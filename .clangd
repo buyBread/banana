@@ -1,0 +1,10 @@
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
+CompileFlags:
+  Add:
+    - "-xc++"
+    - "--target=i686-pc-windows-msvc"
+    - "/std:c++latest"
+    - "-D_HAS_CXX23=1"
+    - "-Wno-microsoft-cast"
