@@ -1,1 +1,1 @@
-Remove-Item build, .xmake, cache -Recurse -Force
+Remove-Item build, .xmake, .cache -Recurse -Force

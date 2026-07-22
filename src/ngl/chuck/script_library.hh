@@ -12,6 +12,7 @@ namespace internals { namespace chuck {
         struct vm_stack;
         struct script_library_class;
         struct script_library_function;
+        struct script_library_registry;
 
         namespace fn {
             inline auto script_library_class_destruct =
@@ -38,6 +39,16 @@ namespace internals { namespace chuck {
                 (uint32_t(__thiscall*)
                 (script_library_class*, const mash_string&))
                 0x00A90D90;
+
+            inline auto script_library_class_find_function =
+                (script_library_function*(__thiscall*)
+                (script_library_class*, uint32_t))
+                0x00A20F80;
+
+            inline auto script_library_registry_find_class =
+                (script_library_class*(__thiscall*)
+                (script_library_registry*, uint32_t))
+                0x00A20F90;
         } // fn
 
         /*
@@ -96,6 +107,50 @@ namespace internals { namespace chuck {
             }
         };
 
+        struct script_library_class_vector {
+            uint32_t               unk_00;
+            script_library_class** first;
+            script_library_class** last;
+            script_library_class** capacity_end;
+
+            [[nodiscard]] uint32_t size() const noexcept {
+                if (!first)
+                    return 0;
+
+                return (uint32_t)(last - first);
+            }
+
+            [[nodiscard]] bool empty() const noexcept {
+                return size() == 0;
+            }
+
+            [[nodiscard]] script_library_class* operator[](uint32_t index) const noexcept {
+                return first[index];
+            }
+        };
+
+        struct script_library_registry {
+            script_library_class_vector* m_classes;
+
+            [[nodiscard]] uint32_t class_count() const noexcept {
+                return m_classes ? m_classes->size() : 0;
+            }
+
+            [[nodiscard]] script_library_class* class_at(uint32_t index) const noexcept {
+                if (!m_classes || index >= m_classes->size())
+                    return nullptr;
+
+                return (*m_classes)[index];
+            }
+
+            [[nodiscard]] script_library_class* find_class(uint32_t index) {
+                if (index >= class_count())
+                    return nullptr;
+
+                return fn::script_library_registry_find_class(this, index);
+            }
+        };
+
         /*
             script_library_class describes one chuckvm value type.
             it stores the value's byte width and owns the native function descriptors registered for that type.
@@ -138,6 +193,13 @@ namespace internals { namespace chuck {
                 return (*m_functions)[index];
             }
 
+            [[nodiscard]] script_library_function* find_function(uint32_t index) {
+                if (index >= function_count())
+                    return nullptr;
+
+                return fn::script_library_class_find_function(this, index);
+            }
+
             [[nodiscard]] script_library_function* get_func(int32_t index) const {
                 assert(index >= 0);
 
@@ -147,11 +209,22 @@ namespace internals { namespace chuck {
 
         static_assert(sizeof(script_library_function)        == 0x04, ASSERT_FAIL_SANITY);
         static_assert(sizeof(script_library_function_vector) == 0x10, ASSERT_FAIL_SANITY);
+        static_assert(sizeof(script_library_class_vector)    == 0x10, ASSERT_FAIL_SANITY);
+        static_assert(sizeof(script_library_registry)        == 0x04, ASSERT_FAIL_SANITY);
         static_assert(sizeof(script_library_class)           == 0x10, ASSERT_FAIL_SANITY);
 
         static_assert(offsetof(script_library_class, m_value_size)  == 0x04, ASSERT_FAIL_SANITY);
         static_assert(offsetof(script_library_class, m_functions)   == 0x08, ASSERT_FAIL_SANITY);
         static_assert(offsetof(script_library_class, m_parent_name) == 0x0C, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_function_vector, first)        == 0x04, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_function_vector, last)         == 0x08, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_function_vector, capacity_end) == 0x0C, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_class_vector, first)        == 0x04, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_class_vector, last)         == 0x08, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_class_vector, capacity_end) == 0x0C, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(script_library_registry, m_classes) == 0x00, ASSERT_FAIL_SANITY);
     } // vm
+
+    MEMORY_REFERENCE<vm::script_library_registry*> script_library_registry { 0x01124C64 };
 }} // internals::chuck
 }} // banana::NGL

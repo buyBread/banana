@@ -5,10 +5,13 @@
 #include "../mutex.hh"
 #include "script_library.hh"
 
+#include <cstring>
+
 namespace banana { namespace NGL {
 namespace internals { namespace chuck {
     namespace vm {
         struct vm_executable;
+        struct vm_stack;
         struct vm_thread;
         struct script_runtime;
         struct script_executable;
@@ -16,8 +19,37 @@ namespace internals { namespace chuck {
         struct script_object;
 
         namespace fn {
-            inline auto runtime_find_thread    = (vm_thread*(__thiscall*)(script_runtime*,    uint32_t))0x00A1B030;
-            inline auto executable_find_thread = (vm_thread*(__thiscall*)(script_executable*, uint32_t))0x00A1FDE0;
+            inline auto runtime_find_thread =
+                (vm_thread*(__thiscall*)(script_runtime*, uint32_t))
+                0x00A1B030;
+
+            inline auto executable_find_thread =
+                (vm_thread*(__thiscall*)(script_executable*, uint32_t))
+                0x00A1FDE0;
+
+            inline auto executable_find_object_by_hash =
+                (script_object*(__thiscall*)(script_executable*, uint32_t, int32_t*))
+                0x00A1F6C0;
+
+            inline auto executable_resolve_code_locator =
+                (uint8_t*(__thiscall*)(script_executable*, uint32_t))
+                0x00A1F650;
+
+            inline auto executable_find_object_by_index =
+                (script_object*(__thiscall*)(script_executable*, uint32_t))
+                0x00A1F790;
+
+            inline auto object_find_function_by_index =
+                (vm_executable*(__thiscall*)(script_object*, uint32_t))
+                0x00A1CFE0;
+
+            inline auto instance_add_thread_with_arguments =
+                (vm_thread*(__thiscall*)(script_instance*, vm_executable*, const void*, int32_t, void*, int32_t))
+                0x00A1E0F0;
+
+            inline auto stack_push_bytes =
+                (void(__thiscall*)(vm_stack*, const void*, int32_t))
+                0x004E4F70;
         } // fn
 
         struct script_executable_entry {
@@ -110,6 +142,21 @@ namespace internals { namespace chuck {
             vm_thread* find_thread(uint32_t id) {
                 return fn::executable_find_thread(this, id);
             }
+
+            [[nodiscard]] script_object* object(uint32_t index) {
+                if (!objects || index >= object_count)
+                    return nullptr;
+
+                return fn::executable_find_object_by_index(this, index);
+            }
+
+            [[nodiscard]] script_object* find_object(uint32_t hash, int32_t* index = nullptr) {
+                return fn::executable_find_object_by_hash(this, hash, index);
+            }
+
+            [[nodiscard]] uint8_t* resolve_code_locator(uint32_t locator) {
+                return fn::executable_resolve_code_locator(this, locator);
+            }
         };
 
         struct vm_executable {
@@ -139,6 +186,17 @@ namespace internals { namespace chuck {
             uint8_t                           unk_4c[0x08];
             uint32_t                          flags;
             NGL_MUTEX::engine_activity_guard* instance_guard;
+
+            [[nodiscard]] vm_executable* function(uint32_t index) const {
+                if (!functions || index >= function_count)
+                    return nullptr;
+
+                return functions[index];
+            }
+
+            [[nodiscard]] vm_executable* find_function(uint32_t flattened_index) {
+                return fn::object_find_function_by_index(this, flattened_index);
+            }
         };
 
         struct script_instance {
@@ -153,11 +211,154 @@ namespace internals { namespace chuck {
             uint8_t                          unk_4c[0x1C];
             script_instance*                 next;
             uint32_t                         unk_6c;
+
+            [[nodiscard]] vm_thread* add_thread(
+                vm_executable* executable,
+                const void* arguments = nullptr,
+                int32_t argument_size = 0,
+                void* context = nullptr,
+                int32_t stack_size = 0) {
+
+                if (!executable || argument_size < 0 || (argument_size && !arguments))
+                    return nullptr;
+
+                uint32_t maximum_initial_push = 0;
+
+                switch (stack_size) {
+                    case 0:
+                    case 128:
+                        maximum_initial_push = 284;
+                        break;
+
+                    case 284:
+                        maximum_initial_push = 512;
+                        break;
+
+                    case 512:
+                    case 1024:
+                        maximum_initial_push = 1024;
+                        break;
+
+                    default:
+                        return nullptr;
+                }
+
+                if ((uint32_t)argument_size > maximum_initial_push)
+                    return nullptr;
+
+                return fn::instance_add_thread_with_arguments(
+                    this,
+                    executable,
+                    arguments,
+                    argument_size,
+                    context,
+                    stack_size);
+            }
         };
 
         struct vm_stack {
-            uint8_t    unk_00[0x10];
+            uint8_t*   cursor;
+            void*      allocation;
+            uint8_t*   data;
+            uint32_t   capacity;
             vm_thread* thread;
+
+            [[nodiscard]] bool valid() const noexcept {
+                if (!cursor || !data)
+                    return false;
+
+                uint32_t cursor_address = (uint32_t)cursor;
+                uint32_t data_address   = (uint32_t)data;
+
+                return
+                    cursor_address >= data_address &&
+                    cursor_address - data_address <= capacity;
+            }
+
+            [[nodiscard]] uint32_t size() const noexcept {
+                if (!valid())
+                    return 0;
+
+                return (uint32_t)((uint32_t)cursor - (uint32_t)data);
+            }
+
+            [[nodiscard]] uint32_t remaining() const noexcept {
+                return valid() ? capacity - size() : 0;
+            }
+
+            [[nodiscard]] uint32_t capacity_after_one_growth() const noexcept {
+                switch (capacity) {
+                    case 128: return 284;
+                    case 284: return 512;
+                    case 512: return 1024;
+                    default:  return capacity;
+                }
+            }
+
+            [[nodiscard]] bool can_push(uint32_t byte_count) const noexcept {
+                if (!valid())
+                    return false;
+
+                uint32_t used = size();
+
+                if (byte_count > UINT32_MAX - used)
+                    return false;
+
+                uint32_t required = used + byte_count;
+
+                return required <= capacity_after_one_growth();
+            }
+
+            bool push_bytes(const void* source, uint32_t byte_count) {
+                if (!byte_count)
+                    return valid();
+
+                if (!source || byte_count > INT32_MAX || !can_push(byte_count))
+                    return false;
+
+                uint32_t previous_size = size();
+
+                fn::stack_push_bytes(this, source, (int32_t)byte_count);
+
+                return valid() && size() == previous_size + byte_count;
+            }
+
+            bool peek_bytes(void* destination, uint32_t byte_count) const {
+                if (!byte_count)
+                    return valid();
+
+                if (!destination || !valid() || byte_count > size())
+                    return false;
+
+                std::memcpy(destination, cursor - byte_count, byte_count);
+
+                return true;
+            }
+
+            bool pop_bytes(void* destination, uint32_t byte_count) {
+                if (!peek_bytes(destination, byte_count))
+                    return false;
+
+                cursor -= byte_count;
+
+                return true;
+            }
+
+            bool push_number(float value) {
+                return push_bytes(&value, sizeof(value));
+            }
+
+            bool pop_number(float* value) {
+                return pop_bytes(value, sizeof(*value));
+            }
+
+            bool push_unsigned(uint32_t value) {
+                return push_bytes(&value, sizeof(value));
+            }
+
+            bool pop_unsigned(uint32_t* value) {
+                return pop_bytes(value, sizeof(*value));
+            }
         };
 
         struct vm_flow_frame {
@@ -234,7 +435,11 @@ namespace internals { namespace chuck {
         static_assert(offsetof(vm_executable, object)         == 0x1C, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_executable, code)           == 0x20, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_executable, flags)          == 0x2A, ASSERT_FAIL_SANITY);
-        static_assert(offsetof(vm_stack, thread) == 0x10, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_stack, cursor)     == 0x00, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_stack, allocation) == 0x04, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_stack, data)       == 0x08, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_stack, capacity)   == 0x0C, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_stack, thread)     == 0x10, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, stack)      == 0x0C, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, pc)         == 0x20, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, flow_frame) == 0x38, ASSERT_FAIL_SANITY);
