@@ -15,4 +15,4 @@ public:
     }
 };
 
-hk_sub_A22AC0 hk {};
+// hk_sub_A22AC0 hk {};

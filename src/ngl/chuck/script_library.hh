@@ -6,8 +6,7 @@
 
 #include "../mstring.hh"
 
-namespace banana { namespace NGL {
-namespace internals { namespace chuck {
+namespace banana { namespace NGL { namespace chuck {
     namespace vm {
         struct vm_stack;
         struct script_library_class;
@@ -226,5 +225,4 @@ namespace internals { namespace chuck {
     } // vm
 
     MEMORY_REFERENCE<vm::script_library_registry*> script_library_registry { 0x01124C64 };
-}} // internals::chuck
-}} // banana::NGL
+}}} // banana::NGL::chuck

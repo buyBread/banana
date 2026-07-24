@@ -1,7 +1,7 @@
 #include "../base.hh"
 
 /*
-    ??? (forgot, lol)
+    script_instance thread scheduler
 */
 
 class hk_sub_A1E980 : public c_hook<hk_sub_A1E980, hk_fn_sig::sub_A1E980_t> {

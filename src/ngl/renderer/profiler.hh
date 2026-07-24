@@ -4,8 +4,7 @@
 
 #include "../../util.hh"
 
-namespace banana { namespace NGL {
-namespace internals { namespace renderer {
+namespace banana { namespace NGL { namespace renderer {
 namespace profiler {
     /* 
         padding:
@@ -44,12 +43,10 @@ namespace profiler {
         MEMORY_REFERENCE<uint32_t> geom_max     { 0x011238D4 }; // dead?
     } // frame_data
 
-    enum framerate {
+    enum e_framerate {
         off = 0,
         full,
         compact,
     };
-
 } // profiler
-} } // internals::renderer
-} } // banana::NGL
+}}} // banana::NGL::renderer

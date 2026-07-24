@@ -4,8 +4,7 @@
 
 #include "../util.hh"
 
-namespace banana { namespace NGL {
-namespace internals { namespace mutex {
+namespace banana { namespace NGL { namespace mutex {
     inline auto fn_acquire_lock = (int(__thiscall*)(void*))0x00401930;
 
     struct engine_recursive_lock {
@@ -91,5 +90,4 @@ namespace internals { namespace mutex {
     static_assert(sizeof(engine_activity_guard) == 0x14, ASSERT_FAIL_SANITY);
 
     static_assert(offsetof(engine_activity_guard, activity) == 0x10, ASSERT_FAIL_SANITY);
-} } // internals::mutex
-} } // banana::NGL
+}}} // banana::NGL::mutex

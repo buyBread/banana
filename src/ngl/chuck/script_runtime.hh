@@ -3,12 +3,12 @@
 #include "../../util.hh"
 #include "../macros.hh"
 #include "../mutex.hh"
+
+#include "vm/opcode.hh"
 #include "script_library.hh"
 
-#include <cstring>
-
 namespace banana { namespace NGL {
-namespace internals { namespace chuck {
+namespace chuck {
     namespace vm {
         struct vm_executable;
         struct vm_stack;
@@ -159,19 +159,36 @@ namespace internals { namespace chuck {
             }
         };
 
+        enum class vm_reference_kind : uint16_t {
+            dynamic_array                 = 0,
+            string                        = 1,
+            ignored                       = 2,
+            string_dynamic_array          = 3,
+            script_instance_dynamic_array = 4
+        };
+
+        struct vm_reference_descriptor {
+            vm_reference_kind kind;
+            uint16_t          offset;
+        };
+
         struct vm_executable {
-            uint32_t       record_size;
-            uint32_t       unk_04;
-            uint32_t       unk_08;
-            uint32_t       unk_0c;
-            uint32_t       signature_hash;
-            uint32_t       function_hash;
-            uint32_t       unk_18;
-            script_object* object;
-            uint8_t*       code;
-            uint32_t       stack_metadata;
-            uint16_t       unk_28;
-            uint16_t       flags;
+            uint32_t                 record_size;
+            uint32_t                 reference_descriptor_count;
+            vm_reference_descriptor* reference_descriptors;
+            uint32_t                 unk_0c;
+            uint32_t                 signature_hash;
+            uint32_t                 function_hash;
+            uint32_t                 unk_18;
+            script_object*           object;
+            uint8_t*                 code;
+            uint32_t                 stack_metadata;
+            uint16_t                 unk_28;
+            uint16_t                 flags;
+
+            [[nodiscard]] uint16_t argument_size() const noexcept {
+                return (uint16_t)stack_metadata;
+            }
         };
 
         struct script_object {
@@ -379,7 +396,7 @@ namespace internals { namespace chuck {
             uint32_t         unk_30;
             uint32_t         result;
             vm_flow_frame*   flow_frame;
-            uint32_t         opcode;
+            e_opcode         opcode;
             uint32_t         operand_selector;
             uint8_t          operand[0x0C];
             uint32_t         operand_width;
@@ -420,6 +437,8 @@ namespace internals { namespace chuck {
             }
         };
 
+        static_assert(sizeof(e_opcode)                    == 0x04, ASSERT_FAIL_SANITY);
+        static_assert(sizeof(vm_reference_descriptor)     == 0x04, ASSERT_FAIL_SANITY);
         static_assert(sizeof(vm_executable)               == 0x2C, ASSERT_FAIL_SANITY);
         static_assert(sizeof(vm_stack)                    == 0x14, ASSERT_FAIL_SANITY);
         static_assert(sizeof(vm_flow_frame)               == 0x0C, ASSERT_FAIL_SANITY);
@@ -431,10 +450,13 @@ namespace internals { namespace chuck {
         static_assert(sizeof(script_runtime)              == 0x98, ASSERT_FAIL_SANITY);
         static_assert(sizeof(script_library_function)     == 0x04, ASSERT_FAIL_SANITY);
 
-        static_assert(offsetof(vm_executable, signature_hash) == 0x10, ASSERT_FAIL_SANITY);
-        static_assert(offsetof(vm_executable, object)         == 0x1C, ASSERT_FAIL_SANITY);
-        static_assert(offsetof(vm_executable, code)           == 0x20, ASSERT_FAIL_SANITY);
-        static_assert(offsetof(vm_executable, flags)          == 0x2A, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, reference_descriptor_count) == 0x04, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, reference_descriptors)      == 0x08, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, signature_hash)             == 0x10, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, object)                     == 0x1C, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, code)                       == 0x20, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, stack_metadata)             == 0x24, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_executable, flags)                      == 0x2A, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_stack, cursor)     == 0x00, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_stack, allocation) == 0x04, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_stack, data)       == 0x08, ASSERT_FAIL_SANITY);
@@ -443,6 +465,7 @@ namespace internals { namespace chuck {
         static_assert(offsetof(vm_thread, stack)      == 0x0C, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, pc)         == 0x20, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, flow_frame) == 0x38, ASSERT_FAIL_SANITY);
+        static_assert(offsetof(vm_thread, opcode)     == 0x3C, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, id)         == 0x68, ASSERT_FAIL_SANITY);
         static_assert(offsetof(vm_thread, next)       == 0x80, ASSERT_FAIL_SANITY);
         static_assert(offsetof(script_object, function_count) == 0x18, ASSERT_FAIL_SANITY);
@@ -468,5 +491,5 @@ namespace internals { namespace chuck {
     } // vm
 
     MEMORY_REFERENCE<vm::script_runtime*> script_runtime { 0x011248E0 };
-} } // internals::chuck
+} // chuck
 } } // banana::NGL

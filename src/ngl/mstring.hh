@@ -405,10 +405,10 @@ private:
     }
 };
 
-typedef mString mash_string;
-
 static_assert(sizeof(mString) == 0x0C, ASSERT_FAIL_SANITY);
 
 static_assert(offsetof(mString, m_size)             == 0x00, ASSERT_FAIL_SANITY);
 static_assert(offsetof(mString, m_data)             == 0x04, ASSERT_FAIL_SANITY);
 static_assert(offsetof(mString, m_allocation_scope) == 0x08, ASSERT_FAIL_SANITY);
+
+typedef mString mash_string;

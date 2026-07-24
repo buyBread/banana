@@ -19,7 +19,7 @@ namespace core {
         s_hook_manager::get().install_all();
         
         { using namespace NGL_RENDERER;
-            profiler::framerate_panel.write(profiler::framerate::compact);
+            profiler::framerate_panel.write(profiler::e_framerate::compact);
 
             // this should always be true
             assert((void*)d3d9_device.read() == (void*)store::d3d9_device);

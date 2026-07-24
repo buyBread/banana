@@ -1,47 +1,10 @@
 #pragma once
 
 /*
-    overloads have arg types specified
+    overloads have arg types specified in the name
 */
 
-namespace banana { namespace NGL {
-namespace vtables {
-namespace slc {
-    inline constexpr int global                 =  0;
-    inline constexpr int num                    =  1;
-    inline constexpr int str                    =  2;
-    inline constexpr int uint                   =  3;
-    inline constexpr int sound_response         =  4;
-    inline constexpr int beam                   =  5;
-    inline constexpr int entity                 =  6;
-    inline constexpr int player_entity          =  7;
-    inline constexpr int entity_tracker         =  8;
-    inline constexpr int line_info              =  9;
-    inline constexpr int polytube               = 10;
-    inline constexpr int script_controller      = 11;
-    inline constexpr int arch_base              = 12;
-    inline constexpr int timer_widget           = 13;
-    inline constexpr int trigger                = 14;
-    inline constexpr int vector3d               = 15;
-    inline constexpr int cpu_combat_movement    = 16;
-    inline constexpr int generic_event_callback = 17;
-    inline constexpr int mutex                  = 18;
-    inline constexpr int widget_3d              = 19;
-    inline constexpr int water_box              = 20;
-    inline constexpr int ai_path                = 21;
-    inline constexpr int cut_scene              = 22;
-    inline constexpr int web_wall               = 23;
-    inline constexpr int obstacle               = 24;
-    inline constexpr int debug_menu             = 25;
-    inline constexpr int debug_menu_entry       = 26;
-    inline constexpr int city_life_tracker      = 27;
-    inline constexpr int mission_objective_data = 28;
-    inline constexpr int mission_stage_data     = 29;
-    inline constexpr int finger_of_god          = 30;
-    inline constexpr int fight_group            = 31;
-} // slc
-
-namespace slf {
+namespace banana { namespace NGL { namespace vtables { namespace slf {
 namespace global {
     inline constexpr int debug_show_triggers                                                             =   0; // num, num
     inline constexpr int assert                                                                          =   1; // num, str
@@ -960,13 +923,11 @@ namespace global {
     inline constexpr int create_stored_preregistered_entity__str_str                                     = 914; // str, str
     inline constexpr int convert_stored_entity_to_types                                                  = 915; // entity, dynamic_array, dynamic_array
 } // global
-
 namespace sound_response {
     inline constexpr int post      = 0;
     inline constexpr int wait      = 1;
     inline constexpr int is_active = 2;
 } // sound_response
-
 namespace beam {
     inline constexpr int hit_world            =  0;
     inline constexpr int set_thickness        =  1; // num
@@ -984,7 +945,6 @@ namespace beam {
     inline constexpr int set_additive         = 13; // num
     inline constexpr int set_material         = 14; // str
 } // beam
-
 namespace entity {
     inline constexpr int enable_tether                                             =   0; // vector3d, num
     inline constexpr int is_tether_active                                          =   1;
@@ -1430,7 +1390,6 @@ namespace entity {
     inline constexpr int switch_set_web_targetable                                 = 441; // num
     inline constexpr int switch_set_ignore_hero                                    = 442; // num
 } // entity
-
 namespace player_entity {
     inline constexpr int get_player_num            =  0; // str
     inline constexpr int set_button_enabled        =  1; // num, num
@@ -1448,7 +1407,6 @@ namespace player_entity {
     inline constexpr int set_axis                  = 13; // num, num, num
     inline constexpr int set_axis_negative_enabled = 14; // num, num, num
 } // player_entity
-
 namespace entity_tracker {
     inline constexpr int set_mini_map_active               =  0; // num
     inline constexpr int set_poi_range                     =  1; // num, num
@@ -1482,7 +1440,6 @@ namespace entity_tracker {
     inline constexpr int set_fog_requires_senses           = 29; // num
     inline constexpr int set_stealth_widget_offset         = 30; // vector3d
 } // entity_tracker
-
 namespace line_info {
     inline constexpr int check_collision        = 0; // num, num
     inline constexpr int get_start_pos          = 1;
@@ -1494,7 +1451,6 @@ namespace line_info {
     inline constexpr int get_end_pos            = 7;
     inline constexpr int did_collide            = 8;
 } // line_info
-
 namespace polytube {
     inline constexpr int reverse_tentacle                  =  0;
     inline constexpr int add_control_pt                    =  1; // vector3d
@@ -1535,7 +1491,6 @@ namespace polytube {
     inline constexpr int tentacle_get_engine_drag          = 36; // num
     inline constexpr int tentacle_get_engine_gravity       = 37; // num
 } // polytube
-
 namespace script_controller {
     inline constexpr int get_button_state     = 0; // num
     inline constexpr int are_x_and_o_inverted = 1;
@@ -1544,13 +1499,11 @@ namespace script_controller {
     inline constexpr int button_pressed_time  = 4; // num
     inline constexpr int get_axis_angle       = 5; // num
 } // script_controller
-
 namespace arch_base {
     inline constexpr int clear_callbacks      = 0;
     inline constexpr int clear_callback__str  = 1; // str
     inline constexpr int clear_callback__uint = 2; // uint
 } // arch_base
-
 namespace timer_widget {
     inline constexpr int is_valid            =  0;
     inline constexpr int is_timer_halted     =  1;
@@ -1573,7 +1526,6 @@ namespace timer_widget {
     inline constexpr int turn_yellow__num    = 18; // num
     inline constexpr int run_when_hidden     = 19; // num
 } // timer_widget
-
 namespace trigger {
     inline constexpr int get_abs_position          =  0;
     inline constexpr int set_use_any_char          =  1; // num
@@ -1588,7 +1540,6 @@ namespace trigger {
     inline constexpr int set_position              = 10; // vector3d
     inline constexpr int get_box_trigger_frame     = 11; // dynamic_array
 } // trigger
-
 namespace vector3d {
     inline constexpr int vector3d               =  0; // num, num, num
     inline constexpr int operator_divide        =  1; // num
@@ -1603,7 +1554,6 @@ namespace vector3d {
     inline constexpr int xy_norm                = 10;
     inline constexpr int z                      = 11;
 } // vector3d
-
 namespace cpu_combat_movement {
     inline constexpr int clip_to_tether         =  0; // vector3d
     inline constexpr int get_pie_facing         =  1;
@@ -1633,19 +1583,16 @@ namespace cpu_combat_movement {
     inline constexpr int rappel_attach          = 25; // vector3d, entity, str, num
     inline constexpr int rappel_get_constraint  = 26;
 } // cpu_combat_movement
-
 namespace generic_event_callback {
     inline constexpr int raised = 0;
     inline constexpr int add    = 1; // uint
     inline constexpr int remove = 2;
 } // generic_event_callback
-
 namespace mutex {
     inline constexpr int lock          = 0;
     inline constexpr int unlock        = 1;
     inline constexpr int lock_required = 2;
 } // mutex
-
 namespace widget_3d {
     inline constexpr int is_valid                   =  0;
     inline constexpr int set_z                      =  1; // num
@@ -1685,20 +1632,17 @@ namespace widget_3d {
     inline constexpr int set_text_shadow_alpha      = 35; // num, num
     inline constexpr int get_child_id_from_name     = 36; // str
 } // widget_3d
-
 namespace water_box {
     inline constexpr int set_rel_position = 0; // vector3d
     inline constexpr int surface_contains = 1; // entity
     inline constexpr int get_water_height = 2; // vector3d
     inline constexpr int get_water_type   = 3;
 } // water_box
-
 namespace ai_path {
     inline constexpr int has_more_points       = 0;
     inline constexpr int find_path_from_points = 1; // vector3d, vector3d
     inline constexpr int get_next_point        = 2;
 } // ai_path
-
 namespace web_wall {
     inline constexpr int clear                                             = 0;
     inline constexpr int is_active                                         = 1;
@@ -1707,7 +1651,6 @@ namespace web_wall {
     inline constexpr int fire__vector3d_vector3d_vector3d_vector3d_num_num = 4; // vector3d, vector3d, vector3d, vector3d, num, num
     inline constexpr int get_build_point                                   = 5;
 } // web_wall
-
 namespace debug_menu {
     inline constexpr int set_name        = 0; // str
     inline constexpr int create_submenu  = 1; // str
@@ -1718,7 +1661,6 @@ namespace debug_menu {
     inline constexpr int set_sort_mode   = 6; // num
     inline constexpr int create_entry    = 7; // str
 } // debug_menu
-
 namespace debug_menu_entry {
     inline constexpr int set_name       =  0; // str
     inline constexpr int set_handler    =  1; // str
@@ -1736,12 +1678,10 @@ namespace debug_menu_entry {
     inline constexpr int set_min_value  = 13; // num
     inline constexpr int set_step_size  = 14; // num
 } // debug_menu_entry
-
 namespace city_life_tracker {
     inline constexpr int register_entity = 0; // entity
     inline constexpr int add_quest_event = 1; // str
 } // city_life_tracker
-
 namespace mission_objective_data {
     inline constexpr int create_child_data     =  0; // num, num, num, num
     inline constexpr int is_failed             =  1;
@@ -1764,7 +1704,6 @@ namespace mission_objective_data {
     inline constexpr int set_displayable       = 18; // num
     inline constexpr int set_short_description = 19; // num
 } // mission_objective_data
-
 namespace mission_stage_data {
     inline constexpr int restart               =  0;
     inline constexpr int is_completed          =  1;
@@ -1778,7 +1717,6 @@ namespace mission_stage_data {
     inline constexpr int get_id                =  9;
     inline constexpr int set_failed            = 10;
 } // mission_stage_data
-
 namespace finger_of_god {
     inline constexpr int set_radius                  =  0; // num
     inline constexpr int fog_requires_senses         =  1; // num
@@ -1794,7 +1732,6 @@ namespace finger_of_god {
     inline constexpr int place_fog_reappear          = 11; // vector3d, num
     inline constexpr int set_gta_widget_inner_radius = 12; // num
 } // finger_of_god
-
 namespace fight_group {
     inline constexpr int pause_fight_group            =  0;
     inline constexpr int set_actor_group_flags        =  1; // entity, num
@@ -1811,7 +1748,4 @@ namespace fight_group {
     inline constexpr int rvb_set_var                  = 12; // str, num
     inline constexpr int rvb_has_target               = 13; // num
 } // fight_group
-
-} // slf
-} // vtables
-}} // banana::NGL
+}}}} // banana::NGL::vtables::slf

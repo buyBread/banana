@@ -3,9 +3,8 @@
 #define NGL_OFF 0
 #define NGL_ON  1
 
-#define NGL_INTERNALS banana::NGL::internals
-
-#define NGL_MUTEX    NGL_INTERNALS::mutex
-#define NGL_CHUCK    NGL_INTERNALS::chuck
-#define NGL_RENDERER NGL_INTERNALS::renderer
-#define NGL_SOAP     NGL_INTERNALS::soap
+#define NGL_VTABLES  banana::NGL::vtables
+#define NGL_MUTEX    banana::NGL::mutex
+#define NGL_CHUCK    banana::NGL::chuck
+#define NGL_RENDERER banana::NGL::renderer
+#define NGL_SOAP     banana::NGL::soap
