@@ -15,8 +15,9 @@ namespace treyarch { namespace ngl {
     } // util
 
     namespace references {
-        inline ::util::memory_reference<u8>   initialized   { 0x011184F0 };
-        inline ::util::memory_reference<u32>  frame_epoch   { 0x011184F4 };
-        inline ::util::memory_reference<HWND> render_window { 0x0111AA90 };
+        inline ::util::memory_reference<u8>    initialized       { 0x011184F0 };
+        inline ::util::memory_reference<u32>   frame_epoch       { 0x011184F4 };
+        inline ::util::memory_reference<void*> resource_callback { 0x01118510 };
+        inline ::util::memory_reference<HWND>  render_window     { 0x0111AA90 };
     } // references
 }} // treyarch::ngl
