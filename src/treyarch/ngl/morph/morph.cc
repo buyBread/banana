@@ -1,3 +1,4 @@
+#include "treyarch/shared/four_cc.hh"
 #include "treyarch/ngl/morph/morph.hh"
 #include "treyarch/ngl/ngl.hh"
 
@@ -17,7 +18,7 @@ void __cdecl ngl::load_morph(amalga::file*       owner,
 
     constexpr u32 component_types[] { 0, 3, 7, 6, 10, 5 };
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     morph_set* value = (morph_set*)mapped_sections[image_section];
 
@@ -49,7 +50,7 @@ void __cdecl ngl::remove_morph(amalga::file*       owner,
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     morph_set* value = (morph_set*)mapped_sections[image_section];
 

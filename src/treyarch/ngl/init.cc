@@ -6,6 +6,7 @@
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"
 #include "treyarch/ngl/scene/scene.hh"
+#include "treyarch/ngl/d3d9/init.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/mesh/init.hh"
 #include "treyarch/ngl/texture/init.hh"
@@ -28,7 +29,7 @@ ngl::scene* ngl::init(HWND window) {
 
     references::frame_epoch.write(0);
 
-    ::util::gimmie::fn<void(__cdecl*)()>(0x009DCBA0)();
+    ngl::d3d9::init();
     ::util::gimmie::fn<void(__cdecl*)()>(0x009CCAF0)();
     ::util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)();
     ::util::gimmie::fn<void(__cdecl*)()>(0x009E2240)();

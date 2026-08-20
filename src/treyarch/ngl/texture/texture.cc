@@ -1,7 +1,8 @@
+#include "treyarch/shared/four_cc.hh"
+#include "treyarch/shared/memory/memory.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
 
@@ -11,7 +12,7 @@ bool ngl::can_release_texture(const texture* value) {
 
 void ngl::process_texture(amalga::file* owner, void** mapped_sections) {
     i32 image_section = owner->find_section_index
-        (string_hash(amalga::four_cc('I', 'M', 'G')));
+        (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];
 
@@ -22,7 +23,7 @@ void ngl::process_texture(amalga::file* owner, void** mapped_sections) {
         return;
 
     i32 physical_section = owner->find_section_index
-        (string_hash(amalga::four_cc('P', 'H', 'Y', 'S')));
+        (string_hash(four_cc('P', 'H', 'Y', 'S')));
 
     const void* source = mapped_sections[physical_section];
 
@@ -85,7 +86,7 @@ void __cdecl ngl::load_texture(amalga::file*       owner,
     (void)user_data;
 
     i32 image_section = owner->find_section_index
-        (string_hash(amalga::four_cc('I', 'M', 'G')));
+        (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];
 
@@ -104,7 +105,7 @@ void __cdecl ngl::remove_texture(amalga::file*       owner,
     (void)user_data;
 
     i32 image_section = owner->find_section_index
-        (string_hash(amalga::four_cc('I', 'M', 'G')));
+        (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];
 

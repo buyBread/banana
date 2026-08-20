@@ -3,26 +3,36 @@
 
 using namespace treyarch;
 
+void ngl::d3d9::poison_bindings() {
+    u32* cached_state = (u32*)&references::bindings.get();
+
+    for (u32 index = 0; index < 36; ++index)
+        cached_state[index] = 0xDEADBEEF;
+
+    references::bindings.get().validation = 0x4B3C2D1E;
+}
+
 void ngl::d3d9::reset_bindings() {
     IDirect3DDevice9* device = references::device.get();
+    binding_cache& bindings = references::bindings.get();
 
-    references::stream_source.write(nullptr);
-    references::stream_source_stride.write(0);
+    bindings.stream_source = nullptr;
+    bindings.stream_source_stride = 0;
     device->SetStreamSource(0, nullptr, 0, 0);
 
-    references::indices.write(nullptr);
+    bindings.indices = nullptr;
     device->SetIndices(nullptr);
 
-    references::vertex_shader.write(nullptr);
+    bindings.vertex_shader = nullptr;
     device->SetVertexShader(nullptr);
 
-    references::pixel_shader.write(nullptr);
+    bindings.pixel_shader = nullptr;
     device->SetPixelShader(nullptr);
 
     for (u32 index = 0; index < 16; ++index) {
         device->SetTexture(index, nullptr);
 
-        references::textures.get().values[index] = nullptr;
+        bindings.textures[index] = nullptr;
     }
 }
 
