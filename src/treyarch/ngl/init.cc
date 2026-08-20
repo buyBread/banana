@@ -1,11 +1,14 @@
 #include <windows.h>
 
 #include "banana/logging.hh"
+#include "util/gimmie/fn.hh"
+#include "util/types.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "util/gimmie/fn.hh"
-#include "util/types.hh"
+#include "treyarch/ngl/debug/debug.hh"
+#include "treyarch/ngl/mesh/init.hh"
+#include "treyarch/ngl/texture/init.hh"
 
 using namespace treyarch;
 
@@ -18,9 +21,10 @@ ngl::scene* ngl::init(HWND window) {
 
     _controlfp(_PC_24, _MCW_PC);
 
-    ::util::gimmie::fn<void(__cdecl*)()>(0x009E7280)();
-    ::util::gimmie::fn<void(__cdecl*)()>(0x009DC6F0)();
-    ::util::gimmie::fn<void(__cdecl*)()>(0x009E4680)();
+    ngl::debug::init();
+    
+    ngl::mesh_init();
+    ngl::texture_init();
 
     references::frame_epoch.write(0);
 
