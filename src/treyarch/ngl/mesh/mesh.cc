@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "treyarch/shared/four_cc.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
@@ -120,7 +121,7 @@ void __cdecl ngl::load_mesh(amalga::file*       owner,
 
     constexpr u32 section_owner = 0x00000001;
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     auto value = (mesh*)mapped_sections[image_section];
 
@@ -129,7 +130,7 @@ void __cdecl ngl::load_mesh(amalga::file*       owner,
 
     process_mesh(value);
 
-    i32 vrml_section = owner->find_section_index(string_hash(amalga::four_cc('V', 'R', 'M', 'L')));
+    i32 vrml_section = owner->find_section_index(string_hash(four_cc('V', 'R', 'M', 'L')));
 
     if (vrml_section != -1 && owner->get_section_span(entry, vrml_section, 0)) {
         for (u32 index = 0; index < value->section_count; ++index)
@@ -148,7 +149,7 @@ void __cdecl ngl::remove_mesh(amalga::file*       owner,
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     mesh* value = (mesh*)mapped_sections[image_section];
 

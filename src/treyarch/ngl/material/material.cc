@@ -1,3 +1,4 @@
+#include "treyarch/shared/four_cc.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/ngl.hh"
 
@@ -33,7 +34,7 @@ void __cdecl ngl::load_material(amalga::file*       owner,
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     material* value = (material*)mapped_sections[image_section];
 
@@ -51,7 +52,7 @@ void __cdecl ngl::remove_material(amalga::file*       owner,
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(amalga::four_cc('I', 'M', 'G')));
+    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     material* value = (material*)mapped_sections[image_section];
 
