@@ -1,0 +1,13 @@
+#pragma once
+
+/*
+    let's be cute
+*/
+
+#define NGL_RELEASE_VERSION 3
+#define NGL_MAJOR_VERSION   1
+#define NGL_MINOR_VERSION   0
+
+#define STRINGIFY(x) #x
+#define MAKE_VERSION(a, b, c) STRINGIFY(a) "." STRINGIFY(b) "." STRINGIFY(c) "-" GIT_COMMIT_HASH
+#define NGL_VERSION MAKE_VERSION(NGL_RELEASE_VERSION, NGL_MAJOR_VERSION, NGL_MINOR_VERSION)
