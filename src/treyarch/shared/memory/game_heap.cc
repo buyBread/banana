@@ -722,12 +722,10 @@ void memory::game_heap::free_small_block(void* allocation) {
         }
 
         // hello there, let's check if it's empty
-        if (queued_page->state == 3 &&
-            queued_page->free_count == (LONG)queued_page->block_count) {
-            
-            // bye bye
+        if (queued_page->state == 3 && queued_page->free_count == (LONG)queued_page->block_count)
+            // it is, bye bye
             release_page(state->small_block_heap, queued_page);
-        } else
+        else
             // another thread allocated from it while we were looking for it, put it back
             enqueue_page(&size_class->available_pages, queued_page);
 
