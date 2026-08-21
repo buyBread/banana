@@ -16,8 +16,8 @@ void CALLBACK ngl::timing::frame_timer_callback(UINT      timer_id,
     (void)first;
     (void)second;
 
-    frame_tick_state& state = references::tick_state.get();
-    LARGE_INTEGER counter;
+    frame_tick_state &state = references::tick_state.get();
+    LARGE_INTEGER     counter;
 
     ++state.tick_count;
     QueryPerformanceCounter(&counter);

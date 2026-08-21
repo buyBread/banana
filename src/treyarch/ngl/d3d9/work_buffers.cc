@@ -1,16 +1,17 @@
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/work_buffers.hh"
+#include "treyarch/ngl/list/arena.hh"
 #include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
 
 void ngl::d3d9::initialize_work_buffers() {
-    list_work_buffer &list = references::list_buffer.get();
+    list::arena_state &list = list::references::arena.get();
 
-    if (!list.data) {
+    if (!list.base) {
         wait_for_rendering();
 
-        list.data     = memory::allocate(0x40000, 8, 0);
+        list.base     = (u8*)memory::allocate(0x40000, 8, 0);
         list.capacity = 0x40000;
     }
 

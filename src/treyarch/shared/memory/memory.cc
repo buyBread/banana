@@ -6,18 +6,14 @@
 
 using namespace treyarch;
 
-namespace treyarch { namespace memory {
-    using error_callback      = void  (__cdecl*)(const char* message);
-    using allocation_callback = void* (__cdecl*)(u32 size, u32 alignment, u32 flags);
-    using free_callback       = void  (__cdecl*)(void* allocation);
-    
-namespace references {
-        util::memory_reference<error_callback>      error_handler      { 0x01115A28 };
-        util::memory_reference<allocation_callback> allocation_handler { 0x01115A34 };
-        util::memory_reference<free_callback>       free_handler       { 0x01115A3C };
-        util::memory_reference<u32>                 allocation_count   { 0x01115A40 };
-} // references
-}} // treyarch::memory
+using memory_error_callback      = void (__cdecl*)(const char* message);
+using memory_allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
+using memory_free_callback       = void (__cdecl*)(void* allocation);
+
+static ::util::memory_reference<memory_error_callback>      memory_error_handler      { 0x01115A28 };
+static ::util::memory_reference<memory_allocation_callback> memory_allocation_handler { 0x01115A34 };
+static ::util::memory_reference<memory_free_callback>       memory_free_handler       { 0x01115A3C };
+static ::util::memory_reference<u32>                        memory_allocation_count   { 0x01115A40 };
 
 void __cdecl treyarch::memory::report(const char* format, ...) {
     char message[512];
@@ -27,7 +23,7 @@ void __cdecl treyarch::memory::report(const char* format, ...) {
     std::vsprintf(message, format, arguments);
     va_end(arguments);
 
-    error_callback handler = references::error_handler.read();
+    memory_error_callback handler = memory_error_handler.read();
 
     if (handler)
         handler(message);
@@ -39,9 +35,9 @@ void* __cdecl treyarch::memory::allocate(u32 size, u32 alignment, u32 flags) {
     if (!alignment && !(size & 0x0F))
         effective_alignment = 0;
 
-    ++references::allocation_count.get();
+    ++memory_allocation_count.get();
 
-    allocation_callback handler = references::allocation_handler.read();
+    memory_allocation_callback handler = memory_allocation_handler.read();
 
     void* allocation = handler ?
         handler(size, effective_alignment, flags) : _aligned_malloc(size, effective_alignment);
@@ -53,9 +49,9 @@ void* __cdecl treyarch::memory::allocate(u32 size, u32 alignment, u32 flags) {
 }
 
 void __cdecl treyarch::memory::free(void* allocation) {
-    --references::allocation_count.get();
+    --memory_allocation_count.get();
 
-    free_callback handler = references::free_handler.read();
+    memory_free_callback handler = memory_free_handler.read();
 
     if (handler)
         handler(allocation);

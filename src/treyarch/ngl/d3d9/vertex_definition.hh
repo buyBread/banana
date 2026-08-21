@@ -10,9 +10,9 @@
 
 namespace treyarch { namespace ngl {
     struct vertex_definition {
-        u32                          vertex_size;
-        const D3DVERTEXELEMENT9*     elements;
-        IDirect3DVertexDeclaration9* declaration;
+              u32                          vertex_size;
+        const D3DVERTEXELEMENT9*           elements;
+              IDirect3DVertexDeclaration9* declaration;
     };
 
     struct vertex_definition_bank_entry {
@@ -30,9 +30,8 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct vertex_definition_bank :
-        instance_bank<vertex_definition_bank_entry,
-                      vertex_definition_bank_entry_name> {};
+    struct vertex_definition_bank : instance_bank<vertex_definition_bank_entry,
+                                                  vertex_definition_bank_entry_name> {};
 
     void initialize_vertex_definition_bank();
 

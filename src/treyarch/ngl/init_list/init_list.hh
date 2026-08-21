@@ -26,8 +26,9 @@ namespace treyarch { namespace ngl {
         inline ::util::memory_reference<init_list*> init_list_head { 0x01115B5C };
     } // references
 
-    ASSERT_SIZEOF  (init_list,                0x08);
-    ASSERT_OFFSETOF(init_list, next,           0x04);
-    ASSERT_SIZEOF  (init_list_function,       0x0C);
+    ASSERT_SIZEOF  (init_list,       0x08);
+    ASSERT_OFFSETOF(init_list, next, 0x04);
+    
+    ASSERT_SIZEOF  (init_list_function,           0x0C);
     ASSERT_OFFSETOF(init_list_function, callback, 0x08);
 }} // treyarch::ngl
