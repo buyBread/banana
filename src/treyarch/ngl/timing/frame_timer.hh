@@ -22,11 +22,12 @@ namespace treyarch { namespace ngl { namespace timing {
                                        DWORD_PTR second);
 
     namespace references {
+        inline ::util::memory_reference<u32>              list_tick  { 0x011184F8 };
         inline ::util::memory_reference<MMRESULT>         timer_id   { 0x01117150 };
         inline ::util::memory_reference<frame_tick_state> tick_state { 0x011184FC };
     } // references
 
-    ASSERT_SIZEOF  (frame_tick_state,                          0x0C);
+    ASSERT_SIZEOF  (frame_tick_state,                           0x0C);
     ASSERT_OFFSETOF(frame_tick_state, tick_count,               0x00);
     ASSERT_OFFSETOF(frame_tick_state, performance_counter_low,  0x04);
     ASSERT_OFFSETOF(frame_tick_state, performance_counter_high, 0x08);

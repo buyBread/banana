@@ -4,6 +4,7 @@
 #include "treyarch/ngl/d3d9/init.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/init_list/init.hh"
+#include "treyarch/ngl/list/init.hh"
 #include "treyarch/ngl/mesh/init.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/resources/init.hh"
@@ -35,12 +36,12 @@ ngl::scene* ngl::init(HWND window) {
 
     ngl::dispatch_init_list();
     
-    // nullsub
-    ::util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)(); /* some unimplemented default fx shader? */
+    ::util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)(); /* nullsub;
+                                                           some unimplemented default fx shader? */
 
     ngl::resources::init();
 
-    ngl::scene* root_scene = ::util::gimmie::fn<ngl::scene*(__cdecl*)()>(0x009DCDE0)();
+    ngl::scene* root_scene = ngl::list_init();
 
     references::initialized.write(1);
 

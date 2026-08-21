@@ -5,7 +5,7 @@
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/morph.hh"
 #include "treyarch/ngl/shaders/shader.hh"
-#include "treyarch/ngl/vertex_definition/vertex_definition.hh"
+#include "treyarch/ngl/d3d9/vertex_definition.hh"
 
 using namespace treyarch;
 

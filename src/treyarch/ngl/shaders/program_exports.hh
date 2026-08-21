@@ -7,7 +7,7 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
-#include "treyarch/ngl/vertex_definition/vertex_definition.hh"
+#include "treyarch/ngl/d3d9/vertex_definition.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace program_exports {
 namespace pcuv {

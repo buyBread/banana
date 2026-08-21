@@ -3,7 +3,7 @@
 #include <d3d9.h>
 
 #include "treyarch/amalga/file.hh"
-#include "treyarch/ngl/vertex_definition/vertex_definition.hh"
+#include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "util/macros/sanity_assert.hh"
