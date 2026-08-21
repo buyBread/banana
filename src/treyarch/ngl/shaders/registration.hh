@@ -6,7 +6,7 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace registration {
-    void initialize();
+    bool try_register(ngl::init_list* item);
 
     namespace references {
         inline ::util::memory_reference<u32> next_shader_id { 0x01118508 };

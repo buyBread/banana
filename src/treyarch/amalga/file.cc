@@ -80,3 +80,28 @@ amalga::file_type_handler* __cdecl amalga::register_file_type(u32           type
 
     return handler;
 }
+
+amalga::section_handler* __cdecl amalga::register_section_handler(string_hash      name,
+                                                                  section_resolver resolve,
+                                                                  section_callback load,
+                                                                  section_callback remove,
+                                                                  void*            user_data) {
+
+    auto handler = (section_handler*)memory::allocate
+        (sizeof(section_handler), 8, 0);
+
+    handler->name      = name;
+    handler->resolve   = resolve;
+    handler->load      = load;
+    handler->remove    = remove;
+    handler->user_data = user_data;
+    handler->next      = references::section_handlers.read();
+
+    references::section_handlers.write(handler);
+
+    return handler;
+}
+
+void amalga::set_resource_resolver(resource_resolver resolver) {
+    references::resource_resolver.write(resolver);
+}
