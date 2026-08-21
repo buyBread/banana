@@ -175,9 +175,9 @@ static ngl::texture* create_runtime_texture(u32       flags,
 }
 
 static void name_framebuffer(ngl::texture* value, const char* name) {
-    value->name.text = nullptr;
-    value->name.hash = string_hash(hash::djb2(name));
-    value->flags |= runtime_texture_named_target;
+    value->name.text  = nullptr;
+    value->name.hash  = string_hash(hash::djb2(name));
+    value->flags     |= runtime_texture_named_target;
 }
 
 static bool supports_depth_texture(D3DFORMAT format) {

@@ -54,27 +54,28 @@ end
 -- NGL SHADER COMPILER
 
 rule("ngl.shader.package")
-    before_build_file(function(target, sourcefile)
-        local packer = target:dep("ngl_shader_packer"):targetfile()
+    before_build(function(target)
+        local compiler = target:dep("ngl_shader_compiler"):targetfile()
 
-        local source = path.join(os.projectdir(), "src", "ngl", "renderer", "shaders")
-        local output = path.join(os.projectdir(), ".cache", "shaders", "baseline.pack")
+        local source   = path.join(os.projectdir(), "src", "treyarch", "ngl", "shaders")
+        local output   = path.join(os.projectdir(), ".cache", "shaders", "ngl.pack")
+        local resource = path.join(source, "program", "resources.rc")
 
-        os.vrunv(packer, { source, output, sourcefile })
+        os.vrunv(compiler, { source, output, resource })
     end)
 
-target("ngl_shader_packer")
+target("ngl_shader_compiler")
     set_default(false)
 
     set_kind  ("binary")
     set_policy("build.fence", true)
 
     add_defines("WIN32_LEAN_AND_MEAN")
+    add_defines("NOMINMAX") -- famous war criminal, bill gates
 
-    -- adjust after refactor
-    add_files      ("tools/shader_packer/main.cc")
-    add_files      ("src/ngl/renderer/shaders/compiler.cc")
-    add_files      ("src/ngl/renderer/shaders/description.cc")
+    add_files      ("src/tools/ngl_shader_compiler/main.cc")
+    add_files      ("src/tools/ngl_shader_compiler/compiler.cc")
+    add_files      ("src/treyarch/ngl/shaders/description.cc")
     add_includedirs("src")
     add_links      ("d3dcompiler")
 
@@ -86,7 +87,8 @@ target(name)
     set_kind    ("shared")
     set_basename("d3d9")
 
-    -- add_deps("ngl_shader_packer")
+    add_deps("ngl_shader_compiler")
+    add_rules("ngl.shader.package")
 
     add_packages("minhook")
     add_packages("imgui")
@@ -107,6 +109,7 @@ target(name)
     end)
 
     add_files      ("src/**.cc")
-    -- add_files      ("src/**.rc", { rules = "ngl.shader.package" })
+    remove_files   ("src/tools/**.cc")
+    add_files      ("src/treyarch/ngl/shaders/resources.rc")
     add_includedirs("src")
     add_syslinks    ("winmm")

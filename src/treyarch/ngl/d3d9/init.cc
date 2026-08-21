@@ -4,7 +4,7 @@
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/init.hh"
-#include "treyarch/ngl/d3d9/internal_shaders.hh"
+#include "treyarch/ngl/d3d9/internal_programs.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/d3d9/vertex_formats.hh"
 #include "treyarch/ngl/d3d9/work_buffers.hh"
@@ -34,7 +34,7 @@ ULONG ngl::d3d9::init() {
     references::device.get()->GetDeviceCaps(&references::capabilities.get());
     initialize_sampler_filters();
     initialize_internal_vertex_formats();
-    initialize_internal_shaders();
+    initialize_internal_programs();
     
     poison_bindings();
     reset_bindings();

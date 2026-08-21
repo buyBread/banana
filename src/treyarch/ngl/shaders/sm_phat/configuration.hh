@@ -3,25 +3,27 @@
 #include <array>
 #include <cstddef>
 
+#include "util/types.hh"
+
 namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
     enum class e_vertex_variant {
         material,
         utility,
     };
 
-    enum class e_environment_mapping : uint8_t {
+    enum class e_environment_mapping : u8 {
         none,
         uniform,
         mapped,
     };
 
-    enum class e_light_count : uint8_t {
+    enum class e_light_count : u8 {
         none = 0,
         two  = 2,
         four = 4,
     };
 
-    enum class e_shadow_count : uint8_t {
+    enum class e_shadow_count : u8 {
         none,
         one,
         two,
@@ -122,7 +124,7 @@ namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
         "7",
     }};
 
-    constexpr uint16_t material_permutation(size_t material, size_t lighting) {
-        return (uint16_t)(material * lighting_configuration_count + lighting);
+    constexpr u16 material_permutation(size_t material, size_t lighting) {
+        return (u16)(material * lighting_configuration_count + lighting);
     }
 }}}} // treyarch::ngl::shaders::sm_phat
