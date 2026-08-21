@@ -1,0 +1,3 @@
+#include "resource_ids.hh"
+
+NGL_SHADER_PACKAGE RCDATA "..\\..\\..\\..\\.cache\\shaders\\ngl.pack"
