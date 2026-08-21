@@ -17,6 +17,12 @@ using c8  = char8_t;
 using c16 = char16_t;
 using c32 = char32_t;
 
+using uchar  = unsigned char;
+using ushort = unsigned short;
+using uint   = unsigned int;
+using ulong  = unsigned long;
+using ullong = unsigned long long;
+
 /*
     compile correctly
 */
@@ -37,6 +43,12 @@ static_assert(sizeof(f64) == 8);
 static_assert(sizeof(c8)  == 1);
 static_assert(sizeof(c16) == 2);
 static_assert(sizeof(c32) == 4);
+
+static_assert(sizeof(uchar)  == 1);
+static_assert(sizeof(ushort) == 2);
+static_assert(sizeof(uint)   == 4);
+static_assert(sizeof(ulong)  == 4);
+static_assert(sizeof(ullong) == 8);
 
 /*
     bounds
