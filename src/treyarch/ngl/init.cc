@@ -3,10 +3,11 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/init.hh"
 #include "treyarch/ngl/debug/debug.hh"
+#include "treyarch/ngl/init_list/init.hh"
 #include "treyarch/ngl/mesh/init.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/resources/init.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/ngl/shaders/registration.hh"
 #include "treyarch/ngl/texture/init.hh"
 #include "treyarch/ngl/version.hh"
 #include "util/gimmie/fn.hh"
@@ -31,9 +32,13 @@ ngl::scene* ngl::init(HWND window) {
     references::frame_epoch.write(0);
 
     ngl::d3d9::init();
-    ngl::shaders::registration::initialize();
-    ::util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)();
-    ::util::gimmie::fn<void(__cdecl*)()>(0x009E2240)();
+
+    ngl::dispatch_init_list();
+    
+    // nullsub
+    ::util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)(); /* some unimplemented default fx shader? */
+
+    ngl::resources::init();
 
     ngl::scene* root_scene = ::util::gimmie::fn<ngl::scene*(__cdecl*)()>(0x009DCDE0)();
 

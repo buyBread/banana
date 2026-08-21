@@ -215,9 +215,6 @@ static bool register_override(ngl::init_list* item) {
     return false;
 }
 
-void ngl::shaders::registration::initialize() {
-    for (init_list* item = ngl::references::init_list_head.read(); item; item = item->next) {
-        if (!register_override(item))
-            item->register_item();
-    }
+bool ngl::shaders::registration::try_register(init_list* item) {
+    return register_override(item);
 }
