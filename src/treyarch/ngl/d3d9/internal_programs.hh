@@ -31,7 +31,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_internal_programs();
 
     namespace references {
-        inline ::util::memory_reference<internal_program_set> internal_programs { 0x0111A9E0 };
+        inline util::memory_reference<internal_program_set> internal_programs { 0x0111A9E0 };
     } // references
 
     ASSERT_SIZEOF  (internal_program_set,                    0x48);

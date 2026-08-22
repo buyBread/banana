@@ -11,68 +11,68 @@
 
 namespace treyarch { namespace ngl { namespace shaders { namespace program_exports {
 namespace pcuv {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114350 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114354 };
-    inline ::util::memory_reference<vertex_definition>       format         { 0x010F7C50 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114350 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114354 };
+    inline util::memory_reference<vertex_definition>       format         { 0x010F7C50 };
 } // pcuv
 
 namespace puv {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114394 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114390 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114394 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114390 };
 } // puv
 
 namespace sm_simple {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114410 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114414 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114410 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114414 };
 } // sm_simple
 
 namespace sm_translucent {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114450 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114454 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114450 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114454 };
 } // sm_translucent
 
 namespace sm_depth_shadow {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114794 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114790 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114794 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114790 };
 } // sm_depth_shadow
 
 namespace smsky {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program         { 0x011143D8 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  daylight_pixel_program { 0x011143D0 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  night_pixel_program    { 0x011143D4 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  combined_pixel_program { 0x011143DC };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program         { 0x011143D8 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  daylight_pixel_program { 0x011143D0 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  night_pixel_program    { 0x011143D4 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  combined_pixel_program { 0x011143DC };
 } // smsky
 
 namespace road_lights {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114D24 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114D20 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114D24 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114D20 };
 } // road_lights
 
 namespace fake_peds {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114A74 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114A70 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114A74 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114A70 };
 } // fake_peds
 
 namespace sm_citylod {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114C64 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114C60 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114C64 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114C60 };
 } // sm_citylod
 
 namespace sm_retrofit {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114CA4 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114CA0 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114CA4 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114CA0 };
 } // sm_retrofit
 
 namespace sm_buildinglod {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program               { 0x01114C10 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  adaptive_alpha_pixel_program { 0x01114C1C };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  opaque_pixel_program         { 0x01114C20 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program               { 0x01114C10 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  adaptive_alpha_pixel_program { 0x01114C1C };
+    inline util::memory_reference<IDirect3DPixelShader9*>  opaque_pixel_program         { 0x01114C20 };
 } // sm_buildinglod
 
 namespace sm_roadlod {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> vertex_program                    { 0x01114BD4 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  surface_pixel_program             { 0x01114BD0 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  sampler_passthrough_pixel_program { 0x01114BD8 };
+    inline util::memory_reference<IDirect3DVertexShader9*> vertex_program                    { 0x01114BD4 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  surface_pixel_program             { 0x01114BD0 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  sampler_passthrough_pixel_program { 0x01114BD8 };
 } // sm_roadlod
 
 namespace sm_road {
@@ -87,7 +87,7 @@ namespace sm_road {
 
     static_assert(sizeof(program_exports) == 0x18, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114870 };
+    inline util::memory_reference<program_exports> programs { 0x01114870 };
 } // sm_road
 
 namespace sm_phatpalettecharnormal {
@@ -103,7 +103,7 @@ namespace sm_phatpalettecharnormal {
 
     static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114820 };
+    inline util::memory_reference<program_exports> programs { 0x01114820 };
 } // sm_phatpalettecharnormal
 
 namespace sm_phatpalettechar {
@@ -119,7 +119,7 @@ namespace sm_phatpalettechar {
 
     static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x011147D0 };
+    inline util::memory_reference<program_exports> programs { 0x011147D0 };
 } // sm_phatpalettechar
 
 namespace sm_phat_palette {
@@ -138,7 +138,7 @@ namespace sm_phat_palette {
     static_assert(offsetof(program_exports, sample_texture_pixel_program) == 0x08, ASSERT_FAIL_SANITY);
     static_assert(offsetof(program_exports, depth_shadow_vertex_program)  == 0x18, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x011145F0 };
+    inline util::memory_reference<program_exports> programs { 0x011145F0 };
 } // sm_phat_palette
 
 namespace sm_phatcharnormal {
@@ -154,7 +154,7 @@ namespace sm_phatcharnormal {
 
     static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x011145A0 };
+    inline util::memory_reference<program_exports> programs { 0x011145A0 };
 } // sm_phatcharnormal
 
 namespace sm_phatchar {
@@ -170,7 +170,7 @@ namespace sm_phatchar {
 
     static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114550 };
+    inline util::memory_reference<program_exports> programs { 0x01114550 };
 } // sm_phatchar
 
 namespace sm_phatspiderman {
@@ -186,7 +186,7 @@ namespace sm_phatspiderman {
 
     static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114500 };
+    inline util::memory_reference<program_exports> programs { 0x01114500 };
 } // sm_phatspiderman
 
 namespace sm_bright_filter {
@@ -265,38 +265,38 @@ namespace sm_bright_filter {
 
     static_assert(sizeof(program_exports) == 0x118, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114640 };
+    inline util::memory_reference<program_exports> programs { 0x01114640 };
 } // sm_bright_filter
 
 namespace sm_decalchar {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114B98 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114B94 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  pixel_program               { 0x01114B90 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114B98 };
+    inline util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114B94 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program               { 0x01114B90 };
 } // sm_decalchar
 
 namespace sm_bush {
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  material_pixel_program                 { 0x01114A20 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  constant_red_pixel_program             { 0x01114A24 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadowed_material_pixel_program        { 0x01114A28 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  sample_texture_pixel_program           { 0x01114A2C };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  sample_auxiliary_texture_pixel_program { 0x01114A30 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program                { 0x01114A34 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  material_pixel_program                 { 0x01114A20 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  constant_red_pixel_program             { 0x01114A24 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadowed_material_pixel_program        { 0x01114A28 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  sample_texture_pixel_program           { 0x01114A2C };
+    inline util::memory_reference<IDirect3DPixelShader9*>  sample_auxiliary_texture_pixel_program { 0x01114A30 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program                { 0x01114A34 };
 } // sm_bush
 
 namespace sm_babyphatnormal {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114B50 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114B4C };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114B48 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x01114B44 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114B40 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114B50 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114B4C };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114B48 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x01114B44 };
+    inline util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114B40 };
 } // sm_babyphatnormal
 
 namespace sm_babyphat {
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114AF0 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114AF4 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114AF8 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x01114AFC };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114B00 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114AF0 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114AF4 };
+    inline util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114AF8 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x01114AFC };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114B00 };
 } // sm_babyphat
 
 namespace sm_decal {
@@ -318,24 +318,24 @@ namespace sm_decal {
 
     static_assert(sizeof(program_exports) == 0x34, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x011149B0 };
+    inline util::memory_reference<program_exports> programs { 0x011149B0 };
 } // sm_decal
 
 namespace sm_phat_palette_normal {
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program            { 0x01114960 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program          { 0x01114964 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program       { 0x0111496C };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program            { 0x01114970 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  sampler_passthrough_pixel_program { 0x01114974 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program           { 0x01114978 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program            { 0x01114960 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program          { 0x01114964 };
+    inline util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program       { 0x0111496C };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program            { 0x01114970 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  sampler_passthrough_pixel_program { 0x01114974 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program           { 0x01114978 };
 } // sm_phat_palette_normal
 
 namespace sm_phatnormal {
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114910 };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114914 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114918 };
-    inline ::util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x0111491C };
-    inline ::util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114920 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  unshadowed_pixel_program    { 0x01114910 };
+    inline util::memory_reference<IDirect3DVertexShader9*> material_vertex_program     { 0x01114914 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_1_pixel_program      { 0x01114918 };
+    inline util::memory_reference<IDirect3DPixelShader9*>  shadow_2_pixel_program      { 0x0111491C };
+    inline util::memory_reference<IDirect3DVertexShader9*> depth_shadow_vertex_program { 0x01114920 };
 } // sm_phatnormal
 
 namespace sm_phat {
@@ -364,9 +364,9 @@ namespace sm_phat {
     static_assert(sizeof(program_exports)           == 0x34, ASSERT_FAIL_SANITY);
     static_assert(sizeof(pixel_pipeline_descriptor) == 0x8C, ASSERT_FAIL_SANITY);
 
-    inline ::util::memory_reference<program_exports> programs { 0x01114490 };
+    inline util::memory_reference<program_exports> programs { 0x01114490 };
 
-    inline ::util::memory_reference // sob
+    inline util::memory_reference // sob
         <std::array<std::array<pixel_pipeline_descriptor, 21>, 17>> pixel_pipelines { 0x00F3E600 };
 } // sm_phat
 }}}} // treyarch::ngl::shaders::program_exports

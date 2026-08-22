@@ -17,6 +17,6 @@ namespace treyarch { namespace ngl {
                                             const scene_parameters* source);
 
     namespace references {
-        inline ::util::memory_reference<u32> scene_parameter_count { 0x011162AC };
+        inline util::memory_reference<u32> scene_parameter_count { 0x011162AC };
     } // references
 }} // treyarch::ngl

@@ -94,13 +94,13 @@ ASSERT_OFFSETOF(game_heap_state, small_block_heap,  0x54);
 using game_allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
 using game_free_callback       = void (__cdecl*)(void* allocation);
 
-static ::util::memory_reference<game_heap_state*>         game_heap_default             { 0x00FFDA58 };
-static ::util::memory_reference<u32>                      game_heap_page_directories    { 0x00FFDA70 };
-static ::util::memory_reference<volatile i64>             game_heap_queue_node_pool     { 0x00FFE1D8 };
-static ::util::memory_reference<volatile LONG>            game_heap_page_lock           { 0x00FFDE70 };
-static ::util::memory_reference<u8*>                      game_heap_free_pages          { 0x00FFDE74 };
-static ::util::memory_reference<game_allocation_callback> game_heap_allocation_callback { 0x01115A34 };
-static ::util::memory_reference<game_free_callback>       game_heap_free_callback       { 0x01115A3C };
+static util::memory_reference<game_heap_state*>         game_heap_default             { 0x00FFDA58 };
+static util::memory_reference<u32>                      game_heap_page_directories    { 0x00FFDA70 };
+static util::memory_reference<volatile i64>             game_heap_queue_node_pool     { 0x00FFE1D8 };
+static util::memory_reference<volatile LONG>            game_heap_page_lock           { 0x00FFDE70 };
+static util::memory_reference<u8*>                      game_heap_free_pages          { 0x00FFDE74 };
+static util::memory_reference<game_allocation_callback> game_heap_allocation_callback { 0x01115A34 };
+static util::memory_reference<game_free_callback>       game_heap_free_callback       { 0x01115A3C };
 
 /*
     i'm severely out of my depth here and i don't ever want to touch this again.

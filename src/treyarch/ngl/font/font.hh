@@ -54,8 +54,8 @@ namespace treyarch { namespace ngl {
                              void*               user_data);
 
     namespace references {
-        inline ::util::memory_reference<font*>          system_font { 0x011160D0 };
-        inline ::util::memory_reference<font_directory> fonts       { 0x01116110 };
+        inline util::memory_reference<font*>          system_font { 0x011160D0 };
+        inline util::memory_reference<font_directory> fonts       { 0x01116110 };
     } // references
 
     ASSERT_SIZEOF  (glyph_info,                 0x1C);
