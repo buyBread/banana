@@ -1,4 +1,5 @@
 #include "treyarch/app.hh"
+#include "treyarch/ngl/ngl.hh"
 #include "util/gimmie/fn.hh"
 #include "banana/logging.hh"
 
@@ -26,11 +27,11 @@ namespace treyarch {
     using cutscene_state_fn = bool(__thiscall*)(void*);
 
     namespace references {
-        inline util::memory_reference<u8>    master_clock_is_up { 0x00FBF230 };
-        inline util::memory_reference<f32>   minimum_frame_time { 0x00FC2F8C };
-        inline util::memory_reference<void*> advertising        { 0x01086F24 };
-        inline util::memory_reference<void*> cutscene_player    { 0x010886F4 };
-        inline util::memory_reference<void*> input_manager      { 0x010FC63C };
+        util::memory_reference<u8>    master_clock_is_up { 0x00FBF230 };
+        util::memory_reference<f32>   minimum_frame_time { 0x00FC2F8C };
+        util::memory_reference<void*> advertising        { 0x01086F24 };
+        util::memory_reference<void*> cutscene_player    { 0x010886F4 };
+        util::memory_reference<void*> input_manager      { 0x010FC63C };
     }
 }
 
@@ -94,7 +95,7 @@ void app::tick() {
     game_frame_timing &frame_timing = *(game_frame_timing*)((u8*)the_game + 0x01A0);
     frame_timing.flip_delta = elapsed(&flip_timer);
 
-    util::gimmie::fn<no_arg_fn>(0x009DA500)(); // impl: nglPresent
+    ngl::present();
 
     // we don't need to tick this, the ad client is mega dead
     /*
@@ -107,6 +108,4 @@ void app::tick() {
 
     frame_timing.total_delta = elapsed(&total_timer);
     frame_timing.limit_delta = 0.0f;
-
-    banana::log.dbg("tick");
 }
