@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstring>
+#include <type_traits>
+
 #include <windows.h>
 
 #include "util/types.hh"
@@ -8,7 +11,22 @@
 namespace util {
     template <typename fn, size_t n> // template for the static_assert
     bool redirect_call(u32 address, const u8 (&expected_instruction)[n], fn target) {
-        static_assert(std::is_pointer_v<fn> && std::is_function_v<std::remove_pointer_t<fn>>, "target must be a function pointer");
+        constexpr bool function_pointer = std::is_pointer_v<fn> &&
+                                          std::is_function_v<std::remove_pointer_t<fn>>;
+
+        constexpr bool member_function_pointer = std::is_member_function_pointer_v<fn>;
+
+        static_assert(function_pointer || member_function_pointer, "target must be a function or a member-function pointer");
+
+        u8* target_address {};
+
+        if constexpr (function_pointer)
+            target_address = (u8*)target;
+        else {
+            static_assert(sizeof(fn) == sizeof(target_address));
+
+            std::memcpy(&target_address, &target, sizeof(target_address));
+        }
 
         auto call = (u8*)address;
 
@@ -18,7 +36,7 @@ namespace util {
             return false;
         }
 
-        i32 displacement = (u8*)target - (call + n);
+        i32 displacement = target_address - (call + n);
             
         DWORD previous_protection {};
 
