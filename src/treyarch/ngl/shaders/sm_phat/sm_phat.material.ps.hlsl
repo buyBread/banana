@@ -138,29 +138,36 @@ half3 evaluate_diffuse_irradiance(half3 normal) {
 }
 
 #if NGL_SM_PHAT_SHADOW_COUNT > 0
+half compare_shadow(
+    SamplerState shadow_sampler,
+    float2 texcoord,
+    float depth)
+{
+    return tex2D(shadow_sampler, texcoord).r >= depth ? 1.0 : 0.0;
+}
+
 half sample_shadow_0(float4 position) {
-    float inverse_w = 1.0 / position.w;
-    float3 projected = position.xyz * inverse_w;
+    float3 projected = position.xyz / position.w;
+    float  depth = saturate(projected.z);
 
 #if NGL_SM_PHAT_SHADOW_COUNT == 1
-    half shadow = 0.0;
+    const float offset = 1.0 / 1024.0;
 
-    [unroll]
-    for (int y = -1; y <= 1; ++y) {
-        [unroll]
-        for (int x = -1; x <= 1; ++x) {
-            half depth = tex2D(
-                shadow_sampler_0,
-                projected.xy + float2(x, y)).x;
-            shadow += depth >= saturate(projected.z) ? 1.0 : 0.0;
-        }
-    }
+    // still didn't fix it, sigh
+    half visibility =
+        compare_shadow(shadow_sampler_0, projected.xy + float2(-offset, -offset), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(0.0,     -offset), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(offset,  -offset), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(-offset, 0.0), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy, depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(offset,  0.0), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(-offset, offset), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(0.0,     offset), depth) +
+        compare_shadow(shadow_sampler_0, projected.xy + float2(offset,  offset), depth);
 
-    return shadow / 9.0;
+    return visibility * (1.0 / 12.0) + (1.0 / 36.0);
 #else
-    half depth = tex2D(shadow_sampler_0, projected.xy).x;
-
-    return depth >= saturate(projected.z) ? 1.0 : 0.0;
+    return compare_shadow(shadow_sampler_0, projected.xy, depth);
 #endif
 }
 #endif
@@ -168,11 +175,38 @@ half sample_shadow_0(float4 position) {
 #if NGL_SM_PHAT_SHADOW_COUNT > 1
 half sample_shadow_1(float4 position) {
     float3 projected = position.xyz / position.w;
-    half depth = tex2D(shadow_sampler_1, projected.xy).x;
 
-    return depth >= saturate(projected.z) ? 1.0 : 0.0;
+    return compare_shadow(
+        shadow_sampler_1,
+        projected.xy,
+        saturate(projected.z));
 }
 #endif
+
+half evaluate_shadow(pixel_input input, float eye_distance) {
+#if NGL_SM_PHAT_SHADOW_COUNT == 1
+    half visibility = sample_shadow_0(input.shadow_position_0);
+#elif NGL_SM_PHAT_SHADOW_COUNT == 2
+    half visibility_0 = sample_shadow_0(input.shadow_position_0);
+    half visibility_1 = sample_shadow_1(input.shadow_position_1);
+    half cascade_blend = saturate(eye_distance - shadow_distance.x);
+    half visibility = lerp(visibility_0, visibility_1, cascade_blend);
+    visibility = saturate(visibility * 0.84 + 0.16);
+#else
+    return 1.0;
+#endif
+
+#if NGL_SM_PHAT_SHADOW_COUNT > 0
+    half distance_fade = saturate(
+        max(eye_distance - shadow_distance.x, 0.0) /
+        (shadow_distance.y - shadow_distance.x));
+    visibility = lerp(visibility, 1.0, distance_fade);
+    visibility = 1.0 +
+        saturate(eye_distance - 4.0) * (visibility - 1.0);
+
+    return visibility;
+#endif
+}
 
 half4 main(pixel_input input) : COLOR0 {
     float4 diffuse_sample = 1.0;
@@ -228,22 +262,7 @@ half4 main(pixel_input input) : COLOR0 {
     material.xz *= reflection_fresnel;
     material.y *= 64.0;
 
-    half shadow = 1.0;
-
-#if NGL_SM_PHAT_SHADOW_COUNT == 1
-    half first_shadow = sample_shadow_0(input.shadow_position_0);
-    half shadow_blend = saturate(
-        (eye_distance - shadow_distance.x) /
-        max(shadow_distance.y - shadow_distance.x, 1.0e-10));
-    shadow = lerp(first_shadow, 1.0, shadow_blend);
-#elif NGL_SM_PHAT_SHADOW_COUNT == 2
-    half first_shadow = sample_shadow_0(input.shadow_position_0);
-    half second_shadow = sample_shadow_1(input.shadow_position_1);
-    half shadow_blend = saturate(
-        (eye_distance - shadow_distance.x) /
-        max(shadow_distance.y - shadow_distance.x, 1.0e-10));
-    shadow = lerp(first_shadow, second_shadow, shadow_blend);
-#endif
+    half shadow = evaluate_shadow(input, eye_distance);
 
     half3 direct_diffuse = material.w;
     half3 direct_specular = 0.0;

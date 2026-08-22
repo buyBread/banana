@@ -59,7 +59,7 @@ rule("ngl.shader.package")
 
         local source   = path.join(os.projectdir(), "src", "treyarch", "ngl", "shaders")
         local output   = path.join(os.projectdir(), ".cache", "shaders", "ngl.pack")
-        local resource = path.join(source, "program", "resources.rc")
+        local resource = path.join(source, "resources.rc")
 
         os.vrunv(compiler, { source, output, resource })
     end)
