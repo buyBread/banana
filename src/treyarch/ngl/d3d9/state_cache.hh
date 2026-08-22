@@ -27,7 +27,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_sampler_filters();
 
     namespace references {
-        inline ::util::memory_reference<sampler_state_cache> sampler_states { 0x011168BC };
+        inline util::memory_reference<sampler_state_cache> sampler_states { 0x011168BC };
     } // references
 
     ASSERT_SIZEOF  (sampler_state_cache,                          0x40);

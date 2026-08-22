@@ -6,7 +6,7 @@
 
 using namespace treyarch;
 
-static ::util::memory_reference<ngl::lighting::context_registry*> light_context_registry { 0x00F532A4 };
+static util::memory_reference<ngl::lighting::context_registry*> light_context_registry { 0x00F532A4 };
 
 void ngl::lighting::register_context(light_context* context) {
     context_registry* registry = light_context_registry.read();

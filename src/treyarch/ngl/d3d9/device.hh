@@ -23,11 +23,11 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void wait_for_rendering();
 
     namespace references {
-        inline ::util::memory_reference<IDirect3D9*>           d3d9         { 0x011170B8 };
-        inline ::util::memory_reference<IDirect3DDevice9*>     device       { 0x011170BC };
-        inline ::util::memory_reference<D3DPRESENT_PARAMETERS> presentation { 0x01116350 };
-        inline ::util::memory_reference<D3DCAPS9>              capabilities { 0x01116388 };
-        inline ::util::memory_reference<binding_cache>         bindings     { 0x0111AB18 };
+        inline util::memory_reference<IDirect3D9*>           d3d9         { 0x011170B8 };
+        inline util::memory_reference<IDirect3DDevice9*>     device       { 0x011170BC };
+        inline util::memory_reference<D3DPRESENT_PARAMETERS> presentation { 0x01116350 };
+        inline util::memory_reference<D3DCAPS9>              capabilities { 0x01116388 };
+        inline util::memory_reference<binding_cache>         bindings     { 0x0111AB18 };
     } // references
 
     ASSERT_SIZEOF  (binding_cache,                       0x94);

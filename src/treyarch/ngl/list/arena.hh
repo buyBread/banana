@@ -15,7 +15,7 @@ namespace treyarch { namespace ngl { namespace list {
     void  rewind();
 
     namespace references {
-        inline ::util::memory_reference<arena_state> arena { 0x01115C64 };
+        inline util::memory_reference<arena_state> arena { 0x01115C64 };
     } // references
 
     ASSERT_SIZEOF  (arena_state,           0x0C);

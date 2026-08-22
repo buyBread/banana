@@ -10,10 +10,10 @@ using memory_error_callback      = void (__cdecl*)(const char* message);
 using memory_allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
 using memory_free_callback       = void (__cdecl*)(void* allocation);
 
-static ::util::memory_reference<memory_error_callback>      memory_error_handler      { 0x01115A28 };
-static ::util::memory_reference<memory_allocation_callback> memory_allocation_handler { 0x01115A34 };
-static ::util::memory_reference<memory_free_callback>       memory_free_handler       { 0x01115A3C };
-static ::util::memory_reference<u32>                        memory_allocation_count   { 0x01115A40 };
+static util::memory_reference<memory_error_callback>      memory_error_handler      { 0x01115A28 };
+static util::memory_reference<memory_allocation_callback> memory_allocation_handler { 0x01115A34 };
+static util::memory_reference<memory_free_callback>       memory_free_handler       { 0x01115A3C };
+static util::memory_reference<u32>                        memory_allocation_count   { 0x01115A40 };
 
 void __cdecl treyarch::memory::report(const char* format, ...) {
     char message[512];

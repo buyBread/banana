@@ -29,7 +29,7 @@ namespace treyarch { namespace ngl { namespace resources {
     void* __cdecl resolve(fixed_string* name, u32 type);
 
     namespace references {
-        inline ::util::memory_reference<effect_resource_directory> effects { 0x011171E4 };
+        inline util::memory_reference<effect_resource_directory> effects { 0x011171E4 };
     } // references
 
     ASSERT_SIZEOF  (effect_resource,                 0x48);

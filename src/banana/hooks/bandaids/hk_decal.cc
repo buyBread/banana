@@ -53,10 +53,10 @@ bool replace_shader_instruction(std::string      &source,
     return true;
 }
 
-bool create_repaired_decal_shader(IDirect3DDevice9*       device,
-                                  const DWORD*            bytecode,
-                                  size_t                  byte_count,
-                                  IDirect3DPixelShader9** output) {
+bool create_repaired_decal_shader(      IDirect3DDevice9*       device,
+                                  const DWORD*                  bytecode,
+                                        size_t                  byte_count,
+                                        IDirect3DPixelShader9** output) {
 
     if (!device || !bytecode || !byte_count || !output)
         return false;
@@ -107,12 +107,12 @@ bool create_repaired_decal_shader(IDirect3DDevice9*       device,
         return false;
 
     using D3DXAssembleShader_t = HRESULT(WINAPI*)(const char*,
-                                                  UINT,
+                                                        UINT,
                                                   const void*,
-                                                  void*,
-                                                  DWORD,
-                                                  ID3DBlob**,
-                                                  ID3DBlob**);
+                                                        void*,
+                                                        DWORD,
+                                                        ID3DBlob**,
+                                                        ID3DBlob**);
 
     static auto D3DXAssembleShader = util::gimmie::fn
         <D3DXAssembleShader_t>(store::handle_d3dx, "D3DXAssembleShader");

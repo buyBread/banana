@@ -24,8 +24,8 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     ULONG initialize_framebuffers();
 
     namespace references {
-        inline ::util::memory_reference<u8>                particle_depth_texture_requested { 0x00F4CD42 };
-        inline ::util::memory_reference<framebuffer_state> framebuffers                     { 0x01123A10 };
+        inline util::memory_reference<u8>                particle_depth_texture_requested { 0x00F4CD42 };
+        inline util::memory_reference<framebuffer_state> framebuffers                     { 0x01123A10 };
     } // references
 
     ASSERT_SIZEOF  (framebuffer_state,                         0x24);

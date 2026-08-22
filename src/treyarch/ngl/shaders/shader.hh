@@ -75,8 +75,8 @@ namespace treyarch { namespace ngl {
     void initialize_shader_bank();
 
     namespace references {
-        inline ::util::memory_reference<shader>      default_shader { 0x00F523E0 };
-        inline ::util::memory_reference<shader_bank> shaders        { 0x011161E0 };
+        inline util::memory_reference<shader>      default_shader { 0x00F523E0 };
+        inline util::memory_reference<shader_bank> shaders        { 0x011161E0 };
     } // references
 
     ASSERT_SIZEOF  (shader,           0x10);

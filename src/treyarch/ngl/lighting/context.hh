@@ -36,8 +36,8 @@ namespace lighting {
     scene*         set_scene_context(light_context* context, scene* value);
 
     namespace references {
-        inline ::util::memory_reference<light_context*> default_context { 0x01118980 };
-        inline ::util::memory_reference<light_context*> current_context { 0x01118984 };
+        inline util::memory_reference<light_context*> default_context { 0x01118980 };
+        inline util::memory_reference<light_context*> current_context { 0x01118984 };
     } // references
 
     ASSERT_SIZEOF  (light_node,                 0x14);

@@ -65,9 +65,9 @@ namespace treyarch { namespace ngl {
     } // debug
 
     namespace references {
-        inline ::util::memory_reference<debug_state>      debug                    { 0x01123810 };
-        inline ::util::memory_reference<debug_state>      synchronized_debug       { 0x0112383C };
-        inline ::util::memory_reference<performance_info> performance              { 0x01123868 };
-        inline ::util::memory_reference<performance_info> synchronized_performance { 0x011238C8 };
+        inline util::memory_reference<debug_state>      debug                    { 0x01123810 };
+        inline util::memory_reference<debug_state>      synchronized_debug       { 0x0112383C };
+        inline util::memory_reference<performance_info> performance              { 0x01123868 };
+        inline util::memory_reference<performance_info> synchronized_performance { 0x011238C8 };
     } // references
 }} // treyarch::ngl

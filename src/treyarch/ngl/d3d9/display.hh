@@ -33,16 +33,16 @@ namespace treyarch { namespace ngl { namespace d3d9 {
                                       LPARAM long_word);
 
     namespace references {
-        inline ::util::memory_reference<display_mode>       display_modes          { 0x00F53C10 };
-        inline ::util::memory_reference<D3DFORMAT>          back_buffer_format     { 0x00F528D4 };
-        inline ::util::memory_reference<u8>                 windowed               { 0x00F53514 };
-        inline ::util::memory_reference<u8>                 owns_window            { 0x00F53515 };
-        inline ::util::memory_reference<u32>                selected_display_index { 0x0111850C };
-        inline ::util::memory_reference<display_mode>       selected_display_mode  { 0x01118550 };
-        inline ::util::memory_reference<u8>                 window_inactive        { 0x0111AA94 };
-        inline ::util::memory_reference<u8>                 force_reference_device { 0x0111AA96 };
-        inline ::util::memory_reference<display_dimensions> window_dimensions      { 0x0111AA98 };
-        inline ::util::memory_reference<WINDOWPLACEMENT>    window_placement       { 0x0111AAA0 };
+        inline util::memory_reference<display_mode>       display_modes          { 0x00F53C10 };
+        inline util::memory_reference<D3DFORMAT>          back_buffer_format     { 0x00F528D4 };
+        inline util::memory_reference<u8>                 windowed               { 0x00F53514 };
+        inline util::memory_reference<u8>                 owns_window            { 0x00F53515 };
+        inline util::memory_reference<u32>                selected_display_index { 0x0111850C };
+        inline util::memory_reference<display_mode>       selected_display_mode  { 0x01118550 };
+        inline util::memory_reference<u8>                 window_inactive        { 0x0111AA94 };
+        inline util::memory_reference<u8>                 force_reference_device { 0x0111AA96 };
+        inline util::memory_reference<display_dimensions> window_dimensions      { 0x0111AA98 };
+        inline util::memory_reference<WINDOWPLACEMENT>    window_placement       { 0x0111AAA0 };
     } // references
 
     ASSERT_SIZEOF  (display_mode,              0x10);

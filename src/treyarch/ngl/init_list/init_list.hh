@@ -23,7 +23,7 @@ namespace treyarch { namespace ngl {
     };
 
     namespace references {
-        inline ::util::memory_reference<init_list*> init_list_head { 0x01115B5C };
+        inline util::memory_reference<init_list*> init_list_head { 0x01115B5C };
     } // references
 
     ASSERT_SIZEOF  (init_list,       0x08);
