@@ -8,7 +8,7 @@
 namespace treyarch { namespace ngl {
     using row = vector4;
 
-    class matrix4x4 {
+    class matrix4x4 { // L15637: SM3 .ii
 
 public:
         row x, y, z, w;
@@ -90,26 +90,100 @@ public:
                               0.0f, 0.0f, 1.0f, 0.0f,
                               0.0f, 0.0f, 0.0f, 1.0f);
         }
-        
+
         void translate(const vector3 &t); /* hey, what are you? */
         void rotate(const vector3 &u, f32 a); /* hey, what are you? */
         void scale(const vector3 &s); /* hey, what are you? */
         void scale(f32 s); /* hey, what are you? */
-        matrix4x4 inverse(); /* hey, what are you? */
-        matrix4x4 transpose(); /* hey, what are you? */
-        matrix4x4 cof(); /* hey, what are you? */
-        matrix4x4 adjugate(); /* hey, what are you? */
-        f32 cofactor(int, int) const; /* hey, what are you? */
-        f32 det() const; /* hey, what are you? */
+        void orthonormalize(); /* hey, what are you? */
+        void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
+
+        matrix4x4 inverse() {
+            f32 det = determinant();
+
+            if (det != 0.0f) {
+                matrix4x4 result = adjugate();
+                result *= 1.0f / det;
+
+                return result;
+            }
+
+            matrix4x4 result;
+            result.identity();
+
+            return result;
+        }
+
+        matrix4x4 transpose() {
+            return matrix4x4(x.x, y.x, z.x, w.x,
+                             x.y, y.y, z.y, w.y,
+                             x.z, y.z, z.z, w.z,
+                             x.w, y.w, z.w, w.w);
+        }
+
+        matrix4x4 cof() {
+            matrix4x4 result;
+
+            for (i32 row = 0; row < 4; ++row) {
+                for (i32 column = 0; column < 4; ++column)
+                    result[row][column] = cofactor(row, column);
+            }
+
+            return result;
+        }
+
+        matrix4x4 adjugate() {
+            matrix4x4 result = cof();
+
+            return result.transpose();
+        }
+
+        f32 cofactor(int excluded_row, int excluded_column) const {
+            f32 minor[3][3];
+            i32 minor_row = 0;
+
+            for (i32 row = 0; row < 4; ++row) {
+                if (row == excluded_row)
+                    continue;
+
+                i32 minor_column = 0;
+
+                for (i32 column = 0; column < 4; ++column) {
+                    if (column == excluded_column)
+                        continue;
+
+                    minor[minor_row][minor_column] = (*this)[row][column];
+                    
+                    ++minor_column;
+                }
+
+                ++minor_row;
+            }
+
+            f32 sign = ((excluded_row ^ excluded_column) & 1) ? -1.0f : 1.0f;
+
+            f32 minor_determinant = minor[0][0] * minor[1][1] * minor[2][2] +
+                                    minor[0][1] * minor[1][2] * minor[2][0] +
+                                    minor[0][2] * minor[1][0] * minor[2][1] -
+                                    minor[0][2] * minor[1][1] * minor[2][0] -
+                                    minor[0][0] * minor[1][2] * minor[2][1] -
+                                    minor[0][1] * minor[1][0] * minor[2][2];
+
+            return sign * minor_determinant;
+        }
 
         f32 determinant3() const {
             return x.x * y.y * z.z - y.x * z.z * x.y +
                    y.x * z.y * x.z - z.x * y.y * x.z +
                    z.x * x.y * y.z - x.x * z.y * y.z;
         };
+        f32 determinant() const {
+            f32 result = 0.0f;
 
-        f32 determinant() const; /* hey, what are you? */
-        void orthonormalize(); /* hey, what are you? */
-        void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
+            for (i32 column = 0; column < 4; ++column)
+                result += (*this)[0][column] * cofactor(0, column);
+
+            return result;
+        }
     };
 }}

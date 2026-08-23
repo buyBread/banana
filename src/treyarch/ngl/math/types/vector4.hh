@@ -7,6 +7,8 @@
 #include "treyarch/shared/mash/mash.hh"
 
 namespace treyarch { namespace ngl {
+    class matrix4x4;
+
     class vector4 { // L15465: SM3 .ii
     
 public:
@@ -159,6 +161,8 @@ public:
                    z > -HUGE_DIST && z < HUGE_DIST &&
                    w > -HUGE_DIST && w < HUGE_DIST;
         }
+
+        vector4 transform_plane(const matrix4x4 &matrix) const;
 
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
     };
