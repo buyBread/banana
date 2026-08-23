@@ -1,6 +1,5 @@
-#include <cstring>
-
 #include <windows.h>
+#include <cstring>
 
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/geometry_stream.hh"

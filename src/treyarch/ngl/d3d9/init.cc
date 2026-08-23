@@ -30,7 +30,7 @@ ULONG ngl::d3d9::init() {
                                          &references::presentation.get(),
                                          &references::device.get());
 
-    initialize_work_buffers();
+    provision_default_work_buffers();
     references::device.get()->GetDeviceCaps(&references::capabilities.get());
     initialize_sampler_filters();
     initialize_internal_vertex_formats();
