@@ -9,6 +9,7 @@
 namespace treyarch { namespace ngl {
     ngl::scene* __cdecl init(HWND window);
     ngl::scene* __cdecl present();
+    void __cdecl list_send();
 
     using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
 

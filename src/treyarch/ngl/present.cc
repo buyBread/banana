@@ -4,23 +4,20 @@
 #include "treyarch/ngl/list/init.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/render_sort.hh"
-#include "util/gimmie/fn.hh"
+#include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
 
-using error_fn = void(__cdecl*)(const char*, ...);
-using void_fn  = void(__cdecl*)();
-
 ngl::scene* __cdecl ngl::present() {
     if (references::current_scene.read() != references::root_scene.read())
-        util::gimmie::fn<error_fn>(0x009CC940)("nglPresent called while one or more scenes were still active (need to call nglListEndScene).");
+        memory::report("nglPresent called while one or more scenes were still active (need to call nglListEndScene).");
 
     ngl::debug::reset_primitive_batches();
     ngl::debug::render();
     
     ngl::render_sort(references::root_scene.read());
 
-    util::gimmie::fn<void_fn>(0x009E7010)();
+    ngl::list_send();
 
     return ngl::list_init();
 }

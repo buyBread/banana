@@ -19,9 +19,9 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_work_buffers();
 
     namespace references {
-        inline util::memory_reference<scratch_buffers> scratch_buffers   { 0x011185A0 };
-        inline util::memory_reference<void*>           scratch_mesh      { 0x011187F8 };
-        inline util::memory_reference<u32>             scratch_mesh_size { 0x01118810 };
+        inline util::memory_reference<scratch_buffers> scratch_buffers           { 0x011185A0 };
+        inline util::memory_reference<void*>           platform_work_buffer      { 0x011187F8 };
+        inline util::memory_reference<u32>             platform_work_buffer_size { 0x01118810 };
     } // references
 
     ASSERT_SIZEOF  (scratch_buffers,                      0x18);

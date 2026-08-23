@@ -56,9 +56,9 @@ void ngl::d3d9::initialize_work_buffers() {
         scratch.vertex_buffer_size = 0x800000;
     }
 
-    if (!references::scratch_mesh_size.read()) {
+    if (!references::platform_work_buffer_size.read()) {
         wait_for_rendering();
 
-        references::scratch_mesh_size.write(0);
+        references::platform_work_buffer_size.write(0);
     }
 }

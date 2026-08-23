@@ -22,6 +22,12 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     };
 
     ULONG initialize_framebuffers();
+    
+    void blit_texture(IDirect3DSurface9* destination,
+                      texture*           source,
+                      bool               linear_filter = false);
+    void copy_active_depth();
+    void generate_mipmaps(texture* value);
 
     namespace references {
         inline util::memory_reference<u8>                particle_depth_texture_requested { 0x00F4CD42 };
