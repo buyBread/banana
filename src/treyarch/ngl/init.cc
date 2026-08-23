@@ -1,8 +1,5 @@
-#include <windows.h>
-
 #include "banana/logging.hh"
 #include "util/gimmie/fn.hh"
-#include "util/types.hh"
 
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"

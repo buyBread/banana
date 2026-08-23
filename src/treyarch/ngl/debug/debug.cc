@@ -22,4 +22,8 @@ void ngl::debug::init() {
     std::memcpy(&references::synchronized_performance.get(),
                 &performance_info,
                 sizeof(performance_info));
+
+#ifdef DEBUG
+    debug_state.show_performance_info = 1;
+#endif
 }

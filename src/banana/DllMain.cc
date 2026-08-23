@@ -1,10 +1,9 @@
-#include <windows.h>
-
 /*
     this isn't actually the entry.
     DllMain should be used for when you need to do something hyper-early.
 */
 
+#include <windows.h>
 #include "flags.hh"
 #include "treyarch/app.hh"
 #include "treyarch/ngl/ngl.hh"
