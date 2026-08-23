@@ -30,6 +30,16 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
 
         if (!util::redirect_call(0x009CC477, { 0xE8, 0x14, 0xD6, 0xA5, 0xFF }, &treyarch::app::tick))
             FATAL_BREAKPOINT();
+
+        banana::log.dbg("redirecting nglPresent (movie_manager)");
+
+        if (!util::redirect_call(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &treyarch::ngl::present))
+            FATAL_BREAKPOINT();
+
+        banana::log.dbg("redirecting nglPresent (game::clear_screen)"); // temporary
+
+        if (!util::redirect_call(0x0097B04A, { 0xE8, 0xB1, 0xF4, 0x05, 0x00 }, &treyarch::ngl::present))
+            FATAL_BREAKPOINT();
 #endif
     }
 
