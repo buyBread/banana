@@ -7,9 +7,17 @@
 #include "treyarch/ngl/scene/scene.hh"
 
 namespace treyarch { namespace ngl {
+    enum e_buffer_type : u32 {
+        buffer_list_work,
+        buffer_scratch_index,
+        buffer_scratch_vertex,
+        buffer_platform_work
+    };
+
     ngl::scene* __cdecl init(HWND window);
     ngl::scene* __cdecl present();
     void __cdecl list_send();
+    void __cdecl set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
 
     using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
 

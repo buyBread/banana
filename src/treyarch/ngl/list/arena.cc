@@ -24,6 +24,21 @@ void* ngl::list::allocate(u32 size, u32 alignment) {
     return nullptr;
 }
 
+void ngl::list::replace_storage(u32 capacity) {
+    arena_state &state = references::arena.get();
+
+    if (state.base) {
+        memory::free(state.base);
+
+        state.base = nullptr;
+    }
+
+    if (capacity)
+        state.base = (u8*)memory::allocate(capacity, 8, 0);
+
+    state.capacity = capacity;
+}
+
 void ngl::list::rewind() {
     arena_state &state = references::arena.get();
 

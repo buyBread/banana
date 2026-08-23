@@ -16,7 +16,11 @@ namespace treyarch { namespace ngl { namespace d3d9 {
         u32                     vertex_buffer_size;
     };
 
-    void initialize_work_buffers();
+    void provision_default_work_buffers();
+    
+    void replace_scratch_index_buffers(u32 maximum_index_count);
+    void replace_scratch_vertex_buffers(u32 size);
+    void replace_platform_work_buffer(u32 size);
 
     namespace references {
         inline util::memory_reference<scratch_buffers> scratch_buffers           { 0x011185A0 };

@@ -28,7 +28,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
     ngl::name_runtime_texture(state.front_buffer, "nglFrontBuffer");
 
     D3DFORMAT df24 = (D3DFORMAT)four_cc('D', 'F', '2', '4');
-    D3DFORMAT df16 = (D3DFORMAT)four_cc('D', 'F', '1', '6');
+    D3DFORMAT df16 = (D3DFORMAT)four_cc('D', 'F', '1', '6'); // <-- these too
     // apparently, these are OG hacks for ATI / NVIDIA to sample depth buffers as textures?
     D3DFORMAT intz = (D3DFORMAT)four_cc('I', 'N', 'T', 'Z');
     D3DFORMAT rawz = (D3DFORMAT)four_cc('R', 'A', 'W', 'Z');

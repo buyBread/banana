@@ -12,6 +12,7 @@ namespace treyarch { namespace ngl { namespace list {
     };
 
     void* allocate(u32 size, u32 alignment);
+    void  replace_storage(u32 capacity);
     void  rewind();
 
     namespace references {
