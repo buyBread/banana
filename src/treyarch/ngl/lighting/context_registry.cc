@@ -31,20 +31,5 @@ void ngl::lighting::register_context(light_context* context) {
 }
 
 void ngl::lighting::reset_context_registry() {
-    context_registry* registry = light_context_registry.read();
-    
-    context_registry_node* head = registry->head;
-    context_registry_node* node = head->next;
-
-    head->next     = head;
-    head->previous = head;
-
-    registry->size = 0;
-
-    while (node != head) {
-        context_registry_node* next = node->next;
-
-        memory::game_heap::free_small_block(node);
-        node = next;
-    }
+    container::clear_legacy_list(light_context_registry.read());
 }

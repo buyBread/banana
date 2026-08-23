@@ -14,6 +14,10 @@ i32 get_window_dimensions() {
 
     RECT rect;
 
+    /*
+        scuffed!
+        we should own this on the bootstrap side instead of relying on banana's imgui
+    */
     if (imgui::store::handle_window) {
         GetClientRect(imgui::store::handle_window, &rect);
 

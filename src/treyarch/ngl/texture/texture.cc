@@ -2,6 +2,7 @@
 #include "treyarch/shared/memory/memory.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/texture/runtime.hh"
 #include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
@@ -54,6 +55,8 @@ void ngl::release_texture(texture* value) {
     if (!value)
         return;
 
+    bool owned = (value->flags & runtime_texture_owned) != 0;
+
     if (!can_release_texture(value))
         d3d9::wait_for_rendering();
 
@@ -71,6 +74,9 @@ void ngl::release_texture(texture* value) {
 
     if (value->render_target)
         value->render_target->Release();
+
+    if (owned)
+        memory::free(value);
 }
 
 void ngl::initialize_texture_directory() {

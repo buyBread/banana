@@ -13,6 +13,12 @@ namespace treyarch { namespace ngl {
         void*                vtable;
         render_node*         next;
         render_node_sort_key sort_key;
+
+        void render() {
+            using render_function = void(__thiscall*)(render_node*);
+
+            ((render_function*)vtable)[2](this);
+        }
     };
 
     struct render_sort_entry {
