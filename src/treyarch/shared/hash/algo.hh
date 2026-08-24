@@ -15,10 +15,10 @@ namespace treyarch { namespace hash {
         return hash;
     }
 
-    inline u32 crc2(const void* data, size_t size) {
+    inline u32 crc2(const void* data, size_t size, u32 previous_crc) {
         auto bytes = (const u8*)data;
 
-        u32 crc = 0xFFFFFFFFu;
+        u32 crc = ~previous_crc;
 
         for (size_t index = 0; index < size; ++index) {
             crc ^= bytes[index];
@@ -31,5 +31,9 @@ namespace treyarch { namespace hash {
         }
 
         return ~crc;
+    }
+
+    inline u32 crc2(const void* data, size_t size) {
+        return crc2(data, size, 0);
     }
 }} // treyarch::hash

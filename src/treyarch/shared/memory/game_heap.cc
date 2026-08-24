@@ -611,6 +611,28 @@ static game_heap_page* find_page(void* allocation) {
     ~500 lines later, the actual allocator API
 */
 
+void* memory::game_heap::allocate(u32 size) {
+    void* allocation = allocate_small_block(size);
+
+    if (allocation)
+        return allocation;
+
+    return allocate_game_heap_storage(size, 0);
+}
+
+void memory::game_heap::free(void* allocation) {
+    if (!allocation)
+        return;
+
+    if (find_page(allocation)) {
+        free_small_block(allocation);
+
+        return;
+    }
+
+    free_game_heap_storage(allocation);
+}
+
 void* memory::game_heap::allocate_small_block(u32 size) {
     game_heap_state*       state = game_heap_default.read();
     game_small_block_heap* heap  = state->small_block_heap;
