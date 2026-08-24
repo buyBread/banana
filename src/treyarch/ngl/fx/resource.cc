@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/resources/resolver.hh"
@@ -241,8 +241,8 @@ static void create_vertex_program(ngl::fx::effect   &value,
     if (!function.microcode)
         return;
 
-    ngl::d3d9::references::device.get()
-        ->CreateVertexShader(function.microcode, (IDirect3DVertexShader9**)&function.shader);
+    ngl::d3d9::shader_program_cache::create_vertex_program
+        (function.microcode, (IDirect3DVertexShader9**)&function.shader);
 
     initialize_function_bindings(value, function);
 }
@@ -253,8 +253,8 @@ static void create_pixel_program(ngl::fx::effect   &value,
     if (!function.microcode)
         return;
 
-    ngl::d3d9::references::device.get()
-        ->CreatePixelShader(function.microcode, (IDirect3DPixelShader9**)&function.shader);
+    ngl::d3d9::shader_program_cache::create_pixel_program
+        (function.microcode, (IDirect3DPixelShader9**)&function.shader);
 
     initialize_function_bindings(value, function);
 }

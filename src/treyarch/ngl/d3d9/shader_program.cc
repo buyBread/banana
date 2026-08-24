@@ -1,6 +1,6 @@
 #include "banana/logging.hh"
-#include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
+#include "treyarch/ngl/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/shaders/package_data.hh"
 #include "util/types.hh"
 
@@ -20,13 +20,8 @@ bool ngl::d3d9::vertex_program::create(shaders::shader_key key) {
         return false;
     }
 
-    if (shader_) {
-        shader_->Release();
-        shader_ = nullptr;
-    }
-
-    HRESULT result = references::device.read()
-        ->CreateVertexShader((const DWORD*)bytecode.data(), &shader_);
+    HRESULT result = shader_program_cache::create_vertex_program
+        ((const DWORD*)bytecode.data(), &shader_);
 
     if (FAILED(result)) {
         banana::log.err("failed to create vertex program \"{}\" (0x{:08X})",
@@ -57,13 +52,8 @@ bool ngl::d3d9::pixel_program::create(shaders::shader_key key) {
         return false;
     }
 
-    if (shader_) {
-        shader_->Release();
-        shader_ = nullptr;
-    }
-
-    HRESULT result = references::device.read()
-        ->CreatePixelShader((const DWORD*)bytecode.data(), &shader_);
+    HRESULT result = shader_program_cache::create_pixel_program
+        ((const DWORD*)bytecode.data(), &shader_);
 
     if (FAILED(result)) {
         banana::log.err("failed to create pixel program \"{}\" (0x{:08X})",

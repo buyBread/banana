@@ -1,5 +1,5 @@
-#include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/internal_programs.hh"
+#include "treyarch/ngl/d3d9/shader_program_cache.hh"
 
 using namespace treyarch;
 
@@ -24,29 +24,28 @@ static util::memory_reference<const DWORD> pixel_program_code_9                {
 static util::memory_reference<const DWORD> pixel_program_code_10               { 0x00DB9870 };
 
 void ngl::d3d9::initialize_internal_programs() {
-    IDirect3DDevice9*     device   = references::device.get();
     internal_program_set &programs = references::internal_programs.get();
 
-    device->CreateVertexShader(&vertex_program_code_0.get(), &programs.vertex_program_0);
-    device->CreatePixelShader (&pixel_program_code_0.get(),  &programs.pixel_program_0);
-    device->CreateVertexShader(&vertex_program_code_1.get(), &programs.vertex_program_1);
+    shader_program_cache::create_vertex_program(&vertex_program_code_0.get(), &programs.vertex_program_0);
+    shader_program_cache::create_pixel_program (&pixel_program_code_0.get(),  &programs.pixel_program_0);
+    shader_program_cache::create_vertex_program(&vertex_program_code_1.get(), &programs.vertex_program_1);
 
-    device->CreateVertexShader(&framebuffer_copy_vertex_program_code.get(), &programs.framebuffer_copy_vertex_program);
+    shader_program_cache::create_vertex_program(&framebuffer_copy_vertex_program_code.get(), &programs.framebuffer_copy_vertex_program);
 
-    device->CreateVertexShader(&vertex_program_code_3.get(), &programs.vertex_program_3);
-    device->CreateVertexShader(&vertex_program_code_4.get(), &programs.vertex_program_4);
-    device->CreateVertexShader(&vertex_program_code_5.get(), &programs.vertex_program_5);
-    device->CreateVertexShader(&vertex_program_code_6.get(), &programs.vertex_program_6);
-    device->CreatePixelShader (&pixel_program_code_1.get(),  &programs.pixel_program_1);
+    shader_program_cache::create_vertex_program(&vertex_program_code_3.get(), &programs.vertex_program_3);
+    shader_program_cache::create_vertex_program(&vertex_program_code_4.get(), &programs.vertex_program_4);
+    shader_program_cache::create_vertex_program(&vertex_program_code_5.get(), &programs.vertex_program_5);
+    shader_program_cache::create_vertex_program(&vertex_program_code_6.get(), &programs.vertex_program_6);
+    shader_program_cache::create_pixel_program (&pixel_program_code_1.get(),  &programs.pixel_program_1);
 
-    device->CreatePixelShader(&framebuffer_copy_pixel_program_code.get(), &programs.framebuffer_copy_pixel_program);
-    device->CreatePixelShader(&depth_copy_pixel_program_code.get(),       &programs.depth_copy_pixel_program);
-    device->CreatePixelShader(&rawz_depth_copy_pixel_program_code.get(),  &programs.rawz_depth_copy_pixel_program);
+    shader_program_cache::create_pixel_program(&framebuffer_copy_pixel_program_code.get(), &programs.framebuffer_copy_pixel_program);
+    shader_program_cache::create_pixel_program(&depth_copy_pixel_program_code.get(),       &programs.depth_copy_pixel_program);
+    shader_program_cache::create_pixel_program(&rawz_depth_copy_pixel_program_code.get(),  &programs.rawz_depth_copy_pixel_program);
 
-    device->CreatePixelShader(&pixel_program_code_5.get(),  &programs.pixel_program_5);
-    device->CreatePixelShader(&pixel_program_code_6.get(),  &programs.pixel_program_6);
-    device->CreatePixelShader(&pixel_program_code_7.get(),  &programs.pixel_program_7);
-    device->CreatePixelShader(&pixel_program_code_8.get(),  &programs.pixel_program_8);
-    device->CreatePixelShader(&pixel_program_code_9.get(),  &programs.pixel_program_9);
-    device->CreatePixelShader(&pixel_program_code_10.get(), &programs.pixel_program_10);
+    shader_program_cache::create_pixel_program(&pixel_program_code_5.get(),  &programs.pixel_program_5);
+    shader_program_cache::create_pixel_program(&pixel_program_code_6.get(),  &programs.pixel_program_6);
+    shader_program_cache::create_pixel_program(&pixel_program_code_7.get(),  &programs.pixel_program_7);
+    shader_program_cache::create_pixel_program(&pixel_program_code_8.get(),  &programs.pixel_program_8);
+    shader_program_cache::create_pixel_program(&pixel_program_code_9.get(),  &programs.pixel_program_9);
+    shader_program_cache::create_pixel_program(&pixel_program_code_10.get(), &programs.pixel_program_10);
 }
