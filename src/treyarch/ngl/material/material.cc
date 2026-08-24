@@ -8,6 +8,15 @@ ngl::material& ngl::get_default_material() {
     return references::default_material.get();
 }
 
+void ngl::initialize_default_material(shader* empty_shader) {
+          material     &value = references::default_material.get();
+    const fixed_string &name  = references::default_material_name.get();
+
+    value.name.text   = name.text;
+    value.name.hash   = name.hash;
+    value.shader_data = empty_shader;
+}
+
 void ngl::process_material(material* value) {
     string_hash shader_name((u32)value->shader_data);
     

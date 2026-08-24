@@ -1,6 +1,7 @@
 #include "treyarch/ngl/font/init.hh"
 #include "treyarch/ngl/init_list/init.hh"
 #include "treyarch/ngl/init_list/init_list.hh"
+#include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/shaders/registration.hh"
 
 using namespace treyarch;
@@ -10,6 +11,12 @@ void ngl::dispatch_init_list() {
         if (item == &references::font_init_list.get()) {
             font_init();
             
+            continue;
+        }
+
+        if (item == &references::default_shader.get()) {
+            initialize_default_material((shader*)item);
+
             continue;
         }
 
