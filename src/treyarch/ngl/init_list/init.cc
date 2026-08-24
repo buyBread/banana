@@ -1,5 +1,7 @@
+#include "treyarch/ngl/d3d9/geometry_stream.hh"
 #include "treyarch/ngl/font/init.hh"
 #include "treyarch/ngl/fx/init.hh"
+#include "treyarch/ngl/geometry_shader/geometry_shader.hh"
 #include "treyarch/ngl/init_list/init.hh"
 #include "treyarch/ngl/init_list/init_list.hh"
 #include "treyarch/ngl/material/material.hh"
@@ -27,9 +29,22 @@ void ngl::dispatch_init_list() {
             continue;
         }
 
-        if (shaders::registration::try_register(item))
+        if (item == &references::morph_geometry_shader_instance.get()) {
+            ((geometry_shader*)item)->geometry_shader::register_item();
+
+            continue;
+        }
+
+        if (item == &d3d9::geometry_stream::references::init_list.get()) {
+            d3d9::geometry_stream::init();
+
+            continue;
+        }
+
+        if (item == &references::no_op_init_list.get())
             continue;
 
-        item->register_item();
+        if (shaders::registration::try_register(item))
+            continue;
     }
 }
