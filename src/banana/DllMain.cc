@@ -50,7 +50,6 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
 
         if (!util::redirect_call(0x0097B04A, { 0xE8, 0xB1, 0xF4, 0x05, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();
-
 #endif
     }
 

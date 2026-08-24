@@ -25,6 +25,7 @@ namespace treyarch { namespace ngl {
     struct material_directory : container::skip_list<material, material_name> {};
 
     material &get_default_material();
+    void initialize_default_material(shader* empty_shader);
     void process_material(material* value);
     void initialize_material_directory();
 
@@ -39,6 +40,7 @@ namespace treyarch { namespace ngl {
 
     namespace references {
         inline util::memory_reference<material>           default_material { 0x01116160 };
+        inline util::memory_reference<fixed_string>       default_material_name { 0x01116174 };
         inline util::memory_reference<material_directory> materials        { 0x011161F0 };
     } // references
 
