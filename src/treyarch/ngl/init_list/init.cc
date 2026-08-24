@@ -1,4 +1,5 @@
 #include "treyarch/ngl/font/init.hh"
+#include "treyarch/ngl/fx/init.hh"
 #include "treyarch/ngl/init_list/init.hh"
 #include "treyarch/ngl/init_list/init_list.hh"
 #include "treyarch/ngl/material/material.hh"
@@ -16,6 +17,12 @@ void ngl::dispatch_init_list() {
 
         if (item == &references::default_shader.get()) {
             initialize_default_material((shader*)item);
+
+            continue;
+        }
+
+        if (item == &fx::references::init_list.get()) {
+            fx::init();
 
             continue;
         }

@@ -1,6 +1,7 @@
 #include <thread>
 #include <chrono>
 
+#include "flags.hh"
 #include "banana/core.hh"
 #include "banana/logging.hh"
 #include "banana/hooks/manager.hh"
@@ -31,7 +32,11 @@ namespace banana { namespace core {
         }
 
         hook_manager.install(HK_DEFAULT_CATEGORY);
+
+        // depend on addresses the bootstrap bulldozes over
+#if !NGL_BOOTSTRAP
         hook_manager.install("bandaids");
+#endif
         /*
             devel mode hooks go here too, just add clauses around purely debug mode code;
             otherwise doing some sort of debug / devel separation sounds like a structural headache...

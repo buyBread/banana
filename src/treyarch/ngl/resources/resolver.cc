@@ -1,4 +1,5 @@
 #include "treyarch/ngl/font/font.hh"
+#include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/morph.hh"
@@ -36,7 +37,7 @@ void* __cdecl ngl::resources::resolve(fixed_string* name, u32 type) {
         }
 
         case four_cc('F', 'X', '\0'): {
-            effect_resource* value = references::effects.get().find(name->hash);
+            fx::effect* value = fx::find(name->hash);
 
             if (!value)
                 memory::report("NGL: Unable to locate effect resource %s - bailing.\n", name->text);
