@@ -1,11 +1,11 @@
 #include "treyarch/amalga/file.hh"
 #include "treyarch/shared/four_cc.hh"
+#include "treyarch/ngl/geometry_shader/geometry_shader.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/init.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/morph.hh"
 #include "treyarch/ngl/shaders/shader.hh"
-#include "treyarch/ngl/d3d9/vertex_definition.hh"
 
 using namespace treyarch;
 
@@ -23,7 +23,7 @@ void ngl::mesh_init() {
     initialize_mesh_directory();
     initialize_material_directory();
     initialize_shader_bank();
-    initialize_vertex_definition_bank();
+    initialize_geometry_shader_bank();
 
     amalga::register_file_type(four_cc('M', 'O', 'R', 'H'),
                                1,
