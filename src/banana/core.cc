@@ -8,59 +8,55 @@
 
 #include "util/macros/debug.hh"
 
-namespace banana {
-    void thread() {
-        if (core::init())
-            core::spin();
+void banana::thread() {
+    if (core::init())
+        core::spin();
 
-        core::shutdown();
+    core::shutdown();
+}
+
+bool banana::core::init() {
+    for (;;) { // wait for yay
+        auto current = state::current();
+
+        if (current == e_lifecycle::ready)
+            break;
+
+        if (current == e_lifecycle::failed || current == e_lifecycle::stopping)
+            return false;
+
+        state::poll();
     }
-} // banana
 
-namespace banana { namespace core {
-    bool init() {
-        for (;;) { // wait for yay
-            auto current = state::current();
+    hook_manager.install(HK_DEFAULT_CATEGORY);
 
-            if (current == e_lifecycle::ready)
-                break;
-
-            if (current == e_lifecycle::failed || current == e_lifecycle::stopping)
-                return false;
-
-            state::poll();
-        }
-
-        hook_manager.install(HK_DEFAULT_CATEGORY);
-
-        /*
-            devel mode hooks go here too, just add clauses around purely debug mode code;
-            otherwise doing some sort of debug / devel separation sounds like a structural headache...
-        */
+    /*
+        devel mode hooks go here too, just add clauses around purely debug mode code;
+        otherwise doing some sort of debug / devel separation sounds like a structural headache...
+    */
 #ifndef NDEBUG
-        hook_manager.install("debug");
+    hook_manager.install("debug");
 #endif
 
-        return true;
+    return true;
+}
+
+void banana::core::spin() {
+    for (;;) { // wait for die
+        auto current = state::current();
+
+        if (current == e_lifecycle::failed)
+            FATAL_BREAKPOINT();
+
+        if (current == e_lifecycle::stopping)
+            return;
+
+        state::poll();
     }
+}
 
-    void spin() {
-        for (;;) { // wait for die
-            auto current = state::current();
+void banana::core::shutdown() {
+    hook_manager.shutdown();
 
-            if (current == e_lifecycle::failed)
-                FATAL_BREAKPOINT();
-
-            if (current == e_lifecycle::stopping)
-                return;
-
-            state::poll();
-        }
-    }
-
-    void shutdown() {
-        hook_manager.shutdown();
-
-        log.close();
-    }
-}} // banana::core
+    log.close();
+}

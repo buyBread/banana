@@ -16,12 +16,6 @@ namespace device_lifecycle {
     using Reset = HRESULT(WINAPI*)(IDirect3DDevice9*, D3DPRESENT_PARAMETERS*);
 } // device_lifecycle
 
-namespace bandaids {
-    using sub_9DDF10 = int(__cdecl*)(const DWORD*, IDirect3DPixelShader9**);
-    using sub_9EA950 = int(__cdecl*)(int renderer, DWORD* node);
-    using DrawIndexedPrimitive = HRESULT(WINAPI*)(IDirect3DDevice9*, D3DPRIMITIVETYPE, INT, UINT, UINT, UINT, UINT);
-} // bandaids
-
 namespace imgui {
     using GetRawInputData     = UINT(WINAPI*)(HRAWINPUT, UINT, LPVOID, PUINT, UINT);
     using SetCooperativeLevel = HRESULT(WINAPI*)(IDirectInputDevice8*, HWND, DWORD);
