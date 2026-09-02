@@ -13,6 +13,8 @@ void s_hook_manager::register_hook(i_hook* hook, const std::string &category) {
 }
 
 void s_hook_manager::install(const std::string &category) {    
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     this->init_minhook();
 
     auto hooks = this->get_category(category);
@@ -26,6 +28,8 @@ void s_hook_manager::install(const std::string &category) {
 }
 
 void s_hook_manager::uninstall(const std::string &category) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
@@ -45,6 +49,8 @@ void s_hook_manager::uninstall(const std::string &category) {
 }
 
 void s_hook_manager::uninstall(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hk = this->get_hook(category, name);
 
     if (!hk)
@@ -56,12 +62,16 @@ void s_hook_manager::uninstall(const std::string &category, const std::string &n
 }
 
 void s_hook_manager::shutdown() {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     for (const auto &[hk_category, _] : this->m_hooks) {
         this->uninstall(hk_category);
     }
 }
 
 void s_hook_manager::enable_hook(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     this->init_minhook();
 
     auto hk = this->get_hook(category, name);
@@ -74,6 +84,8 @@ void s_hook_manager::enable_hook(const std::string &category, const std::string 
 }
 
 void s_hook_manager::enable_hook_category(const std::string &category) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     this->init_minhook();
 
     auto hooks = this->get_category(category);
@@ -92,6 +104,8 @@ void s_hook_manager::enable_hook_all() {
 }
 
 void s_hook_manager::disable_hook(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hk = this->get_hook(category, name);
 
     if (!hk)
@@ -103,6 +117,8 @@ void s_hook_manager::disable_hook(const std::string &category, const std::string
 }
 
 void s_hook_manager::disable_hook_category(const std::string &category) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
@@ -118,7 +134,9 @@ void s_hook_manager::disable_hook_all() {
         disable_hook_category(hk_category);
 }
 
-bool s_hook_manager::is_category_enabled(const std::string &category) {    
+bool s_hook_manager::is_category_enabled(const std::string &category) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
@@ -132,6 +150,8 @@ bool s_hook_manager::is_category_enabled(const std::string &category) {
 }
 
 bool s_hook_manager::is_hook_enabled(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hk = this->get_hook(category, name);
 
     if (!hk)
@@ -141,6 +161,8 @@ bool s_hook_manager::is_hook_enabled(const std::string &category, const std::str
 }
 
 void* s_hook_manager::get_hook_detour_ptr(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hk = this->get_hook(category, name);
 
     if (!hk)
@@ -150,6 +172,8 @@ void* s_hook_manager::get_hook_detour_ptr(const std::string &category, const std
 }
 
 void* s_hook_manager::get_hook_original_ptr(const std::string &category, const std::string &name) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
     auto hk = this->get_hook(category, name);
 
     if (!hk)
@@ -173,9 +197,7 @@ i_hook* s_hook_manager::get_hook(const std::string &category, const std::string 
     return nullptr;
 }
 
-std::vector<i_hook*> s_hook_manager::get_category(const std::string &category) {
-    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
-    
+std::vector<i_hook*> s_hook_manager::get_category(const std::string &category) {    
     const auto it = m_hooks.find(category);
 
     if (it == m_hooks.end()) {
