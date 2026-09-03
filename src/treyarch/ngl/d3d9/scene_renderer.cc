@@ -5,6 +5,7 @@
 #include "treyarch/ngl/d3d9/scene_state.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/debug/debug.hh"
+#include "treyarch/ngl/fx/batch_renderer.hh"
 #include "treyarch/ngl/list/render_cursor.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -22,19 +23,6 @@ static DWORD float_bits(f32 value) {
 static void invoke_scene_callback(const ngl::scene_callback &callback) {
     if (callback.function)
         callback.function(callback.context);
-}
-
-static void render_fx_nodes_individually(ngl::render_node* head) {
-    /*
-        retail batches this queue by fx shader/material;
-        until that renderer is reconstructed, just call the node's own render slot directly
-    */
-    for (ngl::render_node* node = head; node;) {
-        ngl::render_node* next = node->next;
-
-        node->render();
-        node = next;
-    }
 }
 
 void ngl::d3d9::render_scene(scene* value) {
@@ -61,9 +49,7 @@ void ngl::d3d9::render_scene(scene* value) {
 
     bool depth_bias_changed = false;
 
-    if (value->depth_bias_enabled &&
-        (value->depth_bias != 0.0f || value->slope_scale_depth_bias != 0.0f)) {
-
+    if (value->depth_bias_enabled && (value->depth_bias != 0.0f || value->slope_scale_depth_bias != 0.0f)) {
         depth_bias_changed = true;
 
         set_render_state(D3DRS_DEPTHBIAS,
@@ -73,7 +59,7 @@ void ngl::d3d9::render_scene(scene* value) {
     }
 
     if (value->specialized_render_list_4)
-        render_fx_nodes_individually(value->specialized_render_list_4);
+        fx::render_batch(value->specialized_render_list_4);
 
     if (value->opaque_render_list_count)
         list::render_nodes(value->opaque_render_list);

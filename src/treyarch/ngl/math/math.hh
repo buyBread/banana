@@ -6,7 +6,8 @@
 
 // i'm not sure why they have two different precision PIs
 #define M_PI          3.1415926535897932384626433832795f 
-#define M_PI_OVER_TWO M_PI * 0.5f // this one's used in sin/asin/cos/acos lookup
+#define M_PI_TWO      (M_PI * 2.0f)
+#define M_PI_OVER_TWO (M_PI * 0.5f)
 
 inline constexpr f32 PI = 3.1415927f;
 
@@ -133,10 +134,4 @@ namespace treyarch { namespace ngl { namespace math {
     inline f32 fast_recip_sqrt(f32 x) {
         return 1.0f / (f32)sqrtf(x);
     }
-
-    /*
-        impl: fast sin/asin lookup tables, since they're missing from the .ii
-              all sin/cos/tan/asin/acos/atan methods require them.
-    */
-
 }}} // treyarch::ngl::math

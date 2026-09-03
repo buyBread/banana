@@ -18,7 +18,7 @@ struct effect_variant_family {
 
 struct effect_priority_prefix {
     const char* prefix;
-    i32         priority;
+          i32   priority;
 };
 
 static const effect_variant_family effect_variant_families[] {
@@ -183,15 +183,15 @@ static void initialize_binding(ngl::fx::effect           &value,
     u32 type = (u32)parameter.type;
 
     if (is_direct_binding_type(type)) {
-        binding.destination_type   = 1;
-        binding.destination_offset = (u32)parameter.data - (u32)value.parameter_data;
+        binding.source_class  = 1;
+        binding.source_offset = (u32)parameter.data - (u32)value.parameter_data;
 
         return;
     }
 
     if (is_indirect_texture_binding_type(type)) {
-        binding.destination_type   = 1;
-        binding.destination_offset = (u32)parameter.data - (u32)value.parameter_data + 0x10;
+        binding.source_class  = 1;
+        binding.source_offset = (u32)parameter.data - (u32)value.parameter_data + 0x10;
 
         return;
     }
@@ -207,25 +207,25 @@ static void initialize_binding(ngl::fx::effect           &value,
 
             resolve_texture_parameter(texture_parameter);
 
-            binding.destination_type   = 1;
-            binding.destination_offset = (u32)texture_parameter.data - (u32)value.parameter_data;
+            binding.source_class  = 1;
+            binding.source_offset = (u32)texture_parameter.data - (u32)value.parameter_data;
 
             return;
         }
     } else if (type == 16) {
-        binding.destination_type   = 3;
-        binding.destination_offset = 0;
+        binding.source_class  = 3;
+        binding.source_offset = 0;
 
         return;
     } else if (type == 22) {
-        binding.destination_type   = 2;
-        binding.destination_offset = 800;
+        binding.source_class  = 2;
+        binding.source_offset = 800;
 
         return;
     }
 
-    binding.destination_type   = binding.count == 3 ? 7 : 6;
-    binding.destination_offset = 0;
+    binding.source_class  = binding.destination_type == 3 ? 7 : 6;
+    binding.source_offset = 0;
 }
 
 static void initialize_function_bindings(ngl::fx::effect   &value,
@@ -299,7 +299,7 @@ static u32 specialized_view_direction_type(u32 component_mask) {
         case 0xC9: return 46;
         case 0xCE: return 50;
         case 0xF9: return 54;
-        default:   return (u32)ngl::fx::parameter_view_direction;
+        default:   return (u32)ngl::fx::parameter_scene_matrix;
     }
 }
 
@@ -307,7 +307,7 @@ static void specialize_parameter_types(ngl::fx::effect& value) {
     for (i32 index = 0; index < value.parameter_count; ++index) {
         ngl::fx::parameter &parameter = value.parameters[index];
 
-        if (parameter.type != ngl::fx::parameter_view_direction)
+        if (parameter.type != ngl::fx::parameter_scene_matrix)
             continue;
 
         u32 component_mask = *(u32*)((u8*)parameter.data + 0x40);
@@ -468,15 +468,15 @@ static ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     runtime->four_point_lights = nullptr;
 
     if (value.technique_count) {
-        runtime->technique_locks = (ngl::fx::reader_writer_lock*)
-            memory::game_heap::allocate_small_block(sizeof(ngl::fx::reader_writer_lock) * value.technique_count);
+        runtime->technique_batches = (ngl::fx::technique_batch*)
+            memory::game_heap::allocate_small_block(sizeof(ngl::fx::technique_batch) * value.technique_count);
 
         for (i32 index = 0; index < value.technique_count; ++index) {
-            runtime->technique_locks[index].readers = 0;
-            runtime->technique_locks[index].writer  = 0;
+            runtime->technique_batches[index].head  = nullptr;
+            runtime->technique_batches[index].count = 0;
         }
     } else
-        runtime->technique_locks = nullptr;
+        runtime->technique_batches = nullptr;
 
     runtime->next     = nullptr;
     runtime->priority = get_effect_priority(value);
@@ -498,9 +498,9 @@ static void destroy_effect_runtime(ngl::fx::effect &value) {
     runtime->two_point_lights  = nullptr;
     runtime->four_point_lights = nullptr;
 
-    if (runtime->technique_locks) {
-        memory::game_heap::free_small_block(runtime->technique_locks);
-        runtime->technique_locks = nullptr;
+    if (runtime->technique_batches) {
+        memory::game_heap::free_small_block(runtime->technique_batches);
+        runtime->technique_batches = nullptr;
     }
 
     runtime->next   = nullptr;
