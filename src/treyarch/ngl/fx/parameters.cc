@@ -93,6 +93,7 @@ static void write_vector(f32* destination, f32 x, f32 y, f32 z, f32 w) {
 }
 
 static void identity_matrix(f32* destination);
+static void copy_affine_matrix(f32* destination, const f32* source);
 
 static void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
     *(ngl::texture**)entry->data = value ? value : default_texture.read();
@@ -200,6 +201,37 @@ struct general_lighting_parameters {
     u8       data[0x610];
     texture* horizon_texture;
 };
+
+struct generated_light_data {
+    u32       flags;
+    u8        reserved_004[0x1C];
+    vector4   direction;
+    u8        reserved_030[0x10];
+    vector4   position;
+    matrix4x4 projector_matrix;
+    vector4   color;
+    texture*  projector_texture;
+    f32       activity;
+    f32       inner_radius;
+    f32       outer_radius;
+    u8        reserved_0B0[0x10];
+    f32       attenuation_inner;
+    f32       attenuation_outer;
+    u8        reserved_0C8[0x0C];
+    f32       direction_w;
+    u8        reserved_0D8[0x04];
+    i32       projector_config_0;
+    i32       projector_config_1;
+    u8        reserved_0E4[0x0C];
+};
+
+struct context_point_light_data {
+    vector4 position;
+    vector4 color;
+};
+
+static_assert(sizeof(generated_light_data) == 0xF0);
+static_assert(sizeof(context_point_light_data) == 0x20);
 
 static f32* general_vector(general_lighting_parameters* value, u32 offset) {
     return (f32*)(value->data + offset);
@@ -391,8 +423,298 @@ static void write_general_primary_block(      general_lighting_parameters* value
     add_general_directional_light(value, source, true);
 }
 
+static void get_world_sphere_center(      f32*                     destination,
+                                    const ngl::fx::mesh_node_data* node_data,
+                                    const ngl::mesh_section*       section) {
+
+    const f32* matrix = (const f32*)&node_data->local_to_world;
+    f32 x = section->sphere[0];
+    f32 y = section->sphere[1];
+    f32 z = section->sphere[2];
+
+    destination[0] = matrix[0] * x + matrix[4] * y + matrix[ 8] * z + matrix[12];
+    destination[1] = matrix[1] * x + matrix[5] * y + matrix[ 9] * z + matrix[13];
+    destination[2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14];
+    destination[3] = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
+}
+
+static f32 get_inverse_node_transform(      f32*                     destination,
+                                      const ngl::fx::mesh_node_data* node_data) {
+
+    inverse_orthonormal_matrix(destination,
+                               (const f32*)&node_data->local_to_world);
+
+    if (!(node_data->node_info[0] & 2))
+        return 1.0f;
+
+    const f32* scales = (const f32*)(node_data->node_info + 0x10);
+    f32 inverse_scale_squared[4];
+
+    for (u32 index = 0; index < 4; ++index) {
+        f32 inverse_scale = 1.0f / scales[index];
+        inverse_scale_squared[index] = inverse_scale * inverse_scale;
+    }
+
+    for (u32 row = 0; row < 4; ++row)
+        for (u32 column = 0; column < 4; ++column)
+            destination[4 * row + column] *= inverse_scale_squared[column];
+
+    return 1.0f / node_data->scale;
+}
+
+static bool local_light_intersects_mesh(const f32*                     position,
+                                              f32                      outer_radius,
+                                        const f32*                     world_center,
+                                        const f32*                     inverse_transform,
+                                              f32                      inverse_scale,
+                                        const ngl::fx::mesh_node_data* node_data) {
+
+    f32 delta_x = position[0] - world_center[0];
+    f32 delta_y = position[1] - world_center[1];
+    f32 delta_z = position[2] - world_center[2];
+    f32 mesh_radius = node_data->scale * *(f32*)(node_data->mesh_data + 0x2C);
+    f32 combined_radius = outer_radius + mesh_radius;
+
+    if (combined_radius * combined_radius <
+        delta_x * delta_x + delta_y * delta_y + delta_z * delta_z) {
+
+        return false;
+    }
+
+    f32 local_x = inverse_transform[0] * delta_x +
+                  inverse_transform[4] * delta_y +
+                  inverse_transform[8] * delta_z;
+    f32 local_y = inverse_transform[1] * delta_x +
+                  inverse_transform[5] * delta_y +
+                  inverse_transform[9] * delta_z;
+    f32 local_z = inverse_transform[2] * delta_x +
+                  inverse_transform[6] * delta_y +
+                  inverse_transform[10] * delta_z;
+
+    const f32* extents = (const f32*)(node_data->mesh_data + 0x30);
+    f32 absolute_x = std::fabs(local_x);
+    f32 absolute_y = std::fabs(local_y);
+    f32 absolute_z = std::fabs(local_z);
+    f32 outside_x = absolute_x - (absolute_x <= extents[0] ? absolute_x : extents[0]);
+    f32 outside_y = absolute_y - (absolute_y <= extents[1] ? absolute_y : extents[1]);
+    f32 outside_z = absolute_z - (absolute_z <= extents[2] ? absolute_z : extents[2]);
+    f32 local_radius = inverse_scale * outer_radius;
+
+    return local_radius * local_radius >=
+           outside_x * outside_x + outside_y * outside_y + outside_z * outside_z;
+}
+
+static void add_general_generated_light(      general_lighting_parameters* value,
+                                        const generated_light_data*        light,
+                                              f32                          inverse_scale) {
+
+    i32 &count = general_integer(value, 0x1A0);
+
+    write_vector(general_vector(value, 0x210 + 0x10 * count),
+                 light->position.x,
+                 light->position.y,
+                 light->position.z,
+                 1.0f);
+
+    write_vector(general_vector(value, 0x250 + 0x10 * count),
+                 light->direction.x,
+                 light->direction.y,
+                 light->direction.z,
+                 light->direction_w);
+
+    std::memcpy(general_vector(value, 0x290 + 0x10 * count),
+                &light->color,
+                sizeof(vector4));
+
+    f32 inner_radius = light->inner_radius * inverse_scale;
+    f32 outer_radius = light->outer_radius * inverse_scale;
+    f32 inner_squared = inner_radius * inner_radius;
+    f32 outer_squared = outer_radius * outer_radius;
+    f32 radial_scale    = 1.0f / (inner_squared - outer_squared);
+    f32 secondary_scale = 1.0f / (light->attenuation_inner - light->attenuation_outer);
+
+    write_vector(general_vector(value, 0x2D0 + 0x10 * count),
+                 radial_scale,
+                 -outer_squared * radial_scale,
+                 secondary_scale,
+                 -light->attenuation_outer * secondary_scale);
+
+    texture* &projector_texture = *(texture**)(value->data + 0x560);
+
+    if (!projector_texture && light->projector_texture) {
+        projector_texture = light->projector_texture;
+        std::memcpy(general_vector(value, 0x4C0),
+                    &light->projector_matrix,
+                    sizeof(matrix4x4));
+        general_integer(value, 0x564) = light->projector_config_0;
+        general_integer(value, 0x568) = light->projector_config_1;
+        general_integer(value, 0x56C) = count;
+    }
+
+    ++count;
+}
+
+static void add_general_point_light(      general_lighting_parameters* value,
+                                    const context_point_light_data*    light,
+                                          f32                          local_radius) {
+
+    i32 &count = general_integer(value, 0x1A0);
+
+    write_vector(general_vector(value, 0x210 + 0x10 * count),
+                 light->position.x,
+                 light->position.y,
+                 light->position.z,
+                 1.0f);
+    write_vector(general_vector(value, 0x250 + 0x10 * count),
+                 0.0f, -1.0f, 0.0f, 0.0f);
+    std::memcpy(general_vector(value, 0x290 + 0x10 * count),
+                &light->color,
+                sizeof(vector4));
+
+    f32 radius_squared = local_radius * local_radius;
+    write_vector(general_vector(value, 0x2D0 + 0x10 * count),
+                 -1.0f / radius_squared,
+                 1.0f,
+                 0.0f,
+                 1.0f);
+
+    ++count;
+}
+
+static void reorder_general_lights(general_lighting_parameters* value) {
+    i32 &count = general_integer(value, 0x1A0);
+    i32 &projector_index = general_integer(value, 0x56C);
+    i32 &special_index = general_integer(value, 0x570);
+
+    if (*(texture**)(value->data + 0x560) && projector_index != 1) {
+        copy_general_vector(value,
+                            0x210 + 0x10,
+                            general_vector(value, 0x210 + 0x10 * projector_index));
+        copy_general_vector(value,
+                            0x250 + 0x10,
+                            general_vector(value, 0x250 + 0x10 * projector_index));
+        copy_general_vector(value,
+                            0x290 + 0x10,
+                            general_vector(value, 0x290 + 0x10 * projector_index));
+        copy_general_vector(value,
+                            0x2D0 + 0x10,
+                            general_vector(value, 0x2D0 + 0x10 * projector_index));
+
+        if (count < 2)
+            count = 2;
+
+        if (special_index == 1)
+            special_index = projector_index;
+
+        projector_index = 1;
+    }
+
+    if (special_index != -1) {
+        copy_general_vector(value,
+                            0x210,
+                            general_vector(value, 0x210 + 0x10 * special_index));
+        copy_general_vector(value,
+                            0x250,
+                            general_vector(value, 0x250 + 0x10 * special_index));
+        copy_general_vector(value,
+                            0x290,
+                            general_vector(value, 0x290 + 0x10 * special_index));
+        copy_general_vector(value,
+                            0x2D0,
+                            general_vector(value, 0x2D0 + 0x10 * special_index));
+        special_index = 0;
+    }
+}
+
+static void gather_general_local_lights(      general_lighting_parameters*  value,
+                                        const ngl::fx::mesh_node_data*      node_data,
+                                        const ngl::mesh_section*            section,
+                                        const ngl::lighting::light_context* context,
+                                              bool                          include_disabled) {
+
+    if (general_integer(value, 0x1A0) >= 4)
+        return;
+
+    f32 world_center[4];
+    f32 inverse_transform[16];
+    get_world_sphere_center(world_center, node_data, section);
+    f32 inverse_scale = get_inverse_node_transform(inverse_transform, node_data);
+
+    u8* source = *(u8**)(value->data + 0x190);
+    u32 source_index = include_disabled ? 2 : 0;
+    generated_light_data* generated_lights =
+        *(generated_light_data**)(source + 0x2F4 + 4 * source_index);
+    i32 generated_light_count = *(i32*)(source + 0x304 + 4 * source_index);
+
+    for (i32 index = 0; index < generated_light_count; ++index) {
+        generated_light_data* light = generated_lights + index;
+
+        if (!local_light_intersects_mesh((const f32*)&light->position,
+                                         light->outer_radius,
+                                         world_center,
+                                         inverse_transform,
+                                         inverse_scale,
+                                         node_data)) {
+
+            continue;
+        }
+
+        add_general_generated_light(value, light, inverse_scale);
+
+        if (general_integer(value, 0x1A0) >= 4)
+            return;
+    }
+
+    const ngl::lighting::light_node* node = context->head.next;
+
+    while (node != &context->head) {
+        if (node->type == ngl::lighting::light_generated) {
+            auto* light = (generated_light_data*)node->node_data;
+
+            if ((!include_disabled && (light->flags & 2)) ||
+                !local_light_intersects_mesh((const f32*)&light->position,
+                                             light->outer_radius,
+                                             world_center,
+                                             inverse_transform,
+                                             inverse_scale,
+                                             node_data)) {
+
+                node = node->next;
+
+                continue;
+            }
+
+            add_general_generated_light(value, light, inverse_scale);
+        } else if (node->type == ngl::lighting::light_point) {
+            auto* light = (context_point_light_data*)node->node_data;
+
+            if (!local_light_intersects_mesh((const f32*)&light->position,
+                                             light->position.w,
+                                             world_center,
+                                             inverse_transform,
+                                             inverse_scale,
+                                             node_data)) {
+
+                node = node->next;
+
+                continue;
+            }
+
+            add_general_point_light(value,
+                                    light,
+                                    inverse_scale * light->position.w);
+        }
+
+        if (general_integer(value, 0x1A0) >= 4)
+            return;
+
+        node = node->next;
+    }
+}
+
 static void build_general_lighting(      general_lighting_parameters* value,
-                                   const ngl::fx::mesh_node_data*     node_data) {
+                                   const ngl::fx::mesh_node_data*     node_data,
+                                   const ngl::mesh_section*           section) {
 
     initialize_general_lighting(value);
 
@@ -557,6 +879,13 @@ static void build_general_lighting(      general_lighting_parameters* value,
         if (general_integer(value, 0x1A0) >= 4)
             break;
     }
+
+    gather_general_local_lights(value,
+                                node_data,
+                                section,
+                                context,
+                                include_disabled);
+    reorder_general_lights(value);
 
     if (*(u32*)node_data->node_info & 2) {
         f32 inverse_scale_squared = 1.0f / (node_data->scale * node_data->scale);
@@ -1006,7 +1335,7 @@ void ngl::fx::update_material_parameters(effect*         value,
     texture* active_horizon_texture = nullptr;
 
     if (!subset_effect) {
-        build_general_lighting(&general_lighting, node_data);
+        build_general_lighting(&general_lighting, node_data, section);
         active_horizon_texture = general_lighting.horizon_texture;
     } else if (!depth_bias_enabled) {
         get_subset_lighting(&lighting, node_data);

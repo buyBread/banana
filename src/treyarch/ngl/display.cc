@@ -1,39 +1,37 @@
+#include <mutex>
 #include <windows.h>
 
-#include "banana/imgui/imgui.hh"
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/display.hh"
 
 using namespace treyarch;
 
-i32 get_window_dimensions() {
-    using namespace banana;
+u32 get_window_dimensions() {
+    static u32 dimensions = (640 << 16) | 480;
 
-    i16 width  = 640;
-    i16 height = 480;
+    static bool got_rect = false;
 
-    RECT rect;
+    if (!got_rect) {
+        RECT rect {};
 
-    /*
-        scuffed!
-        we should own this on the bootstrap side instead of relying on banana's imgui
-    */
-    if (imgui::store::handle_window) {
-        GetClientRect(imgui::store::handle_window, &rect);
-
-        width  = i16(rect.right  - rect.left);
-        height = i16(rect.bottom - rect.top);
+        if (GetClientRect(ngl::references::render_window.get(), &rect)) {
+            dimensions  = u32(u16(rect.right  - rect.left)) << 16;
+            dimensions |=     u16(rect.bottom - rect.top);
+            
+            got_rect = true;
+        }
     }
 
-    return (i32)(width << 16 | height);
+    return dimensions;
 }
 
-i16 ngl::get_screen_width() {
-    return (i16)(get_window_dimensions() >> 16 & 0xFFFF);
+u16 ngl::get_screen_width() {
+    return (u16)(get_window_dimensions() >> 16 & 0xFFFF);
 }
 
-i16 ngl::get_screen_height() {
-    return (i16)(get_window_dimensions() & 0xFFFF);
+u16 ngl::get_screen_height() {
+    return (u16)(get_window_dimensions() & 0xFFFF);
 }
 
 f32 ngl::get_vblank_milliseconds() {

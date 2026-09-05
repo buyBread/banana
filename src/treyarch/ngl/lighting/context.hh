@@ -12,7 +12,8 @@ namespace lighting {
         light_point                 = 0,
         light_directional           = 1,
         light_projected_directional = 2,
-        light_user_first            = 3
+        light_user_first            = 3,
+        light_generated             = 5
     };
 
     struct light_node {
