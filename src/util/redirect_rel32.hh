@@ -2,15 +2,18 @@
 
 #include <cstring>
 #include <type_traits>
-
 #include <windows.h>
+#include <cassert>
 
 #include "util/types.hh"
 #include "banana/logging.hh"
 
 namespace util {
     template <typename fn, size_t n> // template for the static_assert
-    bool redirect_call(u32 address, const u8 (&expected_instruction)[n], fn target) {
+    bool redirect_rel32(u32 address, const u8 (&expected_instruction)[n], fn target) {
+        assert(expected_instruction[0] == 0xE8);
+        assert(n == 5);
+
         constexpr bool function_pointer = std::is_pointer_v<fn> &&
                                           std::is_function_v<std::remove_pointer_t<fn>>;
 

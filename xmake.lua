@@ -108,6 +108,8 @@ target(name)
         target:add("defines", "GIT_COMMIT_HASH=\""..git_hash.."\"")
     end)
 
+    add_defines("BANANA_VERSION=\""..version.."\"")
+
     add_files      ("src/**.cc")
     remove_files   ("src/tools/**.cc")
     add_files      ("src/treyarch/ngl/shaders/resources.rc")

@@ -81,6 +81,32 @@ class s_logging : public util::singleton<s_logging> {
         std::filesystem::create_directories(dir);
 
         m_file = std::fopen(fp.string().c_str(), "a");
+
+#if ALLOCATE_CONSOLE
+#define PRINT(str, ...) std::printf("  %s\n", std::format(str, __VA_ARGS__).c_str())
+
+        PRINT("");
+        PRINT("===================== banana =====================");
+        PRINT(" version    -- {}", BANANA_VERSION);
+        PRINT(" git commit -- {}", GIT_COMMIT_HASH);
+#ifdef DEBUG
+        PRINT(" build mode -- debug");
+#elifdef NDEBUG
+        PRINT(" build mode -- release");
+#else
+        PRINT(" build mode -- devel");
+#endif
+        PRINT(" log file   -- {}", fp.string().c_str());
+        PRINT("----------- flags -----------");
+        PRINT(" ALWAYS_FLUSH     -- {}", ALWAYS_FLUSH);
+        PRINT(" NGL_BOOTSTRAP    -- {}", NGL_BOOTSTRAP);
+        PRINT(" ALLOCATE_CONSOLE -- {}", ALLOCATE_CONSOLE);
+        PRINT(" OPTIMIZE_FLAGS   -- {}", OPTIMIZE_FLAGS);
+        PRINT("==================================================");
+        PRINT("");
+
+#undef PRINT
+#endif
     }
 
     void enqueue(log_entry &&entry) {

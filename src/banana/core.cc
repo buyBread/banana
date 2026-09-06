@@ -29,7 +29,7 @@ bool banana::core::init() {
         if (current == e_lifecycle::failed || current == e_lifecycle::stopping)
             return false;
 
-        state::poll();
+        WAIT_BANANA_STATE(current);
     }
 
     hook_manager.install(HK_DEFAULT_CATEGORY);
@@ -55,7 +55,7 @@ void banana::core::spin() {
         if (current == e_lifecycle::stopping)
             return;
 
-        state::poll();
+        WAIT_BANANA_STATE(current);
     }
 }
 

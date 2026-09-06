@@ -94,6 +94,9 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
 
         if (store::handle_steam_overlay)
             banana::log.msg("Steam Overlay detected");
+
+        if (store::handle_reshade)
+            banana::log.msg("ReShade (DX9) detected");
     });
 
     IDirect3D9* result = nullptr;

@@ -4,9 +4,11 @@
 #include <cstdio>
 #include <mutex>
 
+#include "flags.hh"
+
 namespace util {
     inline void allocate_console() {
-#ifdef NDEBUG
+#if !ALLOCATE_CONSOLE
         return;
 #endif
         static std::once_flag allocate_once;

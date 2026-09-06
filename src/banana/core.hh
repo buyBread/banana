@@ -7,6 +7,8 @@
 #include "banana/logging.hh"
 #include "banana/lifecycle.hh"
 
+#define WAIT_BANANA_STATE(x) banana::store::_state.wait(x, std::memory_order_acquire);
+
 namespace banana {
     extern void thread();
 
@@ -42,10 +44,6 @@ namespace banana {
 
             store::_state.store(next, std::memory_order_release);
             store::_state.notify_all();
-        }
-
-        inline void poll() {
-            store::_state.wait(current(), std::memory_order_acquire);
         }
     } // state
 
