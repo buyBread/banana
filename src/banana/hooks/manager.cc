@@ -62,8 +62,6 @@ void s_hook_manager::uninstall(const std::string &category, const std::string &n
 }
 
 void s_hook_manager::shutdown() {
-    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
-
     for (const auto &[hk_category, _] : this->m_hooks) {
         this->uninstall(hk_category);
     }
