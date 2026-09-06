@@ -9,10 +9,14 @@
 #include "util/macros/debug.hh"
 
 void banana::thread() {
+    log.start();
+
     if (core::init())
         core::spin();
 
     core::shutdown();
+
+    log.close();
 }
 
 bool banana::core::init() {
@@ -57,6 +61,4 @@ void banana::core::spin() {
 
 void banana::core::shutdown() {
     hook_manager.shutdown();
-
-    log.close();
 }

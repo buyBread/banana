@@ -83,7 +83,7 @@ class s_logging : public util::singleton<s_logging> {
         m_file = std::fopen(fp.string().c_str(), "a");
     }
 
-    void enqueue(log_entry&& entry) {
+    void enqueue(log_entry &&entry) {
         bool notify = false;
 
         {
@@ -202,13 +202,17 @@ class s_logging : public util::singleton<s_logging> {
     }
 
 public:
-    s_logging() :
-        m_worker([this](std::stop_token stop) {
-            worker_loop(stop);
-        }) {}
-
     ~s_logging() {
         close();
+    }
+
+    void start() {
+        if (m_worker.joinable())
+            return;
+
+        m_worker = std::jthread([this](std::stop_token stop) {
+            worker_loop(stop);
+        });
     }
 
     void close() {

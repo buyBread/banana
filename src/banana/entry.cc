@@ -24,6 +24,7 @@
 static_assert(sizeof(void*) == 4, "ensure compile architecture is 32-bit");
 
 #include <windows.h>
+#include <mutex>
 
 #include "util/gimmie/dll.hh"
 #include "util/gimmie/method.hh"
@@ -32,7 +33,7 @@ static_assert(sizeof(void*) == 4, "ensure compile architecture is 32-bit");
 #include "banana/logging.hh"
 #include "banana/hooks/manager.hh"
 
-IDirect3D9* direct3dcreate9(HMODULE module, UINT SDKVersion) {
+IDirect3D9* direct3d_create_9(HMODULE module, UINT SDKVersion) {
     auto address = util::gimmie::method(module, "Direct3DCreate9");
 
     // nice syntax...
@@ -41,23 +42,37 @@ IDirect3D9* direct3dcreate9(HMODULE module, UINT SDKVersion) {
 }
 
 IDirect3D9* acquire_d3d9(UINT SDKVersion) {
-    IDirect3D9* d3d9 = nullptr;
+    using namespace banana;
 
-    if (banana::store::handle_dxvk && !banana::store::d3d9) { // only serve DXVK to mememe
-        d3d9 = direct3dcreate9(banana::store::handle_dxvk, SDKVersion);
+    HMODULE     backend = nullptr;
+    std::string backend_name;
 
-        banana::log.dbg("serving IDirect3D9 from DXVK; SDKVersion: {}", SDKVersion);
-    } else {
-        d3d9 = direct3dcreate9(util::gimmie::dll("d3d9.dll"), SDKVersion);
+    if (!store::d3d9) { // only serve exotic to mememe
+        if (store::handle_reshade) {
+            backend      = banana::store::handle_reshade;
+            backend_name = "ReShade";
 
-        banana::log.dbg("serving IDirect3D9 from DirectX9; SDKVersion: {}", SDKVersion);
+        } else if (store::handle_dxvk) {
+            backend      = store::handle_dxvk;
+            backend_name = "DXVK";
+        }
     }
 
-    return d3d9;
+    if (!backend) {
+        backend      = util::gimmie::dll("d3d9.dll");
+        backend_name = "System32";
+    }
+
+    banana::log.dbg("serving IDirect3D9 from {} (SDKVersion: {})", backend_name, SDKVersion);
+
+    return direct3d_create_9(backend, SDKVersion);
 }
 
 extern "C" {
 __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
+    static std::mutex d3d9_mutex;
+    std::lock_guard<std::mutex> lock(d3d9_mutex);
+
     using namespace banana;
 
     static std::once_flag init; // in case anything loads native d3d9.dll (us) over system32's
@@ -72,6 +87,7 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
         store::handle_d3dx          = util::gimmie::dll("d3dx9_43.dll"); // we need this because d3dcompiler.h doesn't export D3DAssemble(??)
         store::handle_dxvk          = util::gimmie::dll_unsafe("dxvk.dll");
         store::handle_steam_overlay = util::gimmie::module_unsafe("GameOverlayRenderer.dll");
+        store::handle_reshade       = util::gimmie::dll_unsafe("reshade/d3d9.dll");
 
         if (store::handle_dxvk)
             banana::log.msg("DXVK detected");
@@ -85,13 +101,8 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
     if (!store::d3d9) {
         store::d3d9 = acquire_d3d9(SDKVersion);
 
-        result = store::d3d9; /* i don't actually know what i'm doing here... (kinda)
-                                 in short though, i'm assuming that there's a chance that something might try to probe directx9 (then delete the instance);
-                                 solution? fetch ours once and give it here once, then just get a new instance every other time.
-                                 "will this happen?" idk. "what if the game isn't the first caller?" honestly, tough luck.
-                                 i don't want to write another wrapper for this see if Release() is called before we get a device. */
+        result = store::d3d9; // implicitly assumes the game will always be the first to ask for it
         
-
         // also responsible for initializing ImGui
         banana::hook_manager.enable_hook("device_lifecycle", "CreateDevice");
     } else

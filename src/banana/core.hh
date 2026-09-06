@@ -20,6 +20,7 @@ namespace banana {
         inline HMODULE handle_d3dx          = nullptr;
         inline HMODULE handle_dxvk          = nullptr;
         inline HMODULE handle_steam_overlay = nullptr; // GameOverlayRenderer
+        inline HMODULE handle_reshade       = nullptr;
 
         // they're really only here for tracking them outside the bootstrapped NGL
         // should not be used in any capacity beyond reading from them
