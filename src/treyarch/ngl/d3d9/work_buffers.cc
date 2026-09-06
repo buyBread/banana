@@ -96,6 +96,7 @@ void ngl::d3d9::provision_default_work_buffers() {
     if (!scratch.vertex_buffer_size)
         ngl::set_buffer_size(ngl::buffer_scratch_vertex, 0x800000, true, true);
 
+    // pc doesn't have a default platform work buffer.
     if (!references::platform_work_buffer_size.read())
         ngl::set_buffer_size(ngl::buffer_platform_work, 0, true, true);
 }

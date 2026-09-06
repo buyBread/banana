@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 
 #include "treyarch/ngl/shaders/sm_phat_palette_normal/programs.hh"
@@ -23,10 +24,10 @@ bool ngl::shaders::sm_phat_palette_normal::initialize() {
     if (!material_vertex_program.create({ e_shader_program::sm_phat_palette_normal_material_vertex }))
         return false;
 
-    for (size_t index = 0; index < pixel_programs.size(); ++index) {
-        if (!pixel_programs[index].create({ e_shader_program::sm_phat_palette_normal_material_pixel, (u16)index }))
-            return false;
-    }
+    if (!create_program_range(
+            pixel_programs,
+            e_shader_program::sm_phat_palette_normal_material_pixel))
+        return false;
 
     if (!depth_shadow_vertex_program.create({ e_shader_program::sm_phat_palette_normal_depth_shadow_vertex }))
         return false;
@@ -71,10 +72,5 @@ IDirect3DPixelShader9* ngl::shaders::sm_phat_palette_normal::get_pixel_program(e
         return sampler_passthrough_pixel_program.get();
     }
 
-    size_t index = (size_t)variant;
-
-    if (index >= pixel_programs.size())
-        return nullptr;
-
-    return pixel_programs[index].get();
+    return get_program(pixel_programs, variant);
 }

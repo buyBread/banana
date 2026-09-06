@@ -4,18 +4,19 @@
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
+#include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 
 using namespace treyarch;
 
-static util::memory_reference<u32> parameter_id_mesh_runs     { 0x011171E0 };
+static util::memory_reference<u32> parameter_id_mesh_runs { 0x011171E0 };
 
-static void draw_single_pass(ngl::fx::render_node* value) {
+void draw_single_pass(ngl::fx::render_node* value) {
     ngl::scene_parameters* parameters = value->node_data->parameters;
     u32 parameter_id = parameter_id_mesh_runs.read();
 
-    if (ngl::fx::has_scene_parameter(parameters, parameter_id)) {
-        const i32* runs = (const i32*)ngl::fx::get_scene_parameter(parameters, parameter_id);
+    if (ngl::has_scene_parameter(parameters, parameter_id)) {
+        const i32* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);
         ngl::d3d9::draw_mesh_section_runs(value->section, runs);
     } else
         ngl::d3d9::draw_mesh_section_individual(value->section);

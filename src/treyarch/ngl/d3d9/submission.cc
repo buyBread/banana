@@ -19,7 +19,7 @@ static util::memory_reference <f32> performance_counts_per_millisecond { 0x00F51
 static util::memory_reference
     <container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };
 
-static u64 query_performance_cycles() {
+u64 query_performance_cycles() {
     LARGE_INTEGER counter;
 
     QueryPerformanceCounter(&counter);
@@ -27,13 +27,8 @@ static u64 query_performance_cycles() {
     return (u64)counter.QuadPart;
 }
 
-static f32 cycles_to_milliseconds(u64 cycles) {
+f32 cycles_to_milliseconds(u64 cycles) {
     return (f32)((f64)cycles / (f64)performance_counts_per_millisecond.read());
-}
-
-static void invoke_submission_callback(const ngl::scene_callback &callback) {
-    if (callback.function)
-        callback.function(callback.context);
 }
 
 void ngl::d3d9::submit_list() {
@@ -53,18 +48,18 @@ void ngl::d3d9::submit_list() {
     device->EndScene();
 
     reset_bindings();
-    invoke_submission_callback(references::submission_callback_1.get());
+    references::submission_callback_1.get().invoke();
 
     list::arena_state &arena = list::references::arena.get();
 
     performance.list_work_bytes_used = (u32)arena.cursor - (u32)arena.base;
     performance.list_submit_milliseconds = cycles_to_milliseconds(query_performance_cycles() - performance.list_send_cycles);
 
-    invoke_submission_callback(references::submission_callback_0.get());
+    references::submission_callback_0.get().invoke();
 
     performance.cpu_milliseconds = cycles_to_milliseconds(query_performance_cycles() - performance.render_finish);
 
-    invoke_submission_callback(references::submission_callback_2.get());
+    references::submission_callback_2.get().invoke();
 
     flip();
 

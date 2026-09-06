@@ -5,6 +5,25 @@
 
 using namespace treyarch;
 
+/*
+    two words say which values are present, followed by the values themselves.
+    a value can still be present when it's zero, so checking for it and reading it have to stay separate.
+*/
+bool ngl::has_scene_parameter(const scene_parameters* parameters, u32 id) {
+    const u32* words = (const u32*)parameters;
+
+    return (words[id >> 5] & (1u << (id & 31))) != 0;
+}
+
+void* ngl::get_scene_parameter(const scene_parameters* parameters, u32 id) {
+    return (void*)parameters->values[id];
+}
+
+void* ngl::find_scene_parameter(const scene_parameters* parameters, u32 id) {
+    return has_scene_parameter(parameters, id) ?
+        get_scene_parameter(parameters, id) : nullptr;
+}
+
 u32 ngl::get_scene_parameter_set_size() {
     return 4 * references::scene_parameter_count.read() + 8;
 }

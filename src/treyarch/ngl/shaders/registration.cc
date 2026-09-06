@@ -44,15 +44,15 @@ struct registration_override {
     void (*register_item)();
 };
 
-static void initialize_programs(const char* name, program_initializer initialize) {
+void initialize_programs(const char* name, program_initializer initialize) {
     if (!initialize())
         banana::log.err("failed to initialize the \"{}\" shader programs", name);
 }
 
-static void register_shader(      ngl::shader        &value,
-                                  ngl::e_shader_id    expected_id,
-                            const char*               name,
-                                  program_initializer initialize) {
+void register_shader(      ngl::shader        &value,
+                           ngl::e_shader_id    expected_id,
+                     const char*               name,
+                           program_initializer initialize) {
 
     u32 shader_id = ngl::shaders::registration::references::next_shader_id.read();
 
@@ -70,7 +70,7 @@ static void register_shader(      ngl::shader        &value,
         initialize_programs(name, initialize);
 }
 
-static const registration_override* get_overrides(size_t &count) {
+const registration_override* get_overrides(size_t &count) {
     static const registration_override overrides[] {
         { &refs::fx.get(), [] {
             register_shader(refs::fx.get(), ngl::e_shader_id::fx,
@@ -198,7 +198,7 @@ static const registration_override* get_overrides(size_t &count) {
     return overrides;
 }
 
-static bool register_override(ngl::init_list* item) {
+bool register_override(ngl::init_list* item) {
     size_t count;
     
     const registration_override* overrides = get_overrides(count);

@@ -14,7 +14,7 @@ static util::memory_reference
 static util::memory_reference
     <const D3DVERTEXELEMENT9> quad_position_color_uv4_elements { 0x00F53648 };
 
-static void initialize_vertex_format(ngl::vertex_definition  &definition,
+void initialize_vertex_format(ngl::vertex_definition  &definition,
                                      u32                      vertex_size,
                                      const D3DVERTEXELEMENT9* elements) {
 

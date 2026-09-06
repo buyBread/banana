@@ -23,7 +23,7 @@ namespace treyarch { namespace ngl { namespace fx {
     void bind_material(material* value, effect* effect_data);
     void copy_material_parameters(material* value);
     void build_animated_texture_parameter_chain(effect* value);
-    void build_animated_texture_parameter_chain(effect* effect_data, material* value);
+    void build_animated_texture_parameter_chain(material* value);
 
     ASSERT_SIZEOF  (material,                                   0x3C);
     ASSERT_OFFSETOF(material, effect_name,                      0x14);

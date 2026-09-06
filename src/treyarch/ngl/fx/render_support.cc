@@ -5,6 +5,7 @@
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "util/gimmie/fn.hh"
 
@@ -49,9 +50,9 @@ struct point_light_visitor {
     f32                         center[4];
 };
 
-static i32 __fastcall visit_point_light(point_light_visitor* visitor,
-                                        void*,
-                                        i32                  index) {
+i32 __fastcall visit_point_light(point_light_visitor* visitor,
+                                 void*,
+                                 i32                  index) {
 
     f32* light = &point_light_data.get() + 8 * index;
     f32 x = (f32)((f64)visitor->center[0] - (f64)light[0]);
@@ -61,6 +62,7 @@ static i32 __fastcall visit_point_light(point_light_visitor* visitor,
                                  (f64)y * (f64)y +
                                  (f64)z * (f64)z);
 
+    // the game sorts lights using a whole-number copy of their squared distance
     if (squared_distance < 1.8446744e19f) {
         point_light_candidate &candidate = visitor->candidates[visitor->count++];
 
@@ -77,10 +79,12 @@ static point_light_visitor_vtable point_light_visitor_methods {
     visit_point_light
 };
 
-static void push_point_light_heap(point_light_candidate* candidates,
-                                  i32                    hole_index,
-                                  i32                    top_index,
-                                  point_light_candidate  value) {
+// this is the same heap sort the original game uses; changing it can pick
+// different lights when two of them are the same distance away
+void push_point_light_heap(point_light_candidate* candidates,
+                           i32                    hole_index,
+                           i32                    top_index,
+                           point_light_candidate  value) {
 
     i32 parent_index = (hole_index - 1) / 2;
 
@@ -96,7 +100,7 @@ static void push_point_light_heap(point_light_candidate* candidates,
     candidates[hole_index] = value;
 }
 
-static void adjust_point_light_heap(point_light_candidate* candidates,
+void adjust_point_light_heap(point_light_candidate* candidates,
                                     i32                    hole_index,
                                     i32                    count,
                                     point_light_candidate  value) {
@@ -124,7 +128,7 @@ static void adjust_point_light_heap(point_light_candidate* candidates,
     push_point_light_heap(candidates, hole_index, top_index, value);
 }
 
-static void make_point_light_heap(point_light_candidate* candidates, i32 count) {
+void make_point_light_heap(point_light_candidate* candidates, i32 count) {
     i32 parent_index = count / 2;
 
     while (parent_index > 0) {
@@ -138,7 +142,7 @@ static void make_point_light_heap(point_light_candidate* candidates, i32 count) 
     }
 }
 
-static void sort_point_light_heap(point_light_candidate* candidates, i32 count) {
+void sort_point_light_heap(point_light_candidate* candidates, i32 count) {
     while (count > 1) {
         --count;
 
@@ -148,7 +152,7 @@ static void sort_point_light_heap(point_light_candidate* candidates, i32 count) 
     }
 }
 
-static i32 select_nearest_point_lights(point_light_visitor* visitor) {
+i32 select_nearest_point_lights(point_light_visitor* visitor) {
     i32 selected_count = visitor->count > 8 ? 8 : visitor->count;
 
     if (selected_count > 1)
@@ -174,7 +178,7 @@ static i32 select_nearest_point_lights(point_light_visitor* visitor) {
     return selected_count;
 }
 
-static void query_point_lights(     ngl::fx::mesh_node_data* node_data,
+void query_point_lights(     ngl::fx::mesh_node_data* node_data,
                                const f32*                    sphere,
                                      f32                     radius) {
 
@@ -212,18 +216,30 @@ static void query_point_lights(     ngl::fx::mesh_node_data* node_data,
     node_data->point_light_count = (u8)count;
 }
 
-bool ngl::fx::has_scene_parameter(const scene_parameters* parameters, u32 id) {
-    const u32* words = (const u32*)parameters;
+ngl::lighting::light_context* ngl::fx::prepare_light_context(
+    const mesh_node_data* node_data) {
 
-    return (words[id >> 5] & (1u << (id & 31))) != 0;
+    // the game sets this byte to 1 before setting up the mesh's lights
+    node_data->mesh_data[0x0B] = 0;
+    *(u32*)(node_data->mesh_data + 0x08) |= 0x01000000;
+
+    lighting::light_context* context;
+
+    if (has_scene_parameter(node_data->parameters, parameter_id_light_context.read()))
+        context = (lighting::light_context*)get_scene_parameter(
+            node_data->parameters,
+            parameter_id_light_context.read());
+    else
+        context = ngl::references::current_scene.read()->light_context;
+
+    selected_light_context.write(context);
+    context->head.local_next = &context->head;
+
+    return context;
 }
 
-void* ngl::fx::get_scene_parameter(const scene_parameters* parameters, u32 id) {
-    return *(void**)((u8*)parameters + 8 + 4 * id);
-}
-
-static void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
-                                const ngl::mesh_section*       section) {
+void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
+                         const ngl::mesh_section*       section) {
 
     f32 x = section->sphere[0];
     f32 y = section->sphere[1];
@@ -250,29 +266,16 @@ static void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
 
     f32 scale = (*(u32*)node_data->node_info & 2) ? node_data->scale : 1.0f;
 
-    node_data->mesh_data[0x0B] = 0;
-    *(u32*)(node_data->mesh_data + 0x08) |= 0x01000000;
-
     ngl::scene_parameters* parameters = node_data->parameters;
-    
-    ngl::lighting::light_context* context;
-
-    if (ngl::fx::has_scene_parameter(parameters, parameter_id_light_context.read()))
-        context = (ngl::lighting::light_context*)ngl::fx::get_scene_parameter
-            (parameters, parameter_id_light_context.read());
-    else
-        context = ngl::references::current_scene.read()->light_context;
-
-    selected_light_context.write(context);
-    context->head.local_next = &context->head;
+    ngl::fx::prepare_light_context(node_data);
 
     if (!point_light_manager.read())
         return;
 
     f32 radius;
 
-    if (ngl::fx::has_scene_parameter(parameters, parameter_id_light_sphere.read())) {
-        const f32* adjustment = (const f32*)ngl::fx::get_scene_parameter
+    if (ngl::has_scene_parameter(parameters, parameter_id_light_sphere.read())) {
+        const f32* adjustment = (const f32*)ngl::get_scene_parameter
             (parameters, parameter_id_light_sphere.read());
 
         sphere[0] += adjustment[0];
@@ -309,6 +312,7 @@ void ngl::fx::record_hash_name(const fixed_string &value) {
     if (value.text)
         return;
 
+    // room for sixteen names in the form "0x12345678"
     u32 index = effect_hash_name_index.read();
     char* names = &effect_hash_names.get();
 
@@ -361,7 +365,7 @@ void ngl::fx::prepare_animated_textures(effect*         effect_data,
         build_animated_texture_parameter_chain(effect_data);
 
     if (!material_data->animated_texture_parameter_chain)
-        build_animated_texture_parameter_chain(effect_data, material_data);
+        build_animated_texture_parameter_chain(material_data);
 
     scene_parameters* parameters = node_data->parameters;
     u32 parameter_id = parameter_id_ifl_frame.read();

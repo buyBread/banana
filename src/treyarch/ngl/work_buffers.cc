@@ -13,6 +13,7 @@ void __cdecl ngl::set_buffer_size(e_buffer_type buffer,
                                   bool          allow_resize,
                                   bool          send_list) {
                                     
+    // unused
     (void)allow_resize;
 
     scene* current_scene = references::current_scene.read();

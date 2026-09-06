@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 
 #include "treyarch/ngl/shaders/sm_bright_filter/programs.hh"
@@ -14,15 +15,13 @@ static std::array<ngl::d3d9::vertex_program, vertex_variant_count> vertex_progra
 static std::array<ngl::d3d9::pixel_program,  pixel_variant_count>  pixel_programs;
 
 bool ngl::shaders::sm_bright_filter::initialize() {
-    for (size_t index = 0; index < vertex_programs.size(); ++index) {
-        if (!vertex_programs[index].create({ e_shader_program::sm_bright_filter_vertex, (u16)index }))
-            return false;
-    }
+    if (!create_program_range(vertex_programs,
+                              e_shader_program::sm_bright_filter_vertex))
+        return false;
 
-    for (size_t index = 0; index < pixel_programs.size(); ++index) {
-        if (!pixel_programs[index].create({ e_shader_program::sm_bright_filter_pixel, (u16)index }))
-            return false;
-    }
+    if (!create_program_range(pixel_programs,
+                              e_shader_program::sm_bright_filter_pixel))
+        return false;
 
     auto &programs = program_exports::sm_bright_filter::programs.get();
 
@@ -78,13 +77,9 @@ bool ngl::shaders::sm_bright_filter::initialize() {
 }
 
 IDirect3DVertexShader9* ngl::shaders::sm_bright_filter::get_vertex_program(e_vertex_variant variant) {
-    size_t index = (size_t)variant;
-
-    return index < vertex_programs.size() ? vertex_programs[index].get() : nullptr;
+    return get_program(vertex_programs, variant);
 }
 
 IDirect3DPixelShader9* ngl::shaders::sm_bright_filter::get_pixel_program(e_pixel_variant variant) {
-    size_t index = (size_t)variant;
-
-    return index < pixel_programs.size() ? pixel_programs[index].get() : nullptr;
+    return get_program(pixel_programs, variant);
 }

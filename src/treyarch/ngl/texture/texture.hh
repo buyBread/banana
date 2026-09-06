@@ -9,7 +9,7 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace ngl {
-    enum texture_flags : u32 {
+    enum e_texture_flags : u32 {
         texture_animated = 0x00000001,
         texture_cube     = 0x00000002,
         texture_volume   = 0x00000004

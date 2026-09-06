@@ -6,14 +6,14 @@
 
 using namespace treyarch;
 
-static bool supports_depth_texture(D3DFORMAT format) {
-    return ngl::d3d9::references::d3d9.get()->CheckDeviceFormat
-        (0,
-         D3DDEVTYPE_HAL,
-         D3DFMT_X8R8G8B8,
-         D3DUSAGE_DEPTHSTENCIL,
-         D3DRTYPE_TEXTURE,
-         format) >= 0;
+bool supports_depth_texture(D3DFORMAT format) {
+    return ngl::d3d9::references::d3d9.get()
+        ->CheckDeviceFormat(0,
+                            D3DDEVTYPE_HAL,
+                            D3DFMT_X8R8G8B8,
+                            D3DUSAGE_DEPTHSTENCIL,
+                            D3DRTYPE_TEXTURE,
+                            format) >= 0;
 }
 
 ULONG ngl::d3d9::initialize_framebuffers() {

@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_phatcharnormal/programs.hh"
 
@@ -16,11 +17,9 @@ static constexpr size_t material_pixel_variant_count = 3;
 static std::array<ngl::d3d9::pixel_program, material_pixel_variant_count> material_pixel_programs;
 
 bool ngl::shaders::sm_phatchar::initialize() {
-    for (size_t index = 0; index < material_pixel_programs.size(); ++index) {
-        if (!material_pixel_programs[index].create({ e_shader_program::sm_phatchar_material_pixel, (u16)index }))
-            
-            return false;
-    }
+    if (!create_program_range(material_pixel_programs,
+                              e_shader_program::sm_phatchar_material_pixel))
+        return false;
 
     IDirect3DVertexShader9* material_vertex =
         sm_phatcharnormal::get_vertex_program(sm_phatcharnormal::e_vertex_variant::material);

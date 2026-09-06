@@ -22,19 +22,6 @@ inline constexpr f32 SMALL_DIST = 0.00001f;
 inline constexpr f32 LARGE_DIST = 10.0e+8f;
 inline constexpr f32 HUGE_DIST  = 1e30f; // made this one up (the const), the value was probably a macro?
 
-/*
-    a lot of these were the following types:
-
-    ```
-        typedef float rational_t;
-        typedef float angle_t;
-        typedef float fp;
-    ```
-
-    there mayyy have been compiler optimizations for them? otherwise, seems like useless semantics.
-    maybe for assert messages?
-*/
-
 namespace treyarch { namespace ngl { namespace math {
     inline bool clamp_value(      f32* value,
                             const f32  min_value,

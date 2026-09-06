@@ -4,7 +4,7 @@
 using namespace treyarch;
 
 u32 ngl::d3d9::get_primitive_count(D3DPRIMITIVETYPE primitive_type,
-                                   u32 element_count) {
+                                   u32              element_count) {
 
     switch (primitive_type) {
         case D3DPT_POINTLIST:
@@ -23,8 +23,8 @@ u32 ngl::d3d9::get_primitive_count(D3DPRIMITIVETYPE primitive_type,
     }
 }
 
-static void bind_mesh_section_with_offset(ngl::mesh_section* value,
-                                          i32                vertex_offset) {
+void bind_mesh_section_with_offset(ngl::mesh_section* value,
+                                   i32                vertex_offset) {
 
     ngl::d3d9::binding_cache &bindings = ngl::d3d9::references::bindings.get();
 

@@ -1,4 +1,4 @@
-#include <cstring>
+#include <bit>
 
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/scene_renderer.hh"
@@ -12,26 +12,14 @@
 
 using namespace treyarch;
 
-static DWORD float_bits(f32 value) {
-    DWORD bits;
-
-    std::memcpy(&bits, &value, sizeof(bits));
-
-    return bits;
-}
-
-static void invoke_scene_callback(const ngl::scene_callback &callback) {
-    if (callback.function)
-        callback.function(callback.context);
-}
-
 void ngl::d3d9::render_scene(scene* value) {
     ++references::scene_recursion_depth.get();
 
     ngl::references::current_scene.write(value);
 
-    invoke_scene_callback(value->callbacks[0]);
+    value->callbacks[0].invoke();
 
+    // children render first
     for (scene* child = value->first_child; child; child = child->next_sibling)
         render_scene(child);
 
@@ -45,7 +33,7 @@ void ngl::d3d9::render_scene(scene* value) {
 
     validate_matrices(value);
     apply_scene_state(value);
-    invoke_scene_callback(value->callbacks[1]);
+    value->callbacks[1].invoke();
 
     bool depth_bias_changed = false;
 
@@ -53,9 +41,9 @@ void ngl::d3d9::render_scene(scene* value) {
         depth_bias_changed = true;
 
         set_render_state(D3DRS_DEPTHBIAS,
-                         float_bits(value->depth_bias));
+                         std::bit_cast<DWORD>(value->depth_bias));
         set_render_state(D3DRS_SLOPESCALEDEPTHBIAS,
-                         float_bits(value->slope_scale_depth_bias));
+                         std::bit_cast<DWORD>(value->slope_scale_depth_bias));
     }
 
     if (value->specialized_render_list_4)
@@ -64,10 +52,11 @@ void ngl::d3d9::render_scene(scene* value) {
     if (value->opaque_render_list_count)
         list::render_nodes(value->opaque_render_list);
 
+    // copy depth before drawing translucent nodes
     if (value->options & 0x40)
         copy_active_depth();
 
-    invoke_scene_callback(value->callbacks[2]);
+    value->callbacks[2].invoke();
 
     if (value->translucent_render_list_count)
         list::render_nodes(value->translucent_render_list);
@@ -77,11 +66,12 @@ void ngl::d3d9::render_scene(scene* value) {
         set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     }
 
+    // list 3 is only drawn when list 2 is empty
     if (value->specialized_render_list_count_3 && !value->specialized_render_list_count_2)
         list::render_nodes(value->specialized_render_list_3);
 
-    invoke_scene_callback(value->callbacks[3]);
-    invoke_scene_callback(value->callbacks[4]);
+    value->callbacks[3].invoke();
+    value->callbacks[4].invoke();
 
     if (value->color_target && value->color_target->gpu_texture.level_count > 1)
         generate_mipmaps(value->color_target);

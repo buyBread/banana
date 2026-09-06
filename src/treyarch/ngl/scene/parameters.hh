@@ -11,6 +11,9 @@ namespace treyarch { namespace ngl {
     };
 
     u32               get_scene_parameter_set_size();
+    bool              has_scene_parameter(const scene_parameters* parameters, u32 id);
+    void*             get_scene_parameter(const scene_parameters* parameters, u32 id);
+    void*             find_scene_parameter(const scene_parameters* parameters, u32 id);
     scene_parameters* allocate_scene_parameters();
     void              clear_scene_parameters(scene_parameters* parameters);
     void              copy_scene_parameters(      scene_parameters* destination,

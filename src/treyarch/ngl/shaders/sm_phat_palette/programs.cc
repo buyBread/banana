@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_phat_palette_normal/programs.hh"
 
@@ -23,10 +24,9 @@ bool ngl::shaders::sm_phat_palette::initialize() {
     if (!material_vertex_program.create({ e_shader_program::sm_phat_palette_material_vertex }))
         return false;
 
-    for (size_t index = 0; index < material_pixel_programs.size(); ++index) {
-        if (!material_pixel_programs[index].create({ e_shader_program::sm_phat_palette_material_pixel, (u16)index }))
-            return false;
-    }
+    if (!create_program_range(material_pixel_programs,
+                              e_shader_program::sm_phat_palette_material_pixel))
+        return false;
 
     if (!sample_texture_pixel_program.create({ e_shader_program::sm_phat_palette_sample_texture_pixel }))
         return false;

@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_bush/programs.hh"
 #include "configuration.hh"
@@ -27,10 +28,9 @@ bool ngl::shaders::sm_decal::initialize() {
     if (!facing_program.create({ e_shader_program::sm_decal_facing_pixel }))
         return false;
 
-    for (size_t index = 0; index < material_programs.size(); ++index) {
-        if (!material_programs[index].create({ e_shader_program::sm_decal_material_pixel, (u16)index }))
-            return false;
-    }
+    if (!create_program_range(material_programs,
+                              e_shader_program::sm_decal_material_pixel))
+        return false;
 
     if (!ambient_alpha_program.create({ e_shader_program::sm_decal_ambient_alpha_pixel }))
         return false;

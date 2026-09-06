@@ -42,12 +42,12 @@ sm_road_shadow_definitions {{
     "2",
 }};
 
-static void describe(      shader_description &description,
-                           shader_key          key,
-                           e_shader_stage      stage,
-                     const char*               source_path,
-                     const char*               source_name,
-                     const char*               profile) {
+void describe(      shader_description &description,
+                    shader_key          key,
+                    e_shader_stage      stage,
+              const char*               source_path,
+              const char*               source_name,
+              const char*               profile) {
 
     description.key          = key;
     description.stage        = stage;
@@ -59,16 +59,16 @@ static void describe(      shader_description &description,
     description.definition_count = 0;
 }
 
-static const char* definition(bool value) {
+const char* definition(bool value) {
     return sm_phat::integer_definitions[value ? 1 : 0];
 }
 
 template <typename T>
-static const char* definition(T value) {
+const char* definition(T value) {
     return sm_phat::integer_definitions[(size_t)value];
 }
 
-static bool describe_sm_phat(shader_key key, shader_description &description) {
+bool describe_sm_phat(shader_key key, shader_description &description) {
     switch (key.program) {
         case e_shader_program::sm_phat_material_vertex:
             if (key.permutation)

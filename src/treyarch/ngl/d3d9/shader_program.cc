@@ -6,32 +6,48 @@
 
 using namespace treyarch;
 
-bool ngl::d3d9::vertex_program::create(shaders::shader_key key) {
-    shaders::shader_description description {};
+template<typename T>
+bool create_shader_program(      ngl::shaders::shader_key     key,
+                                 ngl::shaders::e_shader_stage expected_stage,
+                           const char*                        stage_name,
+                                 HRESULT                    (*create_program)(const DWORD*, T**),
+                                 T**                          output) {
 
-    if (!shaders::describe_shader(key, description) || description.stage != shaders::e_shader_stage::vertex)
+    ngl::shaders::shader_description description {};
+
+    if (!ngl::shaders::describe_shader(key, description) || description.stage != expected_stage)
         return false;
 
-    std::span<const u8> bytecode = shaders::package_data::load(key);
+    std::span<const u8> bytecode = ngl::shaders::package_data::load(key);
 
     if (bytecode.empty()) {
-        banana::log.err("failed to load vertex program \"{}\"", description.source_name);
+        banana::log.err("failed to load {} program \"{}\"",
+                        stage_name,
+                        description.source_name);
         
         return false;
     }
 
-    HRESULT result = shader_program_cache::create_vertex_program
-        ((const DWORD*)bytecode.data(), &shader_);
+    HRESULT result = create_program((const DWORD*)bytecode.data(), output);
 
     if (FAILED(result)) {
-        banana::log.err("failed to create vertex program \"{}\" (0x{:08X})",
-            description.source_name,
-            (u32)result);
+        banana::log.err("failed to create {} program \"{}\" (0x{:08X})",
+                        stage_name,
+                        description.source_name,
+                        (u32)result);
 
         return false;
     }
 
     return true;
+}
+
+bool ngl::d3d9::vertex_program::create(shaders::shader_key key) {
+    return create_shader_program(key,
+                                 shaders::e_shader_stage::vertex,
+                                 "vertex",
+                                 shader_program_cache::create_vertex_program,
+                                 &shader_);
 }
 
 IDirect3DVertexShader9* ngl::d3d9::vertex_program::get() const {
@@ -39,31 +55,11 @@ IDirect3DVertexShader9* ngl::d3d9::vertex_program::get() const {
 }
 
 bool ngl::d3d9::pixel_program::create(shaders::shader_key key) {
-    shaders::shader_description description {};
-
-    if (!shaders::describe_shader(key, description) || description.stage != shaders::e_shader_stage::pixel)
-        return false;
-
-    std::span<const u8> bytecode = shaders::package_data::load(key);
-
-    if (bytecode.empty()) {
-        banana::log.err("failed to load pixel program \"{}\"", description.source_name);
-        
-        return false;
-    }
-
-    HRESULT result = shader_program_cache::create_pixel_program
-        ((const DWORD*)bytecode.data(), &shader_);
-
-    if (FAILED(result)) {
-        banana::log.err("failed to create pixel program \"{}\" (0x{:08X})",
-            description.source_name,
-            (u32)result);
-        
-        return false;
-    }
-
-    return true;
+    return create_shader_program(key,
+                                 shaders::e_shader_stage::pixel,
+                                 "pixel",
+                                 shader_program_cache::create_pixel_program,
+                                 &shader_);
 }
 
 IDirect3DPixelShader9* ngl::d3d9::pixel_program::get() const {

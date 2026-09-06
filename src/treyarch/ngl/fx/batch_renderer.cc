@@ -6,17 +6,15 @@
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
+#include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 
 using namespace treyarch;
 
 static util::memory_reference<u32> parameter_id_mesh_runs { 0x011171E0 };
 
-static ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
-                                             ngl::fx::effect*         head) {
-
-    if (runtime->queued)
-        return head;
+ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
+                                      ngl::fx::effect*         head) {
 
     ngl::fx::effect* previous = nullptr;
     ngl::fx::effect* current  = head;
@@ -24,6 +22,7 @@ static ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
     while (current) {
         ngl::fx::effect_runtime* current_runtime = current->runtime;
 
+        // effects with the same priority are added before the ones already queued
         if (runtime->priority >= current_runtime->priority)
             break;
 
@@ -48,7 +47,7 @@ static ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
     return head;
 }
 
-static void draw_single_pass_batch_node(ngl::fx::render_node* value) {
+void draw_single_pass_batch_node(ngl::fx::render_node* value) {
     if (value->section->index_count) {
         ngl::d3d9::draw_mesh_section(value->section);
         
@@ -58,18 +57,19 @@ static void draw_single_pass_batch_node(ngl::fx::render_node* value) {
     ngl::scene_parameters* parameters = value->node_data->parameters;
     u32 parameter_id = parameter_id_mesh_runs.read();
 
-    if (ngl::fx::has_scene_parameter(parameters, parameter_id)) {
-        auto* runs = (const i32*)ngl::fx::get_scene_parameter(parameters, parameter_id);
+    if (ngl::has_scene_parameter(parameters, parameter_id)) {
+        auto* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);
 
         ngl::d3d9::draw_mesh_section_runs(value->section, runs);
 
         return;
     }
 
+    // non-indexed meshes use the section's vertex offset here, unlike the regular draw path
     ngl::d3d9::draw_mesh_section(value->section);
 }
 
-static void begin_depth_only_technique(ngl::fx::pass*      pass_data,
+void begin_depth_only_technique(ngl::fx::pass*      pass_data,
                                        IDirect3DSurface9** saved_color_target) {
 
     ngl::scene* current_scene = ngl::references::current_scene.read();
@@ -84,7 +84,7 @@ static void begin_depth_only_technique(ngl::fx::pass*      pass_data,
     ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, 0);
 }
 
-static void finish_depth_only_technique(ngl::fx::pass*     pass_data,
+void finish_depth_only_technique(ngl::fx::pass*     pass_data,
                                         IDirect3DSurface9* saved_color_target) {
 
     ngl::scene* current_scene = ngl::references::current_scene.read();
@@ -102,9 +102,9 @@ static void finish_depth_only_technique(ngl::fx::pass*     pass_data,
         ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, 0);
 }
 
-static i32 render_technique_batch(ngl::fx::effect*          effect_data,
-                                  ngl::fx::technique*       technique_data,
-                                  ngl::fx::technique_batch* batch) {
+i32 render_technique_batch(ngl::fx::effect*          effect_data,
+                           ngl::fx::technique*       technique_data,
+                           ngl::fx::technique_batch* batch) {
 
     ngl::fx::record_hash_name(technique_data->name);
 
@@ -118,6 +118,7 @@ static i32 render_technique_batch(ngl::fx::effect*          effect_data,
     i32 rendered_count = 0;
 
     for (ngl::fx::render_node* node = batch->head; node; node = (ngl::fx::render_node*)node->base.next) {
+        // this order is backwards from the regular draw path and changes which values get copied
         ngl::fx::update_material_parameters(effect_data,
                                             node->node_data,
                                             node->section,
@@ -149,6 +150,7 @@ static i32 render_technique_batch(ngl::fx::effect*          effect_data,
         ++rendered_count;
     }
 
+    // single-pass batches stay open until here; multi-pass batches still finish the last pass again
     ngl::fx::finish_pass(effect_data, final_pass);
     final_pass->active_programs = &final_pass->programs;
 
@@ -157,7 +159,7 @@ static i32 render_technique_batch(ngl::fx::effect*          effect_data,
     return rendered_count;
 }
 
-static i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
+i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
     ngl::fx::effect* effect_data = runtime->owner;
 
     ngl::fx::record_hash_name(effect_data->name);

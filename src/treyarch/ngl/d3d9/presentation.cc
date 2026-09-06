@@ -8,7 +8,7 @@
 
 using namespace treyarch;
 
-static void pump_window_messages() {
+void pump_window_messages() {
     MSG message;
 
     while (PeekMessageA(&message, nullptr, 0, 0, PM_REMOVE)) {

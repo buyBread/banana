@@ -8,7 +8,7 @@
 using namespace treyarch;
 using namespace treyarch::ngl;
 
-static u32 shader_bytecode_size(const DWORD* bytecode) {
+u32 shader_bytecode_size(const DWORD* bytecode) {
     const DWORD* instruction = bytecode + 1;
 
     while ((*instruction & D3DSI_OPCODE_MASK) != D3DSIO_END) {
@@ -28,7 +28,7 @@ static u32 shader_bytecode_size(const DWORD* bytecode) {
     return (u32)(instruction - bytecode + 1) * sizeof(DWORD);
 }
 
-static u32 mix_shader_crc(u32 crc) {
+u32 mix_shader_crc(u32 crc) {
     div_t division = std::div((i32)(crc ^ 0xDEADBEEFu), 127773);
 
     i32 mixed = 16807 * division.rem - 2836 * division.quot;
@@ -39,9 +39,10 @@ static u32 mix_shader_crc(u32 crc) {
     return (u32)mixed;
 }
 
+// the bucket count grows one at a time, so part of the table still uses the old mask
 template<typename T>
-static u32 resolve_shader_bucket(const d3d9::shader_program_cache::program_cache<T> &cache,
-                                       u32                                           crc) {
+u32 resolve_shader_bucket(const d3d9::shader_program_cache::program_cache<T> &cache,
+                                u32                                           crc) {
 
     u32 bucket = mix_shader_crc(crc) & cache.mask;
 
@@ -52,8 +53,8 @@ static u32 resolve_shader_bucket(const d3d9::shader_program_cache::program_cache
 }
 
 template<typename T>
-static d3d9::shader_program_cache::program_node<T>* find_shader_program(d3d9::shader_program_cache::program_cache<T> &cache,
-                                                                        u32                                           crc) {
+d3d9::shader_program_cache::program_node<T>* find_shader_program(d3d9::shader_program_cache::program_cache<T> &cache,
+                                                                 u32                                           crc) {
 
     u32 bucket = resolve_shader_bucket(cache, crc);
     auto* node = cache.buckets.begin[bucket];
@@ -69,9 +70,7 @@ static d3d9::shader_program_cache::program_node<T>* find_shader_program(d3d9::sh
 }
 
 template<typename T>
-static void refresh_shader_buckets(
-    ngl::d3d9::shader_program_cache::program_cache<T> &cache) {
-
+void refresh_shader_buckets(ngl::d3d9::shader_program_cache::program_cache<T> &cache) {
     auto* sentinel = cache.programs.sentinel;
 
     for (auto** bucket = cache.buckets.begin; bucket != cache.buckets.end; ++bucket)
@@ -90,8 +89,8 @@ static void refresh_shader_buckets(
 }
 
 template<typename T>
-static void append_shader_program(d3d9::shader_program_cache::program_node<T>* sentinel,
-                                  d3d9::shader_program_cache::program_node<T>* node) {
+void append_shader_program(d3d9::shader_program_cache::program_node<T>* sentinel,
+                           d3d9::shader_program_cache::program_node<T>* node) {
 
     node->previous = sentinel->previous;
     node->next     = sentinel;
@@ -101,7 +100,7 @@ static void append_shader_program(d3d9::shader_program_cache::program_node<T>* s
 }
 
 template<typename T>
-static void split_shader_bucket(ngl::d3d9::shader_program_cache::program_cache<T> &cache) {
+void split_shader_bucket(ngl::d3d9::shader_program_cache::program_cache<T> &cache) {
     u32 split_bucket  = cache.bucket_count - (cache.mask >> 1) - 1;
     auto* split_begin = cache.buckets.begin[split_bucket];
     auto* split_end   = cache.buckets.begin[split_bucket + 1];
@@ -150,9 +149,9 @@ static void split_shader_bucket(ngl::d3d9::shader_program_cache::program_cache<T
 }
 
 template<typename T>
-static d3d9::shader_program_cache::program_node<T>* insert_shader_program(d3d9::shader_program_cache::program_cache<T> &cache,
-                                                                          u32                                           crc,
-                                                                          T*                                            program) {
+d3d9::shader_program_cache::program_node<T>* insert_shader_program(d3d9::shader_program_cache::program_cache<T> &cache,
+                                                                   u32                                           crc,
+                                                                   T*                                            program) {
 
     if (cache.bucket_count <= cache.programs.size >> 2)
         split_shader_bucket(cache);
@@ -185,48 +184,50 @@ static d3d9::shader_program_cache::program_node<T>* insert_shader_program(d3d9::
     return inserted;
 }
 
-HRESULT d3d9::shader_program_cache::create_vertex_program(const DWORD*                   bytecode,
-                                                                IDirect3DVertexShader9** output) {
+template<typename T, typename create_program_t>
+HRESULT create_shader_program(      d3d9::shader_program_cache::program_cache<T> &cache,
+                              const DWORD*                                        bytecode,
+                                    T**                                           output,
+                                    create_program_t                              create_program) {
 
     u32 byte_count = shader_bytecode_size(bytecode);
     u32 crc        = hash::crc2(bytecode, byte_count, U32_MAX);
 
-    auto &cache = references::vertex_programs.get();
-
     auto* node = find_shader_program(cache, crc);
 
     if (node != cache.programs.sentinel) {
+        // the cache owns this, don't AddRef it here
         *output = node->program;
 
         return D3D_OK;
     }
 
-    HRESULT result = d3d9::references::device.read()->CreateVertexShader(bytecode, output);
+    HRESULT result = create_program(bytecode, output);
 
+    // yes, retail caches it even when creation fails
     insert_shader_program(cache, crc, *output);
 
     return result;
 }
 
+HRESULT d3d9::shader_program_cache::create_vertex_program(const DWORD*                   bytecode,
+                                                                IDirect3DVertexShader9** output) {
+
+    return create_shader_program(references::vertex_programs.get(),
+                                 bytecode,
+                                 output,
+                                 [](const DWORD* data, IDirect3DVertexShader9** shader) {
+                                     return d3d9::references::device.read()->CreateVertexShader(data, shader);
+                                 });
+}
+
 HRESULT d3d9::shader_program_cache::create_pixel_program(const DWORD*                  bytecode,
                                                                IDirect3DPixelShader9** output) {
 
-    u32 byte_count = shader_bytecode_size(bytecode);
-    u32 crc        = hash::crc2(bytecode, byte_count, U32_MAX);
-
-    auto &cache = references::pixel_programs.get();
-
-    auto* node = find_shader_program(cache, crc);
-
-    if (node != cache.programs.sentinel) {
-        *output = node->program;
-
-        return D3D_OK;
-    }
-
-    HRESULT result = d3d9::references::device.read()->CreatePixelShader(bytecode, output);
-
-    insert_shader_program(cache, crc, *output);
-
-    return result;
+    return create_shader_program(references::pixel_programs.get(),
+                                 bytecode,
+                                 output,
+                                 [](const DWORD* data, IDirect3DPixelShader9** shader) {
+                                     return d3d9::references::device.read()->CreatePixelShader(data, shader);
+                                 });
 }

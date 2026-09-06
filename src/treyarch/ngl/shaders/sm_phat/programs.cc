@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_babyphat/programs.hh"
 #include "configuration.hh"
@@ -19,7 +20,7 @@ static ngl::d3d9::vertex_program material_vertex_program;
 static std::array<material_program_set, material_configuration_count> material_pixel_programs;
 static std::array<ngl::d3d9::pixel_program, debug_variant_count> debug_pixel_programs;
 
-static bool create_material_programs() {
+bool create_material_programs() {
     auto &pipelines = program_exports::sm_phat::pixel_pipelines.get();
 
     for (size_t material_index = 0; material_index < material_configurations.size(); ++material_index) {
@@ -46,13 +47,9 @@ static bool create_material_programs() {
     return true;
 }
 
-static bool create_debug_programs() {
-    for (size_t index = 0; index < debug_pixel_programs.size(); ++index) {
-        if (!debug_pixel_programs[index].create({ e_shader_program::sm_phat_debug_pixel, (u16)index }))
-            return false;
-    }
-
-    return true;
+bool create_debug_programs() {
+    return create_program_range(debug_pixel_programs,
+                                e_shader_program::sm_phat_debug_pixel);
 }
 
 bool ngl::shaders::sm_phat::initialize() {
@@ -137,10 +134,5 @@ IDirect3DPixelShader9* ngl::shaders::sm_phat::get_pixel_program(const material_c
 }
 
 IDirect3DPixelShader9* ngl::shaders::sm_phat::get_debug_program(e_debug_variant variant) {
-    size_t index = (size_t)variant;
-
-    if (index >= debug_pixel_programs.size())
-        return nullptr;
-
-    return debug_pixel_programs[index].get();
+    return get_program(debug_pixel_programs, variant);
 }

@@ -23,35 +23,35 @@ public:
         }
         explicit vector2(f32 d) { x = y = d; }
 
-        vector2& operator = (const vector2 &v) {
+        vector2 &operator=(const vector2 &v) {
             x = v.x;
             y = v.y;
             
             return *this;
         }
 
-        vector2& operator += (const vector2 &v) {
+        vector2 &operator+=(const vector2 &v) {
             x += v.x;
             y += v.y;
             
             return *this;
         }
 
-        vector2& operator -= (const vector2 &v) {
+        vector2 &operator-=(const vector2 &v) {
             x -= v.x;
             y -= v.y;
             
             return *this;
         }
 
-        vector2& operator *= (f32 d) {
+        vector2 &operator*=(f32 d) {
             x *= d;
             y *= d;
             
             return *this;
         }
 
-        vector2& operator /= (f32 d) {
+        vector2 &operator/=(f32 d) {
             f32 d_inv = 1.0f / d;
             
             x *= d_inv;
@@ -60,10 +60,10 @@ public:
             return *this;
         }
 
-        vector2 operator - () const {  return vector2(-x, -y); }
+        vector2 operator-() const { return vector2(-x, -y); }
 
-        const f32& operator [] (int i) const { return (&x)[i]; }
-              f32& operator [] (int i)       { return (&x)[i]; }
+        const f32 &operator[](int i) const { return (&x)[i]; }
+              f32 &operator[](int i)       { return (&x)[i]; }
 
         f32 length2() const {
             return x*x + y*y;
@@ -81,7 +81,7 @@ public:
             
             return *this;
         }
-        vector2 &set_length(f32 newlen=1.0f) {
+        vector2 &set_length(f32 newlen = 1.0f) {
             f32 l2 = length2();
 
             if (l2 > SMALL_DIST*SMALL_DIST)
@@ -96,7 +96,8 @@ public:
 
         bool is_valid() const {
             return x > -HUGE_DIST && x < HUGE_DIST &&
-                   y > -HUGE_DIST && y < HUGE_DIST; }
+                   y > -HUGE_DIST && y < HUGE_DIST;
+        }
 
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
     };

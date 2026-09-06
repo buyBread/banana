@@ -15,12 +15,12 @@ struct fullscreen_vertex {
 
 static util::memory_reference<u32> texture_animation_frame { 0x01118800 };
 
-static void disable_blending() {
+void disable_blending() {
     ngl::d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
     ngl::d3d9::set_render_state(D3DRS_ALPHATESTENABLE, FALSE);
 }
 
-static ngl::texture* select_texture_frame(ngl::texture* value) {
+ngl::texture* select_texture_frame(ngl::texture* value) {
     if (value->flags & ngl::texture_animated)
         value = value->frames[texture_animation_frame.read() % value->frame_count];
 
@@ -34,7 +34,7 @@ static ngl::texture* select_texture_frame(ngl::texture* value) {
     return value;
 }
 
-static void bind_blit_texture(ngl::texture* value, bool linear_filter) {
+void bind_blit_texture(ngl::texture* value, bool linear_filter) {
     using namespace ngl::d3d9;
 
     value = select_texture_frame(value);
@@ -50,9 +50,9 @@ static void bind_blit_texture(ngl::texture* value, bool linear_filter) {
     set_sampler_state(0, D3DSAMP_MAXANISOTROPY, 3);
 }
 
-static void prepare_fullscreen_draw(ngl::texture*          source,
-                                    bool                   linear_filter,
-                                    IDirect3DPixelShader9* pixel_program) {
+void prepare_fullscreen_draw(ngl::texture*          source,
+                             bool                   linear_filter,
+                             IDirect3DPixelShader9* pixel_program) {
 
     using namespace ngl::d3d9;
 
@@ -72,7 +72,7 @@ static void prepare_fullscreen_draw(ngl::texture*          source,
     set_pixel_program(pixel_program);
 }
 
-static void draw_fullscreen_quad(const fullscreen_vertex* vertices) {
+void draw_fullscreen_quad(const fullscreen_vertex* vertices) {
     using namespace ngl::d3d9;
 
     binding_cache &bindings = references::bindings.get();

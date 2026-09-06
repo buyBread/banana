@@ -31,8 +31,8 @@ public:
             , z(_20, _21, _22, _23)
             , w(_30, _31, _32, _33) {}
 
-        const row& operator [] (int i) const { return (&x)[i]; }
-              row& operator [] (int i)       { return (&x)[i]; }
+        const row &operator[](int i) const { return (&x)[i]; }
+              row &operator[](int i)       { return (&x)[i]; }
 
               vector3 &x_row()       { return *(vector3*)&x; }
         const vector3 &x_row() const { return *(vector3*)&x; }
@@ -55,7 +55,7 @@ public:
             return *this;
         }
 
-        matrix4x4 operator*(const matrix4x4& b) const {
+        matrix4x4 operator*(const matrix4x4 &b) const {
             const matrix4x4 &a = *this;
 
             return matrix4x4(a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0] + a[0][3]*b[3][0], // x row
@@ -114,7 +114,24 @@ public:
             return result;
         }
 
-        matrix4x4 transpose() {
+        // Retail affine packets leave the fourth column uninitialized. Read only
+        // xyz from each row before using one in a full matrix product.
+        matrix4x4 affine() const {
+            return matrix4x4(x_row(), y_row(), z_row(), w_row());
+        }
+
+        // Matches the engine's rigid-transform inverse (0x0044D470). Callers
+        // that need scale removal must do it first; inverse() is not equivalent.
+        matrix4x4 inverse_orthonormal() const {
+            return matrix4x4(x.x, y.x, z.x, 0.0f,
+                             x.y, y.y, z.y, 0.0f,
+                             x.z, y.z, z.z, 0.0f,
+                             -(w.x * x.x + w.y * x.y + w.z * x.z),
+                             -(w.x * y.x + w.y * y.y + w.z * y.z),
+                             -(w.x * z.x + w.y * z.y + w.z * z.z), 1.0f);
+        }
+
+        matrix4x4 transpose() const {
             return matrix4x4(x.x, y.x, z.x, w.x,
                              x.y, y.y, z.y, w.y,
                              x.z, y.z, z.z, w.z,
@@ -177,6 +194,7 @@ public:
                    y.x * z.y * x.z - z.x * y.y * x.z +
                    z.x * x.y * y.z - x.x * z.y * y.z;
         };
+
         f32 determinant() const {
             f32 result = 0.0f;
 
@@ -186,4 +204,4 @@ public:
             return result;
         }
     };
-}}
+}} // treyarch::ngl

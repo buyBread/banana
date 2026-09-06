@@ -29,7 +29,7 @@ public:
         void set_w(const V &val) { w=val; }
 
         vector4() {}
-        vector4(const vector4& v) {
+        vector4(const vector4 &v) {
             x = v.x;
             y = v.y;
             z = v.z;
@@ -41,7 +41,7 @@ public:
             z = _z;
             w = _w;
         }
-        explicit vector4(const vector3 &v, f32 d=1.0f) {
+        explicit vector4(const vector3 &v, f32 d = 1.0f) {
             x = v.x;
             y = v.y;
             z = v.z;
@@ -49,7 +49,7 @@ public:
         }
         explicit vector4(f32 d) { x = y = z = w = d; }
 
-        vector4& operator = (const vector4 &v) {
+        vector4 &operator=(const vector4 &v) {
             x = v.x;
             y = v.y;
             z = v.z;
@@ -58,7 +58,7 @@ public:
             return *this;
         }
 
-        vector4& operator += (const vector4 &v) {
+        vector4 &operator+=(const vector4 &v) {
             x += v.x;
             y += v.y;
             z += v.z;
@@ -67,7 +67,7 @@ public:
             return *this;
         }
 
-        vector4& operator -= (const vector4 &v) {
+        vector4 &operator-=(const vector4 &v) {
             x -= v.x;
             y -= v.y;
             z -= v.z;
@@ -76,7 +76,7 @@ public:
             return *this;
         }
 
-        vector4& operator *= (f32 d) {
+        vector4 &operator*=(f32 d) {
             x *= d;
             y *= d;
             z *= d;
@@ -85,8 +85,8 @@ public:
             return *this;
         }
 
-        vector4& operator /= (f32 d) {
-            f32 d_inv = 1.0f/d;
+        vector4 &operator/=(f32 d) {
+            f32 d_inv = 1.0f / d;
             
             x *= d_inv;
             y *= d_inv;
@@ -96,12 +96,12 @@ public:
             return *this;
         }
 
-        vector4 operator - () const {
+        vector4 operator-() const {
             return vector4(-x, -y, -z, -w);
         }
 
-        const f32& operator [] (int i) const { return (&x)[i]; }
-              f32& operator [] (int i)       { return (&x)[i]; }
+        const f32 &operator[](int i) const { return (&x)[i]; }
+              f32 &operator[](int i)       { return (&x)[i]; }
 
         f32 length2() const {
             return x*x + y*y + z*z + w*w;
@@ -111,7 +111,7 @@ public:
             return (f32)sqrtf(x*x + y*y + z*z + w*w);
         }
 
-        vector4& normalize() {
+        vector4 &normalize() {
             f32 l2 = length2();
 
             if (l2 > SMALL_DIST*SMALL_DIST)
@@ -121,13 +121,17 @@ public:
         }
 
         vector4 &homogenize() {
-            if (w) w=1.0f/w;
-                x*=w; y*=w; z*=w;
+            if (w)
+                w = 1.0f / w;
+
+            x *= w;
+            y *= w;
+            z *= w;
             
             return *this;
         }
 
-        vector4 &set_length(f32 newlen=1.0f) {
+        vector4 &set_length(f32 newlen = 1.0f) {
             f32 l2 = length2();
 
             if (l2 > SMALL_DIST*SMALL_DIST)
@@ -166,4 +170,4 @@ public:
 
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
     };
-}}
+}} // treyarch::ngl

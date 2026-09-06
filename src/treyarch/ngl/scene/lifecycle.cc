@@ -7,8 +7,8 @@
 
 using namespace treyarch;
 
-static ngl::scene* initialize_scene(ngl::scene*                   value,
-                                    ngl::e_scene_parameter_source parameter_source) {
+ngl::scene* initialize_scene(ngl::scene*                   value,
+                             ngl::e_scene_parameter_source parameter_source) {
 
     ngl::scene* parent = ngl::references::current_scene.read();
     ngl::scene* source = parent;
@@ -73,6 +73,7 @@ static ngl::scene* initialize_scene(ngl::scene*                   value,
 ngl::scene* __cdecl ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
     auto* value = (scene*)list::allocate(sizeof(scene), 16);
 
+    // yes, retail allocates this twice; initialize_scene throws this one away
     if (value) {
         value->parameters = allocate_scene_parameters();
         clear_scene_parameters(value->parameters);

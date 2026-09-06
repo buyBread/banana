@@ -156,6 +156,19 @@ u32 ngl::d3d9::get_surface_size(D3DFORMAT format, u32 width, u32 height) {
     }
 }
 
+void copy_locked_surface(const D3DSURFACE_DESC &description,
+                         const D3DLOCKED_RECT  &locked,
+                         const void*           &source) {
+
+    // the data is already packed, retail ignores locked.Pitch here
+    u32 size = ngl::d3d9::get_surface_size(description.Format,
+                                           description.Width,
+                                           description.Height);
+
+    std::memcpy(locked.pBits, source, size);
+    source = (const u8*)source + size;
+}
+
 void ngl::d3d9::upload_texture(texture_resource* value, const void* &source) {
     if (!value->resource)
         return;
@@ -173,13 +186,7 @@ void ngl::d3d9::upload_texture(texture_resource* value, const void* &source) {
         surface->GetDesc(&description);
         resource->LockRect(level, &locked, nullptr, 0);
 
-        u32 size = get_surface_size(description.Format,
-                                    description.Width,
-                                    description.Height);
-
-        std::memcpy(locked.pBits, source, size);
-        
-        source = (const u8*)source + size;
+        copy_locked_surface(description, locked, source);
 
         resource->UnlockRect(level);
         surface->Release();
@@ -200,6 +207,7 @@ void ngl::d3d9::upload_cube_texture(texture_resource* value, const void* &source
     
     u32 level_count = resource->GetLevelCount();
 
+    // one face and all of its mip levels come before the next face
     for (u32 face_index = 0; face_index < 6; ++face_index) {
         D3DCUBEMAP_FACES face = faces[face_index];
 
@@ -212,12 +220,7 @@ void ngl::d3d9::upload_cube_texture(texture_resource* value, const void* &source
             surface->GetDesc(&description);
             resource->LockRect(face, level, &locked, nullptr, 0);
 
-            u32 size = get_surface_size(description.Format,
-                                        description.Width,
-                                        description.Height);
-
-            std::memcpy(locked.pBits, source, size);
-            source = (const u8*)source + size;
+            copy_locked_surface(description, locked, source);
 
             resource->UnlockRect(face, level);
             surface->Release();

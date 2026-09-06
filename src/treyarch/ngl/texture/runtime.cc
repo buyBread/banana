@@ -10,7 +10,7 @@
 
 using namespace treyarch;
 
-static bool is_depth_surface_format(D3DFORMAT format) {
+bool is_depth_surface_format(D3DFORMAT format) {
     switch ((u32)format) {
         case D3DFMT_D16_LOCKABLE:
         case D3DFMT_D32:
@@ -32,12 +32,12 @@ static bool is_depth_surface_format(D3DFORMAT format) {
     }
 }
 
-static void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
-                                   u32                          width,
-                                   u32                          height,
-                                   u32                          level_count,
-                                   D3DFORMAT                    format,
-                                   u8                           creation_flags) {
+void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
+                            u32                          width,
+                            u32                          height,
+                            u32                          level_count,
+                            D3DFORMAT                    format,
+                            u8                           creation_flags) {
 
     DWORD render_target = (creation_flags & 2) != 0;
 
@@ -59,10 +59,10 @@ static void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
         resource.usage |= D3DUSAGE_DEPTHSTENCIL;
 }
 
-static void create_surface(IDirect3DSurface9** surface,
-                           u32                 width,
-                           u32                 height,
-                           D3DFORMAT           format) {
+void create_surface(IDirect3DSurface9** surface,
+                    u32                 width,
+                    u32                 height,
+                    D3DFORMAT           format) {
 
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 

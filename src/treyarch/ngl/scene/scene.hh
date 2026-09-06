@@ -18,6 +18,11 @@ namespace treyarch { namespace ngl {
     struct scene_callback {
         void (__cdecl* function)(void* context);
         void* context;
+
+        void invoke() const {
+            if (function)
+                function(context);
+        }
     };
 
     enum e_projection_type : u32 {

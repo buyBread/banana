@@ -5,14 +5,14 @@
 
 using namespace treyarch;
 
-static bool compare_render_hash(const ngl::render_sort_entry &first,
-                                const ngl::render_sort_entry &second) {
+bool compare_render_hash(const ngl::render_sort_entry &first,
+                         const ngl::render_sort_entry &second) {
 
     return first.sort_key.integer < second.sort_key.integer;
 }
 
-static bool compare_render_distance(const ngl::render_sort_entry &first,
-                                    const ngl::render_sort_entry &second) {
+bool compare_render_distance(const ngl::render_sort_entry &first,
+                             const ngl::render_sort_entry &second) {
 
     if (first.sort_key.floating > second.sort_key.floating)
         return true;
@@ -23,9 +23,9 @@ static bool compare_render_distance(const ngl::render_sort_entry &first,
 }
 
 template <typename compare_type>
-static void sort_render_list(ngl::render_node* &head,
-                             u32                count,
-                             compare_type       compare) {
+void sort_render_list(ngl::render_node* &head,
+                      u32                count,
+                      compare_type       compare) {
 
     ngl::list::arena_state &arena = ngl::list::references::arena.get();
 

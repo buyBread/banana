@@ -8,7 +8,7 @@
 
 using namespace treyarch;
 
-static ngl::scene* set_color_target(ngl::texture* target) {
+ngl::scene* set_color_target(ngl::texture* target) {
     ngl::scene* value = ngl::references::current_scene.read();
 
     value->color_target  = target;
@@ -20,7 +20,7 @@ static ngl::scene* set_color_target(ngl::texture* target) {
     return value;
 }
 
-static ngl::scene* set_depth_target(ngl::texture* target) {
+ngl::scene* set_depth_target(ngl::texture* target) {
     ngl::scene* value = ngl::references::current_scene.read();
 
     value->depth_target = target;
@@ -31,7 +31,7 @@ static ngl::scene* set_depth_target(ngl::texture* target) {
     return value;
 }
 
-static ngl::scene* set_auxiliary_target(ngl::texture* target) {
+ngl::scene* set_auxiliary_target(ngl::texture* target) {
     ngl::scene* value = ngl::references::current_scene.read();
 
     value->auxiliary_target = target;
@@ -42,36 +42,10 @@ static ngl::scene* set_auxiliary_target(ngl::texture* target) {
     return value;
 }
 
-// void nglSetCameraMatrix( math::RotTranMat43Arg CameraToWorld );
-// impl: ...actually, do i really want to replicate that old MatClass template mess?
-static ngl::scene* set_camera_matrix(const ngl::matrix4x4* camera_to_world) {
+ngl::scene* set_camera_matrix(const ngl::matrix4x4* camera_to_world) {
     ngl::scene* value = ngl::references::current_scene.read();
-    
-    const ngl::matrix4x4& input  = *camera_to_world;
-          ngl::matrix4x4& output = value->world_to_view;
 
-    output[0][0] = input[0][0];
-    output[0][1] = input[1][0];
-    output[0][2] = input[2][0];
-    output[0][3] = 0.0f;
-    output[1][0] = input[0][1];
-    output[1][1] = input[1][1];
-    output[1][2] = input[2][1];
-    output[1][3] = 0.0f;
-    output[2][0] = input[0][2];
-    output[2][1] = input[1][2];
-    output[2][2] = input[2][2];
-    output[2][3] = 0.0f;
-    output[3][0] = -(input[3][0] * input[0][0] +
-                     input[3][1] * input[0][1] +
-                     input[3][2] * input[0][2]);
-    output[3][1] = -(input[3][0] * input[1][0] +
-                     input[3][1] * input[1][1] +
-                     input[3][2] * input[1][2]);
-    output[3][2] = -(input[3][0] * input[2][0] +
-                     input[3][1] * input[2][1] +
-                     input[3][2] * input[2][2]);
-    output[3][3] = 1.0f;
+    value->world_to_view = camera_to_world->inverse_orthonormal();
 
     value->derived_matrices_dirty = 1;
     

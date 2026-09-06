@@ -57,16 +57,7 @@ static const effect_priority_prefix effect_priority_prefixes[] {
     { "road",                  0 }
 };
 
-static fixed_string make_fixed_string(const char* text) {
-    fixed_string value;
-
-    value.text = (char*)text;
-    value.hash = string_hash(hash::djb2(text));
-
-    return value;
-}
-
-static ngl::fx::parameter* find_parameter_by_name(ngl::fx::effect* value,
+ngl::fx::parameter* find_parameter_by_name(ngl::fx::effect* value,
                                                   string_hash      name) {
 
     for (i32 index = 0; index < value->parameter_count; ++index) {
@@ -79,8 +70,8 @@ static ngl::fx::parameter* find_parameter_by_name(ngl::fx::effect* value,
     return nullptr;
 }
 
-static ngl::fx::parameter* find_parameter_by_semantic(ngl::fx::effect* value,
-                                                      string_hash      semantic) {
+ngl::fx::parameter* find_parameter_by_semantic(ngl::fx::effect* value,
+                                               string_hash      semantic) {
 
     for (i32 index = 0; index < value->parameter_count; ++index) {
         ngl::fx::parameter &parameter = value->parameters[index];
@@ -92,34 +83,34 @@ static ngl::fx::parameter* find_parameter_by_semantic(ngl::fx::effect* value,
     return nullptr;
 }
 
-static bool is_direct_binding_type(u32 type) {
-    if ((type >=  55 && type <=  62) ||
-        (type >=  64 && type <=  71) ||
-        (type >=  77 && type <=  82) ||
-        (type >=  92 && type <= 103) ||
-        (type >= 107 && type <= 114) ||
-        (type >= 116 && type <= 124)) {
+bool is_direct_binding_type(ngl::fx::e_parameter_type type) {
+    if ((type >= ngl::fx::parameter_horizon_projection_u && type <= ngl::fx::parameter_horizon_info) ||
+        (type >= ngl::fx::parameter_light_info && type <= ngl::fx::parameter_view_projection_shadow_2) ||
+        (type >= ngl::fx::parameter_temporary_0 && type <= ngl::fx::parameter_number_directional_lights) ||
+        (type >= ngl::fx::parameter_ibl_parameters && type <= ngl::fx::parameter_tentacle_width_frequency_offset_x) ||
+        (type >= ngl::fx::parameter_environment_color && type <= ngl::fx::parameter_tentacle_basis_color_1) ||
+        (type >= ngl::fx::parameter_tentacle_width_frequency_offset_y && type <= ngl::fx::parameter_last)) {
 
         return true;
     }
 
     switch (type) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 15:
-        case 17:
-        case 20:
-        case 21:
-        case 24:
-        case 25:
-        case 26:
-        case 27:
-        case 75:
-        case 85:
-        case 88:
+        case ngl::fx::parameter_bool:
+        case ngl::fx::parameter_int:
+        case ngl::fx::parameter_float:
+        case ngl::fx::parameter_vector:
+        case ngl::fx::parameter_matrix:
+        case ngl::fx::parameter_scene_matrix:
+        case ngl::fx::parameter_bone_influences:
+        case ngl::fx::parameter_unknown_20:
+        case ngl::fx::parameter_view_position:
+        case ngl::fx::parameter_frame:
+        case ngl::fx::parameter_time:
+        case ngl::fx::parameter_unknown_26:
+        case ngl::fx::parameter_unknown_27:
+        case ngl::fx::parameter_post_info:
+        case ngl::fx::parameter_number_point_lights:
+        case ngl::fx::parameter_unknown_88:
             return true;
 
         default:
@@ -127,21 +118,22 @@ static bool is_direct_binding_type(u32 type) {
     }
 }
 
-static bool is_indirect_texture_binding_type(u32 type) {
+// array data starts after a 16-byte header, including vector, matrix and lighting arrays
+bool is_array_binding_type(ngl::fx::e_parameter_type type) {
     switch (type) {
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 83:
-        case 84:
-        case 86:
-        case 87:
-        case 89:
-        case 90:
-        case 91:
-        case 115:
+        case ngl::fx::parameter_bool_array:
+        case ngl::fx::parameter_int_array:
+        case ngl::fx::parameter_float_array:
+        case ngl::fx::parameter_vector_array:
+        case ngl::fx::parameter_matrix_array:
+        case ngl::fx::parameter_directional_light_directions:
+        case ngl::fx::parameter_directional_light_colors:
+        case ngl::fx::parameter_point_light_positions_ranges:
+        case ngl::fx::parameter_point_light_colors:
+        case ngl::fx::parameter_unknown_89:
+        case ngl::fx::parameter_unknown_90:
+        case ngl::fx::parameter_unknown_91:
+        case ngl::fx::parameter_decal_texture_matrix:
             return true;
 
         default:
@@ -149,16 +141,16 @@ static bool is_indirect_texture_binding_type(u32 type) {
     }
 }
 
-static bool is_forced_default_texture_type(u32 type) {
+bool is_forced_default_texture_type(ngl::fx::e_parameter_type type) {
     switch (type) {
-        case 63:
-        case 72:
-        case 73:
-        case 74:
-        case 76:
-        case 104:
-        case 105:
-        case 106:
+        case ngl::fx::parameter_horizon_texture:
+        case ngl::fx::parameter_shadow_texture:
+        case ngl::fx::parameter_shadow_texture_1:
+        case ngl::fx::parameter_shadow_texture_2:
+        case ngl::fx::parameter_depth_texture:
+        case ngl::fx::parameter_framebuffer_texture:
+        case ngl::fx::parameter_environment_map:
+        case ngl::fx::parameter_unknown_106:
             return true;
 
         default:
@@ -166,7 +158,7 @@ static bool is_forced_default_texture_type(u32 type) {
     }
 }
 
-static void resolve_texture_parameter(ngl::fx::parameter &parameter) {
+void resolve_texture_parameter(ngl::fx::parameter &parameter) {
     ngl::texture* texture = *(ngl::texture**)parameter.data;
 
     if (!texture)
@@ -175,67 +167,67 @@ static void resolve_texture_parameter(ngl::fx::parameter &parameter) {
     *(ngl::texture**)parameter.data = texture;
 }
 
-static void initialize_binding(ngl::fx::effect           &value,
+void initialize_binding(ngl::fx::effect           &value,
                                ngl::fx::function_binding &binding) {
 
     ngl::fx::parameter &parameter = value.parameters[binding.parameter_index];
 
-    u32 type = (u32)parameter.type;
+    ngl::fx::e_parameter_type type = parameter.type;
 
     if (is_direct_binding_type(type)) {
-        binding.source_class  = 1;
+        binding.source_class  = ngl::fx::binding_parameters;
         binding.source_offset = (u32)parameter.data - (u32)value.parameter_data;
 
         return;
     }
 
-    if (is_indirect_texture_binding_type(type)) {
-        binding.source_class  = 1;
+    if (is_array_binding_type(type)) {
+        binding.source_class  = ngl::fx::binding_parameters;
         binding.source_offset = (u32)parameter.data - (u32)value.parameter_data + 0x10;
 
         return;
     }
 
-    if (type == 14) {
+    if (type == ngl::fx::parameter_sampler) {
         i32 texture_parameter_index = *(i32*)parameter.data;
 
         if (texture_parameter_index != -1) {
             ngl::fx::parameter &texture_parameter = value.parameters[texture_parameter_index];
 
-            if (is_forced_default_texture_type((u32)texture_parameter.type))
+            if (is_forced_default_texture_type(texture_parameter.type))
                 *(ngl::texture**)texture_parameter.data = ngl::references::default_texture.read();
 
             resolve_texture_parameter(texture_parameter);
 
-            binding.source_class  = 1;
+            binding.source_class  = ngl::fx::binding_parameters;
             binding.source_offset = (u32)texture_parameter.data - (u32)value.parameter_data;
 
             return;
         }
-    } else if (type == 16) {
-        binding.source_class  = 3;
+    } else if (type == ngl::fx::parameter_bone_array_world) {
+        binding.source_class  = ngl::fx::binding_bones;
         binding.source_offset = 0;
 
         return;
-    } else if (type == 22) {
-        binding.source_class  = 2;
-        binding.source_offset = 800;
+    } else if (type == ngl::fx::parameter_view_direction) {
+        binding.source_class  = ngl::fx::binding_scene;
+        binding.source_offset = offsetof(ngl::scene, view_direction);
 
         return;
     }
 
-    binding.source_class  = binding.destination_type == 3 ? 7 : 6;
+    binding.source_class  = binding.destination_type == ngl::fx::binding_sampler ? ngl::fx::binding_fallback_texture : ngl::fx::binding_global_constants;
     binding.source_offset = 0;
 }
 
-static void initialize_function_bindings(ngl::fx::effect   &value,
+void initialize_function_bindings(ngl::fx::effect   &value,
                                          ngl::fx::function &function) {
 
     for (i32 index = 0; index < function.binding_count; ++index)
         initialize_binding(value, function.bindings[index]);
 }
 
-static void create_vertex_program(ngl::fx::effect   &value,
+void create_vertex_program(ngl::fx::effect   &value,
                                   ngl::fx::function &function) {
 
     if (!function.microcode)
@@ -247,7 +239,7 @@ static void create_vertex_program(ngl::fx::effect   &value,
     initialize_function_bindings(value, function);
 }
 
-static void create_pixel_program(ngl::fx::effect   &value,
+void create_pixel_program(ngl::fx::effect   &value,
                                  ngl::fx::function &function) {
 
     if (!function.microcode)
@@ -259,7 +251,7 @@ static void create_pixel_program(ngl::fx::effect   &value,
     initialize_function_bindings(value, function);
 }
 
-static void initialize_pass(ngl::fx::effect &value,
+void initialize_pass(ngl::fx::effect &value,
                             ngl::fx::pass   &pass) {
 
     pass.active_programs = &pass.programs;
@@ -273,37 +265,49 @@ static void initialize_pass(ngl::fx::effect &value,
     create_pixel_program (value, pass.programs.pixel_programs [1]);
 }
 
-static u32 specialized_view_direction_type(u32 component_mask) {
+// the value at +0x40 says which scene matrix to use and whether to invert or transpose it
+enum e_matrix_components : u32 {
+    matrix_world = 0x01,
+    matrix_view = 0x02,
+    matrix_projection = 0x03,
+    matrix_world_view = 0x09,
+    matrix_view_projection = 0x0E,
+    matrix_world_view_projection = 0x39,
+    matrix_inverse = 0x40,
+    matrix_transpose = 0x80
+};
+
+ngl::fx::e_parameter_type specialized_view_direction_type(u32 component_mask) {
     switch (component_mask) {
-        case 0x01: return 31;
-        case 0x02: return 35;
-        case 0x03: return 39;
-        case 0x09: return 43;
-        case 0x0E: return 47;
-        case 0x39: return 51;
-        case 0x41: return 32;
-        case 0x42: return 36;
-        case 0x43: return 40;
-        case 0x49: return 44;
-        case 0x4E: return 48;
-        case 0x79: return 52;
-        case 0x81: return 33;
-        case 0x82: return 37;
-        case 0x83: return 41;
-        case 0x89: return 45;
-        case 0x8E: return 49;
-        case 0xB9: return 53;
-        case 0xC1: return 34;
-        case 0xC2: return 38;
-        case 0xC3: return 42;
-        case 0xC9: return 46;
-        case 0xCE: return 50;
-        case 0xF9: return 54;
-        default:   return (u32)ngl::fx::parameter_scene_matrix;
+        case matrix_world: return ngl::fx::parameter_world;
+        case matrix_view: return ngl::fx::parameter_view;
+        case matrix_projection: return ngl::fx::parameter_projection;
+        case matrix_world_view: return ngl::fx::parameter_world_view;
+        case matrix_view_projection: return ngl::fx::parameter_view_projection;
+        case matrix_world_view_projection: return ngl::fx::parameter_world_view_projection;
+        case matrix_world | matrix_inverse: return ngl::fx::parameter_world_inverse;
+        case matrix_view | matrix_inverse: return ngl::fx::parameter_view_inverse;
+        case matrix_projection | matrix_inverse: return ngl::fx::parameter_projection_inverse;
+        case matrix_world_view | matrix_inverse: return ngl::fx::parameter_world_view_inverse;
+        case matrix_view_projection | matrix_inverse: return ngl::fx::parameter_view_projection_inverse;
+        case matrix_world_view_projection | matrix_inverse: return ngl::fx::parameter_world_view_projection_inverse;
+        case matrix_world | matrix_transpose: return ngl::fx::parameter_world_transpose;
+        case matrix_view | matrix_transpose: return ngl::fx::parameter_view_transpose;
+        case matrix_projection | matrix_transpose: return ngl::fx::parameter_projection_transpose;
+        case matrix_world_view | matrix_transpose: return ngl::fx::parameter_world_view_transpose;
+        case matrix_view_projection | matrix_transpose: return ngl::fx::parameter_view_projection_transpose;
+        case matrix_world_view_projection | matrix_transpose: return ngl::fx::parameter_world_view_projection_transpose;
+        case matrix_world | matrix_inverse | matrix_transpose: return ngl::fx::parameter_world_inverse_transpose;
+        case matrix_view | matrix_inverse | matrix_transpose: return ngl::fx::parameter_view_inverse_transpose;
+        case matrix_projection | matrix_inverse | matrix_transpose: return ngl::fx::parameter_projection_inverse_transpose;
+        case matrix_world_view | matrix_inverse | matrix_transpose: return ngl::fx::parameter_world_view_inverse_transpose;
+        case matrix_view_projection | matrix_inverse | matrix_transpose: return ngl::fx::parameter_view_projection_inverse_transpose;
+        case matrix_world_view_projection | matrix_inverse | matrix_transpose: return ngl::fx::parameter_world_view_projection_inverse_transpose;
+        default:   return ngl::fx::parameter_scene_matrix;
     }
 }
 
-static void specialize_parameter_types(ngl::fx::effect& value) {
+void specialize_parameter_types(ngl::fx::effect& value) {
     for (i32 index = 0; index < value.parameter_count; ++index) {
         ngl::fx::parameter &parameter = value.parameters[index];
 
@@ -312,36 +316,35 @@ static void specialize_parameter_types(ngl::fx::effect& value) {
 
         u32 component_mask = *(u32*)((u8*)parameter.data + 0x40);
 
-        parameter.type = (ngl::fx::e_parameter_type)
-            specialized_view_direction_type(component_mask);
+        parameter.type = specialized_view_direction_type(component_mask);
     }
 }
 
-static bool belongs_to_parameter_chain_0(u32 type) {
-    return type == 20 ||
-           type == 21 ||
-           (type >= 23 && type <= 30) ||
-           (type >= 35 && type <= 42) ||
-           (type >= 47 && type <= 50);
+bool belongs_to_parameter_chain_0(ngl::fx::e_parameter_type type) {
+    return type == ngl::fx::parameter_unknown_20 ||
+           type == ngl::fx::parameter_view_position ||
+           (type >= ngl::fx::parameter_viewport_pixel_size && type <= ngl::fx::parameter_unknown_30) ||
+           (type >= ngl::fx::parameter_view && type <= ngl::fx::parameter_projection_inverse_transpose) ||
+           (type >= ngl::fx::parameter_view_projection && type <= ngl::fx::parameter_view_projection_inverse_transpose);
 }
 
-static bool belongs_to_parameter_chain_1(u32 type) {
-    return type == 16 ||
-           type == 17 ||
-           type == 19 ||
-           (type >= 31 && type <= 34) ||
-           (type >= 43 && type <= 46) ||
-           (type >= 51 && type <= 124);
+bool belongs_to_parameter_chain_1(ngl::fx::e_parameter_type type) {
+    return type == ngl::fx::parameter_bone_array_world ||
+           type == ngl::fx::parameter_bone_influences ||
+           type == ngl::fx::parameter_unknown_19 ||
+           (type >= ngl::fx::parameter_world && type <= ngl::fx::parameter_world_inverse_transpose) ||
+           (type >= ngl::fx::parameter_world_view && type <= ngl::fx::parameter_world_view_inverse_transpose) ||
+           (type >= ngl::fx::parameter_world_view_projection && type <= ngl::fx::parameter_last);
 }
 
-static void build_parameter_chains(ngl::fx::effect &value) {
+void build_parameter_chains(ngl::fx::effect &value) {
     value.parameter_chains[0] = nullptr;
     value.parameter_chains[1] = nullptr;
     value.parameter_chains[2] = nullptr;
 
     for (i32 index = value.parameter_count - 1; index >= 0; --index) {
         ngl::fx::parameter &parameter = value.parameters[index];
-        u32 type = (u32)parameter.type;
+        ngl::fx::e_parameter_type type = parameter.type;
 
         if (belongs_to_parameter_chain_1(type)) {
             parameter.next = value.parameter_chains[1];
@@ -353,7 +356,7 @@ static void build_parameter_chains(ngl::fx::effect &value) {
     }
 }
 
-static void classify_effect(ngl::fx::effect &value) {
+void classify_effect(ngl::fx::effect &value) {
     fixed_string transparency_name = make_fixed_string("SW_UsesTransparency");
     
     ngl::fx::parameter* transparency_parameter =
@@ -384,18 +387,18 @@ static void classify_effect(ngl::fx::effect &value) {
         }
     }
 
-    bool has_parameter_type_104 = false;
+    bool uses_framebuffer_texture = false;
 
     for (i32 parameter_index = 0; parameter_index < value.parameter_count; ++parameter_index) {
-        if ((u32)value.parameters[parameter_index].type != 104)
+        if (value.parameters[parameter_index].type != ngl::fx::parameter_framebuffer_texture)
             continue;
 
-        has_parameter_type_104 = true;
+        uses_framebuffer_texture = true;
 
         break;
     }
 
-    if (has_parameter_type_104) {
+    if (uses_framebuffer_texture) {
         for (i32 technique_index = 0; technique_index < value.technique_count; ++technique_index)
             value.techniques[technique_index].flags |= 0x20;
     }
@@ -418,13 +421,13 @@ static void classify_effect(ngl::fx::effect &value) {
         value.flags |= 0x100;
 }
 
-static ngl::fx::effect* resolve_effect(const char* name) {
+ngl::fx::effect* resolve_effect(const char* name) {
     fixed_string lookup = make_fixed_string(name);
 
     return (ngl::fx::effect*)ngl::resources::resolve(&lookup, four_cc('F', 'X', '\0'));
 }
 
-static void resolve_light_variants(ngl::fx::effect_runtime &runtime) {
+void resolve_light_variants(ngl::fx::effect_runtime &runtime) {
     for (const effect_variant_family &family : effect_variant_families) {
         if (runtime.owner->name.hash != string_hash(hash::djb2(family.names[0])))
             continue;
@@ -437,7 +440,7 @@ static void resolve_light_variants(ngl::fx::effect_runtime &runtime) {
     }
 }
 
-static i32 get_effect_priority(const ngl::fx::effect &value) {
+i32 get_effect_priority(const ngl::fx::effect &value) {
     char hash_name[11];
 
     const char* name = value.name.text;
@@ -458,7 +461,7 @@ static i32 get_effect_priority(const ngl::fx::effect &value) {
     return 50;
 }
 
-static ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
+ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     auto* runtime = (ngl::fx::effect_runtime*)
         memory::game_heap::allocate_small_block(sizeof(ngl::fx::effect_runtime));
 
@@ -487,7 +490,7 @@ static ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     return runtime;
 }
 
-static void destroy_effect_runtime(ngl::fx::effect &value) {
+void destroy_effect_runtime(ngl::fx::effect &value) {
     ngl::fx::effect_runtime* runtime = value.runtime;
 
     if (!runtime)

@@ -1,4 +1,3 @@
-#include <mutex>
 #include <windows.h>
 
 #include "treyarch/ngl/ngl.hh"

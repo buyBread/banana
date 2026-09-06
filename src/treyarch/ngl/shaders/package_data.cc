@@ -16,7 +16,7 @@ static const ngl::shaders::package::entry*  entries;
 static       bool                           initialized;
 static       bool                           valid;
 
-static bool validate_package() {
+bool validate_package() {
     using namespace ngl::shaders;
 
     HMODULE module   = (HMODULE)&__ImageBase;
@@ -78,7 +78,7 @@ static bool validate_package() {
     return header->entry_count == expected_entry_count;
 }
 
-static const ngl::shaders::package::entry* find_entry(u32 key) {
+const ngl::shaders::package::entry* find_entry(u32 key) {
     u32 first = 0;
     u32 count = header->entry_count;
 

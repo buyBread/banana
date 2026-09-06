@@ -57,8 +57,8 @@ ASSERT_OFFSETOF(ngl_string_node, chunks,     0x2C);
 
 static util::memory_reference<void*> string_node_vtable { 0x00DB7374 };
 
-static const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
-                                                   u8         character) {
+const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
+                                            u8         character) {
 
     auto index = (i32)character - font_data->header.first_glyph;
 
@@ -70,11 +70,11 @@ static const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
     return &font_data->glyphs[index];
 }
 
-static u32 get_glyph_cell_width(const ngl::font* font_data, u8 character) {
+u32 get_glyph_cell_width(const ngl::font* font_data, u8 character) {
     return (u32)(get_glyph_info(font_data, character)->cell_width - 1);
 }
 
-static void parse_color_token(const char** cursor, u32* color) {
+void parse_color_token(const char** cursor, u32* color) {
     char* end;
     u32 parsed = std::strtoul(++*cursor, &end, 16);
 
@@ -82,7 +82,7 @@ static void parse_color_token(const char** cursor, u32* color) {
     *cursor = end + 1;
 }
 
-static void parse_scale_token(const char** cursor, f32* scale) {
+void parse_scale_token(const char** cursor, f32* scale) {
     char* end;
     f64 parsed = std::strtod(++*cursor, &end);
 
@@ -90,9 +90,9 @@ static void parse_scale_token(const char** cursor, f32* scale) {
     *cursor = end + 1;
 }
 
-static void parse_scale_xy_token(const char** cursor,
-                                       f32*   scale_x,
-                                       f32*   scale_y) {
+void parse_scale_xy_token(const char** cursor,
+                                f32*   scale_x,
+                                f32*   scale_y) {
 
     char* end;
     f64 parsed_x = std::strtod(++*cursor, &end);
@@ -106,17 +106,17 @@ static void parse_scale_xy_token(const char** cursor,
     *cursor  = end + 1;
 }
 
-static u32 rotate_color(u32 value) {
+u32 rotate_color(u32 value) {
     return (value >> 8) | (value << 24);
 }
 
-static ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
-                                                   f32        x,
-                                                   f32        y,
-                                                   f32        scale_x,
-                                                   f32        scale_y,
-                                                   u32        color,
-                                             const char*      text) {
+ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
+                                            f32        x,
+                                            f32        y,
+                                            f32        scale_x,
+                                            f32        scale_y,
+                                            u32        color,
+                                      const char*      text) {
                                                 
     f32 line_height = (f32)font_data->header.cell_height;
     f32 line_start  = x;

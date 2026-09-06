@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/macros/sanity_assert.hh"
+#include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 
 namespace treyarch {
@@ -15,6 +16,15 @@ namespace treyarch {
             return *this;
         }
     };
+
+    inline fixed_string make_fixed_string(const char* text) {
+        fixed_string value;
+
+        value.text = (char*)text;
+        value.hash = string_hash(hash::djb2(text));
+
+        return value;
+    }
 
     ASSERT_SIZEOF(fixed_string, 0x08);
 

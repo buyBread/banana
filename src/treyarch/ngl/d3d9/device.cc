@@ -11,6 +11,7 @@ void ngl::d3d9::poison_bindings() {
     for (u32 index = 0; index < 36; ++index)
         cached_state[index] = 0xDEADBEEF;
 
+    // retail writes this after poisoning the cache
     references::bindings.get().validation = 0x4B3C2D1E;
 }
 

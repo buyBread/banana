@@ -5,7 +5,7 @@
 #include "treyarch/ngl/texture/texture.hh"
 
 namespace treyarch { namespace ngl {
-    enum runtime_texture_flags : u32 {
+    enum e_runtime_texture_flags : u32 {
         runtime_texture_owned         = 0x00000020,
         runtime_texture_render_target = 0x00000040,
         runtime_texture_surface_only  = 0x00000080,

@@ -11,7 +11,7 @@ using namespace treyarch;
 static util::memory_reference<u8> rendering_to_texture           { 0x00F53D50 };
 static util::memory_reference<u8> fixed_twenty_millisecond_frame { 0x01118559 };
 
-static DWORD pack_color(const ngl::vector4 &color) {
+DWORD pack_color(const ngl::vector4 &color) {
     u32 red   = (u32)(color.x * 255.0f);
     u32 green = (u32)(color.y * 255.0f);
     u32 blue  = (u32)(color.z * 255.0f);
@@ -20,7 +20,7 @@ static DWORD pack_color(const ngl::vector4 &color) {
     return blue | green << 8 | red << 16 | alpha << 24;
 }
 
-static LONG normalized_to_pixel(f32 value, u32 extent) {
+LONG normalized_to_pixel(f32 value, u32 extent) {
     return (LONG)((value * 0.5f + 0.5f) * (f32)extent + 0.5f);
 }
 

@@ -1,4 +1,4 @@
-#include <cstring>
+#include <bit>
 
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
@@ -11,15 +11,7 @@ using namespace treyarch;
 static util::memory_reference<u8> bone_constant_source   { 0x01117240 };
 static util::memory_reference<u8> global_constant_source { 0x01117200 };
 
-static DWORD float_bits(f32 value) {
-    DWORD bits;
-
-    std::memcpy(&bits, &value, sizeof(bits));
-
-    return bits;
-}
-
-static void apply_render_states(const ngl::fx::render_states &states) {
+void apply_render_states(const ngl::fx::render_states &states) {
     using namespace ngl::d3d9;
 
     if (states.alpha_blend_enabled) {
@@ -38,11 +30,12 @@ static void apply_render_states(const ngl::fx::render_states &states) {
     } else
         set_render_state(D3DRS_ALPHATESTENABLE, FALSE);
 
+    // mean the opposite thing in NGL idk?
     DWORD cull_mode = D3DCULL_NONE;
 
-    if (states.cull_mode == 3)
+    if (states.cull_mode == D3DCULL_CCW)
         cull_mode = D3DCULL_CW;
-    else if (states.cull_mode == 2)
+    else if (states.cull_mode == D3DCULL_CW)
         cull_mode = D3DCULL_CCW;
 
     set_render_state(D3DRS_CULLMODE, cull_mode);
@@ -71,27 +64,27 @@ static void apply_render_states(const ngl::fx::render_states &states) {
 
     if (states.point_sprite_enabled) {
         set_render_state(D3DRS_POINTSPRITEENABLE, TRUE);
-        set_render_state(D3DRS_POINTSIZE, float_bits(states.point_size));
+        set_render_state(D3DRS_POINTSIZE, std::bit_cast<DWORD>(states.point_size));
         set_render_state(D3DRS_POINTSCALEENABLE, FALSE);
-        set_render_state(D3DRS_POINTSIZE_MIN, float_bits(states.point_size_minimum));
-        set_render_state(D3DRS_POINTSIZE_MAX, float_bits(states.point_size_maximum));
+        set_render_state(D3DRS_POINTSIZE_MIN, std::bit_cast<DWORD>(states.point_size_minimum));
+        set_render_state(D3DRS_POINTSIZE_MAX, std::bit_cast<DWORD>(states.point_size_maximum));
     } else
         set_render_state(D3DRS_POINTSPRITEENABLE, FALSE);
 }
 
-static void apply_sampler_states(u32 stage, const u32* sampler) {
+void apply_sampler_states(u32 stage, const u32* sampler) {
     using namespace ngl::d3d9;
 
     set_sampler_state(stage, D3DSAMP_ADDRESSU, sampler[1]);
     set_sampler_state(stage, D3DSAMP_ADDRESSV, sampler[2]);
     set_sampler_state(stage, D3DSAMP_ADDRESSW, sampler[3]);
     set_sampler_state(stage, D3DSAMP_MAGFILTER, sampler[5]);
-    set_sampler_state(stage, D3DSAMP_MINFILTER, sampler[6] == 3 ? 2 : sampler[6]);
-    set_sampler_state(stage, D3DSAMP_MIPFILTER, sampler[4] == 3 ? 2 : sampler[4]);
+    set_sampler_state(stage, D3DSAMP_MINFILTER, sampler[6] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[6]);
+    set_sampler_state(stage, D3DSAMP_MIPFILTER, sampler[4] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[4]);
     set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, 1);
 }
 
-static void bind_texture(      ngl::fx::effect*           effect_data,
+void bind_texture(      ngl::fx::effect*           effect_data,
                          const ngl::fx::function_binding &binding,
                                void**                     sources) {
 
@@ -103,7 +96,7 @@ static void bind_texture(      ngl::fx::effect*           effect_data,
     apply_sampler_states(binding.handle, (const u32*)parameter.data);
 }
 
-static void bind_vertex_function(ngl::fx::effect*   effect_data,
+void bind_vertex_function(ngl::fx::effect*   effect_data,
                                  ngl::fx::function* value,
                                  void**             sources) {
 
@@ -120,7 +113,7 @@ static void bind_vertex_function(ngl::fx::effect*   effect_data,
     for (i32 index = 0; index < value->binding_count; ++index) {
         const ngl::fx::function_binding &binding = value->bindings[index];
 
-        if (binding.destination_type == 3) {
+        if (binding.destination_type == ngl::fx::binding_sampler) {
             bind_texture(effect_data, binding, sources);
 
             continue;
@@ -130,7 +123,7 @@ static void bind_vertex_function(ngl::fx::effect*   effect_data,
         const f32* source = (const f32*)((u8*)sources[binding.source_class] + binding.source_offset);
         f32 converted[4];
 
-        if ((u32)parameter.type == 1 || (u32)parameter.type == 2) {
+        if (parameter.type == ngl::fx::parameter_bool || parameter.type == ngl::fx::parameter_int) {
             converted[0] = (f32)*(const i32*)source;
             converted[1] = 0.0f;
             converted[2] = 0.0f;
@@ -142,7 +135,7 @@ static void bind_vertex_function(ngl::fx::effect*   effect_data,
     }
 }
 
-static void bind_pixel_function(ngl::fx::effect* effect_data,
+void bind_pixel_function(ngl::fx::effect* effect_data,
                                 ngl::fx::function* value,
                                 void** sources) {
 
@@ -160,25 +153,25 @@ static void bind_pixel_function(ngl::fx::effect* effect_data,
         const u8* source = (const u8*)sources[binding.source_class] + binding.source_offset;
 
         switch (binding.destination_type) {
-            case 0:
+            case ngl::fx::binding_float:
                 device->SetPixelShaderConstantF(binding.handle,
                                                  (const f32*)source,
                                                  binding.register_count);
                 break;
 
-            case 1: {
+            case ngl::fx::binding_int: {
                 i32 converted[4] { *(const i32*)source, 0, 0, 0 };
                 device->SetPixelShaderConstantI(binding.handle, converted, 1);
                 break;
             }
 
-            case 2: {
+            case ngl::fx::binding_bool: {
                 BOOL converted = *source != 0;
                 device->SetPixelShaderConstantB(binding.handle, &converted, 1);
                 break;
             }
 
-            case 3:
+            case ngl::fx::binding_sampler:
                 if (binding.handle != (u32)-1)
                     bind_texture(effect_data, binding, sources);
                 break;
@@ -186,11 +179,11 @@ static void bind_pixel_function(ngl::fx::effect* effect_data,
     }
 }
 
-static void unbind_samplers(const ngl::fx::function &value) {
+void unbind_samplers(const ngl::fx::function &value) {
     for (i32 index = 0; index < value.binding_count; ++index) {
         const ngl::fx::function_binding &binding = value.bindings[index];
 
-        if (binding.destination_type != 3)
+        if (binding.destination_type != ngl::fx::binding_sampler)
             continue;
 
         ngl::d3d9::set_texture(binding.handle, nullptr);
@@ -200,11 +193,11 @@ static void unbind_samplers(const ngl::fx::function &value) {
 void ngl::fx::apply_pass(effect* effect_data, pass* value) {
     void* sources[8] {};
 
-    sources[1] = effect_data->parameter_data;
-    sources[2] = ngl::references::current_scene.read();
-    sources[3] = &bone_constant_source.get();
-    sources[6] = &global_constant_source.get();
-    sources[7] = references::parameter_texture_fallback_pointer.read();
+    sources[binding_parameters] = effect_data->parameter_data;
+    sources[binding_scene] = ngl::references::current_scene.read();
+    sources[binding_bones] = &bone_constant_source.get();
+    sources[binding_global_constants] = &global_constant_source.get();
+    sources[binding_fallback_texture] = references::parameter_texture_fallback_pointer.read();
 
     apply_render_states(value->states);
 

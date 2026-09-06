@@ -7,7 +7,7 @@
 
 namespace treyarch { namespace ngl {
     class phys_vec3;
-    
+
     class vector3 { // L15346: SM3 .ii
 
 public:
@@ -36,14 +36,14 @@ public:
             y = _y;
             z = _z;
         }
-        explicit vector3(const vector2& v, f32 d=1.0F) {
+        explicit vector3(const vector2 &v, f32 d = 1.0f) {
             x = v.x;
             y = v.y;
             z = d;
         }
         explicit vector3(f32 d) { x = y = z = d; }
 
-        vector3& operator = (const vector3 &v) {
+        vector3 &operator=(const vector3 &v) {
             x = v.x;
             y = v.y;
             z = v.z;
@@ -51,7 +51,7 @@ public:
             return *this;
         }
 
-        vector3& operator += (const vector3 &v) {
+        vector3 &operator+=(const vector3 &v) {
             x += v.x;
             y += v.y;
             z += v.z;
@@ -59,7 +59,7 @@ public:
             return *this;
         }
 
-        vector3& operator -= (const vector3 &v) {
+        vector3 &operator-=(const vector3 &v) {
             x -= v.x;
             y -= v.y;
             z -= v.z;
@@ -67,7 +67,7 @@ public:
             return *this;
         }
 
-        vector3& operator *= (f32 d) {
+        vector3 &operator*=(f32 d) {
             x *= d;
             y *= d;
             z *= d;
@@ -75,7 +75,7 @@ public:
             return *this;
         }
 
-        vector3& operator /= (f32 d) {
+        vector3 &operator/=(f32 d) {
             f32 d_inv = 1.0f / d;
             
             x *= d_inv;
@@ -85,12 +85,12 @@ public:
             return *this;
         }
 
-        vector3 operator - () const {
+        vector3 operator-() const {
             return vector3(-x, -y, -z);
         }
 
-        const f32& operator[] (int i) const { return (&x)[i]; }
-              f32& operator[] (int i)       { return (&x)[i]; }
+        const f32 &operator[](int i) const { return (&x)[i]; }
+              f32 &operator[](int i)       { return (&x)[i]; }
 
         f32 length2() const {
             return x*x + y*y + z*z;
@@ -100,7 +100,7 @@ public:
             return (f32)sqrtf(x*x + y*y + z*z);
         }
 
-        vector3 &normalize(){
+        vector3 &normalize() {
             f32 l2 = length2();
             
             if (l2 > SMALL_DIST*SMALL_DIST)
@@ -109,7 +109,7 @@ public:
             return *this;
         }
 
-        vector3 &set_length(f32 newlen=1.0f){
+        vector3 &set_length(f32 newlen = 1.0f) {
             f32 l2 = length2();
 
             if (l2 > SMALL_DIST*SMALL_DIST)
@@ -122,7 +122,7 @@ public:
 
         const vector2 &get_xy() const { return *(vector2*)&x; }
         const vector2 &get_yz() const { return *(vector2*)&y; }
-        const vector2  get_xz() const { return vector2(x,z); }
+        const vector2 get_xz() const { return vector2(x, z); }
 
         f32 xy_length2() const { return x*x + y*y; }
         f32 yz_length2() const { return y*y + z*z; }
@@ -145,7 +145,7 @@ public:
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
 
         operator const phys_vec3() const; /* hey, what are you? */
-        
+
         vector3(const phys_vec3&); /* hey, what are you? */
     };
 }} // treyarch::ngl

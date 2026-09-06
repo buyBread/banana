@@ -1,7 +1,7 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
-#include "treyarch/ngl/d3d9/shader_program.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/shaders/pcuv/programs.hh"
 
 using namespace treyarch;
@@ -18,7 +18,7 @@ static const D3DVERTEXELEMENT9 vertex_elements[] {
     D3DDECL_END(),
 };
 
-static bool create_vertex_declaration() {
+bool create_vertex_declaration() {
     ngl::vertex_definition &format = program_exports::pcuv::format.get();
 
     format.vertex_size = 16;
@@ -37,10 +37,10 @@ static bool create_vertex_declaration() {
 }
 
 bool ngl::shaders::pcuv::initialize() {
-    if (!vertex_program.create({ e_shader_program::pcuv_vertex }))
-        return false;
-
-    if (!pixel_program.create({ e_shader_program::pcuv_pixel }))
+    if (!create_program_pair(vertex_program,
+                             e_shader_program::pcuv_vertex,
+                             pixel_program,
+                             e_shader_program::pcuv_pixel))
         return false;
 
     program_exports::pcuv::vertex_program.write(vertex_program.get());

@@ -2,6 +2,7 @@
 #include <cstddef>
 
 #include "treyarch/ngl/shaders/program_exports.hh"
+#include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_roadlod/programs.hh"
 
@@ -23,11 +24,9 @@ bool ngl::shaders::sm_road::initialize() {
     if (!vertex_program.create({ e_shader_program::sm_road_vertex }))
         return false;
 
-    for (size_t index = 0; index < material_pixel_programs.size(); ++index) {
-        if (!material_pixel_programs[index].create({ e_shader_program::sm_road_material_pixel, (u16)index }))
-            
-            return false;
-    }
+    if (!create_program_range(material_pixel_programs,
+                              e_shader_program::sm_road_material_pixel))
+        return false;
 
     if (!sample_auxiliary_alpha_pixel_program.create({ e_shader_program::sm_road_sample_auxiliary_alpha_pixel }))
         return false;

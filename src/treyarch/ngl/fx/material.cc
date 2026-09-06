@@ -6,10 +6,6 @@
 
 using namespace treyarch;
 
-static u32 parameter_name_hash(const ngl::fx::parameter &value) {
-    return value.name.hash.source_hash_code;
-}
-
 void ngl::fx::bind_material(material* value, effect* effect_data) {
     for (i32 material_index = 0; material_index < value->parameter_count; ++material_index) {
         parameter &material_parameter = value->parameters[material_index];
@@ -17,12 +13,12 @@ void ngl::fx::bind_material(material* value, effect* effect_data) {
         material_parameter.effect_binding =
             (parameter*)&references::parameter_binding_sentinel.get();
 
-        u32 name_hash = parameter_name_hash(material_parameter);
+        u32 name_hash = material_parameter.name.hash.source_hash_code;
 
         for (i32 effect_index = 0; effect_index < effect_data->parameter_count; ++effect_index) {
             parameter &effect_parameter = effect_data->parameters[effect_index];
 
-            if (name_hash && name_hash == parameter_name_hash(effect_parameter)) {
+            if (name_hash && name_hash == effect_parameter.name.hash.source_hash_code) {
                 material_parameter.effect_binding = &effect_parameter;
                 
                 break;
@@ -69,6 +65,8 @@ void ngl::fx::copy_material_parameters(material* value) {
 
         u8* source_data      = (u8*)source.data;
         u8* destination_data = (u8*)destination->data;
+        // copy whole 16-byte values even when data_size ends partway through one
+        // copy front to back in case the material and effect data overlap
         u32 byte_count       = (destination->data_size + 15) & ~15u;
 
         for (u32 offset = 0; offset < byte_count; offset += 16)
@@ -76,14 +74,16 @@ void ngl::fx::copy_material_parameters(material* value) {
     }
 }
 
-void ngl::fx::build_animated_texture_parameter_chain(effect* value) {
-    value->animated_texture_parameter_chain =
-        (parameter*)&references::parameter_chain_sentinel.get();
+ngl::fx::parameter* build_animated_texture_chain(ngl::fx::parameter* parameters, i32 count) {
+    using namespace ngl::fx;
 
-    for (i32 index = 0; index < value->parameter_count; ++index) {
-        parameter &entry = value->parameters[index];
+    // this marker means the chain was built but no animated textures were found
+    parameter* head = (parameter*)&references::parameter_chain_sentinel.get();
 
-        if ((u32)entry.type != 11)
+    for (i32 index = 0; index < count; ++index) {
+        parameter &entry = parameters[index];
+
+        if (entry.type != parameter_texture)
             continue;
 
         u8* texture_data = (u8*)*(void**)entry.data;
@@ -91,29 +91,19 @@ void ngl::fx::build_animated_texture_parameter_chain(effect* value) {
         if (!(texture_data[0x10] & 1))
             continue;
 
-        entry.animated_texture_chain_next = value->animated_texture_parameter_chain;
-        value->animated_texture_parameter_chain = &entry;
+        entry.animated_texture_chain_next = head;
+        head = &entry;
     }
+
+    return head;
 }
 
-void ngl::fx::build_animated_texture_parameter_chain(effect* effect_data, material* value) {
-    (void)effect_data;
-
+void ngl::fx::build_animated_texture_parameter_chain(effect* value) {
     value->animated_texture_parameter_chain =
-        (parameter*)&references::parameter_chain_sentinel.get();
+        build_animated_texture_chain(value->parameters, value->parameter_count);
+}
 
-    for (i32 index = 0; index < value->parameter_count; ++index) {
-        parameter &entry = value->parameters[index];
-
-        if ((u32)entry.type != 11)
-            continue;
-
-        u8* texture_data = (u8*)*(void**)entry.data;
-
-        if (!(texture_data[0x10] & 1))
-            continue;
-
-        entry.animated_texture_chain_next = value->animated_texture_parameter_chain;
-        value->animated_texture_parameter_chain = &entry;
-    }
+void ngl::fx::build_animated_texture_parameter_chain(material* value) {
+    value->animated_texture_parameter_chain =
+        build_animated_texture_chain(value->parameters, value->parameter_count);
 }
