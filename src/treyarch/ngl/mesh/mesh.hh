@@ -4,6 +4,7 @@
 
 #include "treyarch/amalga/file.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
+#include "treyarch/ngl/math/types/vector4.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "util/macros/sanity_assert.hh"
@@ -15,7 +16,7 @@ namespace treyarch { namespace ngl {
     struct mesh;
 
     struct mesh_section {
-        f32                          sphere[4];
+        vector4                      sphere;
         u32                          unk_010;
         u32                          unk_014;
         u32                          unk_018;
@@ -55,7 +56,7 @@ namespace treyarch { namespace ngl {
         u32                       lod_count;
         mesh_lod*                 lods;
         u32                       polygon_count;
-        f32                       sphere[4];
+        vector4                   sphere;
         u32                       unk_034;
         u32                       unk_038;
         u32                       unk_03c;

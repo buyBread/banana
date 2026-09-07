@@ -107,6 +107,6 @@ namespace treyarch {
         ref_lock_scope &operator=(const ref_lock_scope&) = delete;
     };
 
-    static_assert(sizeof(engine_recursive_lock)    == 0x10, ASSERT_FAIL_SANITY);
-    static_assert(sizeof(ref_counted_simple_mutex) == 0x18, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(engine_recursive_lock,    0x10);
+    ASSERT_SIZEOF(ref_counted_simple_mutex, 0x18);
 } // treyarch

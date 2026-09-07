@@ -56,7 +56,6 @@ static util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
 static util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
 static util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
 
-static util::memory_reference<f32> point_light_data    { 0x011189D0 };
 static util::memory_reference<f32> bone_constant_data  { 0x01117240 };
 static util::memory_reference<u32> bone_constant_count { 0x01117168 };
 
@@ -158,13 +157,7 @@ struct generated_light_data {
     u8        reserved_0E4[0x0C];
 };
 
-struct context_point_light_data {
-    vector4 position;
-    vector4 color;
-};
-
-static_assert(sizeof(generated_light_data) == 0xF0);
-static_assert(sizeof(context_point_light_data) == 0x20);
+ASSERT_SIZEOF(generated_light_data, 0xF0);
 
 void initialize_general_lighting(general_lighting_parameters* value) {
     std::memset(value, 0, sizeof(*value));
@@ -336,19 +329,17 @@ void write_general_primary_block(      general_lighting_parameters* value,
     add_general_directional_light(value, source, true);
 }
 
-void get_world_sphere_center(      f32*                     destination,
-                             const ngl::fx::mesh_node_data* node_data,
-                             const ngl::mesh_section*       section) {
+void get_world_sphere_center(      vector4                  &destination,
+                             const ngl::fx::mesh_node_data*  node_data,
+                             const ngl::mesh_section*        section) {
 
-    const f32* matrix = (const f32*)&node_data->local_to_world;
-    f32 x = section->sphere[0];
-    f32 y = section->sphere[1];
-    f32 z = section->sphere[2];
+    const matrix4x4 &matrix = node_data->local_to_world;
+    const vector4   &sphere = section->sphere;
 
-    destination[0] = matrix[0] * x + matrix[4] * y + matrix[ 8] * z + matrix[12];
-    destination[1] = matrix[1] * x + matrix[5] * y + matrix[ 9] * z + matrix[13];
-    destination[2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14];
-    destination[3] = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15];
+    destination.x = matrix.x.x * sphere.x + matrix.y.x * sphere.y + matrix.z.x * sphere.z + matrix.w.x;
+    destination.y = matrix.x.y * sphere.x + matrix.y.y * sphere.y + matrix.z.y * sphere.z + matrix.w.y;
+    destination.z = matrix.x.z * sphere.x + matrix.y.z * sphere.y + matrix.z.z * sphere.z + matrix.w.z;
+    destination.w = matrix.x.w * sphere.x + matrix.y.w * sphere.y + matrix.z.w * sphere.z + matrix.w.w;
 }
 
 f32 get_inverse_node_transform(      matrix4x4                &destination,
@@ -374,16 +365,16 @@ f32 get_inverse_node_transform(      matrix4x4                &destination,
     return 1.0f / node_data->scale;
 }
 
-bool local_light_intersects_mesh(const f32*                     position,
-                                       f32                      outer_radius,
-                                 const f32*                     world_center,
-                                 const matrix4x4               &inverse_transform,
-                                       f32                      inverse_scale,
-                                 const ngl::fx::mesh_node_data* node_data) {
+bool local_light_intersects_mesh(const vector4                  &position,
+                                       f32                       outer_radius,
+                                 const vector4                  &world_center,
+                                 const matrix4x4                &inverse_transform,
+                                       f32                       inverse_scale,
+                                 const ngl::fx::mesh_node_data*  node_data) {
 
-    f32 delta_x = position[0] - world_center[0];
-    f32 delta_y = position[1] - world_center[1];
-    f32 delta_z = position[2] - world_center[2];
+    f32 delta_x = position.x - world_center.x;
+    f32 delta_y = position.y - world_center.y;
+    f32 delta_z = position.z - world_center.z;
     f32 mesh_radius = node_data->scale * *(f32*)(node_data->mesh_data + 0x2C);
     f32 combined_radius = outer_radius + mesh_radius;
 
@@ -455,7 +446,7 @@ void add_general_generated_light(      general_lighting_parameters* value,
 }
 
 void add_general_point_light(      general_lighting_parameters* value,
-                             const context_point_light_data*    light,
+                             const lighting::point_light_data*  light,
                                    f32                          local_radius) {
 
     i32 &count = value->light_count;
@@ -510,7 +501,7 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
     if (value->light_count >= 4)
         return;
 
-    f32 world_center[4];
+    vector4 world_center;
     matrix4x4 inverse_transform;
     get_world_sphere_center(world_center, node_data, section);
     f32 inverse_scale = get_inverse_node_transform(inverse_transform, node_data);
@@ -524,7 +515,7 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
     for (i32 index = 0; index < generated_light_count; ++index) {
         generated_light_data* light = generated_lights + index;
 
-        if (!local_light_intersects_mesh((const f32*)&light->position,
+        if (!local_light_intersects_mesh(light->position,
                                          light->outer_radius,
                                          world_center,
                                          inverse_transform,
@@ -547,7 +538,7 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
             auto* light = (generated_light_data*)node->node_data;
 
             if ((!include_disabled && (light->flags & 2)) ||
-                !local_light_intersects_mesh((const f32*)&light->position,
+                !local_light_intersects_mesh(light->position,
                                              light->outer_radius,
                                              world_center,
                                              inverse_transform,
@@ -561,9 +552,9 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
 
             add_general_generated_light(value, light, inverse_scale);
         } else if (node->type == ngl::lighting::light_point) {
-            auto* light = (context_point_light_data*)node->node_data;
+            auto* light = (lighting::point_light_data*)node->node_data;
 
-            if (!local_light_intersects_mesh((const f32*)&light->position,
+            if (!local_light_intersects_mesh(light->position,
                                              light->position.w,
                                              world_center,
                                              inverse_transform,
@@ -915,31 +906,37 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
 void write_point_light_positions(      f32*                     destination,
                                  const ngl::fx::mesh_node_data* node_data) {
 
-    f32* lights = &point_light_data.get();
+    lighting::point_light_data* lights = &lighting::references::point_light_data.get();
     // skip the 16-byte array header
     destination += 4;
 
     for (u32 index = 0; index < node_data->point_light_count; ++index) {
         u32 light_index = node_data->point_light_indices[index];
-        f32* light = lights + 8 * light_index;
+        const lighting::point_light_data &light = lights[light_index];
 
-        *(vector4*)(destination + 4 * index) = vector4(light[0], light[1], light[2], 1.0f / light[3]);
+        *(vector4*)(destination + 4 * index) = vector4(light.position.x,
+                                                       light.position.y,
+                                                       light.position.z,
+                                                       1.0f / light.position.w);
     }
 }
 
-void write_point_light_colors(      f32* destination,
+void write_point_light_colors(      f32*                     destination,
                               const ngl::fx::mesh_node_data* node_data) {
 
-    f32* lights = &point_light_data.get();
+    lighting::point_light_data* lights = &lighting::references::point_light_data.get();
     u32 index = 0;
     // skip the 16-byte array header
     destination += 4;
 
     for (; index < node_data->point_light_count; ++index) {
         u32 light_index = node_data->point_light_indices[index];
-        f32* light = lights + 8 * light_index;
+        const lighting::point_light_data &light = lights[light_index];
 
-        *(vector4*)(destination + 4 * index) = vector4(light[4], light[5], light[6], 0.0f);
+        *(vector4*)(destination + 4 * index) = vector4(light.color.x,
+                                                       light.color.y,
+                                                       light.color.z,
+                                                       0.0f);
     }
 
     // clear unused colors, but leave unused positions and ranges alone

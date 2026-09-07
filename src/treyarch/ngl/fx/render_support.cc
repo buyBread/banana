@@ -1,13 +1,14 @@
 #include <cstdio>
+#include <cstddef>
 
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "treyarch/ngl/lighting/context.hh"
+#include "treyarch/ngl/math/rtree.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "util/gimmie/fn.hh"
 
 using namespace treyarch;
 
@@ -18,12 +19,11 @@ static util::memory_reference<u32> parameter_id_ifl_frame     { 0x01116348 };
 static util::memory_reference<ngl::lighting::light_context*> selected_light_context { 0x01118988 };
 
 static util::memory_reference<void*> point_light_manager { 0x010FC594 };
-static util::memory_reference<f32>   point_light_data    { 0x011189D0 };
 
 static util::memory_reference<i32> ifl_frame { 0x01118800 };
 
-static util::memory_reference<char> effect_hash_names           { 0x00FC6950 };
-static util::memory_reference<u32>  effect_hash_name_index      { 0x00FC6A00 };
+static util::memory_reference<char> effect_hash_names      { 0x00FC6950 };
+static util::memory_reference<u32>  effect_hash_name_index { 0x00FC6A00 };
 
 struct point_light_candidate {
     u32 index;
@@ -32,32 +32,30 @@ struct point_light_candidate {
     u32 reserved;
 };
 
-struct point_light_visitor;
-
-using point_light_visit_function = i32(__fastcall*)(point_light_visitor*, void*, i32);
-
-struct point_light_visitor_vtable {
-    void*                      destroy;
-    point_light_visit_function visit;
-};
-
 struct point_light_visitor {
-    point_light_visitor_vtable* vtable;
-    u32                         reserved_004;
-    point_light_candidate       candidates[512];
-    u32                         count;
-    u32                         reserved_200C;
-    f32                         center[4];
+    ngl::math::visitor    base;
+    u32                   reserved_004;
+    point_light_candidate candidates[512];
+    u32                   count;
+    u32                   reserved_200C;
+    ngl::vector4          center;
 };
 
-i32 __fastcall visit_point_light(point_light_visitor* visitor,
-                                 void*,
-                                 i32                  index) {
+ASSERT_SIZEOF(point_light_candidate, 0x10);
 
-    f32* light = &point_light_data.get() + 8 * index;
-    f32 x = (f32)((f64)visitor->center[0] - (f64)light[0]);
-    f32 y = (f32)((f64)visitor->center[1] - (f64)light[1]);
-    f32 z = (f32)((f64)visitor->center[2] - (f64)light[2]);
+ASSERT_SIZEOF  (point_light_visitor,             0x2020);
+ASSERT_OFFSETOF(point_light_visitor, candidates, 0x0008);
+ASSERT_OFFSETOF(point_light_visitor, count,      0x2008);
+ASSERT_OFFSETOF(point_light_visitor, center,     0x2010);
+
+i32 visit_point_light(ngl::math::visitor* base, i32 index) {
+    auto* visitor = (point_light_visitor*)base;
+
+    const ngl::lighting::point_light_data &light =
+        (&ngl::lighting::references::point_light_data.get())[index];
+    f32 x = (f32)((f64)visitor->center.x - (f64)light.position.x);
+    f32 y = (f32)((f64)visitor->center.y - (f64)light.position.y);
+    f32 z = (f32)((f64)visitor->center.z - (f64)light.position.z);
     f32 squared_distance = (f32)((f64)x * (f64)x +
                                  (f64)y * (f64)y +
                                  (f64)z * (f64)z);
@@ -74,7 +72,7 @@ i32 __fastcall visit_point_light(point_light_visitor* visitor,
     return 0;
 }
 
-static point_light_visitor_vtable point_light_visitor_methods {
+static ngl::math::visitor_vtable point_light_visitor_methods {
     nullptr,
     visit_point_light
 };
@@ -101,9 +99,9 @@ void push_point_light_heap(point_light_candidate* candidates,
 }
 
 void adjust_point_light_heap(point_light_candidate* candidates,
-                                    i32                    hole_index,
-                                    i32                    count,
-                                    point_light_candidate  value) {
+                             i32                    hole_index,
+                             i32                    count,
+                             point_light_candidate  value) {
 
     i32 top_index = hole_index;
     i32 second_child = 2 * hole_index + 2;
@@ -178,9 +176,9 @@ i32 select_nearest_point_lights(point_light_visitor* visitor) {
     return selected_count;
 }
 
-void query_point_lights(     ngl::fx::mesh_node_data* node_data,
-                               const f32*                    sphere,
-                                     f32                     radius) {
+void query_point_lights(      ngl::fx::mesh_node_data* node_data,
+                        const ngl::vector4             &sphere,
+                              f32                      radius) {
 
     ngl::lighting::light_context* context = selected_light_context.read();
 
@@ -188,25 +186,15 @@ void query_point_lights(     ngl::fx::mesh_node_data* node_data,
         return;
 
     point_light_visitor visitor;
-    visitor.vtable        = &point_light_visitor_methods;
+    visitor.base.vtable   = &point_light_visitor_methods;
     visitor.reserved_004  = 0;
     visitor.count         = 0;
     visitor.reserved_200C = 0;
 
-    for (u32 index = 0; index < 4; ++index)
-        visitor.center[index] = sphere[index];
+    visitor.center = sphere;
 
-    using spatial_query_function =
-        i32(__thiscall*)(void*, f32*, f32, point_light_visitor*, i32);
-
-    void* spatial_index = *(void**)context->platform_state_040;
-
-    util::gimmie::fn<spatial_query_function>
-        (0x0095C270)(spatial_index,
-                     (f32*)sphere,
-                     radius,
-                     &visitor,
-                     (i32)0xDEADBEEF);
+    ngl::math::rtree* tree = *(ngl::math::rtree**)context->platform_state_040;
+    ngl::math::query_sphere(tree, sphere.get_xyz(), radius, &visitor.base);
 
     i32 count = select_nearest_point_lights(&visitor);
 
@@ -241,28 +229,27 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
 void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
 
-    f32 x = section->sphere[0];
-    f32 y = section->sphere[1];
-    f32 z = section->sphere[2];
+    const ngl::vector4   &local_sphere = section->sphere;
+    const ngl::matrix4x4 &matrix       = node_data->local_to_world;
 
-    const f32* matrix = (const f32*)&node_data->local_to_world;
-
-    f32 sphere[4] { (f32)((f64)matrix[0] * (f64)x +
-                          (f64)matrix[4] * (f64)y +
-                          (f64)matrix[8] * (f64)z +
-                          (f64)matrix[12]),
-                    (f32)((f64)matrix[1] * (f64)x +
-                          (f64)matrix[5] * (f64)y +
-                          (f64)matrix[9] * (f64)z +
-                          (f64)matrix[13]),
-                    (f32)((f64)matrix[2]  * (f64)x +
-                          (f64)matrix[6]  * (f64)y +
-                          (f64)matrix[10] * (f64)z +
-                          (f64)matrix[14]),
-                    (f32)((f64)matrix[3]  * (f64)x +
-                          (f64)matrix[7]  * (f64)y +
-                          (f64)matrix[11] * (f64)z +
-                          (f64)matrix[15]) };
+    ngl::vector4 sphere {
+        (f32)((f64)matrix.x.x * (f64)local_sphere.x +
+              (f64)matrix.y.x * (f64)local_sphere.y +
+              (f64)matrix.z.x * (f64)local_sphere.z +
+              (f64)matrix.w.x),
+        (f32)((f64)matrix.x.y * (f64)local_sphere.x +
+              (f64)matrix.y.y * (f64)local_sphere.y +
+              (f64)matrix.z.y * (f64)local_sphere.z +
+              (f64)matrix.w.y),
+        (f32)((f64)matrix.x.z * (f64)local_sphere.x +
+              (f64)matrix.y.z * (f64)local_sphere.y +
+              (f64)matrix.z.z * (f64)local_sphere.z +
+              (f64)matrix.w.z),
+        (f32)((f64)matrix.x.w * (f64)local_sphere.x +
+              (f64)matrix.y.w * (f64)local_sphere.y +
+              (f64)matrix.z.w * (f64)local_sphere.z +
+              (f64)matrix.w.w)
+    };
 
     f32 scale = (*(u32*)node_data->node_info & 2) ? node_data->scale : 1.0f;
 
@@ -275,14 +262,11 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
     f32 radius;
 
     if (ngl::has_scene_parameter(parameters, parameter_id_light_sphere.read())) {
-        const f32* adjustment = (const f32*)ngl::get_scene_parameter
+        const ngl::vector4 &adjustment = *(const ngl::vector4*)ngl::get_scene_parameter
             (parameters, parameter_id_light_sphere.read());
 
-        sphere[0] += adjustment[0];
-        sphere[1] += adjustment[1];
-        sphere[2] += adjustment[2];
-        sphere[3] += adjustment[3];
-        radius = adjustment[3];
+        sphere += adjustment;
+        radius = adjustment.w;
     } else
         radius = *(f32*)(node_data->mesh_data + 0x2C);
 

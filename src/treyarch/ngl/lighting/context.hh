@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/ngl/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -24,6 +25,11 @@ namespace lighting {
         void*        node_data;
     };
 
+    struct point_light_data {
+        vector4 position;
+        vector4 color;
+    };
+
     struct light_context {
         light_node head;
         light_node projector_head;
@@ -39,6 +45,7 @@ namespace lighting {
     namespace references {
         inline util::memory_reference<light_context*> default_context { 0x01118980 };
         inline util::memory_reference<light_context*> current_context { 0x01118984 };
+        inline util::memory_reference<point_light_data> point_light_data { 0x011189D0 };
     } // references
 
     ASSERT_SIZEOF  (light_node,                 0x14);
@@ -47,6 +54,8 @@ namespace lighting {
     ASSERT_OFFSETOF(light_node, light_category, 0x08);
     ASSERT_OFFSETOF(light_node, type,           0x0C);
     ASSERT_OFFSETOF(light_node, node_data,      0x10);
+
+    ASSERT_SIZEOF(point_light_data, 0x20);
 
     ASSERT_SIZEOF  (light_context,                     0x50);
     ASSERT_OFFSETOF(light_context, head,               0x00);
