@@ -1,8 +1,8 @@
 #pragma once
 
 /*
-    this is not a "config file"!
-    any additional flags must be manually added to a commit.
+    this is not a "config" file.
+    don't push your local flag flips.
 */
 
 // flush all logging types
