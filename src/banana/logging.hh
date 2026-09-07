@@ -83,6 +83,7 @@ class s_logging : public util::singleton<s_logging> {
         m_file = std::fopen(fp.string().c_str(), "a");
 
 #if ALLOCATE_CONSOLE
+// in retrospect, this looks stupid
 #define PRINT(str, ...) std::printf("  %s\n", std::format(str, __VA_ARGS__).c_str())
 
         PRINT("");
@@ -161,8 +162,8 @@ class s_logging : public util::singleton<s_logging> {
 
             bool should_flush = false;
 
-            for (auto& entry : local) {
-#ifndef NDEBUG
+            for (auto &entry : local) {
+#if ALLOCATE_CONSOLE
                 console_output += std::format("{} {}\n",
                     colored_watermark(entry.type),
                     entry.text);
@@ -183,7 +184,7 @@ class s_logging : public util::singleton<s_logging> {
 #endif
             }
 
-#ifndef NDEBUG
+#if ALLOCATE_CONSOLE
             if (!console_output.empty()) {
                 std::fwrite(
                     console_output.data(),
@@ -210,8 +211,8 @@ class s_logging : public util::singleton<s_logging> {
             const auto dropped = m_dropped_messages.exchange(0);
 
             if (dropped != 0) {
-#ifndef NDEBUG
-                std::printf("%s",
+#if ALLOCATE_CONSOLE
+                std::printf("%s\n",
                     std::format("{} dropped {} messages", colored_watermark(e_log_type::wrn), dropped).c_str());
 #endif
             }
