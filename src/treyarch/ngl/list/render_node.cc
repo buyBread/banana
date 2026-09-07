@@ -36,7 +36,7 @@ void ngl::render_node::render() {
         last = address;
 
         if (seen.insert(address).second)
-            banana::log.wrn("unowned render node: {:p}", address);
+            banana::log.wrn("unowned render node -- address: {:p} | vtable: {:p}", address, vtable);
     }
 
     fn(this);
