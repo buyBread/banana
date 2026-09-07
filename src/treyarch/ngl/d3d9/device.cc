@@ -99,7 +99,7 @@ void ngl::d3d9::reset_device() {
     shadow::release_device_resources();
     movie::release_device_resources();
 
-    references::presentation.get().Windowed = FALSE;
+    references::presentation.get().PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
     references::device.get()->Reset(&references::presentation.get());
 
     initialize_framebuffers();
