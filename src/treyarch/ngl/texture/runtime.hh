@@ -23,4 +23,7 @@ namespace treyarch { namespace ngl {
 
     void name_runtime_texture(texture* value, const char* name);
     void register_runtime_texture(texture* value, const char* name);
+
+    void release_runtime_texture_device_resources(texture* value);
+    void restore_runtime_texture_device_resources(texture* value);
 }} // treyarch::ngl

@@ -22,6 +22,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     };
 
     ULONG initialize_framebuffers();
+    void release_framebuffers();
     
     void blit_texture(IDirect3DSurface9* destination,
                       texture*           source,

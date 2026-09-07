@@ -17,6 +17,12 @@ namespace treyarch { namespace ngl { namespace d3d9 {
         D3DRESOURCETYPE        resource_type;
     };
 
+    D3DPOOL get_texture_pool(const texture_resource* value);
+    bool is_depth_surface_format(D3DFORMAT format);
+    void create_surface_resource(IDirect3DSurface9** surface,
+                                 u32                 width,
+                                 u32                 height,
+                                 D3DFORMAT           format);
     bool create_texture_resource(texture_resource* value);
     u32 get_surface_size(D3DFORMAT format, u32 width, u32 height);
     void upload_texture(texture_resource* value, const void* &source);

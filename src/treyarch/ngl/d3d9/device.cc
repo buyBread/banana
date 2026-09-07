@@ -2,6 +2,10 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/ngl/movie/device_resources.hh"
+#include "treyarch/ngl/post_process/device_resources.hh"
+#include "treyarch/ngl/shadow/device_resources.hh"
+#include "banana/logging.hh"
 
 using namespace treyarch;
 
@@ -89,18 +93,23 @@ void ngl::d3d9::wait_for_rendering() {
 }
 
 void ngl::d3d9::reset_device() {
-    framebuffer_state &framebuffers = references::framebuffers.get();
+    release_framebuffers();
 
-    ngl::release_texture(framebuffers.back_buffer);
-    ngl::release_texture(framebuffers.secondary_hdr_buffer);
-    ngl::release_texture(framebuffers.secondary_ldr_buffer);
-    ngl::release_texture(framebuffers.front_buffer);
-    ngl::release_texture(framebuffers.linear_depth_buffer);
+    post_process::release_device_resources();
+    shadow::release_device_resources();
+    movie::release_device_resources();
 
     references::presentation.get().Windowed = FALSE;
     references::device.get()->Reset(&references::presentation.get());
 
     initialize_framebuffers();
+    
+    post_process::restore_device_resources();
+    shadow::restore_device_resources();
+    movie::restore_device_resources();
+
     poison_bindings();
     reset_bindings();
+
+    banana::log.dbg("device has been reset");
 }

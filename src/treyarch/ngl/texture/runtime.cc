@@ -4,33 +4,10 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/texture/runtime.hh"
-#include "treyarch/shared/four_cc.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
-
-bool is_depth_surface_format(D3DFORMAT format) {
-    switch ((u32)format) {
-        case D3DFMT_D16_LOCKABLE:
-        case D3DFMT_D32:
-        case D3DFMT_D15S1:
-        case D3DFMT_D24S8:
-        case D3DFMT_D24X8:
-        case D3DFMT_D24X4S4:
-        case D3DFMT_D16:
-        case D3DFMT_D32F_LOCKABLE:
-        case D3DFMT_D24FS8:
-        case (D3DFORMAT)four_cc('D', 'F', '2', '4'):
-        case (D3DFORMAT)four_cc('D', 'F', '1', '6'):
-        case (D3DFORMAT)four_cc('I', 'N', 'T', 'Z'):
-        case (D3DFORMAT)four_cc('R', 'A', 'W', 'Z'):
-            return true;
-
-        default:
-            return false;
-    }
-}
 
 void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
                             u32                          width,
@@ -57,33 +34,6 @@ void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
 
     if (creation_flags & 8)
         resource.usage |= D3DUSAGE_DEPTHSTENCIL;
-}
-
-void create_surface(IDirect3DSurface9** surface,
-                    u32                 width,
-                    u32                 height,
-                    D3DFORMAT           format) {
-
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
-
-    if (is_depth_surface_format(format))
-        device->CreateDepthStencilSurface(width,
-                                          height,
-                                          format,
-                                          D3DMULTISAMPLE_NONE,
-                                          0,
-                                          FALSE,
-                                          surface,
-                                          nullptr);
-    else
-        device->CreateRenderTarget(width,
-                                   height,
-                                   format,
-                                   D3DMULTISAMPLE_NONE,
-                                   0,
-                                   FALSE,
-                                   surface,
-                                   nullptr);
 }
 
 ngl::texture* ngl::create_runtime_texture(u32       flags,
@@ -128,7 +78,18 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
             return value;
         }
 
-        create_surface(&value->render_target, width, height, format);
+        value->gpu_texture.width       = width;
+        value->gpu_texture.height      = height;
+        value->gpu_texture.depth       = 1;
+        value->gpu_texture.level_count = 1;
+        value->gpu_texture.format      = format;
+        value->gpu_texture.usage       = d3d9::is_depth_surface_format(format) ?
+            D3DUSAGE_DEPTHSTENCIL : D3DUSAGE_RENDERTARGET;
+
+        d3d9::create_surface_resource(&value->render_target,
+                                      width,
+                                      height,
+                                      format);
     } else
         initialize_2d_resource(value->gpu_texture,
                                width,
@@ -178,4 +139,57 @@ void ngl::register_runtime_texture(texture* value, const char* name) {
     value->name.hash = string_hash(hash::djb2(name));
 
     references::textures.get().insert(value);
+}
+
+void ngl::release_runtime_texture_device_resources(texture* value) {
+    if (!value)
+        return;
+
+    if (value->depth_target)
+        release_runtime_texture_device_resources(value->depth_target);
+
+    if (value->render_target) {
+        value->render_target->Release();
+        value->render_target = nullptr;
+    }
+
+    d3d9::texture_resource &resource = value->gpu_texture;
+
+    if (resource.resource &&
+        d3d9::get_texture_pool(&resource) == D3DPOOL_DEFAULT) {
+
+        resource.resource->Release();
+        resource.resource = nullptr;
+    }
+}
+
+void ngl::restore_runtime_texture_device_resources(texture* value) {
+    if (!value)
+        return;
+
+    d3d9::texture_resource &resource = value->gpu_texture;
+
+    if (!resource.resource &&
+        d3d9::get_texture_pool(&resource) == D3DPOOL_DEFAULT) {
+
+        d3d9::create_texture_resource(&resource);
+    }
+
+    if (!value->render_target) {
+        if (value->flags & runtime_texture_surface_level) {
+            ((IDirect3DTexture9*)resource.resource)->GetSurfaceLevel
+                (0, &value->render_target);
+        } else if (value->flags & runtime_texture_surface_only) {
+            d3d9::create_surface_resource(&value->render_target,
+                                          resource.width,
+                                          resource.height,
+                                          resource.format);
+        } else if (value->flags & runtime_texture_render_target) {
+            ((IDirect3DTexture9*)resource.resource)->GetSurfaceLevel
+                (0, &value->render_target);
+        }
+    }
+
+    if (value->depth_target)
+        restore_runtime_texture_device_resources(value->depth_target);
 }

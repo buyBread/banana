@@ -2,13 +2,69 @@
 
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
+#include "treyarch/shared/four_cc.hh"
 
 using namespace treyarch;
 
-bool ngl::d3d9::create_texture_resource(texture_resource* value) {
-    D3DPOOL pool = (value->usage & 0x0B) ?
-        D3DPOOL_DEFAULT : (D3DPOOL)(((value->usage & 0x10) != 0) + 1);
+D3DPOOL ngl::d3d9::get_texture_pool(const texture_resource* value) {
+    if (value->usage & 0x0B)
+        return D3DPOOL_DEFAULT;
 
+    return (D3DPOOL)(((value->usage & 0x10) != 0) + 1);
+}
+
+bool ngl::d3d9::is_depth_surface_format(D3DFORMAT format) {
+    switch ((u32)format) {
+        case D3DFMT_D16_LOCKABLE:
+        case D3DFMT_D32:
+        case D3DFMT_D15S1:
+        case D3DFMT_D24S8:
+        case D3DFMT_D24X8:
+        case D3DFMT_D24X4S4:
+        case D3DFMT_D16:
+        case D3DFMT_D32F_LOCKABLE:
+        case D3DFMT_D24FS8:
+        case (D3DFORMAT)four_cc('D', 'F', '2', '4'):
+        case (D3DFORMAT)four_cc('D', 'F', '1', '6'):
+        case (D3DFORMAT)four_cc('I', 'N', 'T', 'Z'):
+        case (D3DFORMAT)four_cc('R', 'A', 'W', 'Z'):
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+void ngl::d3d9::create_surface_resource(IDirect3DSurface9** surface,
+                                        u32                 width,
+                                        u32                 height,
+                                        D3DFORMAT           format) {
+
+    IDirect3DDevice9* device = references::device.get();
+
+    if (is_depth_surface_format(format)) {
+        device->CreateDepthStencilSurface(width,
+                                          height,
+                                          format,
+                                          D3DMULTISAMPLE_NONE,
+                                          0,
+                                          FALSE,
+                                          surface,
+                                          nullptr);
+    } else {
+        device->CreateRenderTarget(width,
+                                   height,
+                                   format,
+                                   D3DMULTISAMPLE_NONE,
+                                   0,
+                                   FALSE,
+                                   surface,
+                                   nullptr);
+    }
+}
+
+bool ngl::d3d9::create_texture_resource(texture_resource* value) {
+    D3DPOOL pool = get_texture_pool(value);
     DWORD usage = value->usage & ~0x18;
     
     HRESULT result;

@@ -106,3 +106,13 @@ ULONG ngl::d3d9::initialize_framebuffers() {
 
     return surface->Release();
 }
+
+void ngl::d3d9::release_framebuffers() {
+    framebuffer_state &framebuffers = references::framebuffers.get();
+
+    ngl::release_texture(framebuffers.back_buffer);
+    ngl::release_texture(framebuffers.secondary_hdr_buffer);
+    ngl::release_texture(framebuffers.secondary_ldr_buffer);
+    ngl::release_texture(framebuffers.front_buffer);
+    ngl::release_texture(framebuffers.linear_depth_buffer);
+}

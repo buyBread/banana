@@ -10,6 +10,7 @@
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/ngl/shadow/device_resources.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;
@@ -40,13 +41,6 @@ static util::memory_reference<ngl::texture*> environment_texture         { 0x010
 static util::memory_reference<vector4>       shadow_distances { 0x01075F10 };
 static util::memory_reference<matrix4x4>     shadow_matrix_0  { 0x01075F20 };
 static util::memory_reference<matrix4x4>     shadow_matrix_2  { 0x01075F70 };
-static util::memory_reference<ngl::texture*> shadow_texture_0 { 0x01075FC0 };
-static util::memory_reference<ngl::texture*> shadow_texture_2 { 0x01075FC4 };
-
-static util::memory_reference<u32> shadow_width_0  { 0x00E7AFC4 };
-static util::memory_reference<u32> shadow_width_2  { 0x00E7AFC8 };
-static util::memory_reference<u32> shadow_height_0 { 0x00E7AFCC };
-static util::memory_reference<u32> shadow_height_2 { 0x00E7AFD0 };
 
 static util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
 static util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
@@ -1180,11 +1174,15 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_shadow_buffer_size:
             case parameter_shadow_buffer_size_1:
-                write_shadow_size(destination, shadow_width_0.read(), shadow_height_0.read());
+                write_shadow_size(destination,
+                                  shadow::references::dimensions.get().widths[0],
+                                  shadow::references::dimensions.get().heights[0]);
 
                 break;
             case parameter_shadow_buffer_size_2:
-                write_shadow_size(destination, shadow_width_2.read(), shadow_height_2.read());
+                write_shadow_size(destination,
+                                  shadow::references::dimensions.get().widths[1],
+                                  shadow::references::dimensions.get().heights[1]);
 
                 break;
             case parameter_view_projection_shadow:
@@ -1198,11 +1196,13 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_shadow_texture:
             case parameter_shadow_texture_1:
-                write_texture(entry, shadow_texture_0.read());
+                write_texture(entry,
+                              shadow::references::device_resources.get().depth_targets[0]);
 
                 break;
             case parameter_shadow_texture_2:
-                write_texture(entry, shadow_texture_2.read());
+                write_texture(entry,
+                              shadow::references::device_resources.get().depth_targets[1]);
 
                 break;
             case parameter_post_info:
