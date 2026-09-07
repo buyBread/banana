@@ -11,15 +11,33 @@ namespace treyarch {
     struct ref_counted_simple_mutex;
     class  ref_lock_scope;
 
-    /*
-        does any of this actually need to be volatile?
-    */
-
     struct engine_recursive_lock {
         volatile u32 owner;
         volatile u32 state;
         volatile u32 depth;
                  u32 reserved;
+
+        bool try_acquire(i64 owner_state) {
+            return _InterlockedCompareExchange64((volatile i64*)&owner, owner_state, 0) == 0;
+        }
+
+        void acquire_contended(i64 owner_state) {
+            u32 pause_count = 1;
+
+            while (!try_acquire(owner_state)) {
+                for (u32 i = 0; i < pause_count; ++i)
+                    _mm_pause();
+
+                if (pause_count < 1024) {
+                    pause_count <<= 1;
+
+                    continue;
+                }
+
+                if (!SwitchToThread())
+                    Sleep(1);
+            }
+        }
 
         void acquire() {
             const u32 thread_id = GetCurrentThreadId();
@@ -30,8 +48,8 @@ namespace treyarch {
                 return;
             }
 
-            if (_InterlockedCompareExchange64((i64*)&owner, (i64)thread_id, 0) != 0)
-                Sleep(0);
+            if (!try_acquire((i64)thread_id))
+                acquire_contended((i64)thread_id);
             
             depth = 1;
         }
@@ -88,7 +106,6 @@ namespace treyarch {
         }
     };
 
-    // local convenience wrapper
     class ref_lock_scope {
 
         ref_counted_simple_mutex* m_lock;
