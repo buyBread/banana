@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <d3d9.h>
 #include <atomic>
+#include <cstring>
 
 #include "banana/logging.hh"
 #include "banana/lifecycle.hh"
@@ -11,6 +12,17 @@
 
 namespace banana {
     extern void thread();
+
+    inline bool vibe_check() {
+        // todo: when not incredibly lazy, don't let the bad 1.0 version of the game get past dllmain,
+        //       but do it in a more "we're very fkn hardcore serious programmers here" manner
+        //       w/ like MessageBox, yeah2x
+
+        if (std::memcmp((void*)0x009CC222, "\xE8\xA9\x9A\x01\x00", 5) != 0) // ts just nglInit check :exploding_head:
+            return false;
+
+        return true;
+    }
 
     namespace core {
         extern bool init();

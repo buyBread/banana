@@ -4,16 +4,21 @@
 */
 
 #include <windows.h>
+
 #include "flags.hh"
 #include "treyarch/app.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "banana/logging.hh"
+#include "banana/core.hh"
 #include "util/redirect_rel32.hh"
 #include "util/macros/debug.hh"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) { 
         DisableThreadLibraryCalls(module);
+
+        if (!banana::vibe_check())
+            return FALSE;
 
 #if NGL_BOOTSTRAP
         /*
