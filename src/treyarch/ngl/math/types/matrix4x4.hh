@@ -114,21 +114,22 @@ public:
             return result;
         }
 
-        // Retail affine packets leave the fourth column uninitialized. Read only
-        // xyz from each row before using one in a full matrix product.
+        // retail affine packets leave the fourth column uninitialized,
+        // read only xyz from each row before using one in a full matrix product
         matrix4x4 affine() const {
             return matrix4x4(x_row(), y_row(), z_row(), w_row());
         }
 
-        // Matches the engine's rigid-transform inverse (0x0044D470). Callers
-        // that need scale removal must do it first; inverse() is not equivalent.
+        // callers that need scale removal must do it first; inverse() is not equivalent (0x0044D470)
         matrix4x4 inverse_orthonormal() const {
             return matrix4x4(x.x, y.x, z.x, 0.0f,
                              x.y, y.y, z.y, 0.0f,
                              x.z, y.z, z.z, 0.0f,
+                             // w
                              -(w.x * x.x + w.y * x.y + w.z * x.z),
                              -(w.x * y.x + w.y * y.y + w.z * y.z),
-                             -(w.x * z.x + w.y * z.y + w.z * z.z), 1.0f);
+                             -(w.x * z.x + w.y * z.y + w.z * z.z),
+                             1.0f);
         }
 
         matrix4x4 transpose() const {

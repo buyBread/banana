@@ -92,7 +92,7 @@ void app::tick() {
 
     hires_clock_t flip_timer;
     construct_clock(&flip_timer);
-    game_frame_timing &frame_timing = *(game_frame_timing*)((u8*)the_game + 0x01A0);
+    game_frame_timing &frame_timing = the_game->frame_timing;
     frame_timing.flip_delta = elapsed(&flip_timer);
 
     ngl::present();

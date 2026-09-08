@@ -87,6 +87,10 @@ namespace treyarch { namespace chuck { namespace script_library {
         }
     };
 
+
+    /*
+        todo: replace with dinkumware STL vector and re-test
+    */
     struct script_library_class_vector {
         u32                    unk_00;
         script_library_class** first;

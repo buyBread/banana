@@ -1,26 +1,12 @@
 #pragma once
 
+#include "treyarch/game.hh"
 #include "util/types.hh"
 #include "util/memory_reference.hh"
 #include "util/singleton_external.hh"
 #include "util/macros/sanity_assert.hh"
 
 namespace treyarch {
-    // impl (sadly mandatory)
-    class game;
-
-    // impl?
-    // SM3 .ii used ppc time base register, retail PC uses QueryPerformanceCounter
-    class hires_clock_t {
-        u64 last_reset_ticks;
-    };
-
-    struct game_frame_timing {
-        f32 total_delta;
-        f32 flip_delta;
-        f32 limit_delta;
-    };
-
     namespace references {
         inline util::memory_reference<game*> game            { 0x00FC2F84 };
         // inline instance used by the engine's asynchronous callback timers
@@ -43,7 +29,5 @@ namespace treyarch {
         void tick();
     };
 
-    ASSERT_SIZEOF(treyarch::hires_clock_t, 0x08);
-    ASSERT_SIZEOF(treyarch::game_frame_timing, 0x0C);
     ASSERT_SIZEOF(treyarch::app, 0x20);
 }

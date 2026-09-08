@@ -2,13 +2,13 @@
 
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/script_library/script_library_registry.hh"
+#include "treyarch/shared/dinkumware/vector.hh"
 #include "util/memory_reference.hh"
 #include "util/macros/sanity_assert.hh"
 
 /*
     current implementation is a rudimentary ABI skeleton that slots into specific addresses.
     also, need to move all the ABI asserts, but really i don't want to touch this...
-    unless i begin bootstrapping the VM or SL
 */
 
 namespace treyarch { namespace chuck {
