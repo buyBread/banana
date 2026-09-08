@@ -846,6 +846,111 @@ bool ngl::shaders::describe_shader(shader_key key, shader_description &descripti
                 "ps_3_0");
 
             return true;
+        case e_shader_program::internal_quad_pc_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.quad_pc.vs.hlsl",
+                "internal.quad_pc.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_screen_pc_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.screen_pc.vs.hlsl",
+                "internal.screen_pc.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_screen_pcuv_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.screen_pcuv.vs.hlsl",
+                "internal.screen_pcuv.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_screen_pcuv4_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.screen_pcuv4.vs.hlsl",
+                "internal.screen_pcuv4.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_screen_puv_material_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.screen_puv_material.vs.hlsl",
+                "internal.screen_puv_material.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_font_vertex:
+            describe(description, key, e_shader_stage::vertex,
+                "internal/internal.font.vs.hlsl",
+                "internal.font.vs.hlsl",
+                "vs_3_0");
+
+            return true;
+        case e_shader_program::internal_vertex_color_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.vertex_color.ps.hlsl",
+                "internal.vertex_color.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_texture_modulate_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.texture_modulate.ps.hlsl",
+                "internal.texture_modulate.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_movie_yuv_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.movie_yuv.ps.hlsl",
+                "internal.movie_yuv.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_white_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.white.ps.hlsl",
+                "internal.white.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_restore_depth_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.restore_depth.ps.hlsl",
+                "internal.restore_depth.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_four_texture_average_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.four_texture_average.ps.hlsl",
+                "internal.four_texture_average.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_fog_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.fog.ps.hlsl",
+                "internal.fog.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_depth_copy_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.depth_copy.ps.hlsl",
+                "internal.depth_copy.ps.hlsl",
+                "ps_3_0");
+
+            return true;
+        case e_shader_program::internal_rawz_depth_copy_pixel:
+            describe(description, key, e_shader_stage::pixel,
+                "internal/internal.rawz_depth_copy.ps.hlsl",
+                "internal.rawz_depth_copy.ps.hlsl",
+                "ps_3_0");
+
+            return true;
         case e_shader_program::count:
             return false;
     }
