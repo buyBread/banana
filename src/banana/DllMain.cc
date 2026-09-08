@@ -20,7 +20,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         if (!banana::vibe_check())
             return FALSE;
 
-#if NGL_BOOTSTRAP
+#if REL32_GAME_CALLS
         /*
             whatever's not marked as "todo" is redirected from a boundary we don't care about
         */

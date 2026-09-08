@@ -100,7 +100,7 @@ class s_logging : public util::singleton<s_logging> {
         PRINT(" log file   -- {}", fp.string().c_str());
         PRINT("----------- flags -----------");
         PRINT(" ALWAYS_FLUSH     -- {}", ALWAYS_FLUSH);
-        PRINT(" NGL_BOOTSTRAP    -- {}", NGL_BOOTSTRAP);
+        PRINT(" NGL_BOOTSTRAP    -- {}", REL32_GAME_CALLS);
         PRINT(" ALLOCATE_CONSOLE -- {}", ALLOCATE_CONSOLE);
         PRINT(" OPTIMIZE_FLAGS   -- {}", OPTIMIZE_FLAGS);
         PRINT("==================================================");

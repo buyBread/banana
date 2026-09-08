@@ -8,8 +8,8 @@
 // flush all logging types
 #define ALWAYS_FLUSH 1
 
-// enables full NGL bootstrap
-#define NGL_BOOTSTRAP 1
+// enables redirecting important rel32 calls to source owned variants
+#define REL32_GAME_CALLS 1
 
 // whether logger will allocate a console window
 #define ALLOCATE_CONSOLE 1
