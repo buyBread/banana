@@ -51,7 +51,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglPresent (game::clear_screen)"); // todo: own the `game` class
+        banana::log.dbg("redirecting nglPresent (game::clear_screen)"); // todo: own game::clear_screen
 
         if (!util::redirect_rel32(0x0097B04A, { 0xE8, 0xB1, 0xF4, 0x05, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();

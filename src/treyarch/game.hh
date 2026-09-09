@@ -88,6 +88,8 @@ public:
         game_data*                       data;
         f32                              blur;
         u8                               reserved_1c4[0x0C];
+
+        void render();
     };
 
     ASSERT_SIZEOF(hires_clock_t,     0x08);

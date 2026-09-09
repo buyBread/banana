@@ -9,6 +9,16 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace ngl {
+    enum e_scene_callback_type : u32 {
+        scene_callback_pre  = 0,
+        scene_callback_mid  = 1,
+        scene_callback_post = 2,
+        scene_callback_3    = 3,
+        scene_callback_4    = 4
+    };
+
+    using scene_callback_function = void (__cdecl*)(void* context);
+
     struct scene_parameters {
         u32 valid_low;
         u32 valid_high;
@@ -16,7 +26,8 @@ namespace treyarch { namespace ngl {
     };
 
     struct scene_callback {
-        void (__cdecl* function)(void* context);
+        scene_callback_function function;
+        
         void* context;
 
         void invoke() const {

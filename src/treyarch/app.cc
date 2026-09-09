@@ -3,13 +3,7 @@
 #include "util/gimmie/fn.hh"
 #include "banana/logging.hh"
 
-namespace treyarch {
-    /*
-        todo: clean up all this garbage into something that isn't AIDS to read
-              ...which involves at least half-implementing these methods properly...
-              sigh
-    */
-    
+namespace treyarch {    
     using clock_construct_fn = hires_clock_t*(__thiscall*)(      hires_clock_t*);
     using clock_reset_fn     = void          (__thiscall*)(      hires_clock_t*);
     using clock_elapsed_fn   = f32           (__thiscall*)(const hires_clock_t*);
@@ -23,7 +17,6 @@ namespace treyarch {
     using callback_tick_fn  = void(__thiscall*)(void*, f32);
     using game_f32_fn       = void(__thiscall*)(game*, f32);
     using game_f32ref_fn    = void(__thiscall*)(game*, f32*);
-    using game_tick_fn      = void(__thiscall*)(game*);
     using cutscene_state_fn = bool(__thiscall*)(void*);
 
     namespace references {
@@ -88,7 +81,7 @@ void app::tick() {
         return;
     }
 
-    util::gimmie::fn<game_tick_fn>(0x00783800)(the_game); // impl: game::render
+    the_game->render();
 
     hires_clock_t flip_timer;
     construct_clock(&flip_timer);
