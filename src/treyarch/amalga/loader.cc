@@ -249,7 +249,7 @@ static amalga::file* relocate_file(void*  image,
     return owner;
 }
 
-amalga::file* amalga::load_in_place(void* image) {
+amalga::file* amalga::load_apkf_in_place(void* image) {
     u32* resource_relocations = nullptr;
     u8*  string_base          = nullptr;
 

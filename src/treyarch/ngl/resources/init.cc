@@ -42,7 +42,7 @@ void ngl::resources::init() {
                 &references::default_package_data.get(),
                 package_size);
 
-    amalga::load_in_place(package_copy);
+    amalga::load_apkf_in_place(package_copy);
 
     fixed_string default_name = make_fixed_string("ngl_default");
     ngl::references::default_texture.write((texture*)resolve(&default_name, four_cc('T', 'E', 'X')));
