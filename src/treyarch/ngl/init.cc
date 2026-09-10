@@ -1,6 +1,5 @@
+#include "retail.hh"
 #include "banana/logging.hh"
-#include "util/gimmie/fn.hh"
-
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"
 #include "treyarch/ngl/d3d9/init.hh"
@@ -35,19 +34,21 @@ ngl::scene* ngl::init(HWND window) {
 #ifdef NDEBUG
     /* sm_phat is currently still incorrect (somehow??),
        so we shouldn't bundle our shader programs in a normal build right now... */
-    util::gimmie::fn<void(__cdecl*)()>(0x009CCAF0)();
+    retail::sub_9CCAF0();
 #else
     ngl::dispatch_init_list();
 #endif
     
-    util::gimmie::fn<void(__cdecl*)()>(0x007C2DE0)(); /* nullsub;
-                                                         some unimplemented default fx shader? */
+    retail::sub_7C2DE0(); /* nullsub (retail)
+                             some omitted default fx shader? (milestone) */
 
     ngl::resources::init();
 
     ngl::scene* root_scene = ngl::list_init();
 
     references::initialized.write(1);
+
+    banana::log.dbg("NGL initialized");
 
     return root_scene;
 }

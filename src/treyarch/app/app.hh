@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/game.hh"
+#include "treyarch/game/game.hh"
 #include "util/types.hh"
 #include "util/memory_reference.hh"
 #include "util/singleton_external.hh"
