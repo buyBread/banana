@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "treyarch/amalga/loader.hh"
+#include "treyarch/amalga/apkf/loader.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/resources/init.hh"
 #include "treyarch/ngl/resources/resolver.hh"
@@ -42,7 +42,7 @@ void ngl::resources::init() {
                 &references::default_package_data.get(),
                 package_size);
 
-    amalga::load_apkf_in_place(package_copy);
+    amalga::apkf::load_file_in_place(package_copy);
 
     fixed_string default_name = make_fixed_string("ngl_default");
     ngl::references::default_texture.write((texture*)resolve(&default_name, four_cc('T', 'E', 'X')));
@@ -51,5 +51,5 @@ void ngl::resources::init() {
     ngl::references::system_font.write((font*)resolve(&system_font_name, four_cc('F', 'O', 'N', 'T')));
 
     initialize_builtin_textures();
-    amalga::set_resource_resolver(resolve);
+    amalga::apkf::set_resource_resolver(resolve);
 }

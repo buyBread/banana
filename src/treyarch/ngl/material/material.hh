@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/amalga/file.hh"
+#include "treyarch/amalga/apkf/file.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
@@ -29,14 +29,14 @@ namespace treyarch { namespace ngl {
     void process_material(material* value);
     void initialize_material_directory();
 
-    void __cdecl load_material(amalga::file*       owner,
-                               amalga::file_entry* entry,
-                               void**              mapped_sections,
-                               void*               user_data);
-    void __cdecl remove_material(amalga::file*       owner,
-                                 amalga::file_entry* entry,
-                                 void**              mapped_sections,
-                                 void*               user_data);
+    void __cdecl load_material(amalga::apkf::file*       owner,
+                               amalga::apkf::file_entry* entry,
+                               void**                    mapped_sections,
+                               void*                     user_data);
+    void __cdecl remove_material(amalga::apkf::file*       owner,
+                                 amalga::apkf::file_entry* entry,
+                                 void**                    mapped_sections,
+                                 void*                     user_data);
 
     namespace references {
         inline util::memory_reference<material>           default_material { 0x01116160 };

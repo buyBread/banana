@@ -522,10 +522,10 @@ void ngl::fx::initialize_directory() {
     references::effects.get().initialize();
 }
 
-void __cdecl ngl::fx::load(amalga::file*       owner,
-                           amalga::file_entry* entry,
-                           void**              mapped_sections,
-                           void*               user_data) {
+void __cdecl ngl::fx::load(amalga::apkf::file*       owner,
+                           amalga::apkf::file_entry* entry,
+                           void**                    mapped_sections,
+                           void*                     user_data) {
 
     (void)entry;
     (void)user_data;
@@ -553,10 +553,10 @@ void __cdecl ngl::fx::load(amalga::file*       owner,
         references::effects.get().insert(value);
 }
 
-void __cdecl ngl::fx::remove(amalga::file*       owner,
-                             amalga::file_entry* entry,
-                             void**              mapped_sections,
-                             void*               user_data) {
+void __cdecl ngl::fx::remove(amalga::apkf::file*       owner,
+                             amalga::apkf::file_entry* entry,
+                             void**                    mapped_sections,
+                             void*                     user_data) {
 
     (void)entry;
     (void)user_data;

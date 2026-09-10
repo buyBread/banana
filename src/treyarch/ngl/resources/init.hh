@@ -1,6 +1,5 @@
 #pragma once
 
-#include "treyarch/amalga/file.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace resources {

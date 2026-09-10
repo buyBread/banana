@@ -11,7 +11,7 @@ bool ngl::can_release_texture(const texture* value) {
     return value->last_frame_reference + 1 < (i32)references::frame_epoch.read();
 }
 
-void ngl::process_texture(amalga::file* owner, void** mapped_sections) {
+void ngl::process_texture(amalga::apkf::file* owner, void** mapped_sections) {
     i32 image_section = owner->find_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
@@ -83,10 +83,10 @@ void ngl::initialize_texture_directory() {
     references::textures.get().initialize();
 }
 
-void __cdecl ngl::load_texture(amalga::file*       owner,
-                               amalga::file_entry* entry,
-                               void**              mapped_sections,
-                               void*               user_data) {
+void __cdecl ngl::load_texture(amalga::apkf::file*       owner,
+                               amalga::apkf::file_entry* entry,
+                               void**                    mapped_sections,
+                               void*                     user_data) {
 
     (void)entry;
     (void)user_data;
@@ -102,10 +102,10 @@ void __cdecl ngl::load_texture(amalga::file*       owner,
         references::textures.get().insert(value);
 }
 
-void __cdecl ngl::remove_texture(amalga::file*       owner,
-                                 amalga::file_entry* entry,
-                                 void**              mapped_sections,
-                                 void*               user_data) {
+void __cdecl ngl::remove_texture(amalga::apkf::file*       owner,
+                                 amalga::apkf::file_entry* entry,
+                                 void**                    mapped_sections,
+                                 void*                     user_data) {
 
     (void)entry;
     (void)user_data;

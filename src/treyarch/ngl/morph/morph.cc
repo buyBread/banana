@@ -8,10 +8,10 @@ void ngl::initialize_morph_directory() {
     references::morphs.get().initialize();
 }
 
-void __cdecl ngl::load_morph(amalga::file*       owner,
-                             amalga::file_entry* entry,
-                             void**              mapped_sections,
-                             void*               user_data) {
+void __cdecl ngl::load_morph(amalga::apkf::file*       owner,
+                             amalga::apkf::file_entry* entry,
+                             void**                    mapped_sections,
+                             void*                     user_data) {
 
     (void)entry;
     (void)user_data;
@@ -42,10 +42,10 @@ void __cdecl ngl::load_morph(amalga::file*       owner,
         references::morphs.get().insert(value);
 }
 
-void __cdecl ngl::remove_morph(amalga::file*       owner,
-                               amalga::file_entry* entry,
-                               void**              mapped_sections,
-                               void*               user_data) {
+void __cdecl ngl::remove_morph(amalga::apkf::file*       owner,
+                               amalga::apkf::file_entry* entry,
+                               void**                    mapped_sections,
+                               void*                     user_data) {
 
     (void)entry;
     (void)user_data;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/amalga/file.hh"
+#include "treyarch/amalga/apkf/file.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
@@ -16,7 +16,7 @@ namespace treyarch { namespace ngl {
     };
 
     struct texture {
-        amalga::file*          owner_file;
+        amalga::apkf::file*    owner_file;
         i32                    last_frame_reference;
         fixed_string           name;
         u32                    flags;
@@ -36,19 +36,19 @@ namespace treyarch { namespace ngl {
     struct texture_directory : container::skip_list<texture, texture_name> {};
 
     bool can_release_texture(const texture* value);
-    void process_texture(amalga::file* owner, void** mapped_sections);
+    void process_texture(amalga::apkf::file* owner, void** mapped_sections);
     void release_texture(texture* value);
 
     void initialize_texture_directory();
 
-    void __cdecl load_texture(amalga::file*       owner,
-                              amalga::file_entry* entry,
-                              void**              mapped_sections,
-                              void*               user_data);
-    void __cdecl remove_texture(amalga::file*       owner,
-                                amalga::file_entry* entry,
-                                void**              mapped_sections,
-                                void*               user_data);
+    void __cdecl load_texture(amalga::apkf::file*       owner,
+                              amalga::apkf::file_entry* entry,
+                              void**                    mapped_sections,
+                              void*                     user_data);
+    void __cdecl remove_texture(amalga::apkf::file*       owner,
+                                amalga::apkf::file_entry* entry,
+                                void**                    mapped_sections,
+                                void*                     user_data);
 
     namespace references {
         inline util::memory_reference<texture*>          default_texture   { 0x011187FC };

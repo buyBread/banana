@@ -4,10 +4,10 @@
 
 using namespace treyarch;
 
-void __cdecl ngl::load_font(amalga::file*       owner,
-                            amalga::file_entry* entry,
-                            void**              mapped_sections,
-                            void*               user_data) {
+void __cdecl ngl::load_font(amalga::apkf::file*       owner,
+                            amalga::apkf::file_entry* entry,
+                            void**                    mapped_sections,
+                            void*                     user_data) {
 
     (void)entry;
     (void)user_data;
@@ -36,10 +36,10 @@ void __cdecl ngl::load_font(amalga::file*       owner,
         references::fonts.get().insert(value);
 }
 
-void __cdecl ngl::remove_font(amalga::file*       owner,
-                              amalga::file_entry* entry,
-                              void**              mapped_sections,
-                              void*               user_data) {
+void __cdecl ngl::remove_font(amalga::apkf::file*       owner,
+                              amalga::apkf::file_entry* entry,
+                              void**                    mapped_sections,
+                              void*                     user_data) {
 
     (void)entry;
     (void)user_data;

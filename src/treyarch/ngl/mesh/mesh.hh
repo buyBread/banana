@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "treyarch/amalga/file.hh"
+#include "treyarch/amalga/apkf/file.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/math/types/vector4.hh"
 #include "treyarch/shared/container/skip_list.hh"
@@ -60,7 +60,7 @@ namespace treyarch { namespace ngl {
         u32                       unk_034;
         u32                       unk_038;
         u32                       unk_03c;
-        amalga::file*             owner_file;
+        amalga::apkf::file*       owner_file;
         u32                       unk_044;
         i32                       last_frame_reference;
         u32                       pad_04c;
@@ -83,14 +83,14 @@ namespace treyarch { namespace ngl {
     
     void initialize_mesh_directory();
 
-    void __cdecl load_mesh(amalga::file*       owner,
-                           amalga::file_entry* entry,
-                           void**              mapped_sections,
-                           void*               user_data);
-    void __cdecl remove_mesh(amalga::file*       owner,
-                             amalga::file_entry* entry,
-                             void**              mapped_sections,
-                             void*               user_data);
+    void __cdecl load_mesh(amalga::apkf::file*       owner,
+                           amalga::apkf::file_entry* entry,
+                           void**                    mapped_sections,
+                           void*                     user_data);
+    void __cdecl remove_mesh(amalga::apkf::file*       owner,
+                             amalga::apkf::file_entry* entry,
+                             void**                    mapped_sections,
+                             void*                     user_data);
 
     namespace references {
         inline util::memory_reference<mesh_directory> meshes { 0x01116190 };

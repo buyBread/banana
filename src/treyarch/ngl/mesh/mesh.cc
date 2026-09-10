@@ -112,10 +112,10 @@ void ngl::initialize_mesh_directory() {
     references::meshes.get().initialize();
 }
 
-void __cdecl ngl::load_mesh(amalga::file*       owner,
-                            amalga::file_entry* entry,
-                            void**              mapped_sections,
-                            void*               user_data) {
+void __cdecl ngl::load_mesh(amalga::apkf::file*       owner,
+                            amalga::apkf::file_entry* entry,
+                            void**                    mapped_sections,
+                            void*                     user_data) {
 
     (void)user_data;
 
@@ -141,10 +141,10 @@ void __cdecl ngl::load_mesh(amalga::file*       owner,
         references::meshes.get().insert(value);
 }
 
-void __cdecl ngl::remove_mesh(amalga::file*       owner,
-                              amalga::file_entry* entry,
-                              void**              mapped_sections,
-                              void*               user_data) {
+void __cdecl ngl::remove_mesh(amalga::apkf::file*       owner,
+                              amalga::apkf::file_entry* entry,
+                              void**                    mapped_sections,
+                              void*                     user_data) {
 
     (void)entry;
     (void)user_data;
