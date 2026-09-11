@@ -12,7 +12,6 @@ namespace util {
     template <typename fn, size_t n> // template for the static_assert
     bool redirect_rel32(u32 address, const u8 (&expected_instruction)[n], fn target) {
         assert(expected_instruction[0] == 0xE8);
-        assert(n == 5);
 
         constexpr bool function_pointer = std::is_pointer_v<fn> &&
                                           std::is_function_v<std::remove_pointer_t<fn>>;
@@ -20,6 +19,7 @@ namespace util {
         constexpr bool member_function_pointer = std::is_member_function_pointer_v<fn>;
 
         static_assert(function_pointer || member_function_pointer, "target must be a function or a member-function pointer");
+        static_assert(n == 5, "callsite is invalid");
 
         u8* target_address {};
 
@@ -34,7 +34,7 @@ namespace util {
         auto call = (u8*)address;
 
         if (std::memcmp(call, expected_instruction, n) != 0) {
-            banana::log.err("unexpected callsite");
+            banana::log.err("redirect_rel32: unexpected callsite");
 
             return false;
         }
@@ -44,7 +44,7 @@ namespace util {
         DWORD previous_protection {};
 
         if (!VirtualProtect(call, n, PAGE_EXECUTE_READWRITE, &previous_protection)) {
-            banana::log.err("failed to redirect call");
+            banana::log.err("redirect_rel32: failed to change protection");
 
             return false;
         }
