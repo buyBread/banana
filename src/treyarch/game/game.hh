@@ -14,7 +14,7 @@ namespace treyarch {
     class game_data; // impl?
     class localized_string_table; // impl?
     class message_board; // impl?
-    class wds_camera_manager;
+    class wds_camera_manager; // impl?
 
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
 
@@ -87,6 +87,7 @@ public:
         u8                               reserved_1c4[0x0C];
 
         camera_handle get_current_view_camera();
+        void          handle_frame_locking(f32* time_inc);
         void          clear_screen();
         void          render();
     };

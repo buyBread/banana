@@ -29,7 +29,7 @@ void app::tick() {
     f32 time_inc = 0.0f; do {
         time_inc = this->real_clock.elapsed();
 
-        retail::sub_97AD00((i32)&time_inc);
+        references::game.read()->handle_frame_locking(&time_inc);
 
         if (time_inc > maximum_frame_time)
             time_inc = maximum_frame_time;
