@@ -91,6 +91,7 @@ public:
         u8                               reserved_1c4[0x0C];
 
         camera_handle get_current_view_camera();
+        void          clear_screen();
         void          render();
     };
 

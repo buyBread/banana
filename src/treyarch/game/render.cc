@@ -1,20 +1,21 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/movie_manager.hh"
+#include "treyarch/game/world_dynamic_system.hh"
+#include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/viewport.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
     // fancy "we know what these are" statement
     class FEManager;
-    class movie_manager;
-    class world_dynamics_system;
     class zombie_manager;
 
     namespace references {
         util::memory_reference<u8>                     render_flag_00bcd0ba      { 0x00BCD0BA };
-        util::memory_reference<u32>                    ngl_mode                  { 0x00F528D8 };
         util::memory_reference<u8>                     render_flag_00f4cd40      { 0x00F4CD40 };
         util::memory_reference<u8>                     movie_clears_screen       { 0x0102CDDA };
         util::memory_reference<FEManager>              g_femanager               { 0x0102CFA8 };
@@ -24,24 +25,13 @@ namespace treyarch {
         util::memory_reference<ngl::scene*>            shadow_scene_0            { 0x01036E98 };
         util::memory_reference<ngl::scene*>            shadow_scene_1            { 0x01036E9C };
         util::memory_reference<void*>                  scene_callback_state      { 0x010FB390 };
-        util::memory_reference<u8>                     viewport_override_enabled { 0x01115C98 };
     } // references
 
     namespace helpers {
         using namespace references;
 
-        bool movie_is_playing(movie_manager* value) {
-            return *(i32*)((u8*)value + 0x04) == 1;
-        }
-
         bool clear_uses_game_scene() {
             return !render_flag_00bcd0ba.read() && scene_callback_state.read();
-        }
-
-        bool world_rendering_is_blocked() {
-            u8* render_state = *(u8**)((u8*)world.read() + 0x12C);
-
-            return render_state[0x0D] || render_state[0x8F90];
         }
 
     } // helpers
@@ -50,8 +40,8 @@ namespace treyarch {
 using namespace treyarch;
 
 void game::render() {
-    if (references::ngl_mode.read() != 4)
-        retail::sub_9DC980(4);
+    if (ngl::references::current_frame_lock.read() != ngl::frame_lock_two_or_immediate)
+        ngl::set_frame_lock(ngl::frame_lock_two_or_immediate);
 
     if (!ngl::references::current_scene.get()->callbacks[0].function) {
         ngl::set_scene_callback(ngl::scene_callback_pre,
@@ -67,7 +57,7 @@ void game::render() {
 
     movie_manager* cur_movie_manager = references::movies.read();
 
-    if (helpers::movie_is_playing(cur_movie_manager) && references::movie_clears_screen.read()) {
+    if (cur_movie_manager->is_playing() && references::movie_clears_screen.read()) {
         retail::sub_6C7660((i32)cur_movie_manager); // render movie
 
         return;
@@ -81,13 +71,13 @@ void game::render() {
 
     retail::sub_653750();
 
-    if (get_current_view_camera())
-        retail::sub_975970(2, (u32*)get_current_view_camera()); // publish camera view
+    if (this->get_current_view_camera())
+        retail::sub_975970(2, (u32*)this->get_current_view_camera()); // publish camera view
 
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
 
-    if (!helpers::world_rendering_is_blocked() && references::render_flag_00f4cd40.read()) {
+    if (!references::world.read()->is_rendering_blocked() && references::render_flag_00f4cd40.read()) {
         retail::sub_970CB0();
         retail::sub_96F950();
     }
@@ -126,13 +116,13 @@ void game::render() {
 
     retail::sub_970CB0();
 
-    if (references::viewport_override_enabled.read())
-        retail::sub_9D8AF0();
+    if (ngl::is_viewport_override_enabled())
+        ngl::apply_active_viewport();
 
     retail::sub_9772D0();
 
-    if (!helpers::world_rendering_is_blocked()) {
-        vector3 camera_position = references::game.get()->get_current_view_camera()->get_abs_position();
+    if (!references::world.read()->is_rendering_blocked()) {
+        vector3 camera_position = this->get_current_view_camera()->get_abs_position();
 
         // IDA typed it as a no-argument void method, but it has to take a vector3
         __asm {
@@ -161,7 +151,7 @@ void game::render() {
 
     cur_movie_manager = references::movies.read();
 
-    if (helpers::movie_is_playing(cur_movie_manager))
+    if (cur_movie_manager->is_playing())
         retail::sub_6C7660((i32)cur_movie_manager); // render movie
 
     ngl::list_select_scene(game_scene);

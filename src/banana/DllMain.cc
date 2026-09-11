@@ -11,6 +11,7 @@
 #include "banana/logging.hh"
 #include "banana/core.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/game.hh"
 #include "treyarch/ngl/ngl.hh"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
@@ -47,9 +48,11 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("DllMain: redirecting nglPresent (game::clear_screen)"); // todo: own game::clear_screen
+        banana::log.dbg("DllMain: redirecting game::clear_screen callsites");
 
-        if (!util::redirect_rel32(0x0097B04A, { 0xE8, 0xB1, 0xF4, 0x05, 0x00 }, &treyarch::ngl::present))
+        if (!util::redirect_rel32(0x0076BC14, { 0xE8, 0xF7, 0xF3, 0x20, 0x00 }, &treyarch::game::clear_screen) ||
+            !util::redirect_rel32(0x0097B495, { 0xE8, 0x76, 0xFB, 0xFF, 0xFF }, &treyarch::game::clear_screen))
+
             FATAL_BREAKPOINT();
 #endif
     }
