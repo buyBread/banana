@@ -4,6 +4,9 @@
 #include <imgui.h>
 
 namespace banana { namespace imgui {
+    extern void initialize();
+    extern void shutdown();
+
     inline bool render = false;
 
     inline ImGuiContext* ctx   = nullptr;

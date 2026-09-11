@@ -6,8 +6,9 @@
 #include "banana/imgui/manager.hh"
 #include "banana/imgui/imgui.hh"
 #include "banana/core.hh"
+#include "banana/lifecycle.hh"
 
-#define IMGUI_DEMO 0
+#define IMGUI_DEMO 1
 
 void set_imgui_point_filter(const ImDrawList*, const ImDrawCmd*) {
     banana::store::d3d9_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
@@ -19,28 +20,20 @@ void s_gui_manager::register_GUI(i_gui* GUI) {
 }
 
 void begin_frame() {
-#ifndef DEBUG
     if (imgui::render) {
-#endif
         ImGui_ImplDX9_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
         ImGui::GetBackgroundDrawList()->AddCallback(set_imgui_point_filter, nullptr);
-#ifndef DEBUG
     }
-#endif
 }
 
 void end_frame() {
-#ifndef DEBUG
     if (imgui::render) {
-#endif
         ImGui::Render();
         ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
-#ifndef DEBUG
     }
-#endif
 }
 
 void s_gui_manager::run() {

@@ -6,9 +6,6 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "banana/lifecycle.hh"
-
-#define WAIT_BANANA_STATE(x) banana::store::_state.wait(x, std::memory_order_acquire);
 
 namespace banana {
     extern void thread();
@@ -40,23 +37,5 @@ namespace banana {
         // should not be used in any capacity beyond reading from them
         inline IDirect3D9*       d3d9        = nullptr;
         inline IDirect3DDevice9* d3d9_device = nullptr;
-
-        // use banana::state
-        // can we OOP this too? yeah, but why?
-        inline std::atomic<e_lifecycle> _state { e_lifecycle::pending };
     } // store
-
-    namespace state {
-        inline e_lifecycle current() {
-            return store::_state.load(std::memory_order_acquire);
-        }
-
-        inline void update(e_lifecycle next) {
-            log.dbg("banana::state: {} -> {}", current(), next);
-
-            store::_state.store(next, std::memory_order_release);
-            store::_state.notify_all();
-        }
-    } // state
-
 } // banana

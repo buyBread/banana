@@ -1,10 +1,5 @@
 #pragma once
 
-/*
-    banana's worker-based logging utility
-    refactored to lighten the load on the game thread from trashy IO spam
-*/
-
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -24,10 +19,12 @@
 #include "util/appdata_path.hh"
 #include "util/types.hh"
 
+#define PRINT_COLOR_TEST 0
+
 class s_logging : public util::singleton<s_logging> {
 
     enum class e_log_type : u8 {
-        msg, wrn, err, dbg
+        msg, wrn, err, dbg, ngl,
     };
 
     struct log_entry {
@@ -43,7 +40,7 @@ class s_logging : public util::singleton<s_logging> {
     std::condition_variable m_queue_cv;
     std::jthread            m_worker;
 
-    std::atomic<u16> m_dropped_messages = 0;
+    std::atomic<u32> m_dropped_messages = 0;
 
     static constexpr size_t max_queue_size = 8192; // some large-ish number for safety
 
@@ -53,6 +50,7 @@ class s_logging : public util::singleton<s_logging> {
             case e_log_type::wrn: return "[ WRN ]";
             case e_log_type::err: return "[ ERR ]";
             case e_log_type::dbg: return "[ DBG ]";
+            case e_log_type::ngl: return "[ NGL ]";
         }
 
         return {};
@@ -60,10 +58,11 @@ class s_logging : public util::singleton<s_logging> {
 
     static std::string_view colored_watermark(e_log_type type) {
         switch (type) {
-            case e_log_type::msg: return "[\033[36m MSG\033[0m ]"; // cyan
+            case e_log_type::msg: return "[\033[96m MSG\033[0m ]"; // brite cyan
             case e_log_type::wrn: return "[\033[33m WRN\033[0m ]"; // yello
-            case e_log_type::err: return "[\033[31m ERR\033[0m ]"; // red
-            case e_log_type::dbg: return "[\033[35m DBG\033[0m ]"; // purpur
+            case e_log_type::err: return "[\033[95m ERR\033[0m ]"; // brite purpur
+            case e_log_type::dbg: return "[\033[0m DBG\033[0m ]";
+            case e_log_type::ngl: return "[\033[31m NGL\033[0m ]"; // red
         }
 
         return {};
@@ -100,7 +99,7 @@ class s_logging : public util::singleton<s_logging> {
         PRINT(" log file   -- {}", fp.string().c_str());
         PRINT("----------- flags -----------");
         PRINT(" ALWAYS_FLUSH     -- {}", ALWAYS_FLUSH);
-        PRINT(" NGL_BOOTSTRAP    -- {}", REL32_GAME_CALLS);
+        PRINT(" REL32_GAME_CALLS -- {}", REL32_GAME_CALLS);
         PRINT(" ALLOCATE_CONSOLE -- {}", ALLOCATE_CONSOLE);
         PRINT(" OPTIMIZE_FLAGS   -- {}", OPTIMIZE_FLAGS);
         PRINT("==================================================");
@@ -133,6 +132,14 @@ class s_logging : public util::singleton<s_logging> {
 
     void worker_loop(std::stop_token stop) {
         open();
+
+#if PRINT_COLOR_TEST
+        msg("The quick brown fox jumps over the lazy dog.");
+        wrn("The quick brown fox jumps over the lazy dog.");
+        err("The quick brown fox jumps over the lazy dog.");
+        dbg("The quick brown fox jumps over the lazy dog.");
+        ngl("The quick brown fox jumps over the lazy dog.");
+#endif
 
         std::deque<log_entry> local;
 
@@ -298,8 +305,18 @@ public:
 #endif
         log(e_log_type::dbg, "{}", str);
     }
+
+    template <typename... t_args>
+    void ngl(std::format_string<t_args...> fmt, t_args&&... args) {
+        log(e_log_type::ngl, fmt, std::forward<t_args>(args)...);
+    }
+    void ngl(std::string_view str) {
+        log(e_log_type::ngl, "{}", str);
+    }
 };
 
 namespace banana {
     inline auto &log = s_logging::get();
 } // banana
+
+#undef PRINT_COLOR_TEST

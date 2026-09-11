@@ -3,6 +3,7 @@
 
 #include "flags.hh"
 #include "banana/core.hh"
+#include "banana/lifecycle.hh"
 #include "banana/logging.hh"
 #include "banana/hooks/manager.hh"
 #include "util/macros/debug.hh"
@@ -28,7 +29,7 @@ bool banana::core::init() {
         if (current == e_lifecycle::failed || current == e_lifecycle::stopping)
             return false;
 
-        WAIT_BANANA_STATE(current);
+        state::poll(current);
     }
 
     hook_manager.install(HK_DEFAULT_CATEGORY);
@@ -44,7 +45,7 @@ bool banana::core::init() {
         it's not really what i'd "like" to "ship", but i can't figure out an ezpz variant that truly fixes stutters caused by the mutex...
         so until that happens, or until we no longer need to hook this (crack dream), it'll do to alleviate the problem somewhat.
     */
-    hook_manager.enable_hook("debug", "hk_sub_A6C860");
+    hook_manager.enable_hook("debug", "sub_A6C860");
 #endif
 
     return true;
@@ -60,7 +61,7 @@ void banana::core::spin() {
         if (current == e_lifecycle::stopping)
             return;
 
-        WAIT_BANANA_STATE(current);
+        state::poll(current);
     }
 }
 

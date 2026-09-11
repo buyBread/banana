@@ -1,6 +1,8 @@
 #include <d3d9.h>
 #include <imgui_impl_dx9.h>
 
+#include "banana/core.hh"
+#include "banana/lifecycle.hh"
 #include "banana/hooks/base.hh"
 #include "util/gimmie/virt.hh"
 #include "util/vtables/IDirect3DDevice9.hh"

@@ -21,16 +21,12 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
             return FALSE;
 
 #if REL32_GAME_CALLS
-        /*
-            whatever's not marked as "todo" is redirected from a boundary we don't care about
-        */
-
-        banana::log.dbg("redirecting nglInit (WinMain)");
+        banana::log.dbg("DllMain: redirecting nglInit (WinMain)");
         
         if (!util::redirect_rel32(0x009CC222, { 0xE8, 0xA9, 0x9A, 0x01, 0x00 }, &treyarch::ngl::init))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglSetBufferSize callsites (WinMain)");
+        banana::log.dbg("DllMain: redirecting nglSetBufferSize callsites (WinMain)");
 
         if (!util::redirect_rel32(0x009CC2D2, { 0xE8, 0x29, 0xC6, 0x01, 0x00 }, &treyarch::ngl::set_buffer_size) ||
             !util::redirect_rel32(0x009CC311, { 0xE8, 0xEA, 0xC5, 0x01, 0x00 }, &treyarch::ngl::set_buffer_size) ||
@@ -39,19 +35,19 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
             
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting app::tick callsites (WinMain)");
+        banana::log.dbg("DllMain: redirecting app::tick callsites (WinMain)");
 
         if (!util::redirect_rel32(0x009CC44C, { 0xE8, 0x3F, 0xD6, 0xA5, 0xFF }, &treyarch::app::tick) ||
             !util::redirect_rel32(0x009CC477, { 0xE8, 0x14, 0xD6, 0xA5, 0xFF }, &treyarch::app::tick))
 
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglPresent (movie_manager)");
+        banana::log.dbg("DllMain: redirecting nglPresent (movie_manager)");
 
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglPresent (game::clear_screen)"); // todo: own game::clear_screen
+        banana::log.dbg("DllMain: redirecting nglPresent (game::clear_screen)"); // todo: own game::clear_screen
 
         if (!util::redirect_rel32(0x0097B04A, { 0xE8, 0xB1, 0xF4, 0x05, 0x00 }, &treyarch::ngl::present))
             FATAL_BREAKPOINT();

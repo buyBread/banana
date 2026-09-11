@@ -4,6 +4,8 @@
 #include <imgui_impl_win32.h>
 #include <cassert>
 
+#include "banana/core.hh"
+#include "banana/lifecycle.hh"
 #include "banana/hooks/base.hh"
 #include "banana/imgui/imgui.hh"
 #include "util/gimmie/virt.hh"
@@ -11,6 +13,11 @@
 #include "util/macros/lambda.hh"
 
 DEFINE_HOOK(hk_CreateDevice, hook_signatures::device_lifecycle::CreateDevice) {
+
+    static bool has_device_changed(IDirect3DDevice9* returned_device) {
+        return !(banana::store::d3d9_device != nullptr &&
+                 banana::store::d3d9_device != returned_device);
+    }
 
 public:
     CONSTRUCT_HOOK(hk_CreateDevice,
@@ -36,70 +43,37 @@ public:
             safeguard
             a bit paranoid, but it might happen
         */
-        if (banana::store::d3d9_device != nullptr &&
-            banana::store::d3d9_device != *ppReturnedDeviceInterface) {
-
+        if (!has_device_changed(*ppReturnedDeviceInterface)) {
             banana::state::update(e_lifecycle::rebuilding);
 
-            banana::hook_manager.uninstall("imgui");
             banana::hook_manager.uninstall("device_lifecycle", "Reset");
 
-            SetWindowLongPtrA(
-                imgui::store::handle_window,
-                GWLP_WNDPROC,
-                (LONG_PTR)imgui::store::original_WndProc
-            );
+            imgui::shutdown();
 
-            ImGui_ImplDX9_Shutdown();
-            ImGui_ImplWin32_Shutdown();
-            
-            ImGui::DestroyContext();
-            imgui::ctx = nullptr;
-
-            banana::log.dbg("game rebuilt IDirect3DDevice9");
-
-            imgui::store::original_WndProc = nullptr;
+            HK_DBG("game rebuilt IDirect3DDevice9");
         }
-
-        if (!ImGui::GetCurrentContext())
-            imgui::ctx = ImGui::CreateContext();
 
         banana::store::d3d9_device = *ppReturnedDeviceInterface;
 
-        banana::log.dbg("stored IDirect3DDevice9");
+        HK_DBG("stored IDirect3DDevice9");
 
         imgui::store::handle_window = pPresentationParameters->hDeviceWindow ?
             pPresentationParameters->hDeviceWindow : hFocusWindow;
 
-        banana::log.dbg("stored HWND");
+        HK_DBG("stored HWND");
 
-        // both want store::d3d9_device
+        // wants both device & window handle
+        imgui::initialize();
+
         banana::hook_manager.enable_hook("device_lifecycle", "Reset");
-        banana::hook_manager.install("imgui");
-
-        ImGui_ImplDX9_Init  (banana::store::d3d9_device);
-        ImGui_ImplWin32_Init(imgui::store::handle_window);
-
-        imgui::io    = &ImGui::GetIO();
-        imgui::style = &ImGui::GetStyle();
-
-        imgui::io->FontDefault = banana::imgui::io->Fonts->AddFontDefaultVector();
-
-        // imgui::style->AntiAliasedLines       = false;
-        // imgui::style->AntiAliasedLinesUseTex = false;
-        // imgui::style->AntiAliasedFill        = false;
-
-        imgui::store::original_WndProc = (WNDPROC)SetWindowLongPtrA(
-            imgui::store::handle_window, 
-            GWLP_WNDPROC, 
-            (LONG_PTR)imgui::WndProc
-        );
-
-        banana::log.msg("ImGui initialized");
 
         banana::state::update(e_lifecycle::ready);
 
         return result;
+    }
+
+    void clean_up() override {
+        imgui::shutdown();
     }
 };
 

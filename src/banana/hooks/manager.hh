@@ -32,9 +32,8 @@ class i_hook {
 public:
     virtual ~i_hook() = default;
 
-    virtual void install()   = 0; // if hook queueing fails, the hook will be removed
-    virtual void uninstall() = 0;
-
+    virtual bool install()       = 0; // if hook queueing fails, the hook will be removed
+    virtual bool uninstall()     = 0;
     virtual bool enable()        = 0;
     virtual bool disable()       = 0;
     virtual bool queue_enable()  = 0;

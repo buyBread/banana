@@ -31,6 +31,7 @@ static_assert(sizeof(void*) == 4, "ensure compile architecture is 32-bit");
 #include "util/gimmie/module.hh"
 #include "banana/core.hh"
 #include "banana/logging.hh"
+#include "banana/lifecycle.hh"
 #include "banana/hooks/manager.hh"
 
 IDirect3D9* direct3d_create_9(HMODULE module, UINT SDKVersion) {
@@ -63,7 +64,7 @@ IDirect3D9* acquire_d3d9(UINT SDKVersion) {
         backend_name = "System32";
     }
 
-    banana::log.dbg("serving IDirect3D9 from {} (SDKVersion: {})", backend_name, SDKVersion);
+    banana::log.dbg("banana: serving IDirect3D9 from {} (SDKVersion: {})", backend_name, SDKVersion);
 
     return direct3d_create_9(backend, SDKVersion);
 }
@@ -74,7 +75,7 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
     std::lock_guard<std::mutex> lock(d3d9_mutex);
 
     using namespace banana;
-
+    
     static std::once_flag init; // in case anything loads native d3d9.dll (us) over system32's
 
     std::call_once(init, [] {
@@ -90,13 +91,13 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
         store::handle_reshade       = util::gimmie::dll_unsafe("reshade/d3d9.dll");
 
         if (store::handle_dxvk)
-            banana::log.msg("DXVK detected");
+            banana::log.msg("banana: DXVK detected");
 
         if (store::handle_steam_overlay)
-            banana::log.msg("Steam Overlay detected");
+            banana::log.msg("banana: Steam Overlay detected");
 
         if (store::handle_reshade)
-            banana::log.msg("ReShade (DX9) detected");
+            banana::log.msg("banana: ReShade (DX9) detected");
     });
 
     IDirect3D9* result = nullptr;
@@ -108,6 +109,9 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
         
         // also responsible for initializing ImGui
         banana::hook_manager.enable_hook("device_lifecycle", "CreateDevice");
+
+        if (!banana::hook_manager.is_hook_enabled("device_lifecycle", "CreateDevice"))
+            banana::state::update(e_lifecycle::failed);
     } else
         result = acquire_d3d9(SDKVersion);
 

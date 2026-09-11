@@ -5,7 +5,7 @@
 
 #include "banana/hooks/manager.hh"
 #include "banana/hooks/signatures.hh"
-#include "banana/core.hh"
+#include "banana/lifecycle.hh"
 #include "banana/logging.hh"
 #include "util/type_name.hh"
 #include "util/macros/unique_name.hh"
@@ -66,11 +66,11 @@ public:
         s_hook_manager::get().register_hook(this, category);
     }
 
-    void install() override {
+    bool install() override {
         if (this->m_state == e_hook_state::enabled) {
             HK_MGR_DBG("can't install an enabled hook");
 
-            return;
+            return true;
         }
 
         if (m_address_resolver)
@@ -79,7 +79,7 @@ public:
         if (!m_address) {
             HK_MGR_ERR("couldn't resolve target address");
             
-            return;
+            return false;
         }
 
         static_assert(!std::is_member_function_pointer_v<decltype(&derived::detour)>,
@@ -91,7 +91,7 @@ public:
         if (!this->create()) {
             HK_MGR_ERR("failed to install [creation]");
 
-            return;
+            return false;
         }
 
         if (!this->queue_enable()) {
@@ -99,28 +99,32 @@ public:
 
             this->remove();
 
-            return;
+            return false;
         }
+
+        return true;
     }
 
-    void uninstall() override {
+    bool uninstall() override {
         if (this->m_state == e_hook_state::absent) {
             HK_MGR_DBG("can't uninstall an absent hook");
 
-            return;
+            return true;
         }
 
         if (!this->disable()) {
             HK_MGR_ERR("failed to uninstall [disabling]");
 
-            return;
+            return false;
         }
 
         if (!this->remove()) {
             HK_MGR_ERR("failed to uninstall [removal]");
 
-            return;
+            return false;
         }
+
+        return true;
     }
 
     bool create() {
