@@ -1,6 +1,7 @@
 #include <windows.h>
 
 #include "treyarch/ngl/timing/frame_timer.hh"
+#include "treyarch/shared/timing/hires_clock.hh"
 
 using namespace treyarch;
 
@@ -17,13 +18,13 @@ void CALLBACK ngl::timing::frame_timer_callback(UINT      timer_id,
     (void)second;
 
     frame_tick_state &state = references::tick_state.get();
-    LARGE_INTEGER     counter;
+    u64               counter;
 
     ++state.tick_count;
-    QueryPerformanceCounter(&counter);
+    counter = treyarch::timing::get_cpu_cycle();
 
-    state.performance_counter_low  = counter.LowPart;
-    state.performance_counter_high = counter.HighPart;
+    state.performance_counter_low  = (u32)counter;
+    state.performance_counter_high = (i32)(counter >> 32);
 }
 
 void ngl::timing::restart_frame_timer() {

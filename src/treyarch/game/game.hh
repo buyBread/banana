@@ -7,6 +7,7 @@
 #include "treyarch/shared/stringx.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/timing/hires_clock.hh"
 
 namespace treyarch {
     struct level_descriptor; // impl?
@@ -16,11 +17,6 @@ namespace treyarch {
     class wds_camera_manager;
 
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
-
-    // SM3 used the PPC time-base register; retail PC uses QueryPerformanceCounter.
-    class hires_clock_t {
-        u64 last_reset_ticks;
-    };
 
     struct game_frame_timing {
         f32 total_delta;
@@ -95,7 +91,6 @@ public:
         void          render();
     };
 
-    ASSERT_SIZEOF(hires_clock_t,     0x08);
     ASSERT_SIZEOF(game_frame_timing, 0x0C);
 
     ASSERT_SIZEOF  (game_process,                 0x18);

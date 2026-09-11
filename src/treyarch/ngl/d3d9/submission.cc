@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <cstring>
 
 #include "treyarch/ngl/d3d9/device.hh"
@@ -11,30 +10,17 @@
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/shared/container/legacy_list.hh"
+#include "treyarch/shared/timing/hires_clock.hh"
 
 using namespace treyarch;
-
-static util::memory_reference <f32> performance_counts_per_millisecond { 0x00F51E84 };
 
 static util::memory_reference
     <container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };
 
-u64 query_performance_cycles() {
-    LARGE_INTEGER counter;
-
-    QueryPerformanceCounter(&counter);
-
-    return (u64)counter.QuadPart;
-}
-
-f32 cycles_to_milliseconds(u64 cycles) {
-    return (f32)((f64)cycles / (f64)performance_counts_per_millisecond.read());
-}
-
 void ngl::d3d9::submit_list() {
     performance_info &performance = ngl::references::performance.get();
 
-    performance.list_send_cycles = query_performance_cycles();
+    performance.list_send_cycles = treyarch::timing::get_cpu_cycle();
 
     geometry_stream::begin_submission();
     
@@ -53,17 +39,21 @@ void ngl::d3d9::submit_list() {
     list::arena_state &arena = list::references::arena.get();
 
     performance.list_work_bytes_used = (u32)arena.cursor - (u32)arena.base;
-    performance.list_submit_milliseconds = cycles_to_milliseconds(query_performance_cycles() - performance.list_send_cycles);
+    performance.list_submit_milliseconds = (f32)
+        treyarch::timing::cycles_to_milliseconds
+            (treyarch::timing::get_cpu_cycle() - performance.list_send_cycles);
 
     references::submission_callback_0.get().invoke();
 
-    performance.cpu_milliseconds = cycles_to_milliseconds(query_performance_cycles() - performance.render_finish);
+    performance.cpu_milliseconds = (f32)
+        treyarch::timing::cycles_to_milliseconds
+            (treyarch::timing::get_cpu_cycle() - performance.render_finish);
 
     references::submission_callback_2.get().invoke();
 
     flip();
 
-    performance.render_finish       = query_performance_cycles();
+    performance.render_finish       = treyarch::timing::get_cpu_cycle();
     performance.frames_per_second   = 1000.0f / performance.cpu_milliseconds;
     performance.frame_milliseconds  = performance.cpu_milliseconds;
     performance.render_milliseconds = performance.cpu_milliseconds;

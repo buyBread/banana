@@ -1,5 +1,3 @@
-#include <windows.h>
-
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/context_registry.hh"
@@ -9,16 +7,15 @@
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
+#include "treyarch/shared/timing/hires_clock.hh"
 
 using namespace treyarch;
 
 ngl::scene* __cdecl ngl::list_init() {
     timing::references::list_tick.write(timing::references::tick_state.get().tick_count);
 
-    LARGE_INTEGER performance_counter;
-    QueryPerformanceCounter(&performance_counter);
-
-    references::performance.get().list_submit_cycles = (u64)performance_counter.QuadPart;
+    references::performance.get().list_submit_cycles =
+        treyarch::timing::get_cpu_cycle();
 
     lighting::reset_context_registry();
     list::rewind();

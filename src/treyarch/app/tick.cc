@@ -20,15 +20,14 @@ void app::tick() {
     f32 maximum_frame_time = retail::sub_805020((u32*)references::cutscene_player.read()) ? 0.5f : 0.05f;
 
     hires_clock_t total_timer;
-    retail::sub_9C9DA0((u64*)&total_timer); // construct clock
     retail::sub_773AD0();
-    retail::sub_9C8DD0((i64*)&total_timer); // reset clock
+    total_timer.reset();
     retail::sub_686350();
 
     retail::sub_9592D0((u32*)references::input_manager.read()); // tick input manager
 
     f32 time_inc = 0.0f; do {
-        time_inc = retail::sub_9C8E40((u64*)&this->real_clock); // check clock elapsed time
+        time_inc = this->real_clock.elapsed();
 
         retail::sub_97AD00((i32)&time_inc);
 
@@ -36,7 +35,7 @@ void app::tick() {
             time_inc = maximum_frame_time;
     } while (time_inc < references::minimum_frame_time.read());
 
-    retail::sub_9C8DD0((i64*)&this->real_clock); // reset clock
+    this->real_clock.reset();
     retail::sub_453700(0, 0);
     retail::sub_A173E0();
     retail::sub_734610((f32*)&references::callback_timers.get(), time_inc);
@@ -58,9 +57,8 @@ void app::tick() {
     the_game->render();
 
     hires_clock_t flip_timer;
-    retail::sub_9C9DA0((u64*)&flip_timer); // construct clock
 
-    the_game->frame_timing.flip_delta = retail::sub_9C8E40((u64*)&flip_timer); // check clock elapsed time
+    the_game->frame_timing.flip_delta = flip_timer.elapsed();
 
     ngl::present();
 
@@ -71,6 +69,6 @@ void app::tick() {
 
     retail::sub_8FDF00(0, 1);
 
-    the_game->frame_timing.flip_delta = retail::sub_9C8E40((u64*)&total_timer); // check clock elapsed time
+    the_game->frame_timing.total_delta = total_timer.elapsed();
     the_game->frame_timing.limit_delta = 0.0f;
 }

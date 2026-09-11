@@ -1,28 +1,22 @@
-#include <windows.h>
-
 #include "treyarch/ngl/d3d9/submission.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/debug/primitive_batches.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/shared/memory/memory.hh"
-#include "util/memory_reference.hh"
+#include "treyarch/shared/timing/hires_clock.hh"
 
 using namespace treyarch;
 
-static util::memory_reference<f32> performance_counts_per_millisecond { 0x00F51E84 };
-
 void __cdecl ngl::list_send() {
-    LARGE_INTEGER counter;
-
-    QueryPerformanceCounter(&counter);
+    u64 current_cycles = treyarch::timing::get_cpu_cycle();
 
     performance_info &performance = references::performance.get();
     
-    u64 elapsed_cycles = (u64)counter.QuadPart - performance.list_submit_cycles;
+    u64 elapsed_cycles = current_cycles - performance.list_submit_cycles;
 
     performance.list_send_milliseconds = (f32)
-        ((f64)elapsed_cycles / (f64)performance_counts_per_millisecond.read());
+        treyarch::timing::cycles_to_milliseconds(elapsed_cycles);
 
     debug::reset_primitive_batches();
 
