@@ -1,8 +1,8 @@
 #pragma once
 
-#include "treyarch/ngl/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 
-namespace treyarch { namespace ngl { namespace math {
+namespace treyarch { namespace math {
     inline matrix4x4 make_perspective(f32 horizontal_scale,
                                       f32 vertical_scale,
                                       f32 near_plane,
@@ -39,4 +39,4 @@ namespace treyarch { namespace ngl { namespace math {
                           0.0f,                  0.0f,                 1.0f, 0.0f,
                          (left + right) * 0.5f, (top + bottom) * 0.5f, 0.0f, 1.0f);
     }
-}}} // treyarch::ngl::math
+}} // treyarch::math

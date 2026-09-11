@@ -5,6 +5,7 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/presentation.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "banana/logging.hh"
 
 using namespace treyarch;
 
@@ -46,6 +47,8 @@ void ngl::d3d9::flip() {
         HRESULT result = device->Present(nullptr, nullptr, nullptr, nullptr);
 
         if (result == D3DERR_DEVICELOST) {
+            banana::log.ngl("device lost");
+
             Sleep(100);
 
             if (device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)

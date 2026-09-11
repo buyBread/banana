@@ -14,7 +14,7 @@
 using namespace treyarch;
 
 ngl::scene* ngl::init(HWND window) {
-    banana::log.dbg("Nyarlathotep's Graphics Laboratory"
+    banana::log.ngl("Nyarlathotep's Graphics Laboratory"
                     " "
                     NGL_VERSION);
 
@@ -48,7 +48,7 @@ ngl::scene* ngl::init(HWND window) {
 
     references::initialized.write(1);
 
-    banana::log.dbg("NGL initialized");
+    banana::log.ngl("initialized");
 
     return root_scene;
 }

@@ -21,7 +21,7 @@ bool create_shader_program(      ngl::shaders::shader_key     key,
     std::span<const u8> bytecode = ngl::shaders::package_data::load(key);
 
     if (bytecode.empty()) {
-        banana::log.err("failed to load {} program \"{}\"",
+        banana::log.ngl("failed to load {} program \"{}\"",
                         stage_name,
                         description.source_name);
         
@@ -31,7 +31,7 @@ bool create_shader_program(      ngl::shaders::shader_key     key,
     HRESULT result = create_program((const DWORD*)bytecode.data(), output);
 
     if (FAILED(result)) {
-        banana::log.err("failed to create {} program \"{}\" (0x{:08X})",
+        banana::log.ngl("failed to create {} program \"{}\" (0x{:08X})",
                         stage_name,
                         description.source_name,
                         (u32)result);

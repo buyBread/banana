@@ -1,10 +1,10 @@
 #pragma once
 
-#include "treyarch/ngl/math/types/vector3.hh"
+#include "treyarch/shared/math/types/vector3.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace ngl { namespace math {
+namespace treyarch { namespace math {
     struct rtree;
     struct visitor;
 
@@ -25,4 +25,4 @@ namespace treyarch { namespace ngl { namespace math {
                       const vector3 &center,
                             f32      radius,
                             visitor* result_visitor);
-}}} // treyarch::ngl::math
+}} // treyarch::math

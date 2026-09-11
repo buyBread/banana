@@ -1,11 +1,11 @@
 #pragma once
 
 #include "util/types.hh"
-#include "treyarch/ngl/math/types/vector3.hh"
-#include "treyarch/ngl/math/types/vector4.hh"
+#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/types/vector4.hh"
 #include "treyarch/shared/mash/mash.hh"
 
-namespace treyarch { namespace ngl {
+namespace treyarch {
     using row = vector4;
 
     class matrix4x4 { // L15637: SM3 .ii
@@ -205,4 +205,4 @@ public:
             return result;
         }
     };
-}} // treyarch::ngl
+} // treyarch

@@ -42,7 +42,7 @@ ngl::scene* set_auxiliary_target(ngl::texture* target) {
     return value;
 }
 
-ngl::scene* set_camera_matrix(const ngl::matrix4x4* camera_to_world) {
+ngl::scene* set_camera_matrix(const matrix4x4* camera_to_world) {
     ngl::scene* value = ngl::references::current_scene.read();
 
     value->world_to_view = camera_to_world->inverse_orthonormal();

@@ -22,7 +22,7 @@ inline constexpr f32 SMALL_DIST = 0.00001f;
 inline constexpr f32 LARGE_DIST = 10.0e+8f;
 inline constexpr f32 HUGE_DIST  = 1e30f; // made this one up (the const), the value was probably a macro?
 
-namespace treyarch { namespace ngl { namespace math {
+namespace treyarch { namespace math {
     inline bool clamp_value(      f32* value,
                             const f32  min_value,
                             const f32  max_value ) {
@@ -121,4 +121,4 @@ namespace treyarch { namespace ngl { namespace math {
     inline f32 fast_recip_sqrt(f32 x) {
         return 1.0f / (f32)sqrtf(x);
     }
-}}} // treyarch::ngl::math
+}} // treyarch::math

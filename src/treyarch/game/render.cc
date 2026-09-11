@@ -8,7 +8,6 @@
 namespace treyarch {
     // fancy "we know what these are" statement
     class FEManager;
-    class camera; // impl
     class movie_manager;
     class world_dynamics_system;
     class zombie_manager;
@@ -45,11 +44,6 @@ namespace treyarch {
             return render_state[0x0D] || render_state[0x8F90];
         }
 
-        ngl::vector3 get_camera_position(u32* value) {
-            u8* transform = *(u8**)((u8*)value + 0x10);
-
-            return *(ngl::vector3*)(transform + 0x30);
-        }
     } // helpers
 } // treyarch
 
@@ -87,8 +81,8 @@ void game::render() {
 
     retail::sub_653750();
 
-    if (retail::sub_97ACA0((u32*)this))
-        retail::sub_975970(2, (u32*)retail::sub_97ACA0((u32*)this)); // publish camera view
+    if (get_current_view_camera())
+        retail::sub_975970(2, (u32*)get_current_view_camera()); // publish camera view
 
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
@@ -138,7 +132,7 @@ void game::render() {
     retail::sub_9772D0();
 
     if (!helpers::world_rendering_is_blocked()) {
-        ngl::vector3 camera_position = helpers::get_camera_position((u32*)retail::sub_97ACA0((u32*)references::game.read()));
+        vector3 camera_position = references::game.get()->get_current_view_camera()->get_abs_position();
 
         // IDA typed it as a no-argument void method, but it has to take a vector3
         __asm {

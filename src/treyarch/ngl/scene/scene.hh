@@ -3,8 +3,8 @@
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/ngl/math/types/vector4.hh"
-#include "treyarch/ngl/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 

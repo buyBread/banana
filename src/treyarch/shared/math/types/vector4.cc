@@ -1,7 +1,7 @@
-#include "treyarch/ngl/math/types/vector4.hh"
-#include "treyarch/ngl/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 
-using namespace treyarch::ngl;
+using namespace treyarch;
 
 vector4 vector4::transform_plane(const matrix4x4 &matrix) const {
     vector4 transformed(x * matrix[0][0] + y * matrix[1][0] + z * matrix[2][0],

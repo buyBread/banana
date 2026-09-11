@@ -4,7 +4,7 @@
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/ngl/math/rtree.hh"
+#include "treyarch/shared/math/rtree.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/parameters.hh"
@@ -33,12 +33,12 @@ struct point_light_candidate {
 };
 
 struct point_light_visitor {
-    ngl::math::visitor    base;
+    math::visitor         base;
     u32                   reserved_004;
     point_light_candidate candidates[512];
     u32                   count;
     u32                   reserved_200C;
-    ngl::vector4          center;
+    vector4               center;
 };
 
 ASSERT_SIZEOF(point_light_candidate, 0x10);
@@ -48,7 +48,7 @@ ASSERT_OFFSETOF(point_light_visitor, candidates, 0x0008);
 ASSERT_OFFSETOF(point_light_visitor, count,      0x2008);
 ASSERT_OFFSETOF(point_light_visitor, center,     0x2010);
 
-i32 visit_point_light(ngl::math::visitor* base, i32 index) {
+i32 visit_point_light(math::visitor* base, i32 index) {
     auto* visitor = (point_light_visitor*)base;
 
     const ngl::lighting::point_light_data &light =
@@ -72,7 +72,7 @@ i32 visit_point_light(ngl::math::visitor* base, i32 index) {
     return 0;
 }
 
-static ngl::math::visitor_vtable point_light_visitor_methods {
+static math::visitor_vtable point_light_visitor_methods {
     nullptr,
     visit_point_light
 };
@@ -177,7 +177,7 @@ i32 select_nearest_point_lights(point_light_visitor* visitor) {
 }
 
 void query_point_lights(      ngl::fx::mesh_node_data* node_data,
-                        const ngl::vector4             &sphere,
+                        const vector4                  &sphere,
                               f32                      radius) {
 
     ngl::lighting::light_context* context = selected_light_context.read();
@@ -193,8 +193,8 @@ void query_point_lights(      ngl::fx::mesh_node_data* node_data,
 
     visitor.center = sphere;
 
-    ngl::math::rtree* tree = *(ngl::math::rtree**)context->platform_state_040;
-    ngl::math::query_sphere(tree, sphere.get_xyz(), radius, &visitor.base);
+    math::rtree* tree = *(math::rtree**)context->platform_state_040;
+    math::query_sphere(tree, sphere.get_xyz(), radius, &visitor.base);
 
     i32 count = select_nearest_point_lights(&visitor);
 
@@ -229,10 +229,10 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
 void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
 
-    const ngl::vector4   &local_sphere = section->sphere;
-    const ngl::matrix4x4 &matrix       = node_data->local_to_world;
+    const vector4   &local_sphere = section->sphere;
+    const matrix4x4 &matrix       = node_data->local_to_world;
 
-    ngl::vector4 sphere {
+    vector4 sphere {
         (f32)((f64)matrix.x.x * (f64)local_sphere.x +
               (f64)matrix.y.x * (f64)local_sphere.y +
               (f64)matrix.z.x * (f64)local_sphere.z +
@@ -262,7 +262,7 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
     f32 radius;
 
     if (ngl::has_scene_parameter(parameters, parameter_id_light_sphere.read())) {
-        const ngl::vector4 &adjustment = *(const ngl::vector4*)ngl::get_scene_parameter
+        const vector4 &adjustment = *(const vector4*)ngl::get_scene_parameter
             (parameters, parameter_id_light_sphere.read());
 
         sphere += adjustment;

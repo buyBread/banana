@@ -1,19 +1,19 @@
 #include <cmath>
 
 #include "treyarch/ngl/display.hh"
-#include "treyarch/ngl/math/projection.hh"
+#include "treyarch/shared/math/projection.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 
 using namespace treyarch;
 
-ngl::matrix4x4 make_d3d9_clip_adjustment() {
-    return ngl::matrix4x4(1.0f,  0.0f, 0.0f, 0.0f,
+matrix4x4 make_d3d9_clip_adjustment() {
+    return matrix4x4(1.0f,  0.0f, 0.0f, 0.0f,
                           0.0f, -1.0f, 0.0f, 0.0f,
                           0.0f,  0.0f, 1.0f, 0.0f,
                           0.0f,  0.0f, 0.0f, 1.0f);
 }
 
-ngl::matrix4x4 make_ui_to_screen(const ngl::scene* value) {
+matrix4x4 make_ui_to_screen(const ngl::scene* value) {
     f32 half_width;
     f32 half_height;
 
@@ -25,7 +25,7 @@ ngl::matrix4x4 make_ui_to_screen(const ngl::scene* value) {
         half_height = (f32)value->target_height * 0.5f;
     }
 
-    return ngl::matrix4x4(1.0f / half_width, 0.0f,               0.0f, 0.0f,
+    return matrix4x4(1.0f / half_width, 0.0f,               0.0f, 0.0f,
                           0.0f,              1.0f / half_height, 0.0f, 0.0f,
                           0.0f,              0.0f,               1.0f, 0.0f,
                          -1.0f,             -1.0f,               0.0f, 1.0f);
@@ -87,7 +87,7 @@ void ngl::calculate_matrices(scene* value) {
         viewport_top    = (viewport_top    - viewport_center_y) * maximum_y + viewport_center_y;
         viewport_bottom = (viewport_bottom - viewport_center_y) * maximum_y + viewport_center_y;
 
-        value->projection = ngl::math::make_perspective(
+        value->projection = math::make_perspective(
             1.0f / value->viewport_half_width,
             1.0f / value->viewport_half_height,
             value->near_plane,
@@ -119,7 +119,7 @@ void ngl::calculate_matrices(scene* value) {
                                  bottom_length * bottom_slope,
                                  0.0f);
     } else {
-        value->projection = ngl::math::make_orthographic(
+        value->projection = math::make_orthographic(
             1.0f / (value->ortho_width * value->aspect_ratio),
             1.0f / value->ortho_height,
             value->near_plane,
@@ -138,7 +138,7 @@ void ngl::calculate_matrices(scene* value) {
     view_planes[4] = vector4(0.0f, 0.0f, 1.0f, value->near_plane);
     view_planes[5] = vector4(0.0f, 0.0f, -1.0f, -value->far_plane);
 
-    value->view = ngl::math::make_viewport(viewport_left,
+    value->view = math::make_viewport(viewport_left,
                                            viewport_top,
                                            viewport_right,
                                            viewport_bottom);

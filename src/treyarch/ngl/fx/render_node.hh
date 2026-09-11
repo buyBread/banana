@@ -3,7 +3,7 @@
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/material.hh"
 #include "treyarch/ngl/list/render_node.hh"
-#include "treyarch/ngl/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"

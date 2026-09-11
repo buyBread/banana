@@ -105,7 +105,7 @@ std::span<const u8> ngl::shaders::package_data::load(shader_key key) {
         initialized = true;
 
         if (!valid)
-            banana::log.err("embedded NGL shader package is invalid");
+            banana::log.ngl("embedded NGL shader package is invalid");
     }
 
     if (!valid)

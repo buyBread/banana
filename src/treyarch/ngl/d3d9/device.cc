@@ -111,5 +111,5 @@ void ngl::d3d9::reset_device() {
     poison_bindings();
     reset_bindings();
 
-    banana::log.dbg("device has been reset");
+    banana::log.ngl("device has been reset");
 }

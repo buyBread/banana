@@ -28,7 +28,7 @@ bool create_vertex_declaration() {
     HRESULT result = ngl::d3d9::references::device.read()->CreateVertexDeclaration(format.elements, &format.declaration);
 
     if (FAILED(result)) {
-        banana::log.err("failed to create the compressed PCUV vertex declaration (0x{:08X})", (u32)result);
+        banana::log.ngl("failed to create the compressed PCUV vertex declaration (0x{:08X})", (u32)result);
 
         return false;
     }

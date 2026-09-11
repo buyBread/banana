@@ -1,10 +1,9 @@
-#include "treyarch/ngl/math/math.hh"
-#include "treyarch/ngl/math/rtree.hh"
-#include "treyarch/ngl/math/types/vector4.hh"
+#include "treyarch/shared/math/math.hh"
+#include "treyarch/shared/math/rtree.hh"
+#include "treyarch/shared/math/types/vector4.hh"
 #include "treyarch/shared/mutex.hh"
 
 using namespace treyarch;
-using namespace treyarch::ngl;
 
 struct packed_node {
     i16 bounds[6];

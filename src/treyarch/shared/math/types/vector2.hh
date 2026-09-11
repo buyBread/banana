@@ -3,10 +3,10 @@
 #include <cmath>
 
 #include "util/types.hh"
-#include "treyarch/ngl/math/math.hh"
+#include "treyarch/shared/math/math.hh"
 #include "treyarch/shared/mash/mash.hh"
 
-namespace treyarch { namespace ngl {
+namespace treyarch {
     class vector2 { // L15079: SM3 .ii
 
 public:
@@ -101,4 +101,4 @@ public:
 
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
     };
-}} // treyarch::ngl
+} // treyarch

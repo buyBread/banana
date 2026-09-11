@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/ngl/math/types/vector4.hh"
+#include "treyarch/shared/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"

@@ -2,17 +2,18 @@
 
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
+#include "treyarch/game/camera/camera.hh"
 #include "treyarch/shared/boolx.hh"
 #include "treyarch/shared/stringx.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
-#include "treyarch/ngl/math/types/vector3.hh"
+#include "treyarch/shared/math/types/vector3.hh"
 
 namespace treyarch {
     struct level_descriptor; // impl?
     class game_data; // impl?
     class localized_string_table; // impl?
     class message_board; // impl?
-    class wds_camera_manager; // impl?
+    class wds_camera_manager;
 
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
 
@@ -40,7 +41,7 @@ namespace treyarch {
         level_descriptor* descriptor;
         stringx           name;
         stringx           hero_name;
-        ngl::vector3      hero_start_position;
+        vector3           hero_start_position;
         i32               loading_meter_val;
         u8                reserved_02c[0x04];
         hires_clock_t     level_clock;
@@ -69,15 +70,15 @@ public:
         i32                              hero_freeze_depth;
         wds_camera_manager*              camera_manager;
         u8                               reserved_068[0x04];
-        u32                              base_camera;
-        u32                              current_view_camera;
-        u32                              current_game_camera;
+        camera_handle                    base_camera;
+        camera_handle                    current_view_camera;
+        camera_handle                    current_game_camera;
         u8                               reserved_078[0x08];
         message_board*                   mb;
         f32                              level_time;
         dinkumware::vector<game_process> process_stack;
         localized_string_table*          string_localizer;
-        ngl::vector3                     base_cam_position;
+        vector3                          base_cam_position;
         u8                               reserved_0a8[0xF0];
         u32                              reserved_198;
         u32                              frame_sequence;
@@ -89,7 +90,8 @@ public:
         f32                              blur;
         u8                               reserved_1c4[0x0C];
 
-        void render();
+        camera_handle get_current_view_camera();
+        void          render();
     };
 
     ASSERT_SIZEOF(hires_clock_t,     0x08);

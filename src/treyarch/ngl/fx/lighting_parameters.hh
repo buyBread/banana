@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/ngl/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace ngl {
