@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "util/gimmie/fn.hh"
 
@@ -8,7 +9,6 @@ namespace treyarch {
         util::memory_reference<u8>    master_clock_is_up { 0x00FBF230 };
         util::memory_reference<f32>   minimum_frame_time { 0x00FC2F8C };
         util::memory_reference<void*> cutscene_player    { 0x010886F4 };
-        util::memory_reference<void*> input_manager      { 0x010FC63C };
     } // references
 } // treyarch
 
@@ -24,7 +24,7 @@ void app::tick() {
     total_timer.reset();
     retail::sub_686350();
 
-    retail::sub_9592D0((u32*)references::input_manager.read()); // tick input manager
+    references::input_manager.read()->poll_devices();
 
     f32 time_inc = 0.0f; do {
         time_inc = this->real_clock.elapsed();

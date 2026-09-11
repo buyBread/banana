@@ -10,9 +10,13 @@
 #include "util/macros/debug.hh"
 #include "banana/logging.hh"
 #include "banana/core.hh"
-#include "treyarch/app/app.hh"
-#include "treyarch/game/game.hh"
-#include "treyarch/ngl/ngl.hh"
+
+#if REL32_GAME_CALLS
+    #include "treyarch/app/app.hh"
+    #include "treyarch/game/game.hh"
+    #include "treyarch/game/input/input_mgr.hh"
+    #include "treyarch/ngl/ngl.hh"
+#endif
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) { 
@@ -41,6 +45,11 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         if (!util::redirect_rel32(0x009CC44C, { 0xE8, 0x3F, 0xD6, 0xA5, 0xFF }, &treyarch::app::tick) ||
             !util::redirect_rel32(0x009CC477, { 0xE8, 0x14, 0xD6, 0xA5, 0xFF }, &treyarch::app::tick))
 
+            FATAL_BREAKPOINT();
+
+        banana::log.dbg("DllMain: redirecting input_mgr::poll_devices (movie_manager)");
+
+        if (!util::redirect_rel32(0x006ABCEB, { 0xE8, 0xE0, 0xD5, 0x2A, 0x00 }, &treyarch::input_mgr::poll_devices))
             FATAL_BREAKPOINT();
 
         banana::log.dbg("DllMain: redirecting nglPresent (movie_manager)");
