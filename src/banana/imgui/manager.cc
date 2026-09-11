@@ -8,7 +8,7 @@
 #include "banana/core.hh"
 #include "banana/lifecycle.hh"
 
-#define IMGUI_DEMO 1
+#define IMGUI_DEMO 0
 
 void set_imgui_point_filter(const ImDrawList*, const ImDrawCmd*) {
     banana::store::d3d9_device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
