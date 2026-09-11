@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "util/gimmie/fn.hh"
@@ -8,7 +9,6 @@ namespace treyarch {
     namespace references {
         util::memory_reference<u8>    master_clock_is_up { 0x00FBF230 };
         util::memory_reference<f32>   minimum_frame_time { 0x00FC2F8C };
-        util::memory_reference<void*> cutscene_player    { 0x010886F4 };
     } // references
 } // treyarch
 
@@ -17,7 +17,7 @@ using namespace treyarch;
 void app::tick() {
     references::master_clock_is_up.write(1);
 
-    f32 maximum_frame_time = retail::sub_805020((u32*)references::cutscene_player.read()) ? 0.5f : 0.05f;
+    f32 maximum_frame_time = references::cutscene_player.read()->is_playing() ? 0.5f : 0.05f;
 
     hires_clock_t total_timer;
     retail::sub_773AD0();
