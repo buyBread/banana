@@ -12,11 +12,12 @@ No, I'm not sure what percentage of NGL I've covered at this point. While it is 
 2. Compile with `xmake`.
 3. Place the resulting `.dll` in `/image/pc/` and launch the game.
 
+...*log files are stored in* `%LOCALAPPDATA%\banana\logs\`
+
 ## Compatibility
-Banana supports loading DXVK and ReShade under these conditions:
-* **DXVK**: there is a file in `image/pc/` named `dxvk.dll`.
-* **ReShade**: there is a file in `image/pc/reshade/` named `d3d9.dll`.
-* **exWoS** / **WOSTweaks**: Banana's capability to load alongside exWoS or WOSTweaks is basically a non-consideration. Unlike a traditional "cheat-like" project, Banana owns (and will continue to own more) parts of the executable. This effectively kills (and will continue to kill) hooks that the two projects rely on.
+* **DXVK**: when there is a file in `image/pc/` named `dxvk.dll`.
+* **ReShade**: when there is a file in `image/pc/reshade/` named `d3d9.dll`.
+* **exWoS** / **WOSTweaks**: Banana's capability to load alongside exWoS or WOSTweaks is basically a non-consideration. Unlike a traditional "cheat-like" project, Banana owns (and will continue to own more) parts of the executable. This can easily produce UBs for the two projects or eliminate hook points that the two projects might be relying on.
 
 ## Credits
 * **kirbystealer** -- most of my early poking at game pack loading was basically confirmed by templating it against his Python scripts. A chunk of my behind-the-scenes tooling owes its initial existence to him.
