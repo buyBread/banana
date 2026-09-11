@@ -14,6 +14,8 @@ namespace treyarch { namespace ngl {
 
     void __cdecl set_clear_flags(u32 flags);
     void __cdecl set_clear_color(f32 red, f32 green, f32 blue, f32 alpha);
+    void __cdecl set_z_write_enable(bool enable);
+    void __cdecl set_z_test_enable(bool enable);
     void __cdecl set_animation_time(f32 time);
 
     scene* __cdecl set_scene_option_group_0(bool first,

@@ -1,8 +1,8 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/movie_manager.hh"
-#include "treyarch/game/world_dynamic_system.hh"
 #include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -11,15 +11,13 @@
 
 namespace treyarch {
     // fancy "we know what these are" statement
-    class FEManager;
     class zombie_manager;
 
     namespace references {
         util::memory_reference<u8>                     render_flag_00bcd0ba      { 0x00BCD0BA };
         util::memory_reference<u8>                     render_flag_00f4cd40      { 0x00F4CD40 };
         util::memory_reference<u8>                     movie_clears_screen       { 0x0102CDDA };
-        util::memory_reference<FEManager>              g_femanager               { 0x0102CFA8 };
-        util::memory_reference<world_dynamics_system*> world                     { 0x0102CFFC };
+        util::memory_reference<frontend_manager>       frontend                  { 0x0102CFA8 };
         util::memory_reference<movie_manager*>         movies                    { 0x0102F2DC };
         util::memory_reference<zombie_manager*>        zombies                   { 0x0102FFF0 };
         util::memory_reference<ngl::scene*>            shadow_scene_0            { 0x01036E98 };
@@ -64,7 +62,7 @@ void game::render() {
     }
 
     if (!level_is_loaded) {
-        retail::sub_6D78C0((i32)&references::g_femanager.get());
+        references::frontend.get().draw_igo();
 
         return;
     }
@@ -77,7 +75,7 @@ void game::render() {
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
 
-    if (!references::world.read()->is_rendering_blocked() && references::render_flag_00f4cd40.read()) {
+    if (!references::frontend.get().igo->blocks_world_rendering() && references::render_flag_00f4cd40.read()) {
         retail::sub_970CB0();
         retail::sub_96F950();
     }
@@ -121,7 +119,7 @@ void game::render() {
 
     retail::sub_9772D0();
 
-    if (!references::world.read()->is_rendering_blocked()) {
+    if (!references::frontend.get().igo->blocks_world_rendering()) {
         vector3 camera_position = this->get_current_view_camera()->get_abs_position();
 
         // IDA typed it as a no-argument void method, but it has to take a vector3
@@ -147,7 +145,7 @@ void game::render() {
 
     ngl::list_end_scene();
 
-    retail::sub_6D78C0((i32)&references::g_femanager.get());
+    references::frontend.get().draw_igo();
 
     cur_movie_manager = references::movies.read();
 

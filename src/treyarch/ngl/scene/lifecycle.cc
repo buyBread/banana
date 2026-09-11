@@ -147,6 +147,14 @@ void __cdecl ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
     references::current_scene.get()->clear_color = vector4(red, green, blue, alpha);
 }
 
+void __cdecl ngl::set_z_write_enable(bool enable) {
+    references::current_scene.get()->z_write_enabled = enable;
+}
+
+void __cdecl ngl::set_z_test_enable(bool enable) {
+    references::current_scene.get()->z_test_enabled = enable;
+}
+
 void __cdecl ngl::set_animation_time(f32 time) {
     references::current_scene.get()->animation_time = time;
 }

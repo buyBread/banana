@@ -196,6 +196,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(scene, clear_color,                     0x490);
     ASSERT_OFFSETOF(scene, framebuffer_write_mask,          0x4A0);
     ASSERT_OFFSETOF(scene, z_write_enabled,                 0x4A4);
+    ASSERT_OFFSETOF(scene, z_test_enabled,                  0x4A5);
     ASSERT_OFFSETOF(scene, depth_bias_enabled,              0x4A6);
     ASSERT_OFFSETOF(scene, derived_matrices_dirty,          0x4A7);
     ASSERT_OFFSETOF(scene, aspect_ratio,                    0x4A8);
