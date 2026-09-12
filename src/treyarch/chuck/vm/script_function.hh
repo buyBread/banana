@@ -4,6 +4,17 @@
 
 namespace treyarch { namespace chuck { namespace vm {
     struct script_object;
+    struct script_function;
+
+    namespace fn {
+        inline auto function_retain_argument_references =
+            (void(__thiscall*)(script_function*, i32, void*, u32, bool, bool))
+            0x00A20440;
+
+        inline auto function_release_argument_references =
+            (void(__thiscall*)(script_function*, void*, u32))
+            0x00A20560;
+    }
 
     enum class vm_reference_kind : u16 {
         dynamic_array                 = 0,
@@ -34,6 +45,14 @@ namespace treyarch { namespace chuck { namespace vm {
 
         u16 argument_size() const noexcept {
             return (u16)stack_metadata;
+        }
+
+        void retain_argument_references(void* arguments, u32 size) {
+            fn::function_retain_argument_references(this, 0, arguments, size, true, false);
+        }
+
+        void release_argument_references(void* arguments, u32 size) {
+            fn::function_release_argument_references(this, arguments, size);
         }
     };
 }}} // treyarch::chuck

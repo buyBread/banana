@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "util/gimmie/fn.hh"
@@ -22,7 +23,8 @@ void app::tick() {
     hires_clock_t total_timer;
     retail::sub_773AD0();
     total_timer.reset();
-    retail::sub_686350();
+    
+    event_manager::garbage_collect();
 
     references::input_manager.read()->poll_devices();
 

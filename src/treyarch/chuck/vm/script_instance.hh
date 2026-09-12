@@ -10,13 +10,6 @@ namespace treyarch { namespace chuck { namespace vm {
     struct vm_thread;
     struct script_instance;
 
-    namespace fn {
-        inline auto instance_add_thread_with_arguments =
-            (vm_thread*(__thiscall*)
-            (script_instance*, script_function*, const void*, i32, void*, i32))
-            0x00A1E0F0;
-    }
-
     namespace callback {
         // reason 0: instance teardown; reason 1: thread destroy
         using script_instance_lifecycle =
@@ -33,6 +26,23 @@ namespace treyarch { namespace chuck { namespace vm {
         void*                          user_data;
         script_instance_callback_node* next;
     };
+
+    namespace fn {
+        inline auto instance_add_thread_with_arguments =
+            (vm_thread*(__thiscall*)
+            (script_instance*, script_function*, const void*, i32, void*, i32))
+            0x00A1E0F0;
+
+        inline auto instance_add_lifecycle_callback =
+            (script_instance_callback_node*(__thiscall*)
+            (script_instance*, callback::script_instance_lifecycle, void*))
+            0x00A1DDC0;
+
+        inline auto instance_remove_lifecycle_callback =
+            (script_instance_callback_node*(__thiscall*)
+            (script_instance*, void*))
+            0x00A1E160;
+    }
 
     struct script_instance {
         u32                                 flags;
@@ -92,6 +102,14 @@ namespace treyarch { namespace chuck { namespace vm {
                 argument_size,
                 context,
                 stack_size);
+        }
+
+        void add_lifecycle_callback(callback::script_instance_lifecycle callback, void* user_data) {
+            fn::instance_add_lifecycle_callback(this, callback, user_data);
+        }
+
+        void remove_lifecycle_callback(void* user_data) {
+            fn::instance_remove_lifecycle_callback(this, user_data);
         }
     };
 
