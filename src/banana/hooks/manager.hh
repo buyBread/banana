@@ -93,6 +93,7 @@ public:
     void disable_hook_all();
 
     bool is_category_enabled(const std::string &category);
+    bool is_category_enabled_loose(const std::string &category);
     bool is_hook_enabled(const std::string &category, const std::string &name);
 
     // the year 2041, C++41 lets programmers implement template methods in source files

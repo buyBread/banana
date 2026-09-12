@@ -71,10 +71,6 @@ public:
 
         return result;
     }
-
-    void clean_up() override {
-        imgui::shutdown();
-    }
 };
 
 CREATE_HOOK(hk_CreateDevice);

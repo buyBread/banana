@@ -63,7 +63,8 @@ void s_hook_manager::uninstall(const std::string &category, const std::string &n
 
 void s_hook_manager::shutdown() {
     for (const auto &[hk_category, _] : this->m_hooks) {
-        this->uninstall(hk_category);
+        if (this->is_category_enabled_loose(hk_category))
+            this->uninstall(hk_category);
     }
 }
 
@@ -145,6 +146,21 @@ bool s_hook_manager::is_category_enabled(const std::string &category) {
             return false;
 
     return true;
+}
+
+bool s_hook_manager::is_category_enabled_loose(const std::string &category) {
+    std::lock_guard<std::mutex> lock(this->m_manager_mutex);
+
+    auto hooks = this->get_category(category);
+
+    if (hooks.empty())
+        return false;
+
+    for (const auto &hk : hooks)
+        if (hk->get_state() == e_hook_state::enabled)
+            return true;
+
+    return false;
 }
 
 bool s_hook_manager::is_hook_enabled(const std::string &category, const std::string &name) {
