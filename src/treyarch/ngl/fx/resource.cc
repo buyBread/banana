@@ -8,7 +8,7 @@
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/four_cc.hh"
 #include "treyarch/shared/hash/algo.hh"
-#include "treyarch/shared/memory/game_heap.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 
@@ -463,7 +463,7 @@ i32 get_effect_priority(const ngl::fx::effect &value) {
 
 ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     auto* runtime = (ngl::fx::effect_runtime*)
-        memory::game_heap::allocate_small_block(sizeof(ngl::fx::effect_runtime));
+        memory::heap::allocate_small_block(sizeof(ngl::fx::effect_runtime));
 
     runtime->owner             = &value;
     runtime->zero_point_lights = nullptr;
@@ -472,7 +472,7 @@ ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
 
     if (value.technique_count) {
         runtime->technique_batches = (ngl::fx::technique_batch*)
-            memory::game_heap::allocate_small_block(sizeof(ngl::fx::technique_batch) * value.technique_count);
+            memory::heap::allocate_small_block(sizeof(ngl::fx::technique_batch) * value.technique_count);
 
         for (i32 index = 0; index < value.technique_count; ++index) {
             runtime->technique_batches[index].head  = nullptr;
@@ -502,14 +502,14 @@ void destroy_effect_runtime(ngl::fx::effect &value) {
     runtime->four_point_lights = nullptr;
 
     if (runtime->technique_batches) {
-        memory::game_heap::free_small_block(runtime->technique_batches);
+        memory::heap::free_small_block(runtime->technique_batches);
         runtime->technique_batches = nullptr;
     }
 
     runtime->next   = nullptr;
     runtime->queued = 0;
 
-    memory::game_heap::free_small_block(runtime);
+    memory::heap::free_small_block(runtime);
 
     value.runtime = nullptr;
 }

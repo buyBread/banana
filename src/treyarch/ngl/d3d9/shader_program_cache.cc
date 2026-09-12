@@ -3,7 +3,7 @@
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/shader_program_cache.hh"
 #include "treyarch/shared/hash/algo.hh"
-#include "treyarch/shared/memory/game_heap.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::ngl;
@@ -112,9 +112,9 @@ void split_shader_bucket(ngl::d3d9::shader_program_cache::program_cache<T> &cach
         u32 new_vector_size = new_mask + 2;
 
         auto** buckets = (ngl::d3d9::shader_program_cache::program_node<T>**)
-            memory::game_heap::allocate(new_vector_size * sizeof(ngl::d3d9::shader_program_cache::program_node<T>*));
+            memory::heap::allocate(new_vector_size * sizeof(ngl::d3d9::shader_program_cache::program_node<T>*));
 
-        memory::game_heap::free(cache.buckets.begin);
+        memory::heap::free(cache.buckets.begin);
 
         cache.buckets.begin    = buckets;
         cache.buckets.end      = buckets + new_vector_size;
@@ -167,7 +167,7 @@ d3d9::shader_program_cache::program_node<T>* insert_shader_program(d3d9::shader_
         return node;
 
     auto* inserted = (ngl::d3d9::shader_program_cache::program_node<T>*)
-        memory::game_heap::allocate(sizeof(ngl::d3d9::shader_program_cache::program_node<T>));
+        memory::heap::allocate(sizeof(ngl::d3d9::shader_program_cache::program_node<T>));
 
     inserted->next     = node;
     inserted->previous = node->previous;

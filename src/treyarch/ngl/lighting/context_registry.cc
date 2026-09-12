@@ -1,7 +1,7 @@
 #include <stdexcept>
 
 #include "treyarch/ngl/lighting/context_registry.hh"
-#include "treyarch/shared/memory/game_heap.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;
@@ -15,7 +15,7 @@ void ngl::lighting::register_context(light_context* context) {
     context_registry_node* previous = head->previous;
 
     auto* node = (context_registry_node*)
-        memory::game_heap::allocate_small_block(sizeof(context_registry_node));
+        memory::heap::allocate_small_block(sizeof(context_registry_node));
 
     node->next     = head;
     node->previous = previous;

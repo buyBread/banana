@@ -2,105 +2,99 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "treyarch/shared/memory/game_heap.hh"
+#include "retail.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 
-struct game_small_block_heap; // fwd
+struct small_block_heap; // fwd
 
-struct game_heap_page {
-             u32                    block_size;
-             u32                    block_count;
-             u32                    bitmap_word_count;
-             u8*                    blocks;
-             game_small_block_heap* owner;
-             u32                    bitmap_cursor;
-    volatile LONG                   free_count;
-    volatile LONG                   state;
-    volatile i64                    bitmap[1];
+struct heap_page {
+             u32               block_size;
+             u32               block_count;
+             u32               bitmap_word_count;
+             u8*               blocks;
+             small_block_heap* owner;
+             u32               bitmap_cursor;
+    volatile LONG              free_count;
+    volatile LONG              state;
+    volatile i64               bitmap[1];
 };
 
-struct game_heap_page_queue_node {
-    volatile i64             next;
-             game_heap_page* value;
-             u32             reserved_00c;
+struct heap_page_queue_node {
+    volatile i64        next;
+             heap_page* value;
+             u32        reserved_00c;
 };
 
-struct game_heap_page_queue {
+struct heap_page_queue {
     volatile i64 head;
     volatile i64 tail;
 };
 
-struct game_heap_size_class {
-    u32                  block_size;
-    game_heap_page*      active_page;
-    game_heap_page_queue available_pages;
-    game_heap_page*      unused_pages;
-    u32                  reserved_01c;
+struct heap_size_class {
+    u32             block_size;
+    heap_page*      active_page;
+    heap_page_queue available_pages;
+    heap_page*      unused_pages;
+    u32             reserved_01c;
 };
 
-struct game_heap_metadata_slab {
-    game_heap_metadata_slab* previous;
-    u32                      used;
-    u8                       storage[0x4000];
+struct heap_metadata_slab {
+    heap_metadata_slab* previous;
+    u32                 used;
+    u8                  storage[0x4000];
 };
 
-struct game_small_block_heap {
-    void*                    owner;
-    u32                      reserved_004;
-    game_heap_size_class     size_classes[64];
-    game_heap_metadata_slab* metadata_slabs;
+struct small_block_heap {
+    void*               owner;
+    u32                 reserved_004;
+    heap_size_class     size_classes[64];
+    heap_metadata_slab* metadata_slabs;
 };
 
-struct game_heap_state {
-    u8                     reserved_000[0x38];
-    u32                    small_block_bytes;
-    u8                     reserved_03c[0x18];
-    game_small_block_heap* small_block_heap;
+struct heap_state {
+    u8                reserved_000[0x38];
+    u32               small_block_bytes;
+    u8                reserved_03c[0x18];
+    small_block_heap* small_block_heap;
 };
 
-ASSERT_SIZEOF  (game_heap_page,                    0x28);
-ASSERT_OFFSETOF(game_heap_page, block_size,        0x00);
-ASSERT_OFFSETOF(game_heap_page, block_count,       0x04);
-ASSERT_OFFSETOF(game_heap_page, bitmap_word_count, 0x08);
-ASSERT_OFFSETOF(game_heap_page, blocks,            0x0C);
-ASSERT_OFFSETOF(game_heap_page, owner,             0x10);
-ASSERT_OFFSETOF(game_heap_page, bitmap_cursor,     0x14);
-ASSERT_OFFSETOF(game_heap_page, free_count,        0x18);
-ASSERT_OFFSETOF(game_heap_page, state,             0x1C);
-ASSERT_OFFSETOF(game_heap_page, bitmap,            0x20);
+ASSERT_SIZEOF  (heap_page,                    0x28);
+ASSERT_OFFSETOF(heap_page, block_size,        0x00);
+ASSERT_OFFSETOF(heap_page, block_count,       0x04);
+ASSERT_OFFSETOF(heap_page, bitmap_word_count, 0x08);
+ASSERT_OFFSETOF(heap_page, blocks,            0x0C);
+ASSERT_OFFSETOF(heap_page, owner,             0x10);
+ASSERT_OFFSETOF(heap_page, bitmap_cursor,     0x14);
+ASSERT_OFFSETOF(heap_page, free_count,        0x18);
+ASSERT_OFFSETOF(heap_page, state,             0x1C);
+ASSERT_OFFSETOF(heap_page, bitmap,            0x20);
 
-ASSERT_SIZEOF  (game_heap_page_queue_node,        0x10);
-ASSERT_OFFSETOF(game_heap_page_queue_node, next,  0x00);
-ASSERT_OFFSETOF(game_heap_page_queue_node, value, 0x08);
+ASSERT_SIZEOF  (heap_page_queue_node,        0x10);
+ASSERT_OFFSETOF(heap_page_queue_node, next,  0x00);
+ASSERT_OFFSETOF(heap_page_queue_node, value, 0x08);
 
-ASSERT_SIZEOF  (game_heap_size_class,                  0x20);
-ASSERT_OFFSETOF(game_heap_size_class, block_size,      0x00);
-ASSERT_OFFSETOF(game_heap_size_class, active_page,     0x04);
-ASSERT_OFFSETOF(game_heap_size_class, available_pages, 0x08);
-ASSERT_OFFSETOF(game_heap_size_class, unused_pages,    0x18);
+ASSERT_SIZEOF  (heap_size_class,                  0x20);
+ASSERT_OFFSETOF(heap_size_class, block_size,      0x00);
+ASSERT_OFFSETOF(heap_size_class, active_page,     0x04);
+ASSERT_OFFSETOF(heap_size_class, available_pages, 0x08);
+ASSERT_OFFSETOF(heap_size_class, unused_pages,    0x18);
 
-ASSERT_SIZEOF  (game_heap_metadata_slab,           0x4008);
-ASSERT_OFFSETOF(game_heap_metadata_slab, previous, 0x0000);
-ASSERT_OFFSETOF(game_heap_metadata_slab, used,     0x0004);
-ASSERT_OFFSETOF(game_heap_metadata_slab, storage,  0x0008);
+ASSERT_SIZEOF  (heap_metadata_slab,           0x4008);
+ASSERT_OFFSETOF(heap_metadata_slab, previous, 0x0000);
+ASSERT_OFFSETOF(heap_metadata_slab, used,     0x0004);
+ASSERT_OFFSETOF(heap_metadata_slab, storage,  0x0008);
 
-ASSERT_SIZEOF  (game_small_block_heap,                 0x810);
-ASSERT_OFFSETOF(game_small_block_heap, size_classes,   0x008);
-ASSERT_OFFSETOF(game_small_block_heap, metadata_slabs, 0x808);
-ASSERT_OFFSETOF(game_heap_state, small_block_bytes, 0x38);
-ASSERT_OFFSETOF(game_heap_state, small_block_heap,  0x54);
+ASSERT_SIZEOF  (small_block_heap,                 0x810);
+ASSERT_OFFSETOF(small_block_heap, size_classes,   0x008);
+ASSERT_OFFSETOF(small_block_heap, metadata_slabs, 0x808);
 
-using game_allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
-using game_free_callback       = void (__cdecl*)(void* allocation);
+ASSERT_OFFSETOF(heap_state, small_block_bytes, 0x38);
+ASSERT_OFFSETOF(heap_state, small_block_heap,  0x54);
 
-static util::memory_reference<game_heap_state*>         game_heap_default             { 0x00FFDA58 };
-static util::memory_reference<u32>                      game_heap_page_directories    { 0x00FFDA70 };
-static util::memory_reference<volatile i64>             game_heap_queue_node_pool     { 0x00FFE1D8 };
-static util::memory_reference<volatile LONG>            game_heap_page_lock           { 0x00FFDE70 };
-static util::memory_reference<u8*>                      game_heap_free_pages          { 0x00FFDE74 };
-static util::memory_reference<game_allocation_callback> game_heap_allocation_callback { 0x01115A34 };
-static util::memory_reference<game_free_callback>       game_heap_free_callback       { 0x01115A3C };
+using allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
+using free_callback       = void (__cdecl*)(void* allocation);
 
 /*
     i'm severely out of my depth here and i don't ever want to touch this again.
@@ -114,6 +108,18 @@ static util::memory_reference<game_free_callback>       game_heap_free_callback 
 
 using namespace treyarch;
 using namespace treyarch::memory;
+
+namespace treyarch { namespace memory { namespace heap { 
+    namespace references {
+        util::memory_reference<heap_state*>         heap_default             { 0x00FFDA58 };
+        util::memory_reference<u32>                 heap_page_directories    { 0x00FFDA70 };
+        util::memory_reference<volatile i64>        heap_queue_node_pool     { 0x00FFE1D8 };
+        util::memory_reference<volatile LONG>       heap_page_lock           { 0x00FFDE70 };
+        util::memory_reference<u8*>                 heap_free_pages          { 0x00FFDE74 };
+        util::memory_reference<allocation_callback> heap_allocation_callback { 0x01115A34 };
+        util::memory_reference<free_callback>       heap_free_callback       { 0x01115A3C };
+    } // references
+}}} // treyarch::memory::heap
 
 /*
     ABA problem prevention;
@@ -146,15 +152,14 @@ static bool compare_exchange(volatile i64* destination,
 */
 
 static void acquire_page_lock() {
-    volatile LONG &lock = game_heap_page_lock.get();
+    volatile LONG &lock = heap::references::heap_page_lock.get();
 
     while (_InterlockedCompareExchange(&lock, 1, 0) != 0)
         Sleep(0); // could be `std::this_thread::yield()` probably?
-                  // Sleep(0) yields the thread's time slice for other processes
 }
 
 static void release_page_lock() {
-    volatile LONG &lock = game_heap_page_lock.get();
+    volatile LONG &lock = heap::references::heap_page_lock.get();
 
     // reset lock to 0
     while (_InterlockedCompareExchange(&lock, 0, 1) != 1) {}
@@ -164,8 +169,8 @@ static void release_page_lock() {
     game's allocator callbacks
 */
 
-static void* allocate_game_heap_storage(u32 size, u32 alignment) {
-    auto callback = game_heap_allocation_callback.read();
+static void* allocate_heap_storage(u32 size, u32 alignment) {
+    auto callback = heap::references::heap_allocation_callback.read();
 
     if (!callback)
         std::abort();
@@ -178,8 +183,8 @@ static void* allocate_game_heap_storage(u32 size, u32 alignment) {
     return allocation;
 }
 
-static void free_game_heap_storage(void* allocation) {
-    auto callback = game_heap_free_callback.read();
+static void free_heap_storage(void* allocation) {
+    auto callback = heap::references::heap_free_callback.read();
 
     if (!callback)
         std::abort();
@@ -192,14 +197,14 @@ static void free_game_heap_storage(void* allocation) {
 */
 
 static void refill_queue_node_pool() {
-    volatile i64 &pool  = game_heap_queue_node_pool.get();
+    volatile i64 &pool  = heap::references::heap_queue_node_pool.get();
              u64  state = (u64)pool;
 
     if (tagged_pointer(state))
         return; // if another thread has refilled it, bail
 
     // allocate a page, slice it into linked 256 queue nodes
-    auto* nodes = (game_heap_page_queue_node*)allocate_game_heap_storage(0x1000, 0);
+    auto* nodes = (heap_page_queue_node*)allocate_heap_storage(0x1000, 0);
 
     for (u32 index = 0; index < 0xFF; ++index)
         nodes[index].next = (u32)&nodes[index + 1];
@@ -210,15 +215,15 @@ static void refill_queue_node_pool() {
     u64 next = make_tagged_pointer(nodes, tagged_sequence(state) + 1);
 
     if (!compare_exchange(&pool, next, state))
-        free_game_heap_storage(nodes); // someone else beat us, discard our batch
+        free_heap_storage(nodes); // someone else beat us, discard our batch
 }
 
-static game_heap_page_queue_node* acquire_queue_node() {
-    volatile i64 &pool = game_heap_queue_node_pool.get();
+static heap_page_queue_node* acquire_queue_node() {
+    volatile i64 &pool = heap::references::heap_queue_node_pool.get();
 
     for (;;) {
         auto  state = (u64)pool;
-        auto* node  = (game_heap_page_queue_node*)tagged_pointer(state);
+        auto* node  = (heap_page_queue_node*)tagged_pointer(state);
 
         if (!node) {
             refill_queue_node_pool();
@@ -234,8 +239,8 @@ static game_heap_page_queue_node* acquire_queue_node() {
     }
 }
 
-static void release_queue_node(game_heap_page_queue_node* node) {
-    volatile i64 &pool = game_heap_queue_node_pool.get();
+static void release_queue_node(heap_page_queue_node* node) {
+    volatile i64 &pool = heap::references::heap_queue_node_pool.get();
 
     for (;;) {
         auto state = (u64)pool;
@@ -252,13 +257,13 @@ static void release_queue_node(game_heap_page_queue_node* node) {
     Michael-Scott lock-free queue
 */
 
-static bool dequeue_page(game_heap_page_queue* queue,
-                         game_heap_page**      output) {
+static bool dequeue_page(heap_page_queue* queue,
+                         heap_page**      output) {
 
     for (;;) {
         auto  head      = (u64)queue->head;
         auto  tail      = (u64)queue->tail;
-        auto* head_node = (game_heap_page_queue_node*)tagged_pointer(head);
+        auto* head_node = (heap_page_queue_node*)tagged_pointer(head);
         auto  next      = (u64)head_node->next;
 
         if (head != (u64)queue->head)
@@ -280,7 +285,7 @@ static bool dequeue_page(game_heap_page_queue* queue,
             continue;
         }
 
-        auto* next_node = (game_heap_page_queue_node*)tagged_pointer(next);
+        auto* next_node = (heap_page_queue_node*)tagged_pointer(next);
         
         *output = next_node->value;
 
@@ -297,8 +302,8 @@ static bool dequeue_page(game_heap_page_queue* queue,
     }
 }
 
-static void enqueue_page(game_heap_page_queue* queue,
-                         game_heap_page*       page) {
+static void enqueue_page(heap_page_queue* queue,
+                         heap_page*       page) {
 
     auto* node = acquire_queue_node();
 
@@ -307,7 +312,7 @@ static void enqueue_page(game_heap_page_queue* queue,
 
     for (;;) {
         auto  tail      = (u64)queue->tail;
-        auto* tail_node = (game_heap_page_queue_node*)tagged_pointer(tail);
+        auto* tail_node = (heap_page_queue_node*)tagged_pointer(tail);
         auto  next      = (u64)tail_node->next;
 
         if (tail != (u64)queue->tail)
@@ -348,7 +353,7 @@ static void enqueue_page(game_heap_page_queue* queue,
     bitmapped page allocation
 */
 
-static void* allocate_from_page(game_heap_page* page) {
+static void* allocate_from_page(heap_page* page) {
     LONG free_count;
 
     for (;;) { /* atomically decrement free_count;
@@ -406,7 +411,7 @@ static void* allocate_from_page(game_heap_page* page) {
     }
 }
 
-static void free_to_page(game_heap_page* page, void* allocation) {
+static void free_to_page(heap_page* page, void* allocation) {
     // figure out which bit belongs to this pointer
     u32 slot       = ((u8*)allocation - page->blocks) / page->block_size;
     u32 word_index = slot >> 6;                    // divide by 64 to find which u64 word it's in
@@ -439,7 +444,7 @@ static void free_to_page(game_heap_page* page, void* allocation) {
     retrieves the metadata bucket for a specific allocation size;
     sizes 1-4 bytes -> index 0; sizes 5-8 bytes -> index 1
 */
-static game_heap_size_class* get_size_class(game_small_block_heap* heap, u32 size) {
+static heap_size_class* get_size_class(small_block_heap* heap, u32 size) {
     u32 clamped_size = size < 4 ? 4 : size;
     u32 index        = ((clamped_size + 3) >> 2) - 1;
 
@@ -447,15 +452,15 @@ static game_heap_size_class* get_size_class(game_small_block_heap* heap, u32 siz
 }
 
 // allocate memory to store the administrative metadata for a new page
-static game_heap_page* acquire_page_metadata(game_small_block_heap* heap,
-                                             game_heap_size_class*  size_class,
-                                             u32                    bitmap_word_count) {
+static heap_page* acquire_page_metadata(small_block_heap* heap,
+                                        heap_size_class*  size_class,
+                                        u32               bitmap_word_count) {
     
     // check if we have recycled metadata available first
     auto* page = size_class->unused_pages;
 
     if (page) {
-        size_class->unused_pages = (game_heap_page*)page->block_size;
+        size_class->unused_pages = (heap_page*)page->block_size;
         
         return page;
     }
@@ -464,11 +469,11 @@ static game_heap_page* acquire_page_metadata(game_small_block_heap* heap,
     u32 metadata_size = 0x28 + bitmap_word_count * sizeof(i64);
     u32 aligned_size  = (metadata_size + 7) & ~7u;
 
-    game_heap_metadata_slab* slab = heap->metadata_slabs;
+    heap_metadata_slab* slab = heap->metadata_slabs;
 
     if (!slab || slab->used + aligned_size >= 0x4000) {
-        slab = (game_heap_metadata_slab*)
-            allocate_game_heap_storage(0x4008, 0);
+        slab = (heap_metadata_slab*)
+            allocate_heap_storage(0x4008, 0);
 
         slab->previous = heap->metadata_slabs;
         slab->used     = (u32)slab & 7 ? 8 - ((u32)slab & 7) : 0;
@@ -476,7 +481,7 @@ static game_heap_page* acquire_page_metadata(game_small_block_heap* heap,
         heap->metadata_slabs = slab;
     }
 
-    page = (game_heap_page*)(slab->storage + slab->used);
+    page = (heap_page*)(slab->storage + slab->used);
     
     slab->used += aligned_size;
     
@@ -485,41 +490,41 @@ static game_heap_page* acquire_page_metadata(game_small_block_heap* heap,
 
 /*
     Radix Tree;
-    maps arbitrary raw memory pointers back to their owning `game_heap_page`,
+    maps arbitrary raw memory pointers back to their owning `heap_page`,
     required so `free_small_block()` knows where metadata is without storing headers in front of allocations
     ...which would waste cache space
 */
 
-static void register_page(game_heap_page* page) {
+static void register_page(heap_page* page) {
     auto  address     = (u32)page->blocks;
-    u32*  directories = &game_heap_page_directories.get();
+    u32*  directories = &heap::references::heap_page_directories.get();
     u32  &directory   = directories[address >> 24];
 
     if (!directory) {
-        directory = (u32)allocate_game_heap_storage(0x4000, 0);
+        directory = (u32)allocate_heap_storage(0x4000, 0);
         
         std::memset((void*)directory, 0, 0x4000);
     }
 
     // middle 12 bits ( 0x1000 aligned page addresses )
-    *(game_heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF)) = page;
+    *(heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF)) = page;
 }
 
-static game_heap_page* create_page(game_small_block_heap* heap, u32 block_size) {
+static heap_page* create_page(small_block_heap* heap, u32 block_size) {
     acquire_page_lock();
 
     /*
         game allocates 0x40000 chunks from the OS;
         then manually partitions them into 0x1000 pages to feed this system...
     */
-    u8* blocks = game_heap_free_pages.read();
+    u8* blocks = heap::references::heap_free_pages.read();
 
     if (blocks)
-        game_heap_free_pages.write(*(u8**)blocks);
+        heap::references::heap_free_pages.write(*(u8**)blocks);
     else {
-        blocks = (u8*)allocate_game_heap_storage(0x40000, 0x1000);
+        blocks = (u8*)allocate_heap_storage(0x40000, 0x1000);
 
-        u8* free_page = game_heap_free_pages.read();
+        u8* free_page = heap::references::heap_free_pages.read();
 
         // slice a 0x40000 chunk into 0x1000 pages and link them via their first word
         for (u32 offset = 0x1000; offset < 0x40000; offset += 0x1000) {
@@ -530,7 +535,7 @@ static game_heap_page* create_page(game_small_block_heap* heap, u32 block_size) 
             free_page = page_blocks;
         }
 
-        game_heap_free_pages.write(free_page);
+        heap::references::heap_free_pages.write(free_page);
     }
 
     auto* size_class = get_size_class(heap, block_size);
@@ -566,24 +571,24 @@ static game_heap_page* create_page(game_small_block_heap* heap, u32 block_size) 
     return page;
 }
 
-static void release_page(game_small_block_heap* heap,
-                         game_heap_page*        page) {
+static void release_page(small_block_heap* heap,
+                         heap_page*        page) {
 
     acquire_page_lock();
 
     // 1. remove from directory mappings
 
     auto  address     = (u32)page->blocks;
-    u32*  directories = &game_heap_page_directories.get();
+    u32*  directories = &heap::references::heap_page_directories.get();
     u32   directory   = directories[address >> 24];
 
-    *(game_heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF)) = nullptr;
+    *(heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF)) = nullptr;
 
     // 2. return 4KiB (0x1000) to the pool
 
-    *(u8**)page->blocks = game_heap_free_pages.read();
+    *(u8**)page->blocks = heap::references::heap_free_pages.read();
     
-    game_heap_free_pages.write(page->blocks);
+    heap::references::heap_free_pages.write(page->blocks);
 
     // 3. return metadata struct to the size class pool
     
@@ -595,32 +600,34 @@ static void release_page(game_small_block_heap* heap,
     release_page_lock();
 }
 
-static game_heap_page* find_page(void* allocation) {
+static heap_page* find_page(void* allocation) {
     // traverse the directory radix tree to find the metadata page for this pointer
     auto address     = (u32)allocation;
-    u32* directories = &game_heap_page_directories.get();
+    u32* directories = &heap::references::heap_page_directories.get();
     u32  directory   = directories[address >> 24];
 
     if (!directory)
         return nullptr;
 
-    return *(game_heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF));
+    return *(heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF));
 }
 
 /*
     ~500 lines later, the actual allocator API
 */
 
-void* memory::game_heap::allocate(u32 size) {
+void* memory::heap::allocate(u32 size) {
     void* allocation = allocate_small_block(size);
 
     if (allocation)
         return allocation;
 
-    return allocate_game_heap_storage(size, 0);
+    return allocate_heap_storage(size, 0);
+
+    // return retail::sub_5FBDD0(size);
 }
 
-void memory::game_heap::free(void* allocation) {
+void memory::heap::free(void* allocation) {
     if (!allocation)
         return;
 
@@ -630,20 +637,22 @@ void memory::game_heap::free(void* allocation) {
         return;
     }
 
-    free_game_heap_storage(allocation);
+    free_heap_storage(allocation);
+
+    // retail::sub_8597E0((u32)allocation);
 }
 
-void* memory::game_heap::allocate_small_block(u32 size) {
-    game_heap_state*       state = game_heap_default.read();
-    game_small_block_heap* heap  = state->small_block_heap;
+void* memory::heap::allocate_small_block(u32 size) {
+    heap_state*       state = heap::references::heap_default.read();
+    small_block_heap* heap  = state->small_block_heap;
 
     if (!heap || size > 0x100) // only sizes up to 256 bytes
         return nullptr;
 
-    game_heap_size_class* size_class = get_size_class(heap, size);
+    heap_size_class* size_class = get_size_class(heap, size);
 
     for (;;) {
-        game_heap_page* page = size_class->active_page;
+        heap_page* page = size_class->active_page;
 
         // fast path: we have a designated active page for this size clas
         if (page) {
@@ -704,18 +713,18 @@ void* memory::game_heap::allocate_small_block(u32 size) {
     }
 }
 
-void memory::game_heap::free_small_block(void* allocation) {
+void memory::heap::free_small_block(void* allocation) {
     if (!allocation)
         return;
 
-    game_heap_state* state = game_heap_default.read();
-    game_heap_page*  page  = find_page(allocation);
+    heap_state* state = references::heap_default.read();
+    heap_page*  page  = find_page(allocation);
 
     state->small_block_bytes -= page->block_size;
     
     free_to_page(page, allocation);
 
-    game_heap_size_class* size_class =
+    heap_size_class* size_class =
         get_size_class(state->small_block_heap, page->block_size);
 
     // if the page was full (1), it now has space; tranisition it to queued (3) and queue it up
@@ -731,7 +740,7 @@ void memory::game_heap::free_small_block(void* allocation) {
         because it's in a queue, we have to cycle the queue until we find it...
     */
     for (u32 scan_count = 0; scan_count < 0x100; ++scan_count) {
-        game_heap_page* queued_page;
+        heap_page* queued_page;
 
         if (!dequeue_page(&size_class->available_pages, &queued_page))
             return; // queue is empty, abort

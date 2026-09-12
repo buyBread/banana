@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/memory/game_heap.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -31,7 +31,7 @@ namespace treyarch { namespace container {
         while (node != head) {
             legacy_list_node<T>* next = node->next;
 
-            memory::game_heap::free_small_block(node);
+            memory::heap::free_small_block(node);
             node = next;
         }
     }
