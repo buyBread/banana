@@ -41,11 +41,13 @@ bool banana::core::init() {
 #ifndef NDEBUG
     hook_manager.install("debug");
 #else
+#if SPINLOCK_MUTEX
     /*
         it's not really what i'd "like" to "ship", but i can't figure out an ezpz variant that truly fixes stutters caused by the mutex...
         so until that happens, or until we no longer need to hook this (crack dream), it'll do to alleviate the problem somewhat.
     */
     hook_manager.enable_hook("debug", "sub_A6C860");
+#endif
 #endif
 
     return true;

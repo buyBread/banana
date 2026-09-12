@@ -8,7 +8,7 @@
 // flush all logging types
 #define ALWAYS_FLUSH 1
 
-// enables redirecting important rel32 calls to source owned variants
+// enables redirecting important calls to source owned variants
 #define REL32_GAME_CALLS 1
 
 // whether logger will allocate a console window
@@ -16,6 +16,9 @@
 
 // adjusts a handful of flags automatically
 #define OPTIMIZE_FLAGS 1
+
+// use spinlock method over yielding with Sleep(0) when trying to acquire a mutex
+#define SPINLOCK_MUTEX 1
 
 // ============================ //
 //        OPTIMIZE_FLAGS        //

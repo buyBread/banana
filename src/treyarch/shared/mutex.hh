@@ -2,6 +2,7 @@
 
 #include <windows.h>
 
+#include "flags.hh"
 #include "util/types.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -21,6 +22,12 @@ namespace treyarch {
             return _InterlockedCompareExchange64((volatile i64*)&owner, owner_state, 0) == 0;
         }
 
+        /*
+            this either did or didn't cause issues for me when trying to recreate the event manager.
+            either way, it seems to work all the same now, but i'll add a flag to switch between the two anyways.
+            (future debugging qol, yay)
+        */
+#if SPINLOCK_MUTEX
         void acquire_contended(i64 owner_state) {
             u32 pause_count = 1;
 
@@ -38,6 +45,12 @@ namespace treyarch {
                     Sleep(1);
             }
         }
+#else
+        void acquire_contended(i64 owner_state) {
+            while (!try_acquire(owner_state))
+                Sleep(0);
+        }
+#endif
 
         void acquire() {
             const u32 thread_id = GetCurrentThreadId();
