@@ -67,8 +67,8 @@ class s_hook_manager : public util::singleton<s_hook_manager> {
     void* get_hook_detour_ptr(const std::string &category, const std::string &name);
     void* get_hook_original_ptr(const std::string &category, const std::string &name);
 
-    void attempt_queue_enable(const std::string &category, const std::vector<i_hook*> &hooks);
-    void attempt_queue_disable(const std::string &category, const std::vector<i_hook*> &hooks);
+    bool attempt_queue_enable(const std::string &category, const std::vector<i_hook*> &hooks);
+    bool attempt_queue_disable(const std::string &category, const std::vector<i_hook*> &hooks);
 
     std::mutex m_manager_mutex;
 
@@ -78,18 +78,18 @@ public:
 
     void register_hook(i_hook* hook, const std::string &category = HK_DEFAULT_CATEGORY); // hooks auto-register themselves
 
-    void install(const std::string &category = HK_DEFAULT_CATEGORY);
+    bool install(const std::string &category = HK_DEFAULT_CATEGORY);
     // void install(const std::string &category, const std::string &name);
     // void install(const std::vector<i_hook*> &hooks);
     void uninstall(const std::string &category);
     void uninstall(const std::string &category, const std::string &name);
     // void uninstall(const std::vector<i_hook*> &hooks);
     void shutdown();
-    void enable_hook(const std::string &category, const std::string &name);
-    void enable_hook_category(const std::string &category);
+    bool enable_hook(const std::string &category, const std::string &name);
+    bool enable_hook_category(const std::string &category);
     void enable_hook_all();
-    void disable_hook(const std::string &category, const std::string &name);
-    void disable_hook_category(const std::string &category);
+    bool disable_hook(const std::string &category, const std::string &name);
+    bool disable_hook_category(const std::string &category);
     void disable_hook_all();
 
     bool is_category_enabled(const std::string &category);

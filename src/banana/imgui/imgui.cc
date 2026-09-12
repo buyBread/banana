@@ -28,15 +28,16 @@ void imgui::initialize() {
     store::original_WndProc = (WNDPROC)SetWindowLongPtrA
         (store::handle_window, GWLP_WNDPROC, (LONG_PTR)imgui::WndProc);
 
-    banana::hook_manager.install("imgui");
-    
-    banana::log.msg("ImGui: initialized");
+    if (banana::hook_manager.install("imgui"))
+        banana::log.msg("ImGui: initialized");
 }
 
 void imgui::shutdown() {
     SetWindowLongPtrA(store::handle_window,
                       GWLP_WNDPROC,
                       (LONG_PTR)store::original_WndProc);
+
+    store::original_WndProc = nullptr;
 
     ImGui_ImplDX9_Shutdown();
     ImGui_ImplWin32_Shutdown();
@@ -46,8 +47,6 @@ void imgui::shutdown() {
     ctx   = nullptr;
     io    = nullptr;
     style = nullptr;
-
-    store::original_WndProc = nullptr;
 
     banana::hook_manager.uninstall("imgui");
     

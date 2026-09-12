@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "banana/core.hh"
 #include "banana/hooks/base.hh"
 #include "banana/hooks/manager.hh"
@@ -12,7 +14,7 @@ void s_hook_manager::register_hook(i_hook* hook, const std::string &category) {
     this->m_hooks[category].push_back(hook);
 }
 
-void s_hook_manager::install(const std::string &category) {    
+bool s_hook_manager::install(const std::string &category) {    
     std::lock_guard<std::mutex> lock(this->m_manager_mutex);
 
     this->init_minhook();
@@ -20,11 +22,11 @@ void s_hook_manager::install(const std::string &category) {
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
-        return;
+        return false;
 
     MGR_DBG("installing {} hooks for category \"{}\"", hooks.size(), category);
 
-    this->attempt_queue_enable(category, hooks);
+    return this->attempt_queue_enable(category, hooks);
 }
 
 void s_hook_manager::uninstall(const std::string &category) {
@@ -68,7 +70,7 @@ void s_hook_manager::shutdown() {
     }
 }
 
-void s_hook_manager::enable_hook(const std::string &category, const std::string &name) {
+bool s_hook_manager::enable_hook(const std::string &category, const std::string &name) {
     std::lock_guard<std::mutex> lock(this->m_manager_mutex);
 
     this->init_minhook();
@@ -76,13 +78,18 @@ void s_hook_manager::enable_hook(const std::string &category, const std::string 
     auto hk = this->get_hook(category, name);
 
     if (!hk)
-        return;
+        return false;
 
-    if (hk->enable())
+    if (hk->enable()) {
         MGR_MSG("enabled hook \"{}\" in category \"{}\"", name, category);
+
+        return true;
+    }
+
+    return false;
 }
 
-void s_hook_manager::enable_hook_category(const std::string &category) {
+bool s_hook_manager::enable_hook_category(const std::string &category) {
     std::lock_guard<std::mutex> lock(this->m_manager_mutex);
 
     this->init_minhook();
@@ -90,11 +97,11 @@ void s_hook_manager::enable_hook_category(const std::string &category) {
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
-        return;
+        return false;
     
     MGR_DBG("enabling category \"{}\"", category);
 
-    attempt_queue_enable(category, hooks);
+    return attempt_queue_enable(category, hooks);
 }
 
 void s_hook_manager::enable_hook_all() {
@@ -102,30 +109,34 @@ void s_hook_manager::enable_hook_all() {
         enable_hook_category(hk_category);
 }
 
-void s_hook_manager::disable_hook(const std::string &category, const std::string &name) {
+bool s_hook_manager::disable_hook(const std::string &category, const std::string &name) {
     std::lock_guard<std::mutex> lock(this->m_manager_mutex);
 
     auto hk = this->get_hook(category, name);
 
     if (!hk)
-        return;
+        return false;
 
-    hk->disable();
+    if (hk->disable()) {
+        MGR_MSG("disabled hook \"{}\" in category \"{}\"", name, category);
 
-    MGR_MSG("disabled hook \"{}\" in category \"{}\"", name, category);
+        return true;
+    }
+
+    return false;
 }
 
-void s_hook_manager::disable_hook_category(const std::string &category) {
+bool s_hook_manager::disable_hook_category(const std::string &category) {
     std::lock_guard<std::mutex> lock(this->m_manager_mutex);
 
     auto hooks = this->get_category(category);
 
     if (hooks.empty())
-        return;
+        return false;
 
     MGR_DBG("disabling category \"{}\"", category);
 
-    attempt_queue_disable(category, hooks);
+    return attempt_queue_disable(category, hooks);
 }
 
 void s_hook_manager::disable_hook_all() {
@@ -224,7 +235,7 @@ std::vector<i_hook*> s_hook_manager::get_category(const std::string &category) {
     return it->second;
 }
 
-void s_hook_manager::attempt_queue_enable(const std::string &category, const std::vector<i_hook*> &hooks) {
+bool s_hook_manager::attempt_queue_enable(const std::string &category, const std::vector<i_hook*> &hooks) {
     auto queued = std::vector<i_hook*>{};
 
     for (const auto &hk : hooks) {
@@ -242,7 +253,7 @@ void s_hook_manager::attempt_queue_enable(const std::string &category, const std
             for (const auto &queued_hk : queued)
                 queued_hk->uninstall();
             
-            return;
+            return false;
         }
 
         queued.push_back(hk);
@@ -256,16 +267,18 @@ void s_hook_manager::attempt_queue_enable(const std::string &category, const std
         for (const auto &hk : queued)
             hk->uninstall();
 
-        return;
+        return false;
     }
 
     MGR_MSG("enabled category \"{}\"", category);
 
     for (const auto &hk : queued)
         hk->set_state(e_hook_state::enabled);
+
+    return true;
 }
 
-void s_hook_manager::attempt_queue_disable(const std::string &category, const std::vector<i_hook*> &hooks) {
+bool s_hook_manager::attempt_queue_disable(const std::string &category, const std::vector<i_hook*> &hooks) {
     /*
         since the loop will literally headshot the process if queueing for disable fails,
         we don't need to make a `queued` vector for post-disabling state switching.
@@ -282,7 +295,7 @@ void s_hook_manager::attempt_queue_disable(const std::string &category, const st
         FATAL_BREAKPOINT(); /* we never know when PSR B1919+21 will snipe our process ID specifically
                                ...to be more precise, there's no reason this should happen */
 
-        return;
+        std::unreachable();
     }
 
     MGR_MSG("disabled category \"{}\"", category);
@@ -290,6 +303,8 @@ void s_hook_manager::attempt_queue_disable(const std::string &category, const st
     for (const auto &hk : hooks)
         if (hk->get_state() != e_hook_state::absent) // some unicorn can be absent, so don't desync state for it
             hk->set_state(e_hook_state::created);
+
+    return true;
 }
 
 void s_hook_manager::init_minhook() {

@@ -108,9 +108,7 @@ __declspec(dllexport) IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
         result = store::d3d9; // implicitly assumes the game will always be the first to ask for it
         
         // also responsible for initializing ImGui
-        banana::hook_manager.enable_hook("device_lifecycle", "CreateDevice");
-
-        if (!banana::hook_manager.is_hook_enabled("device_lifecycle", "CreateDevice"))
+        if (!banana::hook_manager.enable_hook("device_lifecycle", "CreateDevice"))
             banana::state::update(e_lifecycle::failed);
     } else
         result = acquire_d3d9(SDKVersion);
