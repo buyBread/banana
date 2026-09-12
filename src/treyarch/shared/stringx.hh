@@ -15,14 +15,14 @@ namespace treyarch {
 
     class stringx {
 
-public: // why are you public?
+    public: // why are you public?
         char* data_;
         i32 length_;
 
-protected:
+    protected:
         fixed_pool* source_pool;
 
-public:
+    public:
         enum      { npos = -1 };
         enum fmtd { fmt };
 

@@ -8,7 +8,7 @@ namespace treyarch { namespace mash {
 
     class mash_virtual_base {
 
-public:
+    public:
         // order matters here; retail calls these by the offsets documented in the mash notes
         virtual void construct_mashed_class() {}
         virtual void destruct_mashed_class() {}

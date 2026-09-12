@@ -8,7 +8,7 @@
 namespace treyarch {
     class frontend_manager {
 
-public:
+    public:
         u8            reserved_000[0x54];
         ui_frontend*  igo;
         f32           pause_menu_timer;

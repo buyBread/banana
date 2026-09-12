@@ -7,7 +7,7 @@
 namespace treyarch { namespace mash {
     class container_base {
 
-public:
+    public:
         u32 mash_image_offset;
         u32 size;
 

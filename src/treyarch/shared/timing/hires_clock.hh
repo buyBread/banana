@@ -13,7 +13,7 @@ namespace treyarch {
 
         u64 last_reset_ticks;
 
-public:
+    public:
         hires_clock_t();
 
         void reset();

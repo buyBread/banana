@@ -9,7 +9,7 @@
 namespace treyarch {
     class vector2 { // L15079: SM3 .ii
 
-public:
+    public:
         f32 x, y;
 
         vector2() {}

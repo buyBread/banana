@@ -10,7 +10,7 @@ namespace treyarch {
 
     class vector3 { // L15346: SM3 .ii
 
-public:
+    public:
         f32 x, y, z;
 
         f32 get_x() const { return x; }

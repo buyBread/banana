@@ -7,7 +7,7 @@
 namespace treyarch {
     class camera {
 
-public:
+    public:
         u8  reserved_000[0x10];
         po* my_abs_po;
 

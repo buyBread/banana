@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "treyarch/shared/mash/container_base.hh"
-#include "treyarch/shared/memory/game_heap.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -12,7 +12,7 @@ namespace treyarch { namespace mash {
     template<typename T>
     class vector : public container_base {
 
-public:
+    public:
         T**  data;
         u32  capacity;
         bool destroy_elements;
@@ -115,7 +115,7 @@ public:
                             delete element;
                         else {
                             element->~T();
-                            memory::game_heap::free(element);
+                            memory::heap::free(element);
                         }
                     }
 
@@ -124,7 +124,7 @@ public:
             }
 
             if (!is_pointer_in_mash_image(data))
-                memory::game_heap::free(data);
+                memory::heap::free(data);
 
             data     = nullptr;
             capacity = 0;

@@ -6,7 +6,7 @@
 namespace treyarch {
     class po { // dragon warrior?!
 
-public:
+    public:
         matrix4x4 matrix;
 
         const vector3 &get_position() const {

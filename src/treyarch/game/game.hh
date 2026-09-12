@@ -50,7 +50,7 @@ namespace treyarch {
 
     class game {
 
-public:
+    public:
         level_load_stuff                 level;
         u8                               disable_interface;
         u8                               disable_start_menu;

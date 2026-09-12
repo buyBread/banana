@@ -11,7 +11,7 @@ namespace treyarch {
 
     class vector4 { // L15465: SM3 .ii
     
-public:
+    public:
         f32 x, y, z, w;
 
         f32 get_x() const { return x; }

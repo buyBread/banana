@@ -10,7 +10,7 @@ namespace treyarch {
 
     class matrix4x4 { // L15637: SM3 .ii
 
-public:
+    public:
         row x, y, z, w;
 
         matrix4x4() {}

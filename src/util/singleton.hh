@@ -3,10 +3,10 @@
 namespace util {
     template <typename T> class singleton {
         
-protected:
+    protected:
         singleton() = default;
 
-public:
+    public:
         singleton           (const singleton&) = delete;
         singleton& operator=(const singleton&) = delete;
         singleton           (singleton&&)      = delete;

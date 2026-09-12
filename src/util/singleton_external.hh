@@ -11,10 +11,10 @@ namespace util {
     template <typename T, u32 address>
     class singleton_external {
         
-protected:
+    protected:
         singleton_external() = default;
 
-public:
+    public:
         singleton_external           (const singleton_external&) = delete;
         singleton_external& operator=(const singleton_external&) = delete;
         singleton_external           (singleton_external&&)      = delete;

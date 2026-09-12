@@ -7,7 +7,7 @@
 namespace treyarch {
     class wds_camera_manager {
 
-public:
+    public:
         u8            reserved_000[0x124];
         camera_handle current_camera;
         u8            reserved_128[0x18];
