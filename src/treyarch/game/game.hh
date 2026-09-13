@@ -88,6 +88,7 @@ namespace treyarch {
 
         camera_handle get_current_view_camera();
         void          handle_frame_locking(f32* time_inc);
+        void          frame_advance(f32 time_inc);
         void          clear_screen();
         void          render();
     };

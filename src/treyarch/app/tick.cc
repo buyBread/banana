@@ -4,12 +4,11 @@
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "util/gimmie/fn.hh"
 
 namespace treyarch {    
     namespace references {
-        util::memory_reference<u8>    master_clock_is_up { 0x00FBF230 };
-        util::memory_reference<f32>   minimum_frame_time { 0x00FC2F8C };
+        util::memory_reference<u8>  master_clock_is_up { 0x00FBF230 };
+        util::memory_reference<f32> minimum_frame_time { 0x00FC2F8C };
     } // references
 } // treyarch
 
@@ -43,7 +42,7 @@ void app::tick() {
     retail::sub_734610((f32*)&references::callback_timers.get(), time_inc);
     retail::sub_7702F0(time_inc);
     retail::sub_5F8870(0);
-    retail::sub_97CC40((i32)this->the_game, std::bit_cast<i32>(time_inc)); // IDA typed this wrong
+    this->the_game->frame_advance(time_inc);
 
     if (frames_to_skip) {
         --frames_to_skip;
