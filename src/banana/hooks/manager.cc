@@ -295,7 +295,10 @@ bool s_hook_manager::attempt_queue_disable(const std::string &category, const st
         FATAL_BREAKPOINT(); /* we never know when PSR B1919+21 will snipe our process ID specifically
                                ...to be more precise, there's no reason this should happen */
 
+#pragma warning(push)
+#pragma warning(disable: 4702)
         std::unreachable();
+#pragma warning(pop)
     }
 
     MGR_MSG("disabled category \"{}\"", category);
