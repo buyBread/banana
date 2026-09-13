@@ -18,7 +18,7 @@
 #define OPTIMIZE_FLAGS 1
 
 // use spinlock method over yielding with Sleep(0) when trying to acquire a mutex
-#define SPINLOCK_MUTEX 1
+#define SPINLOCK_MUTEX 0
 
 // ============================ //
 //        OPTIMIZE_FLAGS        //

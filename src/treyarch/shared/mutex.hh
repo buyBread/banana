@@ -26,6 +26,9 @@ namespace treyarch {
             this either did or didn't cause issues for me when trying to recreate the event manager.
             either way, it seems to work all the same now, but i'll add a flag to switch between the two anyways.
             (future debugging qol, yay)
+
+            2026-09-13: performance wise, it's a mixed bag. some situations one is better and in others it's the opposite.
+                        attempting to improve the situation or debate whether it even should be improved shouldn't be done at the moment.
         */
 #if SPINLOCK_MUTEX
         void acquire_contended(i64 owner_state) {
