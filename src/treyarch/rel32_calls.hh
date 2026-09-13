@@ -2,6 +2,7 @@
 
 #include "flags.hh"
 #include "util/redirect_rel32.hh"
+#include "util/thunk.hh"
 #include "util/macros/debug.hh"
 #include "banana/logging.hh"
 #include "treyarch/app/app.hh"
@@ -13,7 +14,7 @@
 
 namespace treyarch {
     inline void _redirect_event_manager() {
-        banana::log.dbg("redirecting event_manager callsites");
+        banana::log.msg("redirecting event_manager callsites");
 
         struct event_callsite {
             u32 address;
@@ -310,12 +311,12 @@ namespace treyarch {
     }
 
     inline void redirect_game_calls() {
-        banana::log.dbg("redirecting nglInit (WinMain)");
+        banana::log.msg("redirecting nglInit (WinMain)");
         
         if (!util::redirect_rel32(0x009CC222, { 0xE8, 0xA9, 0x9A, 0x01, 0x00 }, &ngl::init))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglSetBufferSize callsites (WinMain)");
+        banana::log.msg("redirecting nglSetBufferSize callsites (WinMain)");
 
         if (!util::redirect_rel32(0x009CC2D2, { 0xE8, 0x29, 0xC6, 0x01, 0x00 }, &ngl::set_buffer_size) ||
             !util::redirect_rel32(0x009CC311, { 0xE8, 0xEA, 0xC5, 0x01, 0x00 }, &ngl::set_buffer_size) ||
@@ -324,21 +325,19 @@ namespace treyarch {
             
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting app::tick callsites (WinMain)");
+        banana::log.msg("redirecting app::tick callsites (WinMain)");
 
         if (!util::redirect_rel32(0x009CC44C, { 0xE8, 0x3F, 0xD6, 0xA5, 0xFF }, &app::tick) ||
             !util::redirect_rel32(0x009CC477, { 0xE8, 0x14, 0xD6, 0xA5, 0xFF }, &app::tick))
 
             FATAL_BREAKPOINT();
 
-
-
-        banana::log.dbg("DllMain: redirecting input_mgr::poll_devices (movie_manager)");
+        banana::log.msg("DllMain: redirecting input_mgr::poll_devices (movie_manager)");
 
         if (!util::redirect_rel32(0x006ABCEB, { 0xE8, 0xE0, 0xD5, 0x2A, 0x00 }, &input_mgr::poll_devices))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting cutscene_player::is_playing callsites");
+        banana::log.msg("redirecting cutscene_player::is_playing callsites");
 
         if (!util::redirect_rel32(0x004E0869, { 0xE8, 0xB2, 0x47, 0x32, 0x00 }, &cutscene_player::is_playing) ||
             !util::redirect_rel32(0x004ECC8B, { 0xE8, 0x90, 0x83, 0x31, 0x00 }, &cutscene_player::is_playing) ||
@@ -367,15 +366,24 @@ namespace treyarch {
 
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting nglPresent (movie_manager)");
+        banana::log.msg("redirecting nglPresent (movie_manager)");
 
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.dbg("redirecting game::clear_screen callsites");
+        banana::log.msg("redirecting game::clear_screen callsites");
 
         if (!util::redirect_rel32(0x0076BC14, { 0xE8, 0xF7, 0xF3, 0x20, 0x00 }, &game::clear_screen) ||
             !util::redirect_rel32(0x0097B495, { 0xE8, 0x76, 0xFB, 0xFF, 0xFF }, &game::clear_screen))
+
+            FATAL_BREAKPOINT();
+
+        banana::log.msg("redirecting level_load_stuff lifecycle");
+
+        if (!util::redirect_rel32(0x0097D5B0, { 0xE8, 0xBB, 0xD5, 0xFF, 0xFF }, &util::thunk::ctor<level_load_stuff>::invoke) ||
+            !util::redirect_rel32(0x0097DFD6, { 0xE8, 0x65, 0xCC, 0xFF, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
+            !util::redirect_rel32(0x00B0F173, { 0xE9, 0xC8, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
+            !util::redirect_rel32(0x00B0F1D3, { 0xE9, 0x68, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke))
 
             FATAL_BREAKPOINT();
 

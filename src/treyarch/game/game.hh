@@ -4,7 +4,7 @@
 #include "util/types.hh"
 #include "treyarch/game/camera/camera.hh"
 #include "treyarch/shared/boolx.hh"
-#include "treyarch/shared/stringx.hh"
+#include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/math/types/vector3.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
@@ -35,8 +35,8 @@ namespace treyarch {
 
     struct level_load_stuff {
         level_descriptor* descriptor;
-        stringx           name;
-        stringx           hero_name;
+        mash::string      name;
+        mash::string      hero_name;
         vector3           hero_start_position;
         i32               loading_meter_val;
         u8                reserved_02c[0x04];
@@ -46,6 +46,11 @@ namespace treyarch {
         u8                load_complete_called;
         u8                load_this_level_finished;
         u8                reserved_042[0x06];
+
+        level_load_stuff();
+       ~level_load_stuff() = default;
+
+        void reset_level_load_data();
     };
 
     class game {
@@ -89,6 +94,9 @@ namespace treyarch {
         camera_handle get_current_view_camera();
         void          handle_frame_locking(f32* time_inc);
         void          frame_advance(f32 time_inc);
+        void          release_camera_manager();
+        void          clear_camera_handles();
+        void          create_camera_manager();
         void          clear_screen();
         void          render();
     };
