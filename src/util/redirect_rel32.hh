@@ -1,17 +1,39 @@
 #pragma once
 
+#include <windows.h>
 #include <cstring>
 #include <type_traits>
-#include <windows.h>
 #include <cassert>
 
 #include "util/types.hh"
 #include "banana/logging.hh"
 
+template <std::size_t N>
+struct std::formatter<u8[N]> {
+    constexpr auto parse(std::format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(const u8 (&arr)[N], std::format_context& ctx) const {
+        auto out = ctx.out();
+        
+        for (std::size_t i = 0; i < N; ++i) {
+            out = std::format_to(out, "{:02X}", arr[i]);
+
+            if (i + 1 != N)
+                *out++ = ' ';
+        }
+
+        return out;
+    }
+};
+
 namespace util {
     template <typename fn, size_t n> // template for the static_assert
     bool redirect_rel32(u32 address, const u8 (&expected_instruction)[n], fn target) {
-        assert(expected_instruction[0] == 0xE8);
+        banana::log.dbg("redirect_rel32: patching {} @ {:08X}", expected_instruction, address);
+
+        assert(expected_instruction[0] == 0xE8 || expected_instruction[0] == 0xE9);
 
         constexpr bool function_pointer = std::is_pointer_v<fn> &&
                                           std::is_function_v<std::remove_pointer_t<fn>>;
@@ -34,7 +56,7 @@ namespace util {
         auto call = (u8*)address;
 
         if (std::memcmp(call, expected_instruction, n) != 0) {
-            banana::log.err("redirect_rel32: unexpected callsite");
+            banana::log.err("redirect_rel32: unexpected {} site", expected_instruction[0] == 0xE8 ? "call" : "branch");
 
             return false;
         }
