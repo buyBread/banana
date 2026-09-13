@@ -1,4 +1,5 @@
 #include "treyarch/ngl/fx/render_node.hh"
+#include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
 
 #ifdef DEBUG
@@ -10,6 +11,12 @@
 using namespace treyarch;
 
 void ngl::render_node::render() {
+    if (vtable == (void*)&render_callback::references::node_vtable.get()) {
+        render_callback::render((render_callback::node*)this);
+
+        return;
+    }
+
     if (vtable == (void*)&fx::references::render_node_vtable.get()) {
         fx::render((fx::render_node*)this);
 
