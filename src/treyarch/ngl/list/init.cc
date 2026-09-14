@@ -1,6 +1,7 @@
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/context_registry.hh"
+#include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/list/init.hh"
 #include "treyarch/ngl/scene/dump.hh"

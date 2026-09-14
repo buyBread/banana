@@ -1,26 +1,22 @@
 #include <cstdio>
 #include <cstddef>
 
-#include "treyarch/ngl/fx/parameters.hh"
-#include "treyarch/ngl/fx/render_support.hh"
-#include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/shared/math/rtree.hh"
-#include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/fx/parameters.hh"
+#include "treyarch/ngl/fx/references.hh"
+#include "treyarch/ngl/fx/render_support.hh"
+#include "treyarch/ngl/lighting/context.hh"
+#include "treyarch/ngl/lighting/references.hh"
+#include "treyarch/shared/math/rtree.hh"
 
 using namespace treyarch;
 
 static util::memory_reference<u32> parameter_id_light_context { 0x01116330 };
 static util::memory_reference<u32> parameter_id_light_sphere  { 0x0111633C };
 static util::memory_reference<u32> parameter_id_ifl_frame     { 0x01116348 };
-
-static util::memory_reference<ngl::lighting::light_context*> selected_light_context { 0x01118988 };
-
-static util::memory_reference<void*> point_light_manager { 0x010FC594 };
-
-static util::memory_reference<i32> ifl_frame { 0x01118800 };
 
 static util::memory_reference<char> effect_hash_names      { 0x00FC6950 };
 static util::memory_reference<u32>  effect_hash_name_index { 0x00FC6A00 };
@@ -52,7 +48,7 @@ i32 visit_point_light(math::visitor* base, i32 index) {
     auto* visitor = (point_light_visitor*)base;
 
     const ngl::lighting::point_light_data &light =
-        (&ngl::lighting::references::point_light_data.get())[index];
+        (&ngl::lighting::references::point_lights.get())[index];
     f32 x = (f32)((f64)visitor->center.x - (f64)light.position.x);
     f32 y = (f32)((f64)visitor->center.y - (f64)light.position.y);
     f32 z = (f32)((f64)visitor->center.z - (f64)light.position.z);
@@ -180,7 +176,8 @@ void query_point_lights(      ngl::fx::mesh_node_data* node_data,
                         const vector4                  &sphere,
                               f32                      radius) {
 
-    ngl::lighting::light_context* context = selected_light_context.read();
+    ngl::lighting::light_context* context =
+        ngl::lighting::references::selected_light_context.read();
 
     if (context->head.next == &context->head)
         return;
@@ -220,7 +217,7 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
     else
         context = ngl::references::current_scene.read()->light_context;
 
-    selected_light_context.write(context);
+    lighting::references::selected_light_context.write(context);
     context->head.local_next = &context->head;
 
     return context;
@@ -256,7 +253,7 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
     ngl::scene_parameters* parameters = node_data->parameters;
     ngl::fx::prepare_light_context(node_data);
 
-    if (!point_light_manager.read())
+    if (!ngl::lighting::references::light_manager.read())
         return;
 
     f32 radius;
@@ -355,7 +352,7 @@ void ngl::fx::prepare_animated_textures(effect*         effect_data,
     u32 parameter_id = parameter_id_ifl_frame.read();
 
     if (has_scene_parameter(parameters, parameter_id))
-        ifl_frame.write((i32)get_scene_parameter(parameters, parameter_id));
+        references::ifl_frame.write((i32)get_scene_parameter(parameters, parameter_id));
     else
-        ifl_frame.write(ngl::references::current_scene.read()->ifl_frame);
+        references::ifl_frame.write(ngl::references::current_scene.read()->ifl_frame);
 }

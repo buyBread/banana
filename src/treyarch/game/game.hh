@@ -1,22 +1,27 @@
 #pragma once
 
-#include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
+#include "util/macros/sanity_assert.hh"
 #include "treyarch/game/camera/camera.hh"
 #include "treyarch/shared/boolx.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/math/types/vector3.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
+#include "util/memory_reference.hh"
 
 namespace treyarch {
     struct level_descriptor; // impl?
     class game_data; // impl?
     class localized_string_table; // impl?
     class message_board; // impl?
-    class wds_camera_manager; // impl?
+    class world_dynamics_system;
 
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
+
+    namespace references {
+        inline util::memory_reference<u8*> game_state { 0x01111760 };
+    } // references
 
     struct game_frame_timing {
         f32 total_delta;
@@ -69,7 +74,7 @@ namespace treyarch {
         u8                               level_is_unloading;
         u8                               reserved_05c[0x04];
         i32                              hero_freeze_depth;
-        wds_camera_manager*              camera_manager;
+        world_dynamics_system*           the_world;
         u8                               reserved_068[0x04];
         camera_handle                    base_camera;
         camera_handle                    current_view_camera;
@@ -94,9 +99,9 @@ namespace treyarch {
         camera_handle get_current_view_camera();
         void          handle_frame_locking(f32* time_inc);
         void          frame_advance(f32 time_inc);
-        void          release_camera_manager();
+        void          release_the_world();
         void          clear_camera_handles();
-        void          create_camera_manager();
+        void          create_the_world();
         void          clear_screen();
         void          render();
     };
@@ -132,7 +137,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(game, use_default_hero_start_position, 0x05A);
     ASSERT_OFFSETOF(game, level_is_unloading,              0x05B);
     ASSERT_OFFSETOF(game, hero_freeze_depth,               0x060);
-    ASSERT_OFFSETOF(game, camera_manager,                  0x064);
+    ASSERT_OFFSETOF(game, the_world,                       0x064);
     ASSERT_OFFSETOF(game, base_camera,                     0x06C);
     ASSERT_OFFSETOF(game, current_view_camera,             0x070);
     ASSERT_OFFSETOF(game, current_game_camera,             0x074);

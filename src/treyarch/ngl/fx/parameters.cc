@@ -1,64 +1,69 @@
 #include <cmath>
 #include <cstring>
 
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/parameters.hh"
+#include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "treyarch/ngl/lighting/context.hh"
+#include "treyarch/ngl/lighting/light_data.hh"
+#include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/shadow/device_resources.hh"
+#include "treyarch/game/game.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;
 using namespace treyarch::ngl;
-using ngl::fx::general_lighting_parameters;
 
-static util::memory_reference<u32> parameter_id_light_source         { 0x010F7D78 };
-static util::memory_reference<u32> parameter_id_scene_light_source   { 0x010F853C };
-static util::memory_reference<u32> parameter_id_light_table          { 0x010F7D74 };
-static util::memory_reference<u32> parameter_id_light_table_range    { 0x01116328 };
-static util::memory_reference<u32> parameter_id_character_color      { 0x01116304 };
-static util::memory_reference<u32> parameter_id_parameter_subset     { 0x0111630C };
-static util::memory_reference<u32> parameter_id_environment_color    { 0x011162F0 };
-static util::memory_reference<u32> parameter_id_decal_projection     { 0x011162FC };
-static util::memory_reference<u32> parameter_id_ui_parameters        { 0x01116334 };
-static util::memory_reference<u32> parameter_id_tint_color           { 0x01116320 };
-static util::memory_reference<u32> parameter_id_decal_texture_matrix { 0x01116314 };
-static util::memory_reference<u32> parameter_id_last                 { 0x01116318 };
+/*
+    todo: mooooooooooooooooooooooooooooooooooove
+          where
+*/
 
-static util::memory_reference<u8*>           game_state                  { 0x01111760 };
-static util::memory_reference<ngl::texture*> default_texture             { 0x011187FC };
-static util::memory_reference<ngl::texture*> horizon_texture             { 0x01118804 };
-static util::memory_reference<ngl::texture*> framebuffer_texture         { 0x01123A1C };
-static util::memory_reference<ngl::texture*> framebuffer_texture_general { 0x01123A20 };
-static util::memory_reference<ngl::texture*> depth_texture               { 0x01123A28 };
-static util::memory_reference<ngl::texture*> environment_texture         { 0x010FC58C };
+util::memory_reference<u32> parameter_id_light_source         { 0x010F7D78 };
+util::memory_reference<u32> parameter_id_light_table          { 0x010F7D74 };
+util::memory_reference<u32> parameter_id_light_table_range    { 0x01116328 };
+util::memory_reference<u32> parameter_id_character_color      { 0x01116304 };
+util::memory_reference<u32> parameter_id_parameter_subset     { 0x0111630C };
+util::memory_reference<u32> parameter_id_environment_color    { 0x011162F0 };
+util::memory_reference<u32> parameter_id_decal_projection     { 0x011162FC };
+util::memory_reference<u32> parameter_id_ui_parameters        { 0x01116334 };
+util::memory_reference<u32> parameter_id_tint_color           { 0x01116320 };
+util::memory_reference<u32> parameter_id_decal_texture_matrix { 0x01116314 };
+util::memory_reference<u32> parameter_id_last                 { 0x01116318 };
 
-static util::memory_reference<vector4>       shadow_distances { 0x01075F10 };
-static util::memory_reference<matrix4x4>     shadow_matrix_0  { 0x01075F20 };
-static util::memory_reference<matrix4x4>     shadow_matrix_2  { 0x01075F70 };
+util::memory_reference<ngl::texture*> default_texture             { 0x011187FC };
+util::memory_reference<ngl::texture*> horizon_texture             { 0x01118804 };
+util::memory_reference<ngl::texture*> framebuffer_texture         { 0x01123A1C };
+util::memory_reference<ngl::texture*> framebuffer_texture_general { 0x01123A20 };
+util::memory_reference<ngl::texture*> depth_texture               { 0x01123A28 };
 
-static util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
-static util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
-static util::memory_reference<vector4> constant_80          { 0x00F4AB70 };
-static util::memory_reference<vector4> ui_parameters        { 0x010F7D50 };
-static util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
-static util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
-static util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
+util::memory_reference<vector4>   shadow_distances { 0x01075F10 };
+util::memory_reference<matrix4x4> shadow_matrix_0  { 0x01075F20 };
+util::memory_reference<matrix4x4> shadow_matrix_2  { 0x01075F70 };
 
-static util::memory_reference<f32> bone_constant_data  { 0x01117240 };
-static util::memory_reference<u32> bone_constant_count { 0x01117168 };
+util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
+util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
+util::memory_reference<vector4> constant_80          { 0x00F4AB70 };
+util::memory_reference<vector4> ui_parameters        { 0x010F7D50 };
+util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
+util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
+util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
 
-static util::memory_reference<vector4>                       lighting_default_value   { 0x01086F30 };
-static util::memory_reference<vector4>                       lighting_zero_value      { 0x01086F50 };
-static util::memory_reference<vector4>                       lighting_horizon_axis    { 0x01087690 };
-static util::memory_reference<vector4>                       lighting_direction_scale { 0x00E7CCE0 };
-static util::memory_reference<vector4>                       lighting_horizon_base    { 0x00E7CED0 };
-static util::memory_reference<vector4>                       lighting_half            { 0x00E7CEB0 };
+util::memory_reference<f32> bone_constant_data  { 0x01117240 };
+util::memory_reference<u32> bone_constant_count { 0x01117168 };
+
+util::memory_reference<vector4> lighting_default_value   { 0x01086F30 };
+util::memory_reference<vector4> lighting_zero_value      { 0x01086F50 };
+util::memory_reference<vector4> lighting_horizon_axis    { 0x01087690 };
+util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
+util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
+util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
 
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
     *(ngl::texture**)entry->data = value ? value : default_texture.read();
@@ -82,9 +87,10 @@ matrix4x4 get_unscaled_local_to_world(const ngl::fx::mesh_node_data* node_data) 
     return result;
 }
 
+// todo: move
 f32 get_hour_of_day() {
-    u8* state = game_state.read();
-    f32 seconds = (f32)*(u32*)(state + 188) + *(f32*)(state + 196);
+    u8* game_state_bytes = treyarch::references::game_state.read();
+    f32 seconds = (f32)*(u32*)(game_state_bytes + 188) + *(f32*)(game_state_bytes + 196);
 
     return seconds / 3600.0f;
 }
@@ -116,44 +122,7 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
     }
 }
 
-struct subset_lighting_parameters {
-    i32      directional_light_count;
-    vector4  directional_light_directions[8];
-    vector4  directional_light_colors[8];
-    vector4  horizon_projection_u;
-    vector4  horizon_projection_v;
-    vector4  ambient_info;
-    vector4  fog_color;
-    vector4  fog_control;
-    texture* horizon_texture;
-};
-
-struct generated_light_data {
-    u32       flags;
-    u8        reserved_004[0x1C];
-    vector4   direction;
-    u8        reserved_030[0x10];
-    vector4   position;
-    matrix4x4 projector_matrix;
-    vector4   color;
-    texture*  projector_texture;
-    f32       activity;
-    f32       inner_radius;
-    f32       outer_radius;
-    u8        reserved_0B0[0x10];
-    f32       attenuation_inner;
-    f32       attenuation_outer;
-    u8        reserved_0C8[0x0C];
-    f32       direction_w;
-    u8        reserved_0D8[0x04];
-    i32       projector_config_0;
-    i32       projector_config_1;
-    u8        reserved_0E4[0x0C];
-};
-
-ASSERT_SIZEOF(generated_light_data, 0xF0);
-
-void initialize_general_lighting(general_lighting_parameters* value) {
+void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
     std::memset(value, 0, sizeof(*value));
 
     const vector4 &zero = lighting_zero_value.get();
@@ -193,12 +162,12 @@ u8* get_light_source(const ngl::fx::mesh_node_data* node_data) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
     return (u8*)get_scene_parameter(current_scene->parameters,
-                              parameter_id_scene_light_source.read());
+                                    ngl::fx::references::parameter_id_scene_light_source.read());
 }
 
-void add_general_directional_light(      general_lighting_parameters* value,
-                                   const u8*                          source,
-                                         bool                         primary) {
+void add_general_directional_light(      ngl::fx::general_lighting_parameters* value,
+                                   const u8*                                   source,
+                                         bool                                  primary) {
 
     i32 &count = value->light_count;
 
@@ -230,11 +199,11 @@ void add_general_directional_light(      general_lighting_parameters* value,
     ++count;
 }
 
-void write_general_primary_block(      general_lighting_parameters* value,
-                                 const u8*                          source,
-                                 const u8*                          light_table,
-                                       i32                          table_index,
-                                       i32                          table_offset) {
+void write_general_primary_block(      ngl::fx::general_lighting_parameters* value,
+                                 const u8*                                   source,
+                                 const u8*                                   light_table,
+                                       i32                                   table_index,
+                                       i32                                   table_offset) {
 
     const vector4 &zero          = lighting_zero_value.get();
     const vector4 &default_value = lighting_default_value.get();
@@ -401,9 +370,9 @@ bool local_light_intersects_mesh(const vector4                  &position,
            outside_x * outside_x + outside_y * outside_y + outside_z * outside_z;
 }
 
-void add_general_generated_light(      general_lighting_parameters* value,
-                                 const generated_light_data*        light,
-                                       f32                          inverse_scale) {
+void add_general_generated_light(      ngl::fx::general_lighting_parameters* value,
+                                 const ngl::lighting::generated_light_data*  light,
+                                       f32                                   inverse_scale) {
 
     i32 &count = value->light_count;
 
@@ -439,7 +408,7 @@ void add_general_generated_light(      general_lighting_parameters* value,
     ++count;
 }
 
-void add_general_point_light(      general_lighting_parameters* value,
+void add_general_point_light(      ngl::fx::general_lighting_parameters* value,
                              const lighting::point_light_data*  light,
                                    f32                          local_radius) {
 
@@ -455,7 +424,7 @@ void add_general_point_light(      general_lighting_parameters* value,
     ++count;
 }
 
-void reorder_general_lights(general_lighting_parameters* value) {
+void reorder_general_lights(ngl::fx::general_lighting_parameters* value) {
     i32 &count = value->light_count;
     i32 &projector_index = value->projector_index;
     i32 &special_index = value->special_light_index;
@@ -486,11 +455,11 @@ void reorder_general_lights(general_lighting_parameters* value) {
     }
 }
 
-void gather_general_local_lights(      general_lighting_parameters*  value,
-                                 const ngl::fx::mesh_node_data*      node_data,
-                                 const ngl::mesh_section*            section,
-                                 const ngl::lighting::light_context* context,
-                                       bool                          include_disabled) {
+void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  value,
+                                 const ngl::fx::mesh_node_data*               node_data,
+                                 const ngl::mesh_section*                     section,
+                                 const ngl::lighting::light_context*          context,
+                                       bool                                   include_disabled) {
 
     if (value->light_count >= 4)
         return;
@@ -502,12 +471,12 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
 
     u8* source = value->light_source;
     u32 source_index = include_disabled ? 2 : 0;
-    generated_light_data* generated_lights =
-        *(generated_light_data**)(source + 0x2F4 + 4 * source_index);
+    ngl::lighting::generated_light_data* generated_lights =
+        *(ngl::lighting::generated_light_data**)(source + 0x2F4 + 4 * source_index);
     i32 generated_light_count = *(i32*)(source + 0x304 + 4 * source_index);
 
     for (i32 index = 0; index < generated_light_count; ++index) {
-        generated_light_data* light = generated_lights + index;
+        ngl::lighting::generated_light_data* light = generated_lights + index;
 
         if (!local_light_intersects_mesh(light->position,
                                          light->outer_radius,
@@ -529,7 +498,7 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
 
     while (node != &context->head) {
         if (node->type == ngl::lighting::light_generated) {
-            auto* light = (generated_light_data*)node->node_data;
+            auto* light = (ngl::lighting::generated_light_data*)node->node_data;
 
             if ((!include_disabled && (light->flags & 2)) ||
                 !local_light_intersects_mesh(light->position,
@@ -572,9 +541,9 @@ void gather_general_local_lights(      general_lighting_parameters*  value,
     }
 }
 
-void build_general_lighting(      general_lighting_parameters* value,
-                            const ngl::fx::mesh_node_data*     node_data,
-                            const ngl::mesh_section*           section) {
+void build_general_lighting(      ngl::fx::general_lighting_parameters* value,
+                            const ngl::fx::mesh_node_data*              node_data,
+                            const ngl::mesh_section*                    section) {
 
     initialize_general_lighting(value);
 
@@ -601,14 +570,13 @@ void build_general_lighting(      general_lighting_parameters* value,
 
     const f32* normal = (const f32*)(source + 0x230);
     f32 inverse_length = 1.0f / std::sqrt(normal[0] * normal[0] +
-                                         normal[1] * normal[1] +
-                                         normal[2] * normal[2]);
+                                          normal[1] * normal[1] +
+                                          normal[2] * normal[2]);
 
-    value->post_direction = vector4(
-        normal[0] * inverse_length,
-        normal[1] * inverse_length,
-        normal[2] * inverse_length,
-        0.0f);
+    value->post_direction = vector4(normal[0] * inverse_length,
+                                    normal[1] * inverse_length,
+                                    normal[2] * inverse_length,
+                                    0.0f);
 
     value->post_plane_0 = vector4(*(f32*)(source + 0x240),
                                   *(f32*)(source + 0x244),
@@ -727,8 +695,8 @@ void build_general_lighting(      general_lighting_parameters* value,
     }
 }
 
-void get_subset_lighting(      subset_lighting_parameters* destination,
-                         const ngl::fx::mesh_node_data*    node_data) {
+void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
+                         const ngl::fx::mesh_node_data*             node_data) {
 
     std::memset(destination, 0, sizeof(*destination));
 
@@ -739,7 +707,7 @@ void get_subset_lighting(      subset_lighting_parameters* destination,
         ngl::scene* current_scene = ngl::references::current_scene.read();
 
         source = (u8*)get_scene_parameter(current_scene->parameters,
-                                    parameter_id_scene_light_source.read());
+                                          ngl::fx::references::parameter_id_scene_light_source.read());
     }
 
     destination->ambient_info.x = *(f32*)(source + 0x278);
@@ -900,7 +868,7 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
 void write_point_light_positions(      f32*                     destination,
                                  const ngl::fx::mesh_node_data* node_data) {
 
-    lighting::point_light_data* lights = &lighting::references::point_light_data.get();
+    lighting::point_light_data* lights = &lighting::references::point_lights.get();
     // skip the 16-byte array header
     destination += 4;
 
@@ -918,7 +886,7 @@ void write_point_light_positions(      f32*                     destination,
 void write_point_light_colors(      f32*                     destination,
                               const ngl::fx::mesh_node_data* node_data) {
 
-    lighting::point_light_data* lights = &lighting::references::point_light_data.get();
+    lighting::point_light_data* lights = &lighting::references::point_lights.get();
     u32 index = 0;
     // skip the 16-byte array header
     destination += 4;
@@ -1047,8 +1015,10 @@ void ngl::fx::update_material_parameters(effect*         value,
                                          bool            depth_bias_enabled) {
 
     bool subset_effect = (value->flags & 0x40) != 0;
-    subset_lighting_parameters lighting;
-    general_lighting_parameters general_lighting;
+
+    ngl::fx::subset_lighting_parameters  lighting;
+    ngl::fx::general_lighting_parameters general_lighting;
+
     texture* active_horizon_texture = nullptr;
 
     if (!subset_effect) {
@@ -1344,7 +1314,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_environment_map:
                 if (!subset_effect)
-                    write_texture(entry, environment_texture.read());
+                    write_texture(entry, ngl::fx::references::environment_texture.read());
 
                 break;
             case parameter_environment_color: {

@@ -15,7 +15,6 @@ namespace treyarch {
         util::memory_reference<void*>               raw_delta_consumer    { 0x010F9BEC };
         util::memory_reference<void*>               region_spawn_manager  { 0x010FA2C4 };
         util::memory_reference<i32>                 frame_delta_index     { 0x01111398 };
-        util::memory_reference<u8*>                 game_state            { 0x01111760 };
     } // references
 } // treyarch
 
@@ -24,8 +23,10 @@ using namespace treyarch;
 void game::frame_advance(f32 time_inc) {
     this->current_frame_delta = time_inc;
 
-    u8* state = references::game_state.read();
-    bool block_external_updates = retail::sub_97E1E0(state) && *(void**)(state + 0x2CC) && !retail::sub_77C9E0(this->data);
+    u8* game_state_bytes = references::game_state.read();
+    bool block_external_updates = retail::sub_97E1E0(game_state_bytes) &&
+                                  *(void**)(game_state_bytes + 0x2CC)  &&
+                                  !retail::sub_77C9E0(this->data);
 
     ++this->frame_sequence;
 

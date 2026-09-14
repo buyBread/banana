@@ -3,6 +3,9 @@
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/movie_manager.hh"
+#include "treyarch/game/render/depth_shadows/references.hh"
+#include "treyarch/game/render/wds_render_manager.hh"
+#include "treyarch/game/world/world_dynamics_system.hh"
 #include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -14,15 +17,12 @@ namespace treyarch {
     class zombie_manager;
 
     namespace references {
-        util::memory_reference<u8>                     render_flag_00bcd0ba      { 0x00BCD0BA };
-        util::memory_reference<u8>                     render_flag_00f4cd40      { 0x00F4CD40 };
-        util::memory_reference<u8>                     movie_clears_screen       { 0x0102CDDA };
-        util::memory_reference<frontend_manager>       frontend                  { 0x0102CFA8 };
-        util::memory_reference<movie_manager*>         movies                    { 0x0102F2DC };
-        util::memory_reference<zombie_manager*>        zombies                   { 0x0102FFF0 };
-        util::memory_reference<ngl::scene*>            shadow_scene_0            { 0x01036E98 };
-        util::memory_reference<ngl::scene*>            shadow_scene_1            { 0x01036E9C };
-        util::memory_reference<void*>                  scene_callback_state      { 0x010FB390 };
+        util::memory_reference<u8>              render_flag_00bcd0ba { 0x00BCD0BA };
+        util::memory_reference<u8>              render_flag_00f4cd40 { 0x00F4CD40 };
+        util::memory_reference<u8>              movie_clears_screen  { 0x0102CDDA };
+        util::memory_reference<movie_manager*>  movies               { 0x0102F2DC };
+        util::memory_reference<zombie_manager*> zombies              { 0x0102FFF0 };
+        util::memory_reference<void*>           scene_callback_state { 0x010FB390 };
     } // references
 
     namespace helpers {
@@ -36,6 +36,13 @@ namespace treyarch {
 } // treyarch
 
 using namespace treyarch;
+
+camera_handle game::get_current_view_camera() {
+    if (the_world && current_view_camera == the_world->get_chase_cam_ptr())
+        return the_world->get_chase_cam_ptr();
+
+    return current_view_camera;
+}
 
 void game::render() {
     if (ngl::references::current_frame_lock.read() != ngl::frame_lock_two_or_immediate)
@@ -117,7 +124,7 @@ void game::render() {
     if (ngl::is_viewport_override_enabled())
         ngl::apply_active_viewport();
 
-    retail::sub_9772D0();
+    the_world->render_mgr.render();
 
     if (!references::frontend.get().igo->blocks_world_rendering()) {
         vector3 camera_position = this->get_current_view_camera()->get_abs_position();

@@ -3,6 +3,7 @@
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_callback.hh"
+#include "treyarch/game/world/references.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 
@@ -56,9 +57,7 @@ script_event_callback::script_event_callback(      chuck::vm::script_instance* r
 }
 
 script_event_callback::~script_event_callback() {
-    static util::memory_reference<void*> game_state { 0x010FC54C };
-
-    if (game_state.read() && instance) {
+    if (references::g_world_ptr.read() && instance) {
         instance->remove_lifecycle_callback(this);
 
         if (parameters)

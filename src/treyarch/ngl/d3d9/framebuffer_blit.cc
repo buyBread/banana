@@ -13,6 +13,7 @@ struct fullscreen_vertex {
     f32 x, y, z, u, v;
 };
 
+// todo: L12 treyarch/ngl/fx/references.hh
 static util::memory_reference<u32> texture_animation_frame { 0x01118800 };
 
 void disable_blending() {

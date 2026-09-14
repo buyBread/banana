@@ -1,5 +1,6 @@
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_pools.hh"
+#include "treyarch/game/world/references.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/memory_reference.hh"
 
@@ -35,7 +36,5 @@ bool event::is_subclass_of(mash::virtual_types_key parent_class) const {
 }
 
 void event::raise() {
-    static util::memory_reference<u8*> game_state { 0x010FC54C };
-
-    raised_frame = *(u32*)(game_state.read() + 0xF0);
+    raised_frame = references::g_world_ptr.read()->time_mgr.frame_sequence;
 }

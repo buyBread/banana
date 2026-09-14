@@ -3,6 +3,7 @@
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/lighting/context.hh"
+#include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/references.hh"
 

@@ -9,22 +9,26 @@ namespace treyarch {
     class frontend_manager {
 
     public:
-        u8            reserved_000[0x54];
-        ui_frontend*  igo;
-        f32           pause_menu_timer;
-        u8            start_on;
-        u8            fonts_loaded;
-        u8            reserved_05e[0x02];
-        f32           default_screen_width;
-        f32           aspect_ratio;
-        u8            aspect_ratio_test_mode;
-        u8            reserved_069[0x03];
-        ngl::quad*    cutscene_quad;
-        u8            reserved_070[0x1C];
-        u8            draw_cutscene_quad;
+        u8           reserved_000[0x54];
+        ui_frontend* igo;
+        f32          pause_menu_timer;
+        u8           start_on;
+        u8           fonts_loaded;
+        u8           reserved_05e[0x02];
+        f32          default_screen_width;
+        f32          aspect_ratio;
+        u8           aspect_ratio_test_mode;
+        u8           reserved_069[0x03];
+        ngl::quad*   cutscene_quad;
+        u8           reserved_070[0x1C];
+        u8           draw_cutscene_quad;
 
         void draw_igo();
     };
+
+    namespace references {
+        inline util::memory_reference<frontend_manager> frontend { 0x0102CFA8 };
+    }
 
     ASSERT_OFFSETOF(frontend_manager, igo,                    0x54);
     ASSERT_OFFSETOF(frontend_manager, pause_menu_timer,       0x58);
