@@ -2,7 +2,7 @@
 
 #include "flags.hh"
 #include "util/redirect_rel32.hh"
-#include "util/thunk.hh"
+#include "util/thunks.hh"
 #include "util/macros/debug.hh"
 #include "banana/logging.hh"
 #include "treyarch/app/app.hh"
