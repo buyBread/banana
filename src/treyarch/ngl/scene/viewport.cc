@@ -1,3 +1,6 @@
+#include <algorithm>
+
+#include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
 #include "util/memory_reference.hh"
@@ -27,6 +30,36 @@ void __cdecl ngl::set_viewport(f32 left, f32 top, f32 right, f32 bottom) {
     value->viewport_bottom = bottom;
 
     references::current_scene.get()->derived_matrices_dirty = true;
+}
+
+ngl::scene* __cdecl ngl::set_scissor(f32 left, f32 top, f32 right, f32 bottom) {
+    scene* value = references::current_scene.read();
+
+    value->scissor_left   = std::clamp(left,   -1.0f, 1.0f);
+    value->scissor_top    = std::clamp(top,    -1.0f, 1.0f);
+    value->scissor_right  = std::clamp(right,  -1.0f, 1.0f);
+    value->scissor_bottom = std::clamp(bottom, -1.0f, 1.0f);
+    value->derived_matrices_dirty = 1;
+
+    return value;
+}
+
+ngl::scene* __cdecl ngl::set_pixel_viewport(f32 left, f32 top, f32 right, f32 bottom) {
+    scene* value = references::current_scene.read();
+
+    validate_matrices(value);
+
+    f32 target_width  = (f32)value->target_width;
+    f32 target_height = (f32)value->target_height;
+
+    f32 viewport_left = (f32)((f64)left / target_width  * 2.0 - 1.0);
+    f32 viewport_top  = (f32)((f64)top  / target_height * 2.0 - 1.0);
+    f32 viewport_right  = (f32)(((f64)right  + 1.0) / target_width  * 2.0 - 1.0);
+    f32 viewport_bottom = (f32)(((f64)bottom + 1.0) / target_height * 2.0 - 1.0);
+
+    set_viewport(viewport_left, viewport_top, viewport_right, viewport_bottom);
+
+    return set_scissor(viewport_left, viewport_top, viewport_right, viewport_bottom);
 }
 
 void __cdecl ngl::apply_active_viewport() {

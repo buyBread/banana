@@ -20,6 +20,7 @@
 #include "treyarch/ngl/lighting/light_data.hh"
 #include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
+#include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
@@ -230,8 +231,7 @@ void wds_render_manager::render_z_pre_pass(ngl::scene* game_scene, f32 near_plan
     ngl::set_clear_flags(0);
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);
-
-    retail::sub_9D54C0(0);
+    ngl::set_color_target(nullptr);
 
     z_pre_pass->depth_bias_enabled     = true;
     z_pre_pass->near_plane             = near_plane - 0.19f;
@@ -353,8 +353,7 @@ void wds_render_manager::render() {
 
     ngl::scene* game_scene = ngl::references::current_scene.read();
 
-    game_scene->world_to_view          = references::world_to_view.get();
-    game_scene->derived_matrices_dirty = true;
+    ngl::set_world_to_view_matrix(&references::world_to_view.get());
 
     ngl::calculate_matrices(game_scene);
     publish_scene_parameter(game_scene);
@@ -442,15 +441,14 @@ void wds_render_manager::render_depth_shadows() {
         ngl::set_clear_flags(7);
         ngl::set_clear_color(1.0f, 1.0f, 1.0f, 1.0f);
 
-        retail::sub_9D54C0((i32)targets.color_targets[index]);
-        retail::sub_9D3810((i32)targets.depth_targets[index]);
-        retail::sub_9D38C0(1.0f); // set clear depth
+        ngl::set_color_target(targets.color_targets[index]);
+        ngl::set_depth_target(targets.depth_targets[index]);
+        ngl::set_clear_depth(1.0f);
 
-        f32 viewport_right = (f32)dimensions.widths[index] - 1.0f;
+        f32 viewport_right  = (f32)dimensions.widths[index]  - 1.0f;
         f32 viewport_bottom = (f32)dimensions.heights[index] - 1.0f;
-
-        retail::sub_9D7AA0(0.0f, 0.0f, viewport_right, viewport_bottom);
-        retail::sub_9D7C10(1.0f); // set aspect ratio
+        ngl::set_pixel_viewport(0.0f, 0.0f, viewport_right, viewport_bottom);
+        ngl::set_aspect_ratio(1.0f);
 
         vector3 points[4];
         vector3 camera_right   = references::camera_right.get().get_xyz();
@@ -485,8 +483,9 @@ void wds_render_manager::render_depth_shadows() {
         f32 vertical_max   = 0.0f;
 
         for (u32 point_index = 0; point_index < 4; ++point_index) {
-            vector3 offset = points[point_index];
-            offset -= center;
+            vector3 offset  = points[point_index];
+                    offset -= center;
+
             f32 horizontal_projection = offset.x * horizontal.x +
                                         offset.y * horizontal.y +
                                         offset.z * horizontal.z;
@@ -525,11 +524,12 @@ void wds_render_manager::render_depth_shadows() {
 
         f32 far_plane = 400.0f + span_cap + references::shadow_far_adjustment.read();
 
-        retail::sub_9D7CA0(1.0f, 1.0f, 1.0f, far_plane); // set ortho parameters
-        retail::sub_9D7D00((u64*)&references::world_to_view.get());
+        ngl::set_ortho_parameters(1.0f, 1.0f, 1.0f, far_plane);
+        ngl::set_world_to_view_matrix(&references::world_to_view.get());
 
         ngl::set_z_write_enable(true);
         ngl::set_z_test_enable(true);
+
         ngl::validate_matrices(scene);
         ngl::list_end_scene();
 

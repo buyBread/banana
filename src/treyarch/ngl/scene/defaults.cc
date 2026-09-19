@@ -9,51 +9,6 @@
 
 using namespace treyarch;
 
-ngl::scene* set_color_target(ngl::texture* target) {
-    ngl::scene* value = ngl::references::current_scene.read();
-
-    value->color_target  = target;
-    value->cube_map_face = 0;
-
-    if (!target)
-        value->options = 0;
-
-    return value;
-}
-
-ngl::scene* set_depth_target(ngl::texture* target) {
-    ngl::scene* value = ngl::references::current_scene.read();
-
-    value->depth_target = target;
-
-    if (!target)
-        value->options = 0;
-
-    return value;
-}
-
-ngl::scene* set_auxiliary_target(ngl::texture* target) {
-    ngl::scene* value = ngl::references::current_scene.read();
-
-    value->auxiliary_target = target;
-
-    if (!target)
-        value->options = 0;
-
-    return value;
-}
-
-ngl::scene* set_camera_matrix(const matrix4x4* camera_to_world) {
-    ngl::scene* value = ngl::references::current_scene.read();
-
-    value->world_to_view = camera_to_world->inverse_orthonormal();
-
-    value->derived_matrices_dirty = 1;
-    
-    return value;
-}
-
-
 ngl::scene* ngl::set_default_scene_state() {
     scene* value = references::current_scene.read();
     
