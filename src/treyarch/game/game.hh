@@ -2,7 +2,7 @@
 
 #include "util/types.hh"
 #include "util/macros/sanity_assert.hh"
-#include "treyarch/game/camera/camera.hh"
+#include "treyarch/game/wds/camera/camera.hh"
 #include "treyarch/shared/boolx.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
@@ -99,9 +99,6 @@ namespace treyarch {
         camera_handle get_current_view_camera();
         void          handle_frame_locking(f32* time_inc);
         void          frame_advance(f32 time_inc);
-        void          release_the_world();
-        void          clear_camera_handles();
-        void          create_the_world();
         void          clear_screen();
         void          render();
     };

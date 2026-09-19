@@ -3,7 +3,7 @@
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_callback.hh"
-#include "treyarch/game/world/references.hh"
+#include "treyarch/game/wds/references.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/game/world/entity.hh"
+#include "treyarch/game/wds/entity/entity.hh"
 
 namespace treyarch {
     class camera : public entity {

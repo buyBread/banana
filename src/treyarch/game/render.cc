@@ -3,9 +3,8 @@
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/movie_manager.hh"
-#include "treyarch/game/render/depth_shadows/references.hh"
-#include "treyarch/game/render/wds_render_manager.hh"
-#include "treyarch/game/world/world_dynamics_system.hh"
+#include "treyarch/game/wds/render/references.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -84,7 +83,7 @@ void game::render() {
 
     if (!references::frontend.get().igo->blocks_world_rendering() && references::render_flag_00f4cd40.read()) {
         retail::sub_970CB0();
-        retail::sub_96F950();
+        the_world->render_mgr.render_depth_shadows();
     }
 
     retail::sub_641B00();

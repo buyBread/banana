@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/game/world/world_dynamics_system.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace references {

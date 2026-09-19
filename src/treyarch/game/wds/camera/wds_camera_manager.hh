@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/game/camera/camera.hh"
+#include "treyarch/game/wds/camera/camera.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 

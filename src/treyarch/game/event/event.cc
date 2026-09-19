@@ -1,6 +1,6 @@
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_pools.hh"
-#include "treyarch/game/world/references.hh"
+#include "treyarch/game/wds/references.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/memory_reference.hh"
 

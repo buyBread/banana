@@ -31,14 +31,14 @@ namespace treyarch {
         light_properties* properties;
     };
 
-    ASSERT_SIZEOF  (light_properties,             0x38);
-    ASSERT_OFFSETOF(light_properties, flavor,      0x00);
+    ASSERT_SIZEOF  (light_properties,                0x38);
+    ASSERT_OFFSETOF(light_properties, flavor,        0x00);
     ASSERT_OFFSETOF(light_properties, diffuse_color, 0x04);
-    ASSERT_OFFSETOF(light_properties, inner_angle, 0x30);
-    ASSERT_OFFSETOF(light_properties, outer_angle, 0x34);
+    ASSERT_OFFSETOF(light_properties, inner_angle,   0x30);
+    ASSERT_OFFSETOF(light_properties, outer_angle,   0x34);
 
-    ASSERT_SIZEOF  (light_source,                    0xA4);
-    ASSERT_OFFSETOF(light_source, my_abs_po,           0x10);
+    ASSERT_SIZEOF  (light_source,                     0xA4);
+    ASSERT_OFFSETOF(light_source, my_abs_po,          0x10);
     ASSERT_OFFSETOF(light_source, render_generations, 0x78);
     ASSERT_OFFSETOF(light_source, properties,         0xA0);
 } // treyarch

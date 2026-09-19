@@ -1,7 +1,7 @@
 #pragma once
 
-#include "treyarch/game/render/far_away_render_list.hh"
-#include "treyarch/game/render/render_data.hh"
+#include "treyarch/game/wds/render/far_away_render_list.hh"
+#include "treyarch/game/wds/render/render_data.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/math/types/vector4.hh"
 #include "util/memory_reference.hh"
@@ -39,4 +39,8 @@ namespace treyarch { namespace references {
 
     inline util::memory_reference<matrix4x4> world_to_view        { 0x011107B0 };
     inline util::memory_reference<vector4>   near_plane_reference { 0x011161D0 };
+
+    inline util::memory_reference<ngl::scene*> shadow_scene_0        { 0x01036E98 };
+    inline util::memory_reference<ngl::scene*> shadow_scene_1        { 0x01036E9C };
+    inline util::memory_reference<f32>         shadow_far_adjustment { 0x01110E64 };
 }} // treyarch::references

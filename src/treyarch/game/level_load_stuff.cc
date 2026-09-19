@@ -1,7 +1,5 @@
 #include "treyarch/game/game.hh"
 
-#include "banana/logging.hh"
-
 using namespace treyarch;
 
 level_load_stuff::level_load_stuff() : descriptor(nullptr),
