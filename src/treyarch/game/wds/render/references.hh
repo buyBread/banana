@@ -4,6 +4,7 @@
 #include "treyarch/game/wds/render/render_data.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/mutex.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -32,10 +33,9 @@ namespace treyarch { namespace references {
     inline util::memory_reference<u8>  auxiliary_render_enabled   { 0x00BCD138 };
     inline util::memory_reference<u8>  auxiliary_callback_enabled { 0x00BCD140 };
     inline util::memory_reference<u32> render_sequence            { 0x01073EB4 };
-    inline util::memory_reference<u32> render_lock_owner          { 0x01075978 };
-    inline util::memory_reference<u32> render_lock_thread         { 0x0107597C };
-    inline util::memory_reference<u32> render_lock_depth          { 0x01075980 };
     inline util::memory_reference<u32> worker_generations         { 0x00FFEB30 };
+
+    inline util::memory_reference<engine_recursive_lock> render_lock { 0x01075978 };
 
     inline util::memory_reference<matrix4x4> world_to_view        { 0x011107B0 };
     inline util::memory_reference<vector4>   near_plane_reference { 0x011161D0 };

@@ -8,6 +8,7 @@
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
+#include "treyarch/game/light/references.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/shared/math/rtree.hh"
@@ -253,7 +254,7 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
     ngl::scene_parameters* parameters = node_data->parameters;
     ngl::fx::prepare_light_context(node_data);
 
-    if (!ngl::lighting::references::light_manager.read())
+    if (!treyarch::references::light_manager.read())
         return;
 
     f32 radius;

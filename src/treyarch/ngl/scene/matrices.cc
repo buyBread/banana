@@ -8,9 +8,9 @@ using namespace treyarch;
 
 matrix4x4 make_d3d9_clip_adjustment() {
     return matrix4x4(1.0f,  0.0f, 0.0f, 0.0f,
-                          0.0f, -1.0f, 0.0f, 0.0f,
-                          0.0f,  0.0f, 1.0f, 0.0f,
-                          0.0f,  0.0f, 0.0f, 1.0f);
+                     0.0f, -1.0f, 0.0f, 0.0f,
+                     0.0f,  0.0f, 1.0f, 0.0f,
+                     0.0f,  0.0f, 0.0f, 1.0f);
 }
 
 matrix4x4 make_ui_to_screen(const ngl::scene* value) {
@@ -25,10 +25,10 @@ matrix4x4 make_ui_to_screen(const ngl::scene* value) {
         half_height = (f32)value->target_height * 0.5f;
     }
 
-    return matrix4x4(1.0f / half_width, 0.0f,               0.0f, 0.0f,
-                          0.0f,              1.0f / half_height, 0.0f, 0.0f,
-                          0.0f,              0.0f,               1.0f, 0.0f,
-                         -1.0f,             -1.0f,               0.0f, 1.0f);
+    return matrix4x4( 1.0f / half_width, 0.0f,               0.0f, 0.0f,
+                      0.0f,              1.0f / half_height, 0.0f, 0.0f,
+                      0.0f,              0.0f,               1.0f, 0.0f,
+                     -1.0f,             -1.0f,               0.0f, 1.0f);
 }
 
 void ngl::calculate_matrices(scene* value) {
@@ -119,11 +119,10 @@ void ngl::calculate_matrices(scene* value) {
                                  bottom_length * bottom_slope,
                                  0.0f);
     } else {
-        value->projection = math::make_orthographic(
-            1.0f / (value->ortho_width * value->aspect_ratio),
-            1.0f / value->ortho_height,
-            value->near_plane,
-            value->far_plane);
+        value->projection = math::make_orthographic(1.0f / (value->ortho_width * value->aspect_ratio),
+                                                    1.0f / value->ortho_height,
+                                                    value->near_plane,
+                                                    value->far_plane);
 
         view_planes[0] = vector4(1.0f, 0.0f, 0.0f,
                                  value->pixel_scissor_left * value->aspect_ratio);
@@ -139,9 +138,9 @@ void ngl::calculate_matrices(scene* value) {
     view_planes[5] = vector4(0.0f, 0.0f, -1.0f, -value->far_plane);
 
     value->view = math::make_viewport(viewport_left,
-                                           viewport_top,
-                                           viewport_right,
-                                           viewport_bottom);
+                                      viewport_top,
+                                      viewport_right,
+                                      viewport_bottom);
 
     value->device = make_d3d9_clip_adjustment();
 

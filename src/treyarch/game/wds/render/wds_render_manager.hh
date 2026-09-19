@@ -5,6 +5,10 @@
 
 namespace treyarch {
     class world_dynamics_system;
+    class entity;
+    class light_source;
+    struct render_data;
+    struct render_region_info;
 
     namespace ngl {
         struct scene;
@@ -31,7 +35,11 @@ namespace treyarch {
         void render_z_pre_pass(ngl::scene* game_scene, f32 near_plane);
         void submit_world(world_dynamics_system* world);
         void submit_blocked_world(world_dynamics_system* world);
-        void release_render_lock();
+        void submit_light(render_region_info* entry,
+                          light_source* source,
+                          entity* selected_render_entity,
+                          i32 worker_index);
+        void submit_region_renderables(render_data* frame_data);
     };
 
     ASSERT_SIZEOF(wds_render_manager, 0x08);

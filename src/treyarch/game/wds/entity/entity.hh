@@ -13,6 +13,8 @@ namespace treyarch {
         po*    my_abs_po;
         u8     reserved_014[0x08];
         u32*   render_object_table;
+
+        void invoke_render_phase();
     };
 
     ASSERT_OFFSETOF(entity, my_abs_po,           0x10);

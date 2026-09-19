@@ -9,6 +9,11 @@ namespace treyarch { namespace ngl {
     struct texture;
 
 namespace lighting {
+    struct directional_light_data {
+        vector4 direction;
+        vector4 color;
+    };
+
     struct point_light_data {
         vector4 position;
         vector4 color;
@@ -44,8 +49,11 @@ namespace lighting {
         u8        reserved_0E4[0x0C];
     };
 
-    ASSERT_SIZEOF(point_light_data,     0x20);
-    ASSERT_SIZEOF(spot_light_data,      0x40);
-    ASSERT_SIZEOF(generated_light_data, 0xF0);
+    ASSERT_SIZEOF  (directional_light_data,            0x20);
+    ASSERT_OFFSETOF(directional_light_data, direction, 0x00);
+    ASSERT_OFFSETOF(directional_light_data, color,     0x10);
+    ASSERT_SIZEOF  (point_light_data,                  0x20);
+    ASSERT_SIZEOF  (spot_light_data,                   0x40);
+    ASSERT_SIZEOF  (generated_light_data,              0xF0);
 } // lighting
 }} // treyarch::ngl
