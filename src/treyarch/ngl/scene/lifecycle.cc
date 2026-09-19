@@ -71,7 +71,7 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
     return value;
 }
 
-ngl::scene* __cdecl ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
+ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
     auto* value = (scene*)list::allocate(sizeof(scene), 16);
 
     // yes, retail allocates this twice; initialize_scene throws this one away
@@ -100,7 +100,7 @@ ngl::scene* __cdecl ngl::list_begin_scene(e_scene_parameter_source parameter_sou
     return value;
 }
 
-void __cdecl ngl::list_end_scene() {
+void ngl::list_end_scene() {
     scene* value = references::current_scene.read();
 
     if (value == references::root_scene.read())
@@ -109,7 +109,7 @@ void __cdecl ngl::list_end_scene() {
     references::current_scene.write(value->parent);
 }
 
-ngl::scene* __cdecl ngl::list_select_scene(scene* value) {
+ngl::scene* ngl::list_select_scene(scene* value) {
     scene* previous = references::current_scene.read();
 
     references::current_scene.write(value);
@@ -117,13 +117,13 @@ ngl::scene* __cdecl ngl::list_select_scene(scene* value) {
     return previous;
 }
 
-const char* __cdecl ngl::set_scene_name(const char* name) {
+const char* ngl::set_scene_name(const char* name) {
     references::current_scene.get()->name = name;
     
     return name;
 }
 
-void __cdecl ngl::set_scene_callback(e_scene_callback_type type,
+void ngl::set_scene_callback(e_scene_callback_type type,
                                      scene_callback_function function,
                                      void* context) {
 
@@ -139,29 +139,29 @@ void __cdecl ngl::set_scene_callback(e_scene_callback_type type,
     callback.context  = context;
 }
 
-void __cdecl ngl::set_clear_flags(u32 flags) {
+void ngl::set_clear_flags(u32 flags) {
     references::current_scene.get()->clear_flags = flags;
 }
 
-void __cdecl ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
+void ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
     references::current_scene.get()->clear_color = vector4(red, green, blue, alpha);
 }
 
-void __cdecl ngl::set_z_write_enable(bool enable) {
+void ngl::set_z_write_enable(bool enable) {
     references::current_scene.get()->z_write_enabled = enable;
 }
 
-void __cdecl ngl::set_z_test_enable(bool enable) {
+void ngl::set_z_test_enable(bool enable) {
     references::current_scene.get()->z_test_enabled = enable;
 }
 
-void __cdecl ngl::set_animation_time(f32 time) {
+void ngl::set_animation_time(f32 time) {
     references::current_scene.get()->animation_time = time;
 }
 
-ngl::scene* __cdecl ngl::set_scene_option_group_0(bool first,
-                                                  bool second,
-                                                  bool third) {
+ngl::scene* ngl::set_scene_option_group_0(bool first,
+                                          bool second,
+                                          bool third) {
 
     scene* value = references::current_scene.read();
 
@@ -177,9 +177,9 @@ ngl::scene* __cdecl ngl::set_scene_option_group_0(bool first,
     return value;
 }
 
-ngl::scene* __cdecl ngl::set_scene_option_group_1(bool first,
-                                                  bool second,
-                                                  bool third) {
+ngl::scene* ngl::set_scene_option_group_1(bool first,
+                                          bool second,
+                                          bool third) {
 
     scene* value = references::current_scene.read();
 

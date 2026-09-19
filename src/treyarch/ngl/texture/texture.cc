@@ -83,10 +83,10 @@ void ngl::initialize_texture_directory() {
     references::textures.get().initialize();
 }
 
-void __cdecl ngl::load_texture(amalga::apkf::file*       owner,
-                               amalga::apkf::file_entry* entry,
-                               void**                    mapped_sections,
-                               void*                     user_data) {
+void ngl::load_texture(amalga::apkf::file*       owner,
+                       amalga::apkf::file_entry* entry,
+                       void**                    mapped_sections,
+                       void*                     user_data) {
 
     (void)entry;
     (void)user_data;
@@ -102,10 +102,10 @@ void __cdecl ngl::load_texture(amalga::apkf::file*       owner,
         references::textures.get().insert(value);
 }
 
-void __cdecl ngl::remove_texture(amalga::apkf::file*       owner,
-                                 amalga::apkf::file_entry* entry,
-                                 void**                    mapped_sections,
-                                 void*                     user_data) {
+void ngl::remove_texture(amalga::apkf::file*       owner,
+                         amalga::apkf::file_entry* entry,
+                         void**                    mapped_sections,
+                         void*                     user_data) {
 
     (void)entry;
     (void)user_data;

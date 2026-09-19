@@ -68,10 +68,11 @@ script_event_callback::~script_event_callback() {
         memory::heap::free(parameters);
 }
 
-void __cdecl script_event_callback::on_instance_lifecycle(i32                          reason,
-                                                          chuck::vm::script_instance*,
-                                                          chuck::vm::vm_thread*,
-                                                          void*                        user_data) {
+void script_event_callback::on_instance_lifecycle(i32                          reason,
+                                                  chuck::vm::script_instance*,
+                                                  chuck::vm::vm_thread*,
+                                                  void*                        user_data) {
+
     if (reason)
         return;
 

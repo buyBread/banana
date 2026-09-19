@@ -8,10 +8,10 @@
 
 using namespace treyarch;
 
-void __cdecl ngl::set_buffer_size(e_buffer_type buffer,
-                                  u32           size,
-                                  bool          allow_resize,
-                                  bool          send_list) {
+void ngl::set_buffer_size(e_buffer_type buffer,
+                          u32           size,
+                          bool          allow_resize,
+                          bool          send_list) {
                                     
     // unused
     (void)allow_resize;

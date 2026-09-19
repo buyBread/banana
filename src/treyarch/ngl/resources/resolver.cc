@@ -11,7 +11,7 @@
 
 using namespace treyarch;
 
-void* __cdecl ngl::resources::resolve(fixed_string* name, u32 type) {
+void* ngl::resources::resolve(fixed_string* name, u32 type) {
     ngl::resource_callback callback = ngl::references::resource_callback.read();
 
     if (callback)

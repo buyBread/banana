@@ -71,10 +71,10 @@ namespace treyarch {
         chuck::vm::script_function* script_function() const noexcept { return function; }
 
     private:
-        static void __cdecl on_instance_lifecycle(i32                          reason,
-                                                  chuck::vm::script_instance*,
-                                                  chuck::vm::vm_thread*,
-                                                  void*                        user_data);
+        static void on_instance_lifecycle(i32                          reason,
+                                          chuck::vm::script_instance*,
+                                          chuck::vm::vm_thread*,
+                                          void*                        user_data);
     };
 
     ASSERT_SIZEOF(event_callback,        0x10);

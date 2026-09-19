@@ -29,14 +29,14 @@ namespace treyarch { namespace ngl {
     void process_material(material* value);
     void initialize_material_directory();
 
-    void __cdecl load_material(amalga::apkf::file*       owner,
-                               amalga::apkf::file_entry* entry,
-                               void**                    mapped_sections,
-                               void*                     user_data);
-    void __cdecl remove_material(amalga::apkf::file*       owner,
-                                 amalga::apkf::file_entry* entry,
-                                 void**                    mapped_sections,
-                                 void*                     user_data);
+    void load_material(amalga::apkf::file*       owner,
+                       amalga::apkf::file_entry* entry,
+                       void**                    mapped_sections,
+                       void*                     user_data);
+    void remove_material(amalga::apkf::file*       owner,
+                         amalga::apkf::file_entry* entry,
+                         void**                    mapped_sections,
+                         void*                     user_data);
 
     namespace references {
         inline util::memory_reference<material>           default_material { 0x01116160 };

@@ -83,14 +83,14 @@ namespace treyarch { namespace ngl {
     
     void initialize_mesh_directory();
 
-    void __cdecl load_mesh(amalga::apkf::file*       owner,
-                           amalga::apkf::file_entry* entry,
-                           void**                    mapped_sections,
-                           void*                     user_data);
-    void __cdecl remove_mesh(amalga::apkf::file*       owner,
-                             amalga::apkf::file_entry* entry,
-                             void**                    mapped_sections,
-                             void*                     user_data);
+    void load_mesh(amalga::apkf::file*       owner,
+                   amalga::apkf::file_entry* entry,
+                   void**                    mapped_sections,
+                   void*                     user_data);
+    void remove_mesh(amalga::apkf::file*       owner,
+                     amalga::apkf::file_entry* entry,
+                     void**                    mapped_sections,
+                     void*                     user_data);
 
     namespace references {
         inline util::memory_reference<mesh_directory> meshes { 0x01116190 };

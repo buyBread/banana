@@ -187,17 +187,17 @@ namespace treyarch { namespace amalga { namespace apkf {
     file_type_handler* find_file_type_handler(u32 type, u32 version);
     section_handler* find_section_handler(string_hash name);
 
-    file_type_handler* __cdecl register_file_type(u32           type,
-                                                  u32           version,
-                                                  file_callback load,
-                                                  file_callback remove,
-                                                  void*         user_data = nullptr);
+    file_type_handler* register_file_type(u32           type,
+                                          u32           version,
+                                          file_callback load,
+                                          file_callback remove,
+                                          void*         user_data = nullptr);
 
-    section_handler* __cdecl register_section_type(string_hash      name,
-                                                   section_resolver resolve,
-                                                   section_callback load,
-                                                   section_callback remove,
-                                                   void*            user_data = nullptr);
+    section_handler* register_section_type(string_hash      name,
+                                           section_resolver resolve,
+                                           section_callback load,
+                                           section_callback remove,
+                                           void*            user_data = nullptr);
 
     void set_resource_resolver(resource_resolver resolver);
 

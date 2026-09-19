@@ -313,14 +313,14 @@ namespace treyarch { namespace ngl { namespace fx {
     effect* find(string_hash name);
     void initialize_directory();
 
-    void __cdecl load(amalga::apkf::file*       owner,
-                      amalga::apkf::file_entry* entry,
-                      void**                    mapped_sections,
-                      void*                     user_data);
-    void __cdecl remove(amalga::apkf::file*       owner,
-                        amalga::apkf::file_entry* entry,
-                        void**                    mapped_sections,
-                        void*                     user_data);
+    void load(amalga::apkf::file*       owner,
+              amalga::apkf::file_entry* entry,
+              void**                    mapped_sections,
+              void*                     user_data);
+    void remove(amalga::apkf::file*       owner,
+                amalga::apkf::file_entry* entry,
+                void**                    mapped_sections,
+                void*                     user_data);
 
     namespace references {
         inline util::memory_reference<effect_directory> effects { 0x011171E4 };

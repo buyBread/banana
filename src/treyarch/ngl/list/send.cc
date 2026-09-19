@@ -8,7 +8,7 @@
 
 using namespace treyarch;
 
-void __cdecl ngl::list_send() {
+void ngl::list_send() {
     u64 current_cycles = treyarch::timing::get_cpu_cycle();
 
     performance_info &performance = references::performance.get();

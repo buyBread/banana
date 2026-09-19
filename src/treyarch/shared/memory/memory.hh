@@ -9,7 +9,7 @@ namespace treyarch { namespace memory {
         allocation_write_combine = 0x00020000
     };
 
-    void  __cdecl report(const char* format, ...);
-    void* __cdecl allocate(u32 size, u32 alignment, u32 flags);
-    void  __cdecl free(void* allocation);
+    void  report(const char* format, ...);
+    void* allocate(u32 size, u32 alignment, u32 flags);
+    void  free(void* allocation);
 }} // treyarch::memory

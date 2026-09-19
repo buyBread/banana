@@ -184,11 +184,11 @@ amalga::apkf::section_handler* amalga::apkf::find_section_handler(string_hash na
     return nullptr;
 }
 
-amalga::apkf::file_type_handler* __cdecl amalga::apkf::register_file_type(u32           type,
-                                                                          u32           version,
-                                                                          file_callback load,
-                                                                          file_callback remove,
-                                                                          void*         user_data) {
+amalga::apkf::file_type_handler* amalga::apkf::register_file_type(u32           type,
+                                                                  u32           version,
+                                                                  file_callback load,
+                                                                  file_callback remove,
+                                                                  void*         user_data) {
 
     auto handler = (file_type_handler*)memory::allocate
         (sizeof(file_type_handler), 8, 0);
@@ -205,11 +205,11 @@ amalga::apkf::file_type_handler* __cdecl amalga::apkf::register_file_type(u32   
     return handler;
 }
 
-amalga::apkf::section_handler* __cdecl amalga::apkf::register_section_type(string_hash      name,
-                                                                           section_resolver resolve,
-                                                                           section_callback load,
-                                                                           section_callback remove,
-                                                                           void*            user_data) {
+amalga::apkf::section_handler* amalga::apkf::register_section_type(string_hash      name,
+                                                                   section_resolver resolve,
+                                                                   section_callback load,
+                                                                   section_callback remove,
+                                                                   void*            user_data) {
 
     auto handler = (section_handler*)memory::allocate
         (sizeof(section_handler), 8, 0);

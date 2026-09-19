@@ -43,14 +43,14 @@ namespace treyarch { namespace ngl {
 
     void initialize_morph_directory();
 
-    void __cdecl load_morph(amalga::apkf::file*       owner,
-                            amalga::apkf::file_entry* entry,
-                            void**                    mapped_sections,
-                            void*                     user_data);
-    void __cdecl remove_morph(amalga::apkf::file*       owner,
-                              amalga::apkf::file_entry* entry,
-                              void**                    mapped_sections,
-                              void*                     user_data);
+    void load_morph(amalga::apkf::file*       owner,
+                    amalga::apkf::file_entry* entry,
+                    void**                    mapped_sections,
+                    void*                     user_data);
+    void remove_morph(amalga::apkf::file*       owner,
+                      amalga::apkf::file_entry* entry,
+                      void**                    mapped_sections,
+                      void*                     user_data);
 
     namespace references {
         inline util::memory_reference<morph_directory> morphs { 0x01118660 };

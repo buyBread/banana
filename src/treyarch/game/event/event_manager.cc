@@ -11,16 +11,16 @@
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace event_manager_references {
+namespace treyarch { namespace references {
     util::memory_reference<bool>                            initialized       { 0x0102C234 };
     util::memory_reference<i32>                             garbage_index     { 0x0102C238 };
     util::memory_reference<event_type*>                     cached_event_type { 0x0102C23C };
     util::memory_reference<engine_recursive_lock>           lock              { 0x0102C6E0 };
     util::memory_reference<dinkumware::vector<event_type*>> event_types       { 0x0102CC94 };
-}} // treyarch::event_manager_references
+}} // treyarch::references
 
-namespace treyarch { namespace event_manager_functions {
-    int __cdecl compare_event_types(const void* left, const void* right) {
+namespace treyarch { namespace fn {
+    int compare_event_types(const void* left, const void* right) {
         const event_type* left_type  = *(event_type* const*)left;
         const event_type* right_type = *(event_type* const*)right;
 
@@ -29,19 +29,19 @@ namespace treyarch { namespace event_manager_functions {
 
         return left_id < right_id ? -1 : left_id != right_id;
     }
-}} // treyarch::event_manager_functions
+}} // treyarch::fn
 
 using namespace treyarch;
 
 event_type* event_manager::find_event_type(string_hash event_type_id) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    event_type* cached = event_manager_references::cached_event_type.read();
+    event_type* cached = references::cached_event_type.read();
 
     if (cached && cached->type_id() == event_type_id)
         return cached;
 
-    auto &event_types = event_manager_references::event_types.get();
+    auto &event_types = references::event_types.get();
     u32   first       = 0;
     u32   count       = event_types.size();
 
@@ -61,7 +61,7 @@ event_type* event_manager::find_event_type(string_hash event_type_id) {
         return nullptr;
 
     cached = event_types[first];
-    event_manager_references::cached_event_type.write(cached);
+    references::cached_event_type.write(cached);
 
     return cached;
 }
@@ -69,23 +69,23 @@ event_type* event_manager::find_event_type(string_hash event_type_id) {
 void event_manager::clear_script_callbacks(arch_base_vhandle             recipient,
                                            chuck::vm::script_executable* executable) {
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    for (event_type* type : event_manager_references::event_types.get())
+    for (event_type* type : references::event_types.get())
         type->clear_script_callbacks(recipient, executable);
 }
 
 void event_manager::clear_script_callback(arch_base_vhandle recipient, string_hash function_name) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    for (event_type* type : event_manager_references::event_types.get())
+    for (event_type* type : references::event_types.get())
         type->clear_script_callback(recipient, function_name);
 }
 
 void event_manager::clear_script_callback(arch_base_vhandle recipient, u32 callback_id) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    for (event_type* type : event_manager_references::event_types.get())
+    for (event_type* type : references::event_types.get())
         type->clear_script_callback(recipient, callback_id);
 }
 
@@ -93,10 +93,10 @@ void event_manager::remove_callback(u32               callback_id,
                                     string_hash       event_type_id,
                                     arch_base_vhandle recipient) {
 
-    if (!event_manager_references::initialized.read())
+    if (!references::initialized.read())
         return;
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = find_event_type(event_type_id);
 
@@ -112,7 +112,7 @@ void event_manager::remove_callback(u32               callback_id,
 }
 
 bool event_manager::has_callbacks(arch_base_vhandle recipient, string_hash event_type_id) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = find_event_type(event_type_id);
 
@@ -120,7 +120,7 @@ bool event_manager::has_callbacks(arch_base_vhandle recipient, string_hash event
 }
 
 void event_manager::raise_event(string_hash event_type_id, arch_base_vhandle recipient) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = find_event_type(event_type_id);
 
@@ -129,7 +129,7 @@ void event_manager::raise_event(string_hash event_type_id, arch_base_vhandle rec
 }
 
 void event_manager::raise_event(event* raised_event, arch_base_vhandle recipient) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = find_event_type(raised_event->type_id());
 
@@ -138,20 +138,20 @@ void event_manager::raise_event(event* raised_event, arch_base_vhandle recipient
 }
 
 void event_manager::clear() {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    auto &event_types = event_manager_references::event_types.get();
+    auto &event_types = references::event_types.get();
 
     for (event_type* type : event_types)
         delete type;
 
     event_types.clear();
-    event_manager_references::garbage_index.write(0);
-    event_manager_references::cached_event_type.write(nullptr);
+    references::garbage_index.write(0);
+    references::cached_event_type.write(nullptr);
 }
 
 event_type* event_manager::register_event_type(string_hash event_type_id) {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = find_event_type(event_type_id);
 
@@ -160,22 +160,22 @@ event_type* event_manager::register_event_type(string_hash event_type_id) {
 
     type = new event_type(event_type_id);
 
-    auto &event_types = event_manager_references::event_types.get();
+    auto &event_types = references::event_types.get();
     event_types.push_back(type);
 
     std::qsort(event_types.begin(),
                event_types.size(),
                sizeof(event_type*),
-               &event_manager_functions::compare_event_types);
+               &fn::compare_event_types);
     
     return type;
 }
 
 void event_manager::garbage_collect() {
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
-    auto &event_types = event_manager_references::event_types.get();
-    i32  &index       = event_manager_references::garbage_index.get();
+    auto &event_types = references::event_types.get();
+    i32  &index       = references::garbage_index.get();
 
     if (event_types.empty() || (u32)index >= event_types.size()) {
         index = 0;
@@ -187,8 +187,8 @@ void event_manager::garbage_collect() {
     event_type*  type     = *position;
 
     if (type->garbage_collect()) {
-        if (type == event_manager_references::cached_event_type.read())
-            event_manager_references::cached_event_type.write(nullptr);
+        if (type == references::cached_event_type.read())
+            references::cached_event_type.write(nullptr);
 
         delete type;
         event_types.erase(position);
@@ -206,11 +206,11 @@ void event_manager::create_inst() {
     delete new event_type(string_hash());
     delete new event_recipient_entry(arch_base_vhandle());
 
-    event_manager_references::initialized.write(true);
+    references::initialized.write(true);
 }
 
 void event_manager::delete_inst() {
-    event_manager_references::initialized.write(false);
+    references::initialized.write(false);
 
     clear();
 }
@@ -218,7 +218,7 @@ void event_manager::delete_inst() {
 event_recipient_entry* event_manager::create_event_recipient(string_hash       event_type_id,
                                                              arch_base_vhandle recipient) {
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = register_event_type(event_type_id);
 
@@ -232,7 +232,7 @@ u32 event_manager::add_callback(string_hash                  event_type_id,
                                 void*                        parameters,
                                 bool                         one_shot) {
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_recipient_entry* entry = create_event_recipient(event_type_id, recipient);
 
@@ -247,7 +247,7 @@ u32 event_manager::add_callback(      string_hash                 event_type_id,
                                 const void*                       parameters,
                                       bool                        one_shot) {
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_recipient_entry* entry = create_event_recipient(event_type_id, recipient);
 
@@ -260,7 +260,7 @@ u32 event_manager::add_default_callback(string_hash                  event_type_
                                         void*                        parameters,
                                         bool                         one_shot) {
 
-    engine_lock_scope scope(&event_manager_references::lock.get());
+    engine_lock_scope scope(&references::lock.get());
 
     event_type* type = register_event_type(event_type_id);
 

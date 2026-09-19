@@ -3,7 +3,7 @@
 
 using namespace treyarch;
 
-void __cdecl ngl::debug::reset_primitive_batches() {
+void ngl::debug::reset_primitive_batches() {
     constexpr f64 allocation_budget_reciprocal = 0.0000019073486328125;
 
     ngl::debug_primitive_batch_state &state = references::debug_primitive_batches.get();

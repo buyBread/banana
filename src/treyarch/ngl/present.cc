@@ -8,7 +8,7 @@
 
 using namespace treyarch;
 
-ngl::scene* __cdecl ngl::present() {
+ngl::scene* ngl::present() {
     if (references::current_scene.read() != references::root_scene.read())
         memory::report("nglPresent called while one or more scenes were still active (need to call nglListEndScene).");
 

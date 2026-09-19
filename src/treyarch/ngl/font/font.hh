@@ -45,14 +45,14 @@ namespace treyarch { namespace ngl {
 
     struct font_directory : container::skip_list<font, font_name> {};
 
-    void __cdecl load_font(amalga::apkf::file*       owner,
-                           amalga::apkf::file_entry* entry,
-                           void**                    mapped_sections,
-                           void*                     user_data);
-    void __cdecl remove_font(amalga::apkf::file*       owner,
-                             amalga::apkf::file_entry* entry,
-                             void**                    mapped_sections,
-                             void*                     user_data);
+    void load_font(amalga::apkf::file*       owner,
+                   amalga::apkf::file_entry* entry,
+                   void**                    mapped_sections,
+                   void*                     user_data);
+    void remove_font(amalga::apkf::file*       owner,
+                     amalga::apkf::file_entry* entry,
+                     void**                    mapped_sections,
+                     void*                     user_data);
 
     namespace references {
         inline util::memory_reference<font*>          system_font { 0x011160D0 };

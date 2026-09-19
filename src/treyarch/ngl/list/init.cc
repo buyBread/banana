@@ -12,7 +12,7 @@
 
 using namespace treyarch;
 
-ngl::scene* __cdecl ngl::list_init() {
+ngl::scene* ngl::list_init() {
     timing::references::list_tick.write(timing::references::tick_state.get().tick_count);
 
     references::performance.get().list_submit_cycles =

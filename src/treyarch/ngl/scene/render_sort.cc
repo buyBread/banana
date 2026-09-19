@@ -3,7 +3,7 @@
 
 using namespace treyarch;
 
-void __cdecl ngl::render_sort(scene* value) {
+void ngl::render_sort(scene* value) {
     for (scene* child = value->first_child; child; child = child->next_sibling)
         render_sort(child);
 

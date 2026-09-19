@@ -34,7 +34,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(debug_primitive_batch_state, synchronized_frame_epoch,            0x24);
 
     namespace debug {
-        void __cdecl reset_primitive_batches();
+        void reset_primitive_batches();
     } // debug
 
     namespace references {
