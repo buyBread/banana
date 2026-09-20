@@ -39,7 +39,7 @@ namespace fx {
     void render(render_node* value);
 
     namespace references {
-        inline util::memory_reference<void*> render_node_vtable { 0x00DB7B84 };
+        inline util::memory_reference<void*> node_vtable { 0x00DB7B84 };
     } // references
 
     ASSERT_OFFSETOF(mesh_node_data, local_to_world,      0x00);

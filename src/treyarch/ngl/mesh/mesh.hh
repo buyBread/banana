@@ -96,6 +96,10 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<mesh_directory> meshes { 0x01116190 };
     } // references
 
+    namespace sm_lod_mesh_instance { namespace references {
+        inline util::memory_reference<void*> node_vtable { 0x00BE5348 };
+    }} // lod_mesh_instance_node::references
+
     ASSERT_SIZEOF  (mesh_section,                         0x58);
     ASSERT_OFFSETOF(mesh_section, sphere,                 0x00);
     ASSERT_OFFSETOF(mesh_section, unk_010,                0x10);

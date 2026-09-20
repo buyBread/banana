@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
+#include "util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace ngl {
     union render_node_sort_key {
