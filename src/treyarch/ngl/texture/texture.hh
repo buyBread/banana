@@ -51,12 +51,15 @@ namespace treyarch { namespace ngl {
                         void*                     user_data);
 
     namespace references {
-        inline util::memory_reference<texture*>          default_texture   { 0x011187FC };
-        inline util::memory_reference<u32>               animation_frame   { 0x01118800 };
-        inline util::memory_reference<texture*>          white_texture     { 0x01118804 };
-        inline util::memory_reference<texture*>          black_texture     { 0x01118808 };
-        inline util::memory_reference<texture*>          invisible_texture { 0x0111880C };
-        inline util::memory_reference<texture_directory> textures          { 0x01118850 };
+        inline util::memory_reference<texture*>          default_texture             { 0x011187FC };
+        inline util::memory_reference<u32>               animation_frame             { 0x01118800 };
+        inline util::memory_reference<texture*>          white_texture               { 0x01118804 }; // "horizon_texture"
+        inline util::memory_reference<texture*>          black_texture               { 0x01118808 };
+        inline util::memory_reference<texture*>          invisible_texture           { 0x0111880C };
+        inline util::memory_reference<texture*>          framebuffer_texture         { 0x01123A1C };
+        inline util::memory_reference<texture*>          framebuffer_texture_general { 0x01123A20 };
+        inline util::memory_reference<texture*>          depth_texture               { 0x01123A28 };
+        inline util::memory_reference<texture_directory> textures                    { 0x01118850 };
     } // references
 
     ASSERT_SIZEOF  (texture,                       0x44);

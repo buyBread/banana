@@ -23,25 +23,11 @@ using namespace treyarch::ngl;
 /*
     todo: mooooooooooooooooooooooooooooooooooove
           where
+          somewhere
+          someday
+          all will be moved
+          isn't that great?
 */
-
-util::memory_reference<u32> parameter_id_light_source         { 0x010F7D78 };
-util::memory_reference<u32> parameter_id_light_table          { 0x010F7D74 };
-util::memory_reference<u32> parameter_id_light_table_range    { 0x01116328 };
-util::memory_reference<u32> parameter_id_character_color      { 0x01116304 };
-util::memory_reference<u32> parameter_id_parameter_subset     { 0x0111630C };
-util::memory_reference<u32> parameter_id_environment_color    { 0x011162F0 };
-util::memory_reference<u32> parameter_id_decal_projection     { 0x011162FC };
-util::memory_reference<u32> parameter_id_ui_parameters        { 0x01116334 };
-util::memory_reference<u32> parameter_id_tint_color           { 0x01116320 };
-util::memory_reference<u32> parameter_id_decal_texture_matrix { 0x01116314 };
-util::memory_reference<u32> parameter_id_last                 { 0x01116318 };
-
-util::memory_reference<ngl::texture*> default_texture             { 0x011187FC };
-util::memory_reference<ngl::texture*> horizon_texture             { 0x01118804 };
-util::memory_reference<ngl::texture*> framebuffer_texture         { 0x01123A1C };
-util::memory_reference<ngl::texture*> framebuffer_texture_general { 0x01123A20 };
-util::memory_reference<ngl::texture*> depth_texture               { 0x01123A28 };
 
 util::memory_reference<vector4>   shadow_distances { 0x01075F10 };
 util::memory_reference<matrix4x4> shadow_matrix_0  { 0x01075F20 };
@@ -66,7 +52,7 @@ util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
 util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
 
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
-    *(ngl::texture**)entry->data = value ? value : default_texture.read();
+    *(ngl::texture**)entry->data = value ? value : ngl::references::default_texture.read();
 }
 
 matrix4x4 get_unscaled_local_to_world(const ngl::fx::mesh_node_data* node_data) {
@@ -99,7 +85,7 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
                            const ngl::fx::mesh_node_data* node_data) {
 
     void* subset = find_scene_parameter(node_data->parameters,
-                                  parameter_id_parameter_subset.read());
+                                        fx::references::parameter_id_parameter_subset.read());
 
     if (!subset)
         return;
@@ -154,7 +140,7 @@ void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
 
 u8* get_light_source(const ngl::fx::mesh_node_data* node_data) {
     u8* source = (u8*)find_scene_parameter(node_data->parameters,
-                                    parameter_id_light_source.read());
+                                           fx::references::parameter_id_light_source.read());
 
     if (source)
         return source;
@@ -619,14 +605,16 @@ void build_general_lighting(      ngl::fx::general_lighting_parameters* value,
 
     value->fog_control = vector4(fog_scale, -fog_near * fog_scale, *(f32*)(source + 0x2E8), fog_magic);
 
-    u8* table = (u8*)find_scene_parameter(node_data->parameters, parameter_id_light_table.read());
+    u8* table = (u8*)find_scene_parameter(node_data->parameters,
+                                          fx::references::parameter_id_light_table.read());
 
     value->horizon_texture = table ? *(texture**)(table + 0x08) : nullptr;
 
     i32 table_index  = 0;
     i32 table_offset = 4;
 
-    u8* range = (u8*)find_scene_parameter(node_data->parameters, parameter_id_light_table_range.read());
+    u8* range = (u8*)find_scene_parameter(node_data->parameters,
+                                          fx::references::parameter_id_light_table_range.read());
 
     if (range) {
         table_index  = *(i32*)(range + 0x48);
@@ -701,7 +689,7 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
     std::memset(destination, 0, sizeof(*destination));
 
     u8* source = (u8*)find_scene_parameter(node_data->parameters,
-                                    parameter_id_light_source.read());
+                                           fx::references::parameter_id_light_source.read());
 
     if (!source) {
         ngl::scene* current_scene = ngl::references::current_scene.read();
@@ -736,7 +724,8 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
         destination->directional_light_count = 1;
     }
 
-    u8* table = (u8*)find_scene_parameter(node_data->parameters, parameter_id_light_table.read());
+    u8* table = (u8*)find_scene_parameter(node_data->parameters,
+                                          fx::references::parameter_id_light_table.read());
 
     if (!table)
         return;
@@ -746,7 +735,7 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
     i32 index = 0;
     i32 offset = 4;
     u8* range = (u8*)find_scene_parameter(node_data->parameters,
-                                   parameter_id_light_table_range.read());
+                                          fx::references::parameter_id_light_table_range.read());
 
     if (range) {
         index  = *(i32*)(range + 0x48);
@@ -1125,7 +1114,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_horizon_texture: {
                 write_texture(entry,
-                              active_horizon_texture ? active_horizon_texture : horizon_texture.read());
+                              active_horizon_texture ? active_horizon_texture : ngl::references::white_texture.read());
 
                 break;
             }
@@ -1195,7 +1184,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                     vectors[5] = general_lighting.fog_control;
 
                     u8* light_source = (u8*)find_scene_parameter(node_data->parameters,
-                                                           parameter_id_light_source.read());
+                                                                 fx::references::parameter_id_light_source.read());
 
                     if (light_source) {
                         f32 scalar_value = *(f32*)(light_source + 0x200);
@@ -1210,7 +1199,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_depth_texture:
-                write_texture(entry, depth_texture.read());
+                write_texture(entry, ngl::references::depth_texture.read());
 
                 break;
             case parameter_temporary_0:
@@ -1297,7 +1286,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_character_highlight: {
                 void* color = find_scene_parameter(node_data->parameters,
-                                             parameter_id_character_color.read());
+                                                   fx::references::parameter_id_character_color.read());
 
                 if (color)
                     vectors[0] = *(const vector4*)(color);
@@ -1307,9 +1296,9 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             }
             case parameter_framebuffer_texture:
-                write_texture(entry,
-                              subset_effect ? framebuffer_texture.read()
-                                            : framebuffer_texture_general.read());
+                write_texture(entry, subset_effect ?
+                                ngl::references::framebuffer_texture.read() :
+                                ngl::references::framebuffer_texture_general.read());
                                             
                 break;
             case parameter_environment_map:
@@ -1319,7 +1308,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_environment_color: {
                 f32* color = (f32*)find_scene_parameter(node_data->parameters,
-                                                  parameter_id_environment_color.read());
+                                                        fx::references::parameter_id_environment_color.read());
 
                 if (color) {
                     destination[0] = color[0] * color[0];
@@ -1333,7 +1322,7 @@ void ngl::fx::update_material_parameters(effect*         value,
             }
             case parameter_decal_projection: {
                 matrix4x4* matrix = (matrix4x4*)find_scene_parameter(node_data->parameters,
-                                                   parameter_id_decal_projection.read());
+                                                                     fx::references::parameter_id_decal_projection.read());
 
                 if (matrix)
                     *(matrix4x4*)destination = matrix->transpose();
@@ -1360,21 +1349,21 @@ void ngl::fx::update_material_parameters(effect*         value,
             }
             case parameter_ui_parameters: {
                 void* parameters = find_scene_parameter(node_data->parameters,
-                                                  parameter_id_ui_parameters.read());
+                                                        fx::references::parameter_id_ui_parameters.read());
                 vectors[0] = *(const vector4*)(parameters ? parameters : &ui_parameters.get());
 
                 break;
             }
             case parameter_tint_color: {
                 void* color = find_scene_parameter(node_data->parameters,
-                                             parameter_id_tint_color.read());
+                                                   fx::references::parameter_id_tint_color.read());
                 vectors[0] = *(const vector4*)(color ? color : &tint_color.get());
 
                 break;
             }
             case parameter_decal_texture_matrix: {
-                const vector4* rows = (const vector4*)find_scene_parameter(
-                    node_data->parameters, parameter_id_decal_texture_matrix.read());
+                const auto* rows = (const vector4*)find_scene_parameter(node_data->parameters,
+                                                                        fx::references::parameter_id_decal_texture_matrix.read());
                 if (rows)
                     std::memcpy(vectors + 1, rows, sizeof(vector4) * 2);
                 else {
@@ -1396,7 +1385,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_last: {
                 void* data = find_scene_parameter(node_data->parameters,
-                                            parameter_id_last.read());
+                                                  fx::references::parameter_id_last.read());
                 if (data)
                     vectors[0] = *(const vector4*)(data);
 

@@ -4,6 +4,7 @@
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/quad/quad.hh"
+#include "treyarch/ngl/shaders/pcuv/render_node.hh"
 
 #ifdef DEBUG
     #include <unordered_set>
@@ -37,6 +38,12 @@ void ngl::render_node::render() {
 
     if (vtable == &string_renderer::references::node_vtable.get()) {
         string_renderer::render((string_renderer::node*)this);
+
+        return;
+    }
+
+    if (vtable == &shaders::pcuv::references::node_vtable.get()) {
+        shaders::pcuv::render((shaders::pcuv::render_node*)this);
 
         return;
     }
