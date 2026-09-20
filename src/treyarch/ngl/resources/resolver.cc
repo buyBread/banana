@@ -49,3 +49,21 @@ void* ngl::resources::resolve(fixed_string* name, u32 type) {
             return nullptr;
     }
 }
+
+void ngl::resources::resolve_effect(ngl::fx::effect* &cache, const char* name) {
+    if (cache)
+        return;
+
+    fixed_string resource_name = make_fixed_string(name);
+
+    cache = (fx::effect*)resolve(&resource_name, four_cc('F', 'X', '\0'));
+}
+
+void ngl::resources::resolve_texture(ngl::texture* &cache, const char* name) {
+    if (cache)
+        return;
+
+    fixed_string resource_name = make_fixed_string(name);
+
+    cache = (texture*)resolve(&resource_name, four_cc('T', 'E', 'X'));
+}

@@ -4,6 +4,7 @@
 
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
+#include "treyarch/ngl/d3d9/blitter.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -35,7 +36,7 @@ namespace treyarch { namespace ngl { namespace post_process {
 
     struct system {
         u8                    reserved_000[0x08];
-        void*                 blitter;
+        d3d9::blitter*        blitter;
         mipmap_texture_array* hdr_targets;
         mipmap_texture_array* ldr_targets;
         surface_texture*      single_target_0;

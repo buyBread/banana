@@ -6,6 +6,7 @@
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/puv/render_node.hh"
+#include "treyarch/ngl/shaders/smsky/render_node.hh"
 
 #ifdef DEBUG
     #include <unordered_set>
@@ -51,6 +52,12 @@ void ngl::render_node::render() {
 
     if (vtable == &shaders::puv::references::node_vtable.get()) {
         shaders::puv::render((shaders::puv::render_node*)this);
+
+        return;
+    }
+
+    if (vtable == &shaders::smsky::references::node_vtable.get()) {
+        shaders::smsky::render((shaders::smsky::render_node*)this);
 
         return;
     }

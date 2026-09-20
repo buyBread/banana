@@ -1,17 +1,11 @@
 #pragma once
 
-#include "util/memory_reference.hh"
+#include "treyarch/ngl/resources/shader_resource_manager.hh"
+#include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/ngl/fx/effect.hh"
 
-namespace treyarch { namespace ngl {
-    struct texture;
-
-    namespace fx {
-        struct effect;
-    } // fx
-}} // treyarch::ngl
-
-namespace treyarch { namespace references {
-    inline util::memory_reference<void*> rvb_radar_resource_manager_maybe_idk { 0x010FC5C0 };
+namespace treyarch { namespace ngl { namespace resources { namespace references {
+    inline util::memory_reference<shader_resource_manager*> shader_resource_manager { 0x010FC5C0 };
 
     inline util::memory_reference<ngl::fx::effect*> highlight_zprime_shader { 0x010FC598 };
     inline util::memory_reference<ngl::fx::effect*> highlight_shader        { 0x010FC59C };
@@ -25,4 +19,4 @@ namespace treyarch { namespace references {
     inline util::memory_reference<ngl::texture*>    radar_stroke            { 0x010FC5BC };
     inline util::memory_reference<ngl::texture*>    dither_texture          { 0x010FC584 };
     inline util::memory_reference<ngl::texture*>    horizon_clouds          { 0x010FC588 };
-}} // treyarch::references
+}}}} // treyarch::ngl::resources::references
