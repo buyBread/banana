@@ -179,9 +179,13 @@ namespace treyarch { namespace amalga { namespace apkf {
         void apply_references(      data_reference* reference_data,
                               const u8*             string_base);
 
+        u32 count_file_type_entries() const;
         void invoke_section_load_callbacks();
+        void invoke_file_type_load_callbacks(u32 start, u32 count);
         void invoke_file_type_load_callbacks();
         void invoke_load_callbacks();
+        void invoke_remove_callbacks();
+        void unload();
     };
 
     file_type_handler* find_file_type_handler(u32 type, u32 version);

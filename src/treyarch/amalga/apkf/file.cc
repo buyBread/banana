@@ -118,6 +118,17 @@ void amalga::apkf::file::apply_references(      data_reference* reference_data,
     }
 }
 
+u32 amalga::apkf::file::count_file_type_entries() const {
+    u32 count = 0;
+
+    if (file_types) {
+        for (const file_type* type = file_types; type->type; type = type->next(section_count))
+            count += type->entry_count;
+    }
+
+    return count;
+}
+
 void amalga::apkf::file::invoke_section_load_callbacks() {
     for (u32 index = 0; index < section_count; ++index) {
         file_section     &section = sections[index];
@@ -129,20 +140,76 @@ void amalga::apkf::file::invoke_section_load_callbacks() {
 }
 
 void amalga::apkf::file::invoke_file_type_load_callbacks() {
+    invoke_file_type_load_callbacks(0, count_file_type_entries());
+}
+
+void amalga::apkf::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
     if (!file_types)
+        return;
+
+    u32 current = 0;
+    u32 end     = start + count;
+
+    for (file_type* type = file_types; type->type; type = type->next(section_count)) {
+        u32 type_end = current + type->entry_count;
+
+        if (start >= type_end) {
+            current = type_end;
+            continue;
+        }
+
+        u32 first = start > current ? start - current : 0;
+        u32 last  = end < type_end ? end - current : type->entry_count;
+
+        file_type_handler* handler = find_file_type_handler(type->type, type->version);
+
+        if (handler && handler->load) {
+            u32 stride = type->entry_stride();
+            u8* entry_data = (u8*)type->entries + first * stride;
+
+            for (u32 entry_index = first; entry_index < last; ++entry_index) {
+                auto entry = (file_entry*)entry_data;
+                void* mapped_sections[maximum_section_count] {};
+
+                for (u32 section_index = 0; section_index < section_count; ++section_index) {
+                    u8 section_slot = type->mapping(section_index).section_slot();
+
+                    if (section_slot != absent_section_slot)
+                        mapped_sections[section_index] = entry->section(section_slot);
+                }
+
+                handler->load(this, entry, mapped_sections, handler->user_data);
+
+                entry_data += stride;
+            }
+        }
+
+        current = type_end;
+
+        if (current >= end)
+            break;
+    }
+}
+
+void amalga::apkf::file::invoke_load_callbacks() {
+    invoke_section_load_callbacks();
+    invoke_file_type_load_callbacks();
+}
+
+void amalga::apkf::file::invoke_remove_callbacks() {
+    if (!section_count || !file_types)
         return;
 
     for (file_type* type = file_types; type->type; type = type->next(section_count)) {
         file_type_handler* handler = find_file_type_handler(type->type, type->version);
 
-        if (!handler || !handler->load)
+        if (!handler || !handler->remove)
             continue;
 
         u8* entry_data = (u8*)type->entries;
 
         for (u32 entry_index = 0; entry_index < type->entry_count; ++entry_index) {
             auto entry = (file_entry*)entry_data;
-
             void* mapped_sections[maximum_section_count] {};
 
             for (u32 section_index = 0; section_index < section_count; ++section_index) {
@@ -152,16 +219,26 @@ void amalga::apkf::file::invoke_file_type_load_callbacks() {
                     mapped_sections[section_index] = entry->section(section_slot);
             }
 
-            handler->load(this, entry, mapped_sections, handler->user_data);
+            handler->remove(this, entry, mapped_sections, handler->user_data);
 
             entry_data += type->entry_stride();
         }
     }
+
+    for (u32 index = 0; index < section_count; ++index) {
+        file_section     &section = sections[index];
+        section_handler*  handler = find_section_handler(section.name);
+
+        if (handler && handler->remove)
+            handler->remove(this, &section, handler->user_data);
+    }
 }
 
-void amalga::apkf::file::invoke_load_callbacks() {
-    invoke_section_load_callbacks();
-    invoke_file_type_load_callbacks();
+void amalga::apkf::file::unload() {
+    invoke_remove_callbacks();
+
+    if (flags & file_from_file_buffer)
+        memory::free((u8*)this - sizeof(file_header));
 }
 
 amalga::apkf::file_type_handler* amalga::apkf::find_file_type_handler(u32 type,

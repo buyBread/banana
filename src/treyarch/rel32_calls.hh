@@ -5,6 +5,7 @@
 #include "util/thunks.hh"
 #include "util/macros/debug.hh"
 #include "banana/logging.hh"
+#include "treyarch/amalga/resource_handler.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/event/event_manager.hh"
@@ -384,6 +385,13 @@ namespace treyarch {
             !util::redirect_rel32(0x0097DFD6, { 0xE8, 0x65, 0xCC, 0xFF, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
             !util::redirect_rel32(0x00B0F173, { 0xE9, 0xC8, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
             !util::redirect_rel32(0x00B0F1D3, { 0xE9, 0x68, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke))
+
+            FATAL_BREAKPOINT();
+
+        banana::log.msg("redirecting resource handler progression (pack load/unload)");
+
+        if (!util::redirect_rel32(0x0073BD01, { 0xE8, 0xCA, 0xE7, 0xFF, 0xFF }, &amalga::resource_handler::advance) ||
+            !util::redirect_rel32(0x0076BDBB, { 0xE8, 0x10, 0xE7, 0xFC, 0xFF }, &amalga::resource_handler::advance))
 
             FATAL_BREAKPOINT();
 

@@ -87,7 +87,13 @@ bool amalga::apkf::file::relocate_in_place(data_reference* &resource_references,
     return true;
 }
 
-amalga::apkf::file* amalga::apkf::load_file_in_place(void* image) {
+amalga::apkf::file* amalga::apkf::relocate_file_in_place(void*            image,
+                                                         data_reference* &resource_references,
+                                                         u8*             &string_base) {
+
+    resource_references = nullptr;
+    string_base         = nullptr;
+
     auto header = (file_header*)image;
 
     if (header->identifier != file_identifier)
@@ -98,10 +104,19 @@ amalga::apkf::file* amalga::apkf::load_file_in_place(void* image) {
 
     auto owner = (file*)(header + 1);
 
-    data_reference* resource_references = nullptr;
-    u8*             string_base         = nullptr;
-
     if (!owner->relocate_in_place(resource_references, string_base))
+        return nullptr;
+
+    return owner;
+}
+
+amalga::apkf::file* amalga::apkf::load_file_in_place(void* image) {
+    data_reference* resource_references;
+    u8*             string_base;
+
+    file* owner = relocate_file_in_place(image, resource_references, string_base);
+
+    if (!owner)
         return nullptr;
 
     owner->apply_references(resource_references, string_base);
