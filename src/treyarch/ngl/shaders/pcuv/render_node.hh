@@ -27,9 +27,8 @@ namespace treyarch { namespace ngl { namespace shaders { namespace pcuv {
     void render(render_node* value);
 
     namespace references {
-        inline util::memory_reference<void*> node_vtable     { 0x00BE5274 };
-        inline util::memory_reference<u8>    pcuv_shader     { 0x00F4AA3F };
-        inline util::memory_reference<u8>    in_shadow_scene { 0x01073DFA }; // todo: move
+        inline util::memory_reference<void*> node_vtable { 0x00BE5274 };
+        inline util::memory_reference<u8>    pcuv_shader { 0x00F4AA3F };
     } // references
 
     ASSERT_SIZEOF  (pcuv_material,                  0x24);

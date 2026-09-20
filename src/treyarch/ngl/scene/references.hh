@@ -4,6 +4,7 @@
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace references {
-    inline util::memory_reference<scene*> current_scene { 0x01115C54 };
-    inline util::memory_reference<scene*> root_scene    { 0x01115C58 };
+    inline util::memory_reference<scene*> current_scene   { 0x01115C54 };
+    inline util::memory_reference<scene*> root_scene      { 0x01115C58 };
+    inline util::memory_reference<u8>     in_shadow_scene { 0x01073DFA };
 }}} // treyarch::ngl::references

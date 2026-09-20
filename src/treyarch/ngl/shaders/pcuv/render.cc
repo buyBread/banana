@@ -59,7 +59,7 @@ matrix4x4 get_pcuv_local_to_screen(const ngl::fx::mesh_node_data* node_data,
 
 void ngl::shaders::pcuv::render(render_node* value) {
     if (references::pcuv_shader.read() != ::ngl::references::all_shaders.read() ||
-        references::in_shadow_scene.read()) {
+        ngl::references::in_shadow_scene.read()) {
 
         return;
     }
