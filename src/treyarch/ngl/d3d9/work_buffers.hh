@@ -14,6 +14,8 @@ namespace treyarch { namespace ngl { namespace d3d9 {
         IDirect3DVertexBuffer9* vertex_buffer_0;
         u32                     maximum_index_count;
         u32                     vertex_buffer_size;
+        u32                     index_write_offset;
+        u32                     vertex_write_offset;
     };
 
     void provision_default_work_buffers();
@@ -28,11 +30,13 @@ namespace treyarch { namespace ngl { namespace d3d9 {
         inline util::memory_reference<u32>             platform_work_buffer_size { 0x01118810 };
     } // references
 
-    ASSERT_SIZEOF  (scratch_buffers,                      0x18);
+    ASSERT_SIZEOF  (scratch_buffers,                      0x20);
     ASSERT_OFFSETOF(scratch_buffers, vertex_buffer_1,     0x00);
     ASSERT_OFFSETOF(scratch_buffers, index_buffer_1,      0x04);
     ASSERT_OFFSETOF(scratch_buffers, index_buffer_0,      0x08);
     ASSERT_OFFSETOF(scratch_buffers, vertex_buffer_0,     0x0C);
     ASSERT_OFFSETOF(scratch_buffers, maximum_index_count, 0x10);
     ASSERT_OFFSETOF(scratch_buffers, vertex_buffer_size,  0x14);
+    ASSERT_OFFSETOF(scratch_buffers, index_write_offset,  0x18);
+    ASSERT_OFFSETOF(scratch_buffers, vertex_write_offset, 0x1C);
 }}} // treyarch::ngl::d3d9

@@ -4,21 +4,13 @@
 #include "treyarch/ngl/d3d9/scene_state.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
+#include "treyarch/shared/color.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;
 
 static util::memory_reference<u8> rendering_to_texture           { 0x00F53D50 };
 static util::memory_reference<u8> fixed_twenty_millisecond_frame { 0x01118559 };
-
-DWORD pack_color(const vector4 &color) {
-    u32 red   = (u32)(color.x * 255.0f);
-    u32 green = (u32)(color.y * 255.0f);
-    u32 blue  = (u32)(color.z * 255.0f);
-    u32 alpha = (u32)(color.w * 255.0f);
-
-    return blue | green << 8 | red << 16 | alpha << 24;
-}
 
 LONG normalized_to_pixel(f32 value, u32 extent) {
     return (LONG)((value * 0.5f + 0.5f) * (f32)extent + 0.5f);
@@ -123,7 +115,7 @@ void ngl::d3d9::apply_scene_state(scene* value) {
         device->Clear(0,
                       nullptr,
                       value->clear_flags,
-                      pack_color(value->clear_color),
+                      (DWORD)pack_color(value->clear_color),
                       value->clear_depth,
                       value->clear_stencil);
 
