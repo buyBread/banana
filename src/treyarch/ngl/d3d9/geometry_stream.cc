@@ -77,3 +77,66 @@ void ngl::d3d9::geometry_stream::begin_submission() {
 u32 ngl::d3d9::geometry_stream::bytes_used() {
     return references::allocation_cursor.get().byte_offset;
 }
+
+ngl::d3d9::geometry_stream::segment* ngl::d3d9::geometry_stream::allocate_segment(u32              byte_count,
+                                                                                  u32              alignment,
+                                                                                  segment_callback callback,
+                                                                                  void*            user_data) {
+
+    EnterCriticalSection(&references::critical_section.get());
+
+    u32 &write_index = references::segment_write_index.get();
+
+    segment* value = &references::segments.get()[write_index];
+
+    ++write_index;
+
+    if (write_index >= references::segment_count.read())
+        write_index = 0;
+
+    cursor &allocation = references::allocation_cursor.get();
+
+    allocation.byte_offset = alignment * ((alignment + allocation.byte_offset + 1) / alignment);
+
+    if (allocation.byte_offset + byte_count > allocation.capacity) {
+        ++allocation.buffer_index;
+
+        allocation.byte_offset = alignment * ((alignment + 1) / alignment);
+    }
+
+    value->allocation_start = allocation;
+    allocation.byte_offset += byte_count;
+    value->allocation_end   = allocation;
+
+    if (value->allocation_start.buffer_index > 0) {
+        memory::report("Ran out of geometry shader vertex buffer memory.  Increase size in ngl_geometryshader.cpp.");
+
+        LeaveCriticalSection(&references::critical_section.get());
+
+        return nullptr;
+    }
+
+    value->byte_count = byte_count;
+
+    if (byte_count) {
+        IDirect3DVertexBuffer9* buffer = references::active_buffer.read();
+
+        buffer->Lock( value->allocation_start.byte_offset,
+                      byte_count,
+                     &value->mapped_data,
+                      0);
+
+        buffer->Unlock();
+    } else
+        value->mapped_data = nullptr;
+
+    references::bytes_allocated.get() += byte_count;
+
+    value->callback  = callback;
+    value->user_data = user_data;
+    value->ready     = false;
+
+    LeaveCriticalSection(&references::critical_section.get());
+
+    return value;
+}

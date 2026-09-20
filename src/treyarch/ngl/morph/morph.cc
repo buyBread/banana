@@ -33,7 +33,7 @@ void ngl::load_morph(amalga::apkf::file*       owner,
                  ++component_index) {
 
                 morph_component& component = section.components[component_index];
-                component.type = component_types[component.type];
+                component.semantic = component_types[component.semantic];
             }
         }
     }

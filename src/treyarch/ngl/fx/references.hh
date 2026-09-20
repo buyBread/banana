@@ -20,6 +20,7 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<u32> parameter_id_last                 { 0x01116318 };
         inline util::memory_reference<u32> parameter_id_tint_color           { 0x01116320 };
         inline util::memory_reference<u32> parameter_id_emissive             { 0x01116324 };
+        inline util::memory_reference<u32> parameter_id_morph                { 0x0111631C };
 
         inline util::memory_reference<texture*> environment_texture { 0x010FC58C };
 

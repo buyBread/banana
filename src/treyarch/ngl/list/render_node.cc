@@ -3,6 +3,7 @@
 #include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
@@ -65,6 +66,12 @@ void ngl::render_node::render() {
 
     if (vtable == &shaders::fake_peds::references::node_vtable.get()) {
         shaders::fake_peds::render((shaders::fake_peds::render_node*)this);
+
+        return;
+    }
+
+    if (vtable == &morph_geometry::references::node_vtable.get()) {
+        morph_geometry::render((morph_geometry::render_node*)this);
 
         return;
     }

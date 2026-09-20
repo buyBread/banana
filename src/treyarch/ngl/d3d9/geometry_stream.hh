@@ -35,6 +35,10 @@ namespace treyarch { namespace ngl { namespace d3d9 { namespace geometry_stream 
     void init();
     void begin_submission();
     u32 bytes_used();
+    segment* allocate_segment(u32              byte_count,
+                              u32              alignment,
+                              segment_callback callback,
+                              void*            user_data);
 
     namespace references {
         inline util::memory_reference<CRITICAL_SECTION>        critical_section     { 0x011188B0 };

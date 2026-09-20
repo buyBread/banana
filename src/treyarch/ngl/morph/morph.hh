@@ -9,10 +9,10 @@
 
 namespace treyarch { namespace ngl {
     struct morph_component {
-        u32   value_count;
-        u32   type;
+        u32   value_type;
+        u32   semantic;
+        u32   semantic_index;
         void* data;
-        u32   stride;
     };
 
     struct morph_section {
@@ -56,11 +56,11 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<morph_directory> morphs { 0x01118660 };
     } // references
 
-    ASSERT_SIZEOF  (morph_component,              0x10);
-    ASSERT_OFFSETOF(morph_component, value_count, 0x00);
-    ASSERT_OFFSETOF(morph_component, type,        0x04);
-    ASSERT_OFFSETOF(morph_component, data,        0x08);
-    ASSERT_OFFSETOF(morph_component, stride,      0x0C);
+    ASSERT_SIZEOF  (morph_component,                 0x10);
+    ASSERT_OFFSETOF(morph_component, value_type,     0x00);
+    ASSERT_OFFSETOF(morph_component, semantic,       0x04);
+    ASSERT_OFFSETOF(morph_component, semantic_index, 0x08);
+    ASSERT_OFFSETOF(morph_component, data,           0x0C);
 
     ASSERT_SIZEOF  (morph_section,                  0x0C);
     ASSERT_OFFSETOF(morph_section, vertex_count,    0x00);
