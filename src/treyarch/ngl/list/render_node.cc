@@ -1,4 +1,5 @@
 #include "treyarch/ngl/fx/render_node.hh"
+#include "treyarch/ngl/font/render.hh"
 #include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
@@ -30,6 +31,12 @@ void ngl::render_node::render() {
 
     if (vtable == &quad_renderer::references::node_vtable.get()) {
         quad_renderer::render((quad_renderer::node*)this);
+
+        return;
+    }
+
+    if (vtable == &string_renderer::references::node_vtable.get()) {
+        string_renderer::render((string_renderer::node*)this);
 
         return;
     }

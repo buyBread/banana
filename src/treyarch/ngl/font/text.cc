@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "treyarch/ngl/font/text.hh"
+#include "treyarch/ngl/font/render.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -10,52 +11,8 @@
 
 using namespace treyarch;
 
-struct ngl_string_chunk {
-    ngl_string_chunk* next;
-    const char*       text;
-    u32               length;
-    f32               x;
-    f32               y;
-    f32               scale_x;
-    f32               scale_y;
-    u32               color;
-};
-
-struct ngl_string_node {
-    ngl::render_node  base;
-    const char*       text;
-    ngl::font*        font_data;
-    f32               x;
-    f32               y;
-    f32               z;
-    f32               scale_x;
-    f32               scale_y;
-    u32               color;
-    ngl_string_chunk* chunks;
-};
-
-ASSERT_SIZEOF  (ngl_string_chunk,          0x20);
-ASSERT_OFFSETOF(ngl_string_chunk, next,    0x00);
-ASSERT_OFFSETOF(ngl_string_chunk, text,    0x04);
-ASSERT_OFFSETOF(ngl_string_chunk, length,  0x08);
-ASSERT_OFFSETOF(ngl_string_chunk, x,       0x0C);
-ASSERT_OFFSETOF(ngl_string_chunk, y,       0x10);
-ASSERT_OFFSETOF(ngl_string_chunk, scale_x, 0x14);
-ASSERT_OFFSETOF(ngl_string_chunk, scale_y, 0x18);
-ASSERT_OFFSETOF(ngl_string_chunk, color,   0x1C);
-
-ASSERT_SIZEOF  (ngl_string_node,            0x30);
-ASSERT_OFFSETOF(ngl_string_node, text,       0x0C);
-ASSERT_OFFSETOF(ngl_string_node, font_data,  0x10);
-ASSERT_OFFSETOF(ngl_string_node, x,          0x14);
-ASSERT_OFFSETOF(ngl_string_node, y,          0x18);
-ASSERT_OFFSETOF(ngl_string_node, z,          0x1C);
-ASSERT_OFFSETOF(ngl_string_node, scale_x,    0x20);
-ASSERT_OFFSETOF(ngl_string_node, scale_y,    0x24);
-ASSERT_OFFSETOF(ngl_string_node, color,      0x28);
-ASSERT_OFFSETOF(ngl_string_node, chunks,     0x2C);
-
-static util::memory_reference<void*> string_node_vtable { 0x00DB7374 };
+using ngl_string_chunk = ngl::string_renderer::chunk;
+using ngl_string_node  = ngl::string_renderer::node;
 
 const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
                                             u8         character) {
@@ -343,7 +300,7 @@ void ngl::list_add_string(      font* font_data,
             list::allocate(sizeof(ngl_string_node), 16);
 
         if (node) {
-            node->base.vtable = (void*)&string_node_vtable.get();
+            node->base.vtable = &string_renderer::references::node_vtable.get();
 
             u32 text_length = (u32)std::strlen(text);
             char* stored_text = (char*)list::allocate(text_length + 1, 16);

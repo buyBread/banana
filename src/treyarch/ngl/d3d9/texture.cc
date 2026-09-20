@@ -41,18 +41,18 @@ void ngl::d3d9::bind_texture(u32      stage,
 
     u32 filter = flags & 3;
 
-    u32 mip_filter = filter == 0 ?
+    u32 min_filter = filter == 0 ?
         D3DTEXF_POINT : filter == 3 ? D3DTEXF_ANISOTROPIC : D3DTEXF_LINEAR;
 
-    u32 mag_filter = mip_filter == D3DTEXF_ANISOTROPIC ?
-        D3DTEXF_LINEAR : mip_filter;
+    u32 mag_filter = min_filter == D3DTEXF_ANISOTROPIC ?
+        D3DTEXF_LINEAR : min_filter;
 
-    u32 min_filter = filter >= 2 ?
+    u32 mip_filter = filter >= 2 ?
         D3DTEXF_LINEAR : D3DTEXF_POINT;
 
-    set_sampler_state(stage, D3DSAMP_MIPFILTER,     mip_filter);
-    set_sampler_state(stage, D3DSAMP_MAGFILTER,     mag_filter);
     set_sampler_state(stage, D3DSAMP_MINFILTER,     min_filter);
+    set_sampler_state(stage, D3DSAMP_MAGFILTER,     mag_filter);
+    set_sampler_state(stage, D3DSAMP_MIPFILTER,     mip_filter);
     set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, anisotropy);
 }
 

@@ -63,10 +63,10 @@ void ngl::quad_renderer::render(node* value) {
         depth_z = current->far_plane;
 
     f32 numerator = (f32)((f64)current->view_to_screen.z.z * (f64)depth_z);
-    numerator = (f32)((f64)numerator + (f64)current->view_to_screen.w.z);
+        numerator = (f32)((f64)numerator + (f64)current->view_to_screen.w.z);
 
     f32 denominator = (f32)((f64)current->view_to_screen.z.w * (f64)depth_z);
-    denominator = (f32)((f64)denominator + (f64)current->view_to_screen.w.w);
+        denominator = (f32)((f64)denominator + (f64)current->view_to_screen.w.w);
 
     f32 depth = (f32)((f64)numerator / (f64)denominator);
 
