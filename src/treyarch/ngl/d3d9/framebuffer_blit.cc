@@ -13,9 +13,6 @@ struct fullscreen_vertex {
     f32 x, y, z, u, v;
 };
 
-// todo: L12 treyarch/ngl/fx/references.hh
-static util::memory_reference<u32> texture_animation_frame { 0x01118800 };
-
 void disable_blending() {
     ngl::d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
     ngl::d3d9::set_render_state(D3DRS_ALPHATESTENABLE, FALSE);
@@ -23,7 +20,7 @@ void disable_blending() {
 
 ngl::texture* select_texture_frame(ngl::texture* value) {
     if (value->flags & ngl::texture_animated)
-        value = value->frames[texture_animation_frame.read() % value->frame_count];
+        value = value->frames[ngl::references::animation_frame.read() % value->frame_count];
 
     i32 frame_epoch = (i32)ngl::references::frame_epoch.read();
 

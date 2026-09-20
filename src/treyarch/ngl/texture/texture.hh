@@ -52,6 +52,7 @@ namespace treyarch { namespace ngl {
 
     namespace references {
         inline util::memory_reference<texture*>          default_texture   { 0x011187FC };
+        inline util::memory_reference<u32>               animation_frame   { 0x01118800 };
         inline util::memory_reference<texture*>          white_texture     { 0x01118804 };
         inline util::memory_reference<texture*>          black_texture     { 0x01118808 };
         inline util::memory_reference<texture*>          invisible_texture { 0x0111880C };

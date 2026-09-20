@@ -27,10 +27,11 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_sampler_filters();
     void set_render_state(D3DRENDERSTATETYPE state, DWORD value);
     void set_sampler_state(u32 stage, D3DSAMPLERSTATETYPE state, DWORD value);
+    void apply_blend_mode(u64 value);
 
     namespace references {
         inline util::memory_reference<sampler_state_cache> sampler_states { 0x011168BC };
-        inline util::memory_reference<DWORD>               render_states { 0x011164B8 };
+        inline util::memory_reference<DWORD>               render_states  { 0x011164B8 };
     } // references
 
     ASSERT_SIZEOF  (sampler_state_cache,                          0x40);

@@ -5,7 +5,10 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace ngl { namespace d3d9 {
+namespace treyarch { namespace ngl {
+    struct texture;
+
+namespace d3d9 {
     struct texture_resource {
         IDirect3DBaseTexture9* resource;
         u32                    width;
@@ -27,6 +30,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     u32 get_surface_size(D3DFORMAT format, u32 width, u32 height);
     void upload_texture(texture_resource* value, const void* &source);
     void upload_cube_texture(texture_resource* value, const void* &source);
+    void bind_texture(u32 stage, texture* value, u32 map_flags, u32 anisotropy);
 
     ASSERT_SIZEOF  (texture_resource,                0x20);
     ASSERT_OFFSETOF(texture_resource, resource,      0x00);

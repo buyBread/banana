@@ -45,3 +45,29 @@ void ngl::d3d9::initialize_sampler_filters() {
         set_sampler_state(stage, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
     }
 }
+
+void ngl::d3d9::apply_blend_mode(u64 value) {
+    u32 mode        = (u32)value;
+    u8  source      = (u8)(value >> 32);
+    u8  destination = (u8)(mode >> 24);
+
+    if (mode & 0x00800000) {
+        set_render_state(D3DRS_ALPHABLENDENABLE, TRUE);
+        set_render_state(D3DRS_BLENDOP, (mode >> 16) & 0x3F);
+        set_render_state(D3DRS_SRCBLEND, source);
+        set_render_state(D3DRS_DESTBLEND, destination);
+
+        if (source == 14 || source == 15 || destination == 14 || destination == 15) {
+            u32 factor = (mode & 0xFF) * 0x01010101;
+            set_render_state(D3DRS_BLENDFACTOR, factor);
+        }
+    } else
+        set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
+
+    if (mode & 0x00400000) {
+        set_render_state(D3DRS_ALPHATESTENABLE, TRUE);
+        set_render_state(D3DRS_ALPHAFUNC, D3DCMP_GREATER);
+        set_render_state(D3DRS_ALPHAREF, mode & 0xFF);
+    } else
+        set_render_state(D3DRS_ALPHATESTENABLE, FALSE);
+}

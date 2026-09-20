@@ -1,10 +1,60 @@
 #include <cstring>
 
 #include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
+#include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/four_cc.hh"
 
 using namespace treyarch;
+
+void ngl::d3d9::bind_texture(u32      stage,
+                             texture* value,
+                             u32      map_flags,
+                             u32      anisotropy) {
+
+    if (value->flags & texture_animated)
+        value = value->frames[ngl::references::animation_frame.read() % value->frame_count];
+
+    i32 frame_epoch = (i32)ngl::references::frame_epoch.read();
+
+    value->last_frame_reference = frame_epoch;
+
+    if (value->owner_file)
+        value->owner_file->last_frame_reference = frame_epoch;
+
+    set_texture(stage, value->gpu_texture.resource);
+
+    u8 flags = (u8)map_flags;
+    
+    u32 address_u = (flags & 0x10) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+    u32 address_v = (flags & 0x20) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+
+    set_sampler_state(stage, D3DSAMP_ADDRESSU, address_u);
+    set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
+
+    if (value->flags & texture_volume) {
+        u32 address_w = (flags & 0x40) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+        set_sampler_state(stage, D3DSAMP_ADDRESSW, address_w);
+    }
+
+    u32 filter = flags & 3;
+
+    u32 mip_filter = filter == 0 ?
+        D3DTEXF_POINT : filter == 3 ? D3DTEXF_ANISOTROPIC : D3DTEXF_LINEAR;
+
+    u32 mag_filter = mip_filter == D3DTEXF_ANISOTROPIC ?
+        D3DTEXF_LINEAR : mip_filter;
+
+    u32 min_filter = filter >= 2 ?
+        D3DTEXF_LINEAR : D3DTEXF_POINT;
+
+    set_sampler_state(stage, D3DSAMP_MIPFILTER,     mip_filter);
+    set_sampler_state(stage, D3DSAMP_MAGFILTER,     mag_filter);
+    set_sampler_state(stage, D3DSAMP_MINFILTER,     min_filter);
+    set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, anisotropy);
+}
 
 D3DPOOL ngl::d3d9::get_texture_pool(const texture_resource* value) {
     if (value->usage & 0x0B)

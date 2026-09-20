@@ -1,7 +1,9 @@
 #pragma once
 
+#include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace ngl {
@@ -14,12 +16,30 @@ namespace treyarch { namespace ngl {
     };
 
     struct quad {
-        quad_vertex vertices[4];
-        f32         z;
-        u32         map_flags;
-        u64         blend_mode;
-        texture*    texture_data;
+        quad_vertex             vertices[4];
+        f32                     z;
+        u32                     map_flags;
+        u64                     blend_mode;
+        texture*                texture_data;
+        IDirect3DPixelShader9** pixel_program;
     };
+
+    namespace quad_renderer {
+        struct node {
+            render_node base;
+            u32         pad_00c;
+            quad        value;
+        };
+
+        void render(node* value);
+
+        namespace references {
+            inline util::memory_reference<void*> node_vtable { 0x00DB8F54 };
+        } // references
+
+        ASSERT_SIZEOF  (node,        0x78);
+        ASSERT_OFFSETOF(node, value, 0x10);
+    } // quad_renderer
 
     void init_quad(quad* value);
     void set_quad_rect(quad* value,
@@ -44,4 +64,5 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(quad, map_flags,    0x54);
     ASSERT_OFFSETOF(quad, blend_mode,   0x58);
     ASSERT_OFFSETOF(quad, texture_data, 0x60);
+    ASSERT_OFFSETOF(quad, pixel_program, 0x64);
 }} // treyarch::ngl

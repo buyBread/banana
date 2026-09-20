@@ -4,27 +4,14 @@
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
 
 using namespace treyarch;
 
-struct ngl_quad_node {
-    ngl::render_node base;
-    u32              pad_00c;
-    ngl::quad        value;
-};
-
-ASSERT_SIZEOF  (ngl_quad_node,        0x78);
-ASSERT_OFFSETOF(ngl_quad_node, value, 0x10);
-
-static util::memory_reference<void*> quad_node_vtable { 0x00DB8F54 };
-
 void ngl::list_add_quad(const quad* value) {
-    ngl_quad_node* node = (ngl_quad_node*)list::allocate(sizeof(ngl_quad_node), 16);
+    auto* node = (quad_renderer::node*)list::allocate(sizeof(quad_renderer::node), 16);
 
     if (node) {
-        node->base.vtable = (void*)&quad_node_vtable.get();
+        node->base.vtable = &quad_renderer::references::node_vtable.get();
 
         scene* current = references::current_scene.read();
         validate_matrices(current);
@@ -37,8 +24,7 @@ void ngl::list_add_quad(const quad* value) {
             
             ++current->translucent_render_list_count;
             current->translucent_render_list = &node->base;
-        }
-        else {
+        } else {
             node->base.sort_key.integer = (u32)value->texture_data;
             node->base.next = current->opaque_render_list;
             

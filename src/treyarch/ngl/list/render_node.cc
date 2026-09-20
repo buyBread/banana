@@ -2,6 +2,7 @@
 #include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/quad/quad.hh"
 
 #ifdef DEBUG
     #include <unordered_set>
@@ -26,6 +27,12 @@ void ngl::render_node::render() {
 
     if (vtable == &sm_lod_mesh_instance::references::node_vtable.get())
         return; // nullsub
+
+    if (vtable == &quad_renderer::references::node_vtable.get()) {
+        quad_renderer::render((quad_renderer::node*)this);
+
+        return;
+    }
 
     /*
         fallback
