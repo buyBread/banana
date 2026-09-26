@@ -77,6 +77,11 @@ namespace treyarch { namespace ngl { namespace fx {
         texture*     horizon_texture;
     };
 
+    void apply_material_values(      general_lighting_parameters* value,
+                               const vector4*                     material_values);
+    void transform_lighting_to_local(      general_lighting_parameters* value,
+                                      const matrix4x4&                  local_to_world);
+
     ASSERT_SIZEOF(subset_lighting_parameters, 0x158);
     /*
         todo: ASSERT_OFFSETOFs

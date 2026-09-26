@@ -1,6 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -23,6 +25,9 @@ namespace treyarch { namespace ngl { namespace shadow {
         inline util::memory_reference<u8>                    initialized      { 0x01073DFB };
         inline util::memory_reference<device_resource_state> device_resources { 0x01075FC0 };
         inline util::memory_reference<target_dimensions>     dimensions       { 0x00E7AFC4 };
+        inline util::memory_reference<vector4>               shadow_distances { 0x01075F10 };
+        inline util::memory_reference<matrix4x4>             matrix_0         { 0x01075F20 };
+        inline util::memory_reference<matrix4x4>             matrix_1         { 0x01075F70 };
     } // references
 
     ASSERT_SIZEOF  (device_resource_state,                0x10);

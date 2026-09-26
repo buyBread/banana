@@ -7,6 +7,11 @@ namespace treyarch { namespace ngl {
     struct mesh_section;
 
 namespace fx {
+    struct general_lighting_parameters;
+
+    void build_general_lighting(      general_lighting_parameters* value,
+                                const mesh_node_data*              node_data,
+                                const mesh_section*                section);
     void update_scene_parameters(effect* value);
     void update_material_parameters(effect*         value,
                                     mesh_node_data* node_data,

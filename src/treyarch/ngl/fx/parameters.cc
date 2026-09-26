@@ -27,11 +27,8 @@ using namespace treyarch::ngl;
           someday
           all will be moved
           isn't that great?
+          * Acknowledging this fills you with Determination.
 */
-
-util::memory_reference<vector4>   shadow_distances { 0x01075F10 };
-util::memory_reference<matrix4x4> shadow_matrix_0  { 0x01075F20 };
-util::memory_reference<matrix4x4> shadow_matrix_2  { 0x01075F70 };
 
 util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
 util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
@@ -53,24 +50,6 @@ util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
 
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
     *(ngl::texture**)entry->data = value ? value : ngl::references::default_texture.read();
-}
-
-matrix4x4 get_unscaled_local_to_world(const ngl::fx::mesh_node_data* node_data) {
-    matrix4x4 result = node_data->local_to_world;
-
-    // remove the node's scale before making an inverse matrix,
-    // divide each value separately because dividing the whole vector changes the result slightly
-    if (node_data->node_info[0] & 2) {
-        const vector3 &scales = *(const vector3*)(node_data->node_info + 0x10);
-
-        for (u32 column = 0; column < 4; ++column) {
-            result[0][column] /= scales.x;
-            result[1][column] /= scales.y;
-            result[2][column] /= scales.z;
-        }
-    }
-
-    return result;
 }
 
 // todo: move
@@ -177,7 +156,7 @@ void add_general_directional_light(      ngl::fx::general_lighting_parameters* v
 
     value->light_colors[count] = *(const vector4*)(source + (primary ? 0x40 : 0x90));
 
-    value->light_attenuation[count] = vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    value->light_attenuation[count] = vector4(0.0f, 1.0f, 0.0f, 1.0f);
 
     if (!primary && (*(const u32*)source & 4))
         value->special_light_index = count;
@@ -527,9 +506,9 @@ void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  va
     }
 }
 
-void build_general_lighting(      ngl::fx::general_lighting_parameters* value,
-                            const ngl::fx::mesh_node_data*              node_data,
-                            const ngl::mesh_section*                    section) {
+void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
+                                     const mesh_node_data*              node_data,
+                                     const ngl::mesh_section*           section) {
 
     initialize_general_lighting(value);
 
@@ -1128,7 +1107,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_shadow_distances:
-                vectors[0] = shadow_distances.get();
+                vectors[0] = shadow::references::shadow_distances.get();
 
                 break;
             case parameter_shadow_buffer_size:
@@ -1146,11 +1125,11 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_view_projection_shadow:
             case parameter_view_projection_shadow_1:
-                *(matrix4x4*)destination = shadow_matrix_0.get().transpose();
+                *(matrix4x4*)destination = shadow::references::matrix_0.get().transpose();
 
                 break;
             case parameter_view_projection_shadow_2:
-                *(matrix4x4*)destination = shadow_matrix_2.get().transpose();
+                *(matrix4x4*)destination = shadow::references::matrix_1.get().transpose();
 
                 break;
             case parameter_shadow_texture:

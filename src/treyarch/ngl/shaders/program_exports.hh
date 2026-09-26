@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
 #include <d3d9.h>
 
 #include "util/macros/sanity_assert.hh"
@@ -10,6 +9,14 @@
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace program_exports {
+struct pixel_pipeline_descriptor {
+    u32                     unk_00;
+    IDirect3DPixelShader9** pixel_program_output;
+    std::array<i32, 33>     bindings;
+};
+
+ASSERT_SIZEOF(pixel_pipeline_descriptor, 0x8C);
+
 namespace pcuv {
     inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114350 };
     inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114354 };
@@ -35,6 +42,10 @@ namespace sm_depth_shadow {
     inline util::memory_reference<IDirect3DVertexShader9*> vertex_program { 0x01114794 };
     inline util::memory_reference<IDirect3DPixelShader9*>  pixel_program  { 0x01114790 };
 } // sm_depth_shadow
+
+namespace shared_shadow {
+    inline util::memory_reference<IDirect3DPixelShader9*> depth_pixel_program { 0x0111AA00 };
+} // shared_shadow
 
 namespace smsky {
     inline util::memory_reference<IDirect3DVertexShader9*> vertex_program         { 0x011143D8 };
@@ -85,7 +96,7 @@ namespace sm_road {
         IDirect3DPixelShader9*  shadow_1_pixel_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x18, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x18);
 
     inline util::memory_reference<program_exports> programs { 0x01114870 };
 } // sm_road
@@ -101,7 +112,7 @@ namespace sm_phatpalettecharnormal {
         IDirect3DVertexShader9* depth_shadow_vertex_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x01114820 };
 } // sm_phatpalettecharnormal
@@ -117,7 +128,7 @@ namespace sm_phatpalettechar {
         IDirect3DVertexShader9* depth_shadow_vertex_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x011147D0 };
 } // sm_phatpalettechar
@@ -133,10 +144,7 @@ namespace sm_phat_palette {
         IDirect3DVertexShader9* depth_shadow_vertex_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
-
-    static_assert(offsetof(program_exports, sample_texture_pixel_program) == 0x08, ASSERT_FAIL_SANITY);
-    static_assert(offsetof(program_exports, depth_shadow_vertex_program)  == 0x18, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x011145F0 };
 } // sm_phat_palette
@@ -152,7 +160,7 @@ namespace sm_phatcharnormal {
         IDirect3DPixelShader9*  shadow_2_pixel_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x011145A0 };
 } // sm_phatcharnormal
@@ -168,7 +176,7 @@ namespace sm_phatchar {
         IDirect3DVertexShader9* material_vertex_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x01114550 };
 } // sm_phatchar
@@ -184,7 +192,7 @@ namespace sm_phatspiderman {
         IDirect3DPixelShader9*  shadow_1_pixel_program;
     };
 
-    static_assert(sizeof(program_exports) == 0x1C, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x1C);
 
     inline util::memory_reference<program_exports> programs { 0x01114500 };
 } // sm_phatspiderman
@@ -263,7 +271,7 @@ namespace sm_bright_filter {
         IDirect3DPixelShader9*  depth_mask;
     };
 
-    static_assert(sizeof(program_exports) == 0x118, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x118);
 
     inline util::memory_reference<program_exports> programs { 0x01114640 };
 } // sm_bright_filter
@@ -316,7 +324,7 @@ namespace sm_decal {
         IDirect3DPixelShader9*  material;
     };
 
-    static_assert(sizeof(program_exports) == 0x34, ASSERT_FAIL_SANITY);
+    ASSERT_SIZEOF(program_exports, 0x34);
 
     inline util::memory_reference<program_exports> programs { 0x011149B0 };
 } // sm_decal
@@ -355,17 +363,9 @@ namespace sm_phat {
         IDirect3DPixelShader9*  debug_gobo;
     };
 
-    struct pixel_pipeline_descriptor {
-        u32                 unk_00;
-        IDirect3DPixelShader9**  pixel_program_output;
-        std::array<u32, 33> unk_08;
-    };
-
-    static_assert(sizeof(program_exports)           == 0x34, ASSERT_FAIL_SANITY);
-    static_assert(sizeof(pixel_pipeline_descriptor) == 0x8C, ASSERT_FAIL_SANITY);
-
+    ASSERT_SIZEOF(program_exports, 0x34);
+    
     inline util::memory_reference<program_exports> programs { 0x01114490 };
-
     inline util::memory_reference // sob
         <std::array<std::array<pixel_pipeline_descriptor, 21>, 17>> pixel_pipelines { 0x00F3E600 };
 } // sm_phat

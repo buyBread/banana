@@ -5,6 +5,15 @@
 
 #include "util/types.hh"
 
+namespace treyarch { namespace ngl { namespace fx {
+    struct general_lighting_parameters;
+}}}
+
+namespace treyarch { namespace ngl { namespace shaders { namespace generated_material {
+    struct material_data;
+    struct scene_snapshot;
+}}}}
+
 namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
     enum class e_vertex_variant {
         material,
@@ -113,18 +122,17 @@ namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
     }};
 
     inline constexpr std::array<const char*, debug_variant_count>
-    integer_definitions {{
-        "0",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-    }};
+    integer_definitions {{ "0", "1", "2", "3", "4", "5", "6", "7", }};
 
     constexpr u16 material_permutation(size_t material, size_t lighting) {
         return (u16)(material * lighting_configuration_count + lighting);
     }
+
+    size_t select_material_configuration(      generated_material::material_data*   material,
+                                         const generated_material::scene_snapshot*  snapshot,
+                                         const fx::general_lighting_parameters     &lighting);
+    size_t select_lighting_configuration(bool horizon,
+                                         i32  light_count,
+                                         bool gobo,
+                                         u32  shadow_count);
 }}}} // treyarch::ngl::shaders::sm_phat

@@ -2,9 +2,8 @@
 
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/material.hh"
+#include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/list/render_node.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/ngl/scene/scene.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -13,18 +12,6 @@ namespace treyarch { namespace ngl {
     struct mesh_section;
 
 namespace fx {
-    struct mesh_node_data {
-        matrix4x4         local_to_world;
-        u8                reserved_040[0x40];
-        u8*               mesh_data;
-        scene_parameters* parameters;
-        u8*               node_info;
-        f32               scale;
-        u8                reserved_090[0x08];
-        u8                point_light_indices[8];
-        u8                point_light_count;
-    };
-
     struct render_node {
         ngl::render_node base;
         mesh_node_data*  node_data;
@@ -41,14 +28,6 @@ namespace fx {
     namespace references {
         inline util::memory_reference<void*> node_vtable { 0x00DB7B84 };
     } // references
-
-    ASSERT_OFFSETOF(mesh_node_data, local_to_world,      0x00);
-    ASSERT_OFFSETOF(mesh_node_data, mesh_data,           0x80);
-    ASSERT_OFFSETOF(mesh_node_data, parameters,          0x84);
-    ASSERT_OFFSETOF(mesh_node_data, node_info,           0x88);
-    ASSERT_OFFSETOF(mesh_node_data, scale,               0x8C);
-    ASSERT_OFFSETOF(mesh_node_data, point_light_indices, 0x98);
-    ASSERT_OFFSETOF(mesh_node_data, point_light_count,   0xA0);
 
     ASSERT_SIZEOF  (render_node,                  0x28);
     ASSERT_OFFSETOF(render_node, node_data,       0x0C);

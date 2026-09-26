@@ -76,6 +76,7 @@ namespace treyarch { namespace ngl {
 
     namespace references {
         inline util::memory_reference<u8>          all_shaders    { 0x00F4AA3C };
+        inline util::memory_reference<u8>          wireframe      { 0x00BE93CB };
         inline util::memory_reference<shader>      default_shader { 0x00F523E0 };
         inline util::memory_reference<shader_bank> shaders        { 0x011161E0 };
     } // references

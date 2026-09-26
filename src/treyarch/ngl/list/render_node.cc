@@ -8,6 +8,7 @@
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
 #include "treyarch/ngl/shaders/puv/render_node.hh"
+#include "treyarch/ngl/shaders/sm_phat/render_node.hh"
 #include "treyarch/ngl/shaders/smsky/render_node.hh"
 
 #ifdef DEBUG
@@ -72,6 +73,12 @@ void ngl::render_node::render() {
 
     if (vtable == &morph_geometry::references::node_vtable.get()) {
         morph_geometry::render((morph_geometry::render_node*)this);
+
+        return;
+    }
+
+    if (vtable == &shaders::sm_phat::references::node_vtable.get()) {
+        shaders::sm_phat::render((shaders::sm_phat::render_node*)this);
 
         return;
     }
