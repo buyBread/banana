@@ -31,13 +31,7 @@ ngl::scene* ngl::init(HWND window) {
 
     ngl::d3d9::init();
 
-#ifdef NDEBUG
-    /* sm_phat is currently still incorrect (somehow??),
-       so we shouldn't bundle our shader programs in a normal build right now... */
-    retail::sub_9CCAF0();
-#else
     ngl::dispatch_init_list();
-#endif
     
     retail::sub_7C2DE0(); /* nullsub (retail)
                              some omitted default fx shader? (milestone) */
