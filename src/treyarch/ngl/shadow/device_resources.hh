@@ -7,6 +7,10 @@
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
+namespace treyarch { namespace ngl {
+    struct scene;
+}}
+
 namespace treyarch { namespace ngl { namespace shadow {
     struct device_resource_state {
         ngl::texture* depth_targets[2];
@@ -22,12 +26,16 @@ namespace treyarch { namespace ngl { namespace shadow {
     void restore_device_resources();
 
     namespace references {
-        inline util::memory_reference<u8>                    initialized      { 0x01073DFB };
-        inline util::memory_reference<device_resource_state> device_resources { 0x01075FC0 };
-        inline util::memory_reference<target_dimensions>     dimensions       { 0x00E7AFC4 };
-        inline util::memory_reference<vector4>               shadow_distances { 0x01075F10 };
-        inline util::memory_reference<matrix4x4>             matrix_0         { 0x01075F20 };
-        inline util::memory_reference<matrix4x4>             matrix_1         { 0x01075F70 };
+        inline util::memory_reference<u8>                    initialized           { 0x01073DFB };
+        inline util::memory_reference<device_resource_state> device_resources      { 0x01075FC0 };
+        inline util::memory_reference<target_dimensions>     dimensions            { 0x00E7AFC4 };
+        inline util::memory_reference<vector4>               shadow_distances      { 0x01075F10 };
+        inline util::memory_reference<matrix4x4>             matrix_0              { 0x01075F20 };
+        inline util::memory_reference<matrix4x4>             matrix_1              { 0x01075F70 };
+        inline util::memory_reference<matrix4x4>             projection_to_texture { 0x01075ED0 };
+        inline util::memory_reference<ngl::scene*>           scene_0               { 0x01075F60 };
+        inline util::memory_reference<ngl::scene*>           scene_1               { 0x01075FB0 };
+        inline util::memory_reference<u8>                    active                { 0x00F4CD40 };
     } // references
 
     ASSERT_SIZEOF  (device_resource_state,                0x10);

@@ -1,9 +1,20 @@
+#include <bit>
+#include <cmath>
+#include <cstring>
+
 #include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
+#include "treyarch/ngl/fx/mesh_node_data.hh"
+#include "treyarch/ngl/fx/references.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/scene/parameters.hh"
+#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shadow/device_resources.hh"
+#include "treyarch/ngl/shadow/projection.hh"
 
 using namespace treyarch;
 
@@ -39,6 +50,266 @@ bool ngl::shaders::generated_material::texture_is_usable(const texture* value) {
            value->gpu_texture.width * value->gpu_texture.height >= 256;
 }
 
+void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapshot*     snapshot,
+                                                              const material_data*      material,
+                                                              const fx::mesh_node_data* node_data,
+                                                              const mesh_section*       section) {
+
+    std::memcpy(snapshot,
+                &references::default_scene_snapshot.get(),
+                sizeof(*snapshot));
+
+    snapshot->local_to_world = node_data->local_to_world;
+    snapshot->animation_time = references::animation_time.read();
+
+    if (node_data->node_info && (node_data->node_info[0] & 2)) {
+        const vector3 &scale = *(const vector3*)(node_data->node_info + 0x10);
+
+        snapshot->base_transform = matrix4x4(scale.x, 0.0f,   0.0f,   0.0f,
+                                             0.0f,   scale.y, 0.0f,   0.0f,
+                                             0.0f,   0.0f,   scale.z, 0.0f,
+                                             0.0f,   0.0f,   0.0f,   1.0f);
+    }
+
+    u32 seed = (u32)section;
+    seed ^= seed >> 11;
+    seed ^= (seed & 0xFF3A58ADu) << 7;
+    seed ^= (seed & 0xFFFFDF8Cu) << 15;
+    snapshot->random_seed = seed;
+
+    scene_parameters* parameters = node_data->parameters;
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_random_seed.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_random_seed.read();
+        u32 value = (u32)get_scene_parameter(parameters, parameter_id);
+
+        value ^= value >> 11;
+        value ^= (value & 0xFF3A58ADu) << 7;
+        value ^= (value & 0xFFFFDF8Cu) << 15;
+
+        snapshot->random_seed = value;
+    }
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_unknown_178.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_unknown_178.read();
+        snapshot->unknown_178 = (u32)get_scene_parameter(parameters, parameter_id);
+    }
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_scalar.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_scalar.read();
+        snapshot->scalar_17c = std::bit_cast<f32>((u32)get_scene_parameter(parameters, parameter_id));
+    }
+
+    snapshot->scalar_180 = snapshot->scalar_17c;
+
+    f32 animation_time = ngl::references::current_scene.read()->current_animation_time;
+
+    f32 scale_u  = material->texture_scale_u;
+    f32 scale_v  = material->texture_scale_v;
+    f32 offset_u = material->texture_offset_u + material->texture_scroll_u * animation_time;
+    f32 offset_v = material->texture_offset_v + material->texture_scroll_v * animation_time;
+
+    if (material->texture_wrap_u != 0.0f) {
+        scale_u /= material->texture_wrap_u;
+        f32 wrapped = offset_u * material->texture_wrap_u;
+        offset_u = (wrapped - std::floor(wrapped)) * scale_u;
+    }
+
+    if (material->texture_wrap_v != 0.0f) {
+        scale_v /= material->texture_wrap_v;
+        f32 wrapped = offset_v * material->texture_wrap_v;
+        offset_v = (wrapped - std::floor(wrapped)) * scale_v;
+    }
+
+    snapshot->texture_matrix = matrix4x4(scale_u, 0.0f,   0.0f, 0.0f,
+                                         0.0f,   scale_v, 0.0f, 0.0f,
+                                         0.0f,   0.0f,   1.0f, 0.0f,
+                                         offset_u, offset_v, 0.0f, 1.0f);
+
+    const vector4 &value_0 = material->material_values[0];
+    const vector4 &value_1 = material->material_values[1];
+    const vector4 &value_2 = material->material_values[2];
+
+    snapshot->material_values[0] = vector4(value_0.x, value_2.z, 1.0f, value_1.z);
+    snapshot->material_values[1] = vector4(value_0.y, value_2.w, 0.0f, value_1.w);
+    snapshot->material_values[2] = vector4(value_0.z, value_1.x, value_2.x, 0.0f);
+    snapshot->material_values[3] = vector4(value_0.w, value_1.y, value_2.y, 0.0f);
+
+    if (material->mode != 1) {
+        snapshot->material_values[2].x = 0.0f;
+        snapshot->material_values[3].x = 1.0f;
+    }
+
+    snapshot->material_vector_140 = vector4(-material->animation_scale_u,
+                                            -material->animation_scale_u,
+                                            1.0f - material->animation_scale_v,
+                                            1.0f - material->animation_scale_v);
+    snapshot->diffuse_texture = material->diffuse_texture;
+    snapshot->scene_initializer_data = material->scene_initializer_data;
+
+    scene_initializer* initializer = material->scene_initializer_data;
+
+    if (initializer && initializer->value) {
+        using apply_function = void(__thiscall*)(void*, scene_snapshot*);
+
+        void** vtable = *(void***)initializer->value;
+        ((apply_function)vtable[9])(initializer->value, snapshot); // todo
+    }
+
+    f32 material_alpha = 1.0f;
+
+    if (has_scene_parameter(parameters, fx::references::parameter_id_tint_color.read())) {
+        const vector4 &tint = *(const vector4*)get_scene_parameter(parameters,
+                                                                   fx::references::parameter_id_tint_color.read());
+
+        vector4 scale = tint;
+
+        if (tint.x > 100.0f || tint.y > 100.0f || tint.z > 100.0f || tint.w > 100.0f) {
+            scale = vector4(tint.x / 1000.0f,
+                            tint.y / 1000.0f,
+                            tint.z / 1000.0f,
+                            1.0f);
+        } else
+            material_alpha = tint.w;
+
+        matrix4x4 tint_matrix(scale.x, 0.0f,    0.0f,    0.0f,
+                              0.0f,    scale.y, 0.0f,    0.0f,
+                              0.0f,    0.0f,    scale.z, 0.0f,
+                              0.0f,    0.0f,    0.0f,    scale.w);
+
+        snapshot->light_matrix = snapshot->light_matrix * tint_matrix;
+    }
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_alpha.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_alpha.read();
+        f32 alpha = std::bit_cast<f32>((u32)get_scene_parameter(parameters, parameter_id));
+        material_alpha *= alpha;
+    }
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_light_matrix.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_light_matrix.read();
+        const matrix4x4 &matrix = *(const matrix4x4*)get_scene_parameter(parameters, parameter_id);
+        snapshot->light_matrix = snapshot->light_matrix * matrix;
+    }
+
+    snapshot->material_values[2].x *= material_alpha;
+    snapshot->material_values[3].x *= material_alpha;
+
+    if (has_scene_parameter(parameters,
+                            fx::references::parameter_id_material_texture_matrix.read())) {
+
+        u32 parameter_id = fx::references::parameter_id_material_texture_matrix.read();
+        const matrix4x4 &matrix = *(const matrix4x4*)get_scene_parameter(parameters, parameter_id);
+        snapshot->texture_matrix = snapshot->texture_matrix * matrix;
+    }
+}
+
+void ngl::shaders::generated_material::prepare_regular_vertex_context(
+          regular_vertex_context*          context,
+    const fx::general_lighting_parameters &lighting,
+    const scene_snapshot*                  snapshot,
+    const fx::mesh_node_data*              node_data,
+    const mesh_section*                    section,
+    const matrix4x4                       &local_to_world,
+          bool                             receive_shadows) {
+
+    std::memset(context, 0, sizeof(*context));
+
+    std::memcpy(context->prefix.ambient_color_lo,
+                lighting.ambient_colors,
+                sizeof(context->prefix.ambient_color_lo));
+    std::memcpy(context->prefix.ambient_color_hi,
+                lighting.ambient_colors_with_primary,
+                sizeof(context->prefix.ambient_color_hi));
+
+    const vector4 gobo_scale(0.5f, 1.0f, 0.5f, 1.0f);
+
+    for (u32 row = 0; row < 4; ++row) {
+        for (u32 column = 0; column < 4; ++column) {
+            context->prefix.local_to_gobo[row][column] =
+                lighting.projector_matrix[row][column] * gobo_scale[column];
+        }
+    }
+
+    if (receive_shadows) {
+        context->shadow_count = shadow::build_projection_matrices(
+            context->prefix.light_to_screen,
+            local_to_world,
+            section->sphere);
+    }
+
+    context->compressed_to_local = fx::get_compressed_to_local(node_data);
+    context->prefix.compressed_to_uv =
+        fx::get_compressed_to_uv() * snapshot->texture_matrix.affine();
+    context->prefix.compressed_to_screen =
+        context->compressed_to_local *
+        local_to_world *
+        ngl::references::current_scene.read()->world_to_screen;
+
+    context->suffix.local_to_ambient     = lighting.ambient_color;
+    context->suffix.fog_eye_to_local     = lighting.post_view_position;
+    context->suffix.fog_normal           = lighting.post_direction;
+    context->suffix.fog_position_0       = lighting.post_plane_0;
+    context->suffix.fog_position_1       = lighting.post_plane_1;
+    context->suffix.fogs_per_meter       = lighting.post_range;
+    context->suffix.horizon_map_matrix_u = lighting.horizon_projection_u;
+    context->suffix.horizon_map_matrix_v = lighting.horizon_projection_v;
+}
+
+void ngl::shaders::generated_material::configure_regular_pass_states(bool queue_class,
+                                                                     u32  render_flags,
+                                                                     bool use_packed_alpha) {
+
+    d3d9::set_render_state(D3DRS_ALPHATESTENABLE, FALSE);
+
+    if (queue_class) {
+        d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, TRUE);
+        d3d9::set_render_state(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+        d3d9::set_render_state(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+        d3d9::set_render_state(D3DRS_BLENDFACTOR, 0);
+        d3d9::set_render_state(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+    } else
+        d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
+
+    if ((render_flags & 0xF) == 5) {
+        f32 alpha = (f32)((render_flags >> 8) & 0x1FF) * (1.0f / 256.0f);
+
+        if (!use_packed_alpha || alpha != 1.0f || queue_class) {
+            d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, TRUE);
+            d3d9::set_render_state(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+            d3d9::set_render_state(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+            d3d9::set_render_state(D3DRS_BLENDFACTOR, 0);
+            d3d9::set_render_state(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+            d3d9::set_render_state(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
+            d3d9::set_render_state(D3DRS_SRCBLENDALPHA, D3DBLEND_ZERO);
+            d3d9::set_render_state(D3DRS_DESTBLENDALPHA, D3DBLEND_DESTALPHA);
+            d3d9::set_render_state(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
+        }
+    }
+
+    f32 depth_bias =
+        (f32)((render_flags >> 4) & 0xF) * std::bit_cast<f32>(0x35800008u);
+
+    d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
+    d3d9::set_render_state(D3DRS_DEPTHBIAS, std::bit_cast<DWORD>(depth_bias));
+}
+
+void ngl::shaders::generated_material::restore_regular_pass_states() {
+    d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
+    d3d9::set_render_state(D3DRS_DEPTHBIAS, 0);
+    d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
+}
+
 void ngl::shaders::generated_material::transform_light_matrix(      scene_snapshot*                  snapshot,
                                                               const fx::general_lighting_parameters &lighting) {
 
@@ -48,13 +319,10 @@ void ngl::shaders::generated_material::transform_light_matrix(      scene_snapsh
 void ngl::shaders::generated_material::configure_samplers(const scene_snapshot* snapshot,
                                                           const material_data*  material) {
 
-    DWORD material_filter = snapshot->texture_filter == 3 ?
-        D3DTEXF_LINEAR : snapshot->texture_filter;
-
     for (u32 stage = 3; stage <= 10; ++stage) {
         d3d9::set_sampler_state(stage, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
         d3d9::set_sampler_state(stage, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-        d3d9::set_sampler_state(stage, D3DSAMP_MAGFILTER, material_filter);
+        d3d9::set_sampler_state(stage, D3DSAMP_MAGFILTER, snapshot->texture_filter);
         d3d9::set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, 1);
     }
 
@@ -240,4 +508,19 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
         set_pixel_constant(ambient_register == -1 ? -1 : ambient_register + index,
                            &lighting.ambient_defaults[index]);
     }
+}
+
+void ngl::shaders::generated_material::draw_pixel_pipeline(
+    const program_exports::pixel_pipeline_descriptor &pipeline,
+    const fx::general_lighting_parameters            &lighting,
+    const scene_snapshot*                             snapshot,
+    const material_data*                              material,
+    const matrix4x4                                  &local_to_world,
+          mesh_section*                               section) {
+
+    d3d9::set_pixel_program(*pipeline.pixel_program_output);
+    configure_samplers(snapshot, material);
+    bind_textures(lighting, snapshot, material);
+    upload_pixel_constants(pipeline, lighting, snapshot, material, local_to_world);
+    d3d9::draw_mesh_section(section);
 }

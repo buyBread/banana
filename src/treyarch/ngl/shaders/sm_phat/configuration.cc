@@ -88,6 +88,19 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
     return selected;
 }
 
+size_t ngl::shaders::sm_phat::resolve_material_configuration(      generated_material::material_data*   material,
+                                                             const generated_material::scene_snapshot*  snapshot,
+                                                             const fx::general_lighting_parameters     &lighting) {
+
+    if (material->configuration_index > 0 &&
+        material->configuration_index <= (i32)material_configuration_count) {
+
+        return (size_t)material->configuration_index - 1;
+    }
+
+    return select_material_configuration(material, snapshot, lighting);
+}
+
 size_t ngl::shaders::sm_phat::select_lighting_configuration(bool horizon,
                                                             i32  light_count,
                                                             bool gobo,

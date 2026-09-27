@@ -9,6 +9,7 @@
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
 #include "treyarch/ngl/shaders/puv/render_node.hh"
 #include "treyarch/ngl/shaders/sm_phat/render_node.hh"
+#include "treyarch/ngl/shaders/sm_phatnormal/render_node.hh"
 #include "treyarch/ngl/shaders/smsky/render_node.hh"
 
 #ifdef DEBUG
@@ -79,6 +80,12 @@ void ngl::render_node::render() {
 
     if (vtable == &shaders::sm_phat::references::node_vtable.get()) {
         shaders::sm_phat::render((shaders::sm_phat::render_node*)this);
+
+        return;
+    }
+
+    if (vtable == &shaders::sm_phatnormal::references::node_vtable.get()) {
+        shaders::sm_phatnormal::render((shaders::sm_phatnormal::render_node*)this);
 
         return;
     }
