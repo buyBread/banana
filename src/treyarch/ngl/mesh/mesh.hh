@@ -16,25 +16,25 @@ namespace treyarch { namespace ngl {
     struct mesh;
 
     struct mesh_section {
-        vector4                      sphere;
-        u32                          unk_010;
-        u32                          unk_014;
-        u32                          unk_018;
-        u32                          unk_01c;
-        material*                    material_data;
-        u16*                         bone_indices;
-        i32                          bone_count;
-        IDirect3DVertexBuffer9*      vertex_buffer;
-        i32                          vertex_offset;
-        u32                          vertex_count;
-        u32                          vertex_size;
-        IDirect3DIndexBuffer9*       index_buffer;
-        i32                          index_offset;
-        u32                          index_count;
-        u32                          index_size;
-        vertex_definition*           vertex_definition_data;
-        i32                          primitive_type;
-        i32                          binary_version;
+        vector4                 sphere;
+        u32                     unk_010;
+        u32                     unk_014;
+        u32                     unk_018;
+        u32                     unk_01c;
+        material*               material_data;
+        u16*                    bone_indices;
+        i32                     bone_count;
+        IDirect3DVertexBuffer9* vertex_buffer;
+        i32                     vertex_offset;
+        u32                     vertex_count;
+        u32                     vertex_size;
+        IDirect3DIndexBuffer9*  index_buffer;
+        i32                     index_offset;
+        u32                     index_count;
+        u32                     index_size;
+        vertex_definition*      vertex_definition_data;
+        i32                     primitive_type;
+        i32                     binary_version;
     };
 
     struct mesh_section_table_entry {
@@ -55,13 +55,13 @@ namespace treyarch { namespace ngl {
         void*                     skeleton;
         u32                       lod_count;
         mesh_lod*                 lods;
-        u32                       polygon_count;
         vector4                   sphere;
+        u32                       unk_030;
         u32                       unk_034;
         u32                       unk_038;
         u32                       unk_03c;
         amalga::apkf::file*       owner_file;
-        u32                       unk_044;
+        u32                       polygon_count;
         i32                       last_frame_reference;
         u32                       pad_04c;
         u32                       pad_050;
@@ -137,13 +137,13 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(mesh, skeleton,             0x14);
     ASSERT_OFFSETOF(mesh, lod_count,            0x18);
     ASSERT_OFFSETOF(mesh, lods,                 0x1C);
-    ASSERT_OFFSETOF(mesh, polygon_count,        0x20);
-    ASSERT_OFFSETOF(mesh, sphere,               0x24);
+    ASSERT_OFFSETOF(mesh, sphere,               0x20);
+    ASSERT_OFFSETOF(mesh, unk_030,              0x30);
     ASSERT_OFFSETOF(mesh, unk_034,              0x34);
     ASSERT_OFFSETOF(mesh, unk_038,              0x38);
     ASSERT_OFFSETOF(mesh, unk_03c,              0x3C);
     ASSERT_OFFSETOF(mesh, owner_file,           0x40);
-    ASSERT_OFFSETOF(mesh, unk_044,              0x44);
+    ASSERT_OFFSETOF(mesh, polygon_count,        0x44);
     ASSERT_OFFSETOF(mesh, last_frame_reference, 0x48);
 
     ASSERT_SIZEOF(mesh_directory, 0x10);

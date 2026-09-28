@@ -1,7 +1,10 @@
 #pragma once
 
 #include "treyarch/game/frontend/igo/igo_3d_zoom_map.hh"
+#include "treyarch/ngl/quad/quad.hh"
+#include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/shared/container/legacy_list.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -26,7 +29,9 @@ namespace treyarch {
         u8                            reserved_130[0xD0];
         u8                            quad_list_state_200;
         u8                            reserved_201[0x03];
-        container::legacy_list<void*> quad_list;
+        container::legacy_list<ngl::quad*> quad_list;
+        matrix4x4                     quad_transform;
+        ngl::shaders::pcuv::pcuv_material* flat_material;
 
         void draw();
         void draw_startup();
@@ -46,4 +51,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, zoom_map,            0x12C);
     ASSERT_OFFSETOF(ui_frontend, quad_list_state_200, 0x200);
     ASSERT_OFFSETOF(ui_frontend, quad_list,           0x204);
+    ASSERT_OFFSETOF(ui_frontend, quad_transform,      0x210);
+    ASSERT_OFFSETOF(ui_frontend, flat_material,       0x250);
 } // treyarch
