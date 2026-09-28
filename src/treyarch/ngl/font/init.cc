@@ -5,6 +5,7 @@
 
 using namespace treyarch;
 
+// sub_9DAFB0
 void ngl::font_init() {
     references::fonts.get().initialize();
 

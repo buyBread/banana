@@ -7,6 +7,7 @@
 
 using namespace treyarch;
 
+// sub_885020
 void ngl::shaders::sm_phat::render_shadow(render_node* value) {
     u32 material_mode = value->material_data->shadow_mode;
 

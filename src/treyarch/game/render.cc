@@ -36,6 +36,7 @@ namespace treyarch {
 
 using namespace treyarch;
 
+// sub_97ACA0
 camera_handle game::get_current_view_camera() {
     if (the_world && current_view_camera == the_world->get_chase_cam_ptr())
         return the_world->get_chase_cam_ptr();
@@ -43,6 +44,7 @@ camera_handle game::get_current_view_camera() {
     return current_view_camera;
 }
 
+// sub_783800
 void game::render() {
     if (ngl::references::current_frame_lock.read() != ngl::frame_lock_two_or_immediate)
         ngl::set_frame_lock(ngl::frame_lock_two_or_immediate);

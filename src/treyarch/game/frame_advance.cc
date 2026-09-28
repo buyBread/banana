@@ -20,6 +20,7 @@ namespace treyarch {
 
 using namespace treyarch;
 
+// sub_97CC40
 void game::frame_advance(f32 time_inc) {
     this->current_frame_delta = time_inc;
 

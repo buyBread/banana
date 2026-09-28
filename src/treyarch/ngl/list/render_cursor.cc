@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_72C560
 ngl::render_node* ngl::list::begin_render_nodes(render_node* head) {
     debug_state &debug = ngl::references::debug.get();
 
@@ -26,6 +27,7 @@ ngl::render_node* ngl::list::begin_render_nodes(render_node* head) {
     return node;
 }
 
+// sub_72C5B0
 ngl::render_node* ngl::list::advance_render_node() {
     debug_state &debug = ngl::references::debug.get();
     

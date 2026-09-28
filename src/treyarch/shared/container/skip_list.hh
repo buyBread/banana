@@ -29,6 +29,7 @@ namespace treyarch { namespace container {
         node* head;
         i32   level;
 
+        // sub_9DC490
         void initialize() {
             level = 0;
 
@@ -38,6 +39,7 @@ namespace treyarch { namespace container {
                 head->forward(index) = nullptr;
         }
 
+        // sub_884160
         i32 random_level() {
             i32 selected_level = 0;
             i32 bits;
@@ -59,6 +61,10 @@ namespace treyarch { namespace container {
             return selected_level > 15 ? 15 : selected_level;
         }
 
+        // sub_9DC300
+        // sub_9E1110
+        // sub_A24DA0
+        // sub_8CABA0
         value_type* insert(value_type* value) {
             if (!head)
                 initialize();
@@ -103,6 +109,9 @@ namespace treyarch { namespace container {
             return nullptr;
         }
 
+        // sub_9DC3C0
+        // sub_9E11D0
+        // sub_9E20A0
         bool erase(value_type* value) {
             if (!head)
                 return false;
@@ -144,6 +153,9 @@ namespace treyarch { namespace container {
             return true;
         }
 
+        // sub_9E2040
+        // sub_743CD0
+        // sub_9E1FE0
         value_type* find(string_hash key) const {
             if (!head)
                 return nullptr;

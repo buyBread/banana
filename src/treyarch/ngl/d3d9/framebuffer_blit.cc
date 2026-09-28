@@ -87,6 +87,7 @@ void draw_fullscreen_quad(const fullscreen_vertex* vertices) {
                             sizeof(fullscreen_vertex));
 }
 
+// sub_9E8260
 void ngl::d3d9::blit_texture(IDirect3DSurface9* destination,
                              texture*           source,
                              bool               linear_filter) {
@@ -121,6 +122,7 @@ void ngl::d3d9::blit_texture(IDirect3DSurface9* destination,
     poison_bindings();
 }
 
+// sub_9E8210
 void ngl::d3d9::copy_active_depth() {
     framebuffer_state &framebuffers = references::framebuffers.get();
 
@@ -177,6 +179,7 @@ void ngl::d3d9::copy_active_depth() {
     poison_bindings();
 }
 
+// sub_9E78A0
 void ngl::d3d9::generate_mipmaps(texture* value) {
     if (!value)
         return;

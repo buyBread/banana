@@ -30,6 +30,7 @@ void ngl::d3d9::set_sampler_state(u32                 stage,
     references::device.get()->SetSamplerState(stage, state, value);
 }
 
+// sub_9E7E00
 void ngl::d3d9::initialize_sampler_filters() {
     sampler_state_cache* states = &references::sampler_states.get();
     IDirect3DDevice9*    device =  references::device.get();
@@ -46,6 +47,7 @@ void ngl::d3d9::initialize_sampler_filters() {
     }
 }
 
+// sub_9E7C10
 void ngl::d3d9::apply_blend_mode(u64 value) {
     u32 mode        = (u32)value;
     u8  source      = (u8)(value >> 32);

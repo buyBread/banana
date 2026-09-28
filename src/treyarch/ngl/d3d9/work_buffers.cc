@@ -82,6 +82,7 @@ void ngl::d3d9::replace_platform_work_buffer(u32 size) {
     buffer_size = size;
 }
 
+// sub_9E8AF0
 void ngl::d3d9::provision_default_work_buffers() {
     list::arena_state &arena = list::references::arena.get();
 

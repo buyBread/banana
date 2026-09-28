@@ -214,14 +214,13 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
     }
 }
 
-void ngl::shaders::generated_material::prepare_regular_vertex_context(
-          regular_vertex_context*          context,
-    const fx::general_lighting_parameters &lighting,
-    const scene_snapshot*                  snapshot,
-    const fx::mesh_node_data*              node_data,
-    const mesh_section*                    section,
-    const matrix4x4                       &local_to_world,
-          bool                             receive_shadows) {
+void ngl::shaders::generated_material::prepare_regular_vertex_context(      regular_vertex_context*          context,
+                                                                      const fx::general_lighting_parameters &lighting,
+                                                                      const scene_snapshot*                  snapshot,
+                                                                      const fx::mesh_node_data*              node_data,
+                                                                      const mesh_section*                    section,
+                                                                      const matrix4x4                       &local_to_world,
+                                                                            bool                             receive_shadows) {
 
     std::memset(context, 0, sizeof(*context));
 
@@ -313,7 +312,8 @@ void ngl::shaders::generated_material::restore_regular_pass_states() {
 void ngl::shaders::generated_material::transform_light_matrix(      scene_snapshot*                  snapshot,
                                                               const fx::general_lighting_parameters &lighting) {
 
-    snapshot->light_matrix = snapshot->light_matrix.affine() * ((const matrix4x4*)(lighting.light_source + 0x100))->affine();
+    snapshot->light_matrix = snapshot->light_matrix.affine() *
+                             ((const matrix4x4*)(lighting.light_source + 0x100))->affine();
 }
 
 void ngl::shaders::generated_material::configure_samplers(const scene_snapshot* snapshot,

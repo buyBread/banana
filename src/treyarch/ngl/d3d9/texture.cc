@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_9E2860
 void ngl::d3d9::bind_texture(u32      stage,
                              texture* value,
                              u32      map_flags,
@@ -63,6 +64,7 @@ D3DPOOL ngl::d3d9::get_texture_pool(const texture_resource* value) {
     return (D3DPOOL)(((value->usage & 0x10) != 0) + 1);
 }
 
+// sub_72BF80
 bool ngl::d3d9::is_depth_surface_format(D3DFORMAT format) {
     switch ((u32)format) {
         case D3DFMT_D16_LOCKABLE:
@@ -85,6 +87,7 @@ bool ngl::d3d9::is_depth_surface_format(D3DFORMAT format) {
     }
 }
 
+// sub_72BFF0
 void ngl::d3d9::create_surface_resource(IDirect3DSurface9** surface,
                                         u32                 width,
                                         u32                 height,
@@ -113,6 +116,7 @@ void ngl::d3d9::create_surface_resource(IDirect3DSurface9** surface,
     }
 }
 
+// sub_72BEC0
 bool ngl::d3d9::create_texture_resource(texture_resource* value) {
     D3DPOOL pool = get_texture_pool(value);
     DWORD usage = value->usage & ~0x18;
@@ -166,6 +170,7 @@ bool ngl::d3d9::create_texture_resource(texture_resource* value) {
     return value->resource != nullptr;
 }
 
+// sub_9EAAE0
 u32 ngl::d3d9::get_surface_size(D3DFORMAT format, u32 width, u32 height) {
     switch (format) {
         case D3DFMT_DXT1: {
@@ -275,6 +280,7 @@ void copy_locked_surface(const D3DSURFACE_DESC &description,
     source = (const u8*)source + size;
 }
 
+// sub_9EADA0
 void ngl::d3d9::upload_texture(texture_resource* value, const void* &source) {
     if (!value->resource)
         return;
@@ -299,6 +305,7 @@ void ngl::d3d9::upload_texture(texture_resource* value, const void* &source) {
     }
 }
 
+// sub_9EAC90
 void ngl::d3d9::upload_cube_texture(texture_resource* value, const void* &source) {
     D3DCUBEMAP_FACES faces[] {
         D3DCUBEMAP_FACE_POSITIVE_X,

@@ -6,6 +6,7 @@
 
 using namespace treyarch;
 
+// sub_A6B620
 mash::mash_info_struct::mash_info_struct(io_mode new_mode,
                                          u8*     buffer,
                                          i32     buffer_max,
@@ -33,6 +34,7 @@ mash::mash_info_struct::mash_info_struct(io_mode new_mode,
         buffer_size_used[NORMAL_BUFFER] += (u32)sizeof(mash_header);
 }
 
+// sub_A6B680
 void mash::mash_info_struct::dupe_buffers_for_unmash_copies() {
     /*
         unmash replaces keys and serialized relationships in place;
@@ -52,6 +54,7 @@ void mash::mash_info_struct::dupe_buffers_for_unmash_copies() {
     buffer_size_used[NORMAL_BUFFER] = 0;
 }
 
+// sub_A6B6C0
 void mash::mash_info_struct::set_buffer(buffer_type buffer,
                                         u8*         buffer_ram,
                                         i32         buffer_size) {
@@ -99,6 +102,7 @@ i32 mash::mash_info_struct::align_buffer(u8*  buffer_ptr,
     return padding_size;
 }
 
+// sub_A6B6E0
 void mash::mash_info_struct::deductive_align_buffer(buffer_type buffer) {
     u8* buffer_ptr = mash_image_ptr[buffer];
     u8* cursor = buffer_ptr + buffer_size_used[buffer];

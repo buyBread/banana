@@ -11,6 +11,7 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// sub_97B010
 void game::clear_screen() {
     for (i32 i = 0; i != 2; ++i) {
         ngl::set_clear_flags(7);

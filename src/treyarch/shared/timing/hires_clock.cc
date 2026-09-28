@@ -8,6 +8,7 @@ namespace treyarch { namespace timing {
         util::memory_reference<f32> performance_counts_per_millisecond { 0x00F51E84 };
     } // references
 
+    // sub_9CCA70
     u64 get_cpu_cycle() {
         LARGE_INTEGER counter;
         QueryPerformanceCounter(&counter);
@@ -22,14 +23,17 @@ namespace treyarch { namespace timing {
 
 using namespace treyarch;
 
+// sub_9C9DA0
 hires_clock_t::hires_clock_t() {
     reset();
 }
 
+// sub_9C8DD0
 void hires_clock_t::reset() {
     last_reset_ticks = timing::get_cpu_cycle();
 }
 
+// sub_9C8DE0
 f32 hires_clock_t::elapsed_and_reset() {
     u64 elapsed_ticks = timing::get_cpu_cycle() - last_reset_ticks;
     f32 elapsed_time = (f32)
@@ -40,6 +44,7 @@ f32 hires_clock_t::elapsed_and_reset() {
     return elapsed_time;
 }
 
+// sub_9C8E40
 f32 hires_clock_t::elapsed() const {
     u64 elapsed_ticks = timing::get_cpu_cycle() - last_reset_ticks;
 

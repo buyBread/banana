@@ -16,6 +16,7 @@ bool supports_depth_texture(D3DFORMAT format) {
                             format) >= 0;
 }
 
+// sub_9E85D0
 ULONG ngl::d3d9::initialize_framebuffers() {
     framebuffer_state &state = references::framebuffers.get();
     display_mode      &mode  = references::selected_display_mode.get();
@@ -107,6 +108,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
     return surface->Release();
 }
 
+// sub_9E7E80
 void ngl::d3d9::release_framebuffers() {
     framebuffer_state &framebuffers = references::framebuffers.get();
 

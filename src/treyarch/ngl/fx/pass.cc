@@ -11,6 +11,7 @@ using namespace treyarch;
 static util::memory_reference<u8> bone_constant_source   { 0x01117240 };
 static util::memory_reference<u8> global_constant_source { 0x01117200 };
 
+// sub_9EA2E0
 void apply_render_states(const ngl::fx::render_states &states) {
     using namespace ngl::d3d9;
 
@@ -96,6 +97,7 @@ void bind_texture(      ngl::fx::effect*           effect_data,
     apply_sampler_states(binding.handle, (const u32*)parameter.data);
 }
 
+// sub_9EA730
 void bind_vertex_function(ngl::fx::effect*   effect_data,
                                  ngl::fx::function* value,
                                  void**             sources) {
@@ -135,6 +137,7 @@ void bind_vertex_function(ngl::fx::effect*   effect_data,
     }
 }
 
+// sub_9EA5B0
 void bind_pixel_function(ngl::fx::effect* effect_data,
                                 ngl::fx::function* value,
                                 void** sources) {
@@ -179,6 +182,7 @@ void bind_pixel_function(ngl::fx::effect* effect_data,
     }
 }
 
+// sub_9EA900
 void unbind_samplers(const ngl::fx::function &value) {
     for (i32 index = 0; index < value.binding_count; ++index) {
         const ngl::fx::function_binding &binding = value.bindings[index];
@@ -190,6 +194,7 @@ void unbind_samplers(const ngl::fx::function &value) {
     }
 }
 
+// sub_9EA950
 void ngl::fx::apply_pass(effect* effect_data, pass* value) {
     void* sources[8] {};
 
@@ -207,6 +212,7 @@ void ngl::fx::apply_pass(effect* effect_data, pass* value) {
     bind_vertex_function(effect_data, &programs->vertex_programs[0], sources);
 }
 
+// sub_9EA9D0
 void ngl::fx::finish_pass(effect* effect_data, pass* value) {
     (void)effect_data;
 

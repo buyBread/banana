@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9E9D10
 void ngl::debug::render() {
     const debug_state &state = references::synchronized_debug.get();
 

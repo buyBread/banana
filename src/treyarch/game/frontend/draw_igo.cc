@@ -7,6 +7,7 @@
 
 using namespace treyarch;
 
+// sub_6D78C0
 void frontend_manager::draw_igo() {
     if (aspect_ratio_test_mode) {
         RECT rectangle;

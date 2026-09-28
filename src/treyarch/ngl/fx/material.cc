@@ -6,6 +6,7 @@
 
 using namespace treyarch;
 
+// sub_9DE080
 void ngl::fx::bind_material(material* value, effect* effect_data) {
     for (i32 material_index = 0; material_index < value->parameter_count; ++material_index) {
         parameter &material_parameter = value->parameters[material_index];
@@ -58,6 +59,7 @@ void ngl::fx::bind_material(material* value, effect* effect_data) {
     value->bound_effect = effect_data;
 }
 
+// sub_9EAA50
 void ngl::fx::copy_material_parameters(material* value) {
     for (i32 index = 0; index < value->parameter_count; ++index) {
         parameter &source = value->parameters[index];
@@ -98,11 +100,13 @@ ngl::fx::parameter* build_animated_texture_chain(ngl::fx::parameter* parameters,
     return head;
 }
 
+// sub_9DE1F0
 void ngl::fx::build_animated_texture_parameter_chain(effect* value) {
     value->animated_texture_parameter_chain =
         build_animated_texture_chain(value->parameters, value->parameter_count);
 }
 
+// sub_9DE240
 void ngl::fx::build_animated_texture_parameter_chain(material* value) {
     value->animated_texture_parameter_chain =
         build_animated_texture_chain(value->parameters, value->parameter_count);

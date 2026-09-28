@@ -25,6 +25,7 @@ ngl::resources::program_node* find_program_node(const ngl::resources::program_tr
     return candidate;
 }
 
+// sub_757BD0
 IDirect3DVertexShader9** ngl::resources::find_vertex_program(const char* name) {
     auto* manager = (shader_resource_manager*)references::shader_resource_manager.read();
 
@@ -33,6 +34,7 @@ IDirect3DVertexShader9** ngl::resources::find_vertex_program(const char* name) {
     return node ? (IDirect3DVertexShader9**)&node->program : nullptr;
 }
 
+// sub_757C20
 IDirect3DPixelShader9** ngl::resources::find_pixel_program(const char* name) {
     auto* manager = (shader_resource_manager*)references::shader_resource_manager.read();
 

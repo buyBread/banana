@@ -7,10 +7,12 @@
 
 using namespace treyarch;
 
+// sub_9E45C0
 bool ngl::can_release_texture(const texture* value) {
     return value->last_frame_reference + 1 < (i32)references::frame_epoch.read();
 }
 
+// sub_9EAE60
 void ngl::process_texture(amalga::apkf::file* owner, void** mapped_sections) {
     i32 image_section = owner->find_section_index
         (string_hash(four_cc('I', 'M', 'G')));
@@ -51,6 +53,7 @@ void ngl::process_texture(amalga::apkf::file* owner, void** mapped_sections) {
     }
 }
 
+// sub_9E27D0
 void ngl::release_texture(texture* value) {
     if (!value)
         return;
@@ -83,6 +86,7 @@ void ngl::initialize_texture_directory() {
     references::textures.get().initialize();
 }
 
+// sub_9E45E0
 void ngl::load_texture(amalga::apkf::file*       owner,
                        amalga::apkf::file_entry* entry,
                        void**                    mapped_sections,
@@ -102,6 +106,7 @@ void ngl::load_texture(amalga::apkf::file*       owner,
         references::textures.get().insert(value);
 }
 
+// sub_9E4620
 void ngl::remove_texture(amalga::apkf::file*       owner,
                          amalga::apkf::file_entry* entry,
                          void**                    mapped_sections,

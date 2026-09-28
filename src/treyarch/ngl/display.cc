@@ -25,14 +25,17 @@ u32 get_window_dimensions() {
     return dimensions;
 }
 
+// sub_9E1FC0
 u16 ngl::get_screen_width() {
     return (u16)(get_window_dimensions() >> 16 & 0xFFFF);
 }
 
+// sub_580500
 u16 ngl::get_screen_height() {
     return (u16)(get_window_dimensions() & 0xFFFF);
 }
 
+// sub_9E1FA0
 f32 ngl::get_vblank_milliseconds() {
     return d3d9::references::selected_display_mode.get().pal ?
         20.0f : 16.666666f;

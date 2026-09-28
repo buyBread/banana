@@ -20,6 +20,7 @@ using save_texture_function = HRESULT(WINAPI*)(const char*,
 static util::memory_reference<char> screenshot_name_buffer { 0x01118860 };
 static util::memory_reference<u32>  screenshot_index       { 0x011188A0 };
 
+// sub_9E4540
 void ngl::debug::capture_screenshot(const char* name) {
     d3d9::wait_for_rendering();
 

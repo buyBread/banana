@@ -25,6 +25,7 @@ namespace treyarch { namespace dinkumware {
     public:
         using node = list_node<T>;
 
+        // sub_79B510
         list() : sentinel((node*)memory::heap::allocate(sizeof(node))),
                  count(0) {
                     
@@ -32,6 +33,7 @@ namespace treyarch { namespace dinkumware {
             sentinel->previous = sentinel;
         }
 
+        // sub_4ED040
         ~list() {
             clear();
             

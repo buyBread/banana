@@ -64,6 +64,7 @@ void ngl::d3d9::bind_scene_targets(scene* value) {
         color_surface->Release();
 }
 
+// sub_9E9250
 void ngl::d3d9::apply_scene_state(scene* value) {
     if (value->animation_time == 0.0f) {
         f32 frame_milliseconds = fixed_twenty_millisecond_frame.read() ?

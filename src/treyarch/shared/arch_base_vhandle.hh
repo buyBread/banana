@@ -16,6 +16,7 @@ namespace treyarch {
                  constexpr arch_base_vhandle()          noexcept : value(0)     {}
         explicit constexpr arch_base_vhandle(u32 value) noexcept : value(value) {}
 
+        // sub_605300
         void* resolve() const noexcept {
             if (!value)
                 return nullptr;

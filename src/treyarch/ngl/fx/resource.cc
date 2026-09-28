@@ -158,6 +158,7 @@ bool is_forced_default_texture_type(ngl::fx::e_parameter_type type) {
     }
 }
 
+// sub_9DF6F0
 void resolve_texture_parameter(ngl::fx::parameter &parameter) {
     ngl::texture* texture = *(ngl::texture**)parameter.data;
 
@@ -220,6 +221,7 @@ void initialize_binding(ngl::fx::effect           &value,
     binding.source_offset = 0;
 }
 
+// sub_9E0770
 void initialize_function_bindings(ngl::fx::effect   &value,
                                          ngl::fx::function &function) {
 
@@ -251,6 +253,7 @@ void create_pixel_program(ngl::fx::effect   &value,
     initialize_function_bindings(value, function);
 }
 
+// sub_9E0990
 void initialize_pass(ngl::fx::effect &value,
                             ngl::fx::pass   &pass) {
 
@@ -337,6 +340,7 @@ bool belongs_to_parameter_chain_1(ngl::fx::e_parameter_type type) {
            (type >= ngl::fx::parameter_world_view_projection && type <= ngl::fx::parameter_last);
 }
 
+// sub_9DF500
 void build_parameter_chains(ngl::fx::effect &value) {
     value.parameter_chains[0] = nullptr;
     value.parameter_chains[1] = nullptr;
@@ -461,6 +465,7 @@ i32 get_effect_priority(const ngl::fx::effect &value) {
     return 50;
 }
 
+// sub_9E13A0
 ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     auto* runtime = (ngl::fx::effect_runtime*)
         memory::heap::allocate_small_block(sizeof(ngl::fx::effect_runtime));
@@ -522,6 +527,7 @@ void ngl::fx::initialize_directory() {
     references::effects.get().initialize();
 }
 
+// sub_9E1A90
 void ngl::fx::load(amalga::apkf::file*       owner,
                    amalga::apkf::file_entry* entry,
                    void**                    mapped_sections,
@@ -553,6 +559,7 @@ void ngl::fx::load(amalga::apkf::file*       owner,
         references::effects.get().insert(value);
 }
 
+// sub_9E12E0
 void ngl::fx::remove(amalga::apkf::file*       owner,
                      amalga::apkf::file_entry* entry,
                      void**                    mapped_sections,

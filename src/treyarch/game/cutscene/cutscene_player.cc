@@ -2,6 +2,7 @@
 
 using namespace treyarch;
 
+// sub_805020
 bool cutscene_player::is_playing() const {
     return (state_flags & 0x80)  != 0 ||
            (state_flags & 0x100) != 0 ||

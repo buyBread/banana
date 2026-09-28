@@ -44,6 +44,7 @@ namespace treyarch { namespace mash { namespace detail {
 
     static util::memory_reference<vtable_registry> vtable_registry_reference { 0x01126CB4 };
 
+    // sub_A6B910
     static vtable_registry_node* find_vtable_entry(vtable_key_t key) {
         vtable_registry &registry = vtable_registry_reference.get();
 
@@ -72,6 +73,7 @@ namespace treyarch { namespace mash { namespace detail {
     }
 }}} // treyarch::mash::detail
 
+// sub_A6B730
 mash::virtual_types_key mash::mash_virtual_base::get_virtual_type_key() const {
     return generate_virtual_types_key_from_string("mash_virtual_base");
 }
@@ -102,6 +104,7 @@ mash::virtual_types_key mash::mash_virtual_base::generate_virtual_types_key_from
     return hash::djb2(string);
 }
 
+// sub_A6B740
 bool mash::mash_virtual_base::is_or_is_subclass_of(virtual_types_key parent_class) const {
     return get_virtual_type_key() == parent_class || is_subclass_of(parent_class);
 }
@@ -114,6 +117,7 @@ mash::mash_virtual_base* mash::mash_virtual_base::create_subclass_in_place(virtu
     return construct_class_helper(memory_buffer);
 }
 
+// sub_A6B9D0
 void mash::mash_virtual_base::fixup_vtable(void* what_class_to_fixup) {
     // the first image word is a type key until this replaces it with an executable vtable
     vtable_key_t   key   = *(vtable_key_t*)what_class_to_fixup;

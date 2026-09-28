@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_72BD80
 void ngl::d3d9::poison_bindings() {
     u32* cached_state = (u32*)&references::bindings.get();
 
@@ -19,6 +20,7 @@ void ngl::d3d9::poison_bindings() {
     references::bindings.get().validation = 0x4B3C2D1E;
 }
 
+// sub_9DCAB0
 void ngl::d3d9::reset_bindings() {
     IDirect3DDevice9* device = references::device.get();
     binding_cache& bindings = references::bindings.get();
@@ -86,12 +88,14 @@ void ngl::d3d9::set_vertex_definition(const vertex_definition* value) {
     references::device.get()->SetVertexDeclaration(declaration);
 }
 
+// sub_9DCC80
 void ngl::d3d9::wait_for_rendering() {
     reset_bindings();
 
     ngl::references::frame_epoch.get() += 2;
 }
 
+// sub_9DCB50
 void ngl::d3d9::reset_device() {
     release_framebuffers();
 

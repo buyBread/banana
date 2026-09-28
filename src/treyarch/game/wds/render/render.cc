@@ -12,6 +12,7 @@
 
 using namespace treyarch;
 
+// sub_9772D0
 void wds_render_manager::render() {
     world_dynamics_system* world = get_world();
 

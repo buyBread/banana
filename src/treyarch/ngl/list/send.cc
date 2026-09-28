@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_9E7010
 void ngl::list_send() {
     u64 current_cycles = treyarch::timing::get_cpu_cycle();
 

@@ -26,12 +26,14 @@ ngl::texture* create_solid_texture(u32 color, const char* name) {
     return value;
 }
 
+// sub_9E7AC0
 void initialize_builtin_textures() {
     ngl::references::white_texture    .write(create_solid_texture(0xFFFFFFFF, "nglwhite"));
     ngl::references::black_texture    .write(create_solid_texture(0xFF000000, "nglblack"));
     ngl::references::invisible_texture.write(create_solid_texture(0x00000000, "nglinvisible"));
 }
 
+// sub_9E2240
 void ngl::resources::init() {
     u32 package_size = references::default_package_size.read();
     void* package_copy = memory::allocate(package_size, 0x1000, 0);

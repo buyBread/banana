@@ -45,11 +45,11 @@ ASSERT_OFFSETOF(point_light_visitor, candidates, 0x0008);
 ASSERT_OFFSETOF(point_light_visitor, count,      0x2008);
 ASSERT_OFFSETOF(point_light_visitor, center,     0x2010);
 
+// sub_7B9680
 i32 visit_point_light(math::visitor* base, i32 index) {
     auto* visitor = (point_light_visitor*)base;
 
-    const ngl::lighting::point_light_data &light =
-        (&ngl::lighting::references::point_lights.get())[index];
+    const auto &light = (&ngl::lighting::references::point_lights.get())[index];
     f32 x = (f32)((f64)visitor->center.x - (f64)light.position.x);
     f32 y = (f32)((f64)visitor->center.y - (f64)light.position.y);
     f32 z = (f32)((f64)visitor->center.z - (f64)light.position.z);
@@ -147,6 +147,7 @@ void sort_point_light_heap(point_light_candidate* candidates, i32 count) {
     }
 }
 
+// sub_7DD9F0
 i32 select_nearest_point_lights(point_light_visitor* visitor) {
     i32 selected_count = visitor->count > 8 ? 8 : visitor->count;
 
@@ -173,6 +174,7 @@ i32 select_nearest_point_lights(point_light_visitor* visitor) {
     return selected_count;
 }
 
+// sub_7DDA40
 void query_point_lights(      ngl::fx::mesh_node_data* node_data,
                         const vector4                  &sphere,
                               f32                      radius) {
@@ -224,6 +226,7 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
     return context;
 }
 
+// sub_884C70
 void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
 
@@ -271,6 +274,7 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
     query_point_lights(node_data, sphere, radius * scale);
 }
 
+// sub_9DF800
 ngl::fx::effect* ngl::fx::select_effect(render_node* value) {
     gather_point_lights(value->node_data, value->section);
 

@@ -61,6 +61,7 @@ namespace treyarch { namespace mash {
             clear();
         }
 
+        // sub_A6D3F0
         void unmash(mash_info_struct* mash_info, void*, buffer_type) {
             // the in-object count is only a placeholder; every generated container takes the real one from shared
             mash_info->read_from_buffer(SHARED_BUFFER, size);

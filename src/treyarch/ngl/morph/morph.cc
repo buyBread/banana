@@ -8,6 +8,7 @@ void ngl::initialize_morph_directory() {
     references::morphs.get().initialize();
 }
 
+// sub_9E40B0
 void ngl::load_morph(amalga::apkf::file*       owner,
                      amalga::apkf::file_entry* entry,
                      void**                    mapped_sections,
@@ -42,6 +43,7 @@ void ngl::load_morph(amalga::apkf::file*       owner,
         references::morphs.get().insert(value);
 }
 
+// sub_9E41B0
 void ngl::remove_morph(amalga::apkf::file*       owner,
                        amalga::apkf::file_entry* entry,
                        void**                    mapped_sections,

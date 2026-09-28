@@ -12,6 +12,7 @@
 
 using namespace treyarch;
 
+// sub_9E97E0
 void ngl::d3d9::render_scene(scene* value) {
     ++references::scene_recursion_depth.get();
 

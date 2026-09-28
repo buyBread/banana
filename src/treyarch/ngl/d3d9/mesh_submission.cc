@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_72BD20
 u32 ngl::d3d9::get_primitive_count(D3DPRIMITIVETYPE primitive_type,
                                    u32              element_count) {
 
@@ -58,6 +59,7 @@ void ngl::d3d9::bind_mesh_section(mesh_section* value) {
     bind_mesh_section_with_offset(value, value->vertex_offset);
 }
 
+// sub_9E5EA0
 void ngl::d3d9::draw_mesh_section(mesh_section* value) {
     IDirect3DDevice9* device = references::device.get();
 

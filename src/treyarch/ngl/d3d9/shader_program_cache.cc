@@ -64,6 +64,7 @@ HRESULT create_shader_program(      d3d9::shader_program_cache::program_cache<T>
     return result;
 }
 
+// sub_9DDE80
 HRESULT d3d9::shader_program_cache::create_vertex_program(const DWORD*                   bytecode,
                                                                 IDirect3DVertexShader9** output) {
 
@@ -75,6 +76,7 @@ HRESULT d3d9::shader_program_cache::create_vertex_program(const DWORD*          
                                  });
 }
 
+// sub_9DDF10
 HRESULT d3d9::shader_program_cache::create_pixel_program(const DWORD*                  bytecode,
                                                                IDirect3DPixelShader9** output) {
 

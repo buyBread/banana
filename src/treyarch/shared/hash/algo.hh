@@ -3,6 +3,7 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace hash {
+    // sub_408DD0
     inline u32 djb2(const char* string) {
         u32 hash = 0;
 
@@ -15,6 +16,7 @@ namespace treyarch { namespace hash {
         return hash;
     }
 
+    // sub_A6D5B0
     inline u32 crc2(const void* data, size_t size, u32 previous_crc) {
         auto bytes = (const u8*)data;
 

@@ -8,6 +8,7 @@ ngl::material& ngl::get_default_material() {
     return references::default_material.get();
 }
 
+// sub_9DB0A0
 void ngl::initialize_default_material(shader* empty_shader) {
           material     &value = references::default_material.get();
     const fixed_string &name  = references::default_material_name.get();
@@ -17,6 +18,7 @@ void ngl::initialize_default_material(shader* empty_shader) {
     value.shader_data = empty_shader;
 }
 
+// sub_9DC630
 void ngl::process_material(material* value) {
     string_hash shader_name((u32)value->shader_data);
     
@@ -35,6 +37,7 @@ void ngl::initialize_material_directory() {
     references::materials.get().initialize();
 }
 
+// sub_9DC6B0
 void ngl::load_material(amalga::apkf::file*       owner,
                         amalga::apkf::file_entry* entry,
                         void**                    mapped_sections,
@@ -53,6 +56,7 @@ void ngl::load_material(amalga::apkf::file*       owner,
         references::materials.get().insert(value);
 }
 
+// sub_9DC5F0
 void ngl::remove_material(amalga::apkf::file*       owner,
                           amalga::apkf::file_entry* entry,
                           void**                    mapped_sections,

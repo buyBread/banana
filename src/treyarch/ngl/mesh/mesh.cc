@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_9E8EE0
 void ngl::upload_mesh_section(mesh_section* section) {
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 
@@ -51,11 +52,13 @@ void ngl::upload_mesh_section(mesh_section* section) {
                                     &section->vertex_definition_data->declaration);
 }
 
+// sub_9E8EC0
 void ngl::release_mesh_section(mesh_section* section) {
     section->vertex_buffer->Release();
     section->index_buffer->Release();
 }
 
+// sub_9DB0C0
 void ngl::process_mesh_section(mesh* owner, mesh_section* section) {
     if (!section->material_data)
         section->material_data = &get_default_material();
@@ -72,6 +75,7 @@ void ngl::process_mesh_section(mesh* owner, mesh_section* section) {
     section_shader->bind_section(section, owner);
 }
 
+// sub_9DB120
 void ngl::process_mesh(mesh* value) {
     constexpr u32 mesh_processed = 0x00010000;
     constexpr u32 section_owner  = 0x00000001;
@@ -91,6 +95,7 @@ void ngl::process_mesh(mesh* value) {
     }
 }
 
+// sub_9DB180
 void ngl::release_mesh(mesh* value) {
     constexpr u32 mesh_processed = 0x00010000;
     constexpr u32 section_owner  = 0x00000001;
@@ -112,6 +117,7 @@ void ngl::initialize_mesh_directory() {
     references::meshes.get().initialize();
 }
 
+// sub_9DC510
 void ngl::load_mesh(amalga::apkf::file*       owner,
                     amalga::apkf::file_entry* entry,
                     void**                    mapped_sections,
@@ -141,6 +147,7 @@ void ngl::load_mesh(amalga::apkf::file*       owner,
         references::meshes.get().insert(value);
 }
 
+// sub_9DC5A0
 void ngl::remove_mesh(amalga::apkf::file*       owner,
                       amalga::apkf::file_entry* entry,
                       void**                    mapped_sections,

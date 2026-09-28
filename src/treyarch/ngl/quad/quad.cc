@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9E4A50
 void ngl::init_quad(quad* value) {
     std::memset(value, 0, sizeof(quad));
 
@@ -25,6 +26,7 @@ void ngl::init_quad(quad* value) {
     value->blend_mode = 0x0000000506C10000ULL;
 }
 
+// sub_9E4B80
 void ngl::set_quad_rect(quad* value,
                         f32   left,
                         f32   top,
@@ -41,6 +43,7 @@ void ngl::set_quad_rect(quad* value,
     value->vertices[3].y = bottom;
 }
 
+// sub_9E4B60
 void ngl::set_quad_color(quad* value, u32 color) {
     value->vertices[0].color = color;
     value->vertices[1].color = color;
@@ -48,6 +51,7 @@ void ngl::set_quad_color(quad* value, u32 color) {
     value->vertices[3].color = color;
 }
 
+// sub_9E4BD0
 void ngl::set_quad_z(quad* value, f32 z) {
     value->z = z;
 }

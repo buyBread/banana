@@ -18,6 +18,7 @@ void pump_window_messages() {
     }
 }
 
+// sub_9E8E00
 void ngl::d3d9::flip() {
     IDirect3DDevice9* device = references::device.get();
 

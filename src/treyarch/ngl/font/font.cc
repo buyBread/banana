@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9DAE60
 void ngl::load_font(amalga::apkf::file*       owner,
                     amalga::apkf::file_entry* entry,
                     void**                    mapped_sections,
@@ -36,6 +37,7 @@ void ngl::load_font(amalga::apkf::file*       owner,
         references::fonts.get().insert(value);
 }
 
+// sub_9DAF80
 void ngl::remove_font(amalga::apkf::file*       owner,
                       amalga::apkf::file_entry* entry,
                       void**                    mapped_sections,

@@ -9,6 +9,7 @@ namespace treyarch { namespace amalga { namespace references {
 
 using namespace treyarch;
 
+// sub_73A4D0
 bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
     if (state == 2)
         return false;
@@ -82,6 +83,7 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
     }
 }
 
+// sub_73A5E0
 void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     resource_directory* directory = pack_slot->directory;
 
@@ -112,6 +114,7 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     entry_cursor = 0;
 }
 
+// sub_73A670
 i32 amalga::merged_apk_resource_handler::progress_merged_apk(i32                  operation,
                                                              resource_descriptor* descriptor) {
 

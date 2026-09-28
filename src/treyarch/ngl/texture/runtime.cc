@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_72BE50
 void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
                             u32                          width,
                             u32                          height,
@@ -36,6 +37,7 @@ void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
         resource.usage |= D3DUSAGE_DEPTHSTENCIL;
 }
 
+// sub_9E25B0
 ngl::texture* ngl::create_runtime_texture(u32       flags,
                                           D3DFORMAT format,
                                           u32       width,

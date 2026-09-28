@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9E4790
 void ngl::d3d9::geometry_stream::init() {
     u32 buffer_size = references::buffer_size.read();
 
@@ -47,6 +48,7 @@ void ngl::d3d9::geometry_stream::init() {
     InitializeCriticalSection(&references::critical_section.get());
 }
 
+// sub_9E4860
 void ngl::d3d9::geometry_stream::begin_submission() {
     references::bytes_allocated.write(0);
 
@@ -78,6 +80,7 @@ u32 ngl::d3d9::geometry_stream::bytes_used() {
     return references::allocation_cursor.get().byte_offset;
 }
 
+// sub_9E4940
 ngl::d3d9::geometry_stream::segment* ngl::d3d9::geometry_stream::allocate_segment(u32              byte_count,
                                                                                   u32              alignment,
                                                                                   segment_callback callback,

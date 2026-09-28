@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_9E7320
 void ngl::debug::render_performance_bar() {
     const performance_info &performance = references::performance.get();
     

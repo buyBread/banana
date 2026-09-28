@@ -13,6 +13,7 @@
 
 using namespace treyarch;
 
+// sub_96F950
 void wds_render_manager::render_depth_shadows() {
     vector3 direction(0.0f, 1.0f, 0.0f);
     vector3 center = references::camera_position.get().get_xyz();

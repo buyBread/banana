@@ -27,6 +27,7 @@ struct quad_textured_draw_vertex {
 ASSERT_SIZEOF(quad_color_draw_vertex,    0x10);
 ASSERT_SIZEOF(quad_textured_draw_vertex, 0x18);
 
+// sub_9E5290
 void ngl::quad_renderer::render(node* value) {
     const quad &source = value->value;
 

@@ -30,6 +30,7 @@ struct string_glyph_rectangle {
 
 ASSERT_SIZEOF(string_draw_vertex, 0x18);
 
+// sub_6980F0
 void get_string_glyph_rectangle(const ngl::font*              font_data,
                                       u8                      character,
                                       f32                     scale_x,
@@ -59,6 +60,7 @@ void get_string_glyph_rectangle(const ngl::font*              font_data,
     result->height_v = coordinates[3] - coordinates[1];
 }
 
+// sub_9E9D30
 void ngl::string_renderer::render(node* value) {
     if (!value->text || !value->font_data->texture_data || !value->chunks)
         return;

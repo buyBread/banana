@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_9E8900
 void ngl::set_buffer_size(e_buffer_type buffer,
                           u32           size,
                           bool          allow_resize,

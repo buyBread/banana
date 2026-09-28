@@ -7,6 +7,7 @@ namespace treyarch { namespace ngl { namespace references {
 
 using namespace treyarch;
 
+// sub_9DC920
 u32 ngl::apply_frame_lock(e_frame_lock frame_lock) {
     u32 presentation_interval = D3DPRESENT_INTERVAL_ONE;
 
@@ -37,6 +38,7 @@ u32 ngl::apply_frame_lock(e_frame_lock frame_lock) {
     return presentation_interval;
 }
 
+// sub_9DC980
 void ngl::set_frame_lock(e_frame_lock frame_lock) {
     if (frame_lock == references::requested_frame_lock.read())
         return;

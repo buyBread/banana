@@ -6,6 +6,7 @@
 #include "treyarch/shared/memory/heap.hh"
 
 namespace treyarch { namespace deferred_lights {
+    // sub_7A77F0
     void queue_point(point_light_node* node) {
         auto* queue = references::deferred_point_lights.read();
 
@@ -22,6 +23,7 @@ namespace treyarch { namespace deferred_lights {
             queue->push_back(node);
     }
 
+    // sub_7A7870
     void queue_spot(spot_light_node* node) {
         auto* queue = references::deferred_spot_lights.read();
 
@@ -38,6 +40,7 @@ namespace treyarch { namespace deferred_lights {
             queue->push_back(node);
     }
 
+    // sub_7A5130
     void drain() {
         auto* point_queue = references::deferred_point_lights.read();
 

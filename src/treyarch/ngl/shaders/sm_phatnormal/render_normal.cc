@@ -18,6 +18,7 @@ namespace rendering {
     };
 } // rendering
 
+// sub_8E41B0
 void render_normal(render_node* value) {
     generated_material::material_data* material = value->material_data;
 

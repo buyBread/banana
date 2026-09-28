@@ -7,6 +7,7 @@
 
 using namespace treyarch;
 
+// sub_9E8D80
 void ngl::d3d9::select_default_display_mode() {
     if (references::selected_display_index.read())
         return;
@@ -20,6 +21,7 @@ void ngl::d3d9::select_default_display_mode() {
     references::selected_display_index.write(selection[0]);
 }
 
+// sub_9E5950
 LRESULT CALLBACK ngl::d3d9::window_procedure(HWND   window,
                                              UINT   message,
                                              WPARAM word,
@@ -109,6 +111,7 @@ LRESULT CALLBACK ngl::d3d9::window_procedure(HWND   window,
     }
 }
 
+// sub_9E5CE0
 HWND ngl::d3d9::initialize_render_window() {
     std::memset(&references::presentation.get(),
                 0,
@@ -192,6 +195,7 @@ HWND ngl::d3d9::initialize_render_window() {
     return window;
 }
 
+// sub_9DC7F0
 void ngl::d3d9::initialize_presentation_parameters() {
     D3DPRESENT_PARAMETERS &presentation = references::presentation.get();
 

@@ -21,6 +21,7 @@ bool ngl::is_viewport_override_enabled() {
     return references::viewport_override_enabled.read() != 0;
 }
 
+// sub_9D79A0
 void ngl::set_viewport(f32 left, f32 top, f32 right, f32 bottom) {
     scene* value = references::current_scene.read();
 
@@ -32,6 +33,7 @@ void ngl::set_viewport(f32 left, f32 top, f32 right, f32 bottom) {
     references::current_scene.get()->derived_matrices_dirty = true;
 }
 
+// sub_9D79F0
 ngl::scene* ngl::set_scissor(f32 left, f32 top, f32 right, f32 bottom) {
     scene* value = references::current_scene.read();
 
@@ -44,6 +46,7 @@ ngl::scene* ngl::set_scissor(f32 left, f32 top, f32 right, f32 bottom) {
     return value;
 }
 
+// sub_9D7AA0
 ngl::scene* ngl::set_pixel_viewport(f32 left, f32 top, f32 right, f32 bottom) {
     scene* value = references::current_scene.read();
 
@@ -62,6 +65,7 @@ ngl::scene* ngl::set_pixel_viewport(f32 left, f32 top, f32 right, f32 bottom) {
     return set_scissor(viewport_left, viewport_top, viewport_right, viewport_bottom);
 }
 
+// sub_9D8AF0
 void ngl::apply_active_viewport() {
     u32 active_viewport_index = references::active_viewport_index.read();
 

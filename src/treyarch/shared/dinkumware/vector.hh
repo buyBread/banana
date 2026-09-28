@@ -71,6 +71,7 @@ namespace treyarch { namespace dinkumware {
             capacity_end = nullptr;
         }
 
+        // sub_685BB0
         void assign(u32 count, const T &value) {
             if (capacity() < count) {
                 destroy();
@@ -88,6 +89,8 @@ namespace treyarch { namespace dinkumware {
             }
         }
 
+        // sub_444540
+        // sub_685A70
         void push_back(const T &value) {
             if (last == capacity_end)
                 reserve_for_size(size() + 1);
@@ -97,6 +100,9 @@ namespace treyarch { namespace dinkumware {
             ++last;
         }
 
+        // sub_685B40
+        // sub_9DD7E0
+        // sub_9DD8D0
         void resize(u32 count, const T &value) {
             while (size() > count) {
                 --last;

@@ -66,10 +66,12 @@ void sort_render_list(ngl::render_node* &head,
     arena.cursor = saved_cursor;
 }
 
+// sub_9DA2A0
 void ngl::list::sort_render_list_by_hash(render_node* &head, u32 count) {
     sort_render_list(head, count, compare_render_hash);
 }
 
+// sub_9DA360
 void ngl::list::sort_render_list_by_distance(render_node* &head, u32 count) {
     sort_render_list(head, count, compare_render_distance);
 }

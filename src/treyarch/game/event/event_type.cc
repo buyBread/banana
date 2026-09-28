@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_685FE0
 event_type::event_type(string_hash requested_event_type_id) : cached_event_recipient_entry(nullptr),
                                                               event_type_id(),
                                                               event_to_raise(nullptr),
@@ -24,20 +25,24 @@ event_type::event_type(string_hash requested_event_type_id) : cached_event_recip
     event_to_raise = new event(event_type_id, true);
 }
 
+// sub_6860B0
 event_type::~event_type() {
     clear();
     
     delete event_to_raise;
 }
 
+// sub_683810
 void* event_type::operator new(std::size_t) {
     return event_pools::event_type_pool().allocate();
 }
 
+// sub_6838B0
 void event_type::operator delete(void* allocation) noexcept {
     event_pools::event_type_pool().release(allocation);
 }
 
+// sub_685F50
 void event_type::clear() {
     event_type_id = string_hash();
 
@@ -51,6 +56,7 @@ void event_type::clear() {
     clear_callbacks();
 }
 
+// sub_684780
 void event_type::clear_callbacks() {
     engine_lock_scope scope(&lock);
 
@@ -63,6 +69,7 @@ void event_type::clear_callbacks() {
     }
 }
 
+// sub_684840
 void event_type::clear_script_callbacks(arch_base_vhandle             recipient,
                                         chuck::vm::script_executable* executable) {
 
@@ -74,6 +81,7 @@ void event_type::clear_script_callbacks(arch_base_vhandle             recipient,
     }
 }
 
+// sub_6848C0
 void event_type::clear_script_callback(arch_base_vhandle recipient, string_hash function_name) {
     engine_lock_scope scope(&lock);
 
@@ -83,6 +91,7 @@ void event_type::clear_script_callback(arch_base_vhandle recipient, string_hash 
     }
 }
 
+// sub_684950
 void event_type::clear_script_callback(arch_base_vhandle recipient, u32 callback_id) {
     engine_lock_scope scope(&lock);
 
@@ -92,6 +101,7 @@ void event_type::clear_script_callback(arch_base_vhandle recipient, u32 callback
     }
 }
 
+// sub_6849D0
 event_recipient_entry* event_type::find_recipient_entry(arch_base_vhandle recipient) {
     engine_lock_scope scope(&lock);
 
@@ -108,6 +118,7 @@ event_recipient_entry* event_type::find_recipient_entry(arch_base_vhandle recipi
     return cached_event_recipient_entry;
 }
 
+// sub_685E20
 event_recipient_entry* event_type::create_recipient_entry(arch_base_vhandle recipient) {
     engine_lock_scope scope(&lock);
 
@@ -122,6 +133,7 @@ event_recipient_entry* event_type::create_recipient_entry(arch_base_vhandle reci
     return entry;
 }
 
+// sub_684A30
 void event_type::remove_default_callback(u32 callback_id) {
     engine_lock_scope scope(&lock);
 
@@ -136,6 +148,7 @@ void event_type::remove_default_callback(u32 callback_id) {
     }
 }
 
+// sub_684AE0
 bool event_type::has_callbacks(arch_base_vhandle recipient) {
     engine_lock_scope scope(&lock);
 
@@ -147,6 +160,7 @@ bool event_type::has_callbacks(arch_base_vhandle recipient) {
     return entry && !entry->empty();
 }
 
+// sub_685220
 void event_type::raise_event(arch_base_vhandle recipient, event* external_event) {
     event* raised_event = external_event ? external_event : event_to_raise;
 
@@ -166,6 +180,7 @@ void event_type::raise_event(arch_base_vhandle recipient, event* external_event)
         dispatch_event_callbacks(raised_event, recipient, &default_callbacks);
 }
 
+// sub_6852F0
 u32 event_type::add_default_callback(code_event_callback_function function,
                                      void*                        parameters,
                                      bool                         one_shot) {
@@ -180,6 +195,7 @@ u32 event_type::add_default_callback(code_event_callback_function function,
     return callback->callback_id();
 }
 
+// sub_6853D0
 bool event_type::garbage_collect() {
     engine_lock_scope scope(&lock);
 

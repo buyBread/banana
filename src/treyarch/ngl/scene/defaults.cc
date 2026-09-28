@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_9D8CC0
 ngl::scene* ngl::set_default_scene_state() {
     scene* value = references::current_scene.read();
     
@@ -79,6 +80,7 @@ ngl::scene* ngl::set_default_scene_state() {
     return value;
 }
 
+// sub_9E9AA0
 ngl::scene* ngl::clear_and_set_default_scene_state(scene* value) {
     std::memset(value, 0, sizeof(scene));
     

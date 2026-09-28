@@ -6,6 +6,7 @@
 
 using namespace treyarch;
 
+// sub_9E2970
 ngl::mesh_section* ngl::d3d9::allocate_scratch_mesh_section(D3DPRIMITIVETYPE   primitive_type,
                                                             u32                index_count,
                                                             u32                vertex_count,
@@ -61,6 +62,7 @@ ngl::mesh_section* ngl::d3d9::allocate_scratch_mesh_section(D3DPRIMITIVETYPE   p
     return section;
 }
 
+// sub_9E2A80
 u16* ngl::d3d9::lock_scratch_mesh_indices(mesh_section* section) {
     u16* indices;
 
@@ -72,10 +74,12 @@ u16* ngl::d3d9::lock_scratch_mesh_indices(mesh_section* section) {
     return indices;
 }
 
+// sub_9E2AB0
 void ngl::d3d9::unlock_scratch_mesh_indices(mesh_section* section) {
     section->index_buffer->Unlock();
 }
 
+// sub_9E2AC0
 void* ngl::d3d9::lock_scratch_mesh_vertices(mesh_section* section) {
     void* vertices;
 
@@ -87,6 +91,7 @@ void* ngl::d3d9::lock_scratch_mesh_vertices(mesh_section* section) {
     return vertices;
 }
 
+// sub_9E2AF0
 void ngl::d3d9::unlock_scratch_mesh_vertices(mesh_section* section) {
     section->vertex_buffer->Unlock();
 }

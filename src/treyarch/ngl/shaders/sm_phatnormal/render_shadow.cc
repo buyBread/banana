@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_8AF670
 void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
     generated_material::material_data* material = value->material_data;
 

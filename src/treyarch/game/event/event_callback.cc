@@ -28,15 +28,18 @@ void event_callback::operator delete(void* allocation) noexcept {
     memory::heap::free(allocation);
 }
 
+// sub_683980
 code_event_callback::code_event_callback(code_event_callback_function requested_function,
                                          void*                        requested_parameters,
                                          bool                         requested_one_shot) : event_callback(requested_parameters, requested_one_shot),
                                                                                             function(requested_function) {}
 
+// sub_6839E0
 void code_event_callback::spawn(event* raised_event, arch_base_vhandle recipient) {
     function(raised_event, recipient, parameters);
 }
 
+// sub_683E20
 script_event_callback::script_event_callback(      chuck::vm::script_instance* requested_instance,
                                                    chuck::vm::script_function* requested_function,
                                              const void*                       requested_parameters,
@@ -56,6 +59,7 @@ script_event_callback::script_event_callback(      chuck::vm::script_instance* r
     instance->add_lifecycle_callback(&script_event_callback::on_instance_lifecycle, this);
 }
 
+// sub_683A00
 script_event_callback::~script_event_callback() {
     if (references::g_world_ptr.read() && instance) {
         instance->remove_lifecycle_callback(this);
@@ -68,6 +72,7 @@ script_event_callback::~script_event_callback() {
         memory::heap::free(parameters);
 }
 
+// sub_683DE0
 void script_event_callback::on_instance_lifecycle(i32                          reason,
                                                   chuck::vm::script_instance*,
                                                   chuck::vm::vm_thread*,
@@ -86,6 +91,7 @@ void script_event_callback::on_instance_lifecycle(i32                          r
     callback->instance = nullptr;
 }
 
+// sub_683F10
 void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
     if (disabled || !instance)
         return;
@@ -127,6 +133,7 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
     }
 }
 
+// sub_6842F0
 void treyarch::dispatch_event_callbacks(event*                             raised_event,
                                         arch_base_vhandle                  recipient,
                                         dinkumware::list<event_callback*>* callbacks) {

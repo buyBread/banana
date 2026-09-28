@@ -12,6 +12,7 @@
 
 using namespace treyarch;
 
+// sub_8ADB30
 void ngl::shaders::smsky::render(render_node* value) {
     d3d9::set_render_state(D3DRS_FILLMODE, D3DFILL_SOLID);
 

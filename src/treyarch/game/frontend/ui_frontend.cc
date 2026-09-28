@@ -14,6 +14,7 @@ void ui_frontend::draw_quad_list() {
     vtable->draw_quad_list(this);
 }
 
+// sub_6CCE50
 void ui_frontend::clear_quad_list() {
     quad_list_state_200 = 0;
 

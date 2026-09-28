@@ -5,6 +5,7 @@
 
 using namespace treyarch;
 
+// sub_8FCED0
 void ngl::shaders::sm_phat::render(render_node* value) {
     d3d9::set_render_state(D3DRS_FILLMODE,
                            ngl::references::wireframe.read() ?

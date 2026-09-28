@@ -87,6 +87,7 @@ bool amalga::apkf::file::relocate_in_place(data_reference* &resource_references,
     return true;
 }
 
+// sub_A6B2F0
 amalga::apkf::file* amalga::apkf::relocate_file_in_place(void*            image,
                                                          data_reference* &resource_references,
                                                          u8*             &string_base) {
@@ -110,6 +111,7 @@ amalga::apkf::file* amalga::apkf::relocate_file_in_place(void*            image,
     return owner;
 }
 
+// sub_A6B5D0
 amalga::apkf::file* amalga::apkf::load_file_in_place(void* image) {
     data_reference* resource_references;
     u8*             string_base;

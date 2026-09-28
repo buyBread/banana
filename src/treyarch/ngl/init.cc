@@ -13,6 +13,7 @@
 
 using namespace treyarch;
 
+// sub_9E5CD0
 ngl::scene* ngl::init(HWND window) {
     banana::log.ngl("Nyarlathotep's Graphics Laboratory"
                     " "

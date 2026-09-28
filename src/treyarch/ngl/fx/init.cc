@@ -5,6 +5,7 @@
 
 using namespace treyarch;
 
+// sub_9E1F10
 void ngl::fx::init() {
     initialize_directory();
 

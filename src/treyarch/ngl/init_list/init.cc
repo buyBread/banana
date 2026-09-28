@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_9CCAF0
 void ngl::dispatch_init_list() {
     for (init_list* item = references::init_list_head.read(); item; item = item->next) {
         if (item == &references::font_init_list.get()) {

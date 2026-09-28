@@ -2,6 +2,7 @@
 
 using namespace treyarch;
 
+// sub_884370
 matrix4x4 ngl::fx::get_unscaled_local_to_world(const mesh_node_data* value) {
     matrix4x4 result = value->local_to_world;
 

@@ -13,20 +13,24 @@ event_recipient_entry::event_recipient_entry
                                               callbacks(),
                                               lock {} {}
 
+// sub_685170
 event_recipient_entry::~event_recipient_entry() {
     recipient_vhandle = arch_base_vhandle();
     
     clear_callbacks();
 }
 
+// sub_683730
 void* event_recipient_entry::operator new(std::size_t) {
     return event_pools::recipient_pool().allocate();
 }
 
+// sub_6837D0
 void event_recipient_entry::operator delete(void* allocation) noexcept {
     event_pools::recipient_pool().release(allocation);
 }
 
+// sub_684200
 void event_recipient_entry::clear_callbacks() {
     engine_lock_scope scope(&lock);
 
@@ -36,6 +40,7 @@ void event_recipient_entry::clear_callbacks() {
     }
 }
 
+// sub_684380
 void event_recipient_entry::clear_stale_callbacks() {
     engine_lock_scope scope(&lock);
 
@@ -52,6 +57,7 @@ void event_recipient_entry::clear_stale_callbacks() {
     }
 }
 
+// sub_684440
 void event_recipient_entry::clear_script_callbacks(chuck::vm::script_executable* executable) {
     engine_lock_scope scope(&lock);
 
@@ -75,6 +81,7 @@ void event_recipient_entry::clear_script_callbacks(chuck::vm::script_executable*
     }
 }
 
+// sub_684520
 void event_recipient_entry::clear_script_callback(string_hash function_name) {
     engine_lock_scope scope(&lock);
 
@@ -97,6 +104,7 @@ void event_recipient_entry::clear_script_callback(string_hash function_name) {
     }
 }
 
+// sub_684610
 void event_recipient_entry::clear_script_callback(u32 callback_id) {
     engine_lock_scope scope(&lock);
 
@@ -115,6 +123,7 @@ void event_recipient_entry::clear_script_callback(u32 callback_id) {
     }
 }
 
+// sub_6846D0
 void event_recipient_entry::remove_callback(u32 callback_id) {
     engine_lock_scope scope(&lock);
 
@@ -129,6 +138,7 @@ void event_recipient_entry::remove_callback(u32 callback_id) {
     }
 }
 
+// sub_684F90
 u32 event_recipient_entry::add_callback(code_event_callback_function function,
                                         void*                        parameters,
                                         bool                         one_shot) {
@@ -143,6 +153,7 @@ u32 event_recipient_entry::add_callback(code_event_callback_function function,
     return callback->callback_id();
 }
 
+// sub_685070
 u32 event_recipient_entry::add_callback(      chuck::vm::script_instance* instance,
                                               chuck::vm::script_function* function,
                                         const void*                       parameters,

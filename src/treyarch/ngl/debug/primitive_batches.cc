@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_9E77F0
 void ngl::debug::reset_primitive_batches() {
     constexpr f64 allocation_budget_reciprocal = 0.0000019073486328125;
 

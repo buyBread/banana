@@ -7,6 +7,7 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// sub_97AD00
 void game::handle_frame_locking(f32* time_inc) {
     i32 target_fps = references::target_fps.read();
 

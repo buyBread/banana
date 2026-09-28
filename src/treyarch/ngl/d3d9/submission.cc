@@ -17,6 +17,7 @@ using namespace treyarch;
 static util::memory_reference
     <container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };
 
+// sub_9DCF00
 void ngl::d3d9::submit_list() {
     performance_info &performance = ngl::references::performance.get();
 

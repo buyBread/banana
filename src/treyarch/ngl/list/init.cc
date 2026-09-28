@@ -12,6 +12,7 @@
 
 using namespace treyarch;
 
+// sub_9DCDE0
 ngl::scene* ngl::list_init() {
     timing::references::list_tick.write(timing::references::tick_state.get().tick_count);
 

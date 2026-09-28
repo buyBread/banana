@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_A6AC90
 i32 amalga::apkf::file::find_section_index(string_hash section_name) const {
     for (u32 index = 0; index < section_count; ++index) {
         if (sections[index].name == section_name)
@@ -12,6 +13,7 @@ i32 amalga::apkf::file::find_section_index(string_hash section_name) const {
     return -1;
 }
 
+// sub_A6AAA0
 u32 amalga::apkf::file::get_section_span(file_entry* entry,
                                          i32         section_index,
                                          u32         occurrence) const {
@@ -68,6 +70,7 @@ void* amalga::apkf::file::resolve_data_reference(      data_reference reference,
     return (u8*)sections[reference.section_index()].data + reference.byte_offset();
 }
 
+// sub_A6ACC0
 void amalga::apkf::file::apply_fixups(      data_reference* &fixup_data,
                                       const u8*              string_base) {
 
@@ -80,6 +83,7 @@ void amalga::apkf::file::apply_fixups(      data_reference* &fixup_data,
     ++fixup_data;
 }
 
+// sub_A6AD30
 void amalga::apkf::file::apply_references(      data_reference* reference_data,
                                           const u8*             string_base) {
 
@@ -118,6 +122,7 @@ void amalga::apkf::file::apply_references(      data_reference* reference_data,
     }
 }
 
+// sub_A6ABC0
 u32 amalga::apkf::file::count_file_type_entries() const {
     u32 count = 0;
 
@@ -129,6 +134,7 @@ u32 amalga::apkf::file::count_file_type_entries() const {
     return count;
 }
 
+// sub_A6AE90
 void amalga::apkf::file::invoke_section_load_callbacks() {
     for (u32 index = 0; index < section_count; ++index) {
         file_section     &section = sections[index];
@@ -143,6 +149,7 @@ void amalga::apkf::file::invoke_file_type_load_callbacks() {
     invoke_file_type_load_callbacks(0, count_file_type_entries());
 }
 
+// sub_A6AEE0
 void amalga::apkf::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
     if (!file_types)
         return;
@@ -191,11 +198,13 @@ void amalga::apkf::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
     }
 }
 
+// sub_A6B1E0
 void amalga::apkf::file::invoke_load_callbacks() {
     invoke_section_load_callbacks();
     invoke_file_type_load_callbacks();
 }
 
+// sub_A6B050
 void amalga::apkf::file::invoke_remove_callbacks() {
     if (!section_count || !file_types)
         return;
@@ -234,6 +243,7 @@ void amalga::apkf::file::invoke_remove_callbacks() {
     }
 }
 
+// sub_A6B1B0
 void amalga::apkf::file::unload() {
     invoke_remove_callbacks();
 
@@ -261,6 +271,7 @@ amalga::apkf::section_handler* amalga::apkf::find_section_handler(string_hash na
     return nullptr;
 }
 
+// sub_A6A9A0
 amalga::apkf::file_type_handler* amalga::apkf::register_file_type(u32           type,
                                                                   u32           version,
                                                                   file_callback load,
@@ -282,6 +293,7 @@ amalga::apkf::file_type_handler* amalga::apkf::register_file_type(u32           
     return handler;
 }
 
+// sub_A6A9E0
 amalga::apkf::section_handler* amalga::apkf::register_section_type(string_hash      name,
                                                                    section_resolver resolve,
                                                                    section_callback load,
@@ -303,6 +315,7 @@ amalga::apkf::section_handler* amalga::apkf::register_section_type(string_hash  
     return handler;
 }
 
+// sub_A6AA20
 void amalga::apkf::set_resource_resolver(resource_resolver resolver) {
     references::resource_resolver.write(resolver);
 }

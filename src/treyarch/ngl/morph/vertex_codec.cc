@@ -2,6 +2,7 @@
 
 using namespace treyarch;
 
+// sub_9E2D80
 u32 ngl::morph_geometry::get_vertex_element_size(u8 type) {
     switch (type) {
         case 0:
@@ -34,6 +35,7 @@ u32 ngl::morph_geometry::get_vertex_element_size(u8 type) {
     }
 }
 
+// sub_9E2E00
 void ngl::morph_geometry::read_component_value(u32 value_type, const u8* &source, vector4 &output) {
     output = { 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -94,6 +96,7 @@ void ngl::morph_geometry::read_component_value(u32 value_type, const u8* &source
     }
 }
 
+// sub_9E3060
 void ngl::morph_geometry::decode_base_vertices(      mesh_section*      section,
                                                const D3DVERTEXELEMENT9 &element,
                                                const u8*                mesh_data,
@@ -125,6 +128,7 @@ void ngl::morph_geometry::decode_base_vertices(      mesh_section*      section,
     section->vertex_buffer->Unlock();
 }
 
+// sub_9E3730
 void ngl::morph_geometry::encode_morph_vertices(      IDirect3DVertexBuffer9*  buffer,
                                                       u32                      buffer_offset,
                                                       u32                      vertex_stride,

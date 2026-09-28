@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// sub_9DC6F0
 void ngl::mesh_init() {
     amalga::apkf::register_file_type(four_cc('M', 'E', 'S', 'H'),
                                      2,

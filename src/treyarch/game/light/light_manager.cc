@@ -47,12 +47,14 @@ spot_light_node* light_manager::add_spot(const ngl::lighting::spot_light_data &d
     return node;
 }
 
+// sub_7B9780
 bool light_manager::remove_point(point_light_node* node) {
     point_light_node* previous = nullptr;
 
     for (point_light_node* current = point_head; current; current = current->next) {
         if (current != node) {
             previous = current;
+            
             continue;
         }
 
@@ -65,18 +67,21 @@ bool light_manager::remove_point(point_light_node* node) {
 
         memory::heap::free(current);
         --point_count;
+
         return true;
     }
 
     return false;
 }
 
+// sub_7B9790
 bool light_manager::remove_spot(spot_light_node* node) {
     spot_light_node* previous = nullptr;
 
     for (spot_light_node* current = spot_head; current; current = current->next) {
         if (current != node) {
             previous = current;
+
             continue;
         }
 
@@ -89,6 +94,7 @@ bool light_manager::remove_spot(spot_light_node* node) {
 
         memory::heap::free(current);
         --spot_count;
+
         return true;
     }
 

@@ -55,6 +55,8 @@ namespace treyarch { namespace dinkumware {
         u32 size() const noexcept { return entries.size(); }
         bool empty() const noexcept { return entries.empty(); }
 
+        // sub_79FA30
+        // sub_A6B910
         node_t* find(const K &key) const noexcept {
             u32 bucket = bucket_for(key);
 
@@ -70,6 +72,9 @@ namespace treyarch { namespace dinkumware {
             return position;
         }
 
+        // sub_685C00
+        // sub_9DD940
+        // sub_9DDBE0
         node_t* insert(const K &key, const V &value) {
             if (bucket_count <= entries.size() >> 2)
                 grow_one_bucket();
@@ -107,6 +112,7 @@ namespace treyarch { namespace dinkumware {
             return inserted;
         }
 
+        // sub_684E30
         node_t* erase(node_t* position) noexcept {
             u32 bucket = bucket_for(position->value.key);
 
@@ -131,6 +137,7 @@ namespace treyarch { namespace dinkumware {
             return entries.erase(position);
         }
 
+        // sub_685EF0
         void clear() noexcept {
             entries.clear();
             bucket_bounds.assign(9, entries.head());

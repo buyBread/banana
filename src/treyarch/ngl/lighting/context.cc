@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_9E50D0
 ngl::lighting::light_context* ngl::lighting::create_context() {
     auto* context = (light_context*)list::allocate(sizeof(light_context), 16);
 
@@ -29,6 +30,7 @@ ngl::lighting::light_context* ngl::lighting::create_context() {
     return context;
 }
 
+// sub_9E4CC0
 ngl::lighting::light_context* ngl::lighting::select_context(light_context* context) {
     light_context* previous = references::current_context.read();
 
@@ -37,6 +39,7 @@ ngl::lighting::light_context* ngl::lighting::select_context(light_context* conte
     return previous;
 }
 
+// sub_9E4CB0
 ngl::scene* ngl::lighting::set_scene_context(light_context* context,
                                               scene*        value) {
 

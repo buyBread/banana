@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9E4E10
 ngl::lighting::light_node* ngl::lighting::add_directional_light(      u32      category,
                                                                 const vector4* direction,
                                                                 const vector4* color) {

@@ -218,6 +218,7 @@ static void refill_queue_node_pool() {
         free_heap_storage(nodes); // someone else beat us, discard our batch
 }
 
+// sub_5FB7D0
 static heap_page_queue_node* acquire_queue_node() {
     volatile i64 &pool = heap::references::heap_queue_node_pool.get();
 
@@ -239,6 +240,7 @@ static heap_page_queue_node* acquire_queue_node() {
     }
 }
 
+// sub_5FAE10
 static void release_queue_node(heap_page_queue_node* node) {
     volatile i64 &pool = heap::references::heap_queue_node_pool.get();
 
@@ -257,6 +259,7 @@ static void release_queue_node(heap_page_queue_node* node) {
     Michael-Scott lock-free queue
 */
 
+// sub_5FB0E0
 static bool dequeue_page(heap_page_queue* queue,
                          heap_page**      output) {
 
@@ -302,6 +305,7 @@ static bool dequeue_page(heap_page_queue* queue,
     }
 }
 
+// sub_5FB940
 static void enqueue_page(heap_page_queue* queue,
                          heap_page*       page) {
 
@@ -353,6 +357,7 @@ static void enqueue_page(heap_page_queue* queue,
     bitmapped page allocation
 */
 
+// sub_5F83B0
 static void* allocate_from_page(heap_page* page) {
     LONG free_count;
 
@@ -411,6 +416,7 @@ static void* allocate_from_page(heap_page* page) {
     }
 }
 
+// sub_5F8510
 static void free_to_page(heap_page* page, void* allocation) {
     // figure out which bit belongs to this pointer
     u32 slot       = ((u8*)allocation - page->blocks) / page->block_size;
@@ -495,6 +501,7 @@ static heap_page* acquire_page_metadata(small_block_heap* heap,
     ...which would waste cache space
 */
 
+// sub_5FB470
 static void register_page(heap_page* page) {
     auto  address     = (u32)page->blocks;
     u32*  directories = &heap::references::heap_page_directories.get();
@@ -510,6 +517,7 @@ static void register_page(heap_page* page) {
     *(heap_page**)(directory + 4 * ((address >> 12) & 0x0FFF)) = page;
 }
 
+// sub_5FB690
 static heap_page* create_page(small_block_heap* heap, u32 block_size) {
     acquire_page_lock();
 
@@ -571,6 +579,7 @@ static heap_page* create_page(small_block_heap* heap, u32 block_size) {
     return page;
 }
 
+// sub_5F8650
 static void release_page(small_block_heap* heap,
                          heap_page*        page) {
 
@@ -616,6 +625,7 @@ static heap_page* find_page(void* allocation) {
     ~500 lines later, the actual allocator API
 */
 
+// sub_5FBDD0
 void* memory::heap::allocate(u32 size) {
     void* allocation = allocate_small_block(size);
 
@@ -627,6 +637,7 @@ void* memory::heap::allocate(u32 size) {
     // return retail::sub_5FBDD0(size);
 }
 
+// sub_8597E0
 void memory::heap::free(void* allocation) {
     if (!allocation)
         return;
@@ -642,6 +653,7 @@ void memory::heap::free(void* allocation) {
     // retail::sub_8597E0((u32)allocation);
 }
 
+// sub_5FBB00
 void* memory::heap::allocate_small_block(u32 size) {
     heap_state*       state = heap::references::heap_default.read();
     small_block_heap* heap  = state->small_block_heap;
@@ -713,6 +725,7 @@ void* memory::heap::allocate_small_block(u32 size) {
     }
 }
 
+// sub_5FBC20
 void memory::heap::free_small_block(void* allocation) {
     if (!allocation)
         return;

@@ -22,6 +22,7 @@ struct fake_pedestrian_vertex {
 
 ASSERT_SIZEOF(fake_pedestrian_vertex, 0x18);
 
+// sub_887B30
 void ngl::shaders::fake_peds::render(render_node* value) {
     if (ngl::references::in_shadow_scene.read() || !value->texture_data || !value->pedestrian_count)
         return;

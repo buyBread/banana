@@ -82,6 +82,7 @@ bool intersects(const packed_node* node, const i16* query_bounds) {
     return true;
 }
 
+// sub_7933B0
 void traverse(const vector3        &minimum,
               const vector3        &maximum,
               const rtree_root*     root,
@@ -132,6 +133,7 @@ void traverse(const vector3        &minimum,
     }
 }
 
+// sub_95C270
 void math::query_sphere(      rtree*    value,
                         const vector3  &center,
                               f32       radius,

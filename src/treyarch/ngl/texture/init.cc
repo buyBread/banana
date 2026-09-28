@@ -5,6 +5,7 @@
 
 using namespace treyarch;
 
+// sub_9E4680
 void ngl::texture_init() {
     initialize_texture_directory();
 

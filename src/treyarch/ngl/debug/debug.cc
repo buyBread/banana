@@ -4,6 +4,7 @@
 
 using namespace treyarch;
 
+// sub_9E7280
 void ngl::debug::init() {
     ngl::debug_state &debug_state = references::debug.get();
 

@@ -11,6 +11,7 @@
 
 using namespace treyarch;
 
+// sub_9E9AE0
 void ngl::debug::render_performance_info() {
     const debug_state      &state       = references::synchronized_debug.get();
     const performance_info &performance = references::synchronized_performance.get();

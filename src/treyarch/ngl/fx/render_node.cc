@@ -22,6 +22,7 @@ void draw_single_pass(ngl::fx::render_node* value) {
         ngl::d3d9::draw_mesh_section_individual(value->section);
 }
 
+// sub_9E0420
 void ngl::fx::render(render_node* value) {
     effect* effect_data = select_effect(value);
 

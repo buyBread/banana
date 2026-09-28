@@ -13,6 +13,7 @@ using namespace treyarch;
 
 static util::memory_reference<u32> parameter_id_mesh_runs { 0x011171E0 };
 
+// sub_9DF770
 ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
                                       ngl::fx::effect*         head) {
 
@@ -159,6 +160,7 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
     return rendered_count;
 }
 
+// sub_9E0A50
 i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
     ngl::fx::effect* effect_data = runtime->owner;
 
@@ -183,6 +185,7 @@ i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
     return rendered_count;
 }
 
+// sub_9E1050
 i32 ngl::fx::render_batch(ngl::render_node* head) {
     effect* queued_effects = nullptr;
 

@@ -13,6 +13,7 @@
 
 using namespace treyarch;
 
+// sub_9DCBA0
 ULONG ngl::d3d9::init() {
     references::d3d9.write(Direct3DCreate9(D3D_SDK_VERSION));
 

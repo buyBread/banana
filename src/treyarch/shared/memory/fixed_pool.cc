@@ -47,6 +47,7 @@ void fixed_pool::initialize(const char* pool_name,
     lock.reserved = 0;
 }
 
+// sub_5AAE30
 void fixed_pool::add_blocks(u32 count) {
     while (count--) {
         u32 allocation_size = alignment + slots_per_block * slot_size + sizeof(void*);

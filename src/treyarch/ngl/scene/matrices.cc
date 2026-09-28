@@ -13,6 +13,7 @@ matrix4x4 make_d3d9_clip_adjustment() {
                      0.0f,  0.0f, 0.0f, 1.0f);
 }
 
+// sub_9D5060
 matrix4x4 make_ui_to_screen(const ngl::scene* value) {
     f32 half_width;
     f32 half_height;
@@ -31,6 +32,7 @@ matrix4x4 make_ui_to_screen(const ngl::scene* value) {
                      -1.0f,             -1.0f,               0.0f, 1.0f);
 }
 
+// sub_9D5510
 void ngl::calculate_matrices(scene* value) {
     if (!value->derived_matrices_dirty)
         return;
@@ -163,6 +165,7 @@ void ngl::calculate_matrices(scene* value) {
     value->view_direction = value->view_to_world.z;
 }
 
+// sub_9D7980
 void ngl::validate_matrices(scene* value) {
     if (value && value->derived_matrices_dirty)
         calculate_matrices(value);

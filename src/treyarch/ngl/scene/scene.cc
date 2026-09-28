@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_9E8FE0
 ngl::scene* ngl::set_color_target(ngl::texture* target) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -17,6 +18,7 @@ ngl::scene* ngl::set_color_target(ngl::texture* target) {
     return current_scene;
 }
 
+// sub_9E9020
 ngl::scene* ngl::set_depth_target(ngl::texture* target) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -28,6 +30,7 @@ ngl::scene* ngl::set_depth_target(ngl::texture* target) {
     return current_scene;
 }
 
+// sub_9E9000
 ngl::scene* ngl::set_auxiliary_target(ngl::texture* target) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -39,6 +42,7 @@ ngl::scene* ngl::set_auxiliary_target(ngl::texture* target) {
     return current_scene;
 }
 
+// sub_9D7D30
 ngl::scene* ngl::set_camera_matrix(const matrix4x4* camera_to_world) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -48,6 +52,7 @@ ngl::scene* ngl::set_camera_matrix(const matrix4x4* camera_to_world) {
     return current_scene;
 }
 
+// sub_9D7D00
 matrix4x4* ngl::set_world_to_view_matrix(const matrix4x4* world_to_view) {
     scene* current_scene = references::current_scene.read();
 
@@ -57,6 +62,7 @@ matrix4x4* ngl::set_world_to_view_matrix(const matrix4x4* world_to_view) {
     return &current_scene->world_to_view;
 }
 
+// sub_9D38C0
 ngl::scene* ngl::set_clear_depth(f32 depth) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -65,6 +71,7 @@ ngl::scene* ngl::set_clear_depth(f32 depth) {
     return current_scene;
 }
 
+// sub_9D7C10
 ngl::scene* ngl::set_aspect_ratio(f32 ratio) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
@@ -73,6 +80,8 @@ ngl::scene* ngl::set_aspect_ratio(f32 ratio) {
 
     return current_scene;
 }
+
+// sub_9D7CA0
 ngl::scene* ngl::set_ortho_parameters(f32 ortho_width,
                                       f32 ortho_height,
                                       f32 near_plane,

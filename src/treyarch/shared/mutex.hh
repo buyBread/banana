@@ -49,12 +49,14 @@ namespace treyarch {
             }
         }
 #else
+        // sub_A6C860
         void acquire_contended(i64 owner_state) {
             while (!try_acquire(owner_state))
                 Sleep(0);
         }
 #endif
 
+        // sub_401930
         void acquire() {
             const u32 thread_id = GetCurrentThreadId();
 
@@ -70,6 +72,7 @@ namespace treyarch {
             depth = 1;
         }
 
+        // sub_4019B0
         void release() {
             if (!--depth) {
                 owner = 0;
@@ -88,6 +91,7 @@ namespace treyarch {
             m_lock->acquire();
         }
 
+        // sub_4019D0
         ~engine_lock_scope() {
             m_lock->release();
         }

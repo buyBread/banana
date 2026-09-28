@@ -14,6 +14,7 @@ namespace treyarch {
 
 using namespace treyarch;
 
+// sub_429A90
 void app::tick() {
     references::master_clock_is_up.write(1);
 

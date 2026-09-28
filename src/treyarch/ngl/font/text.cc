@@ -14,6 +14,7 @@ using namespace treyarch;
 using ngl_string_chunk = ngl::string_renderer::chunk;
 using ngl_string_node  = ngl::string_renderer::node;
 
+// sub_698080
 const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
                                             u8         character) {
 
@@ -27,10 +28,12 @@ const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
     return &font_data->glyphs[index];
 }
 
+// sub_6980C0
 u32 get_glyph_cell_width(const ngl::font* font_data, u8 character) {
     return (u32)(get_glyph_info(font_data, character)->cell_width - 1);
 }
 
+// sub_9DA560
 void parse_color_token(const char** cursor, u32* color) {
     char* end;
     u32 parsed = std::strtoul(++*cursor, &end, 16);
@@ -39,6 +42,7 @@ void parse_color_token(const char** cursor, u32* color) {
     *cursor = end + 1;
 }
 
+// sub_9DA590
 void parse_scale_token(const char** cursor, f32* scale) {
     char* end;
     f64 parsed = std::strtod(++*cursor, &end);
@@ -47,6 +51,7 @@ void parse_scale_token(const char** cursor, f32* scale) {
     *cursor = end + 1;
 }
 
+// sub_9DA5B0
 void parse_scale_xy_token(const char** cursor,
                                 f32*   scale_x,
                                 f32*   scale_y) {
@@ -67,6 +72,7 @@ u32 rotate_color(u32 value) {
     return (value >> 8) | (value << 24);
 }
 
+// sub_9DA5F0
 ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
                                             f32        x,
                                             f32        y,
@@ -171,6 +177,7 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
     return sentinel->next;
 }
 
+// sub_9DA9A0
 void ngl::get_string_dimensions(      font* font_data,
                                 const char* text,
                                       u32*  width,
@@ -282,6 +289,7 @@ void ngl::get_string_dimensions(      font* font_data,
     }
 }
 
+// sub_9DAD50
 void ngl::list_add_string(      font* font_data,
                           const char* text,
                                 f32   x,

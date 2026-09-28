@@ -9,6 +9,7 @@ ngl::init_list::init_list() : next(references::init_list_head.read()) {
 ngl::init_list_function::init_list_function(callback_type value) :
     callback(value) {}
 
+// sub_8842A0
 void ngl::init_list_function::register_item() {
     callback();
 }

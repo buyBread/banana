@@ -7,6 +7,7 @@ using namespace treyarch;
 // non-empty strings remember which allocator slab owns the borrowed character buffer
 static util::memory_reference<void*> string_source_slab { 0x00FBF24C };
 
+// sub_A6CC90
 void mash::string::construct_mashed_class() {
     ++live_count();
 }
@@ -15,6 +16,7 @@ void mash::string::destruct_mashed_class() {
     this->~string();
 }
 
+// sub_A6CF20
 void mash::string::unmash(mash_info_struct* mash_info,
                           void*,
                           buffer_type       buffer) {

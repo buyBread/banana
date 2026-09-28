@@ -7,6 +7,7 @@
 
 using namespace treyarch;
 
+// sub_9E4C20
 void ngl::list_add_quad(const quad* value) {
     auto* node = (quad_renderer::node*)list::allocate(sizeof(quad_renderer::node), 16);
 

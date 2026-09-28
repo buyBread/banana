@@ -6,16 +6,19 @@
 
 using namespace treyarch;
 
+// sub_5AAEB0
 event::event(string_hash requested_event_type_id, bool requested_autokill) : event_type_id(requested_event_type_id),
                                                                              raised_frame(0),
                                                                              autokill(requested_autokill),
                                                                              from_mash(false),
                                                                              padding_0e {} {}
 
+// sub_683680
 void* event::operator new(std::size_t) {
     return event_pools::event_pool().allocate();
 }
 
+// sub_5AAF20
 void event::operator delete(void* allocation) noexcept {
     event_pools::event_pool().release(allocation);
 }
@@ -25,16 +28,19 @@ void event::construct_mashed_class() {
     from_mash     = true;
 }
 
+// sub_5AAFB0
 mash::virtual_types_key event::get_virtual_type_key() const {
     static util::memory_reference<mash::virtual_types_key> event_type_key { 0x0102C410 };
 
     return event_type_key.read();
 }
 
+// sub_719950
 bool event::is_subclass_of(mash::virtual_types_key parent_class) const {
     return parent_class == mash::mash_virtual_base::get_virtual_type_key();
 }
 
+// sub_683920
 void event::raise() {
     raised_frame = references::g_world_ptr.read()->time_mgr.frame_sequence;
 }

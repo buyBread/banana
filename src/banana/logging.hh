@@ -171,7 +171,8 @@ class s_logging : public util::singleton<s_logging> {
 
             for (auto &entry : local) {
 #if ALLOCATE_CONSOLE
-                console_output += std::format("{} {}\n",
+                console_output += std::format("{} | {} {}\n",
+                    entry.time,
                     colored_watermark(entry.type),
                     entry.text);
 #endif

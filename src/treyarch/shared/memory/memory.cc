@@ -15,6 +15,7 @@ static util::memory_reference<memory_allocation_callback> memory_allocation_hand
 static util::memory_reference<memory_free_callback>       memory_free_handler       { 0x01115A3C };
 static util::memory_reference<u32>                        memory_allocation_count   { 0x01115A40 };
 
+// sub_9CC940
 void treyarch::memory::report(const char* format, ...) {
     char message[512];
 
@@ -29,6 +30,7 @@ void treyarch::memory::report(const char* format, ...) {
         handler(message);
 }
 
+// sub_9CC980
 void* treyarch::memory::allocate(u32 size, u32 alignment, u32 flags) {
     u32 effective_alignment = alignment;
 
@@ -48,6 +50,7 @@ void* treyarch::memory::allocate(u32 size, u32 alignment, u32 flags) {
     return allocation;
 }
 
+// sub_9CC9F0
 void treyarch::memory::free(void* allocation) {
     --memory_allocation_count.get();
 

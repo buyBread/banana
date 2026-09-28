@@ -8,6 +8,7 @@
 
 using namespace treyarch;
 
+// sub_9D9030
 ngl::scene* initialize_scene(ngl::scene*                   value,
                              ngl::e_scene_parameter_source parameter_source) {
 
@@ -71,6 +72,7 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
     return value;
 }
 
+// sub_9D91D0
 ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
     auto* value = (scene*)list::allocate(sizeof(scene), 16);
 
@@ -100,6 +102,7 @@ ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
     return value;
 }
 
+// sub_9D52A0
 void ngl::list_end_scene() {
     scene* value = references::current_scene.read();
 
@@ -109,6 +112,7 @@ void ngl::list_end_scene() {
     references::current_scene.write(value->parent);
 }
 
+// sub_9D52E0
 ngl::scene* ngl::list_select_scene(scene* value) {
     scene* previous = references::current_scene.read();
 
@@ -117,12 +121,14 @@ ngl::scene* ngl::list_select_scene(scene* value) {
     return previous;
 }
 
+// sub_9D52F0
 const char* ngl::set_scene_name(const char* name) {
     references::current_scene.get()->name = name;
     
     return name;
 }
 
+// sub_9D5200
 void ngl::set_scene_callback(e_scene_callback_type type,
                                      scene_callback_function function,
                                      void* context) {
@@ -139,26 +145,32 @@ void ngl::set_scene_callback(e_scene_callback_type type,
     callback.context  = context;
 }
 
+// sub_9D3840
 void ngl::set_clear_flags(u32 flags) {
     references::current_scene.get()->clear_flags = flags;
 }
 
+// sub_9D3860
 void ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
     references::current_scene.get()->clear_color = vector4(red, green, blue, alpha);
 }
 
+// sub_9D38E0
 void ngl::set_z_write_enable(bool enable) {
     references::current_scene.get()->z_write_enabled = enable;
 }
 
+// sub_9D3900
 void ngl::set_z_test_enable(bool enable) {
     references::current_scene.get()->z_test_enabled = enable;
 }
 
+// sub_9D39F0
 void ngl::set_animation_time(f32 time) {
     references::current_scene.get()->animation_time = time;
 }
 
+// sub_9D3920
 ngl::scene* ngl::set_scene_option_group_0(bool first,
                                           bool second,
                                           bool third) {
@@ -177,6 +189,7 @@ ngl::scene* ngl::set_scene_option_group_0(bool first,
     return value;
 }
 
+// sub_9D3960
 ngl::scene* ngl::set_scene_option_group_1(bool first,
                                           bool second,
                                           bool third) {

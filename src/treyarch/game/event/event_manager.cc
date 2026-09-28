@@ -20,6 +20,7 @@ namespace treyarch { namespace references {
 }} // treyarch::references
 
 namespace treyarch { namespace fn {
+    // sub_683C10
     int compare_event_types(const void* left, const void* right) {
         const event_type* left_type  = *(event_type* const*)left;
         const event_type* right_type = *(event_type* const*)right;
@@ -33,6 +34,7 @@ namespace treyarch { namespace fn {
 
 using namespace treyarch;
 
+// sub_683FC0
 event_type* event_manager::find_event_type(string_hash event_type_id) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -66,6 +68,7 @@ event_type* event_manager::find_event_type(string_hash event_type_id) {
     return cached;
 }
 
+// sub_684B60
 void event_manager::clear_script_callbacks(arch_base_vhandle             recipient,
                                            chuck::vm::script_executable* executable) {
 
@@ -75,6 +78,7 @@ void event_manager::clear_script_callbacks(arch_base_vhandle             recipie
         type->clear_script_callbacks(recipient, executable);
 }
 
+// sub_684BE0
 void event_manager::clear_script_callback(arch_base_vhandle recipient, string_hash function_name) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -82,6 +86,7 @@ void event_manager::clear_script_callback(arch_base_vhandle recipient, string_ha
         type->clear_script_callback(recipient, function_name);
 }
 
+// sub_684C70
 void event_manager::clear_script_callback(arch_base_vhandle recipient, u32 callback_id) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -89,6 +94,7 @@ void event_manager::clear_script_callback(arch_base_vhandle recipient, u32 callb
         type->clear_script_callback(recipient, callback_id);
 }
 
+// sub_684CF0
 void event_manager::remove_callback(u32               callback_id,
                                     string_hash       event_type_id,
                                     arch_base_vhandle recipient) {
@@ -111,6 +117,7 @@ void event_manager::remove_callback(u32               callback_id,
         entry->remove_callback(callback_id);
 }
 
+// sub_684DA0
 bool event_manager::has_callbacks(arch_base_vhandle recipient, string_hash event_type_id) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -119,6 +126,7 @@ bool event_manager::has_callbacks(arch_base_vhandle recipient, string_hash event
     return type && type->has_callbacks(recipient);
 }
 
+// sub_6854A0
 void event_manager::raise_event(string_hash event_type_id, arch_base_vhandle recipient) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -128,6 +136,7 @@ void event_manager::raise_event(string_hash event_type_id, arch_base_vhandle rec
         type->raise_event(recipient);
 }
 
+// sub_685520
 void event_manager::raise_event(event* raised_event, arch_base_vhandle recipient) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -137,6 +146,7 @@ void event_manager::raise_event(event* raised_event, arch_base_vhandle recipient
         type->raise_event(recipient, raised_event);
 }
 
+// sub_686180
 void event_manager::clear() {
     engine_lock_scope scope(&references::lock.get());
 
@@ -150,6 +160,7 @@ void event_manager::clear() {
     references::cached_event_type.write(nullptr);
 }
 
+// sub_686260
 event_type* event_manager::register_event_type(string_hash event_type_id) {
     engine_lock_scope scope(&references::lock.get());
 
@@ -171,6 +182,7 @@ event_type* event_manager::register_event_type(string_hash event_type_id) {
     return type;
 }
 
+// sub_686350
 void event_manager::garbage_collect() {
     engine_lock_scope scope(&references::lock.get());
 
@@ -196,6 +208,7 @@ void event_manager::garbage_collect() {
         ++index;
 }
 
+// sub_686420
 void event_manager::create_inst() {
     clear();
 
@@ -209,12 +222,14 @@ void event_manager::create_inst() {
     references::initialized.write(true);
 }
 
+// sub_686700
 void event_manager::delete_inst() {
     references::initialized.write(false);
 
     clear();
 }
 
+// sub_686710
 event_recipient_entry* event_manager::create_event_recipient(string_hash       event_type_id,
                                                              arch_base_vhandle recipient) {
 
@@ -226,6 +241,7 @@ event_recipient_entry* event_manager::create_event_recipient(string_hash       e
         type->create_recipient_entry(recipient) : nullptr;
 }
 
+// sub_6867A0
 u32 event_manager::add_callback(string_hash                  event_type_id,
                                 arch_base_vhandle            recipient,
                                 code_event_callback_function function,
@@ -240,6 +256,7 @@ u32 event_manager::add_callback(string_hash                  event_type_id,
         entry->add_callback(function, parameters, one_shot) : 0;
 }
 
+// sub_686830
 u32 event_manager::add_callback(      string_hash                 event_type_id,
                                       arch_base_vhandle           recipient,
                                       chuck::vm::script_instance* instance,
@@ -255,6 +272,7 @@ u32 event_manager::add_callback(      string_hash                 event_type_id,
         entry->add_callback(instance, function, parameters, one_shot) : 0;
 }
 
+// sub_6868D0
 u32 event_manager::add_default_callback(string_hash                  event_type_id,
                                         code_event_callback_function function,
                                         void*                        parameters,

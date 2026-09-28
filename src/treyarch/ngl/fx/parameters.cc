@@ -48,6 +48,7 @@ util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
 util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
 util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
 
+// sub_9DF6F0
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
     *(ngl::texture**)entry->data = value ? value : ngl::references::default_texture.read();
 }
@@ -87,6 +88,7 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
     }
 }
 
+// sub_7D6300
 void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
     std::memset(value, 0, sizeof(*value));
 
@@ -117,6 +119,7 @@ void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
         value->ambient_defaults[index] = lighting_default_value.get();
 }
 
+// sub_7B9610
 u8* get_light_source(const ngl::fx::mesh_node_data* node_data) {
     u8* source = (u8*)find_scene_parameter(node_data->parameters,
                                            fx::references::parameter_id_light_source.read());
@@ -506,6 +509,7 @@ void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  va
     }
 }
 
+// sub_7C8450
 void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
                                      const mesh_node_data*              node_data,
                                      const ngl::mesh_section*           section) {
@@ -662,6 +666,7 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
     }
 }
 
+// sub_7C86D0
 void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
                          const ngl::fx::mesh_node_data*             node_data) {
 
@@ -787,6 +792,7 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
     }
 }
 
+// sub_9DE390
 void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
     vector4* destination = (vector4*)&bone_constant_data.get();
@@ -898,6 +904,7 @@ bool is_depth_bias_parameter(ngl::fx::e_parameter_type type) {
            type == ngl::fx::parameter_decompressed_position_bias;
 }
 
+// sub_9DFF60
 void ngl::fx::update_scene_parameters(effect* value) {
     scene* current_scene = ngl::references::current_scene.read();
 
@@ -977,6 +984,9 @@ void ngl::fx::update_scene_parameters(effect* value) {
     }
 }
 
+// sub_8B8620
+// sub_8A2BA0
+// sub_8A6D50
 void ngl::fx::update_material_parameters(effect*         value,
                                          mesh_node_data* node_data,
                                          mesh_section*   section,

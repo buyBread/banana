@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_588C40
 void* ngl::list::allocate(u32 size, u32 alignment) {
     arena_state &state = references::arena.get();
 

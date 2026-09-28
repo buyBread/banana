@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_9E4310
 void ngl::geometry_shader::register_item() {
     id = references::next_geometry_shader_id.read();
     references::next_geometry_shader_id.write(id + 1);
@@ -10,6 +11,7 @@ void ngl::geometry_shader::register_item() {
     references::geometry_shaders.get().insert(this);
 }
 
+// sub_9E2FF0
 const fixed_string &ngl::morph_geometry_shader::get_name() const {
     u32 guard = references::morph_geometry_shader_name_guard.read();
 

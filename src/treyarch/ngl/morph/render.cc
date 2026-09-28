@@ -103,6 +103,7 @@ void ngl::morph_geometry::apply_sparse_frame(const morph_component &component,
     }
 }
 
+// sub_9E38F0
 void ngl::morph_geometry::write_morph_stream(render_node* value,
                                              binding*     morph_binding,
                                              u32          vertex_stride) {
@@ -171,6 +172,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
     }
 }
 
+// sub_9E3DA0
 void ngl::morph_geometry::render(render_node* value) {
     mesh_section* section = value->section;
 
