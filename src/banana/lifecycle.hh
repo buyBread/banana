@@ -5,7 +5,15 @@
 
 #include "banana/logging.hh"
 
+/*
+    todo: finish banana's state machine, eventually.
+          ...well, really banana is only limping along with this project, because it wasn't originally a decompilation.
+          
+          >_>
+*/
+
 enum class e_lifecycle {
+    attach,
     pending,
     ready,      // acquired device
     failed,
@@ -18,6 +26,7 @@ template <> struct std::formatter<e_lifecycle> : std::formatter<std::string_view
         std::string_view as_string;
 
         switch(v) {
+            case e_lifecycle::attach:     as_string = "attach";     break;
             case e_lifecycle::pending:    as_string = "pending";    break;
             case e_lifecycle::ready:      as_string = "ready";      break;
             case e_lifecycle::failed:     as_string = "failed";     break;
@@ -30,7 +39,7 @@ template <> struct std::formatter<e_lifecycle> : std::formatter<std::string_view
 };
 
 namespace banana {
-    inline std::atomic<e_lifecycle> _state { e_lifecycle::pending };
+    inline std::atomic<e_lifecycle> _state {};
 
     namespace state {
         inline e_lifecycle current() {
@@ -46,6 +55,11 @@ namespace banana {
 
             for (;;) {
                 switch(current_state) {
+                    case e_lifecycle::attach:
+                        if (next == e_lifecycle::pending)
+                            break;
+
+                        return;
                     case e_lifecycle::pending:
                         if (next == e_lifecycle::ready  ||
                             next == e_lifecycle::failed ||

@@ -6,6 +6,7 @@
 #include <windows.h>
 
 #include "flags.hh"
+#include "banana/lifecycle.hh"
 #include "banana/core.hh"
 
 #if REL32_GAME_CALLS
@@ -22,6 +23,8 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
 #if REL32_GAME_CALLS
         treyarch::redirect_game_calls();
 #endif
+
+        banana::state::update(e_lifecycle::pending);
     }
 
     return TRUE;
