@@ -21,6 +21,9 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<u8*> game_state { 0x01111760 };
+
+        inline util::memory_reference<u8>    region_spawns_enabled { 0x00BE73FE };
+        inline util::memory_reference<void*> region_spawn_manager  { 0x010FA2C4 };
     } // references
 
     struct game_frame_timing {

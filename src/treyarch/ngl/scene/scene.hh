@@ -121,7 +121,7 @@ namespace treyarch { namespace ngl {
         f32                      field_of_view;
         f32                      ortho_width;
         f32                      ortho_height;
-        f32                      near_plane; // 302
+        f32                      near_plane;
         f32                      far_plane;
         f32                      slope_scale_depth_bias;
         f32                      depth_bias;
@@ -140,6 +140,7 @@ namespace treyarch { namespace ngl {
     matrix4x4* set_world_to_view_matrix(const matrix4x4* world_to_view);
     scene* set_clear_depth(f32 depth);
     scene* set_aspect_ratio(f32 ratio);
+    scene* set_perspective_parameters(f32 field_of_view, f32 near_plane, f32 far_plane);
     scene* set_ortho_parameters(f32 ortho_width, f32 ortho_height, f32 near_plane, f32 far_plane);
 
     ASSERT_SIZEOF  (scene_callback,           0x08);

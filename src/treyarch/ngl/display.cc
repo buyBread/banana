@@ -1,38 +1,23 @@
-#include <windows.h>
-
-#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/display.hh"
 
 using namespace treyarch;
 
-u32 get_window_dimensions() {
-    static u32 dimensions = (640 << 16) | 480;
-
-    static bool got_rect = false;
-
-    if (!got_rect) {
-        RECT rect {};
-
-        if (GetClientRect(ngl::references::render_window.get(), &rect)) {
-            dimensions  = u32(u16(rect.right  - rect.left)) << 16;
-            dimensions |=     u16(rect.bottom - rect.top);
-            
-            got_rect = true;
-        }
-    }
-
-    return dimensions;
-}
+/*
+    basically, implementing UIFrontEnd::DrawStartup was producing garbage projection.
+    the culript was our crappy getter, that has to be downgraded back to this fixed nonsense.
+    why they hardcoded this resolution is beyond me, nor do i really care, so revert it is.
+    one day, we'll branch and modify "engine code" (our code) and all will be good.
+*/
 
 // sub_9E1FC0
 u16 ngl::get_screen_width() {
-    return (u16)(get_window_dimensions() >> 16 & 0xFFFF);
+    return 640;
 }
 
 // sub_580500
 u16 ngl::get_screen_height() {
-    return (u16)(get_window_dimensions() & 0xFFFF);
+    return 480;
 }
 
 // sub_9E1FA0

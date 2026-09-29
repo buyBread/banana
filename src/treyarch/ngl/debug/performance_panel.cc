@@ -21,7 +21,7 @@ void ngl::debug::render_performance_info() {
     if (state.show_performance_info == 1) {
         std::sprintf(text,
             //  802020FF    1.1
-            "\1[D30A69FF]\2[2]NGL " NGL_VERSION "\2[1]\1[FFFFFFFF]\n"
+            "\1[D30A69FF]\2[1.1]NGL " NGL_VERSION "\2[1]\1[FFFFFFFF]\n"
             "%7.2f FPS\n"
             "%5.2fms CPU\n"
             "%5.2fms GPU\n"

@@ -7,6 +7,8 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace ngl {
+    struct scene;
+
     struct quad_vertex {
         f32 x;
         f32 y;
@@ -49,7 +51,7 @@ namespace treyarch { namespace ngl {
                        f32   bottom);
     void set_quad_color(quad* value, u32 color);
     void set_quad_z(quad* value, f32 z);
-    void list_add_quad(const quad* value);
+    scene* list_add_quad(const quad* value);
 
     ASSERT_SIZEOF  (quad_vertex,        0x14);
     ASSERT_OFFSETOF(quad_vertex, x,     0x00);

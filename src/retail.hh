@@ -14933,7 +14933,7 @@ namespace retail {
     inline auto const sub_7D6520 = (f32* (__cdecl*)(i32, __m128i, f32))0x007D6520; // __userpurge
     inline auto const sub_7D68D0 = (f32* (__cdecl*)(i32, __m128i, f32))0x007D68D0; // __userpurge
     inline auto const sub_7D6C90 = (u64* (__cdecl*)(i32, __m128i, __m128i, f32))0x007D6C90; // __userpurge
-    inline auto const sub_7D6D60 = (i32 (__cdecl*)(__m128i, __m128i, u32*, char))0x007D6D60; // __usercall
+    inline auto const sub_7D6D60 = (i32 (__cdecl*)(void*, i32))0x007D6D60; // manual
     inline auto const sub_7D72F0 = (i32 (__cdecl*)())0x007D72F0; // manual
     inline auto const sub_7D7340 = (i32 (__cdecl*)(__m128i, __m128i, i32))0x007D7340; // __usercall
     inline auto const sub_7D7460 = (i32 (__cdecl*)(__m128i, __m128i, i32, i64*))0x007D7460; // __usercall

@@ -81,6 +81,24 @@ ngl::scene* ngl::set_aspect_ratio(f32 ratio) {
     return current_scene;
 }
 
+// sub_9D7C40
+ngl::scene* ngl::set_perspective_parameters(f32 field_of_view,
+                                            f32 near_plane,
+                                            f32 far_plane) {
+
+    ngl::scene* current_scene = ngl::references::current_scene.read();
+
+    current_scene->field_of_view          = field_of_view;
+    current_scene->ortho_width            = 0.0f;
+    current_scene->ortho_height           = 0.0f;
+    current_scene->near_plane             = near_plane;
+    current_scene->projection_type        = projection_perspective;
+    current_scene->far_plane              = far_plane;
+    current_scene->derived_matrices_dirty = 1;
+
+    return current_scene;
+}
+
 // sub_9D7CA0
 ngl::scene* ngl::set_ortho_parameters(f32 ortho_width,
                                       f32 ortho_height,
@@ -90,8 +108,8 @@ ngl::scene* ngl::set_ortho_parameters(f32 ortho_width,
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
     current_scene->field_of_view   = 0.0f;
-    current_scene->ortho_width     = ortho_height;
-    current_scene->ortho_height    = ortho_width;
+    current_scene->ortho_width     = ortho_width;
+    current_scene->ortho_height    = ortho_height;
     current_scene->near_plane      = near_plane;
     current_scene->projection_type = projection_orthographic;
     current_scene->far_plane       = far_plane;

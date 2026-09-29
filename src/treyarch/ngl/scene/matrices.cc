@@ -19,10 +19,10 @@ matrix4x4 make_ui_to_screen(const ngl::scene* value) {
     f32 half_height;
 
     if (value->color_target && (value->color_target->flags & 0x200) != 0) {
-        half_width  = (f32)ngl::get_screen_width() * 0.5f;
+        half_width  = (f32)ngl::get_screen_width()  * 0.5f;
         half_height = (f32)ngl::get_screen_height() * 0.5f;
     } else {
-        half_width  = (f32)value->target_width * 0.5f;
+        half_width  = (f32)value->target_width  * 0.5f;
         half_height = (f32)value->target_height * 0.5f;
     }
 
@@ -147,7 +147,7 @@ void ngl::calculate_matrices(scene* value) {
     value->device = make_d3d9_clip_adjustment();
 
     value->view_to_screen    = value->projection * value->view * value->device;
-    value->view_to_world     = value->world_to_view.inverse();
+    value->view_to_world     = value->world_to_view.inverse_orthonormal();
     value->world_to_screen   = value->world_to_view * value->view_to_screen;
     value->viewport_to_world = value->world_to_screen.inverse();
 
