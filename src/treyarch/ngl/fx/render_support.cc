@@ -5,6 +5,7 @@
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
@@ -15,12 +16,10 @@
 
 using namespace treyarch;
 
-static util::memory_reference<u32> parameter_id_light_context { 0x01116330 };
-static util::memory_reference<u32> parameter_id_light_sphere  { 0x0111633C };
-static util::memory_reference<u32> parameter_id_ifl_frame     { 0x01116348 };
-
-static util::memory_reference<char> effect_hash_names      { 0x00FC6950 };
-static util::memory_reference<u32>  effect_hash_name_index { 0x00FC6A00 };
+namespace treyarch { namespace ngl { namespace fx { namespace references {
+    util::memory_reference<char> effect_hash_names      { 0x00FC6950 };
+    util::memory_reference<u32>  effect_hash_name_index { 0x00FC6A00 };
+}}}} // treyarch::ngl::fx::references
 
 struct point_light_candidate {
     u32 index;
@@ -213,10 +212,10 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
 
     lighting::light_context* context;
 
-    if (has_scene_parameter(node_data->parameters, parameter_id_light_context.read()))
+    if (has_scene_parameter(node_data->parameters, references::parameter_id_light_context.read()))
         context = (lighting::light_context*)get_scene_parameter(
             node_data->parameters,
-            parameter_id_light_context.read());
+            references::parameter_id_light_context.read());
     else
         context = ngl::references::current_scene.read()->light_context;
 
@@ -262,9 +261,9 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
 
     f32 radius;
 
-    if (ngl::has_scene_parameter(parameters, parameter_id_light_sphere.read())) {
+    if (ngl::has_scene_parameter(parameters, ngl::fx::references::parameter_id_light_sphere.read())) {
         const vector4 &adjustment = *(const vector4*)ngl::get_scene_parameter
-            (parameters, parameter_id_light_sphere.read());
+            (parameters, ngl::fx::references::parameter_id_light_sphere.read());
 
         sphere += adjustment;
         radius = adjustment.w;
@@ -299,14 +298,14 @@ void ngl::fx::record_hash_name(const fixed_string &value) {
         return;
 
     // room for sixteen names in the form "0x12345678"
-    u32 index = effect_hash_name_index.read();
-    char* names = &effect_hash_names.get();
+    u32 index = references::effect_hash_name_index.read();
+    char* names = &references::effect_hash_names.get();
 
     std::sprintf(names + 11 * index,
                  "0x%08X",
                  value.hash.source_hash_code);
 
-    effect_hash_name_index.write((index + 1) & 0x0F);
+    references::effect_hash_name_index.write((index + 1) & 0x0F);
 }
 
 void ngl::fx::prepare_effect_scene(effect* value) {
@@ -354,10 +353,10 @@ void ngl::fx::prepare_animated_textures(effect*         effect_data,
         build_animated_texture_parameter_chain(material_data);
 
     scene_parameters* parameters = node_data->parameters;
-    u32 parameter_id = parameter_id_ifl_frame.read();
+    u32 parameter_id = references::parameter_id_ifl_frame.read();
 
     if (has_scene_parameter(parameters, parameter_id))
-        references::ifl_frame.write((i32)get_scene_parameter(parameters, parameter_id));
+        ngl::references::animation_frame.write((u32)get_scene_parameter(parameters, parameter_id));
     else
-        references::ifl_frame.write(ngl::references::current_scene.read()->ifl_frame);
+        ngl::references::animation_frame.write(ngl::references::current_scene.read()->ifl_frame);
 }

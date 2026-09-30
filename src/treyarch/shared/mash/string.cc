@@ -2,10 +2,12 @@
 #include "treyarch/shared/mash/string.hh"
 #include "util/memory_reference.hh"
 
-using namespace treyarch;
+namespace treyarch { namespace mash { namespace references {
+    // non-empty strings remember which allocator slab owns the borrowed character buffer
+    util::memory_reference<void*> string_source_slab { 0x00FBF24C };
+}}} // treyarch::mash::references
 
-// non-empty strings remember which allocator slab owns the borrowed character buffer
-static util::memory_reference<void*> string_source_slab { 0x00FBF24C };
+using namespace treyarch;
 
 // sub_A6CC90
 void mash::string::construct_mashed_class() {
@@ -35,5 +37,5 @@ void mash::string::unmash(mash_info_struct* mash_info,
 
     // the next thing in either stream expects at least the usual dword alignment
     mash_info->align_buffer(buffer, 4);
-    m_source_slab = string_source_slab.read();
+    m_source_slab = mash::references::string_source_slab.read();
 }

@@ -3,13 +3,11 @@
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/pass.hh"
+#include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
-
-static util::memory_reference<u8> bone_constant_source   { 0x01117240 };
-static util::memory_reference<u8> global_constant_source { 0x01117200 };
 
 // sub_9EA2E0
 void apply_render_states(const ngl::fx::render_states &states) {
@@ -200,8 +198,8 @@ void ngl::fx::apply_pass(effect* effect_data, pass* value) {
 
     sources[binding_parameters] = effect_data->parameter_data;
     sources[binding_scene] = ngl::references::current_scene.read();
-    sources[binding_bones] = &bone_constant_source.get();
-    sources[binding_global_constants] = &global_constant_source.get();
+    sources[binding_bones] = &ngl::fx::references::bone_constants.get();
+    sources[binding_global_constants] = &ngl::fx::references::global_constants.get();
     sources[binding_fallback_texture] = references::parameter_texture_fallback_pointer.read();
 
     apply_render_states(value->states);

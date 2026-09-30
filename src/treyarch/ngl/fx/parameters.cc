@@ -14,6 +14,7 @@
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/shadow/device_resources.hh"
+#include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/game/game.hh"
 #include "util/memory_reference.hh"
 
@@ -30,23 +31,21 @@ using namespace treyarch::ngl;
           * Acknowledging this fills you with Determination.
 */
 
-util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
-util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
-util::memory_reference<vector4> constant_80          { 0x00F4AB70 };
-util::memory_reference<vector4> ui_parameters        { 0x010F7D50 };
-util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
-util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
-util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
+namespace treyarch { namespace ngl { namespace fx { namespace references {
+    util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
+    util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
+    util::memory_reference<vector4> constant_80          { 0x00F4AB70 };
+    util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
+    util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
+    util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
 
-util::memory_reference<f32> bone_constant_data  { 0x01117240 };
-util::memory_reference<u32> bone_constant_count { 0x01117168 };
-
-util::memory_reference<vector4> lighting_default_value   { 0x01086F30 };
-util::memory_reference<vector4> lighting_zero_value      { 0x01086F50 };
-util::memory_reference<vector4> lighting_horizon_axis    { 0x01087690 };
-util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
-util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
-util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
+    util::memory_reference<vector4> lighting_default_value   { 0x01086F30 };
+    util::memory_reference<vector4> lighting_zero_value      { 0x01086F50 };
+    util::memory_reference<vector4> lighting_horizon_axis    { 0x01087690 };
+    util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
+    util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
+    util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
+}}}} // treyarch::ngl::fx::references
 
 // sub_9DF6F0
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
@@ -92,7 +91,7 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
 void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
     std::memset(value, 0, sizeof(*value));
 
-    const vector4 &zero = lighting_zero_value.get();
+    const vector4 &zero = fx::references::lighting_zero_value.get();
 
     vector4 ones { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -116,7 +115,7 @@ void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
     value->special_light_index = -1;
 
     for (u32 index = 0; index < 9; ++index)
-        value->ambient_defaults[index] = lighting_default_value.get();
+        value->ambient_defaults[index] = fx::references::lighting_default_value.get();
 }
 
 // sub_7B9610
@@ -173,8 +172,8 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
                                        i32                                   table_index,
                                        i32                                   table_offset) {
 
-    const vector4 &zero          = lighting_zero_value.get();
-    const vector4 &default_value = lighting_default_value.get();
+    const vector4 &zero          = fx::references::lighting_zero_value.get();
+    const vector4 &default_value = fx::references::lighting_default_value.get();
 
     const f32* direction = (const f32*)(source + 0x50);
 
@@ -195,7 +194,7 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
     }
 
     f32 scalar = *(const f32*)(source + 0xC8);
-    const vector4 &axis = lighting_horizon_axis.get();
+    const vector4 &axis = fx::references::lighting_horizon_axis.get();
     f32 projection = direction[0] * axis.x +
                      direction[1] * axis.y +
                      direction[2] * axis.z;
@@ -207,14 +206,14 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
 
     f32 horizon_temporary[4] { positive, negative, 0.0f, 0.0f };
 
-    const f32* horizon_base = (const f32*)&lighting_horizon_base.get();
+    const f32* horizon_base = (const f32*)&fx::references::lighting_horizon_base.get();
 
     for (u32 index = 0; index < 4; ++index)
         value->horizon_bias[index] = horizon_base[index] - horizon_temporary[index];
 
     value->horizon_direction = vector4(direction[0], direction[1], direction[2], 0.0f);
 
-    const f32* direction_scale = (const f32*)&lighting_direction_scale.get();
+    const f32* direction_scale = (const f32*)&fx::references::lighting_direction_scale.get();
     value->horizon_direction_scaled = vector4(
         direction[0] * direction_scale[0],
         direction[1] * direction_scale[1],
@@ -234,7 +233,7 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
     value->horizon_scale = 1.0f;
 
     if (table_offset == 4) {
-        const f32* half = (const f32*)&lighting_half.get();
+        const f32* half = (const f32*)&fx::references::lighting_half.get();
 
         for (u32 index = 0; index < 4; ++index)
             value->horizon_color[index] *= half[index];
@@ -248,8 +247,8 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
         projection_index < 0 ||
         projection_index >= *(const i32*)(light_table + 0x14)) {
 
-        value->horizon_projection_u = lighting_zero_value.get();
-        value->horizon_projection_v = lighting_zero_value.get();
+        value->horizon_projection_u = fx::references::lighting_zero_value.get();
+        value->horizon_projection_v = fx::references::lighting_zero_value.get();
     } else {
         const vector4* projections = *(const vector4**)(light_table + 0x18);
 
@@ -606,7 +605,7 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
 
     u8* primary = *(u8**)(source + 0x32C);
 
-    vector4 contribution = lighting_zero_value.get();
+    vector4 contribution = fx::references::lighting_zero_value.get();
 
     if (primary) {
         write_general_primary_block(value,
@@ -615,7 +614,7 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
                                     table_index,
                                     table_offset);
 
-        const f32* half = (const f32*)&lighting_half.get();
+        const f32* half = (const f32*)&fx::references::lighting_half.get();
 
         for (u32 index = 0; index < 4; ++index)
             contribution[index] = *(f32*)(primary + 0x80 + 4 * index) * half[index];
@@ -729,10 +728,8 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
     i32 table_index = index + offset;
 
     if (index == -1 || table_index < 0 || table_index >= *(i32*)(table + 0x14)) {
-        static util::memory_reference<vector4> default_horizon_projection { 0x01086F50 };
-        
-        destination->horizon_projection_u = default_horizon_projection.get();
-        destination->horizon_projection_v = default_horizon_projection.get();
+        destination->horizon_projection_u = fx::references::lighting_zero_value.get();
+        destination->horizon_projection_v = fx::references::lighting_zero_value.get();
         
         return;
     }
@@ -795,7 +792,7 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
 // sub_9DE390
 void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
-    vector4* destination = (vector4*)&bone_constant_data.get();
+    vector4* destination = &fx::references::bone_constants.get();
 
     // shaders only receive three rows per bone,
     // meshes without bones still get two copies of the node transform
@@ -803,7 +800,7 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
         matrix4x4 matrix = node_data->local_to_world.affine().transpose();
         std::memcpy(destination, &matrix, sizeof(vector4) * 3);
         std::memcpy(destination + 3, &matrix, sizeof(vector4) * 3);
-        bone_constant_count.write(2);
+        fx::references::bone_constant_count.write(2);
         return;
     }
 
@@ -836,7 +833,7 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
         std::memcpy(destination + 3 * index, &matrix, sizeof(vector4) * 3);
     }
 
-    bone_constant_count.write(section->bone_count);
+    fx::references::bone_constant_count.write(section->bone_count);
 }
 
 void write_point_light_positions(      f32*                     destination,
@@ -1193,23 +1190,23 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_temporary_0:
                 for (u32 index = 0; index < 4; ++index)
-                    destination[index] = temporary_0.get()[index] * 2.0f;
+                    destination[index] = fx::references::temporary_0.get()[index] * 2.0f;
 
                 break;
             case parameter_shadow_factor:
-                vectors[0] = *(const vector4*)(subset_effect ? &subset_shadow_factor.get() : &shadow_factor.get());
+                vectors[0] = *(const vector4*)(subset_effect ? &fx::references::subset_shadow_factor.get() : &fx::references::shadow_factor.get());
 
                 break;
             case parameter_shared_scalar:
                 vectors[0] = vector4(
-                    shared_scalar.read(),
-                    shared_scalar.read(),
-                    shared_scalar.read(),
-                    shared_scalar.read());
+                    fx::references::shared_scalar.read(),
+                    fx::references::shared_scalar.read(),
+                    fx::references::shared_scalar.read(),
+                    fx::references::shared_scalar.read());
 
                 break;
             case parameter_constant_80:
-                vectors[0] = constant_80.get();
+                vectors[0] = fx::references::constant_80.get();
 
                 break;
             case parameter_mesh_map_distance:
@@ -1339,14 +1336,14 @@ void ngl::fx::update_material_parameters(effect*         value,
             case parameter_ui_parameters: {
                 void* parameters = find_scene_parameter(node_data->parameters,
                                                         fx::references::parameter_id_ui_parameters.read());
-                vectors[0] = *(const vector4*)(parameters ? parameters : &ui_parameters.get());
+                vectors[0] = *(const vector4*)(parameters ? parameters : &shaders::generated_material::references::default_normal_vector.get());
 
                 break;
             }
             case parameter_tint_color: {
                 void* color = find_scene_parameter(node_data->parameters,
                                                    fx::references::parameter_id_tint_color.read());
-                vectors[0] = *(const vector4*)(color ? color : &tint_color.get());
+                vectors[0] = *(const vector4*)(color ? color : &fx::references::tint_color.get());
 
                 break;
             }

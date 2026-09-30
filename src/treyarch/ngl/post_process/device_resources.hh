@@ -78,6 +78,7 @@ namespace treyarch { namespace ngl { namespace post_process {
     void restore_device_resources();
 
     namespace references {
+        inline util::memory_reference<u8>                    active           { 0x00F4CD41 };
         inline util::memory_reference<device_resource_state> device_resources { 0x0102FD50 };
     } // references
 

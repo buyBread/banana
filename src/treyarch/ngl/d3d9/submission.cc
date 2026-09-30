@@ -12,10 +12,11 @@
 #include "treyarch/shared/container/legacy_list.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 
-using namespace treyarch;
+namespace treyarch { namespace ngl { namespace d3d9 { namespace references {
+    util::memory_reference<container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };
+}}}} // treyarch::ngl::d3d9::references
 
-static util::memory_reference
-    <container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };
+using namespace treyarch;
 
 // sub_9DCF00
 void ngl::d3d9::submit_list() {
@@ -83,5 +84,5 @@ void ngl::d3d9::submit_list() {
 
     ngl::references::current_scene.write(nullptr);
     
-    container::clear_legacy_list(frame_owned_objects.read());
+    container::clear_legacy_list(references::frame_owned_objects.read());
 }

@@ -4,6 +4,10 @@
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/memory_reference.hh"
 
+namespace treyarch { namespace references {
+    util::memory_reference<mash::virtual_types_key> event_type_key { 0x0102C410 };
+}} // treyarch::references
+
 using namespace treyarch;
 
 // sub_5AAEB0
@@ -30,9 +34,7 @@ void event::construct_mashed_class() {
 
 // sub_5AAFB0
 mash::virtual_types_key event::get_virtual_type_key() const {
-    static util::memory_reference<mash::virtual_types_key> event_type_key { 0x0102C410 };
-
-    return event_type_key.read();
+    return references::event_type_key.read();
 }
 
 // sub_719950

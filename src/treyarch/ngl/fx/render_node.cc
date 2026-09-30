@@ -2,6 +2,7 @@
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
+#include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "treyarch/ngl/scene/parameters.hh"
@@ -9,11 +10,9 @@
 
 using namespace treyarch;
 
-static util::memory_reference<u32> parameter_id_mesh_runs { 0x011171E0 };
-
 void draw_single_pass(ngl::fx::render_node* value) {
     ngl::scene_parameters* parameters = value->node_data->parameters;
-    u32 parameter_id = parameter_id_mesh_runs.read();
+    u32 parameter_id = ngl::fx::references::parameter_id_mesh_runs.read();
 
     if (ngl::has_scene_parameter(parameters, parameter_id)) {
         const i32* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);

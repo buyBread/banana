@@ -10,6 +10,10 @@ namespace treyarch {
         u32   handle;
     };
 
+    namespace references {
+        inline util::memory_reference<arch_base_vhandle_entry*> arch_base_vhandle_entries { 0x00FFEA24 };
+    } // references
+
     struct arch_base_vhandle {
         u32 value;
 
@@ -21,9 +25,7 @@ namespace treyarch {
             if (!value)
                 return nullptr;
 
-            static util::memory_reference<arch_base_vhandle_entry*> entries { 0x00FFEA24 };
-
-            arch_base_vhandle_entry &entry = entries.read()[value & 0x7FFF];
+            arch_base_vhandle_entry &entry = references::arch_base_vhandle_entries.read()[value & 0x7FFF];
 
             return entry.handle == value ? entry.object : nullptr;
         }

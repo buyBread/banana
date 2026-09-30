@@ -2,22 +2,22 @@
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/memory_reference.hh"
 
-namespace treyarch { namespace event_pools {
-    memory::fixed_pool &event_pool() {
-        static util::memory_reference<memory::fixed_pool> reference { 0x0102C2D8 };
+namespace treyarch { namespace event_pools { namespace references {
+    util::memory_reference<memory::fixed_pool> event_pool      { 0x0102C2D8 };
+    util::memory_reference<memory::fixed_pool> event_type_pool { 0x0102C580 };
+    util::memory_reference<memory::fixed_pool> recipient_pool  { 0x0102C7A8 };
+}}} // treyarch::event_pools::references
 
-        return reference.get();
-    }
+using namespace treyarch;
 
-    memory::fixed_pool &event_type_pool() {
-        static util::memory_reference<memory::fixed_pool> reference { 0x0102C580 };
+memory::fixed_pool &event_pools::event_pool() {
+    return references::event_pool.get();
+}
 
-        return reference.get();
-    }
+memory::fixed_pool &event_pools::event_type_pool() {
+    return references::event_type_pool.get();
+}
 
-    memory::fixed_pool &recipient_pool() {
-        static util::memory_reference<memory::fixed_pool> reference { 0x0102C7A8 };
-
-        return reference.get();
-    }
-}} // treyarch::event_pools
+memory::fixed_pool &event_pools::recipient_pool() {
+    return references::recipient_pool.get();
+}

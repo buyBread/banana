@@ -4,12 +4,14 @@
 #include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 
+namespace treyarch { namespace ngl { namespace lighting { namespace references {
+    util::memory_reference<lighting::context_registry*> context_registry { 0x00F532A4 };
+}}}} // treyarch::ngl::lighting::references
+
 using namespace treyarch;
 
-static util::memory_reference<ngl::lighting::context_registry*> light_context_registry { 0x00F532A4 };
-
 void ngl::lighting::register_context(light_context* context) {
-    context_registry* registry = light_context_registry.read();
+    context_registry* registry = references::context_registry.read();
 
     context_registry_node* head     = registry->head;
     context_registry_node* previous = head->previous;
@@ -31,5 +33,5 @@ void ngl::lighting::register_context(light_context* context) {
 }
 
 void ngl::lighting::reset_context_registry() {
-    container::clear_legacy_list(light_context_registry.read());
+    container::clear_legacy_list(references::context_registry.read());
 }

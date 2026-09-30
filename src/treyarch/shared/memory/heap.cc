@@ -4,10 +4,11 @@
 
 #include "retail.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/memory/memory.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 
-struct small_block_heap; // fwd
+struct small_block_heap;
 
 struct heap_page {
              u32               block_size;
@@ -93,9 +94,6 @@ ASSERT_OFFSETOF(small_block_heap, metadata_slabs, 0x808);
 ASSERT_OFFSETOF(heap_state, small_block_bytes, 0x38);
 ASSERT_OFFSETOF(heap_state, small_block_heap,  0x54);
 
-using allocation_callback = void*(__cdecl*)(u32 size, u32 alignment, u32 flags);
-using free_callback       = void (__cdecl*)(void* allocation);
-
 /*
     i'm severely out of my depth here and i don't ever want to touch this again.
     even after eventually getting it to work ((now)), everything here is (mostly) bogus code to me without any comments.
@@ -111,13 +109,11 @@ using namespace treyarch::memory;
 
 namespace treyarch { namespace memory { namespace heap { 
     namespace references {
-        util::memory_reference<heap_state*>         heap_default             { 0x00FFDA58 };
-        util::memory_reference<u32>                 heap_page_directories    { 0x00FFDA70 };
-        util::memory_reference<volatile i64>        heap_queue_node_pool     { 0x00FFE1D8 };
-        util::memory_reference<volatile LONG>       heap_page_lock           { 0x00FFDE70 };
-        util::memory_reference<u8*>                 heap_free_pages          { 0x00FFDE74 };
-        util::memory_reference<allocation_callback> heap_allocation_callback { 0x01115A34 };
-        util::memory_reference<free_callback>       heap_free_callback       { 0x01115A3C };
+        util::memory_reference<heap_state*>   heap_default          { 0x00FFDA58 };
+        util::memory_reference<u32>           heap_page_directories { 0x00FFDA70 };
+        util::memory_reference<volatile i64>  heap_queue_node_pool  { 0x00FFE1D8 };
+        util::memory_reference<volatile LONG> heap_page_lock        { 0x00FFDE70 };
+        util::memory_reference<u8*>           heap_free_pages       { 0x00FFDE74 };
     } // references
 }}} // treyarch::memory::heap
 
@@ -170,7 +166,7 @@ static void release_page_lock() {
 */
 
 static void* allocate_heap_storage(u32 size, u32 alignment) {
-    auto callback = heap::references::heap_allocation_callback.read();
+    auto callback = memory::references::allocation_handler.read();
 
     if (!callback)
         std::abort();
@@ -184,7 +180,7 @@ static void* allocate_heap_storage(u32 size, u32 alignment) {
 }
 
 static void free_heap_storage(void* allocation) {
-    auto callback = heap::references::heap_free_callback.read();
+    auto callback = memory::references::free_handler.read();
 
     if (!callback)
         std::abort();

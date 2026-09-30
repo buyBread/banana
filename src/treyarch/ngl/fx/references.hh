@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/shared/math/types/vector4.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -27,9 +28,16 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<u32> parameter_id_material_unknown_178    { 0x01116308 };
         inline util::memory_reference<u32> parameter_id_material_light_matrix   { 0x01116340 };
         inline util::memory_reference<u32> parameter_id_material_alpha          { 0x01116344 };
+        inline util::memory_reference<u32> parameter_id_light_context           { 0x01116330 };
+        inline util::memory_reference<u32> parameter_id_light_sphere            { 0x0111633C };
+        inline util::memory_reference<u32> parameter_id_ifl_frame               { 0x01116348 };
+        inline util::memory_reference<u32> parameter_id_mesh_runs               { 0x011171E0 };
 
         inline util::memory_reference<texture*> environment_texture { 0x010FC58C };
 
-        inline util::memory_reference<i32> ifl_frame { 0x01118800 }; // todo: not here, but w/e i'm lazy and want to go this over with for now
+        // three rows per bone, written by write_bone_matrices (sub_9DE390)
+        inline util::memory_reference<u32>     bone_constant_count { 0x01117168 };
+        inline util::memory_reference<u8>      global_constants    { 0x01117200 };
+        inline util::memory_reference<vector4> bone_constants      { 0x01117240 };
     } // references
 }}} // treyarch::ngl::fx

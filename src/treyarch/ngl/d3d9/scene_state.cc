@@ -7,10 +7,12 @@
 #include "treyarch/shared/color.hh"
 #include "util/memory_reference.hh"
 
-using namespace treyarch;
+namespace treyarch { namespace ngl { namespace d3d9 { namespace references {
+    util::memory_reference<u8> rendering_to_texture           { 0x00F53D50 };
+    util::memory_reference<u8> fixed_twenty_millisecond_frame { 0x01118559 };
+}}}} // treyarch::ngl::d3d9::references
 
-static util::memory_reference<u8> rendering_to_texture           { 0x00F53D50 };
-static util::memory_reference<u8> fixed_twenty_millisecond_frame { 0x01118559 };
+using namespace treyarch;
 
 LONG normalized_to_pixel(f32 value, u32 extent) {
     return (LONG)((value * 0.5f + 0.5f) * (f32)extent + 0.5f);
@@ -42,15 +44,15 @@ void ngl::d3d9::bind_scene_targets(scene* value) {
     }
 
     if (color_surface) {
-        if (!rendering_to_texture.read())
+        if (!references::rendering_to_texture.read())
             set_render_state(D3DRS_COLORWRITEENABLE, 0x0F);
 
-        rendering_to_texture.write(1);
+        references::rendering_to_texture.write(1);
     } else {
-        if (rendering_to_texture.read())
+        if (references::rendering_to_texture.read())
             set_render_state(D3DRS_COLORWRITEENABLE, 0);
 
-        rendering_to_texture.write(0);
+        references::rendering_to_texture.write(0);
     }
 
     IDirect3DDevice9* device = references::device.get();
@@ -67,7 +69,7 @@ void ngl::d3d9::bind_scene_targets(scene* value) {
 // sub_9E9250
 void ngl::d3d9::apply_scene_state(scene* value) {
     if (value->animation_time == 0.0f) {
-        f32 frame_milliseconds = fixed_twenty_millisecond_frame.read() ?
+        f32 frame_milliseconds = references::fixed_twenty_millisecond_frame.read() ?
             20.0f : 16.666666f;
 
         value->current_animation_time =

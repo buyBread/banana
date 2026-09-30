@@ -42,11 +42,13 @@ namespace treyarch { namespace mash { namespace detail {
     ASSERT_OFFSETOF(vtable_registry, bucket_mask,   0x20);
     ASSERT_OFFSETOF(vtable_registry, bucket_count,  0x24);
 
-    static util::memory_reference<vtable_registry> vtable_registry_reference { 0x01126CB4 };
+    namespace references {
+        util::memory_reference<vtable_registry> vtable_registry { 0x01126CB4 };
+    } // references
 
     // sub_A6B910
     static vtable_registry_node* find_vtable_entry(vtable_key_t key) {
-        vtable_registry &registry = vtable_registry_reference.get();
+        vtable_registry &registry = references::vtable_registry.get();
 
         // this ugly little park-miller mix is exactly what retail uses before applying the bucket mask
         div_t division = std::div((i32)(key ^ 0xDEADBEEF), 127773);
@@ -84,7 +86,7 @@ void mash::mash_virtual_base::copy_values(const mash_virtual_base* other) {
 }
 
 bool mash::mash_virtual_base::verify_valid_vtable_map(void* what_class) {
-    detail::vtable_registry &registry = detail::vtable_registry_reference.get();
+    detail::vtable_registry &registry = detail::references::vtable_registry.get();
 
     vtable_value_t vtable = *(vtable_value_t*)what_class;
 
@@ -147,7 +149,7 @@ bool mash::mash_virtual_base::register_vtable_entry(const vtable_key_t   &key,
 
 mash::vtable_value_t mash::mash_virtual_base::lookup_vtable_entry(const vtable_key_t &key) {
     detail::vtable_registry_node*  node     = detail::find_vtable_entry(key);
-    detail::vtable_registry       &registry = detail::vtable_registry_reference.get();
+    detail::vtable_registry       &registry = detail::references::vtable_registry.get();
 
     return node == registry.head ? invalid_vtable_value : node->value;
 }

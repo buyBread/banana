@@ -17,19 +17,21 @@ using save_texture_function = HRESULT(WINAPI*)(const char*,
                                                      IDirect3DBaseTexture9*,
                                                const void*);
 
-static util::memory_reference<char> screenshot_name_buffer { 0x01118860 };
-static util::memory_reference<u32>  screenshot_index       { 0x011188A0 };
+namespace treyarch { namespace ngl { namespace debug { namespace references {
+    util::memory_reference<char> screenshot_name_buffer { 0x01118860 };
+    util::memory_reference<u32>  screenshot_index       { 0x011188A0 };
+}}}} // treyarch::ngl::debug::references
 
 // sub_9E4540
 void ngl::debug::capture_screenshot(const char* name) {
     d3d9::wait_for_rendering();
 
-    char* generated_name = &screenshot_name_buffer.get();
+    char* generated_name = &references::screenshot_name_buffer.get();
 
     if (!name) {
         std::sprintf(generated_name,
                      "screenshot%4.4d",
-                     screenshot_index.get()++);
+                     references::screenshot_index.get()++);
 
         name = generated_name;
     }
@@ -43,7 +45,7 @@ void ngl::debug::capture_screenshot(const char* name) {
             *cursor = '\\';
     }
 
-    auto D3DXSaveTextureToFileA = (save_texture_function)
+    auto D3DXSaveTextureToFileA = (save_texture_function) // todo: create separate header with all d3dx methods
         util::gimmie::method(banana::store::handle_d3dx, "D3DXSaveTextureToFileA");
 
     D3DXSaveTextureToFileA(path,

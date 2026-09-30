@@ -4,14 +4,13 @@
 #include "treyarch/ngl/fx/batch_renderer.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
+#include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 
 using namespace treyarch;
-
-static util::memory_reference<u32> parameter_id_mesh_runs { 0x011171E0 };
 
 // sub_9DF770
 ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
@@ -56,7 +55,7 @@ void draw_single_pass_batch_node(ngl::fx::render_node* value) {
     }
 
     ngl::scene_parameters* parameters = value->node_data->parameters;
-    u32 parameter_id = parameter_id_mesh_runs.read();
+    u32 parameter_id = ngl::fx::references::parameter_id_mesh_runs.read();
 
     if (ngl::has_scene_parameter(parameters, parameter_id)) {
         auto* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);

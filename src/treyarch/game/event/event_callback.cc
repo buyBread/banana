@@ -7,6 +7,12 @@
 #include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 
+namespace treyarch { namespace references {
+    util::memory_reference<u32>                     callback_id_counter { 0x0102C230 };
+    util::memory_reference<mash::virtual_types_key> chuck_event_type    { 0x010F7160 };
+    util::memory_reference<mash::virtual_types_key> data_event_type     { 0x010F7188 };
+}} // treyarch::references
+
 using namespace treyarch;
 
 event_callback::event_callback(void* requested_parameters,
@@ -16,12 +22,10 @@ event_callback::event_callback(void* requested_parameters,
                                                            one_shot(requested_one_shot),
                                                            padding_0e {} {
 
-    static util::memory_reference<u32> id_counter { 0x0102C230 };
-
-    id = ++id_counter.get();
+    id = ++references::callback_id_counter.get();
 
     if (!id)
-        id = ++id_counter.get();
+        id = ++references::callback_id_counter.get();
 }
 
 void event_callback::operator delete(void* allocation) noexcept {
@@ -104,10 +108,7 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
                                                           nullptr,
                                                           0);
 
-    static util::memory_reference<mash::virtual_types_key> chuck_event_type { 0x010F7160 };
-    static util::memory_reference<mash::virtual_types_key> data_event_type  { 0x010F7188 };
-
-    if (raised_event->is_or_is_subclass_of(chuck_event_type.read())) {
+    if (raised_event->is_or_is_subclass_of(references::chuck_event_type.read())) {
         i32 size = *(i32*)((u8*)raised_event + 0x10);
 
         if (size > 0)
@@ -116,7 +117,7 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
         return;
     }
 
-    if (!raised_event->is_or_is_subclass_of(data_event_type.read()))
+    if (!raised_event->is_or_is_subclass_of(references::data_event_type.read()))
         return;
 
     using get_data_function = const void*(__thiscall*)(event*);

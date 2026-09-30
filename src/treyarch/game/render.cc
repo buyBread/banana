@@ -9,6 +9,7 @@
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
+#include "treyarch/ngl/shadow/device_resources.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
@@ -17,7 +18,6 @@ namespace treyarch {
 
     namespace references {
         util::memory_reference<u8>              render_flag_00bcd0ba { 0x00BCD0BA };
-        util::memory_reference<u8>              render_flag_00f4cd40 { 0x00F4CD40 };
         util::memory_reference<u8>              movie_clears_screen  { 0x0102CDDA };
         util::memory_reference<movie_manager*>  movies               { 0x0102F2DC };
         util::memory_reference<zombie_manager*> zombies              { 0x0102FFF0 };
@@ -83,7 +83,7 @@ void game::render() {
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
 
-    if (!references::frontend.get().igo->blocks_world_rendering() && references::render_flag_00f4cd40.read()) {
+    if (!references::frontend.get().igo->blocks_world_rendering() && ngl::shadow::references::active.read()) {
         retail::sub_970CB0();
         the_world->render_mgr.render_depth_shadows();
     }
