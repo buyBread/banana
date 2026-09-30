@@ -201,7 +201,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     retail::sub_9D1800();
     retail::sub_631D30();
     retail::sub_5B4A70(nullptr);
-    retail::sub_9C98B0();
+    app::create_inst();
 
     if (references::pack_mode.read())
         retail::sub_9CC8F0();

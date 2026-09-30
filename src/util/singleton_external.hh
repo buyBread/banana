@@ -14,6 +14,10 @@ namespace util {
     protected:
         singleton_external() = default;
 
+        static void set(T* instance) {
+            *(T**)address = instance;
+        }
+
     public:
         singleton_external           (const singleton_external&) = delete;
         singleton_external& operator=(const singleton_external&) = delete;

@@ -9,10 +9,15 @@
 namespace treyarch {
     namespace references {
         // "pack"/"repack" command-line mode, set by sub_429C40
-        inline util::memory_reference<u8>    pack_mode       { 0x00FC2F82 };
-        inline util::memory_reference<game*> game            { 0x00FC2F84 };
+        inline util::memory_reference<u8>    pack_mode            { 0x00FC2F82 };
+        inline util::memory_reference<game*> game                 { 0x00FC2F84 };
+
         // inline instance used by the engine's asynchronous callback timers
-        inline util::memory_reference<u8>    callback_timers { 0x00E79688 };
+        inline util::memory_reference<u8> callback_timers    { 0x00E79688 };
+        inline util::memory_reference<u8> master_clock_is_up { 0x00FBF230 };
+
+        inline util::memory_reference<void*> app_vtable           { 0x00B88974 };
+        inline util::memory_reference<void*> app_arch_base_vtable { 0x00B8889C };
     } // references
 
     class app : public util::singleton_external<app, 0x00FC2FCC> {
@@ -28,6 +33,10 @@ namespace treyarch {
         u32           padding_1c;
 
     public:
+        app();
+
+        static void create_inst();
+
         void tick();
 
         inline game* get_game() {

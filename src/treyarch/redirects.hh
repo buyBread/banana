@@ -27,7 +27,6 @@ namespace treyarch {
             !util::redirect_rel32(0x0068674A, { 0xE8, 0x11, 0xFB, 0xFF, 0xFF }, &event_manager::register_event_type)    ||
             !util::redirect_rel32(0x0068690A, { 0xE8, 0x51, 0xF9, 0xFF, 0xFF }, &event_manager::register_event_type)    ||
             !util::redirect_rel32(0x00429ADC, { 0xE8, 0x6F, 0xC8, 0x25, 0x00 }, &event_manager::garbage_collect)        ||
-            !util::redirect_rel32(0x0042A833, { 0xE8, 0xE8, 0xBB, 0x25, 0x00 }, &event_manager::create_inst)            ||
             !util::redirect_rel32(0x006867DD, { 0xE8, 0x2E, 0xFF, 0xFF, 0xFF }, &event_manager::create_event_recipient) ||
             !util::redirect_rel32(0x0068686D, { 0xE8, 0x9E, 0xFE, 0xFF, 0xFF }, &event_manager::create_event_recipient))
             

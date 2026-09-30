@@ -7,7 +7,6 @@
 
 namespace treyarch {    
     namespace references {
-        util::memory_reference<u8>  master_clock_is_up { 0x00FBF230 };
         util::memory_reference<f32> minimum_frame_time { 0x00FC2F8C };
     } // references
 } // treyarch
