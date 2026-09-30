@@ -1,10 +1,8 @@
 #pragma once
 
 #include "flags.hh"
-#include "util/redirect_rel32.hh"
-#include "util/thunks.hh"
-#include "util/macros/debug.hh"
 #include "banana/logging.hh"
+#include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_handler.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
@@ -12,6 +10,9 @@
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "util/redirect_rel32.hh"
+#include "util/thunks.hh"
+#include "util/macros/debug.hh"
 
 namespace treyarch {
     inline void _redirect_event_manager() {
@@ -312,25 +313,9 @@ namespace treyarch {
     }
 
     inline void redirect_game_calls() {
-        banana::log.msg("redirecting nglInit (WinMain)");
-        
-        if (!util::redirect_rel32(0x009CC222, { 0xE8, 0xA9, 0x9A, 0x01, 0x00 }, &ngl::init))
-            FATAL_BREAKPOINT();
+        banana::log.msg("redirecting WinMain");
 
-        banana::log.msg("redirecting nglSetBufferSize callsites (WinMain)");
-
-        if (!util::redirect_rel32(0x009CC2D2, { 0xE8, 0x29, 0xC6, 0x01, 0x00 }, &ngl::set_buffer_size) ||
-            !util::redirect_rel32(0x009CC311, { 0xE8, 0xEA, 0xC5, 0x01, 0x00 }, &ngl::set_buffer_size) ||
-            !util::redirect_rel32(0x009CC321, { 0xE8, 0xDA, 0xC5, 0x01, 0x00 }, &ngl::set_buffer_size) ||
-            !util::redirect_rel32(0x009CC334, { 0xE8, 0xC7, 0xC5, 0x01, 0x00 }, &ngl::set_buffer_size))
-            
-            FATAL_BREAKPOINT();
-
-        banana::log.msg("redirecting app::tick callsites (WinMain)");
-
-        if (!util::redirect_rel32(0x009CC44C, { 0xE8, 0x3F, 0xD6, 0xA5, 0xFF }, &app::tick) ||
-            !util::redirect_rel32(0x009CC477, { 0xE8, 0x14, 0xD6, 0xA5, 0xFF }, &app::tick))
-
+        if (!util::redirect_rel32(0x00ADE9F8, { 0xE8, 0x83, 0xD1, 0xEE, 0xFF }, &WinMain))
             FATAL_BREAKPOINT();
 
         banana::log.msg("DllMain: redirecting input_mgr::poll_devices (movie_manager)");

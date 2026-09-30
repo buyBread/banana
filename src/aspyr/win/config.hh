@@ -4,4 +4,6 @@ namespace aspyr { namespace win {
     double get_config_number(const char* name,
                              double      fallback,
                              bool        write_default);
+    void   set_config_number(const char* name,
+                             double      value);
 }} // aspyr::win

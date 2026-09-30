@@ -2,18 +2,27 @@
 #include "util/memory_reference.hh"
 
 namespace aspyr { namespace win {
-    using get_config_number_callback = double (__cdecl*)(const char*  name,
-                                                               double fallback,
-                                                               bool   write_default);
+    using get_config_number_callback = double (__cdecl*)(const char* name,
+                                                         double      fallback,
+                                                         bool        write_default);
+    using set_config_number_callback = void (__cdecl*)(const char* name,
+                                                       double      value);
+
     namespace references {
         inline util::memory_reference<get_config_number_callback> get_config_number_callback { 0x00B79020 };
+        inline util::memory_reference<set_config_number_callback> set_config_number_callback { 0x00B79018 };
     } // references
 }} // aspyr::win
 
-double aspyr::win::get_config_number(const char*  name,
-                                           double fallback,
-                                           bool   write_default) {
+double aspyr::win::get_config_number(const char* name,
+                                     double      fallback,
+                                     bool        write_default) {
 
-    return references::get_config_number_callback.get()
-        (name, fallback, write_default);
+    return references::get_config_number_callback.get()(name, fallback, write_default);
+}
+
+void aspyr::win::set_config_number(const char* name,
+                                   double      value) {
+
+    references::set_config_number_callback.get()(name, value);
 }
