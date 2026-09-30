@@ -4,6 +4,11 @@
 
 using namespace treyarch;
 
+// sub_756080
+game_state_e game::get_cur_state() {
+    return process_stack.back().get_cur_state();
+}
+
 // sub_76BA50
 void game::push_process(const game_process &process) {
     process_stack.push_back(process);

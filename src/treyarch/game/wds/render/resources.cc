@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/wds/render/wds_render_manager.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/references.hh"
@@ -38,7 +39,7 @@ void wds_render_manager::request_environment_texture() {
         return;
 
     const char* empty_name = "";
-    u32* game_state_instance = (u32*)references::game_state.read();
+    mission_manager* missions = references::mission_manager.read();
 
     __asm {
         push 0
@@ -46,7 +47,7 @@ void wds_render_manager::request_environment_texture() {
         mov ecx, esp
         push empty_name
         call retail::sub_A6CE00
-        mov ecx, game_state_instance
+        mov ecx, missions
         call retail::sub_980760
     }
 }

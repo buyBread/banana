@@ -4,6 +4,7 @@
 #include "retail.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/wds/render/references.hh"
 #include "treyarch/game/wds/render/wds_render_manager.hh"
@@ -19,7 +20,7 @@ using namespace treyarch;
 bool wds_render_manager::is_special_case_level() {
     cutscene_player* player = treyarch::references::cutscene_player.read();
 
-    const char* level_name = (const char*)retail::sub_97E390((u32*)references::game_state.read());
+    const char* level_name = (const char*)retail::sub_97E390((u32*)references::mission_manager.read());
 
     return level_name && !player->is_playing() &&
            (!std::strncmp(level_name, "act4_h", 6) || !std::strcmp(level_name, "Act3_Vulture_Hive"));

@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
@@ -29,9 +30,9 @@ using namespace treyarch;
 void game::frame_advance(f32 time_inc) {
     this->current_frame_delta = time_inc;
 
-    u8* game_state_bytes = references::game_state.read();
-    bool block_external_updates = retail::sub_97E1E0(game_state_bytes) &&
-                                  *(void**)(game_state_bytes + 0x2CC)  &&
+    mission_manager* missions = references::mission_manager.read();
+    bool block_external_updates = missions->is_idle()                  &&
+                                  missions->script_globals_initialized &&
                                   !retail::sub_77C9E0(this->data);
 
     ++this->frame_sequence;
@@ -96,7 +97,8 @@ void game::frame_advance_level(f32 time_inc) {
     if (time_inc != 0.0f)
         retail::sub_9C8EA0(time_inc);
 
-    retail::sub_986520((i32)references::game_state.read(), time_inc);
+    references::mission_manager.read()->frame_advance(time_inc);
+    
     retail::sub_801790((i32)references::unk_01087fd4.read(), time_inc);
     this->handle_game_states(&time_inc);
 

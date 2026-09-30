@@ -8,6 +8,7 @@
 #include "treyarch/game/frontend/igo/igo_3d_scrapbook.hh"
 #include "treyarch/game/frontend/ui_frontend_projection.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
@@ -253,7 +254,7 @@ void ui_frontend::draw() {
 
             if (!current_igo->conversation_state_168) {
                 retail::sub_6D2710((i32)current_igo->ui_object_manager);
-                retail::sub_9818F0((i32)references::game_state.read());
+                retail::sub_9818F0((i32)references::mission_manager.read());
             }
 
             retail::sub_7EA9D0();

@@ -4,6 +4,7 @@
 #include "treyarch/app/app.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/glass_house_manager.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/shared/platform.hh"
 #include "treyarch/shared/singleton.hh"
@@ -63,7 +64,7 @@ app::app() {
     references::unk_010fa26c.write(memory::heap::allocate(8));
     retail::sub_428F60();
     retail::sub_42A700();
-    retail::sub_428AA0(); // references::game_state
+    mission_manager::create_inst();
     retail::sub_428B00();
     retail::sub_428C20();
     retail::sub_428C80();
@@ -76,7 +77,7 @@ app::app() {
     if (!references::pack_mode.read())
         retail::sub_975600();
 
-    // retail passes this to an empty function (nullsub_1)
+    // retail passes this to a nullsub
     mash::string string_hash_dictionary = *(mash::string*)retail::sub_7EFAB0(platform_pc) + "debug\\string_hash_dictionary";
 
     retail::sub_428F00(); // mission_memory_manager::create_inst

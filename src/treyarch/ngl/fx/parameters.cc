@@ -15,7 +15,7 @@
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/shadow/device_resources.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
-#include "treyarch/game/game.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;
@@ -50,14 +50,6 @@ namespace treyarch { namespace ngl { namespace fx { namespace references {
 // sub_9DF6F0
 void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
     *(ngl::texture**)entry->data = value ? value : ngl::references::default_texture.read();
-}
-
-// todo: move
-f32 get_hour_of_day() {
-    u8* game_state_bytes = treyarch::references::game_state.read();
-    f32 seconds = (f32)*(u32*)(game_state_bytes + 188) + *(f32*)(game_state_bytes + 196);
-
-    return seconds / 3600.0f;
 }
 
 void copy_parameter_subset(      ngl::fx::effect*         value,
@@ -1044,14 +1036,14 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_lightmap_color: {
-                f32 hour = get_hour_of_day();
+                f32 hour = treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0f;
                 f32 night = hour < 3.0f || hour > 23.9f ? 1.0f : 0.0f;
                 vectors[0] = vector4(0.60000002f * night, 0.5f * night, 0.40000001f * night, 1.0f);
 
                 break;
             }
             case parameter_window_color: {
-                f32 hour = get_hour_of_day();
+                f32 hour = treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0f;
                 f32 night = hour < 3.0f || hour > 23.9f ? 1.0f : 0.0f;
                 vectors[0] = vector4(1.3f, 1.2f, 0.8f, night);
 

@@ -20,8 +20,6 @@ namespace treyarch {
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
 
     namespace references {
-        inline util::memory_reference<u8*> game_state { 0x01111760 };
-
         // set by game::handle_cameras on entry; cleared once per frame_advance_level
         inline util::memory_reference<u8> cameras_handled { 0x01111392 };
 
@@ -135,16 +133,22 @@ namespace treyarch {
 
         game();
 
+        game_state_e get_cur_state();
+
         void push_process(const game_process &process);
         void pop_process();
+
         void handle_game_states(f32* time_inc);
 
         camera_handle get_current_view_camera();
-        void          handle_frame_locking(f32* time_inc);
-        void          frame_advance(f32 time_inc);
-        void          frame_advance_level(f32 time_inc);
-        void          clear_screen();
-        void          render();
+        
+        void handle_frame_locking(f32* time_inc);
+
+        void frame_advance(f32 time_inc);
+        void frame_advance_level(f32 time_inc);
+
+        void clear_screen();
+        void render();
     };
 
     ASSERT_SIZEOF(game_frame_timing, 0x0C);
