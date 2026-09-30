@@ -99,6 +99,6 @@ app::app() {
 
     void* allocation = memory::heap::allocate(sizeof(game));
 
-    the_game = allocation ? (game*)retail::sub_97D590((i32)allocation) : nullptr;
+    the_game = allocation ? new (allocation) game() : nullptr;
     references::game.write(the_game);
 }

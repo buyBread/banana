@@ -365,9 +365,7 @@ namespace treyarch {
 
         banana::log.msg("redirecting level_load_stuff lifecycle");
 
-        if (!util::redirect_rel32(0x0097D5B0, { 0xE8, 0xBB, 0xD5, 0xFF, 0xFF }, &util::thunk::ctor<level_load_stuff>::invoke) ||
-            !util::redirect_rel32(0x0097DFD6, { 0xE8, 0x65, 0xCC, 0xFF, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
-            !util::redirect_rel32(0x00B0F173, { 0xE9, 0xC8, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
+        if (!util::redirect_rel32(0x0097DFD6, { 0xE8, 0x65, 0xCC, 0xFF, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||
             !util::redirect_rel32(0x00B0F1D3, { 0xE9, 0x68, 0xBA, 0xE6, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke))
 
             FATAL_BREAKPOINT();
