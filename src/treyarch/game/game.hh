@@ -22,6 +22,9 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<u8*> game_state { 0x01111760 };
 
+        // set by game::handle_cameras on entry; cleared once per frame_advance_level
+        inline util::memory_reference<u8> cameras_handled { 0x01111392 };
+
         inline util::memory_reference<u8>    region_spawns_enabled { 0x00BE73FE };
         inline util::memory_reference<void*> region_spawn_manager  { 0x010FA2C4 };
     } // references
@@ -39,6 +42,14 @@ namespace treyarch {
         i32                 num_states;
         f32                 timer;
         boolx               allow_override;
+
+        game_state_e get_cur_state() const {
+            return flow[index];
+        }
+
+        void go_next_state() {
+            ++index;
+        }
     };
 
     namespace references {
@@ -125,10 +136,13 @@ namespace treyarch {
         game();
 
         void push_process(const game_process &process);
+        void pop_process();
+        void handle_game_states(f32* time_inc);
 
         camera_handle get_current_view_camera();
         void          handle_frame_locking(f32* time_inc);
         void          frame_advance(f32 time_inc);
+        void          frame_advance_level(f32 time_inc);
         void          clear_screen();
         void          render();
     };

@@ -81,10 +81,3 @@ game::game() {
     retail::sub_77EA20();
     retail::sub_7B48D0();
 }
-
-// sub_76BA50
-void game::push_process(const game_process &process) {
-    process_stack.push_back(process);
-    process_stack.back().index = 0;
-    process_stack.back().timer = 0.0f;
-}

@@ -100,6 +100,12 @@ namespace treyarch { namespace dinkumware {
             ++last;
         }
 
+        void pop_back() noexcept {
+            --last;
+            
+            last->~T();
+        }
+
         // sub_685B40
         // sub_9DD7E0
         // sub_9DD8D0
