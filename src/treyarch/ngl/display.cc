@@ -7,8 +7,12 @@ using namespace treyarch;
     basically, implementing UIFrontEnd::DrawStartup was producing garbage projection.
     the culript was our crappy getter, that has to be downgraded back to this fixed nonsense.
     why they hardcoded this resolution is beyond me, nor do i really care, so revert it is.
-    one day, we'll branch and modify "engine code" (our code) and all will be good.
 */
+
+// sub_9E1F90
+bool ngl::is_display_widescreen() {
+    return d3d9::references::selected_display_mode.get().widescreen;
+}
 
 // sub_9E1FC0
 u16 ngl::get_screen_width() {

@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "treyarch/ngl/d3d9/display.hh"
+#include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
@@ -37,7 +37,7 @@ ngl::scene* ngl::set_default_scene_state() {
     value->scissor_bottom = 1.0f;
     value->derived_matrices_dirty = 1;
 
-    value->aspect_ratio = d3d9::references::selected_display_mode.get().widescreen ?
+    value->aspect_ratio = is_display_widescreen() ?
         1.7777777f : 1.3333334f;
     value->derived_matrices_dirty = 1;
 

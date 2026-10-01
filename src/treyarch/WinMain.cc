@@ -13,7 +13,9 @@
 #include "treyarch/windows_app.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/wds/camera/references.hh"
+#include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/post_process/device_resources.hh"
 #include "treyarch/ngl/shadow/device_resources.hh"
@@ -138,7 +140,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     std::srand(_time32(nullptr));
 
     if (!references::pack_mode.read()) {
-        retail::sub_9E5CC0(aspyr::win::get_config_number("Windowed", 0.0, false) != 0.0);
+        ngl::d3d9::set_windowed(aspyr::win::get_config_number("Windowed", 0.0, false) != 0.0);
 
         const f64 desired_width  = aspyr::win::get_config_number("VideoDesiredW", 0.0, false);
         const f64 desired_height = aspyr::win::get_config_number("VideoDesiredH", 0.0, false);
@@ -157,7 +159,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
         aspyr::win::set_config_number("VideoDesiredW", 0.0);
         aspyr::win::set_config_number("VideoDesiredH", 0.0);
 
-        retail::sub_9E8DC0((i32)width, (i32)height, width / height > 1.366666666666666);
+        ngl::d3d9::set_display_mode((i32)width, (i32)height, width / height > 1.366666666666666);
 
         ngl::d3d9::references::particle_depth_texture_requested.write(aspyr::win::get_config_number("VideoParticles", 0.0, false) != 0.0);
         ngl::shadow::references::active.write(aspyr::win::get_config_number("VideoShadows", 0.0, false) != 0.0);
@@ -193,7 +195,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
         ngl::set_buffer_size(ngl::buffer_scratch_index, 0x3FFFE, true, true);
         ngl::set_buffer_size(ngl::buffer_scratch_vertex, 0x400000, true, true);
 
-        references::camera_aspect_ratio.write(retail::sub_9E1F90() ?
+        references::camera_aspect_ratio.write(ngl::is_display_widescreen() ?
             std::bit_cast<f32>(u32 { 0x3F100000 }) :
             std::bit_cast<f32>(u32 { 0x3F400000 }));
     }

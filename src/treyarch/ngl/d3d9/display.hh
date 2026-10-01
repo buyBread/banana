@@ -22,6 +22,8 @@ namespace treyarch { namespace ngl { namespace d3d9 {
         i32 height;
     };
 
+    void set_windowed(bool windowed);
+    void set_display_mode(i32 width, i32 height, bool widescreen);
     void select_default_display_mode();
     
     HWND initialize_render_window();

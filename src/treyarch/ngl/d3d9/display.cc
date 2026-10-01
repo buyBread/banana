@@ -7,6 +7,24 @@
 
 using namespace treyarch;
 
+// sub_9E5CC0
+void ngl::d3d9::set_windowed(bool windowed) {
+    references::windowed.write(windowed);
+}
+
+// sub_9E8DC0
+void ngl::d3d9::set_display_mode(i32 width, i32 height, bool widescreen) {
+    display_mode &mode = references::selected_display_mode.get();
+
+    mode.width       = width;
+    mode.height      = height;
+    mode.widescreen  = widescreen;
+    mode.progressive = 0;
+    mode.pal         = 0;
+
+    references::selected_display_index.write(6);
+}
+
 // sub_9E8D80
 void ngl::d3d9::select_default_display_mode() {
     if (references::selected_display_index.read())
