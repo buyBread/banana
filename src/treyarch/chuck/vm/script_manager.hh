@@ -48,7 +48,7 @@ namespace treyarch { namespace chuck { namespace vm {
     public:
         u32                                          flags;                            // SM3 position; no retail consumer found
         f32                                          time_inc;
-        script_executable_entry_set*                 exec_set;
+        script_executable_entry_set_t*               exec_set;
         script_executable*                           master_script;
         script_var_container*                        game_var_container;
         script_var_container*                        shared_var_container;

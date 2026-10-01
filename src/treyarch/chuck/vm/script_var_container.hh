@@ -1,13 +1,16 @@
 #pragma once
 
 #include "treyarch/chuck/vm/so_data_block.hh"
+#include "treyarch/shared/dinkumware/map.hh"
+#include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
+    // heap-owned; teardown (sub_A20D60) erases and frees the map, then this
     struct script_var_debug_info {
-        void* var_to_offset; // VC8 std::map<mash::string, int>
+        dinkumware::map<mash::string, i32>* var_to_offset;
     };
 
     struct script_var_address_entry {
