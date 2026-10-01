@@ -28,7 +28,7 @@ namespace treyarch {
     } // references
 
     namespace helpers {
-        // retail reads the world through g_world_ptr even where `this` is at hand
+        // inlined; retail reads the world through g_world_ptr even where `this` is at hand
         f32 dilate_world_time(f32 time_inc) {
             f32 dilation = references::g_world_ptr.read()->time_mgr.get_time_dilation_factor();
 
@@ -44,6 +44,7 @@ namespace treyarch {
             return (f32)((f64)dilation * (f64)time_inc);
         }
 
+        // inlined into sub_978CF0
         void apply_hero_rel_po_override(entity* hero) {
             retail::sub_640910((u32*)hero);                                       // entity_base::clear_parent
             retail::sub_626BE0((i32)hero, (u64*)references::unk_010fc580.read()); // entity_base::set_rel_po
@@ -160,7 +161,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
         apply_hero_rel_po_override(hero_ptr);
 }
 
-// sub_95C510; the milestone runs this block inline in frame_advance under its "misc_entity_updates" profiler section
+// sub_95C510
 void world_dynamics_system::misc_entity_updates(f32 time_inc) {
     retail::sub_7998B0(4);        // line_info::frame_advance
     retail::sub_632C80(time_inc); // weapon_interface::frame_advance_all_weapon_interfaces

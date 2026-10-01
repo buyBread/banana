@@ -5,10 +5,12 @@
 
 using namespace treyarch;
 
+// sub_7C88D0
 light_manager::light_manager() : reserved_000{},
                                  point_count(0), point_head(nullptr), point_tail(nullptr),
                                  spot_count(0), spot_head(nullptr), spot_tail(nullptr) {}
 
+// sub_7C88F0
 point_light_node* light_manager::add_point(const ngl::lighting::point_light_data &data) {
     point_light_node* node = (point_light_node*)memory::heap::allocate(sizeof(point_light_node));
 
@@ -28,6 +30,7 @@ point_light_node* light_manager::add_point(const ngl::lighting::point_light_data
     return node;
 }
 
+// sub_7D6330
 spot_light_node* light_manager::add_spot(const ngl::lighting::spot_light_data &data) {
     spot_light_node* node = (spot_light_node*)memory::heap::allocate(sizeof(spot_light_node));
 

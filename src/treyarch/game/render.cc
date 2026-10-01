@@ -3,6 +3,7 @@
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/movie_manager.hh"
+#include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/render/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/zombie_manager.hh"
@@ -10,7 +11,6 @@
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
-#include "treyarch/ngl/shadow/device_resources.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
@@ -18,14 +18,13 @@ namespace treyarch {
         util::memory_reference<u8> render_flag_00bcd0ba { 0x00BCD0BA };
         util::memory_reference<u8> movie_clears_screen  { 0x0102CDDA };
 
-        util::memory_reference<movie_manager*> movies { 0x0102F2DC };
-
         util::memory_reference<void*> scene_callback_state { 0x010FB390 };
     } // references
 
     namespace helpers {
         using namespace references;
 
+        // sub_95D580
         bool clear_uses_game_scene() {
             return !render_flag_00bcd0ba.read() && scene_callback_state.read();
         }
@@ -60,7 +59,7 @@ void game::render() {
 
     retail::sub_7BA6C0();
 
-    movie_manager* cur_movie_manager = references::movies.read();
+    movie_manager* cur_movie_manager = references::movie_manager.read();
 
     if (cur_movie_manager->is_playing() && references::movie_clears_screen.read()) {
         retail::sub_6C7660((i32)cur_movie_manager); // render movie
@@ -82,7 +81,7 @@ void game::render() {
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
 
-    if (!references::frontend.get().igo->blocks_world_rendering() && ngl::shadow::references::active.read()) {
+    if (!references::frontend.get().igo->blocks_world_rendering() && shadow::references::active.read()) {
         retail::sub_970CB0();
         the_world->render_mgr.render_depth_shadows();
     }
@@ -154,7 +153,7 @@ void game::render() {
 
     references::frontend.get().draw_igo();
 
-    cur_movie_manager = references::movies.read();
+    cur_movie_manager = references::movie_manager.read();
 
     if (cur_movie_manager->is_playing())
         retail::sub_6C7660((i32)cur_movie_manager); // render movie

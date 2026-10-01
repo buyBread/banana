@@ -27,9 +27,11 @@ void event::operator delete(void* allocation) noexcept {
     event_pools::event_pool().release(allocation);
 }
 
+// sub_683D20
 void event::construct_mashed_class() {
-    event_type_id = string_hash();
-    from_mash     = true;
+    // string_hash::initialize <- mr. useless
+
+    from_mash = true;
 }
 
 // sub_5AAFB0

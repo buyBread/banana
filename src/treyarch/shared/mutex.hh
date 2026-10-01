@@ -9,6 +9,7 @@
 namespace treyarch {
     struct engine_recursive_lock;
     class  engine_lock_scope;
+    class  engine_reference_scope;
     struct ref_counted_simple_mutex;
     class  ref_lock_scope;
 
@@ -79,6 +80,28 @@ namespace treyarch {
                 state = 0;
             }
         }
+
+        // sub_44CED0
+        void acquire_reference() {
+            const i64 thread_id = (i64)GetCurrentThreadId();
+
+            if (_InterlockedCompareExchange64((volatile i64*)&owner, thread_id, thread_id) == thread_id) {
+                _InterlockedIncrement((volatile long*)&depth);
+
+                return;
+            }
+
+            while (!try_acquire(thread_id))
+                Sleep(0);
+
+            _InterlockedIncrement((volatile long*)&depth);
+
+            while (_InterlockedCompareExchange64((volatile i64*)&owner, 0, thread_id) != thread_id);
+        }
+
+        void release_reference() {
+            _InterlockedDecrement((volatile long*)&depth);
+        }
     };
 
     class engine_lock_scope {
@@ -98,6 +121,24 @@ namespace treyarch {
 
         engine_lock_scope           (const engine_lock_scope&) = delete;
         engine_lock_scope &operator=(const engine_lock_scope&) = delete;
+    };
+
+    class engine_reference_scope {
+
+        engine_recursive_lock* m_lock;
+
+    public:
+
+        explicit engine_reference_scope(engine_recursive_lock* lock) : m_lock(lock) {
+            m_lock->acquire_reference();
+        }
+
+        ~engine_reference_scope() {
+            m_lock->release_reference();
+        }
+
+        engine_reference_scope           (const engine_reference_scope&) = delete;
+        engine_reference_scope &operator=(const engine_reference_scope&) = delete;
     };
 
     struct ref_counted_simple_mutex {

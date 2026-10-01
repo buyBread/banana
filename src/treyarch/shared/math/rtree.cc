@@ -141,7 +141,7 @@ void math::query_sphere(      rtree*    value,
 
     auto* tree = (rtree_handle*)value;
 
-    engine_lock_scope lock(tree->lock);
+    engine_reference_scope reference(tree->lock);
 
     vector3 minimum(center.x - radius,
                     center.y - radius,

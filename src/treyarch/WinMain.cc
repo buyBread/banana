@@ -12,13 +12,13 @@
 #include "treyarch/WinMain.hh"
 #include "treyarch/windows_app.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/post_process/post_process.hh"
+#include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/camera/references.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
-#include "treyarch/ngl/post_process/device_resources.hh"
-#include "treyarch/ngl/shadow/device_resources.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 
@@ -162,8 +162,8 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
         ngl::d3d9::set_display_mode((i32)width, (i32)height, width / height > 1.366666666666666);
 
         ngl::d3d9::references::particle_depth_texture_requested.write(aspyr::win::get_config_number("VideoParticles", 0.0, false) != 0.0);
-        ngl::shadow::references::active.write(aspyr::win::get_config_number("VideoShadows", 0.0, false) != 0.0);
-        ngl::post_process::references::active.write(aspyr::win::get_config_number("VideoPostProcFx", 0.0, false) != 0.0);
+        shadow::references::active.write(aspyr::win::get_config_number("VideoShadows", 0.0, false) != 0.0);
+        post_process::references::active.write(aspyr::win::get_config_number("VideoPostProcFx", 0.0, false) != 0.0);
 
         ngl::init(window);
 

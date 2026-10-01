@@ -153,6 +153,9 @@ namespace treyarch {
 
         void clear_screen();
         void render();
+
+        static void release_device_resources();
+        static void restore_device_resources();
     };
 
     ASSERT_SIZEOF(game_frame_timing, 0x0C);

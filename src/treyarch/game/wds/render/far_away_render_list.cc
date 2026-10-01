@@ -2,6 +2,7 @@
 
 using namespace treyarch;
 
+// inlined into sub_9772D0; virtual slot 108 of the resolved target
 void far_away_render_list_entry::activate(f32 amount) {
     using activate_method = void (__thiscall*)(void* self, f32 amount);
 

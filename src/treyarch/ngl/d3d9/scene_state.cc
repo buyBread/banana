@@ -1,8 +1,10 @@
 #include <d3d9.h>
 
 #include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/scene_state.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
 #include "treyarch/shared/color.hh"
 #include "util/memory_reference.hh"
@@ -13,6 +15,49 @@ namespace treyarch { namespace ngl { namespace d3d9 { namespace references {
 }}}} // treyarch::ngl::d3d9::references
 
 using namespace treyarch;
+
+// sub_9E8FE0
+ngl::scene* ngl::d3d9::set_color_target(texture* target) {
+    scene* current_scene = ngl::references::current_scene.read();
+
+    current_scene->color_target  = target;
+    current_scene->cube_map_face = 0;
+
+    if (!target)
+        current_scene->options = 0;
+
+    return current_scene;
+}
+
+// sub_9E9000
+ngl::scene* ngl::d3d9::set_auxiliary_target(texture* target) {
+    scene* current_scene = ngl::references::current_scene.read();
+
+    current_scene->auxiliary_target = target;
+
+    if (!target)
+        current_scene->options = 0;
+
+    return current_scene;
+}
+
+// sub_9E9020
+ngl::scene* ngl::d3d9::set_depth_target(texture* target) {
+    scene* current_scene = ngl::references::current_scene.read();
+
+    current_scene->depth_target = target;
+
+    if (!target)
+        current_scene->options = 0;
+
+    return current_scene;
+}
+
+// sub_9E9A80
+void ngl::d3d9::set_default_depth_target() {
+    ngl::set_clear_stencil(0);
+    ngl::set_depth_target(references::framebuffers.get().active_depth_buffer);
+}
 
 LONG normalized_to_pixel(f32 value, u32 extent) {
     return (LONG)((value * 0.5f + 0.5f) * (f32)extent + 0.5f);

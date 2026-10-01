@@ -18,6 +18,7 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// inlined into the subclass constructors (sub_683980, sub_683E20)
 event_callback::event_callback(void* requested_parameters,
                                bool  requested_one_shot) : parameters(requested_parameters),
                                                            id(0),
@@ -31,6 +32,7 @@ event_callback::event_callback(void* requested_parameters,
         id = ++references::callback_id_counter.get();
 }
 
+// inlined into the deleting destructors (sub_683DC0, sub_683EF0)
 void event_callback::operator delete(void* allocation) noexcept {
     memory::heap::free(allocation);
 }

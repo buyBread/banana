@@ -2,15 +2,15 @@
 
 #include <d3d9.h>
 
+#include "treyarch/game/post_process/blitter.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
-#include "treyarch/ngl/d3d9/blitter.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace ngl { namespace post_process {
+namespace treyarch { namespace post_process {
     struct surface_texture {
         ngl::d3d9::texture_resource texture;
         IDirect3DSurface9*          render_target;
@@ -18,9 +18,6 @@ namespace treyarch { namespace ngl { namespace post_process {
         IDirect3DSurface9*          saved_depth_target;
         u8                          owns_render_target;
         u8                          pad_02d[3];
-
-        void release_device_resources();
-        void restore_device_resources();
     };
 
     struct mipmap_texture_array {
@@ -29,14 +26,11 @@ namespace treyarch { namespace ngl { namespace post_process {
         surface_texture textures[16];
         u32             width;
         u32             height;
-
-        void release_device_resources();
-        void restore_device_resources();
     };
 
     struct system {
         u8                    reserved_000[0x08];
-        d3d9::blitter*        blitter;
+        treyarch::blitter*    blitter;
         mipmap_texture_array* hdr_targets;
         mipmap_texture_array* ldr_targets;
         surface_texture*      single_target_0;
@@ -45,37 +39,31 @@ namespace treyarch { namespace ngl { namespace post_process {
         mipmap_texture_array* secondary_ldr_targets_1;
         surface_texture*      single_target_2;
         u8                    reserved_028[0x3B8];
-
-        void release_device_resources();
-        void restore_device_resources();
     };
 
     struct device_resource_state {
-        ngl::texture*            eighth_target;
-        f32                      inverse_width;
-        u8                       reserved_008[0x04];
-        IDirect3DVertexBuffer9*  half_texel_vertex_buffer_1;
-        ngl::texture*            sixty_fourth_target;
-        u8                       reserved_014[0x44];
-        IDirect3DVertexBuffer9*  quad_vertex_buffer_0;
-        f32                      inverse_height;
-        u8                       reserved_060[0x04];
-        ngl::vertex_definition   quad_vertex_definition;
-        ngl::vertex_definition   half_texel_vertex_definition;
-        ngl::texture*            render_targets[3];
-        u8                       reserved_088[0x30];
-        IDirect3DVertexBuffer9*  half_texel_vertex_buffer_0;
-        IDirect3DVertexBuffer9*  quad_vertex_buffer_1;
-        u8                       reserved_0c0[0x3F];
-        u8                       initialized;
-        u8                       reserved_100[0x58];
-        ngl::texture*            quarter_target;
-        u8                       reserved_15c[0x04];
-        post_process::system*    system;
+        ngl::texture*           eighth_target;
+        f32                     inverse_width;
+        u8                      reserved_008[0x04];
+        IDirect3DVertexBuffer9* half_texel_vertex_buffer_1;
+        ngl::texture*           sixty_fourth_target;
+        u8                      reserved_014[0x44];
+        IDirect3DVertexBuffer9* quad_vertex_buffer_0;
+        f32                     inverse_height;
+        u8                      reserved_060[0x04];
+        ngl::vertex_definition  quad_vertex_definition;
+        ngl::vertex_definition  half_texel_vertex_definition;
+        ngl::texture*           render_targets[3];
+        u8                      reserved_088[0x30];
+        IDirect3DVertexBuffer9* half_texel_vertex_buffer_0;
+        IDirect3DVertexBuffer9* quad_vertex_buffer_1;
+        u8                      reserved_0c0[0x3F];
+        u8                      initialized;
+        u8                      reserved_100[0x58];
+        ngl::texture*           quarter_target;
+        u8                      reserved_15c[0x04];
+        post_process::system*   system;
     };
-
-    void release_device_resources();
-    void restore_device_resources();
 
     namespace references {
         inline util::memory_reference<u8>                    active           { 0x00F4CD41 };
@@ -120,4 +108,4 @@ namespace treyarch { namespace ngl { namespace post_process {
     ASSERT_OFFSETOF(device_resource_state, initialized,                  0x0FF);
     ASSERT_OFFSETOF(device_resource_state, quarter_target,               0x158);
     ASSERT_OFFSETOF(device_resource_state, system,                       0x160);
-}}} // treyarch::ngl::post_process
+}} // treyarch::post_process

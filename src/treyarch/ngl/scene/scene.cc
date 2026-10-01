@@ -1,45 +1,21 @@
+#include "treyarch/ngl/d3d9/scene_state.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/scene/references.hh"
 
 using namespace treyarch;
 
-// sub_9E8FE0
+// sub_9D54C0
 ngl::scene* ngl::set_color_target(ngl::texture* target) {
-    ngl::scene* current_scene = ngl::references::current_scene.read();
+    ngl::scene* current_scene = d3d9::set_color_target(target);
 
-    current_scene->color_target  = target;
-    current_scene->cube_map_face = 0;
-
-    if (!target)
-        current_scene->options = 0;
-
-    current_scene->derived_matrices_dirty = 1;
+    ngl::references::current_scene.read()->derived_matrices_dirty = 1;
 
     return current_scene;
 }
 
-// sub_9E9020
+// sub_9D3810
 ngl::scene* ngl::set_depth_target(ngl::texture* target) {
-    ngl::scene* current_scene = ngl::references::current_scene.read();
-
-    current_scene->depth_target = target;
-
-    if (!target)
-        current_scene->options = 0;
-
-    return current_scene;
-}
-
-// sub_9E9000
-ngl::scene* ngl::set_auxiliary_target(ngl::texture* target) {
-    ngl::scene* current_scene = ngl::references::current_scene.read();
-
-    current_scene->auxiliary_target = target;
-
-    if (!target)
-        current_scene->options = 0;
-
-    return current_scene;
+    return d3d9::set_depth_target(target);
 }
 
 // sub_9D7D30
@@ -60,6 +36,13 @@ matrix4x4* ngl::set_world_to_view_matrix(const matrix4x4* world_to_view) {
     current_scene->derived_matrices_dirty = 1;
 
     return &current_scene->world_to_view;
+}
+
+// sub_9D3820
+u32 ngl::set_clear_stencil(u32 stencil) {
+    ngl::references::current_scene.read()->clear_stencil = stencil;
+
+    return stencil;
 }
 
 // sub_9D38C0

@@ -135,7 +135,7 @@ namespace treyarch { namespace ngl {
 
     scene* set_color_target(texture* target);
     scene* set_depth_target(texture* target);
-    scene* set_auxiliary_target(texture* target);
+    u32    set_clear_stencil(u32 stencil);
     scene* set_camera_matrix(const matrix4x4* camera_to_world);
     matrix4x4* set_world_to_view_matrix(const matrix4x4* world_to_view);
     scene* set_clear_depth(f32 depth);

@@ -12,6 +12,7 @@
 
 using namespace treyarch;
 
+// inlined into sub_9772D0
 void wds_render_manager::submit_light(render_region_info* entry,
                                       light_source*       source,
                                       entity*             selected_render_entity,
@@ -50,6 +51,7 @@ void wds_render_manager::submit_light(render_region_info* entry,
         (&references::worker_generations.get())[worker_index];
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::submit_region_renderables(render_data* frame_data) {
     for (u32 index = 0; index < frame_data->regions.size; ++index) {
         region* reg = frame_data->regions.entries[index].reg;
@@ -63,6 +65,7 @@ world_dynamics_system* wds_render_manager::get_world() {
     return (world_dynamics_system*)((u8*)this - offsetof(world_dynamics_system, render_mgr));
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::submit_world(world_dynamics_system* world) {
     using namespace references;
 
@@ -107,6 +110,7 @@ void wds_render_manager::submit_world(world_dynamics_system* world) {
     retail::sub_602210(worker_index, 0);
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::submit_blocked_world(world_dynamics_system* world) {
     world->hero_ptr->invoke_render_phase();
 

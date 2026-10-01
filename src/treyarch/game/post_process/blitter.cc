@@ -1,10 +1,11 @@
+#include "treyarch/game/post_process/blitter.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/d3d9/blitter.hh"
 
 using namespace treyarch;
 
-void ngl::d3d9::blitter::draw_fullscreen() {
+// sub_72F210
+void blitter::draw_fullscreen() {
     ngl::d3d9::binding_cache &bindings = ngl::d3d9::references::bindings.get();
     
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();

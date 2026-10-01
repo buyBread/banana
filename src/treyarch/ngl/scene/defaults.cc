@@ -2,6 +2,7 @@
 
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/d3d9/scene_state.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/scene/defaults.hh"
@@ -16,13 +17,12 @@ ngl::scene* ngl::set_default_scene_state() {
     d3d9::framebuffer_state &framebuffers =
         d3d9::references::framebuffers.get();
 
-    value->clear_stencil = 0;
-    set_depth_target(framebuffers.active_depth_buffer);
+    d3d9::set_default_depth_target();
 
-    set_color_target(framebuffers.back_buffer);
+    d3d9::set_color_target(framebuffers.back_buffer);
     value->derived_matrices_dirty = 1;
 
-    set_auxiliary_target(framebuffers.back_buffer);
+    d3d9::set_auxiliary_target(framebuffers.back_buffer);
     value->auxiliary_target = framebuffers.active_color_buffer;
 
     value->viewport_left   = -1.0f;

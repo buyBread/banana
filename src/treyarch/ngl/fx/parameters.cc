@@ -13,9 +13,9 @@
 #include "treyarch/ngl/scene/parameters.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/ngl/shadow/device_resources.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/shadow/shadow.hh"
 #include "util/memory_reference.hh"
 
 using namespace treyarch;

@@ -10,12 +10,14 @@
 namespace treyarch { namespace light_render_submission {
     using radius_method = f32 (__thiscall*)(light_source* self);
 
+    // inlined into sub_9772D0; virtual slot 142
     f32 get_light_radius(light_source* source) {
         auto method = (radius_method)source->vtable[142];
 
         return method(source);
     }
 
+    // inlined into sub_9772D0
     void submit_point_light(light_source* source) {
         ngl::lighting::point_light_data light;
 
@@ -30,6 +32,7 @@ namespace treyarch { namespace light_render_submission {
         deferred_lights::queue_point(result);
     }
 
+    // inlined into sub_9772D0
     void submit_spot_light(light_source* source) {
         ngl::lighting::spot_light_data light;
 
@@ -51,6 +54,7 @@ namespace treyarch { namespace light_render_submission {
         deferred_lights::queue_spot(result);
     }
 
+    // inlined into sub_9772D0
     void submit_directional_light(light_source* source) {
         vector4 direction_source = source->my_abs_po->matrix.y;
         vector4 direction;

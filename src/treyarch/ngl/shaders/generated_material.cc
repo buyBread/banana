@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstring>
 
+#include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
@@ -13,8 +14,6 @@
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
-#include "treyarch/ngl/shadow/device_resources.hh"
-#include "treyarch/ngl/shadow/projection.hh"
 
 using namespace treyarch;
 
@@ -35,6 +34,41 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
     void bind_texture(u32 stage, texture* value) {
         if (value)
             d3d9::set_texture(stage, value->gpu_texture.resource);
+    }
+
+    // the cascade selection retail inlines into each family's render body
+    u32 build_shadow_projection_matrices(      matrix4x4*  output,
+                                         const matrix4x4  &local_to_world,
+                                         const vector4    &local_sphere) {
+
+        vector3 world_center(local_sphere.x * local_to_world[0][0] + local_sphere.y * local_to_world[1][0] + local_sphere.z * local_to_world[2][0] + local_to_world[3][0],
+                             local_sphere.x * local_to_world[0][1] + local_sphere.y * local_to_world[1][1] + local_sphere.z * local_to_world[2][1] + local_to_world[3][1],
+                             local_sphere.x * local_to_world[0][2] + local_sphere.y * local_to_world[1][2] + local_sphere.z * local_to_world[2][2] + local_to_world[3][2]);
+
+        u32 cascades = shadow::get_cascade_mask(world_center, local_sphere.w);
+
+        const matrix4x4 &texture = shadow::references::projection_to_texture.get();
+
+        if ((cascades & 1) && (cascades & 2)) {
+            output[0] = local_to_world.affine() * shadow::references::matrix_0.get() * texture;
+            output[1] = local_to_world.affine() * shadow::references::matrix_1.get() * texture;
+
+            return 2;
+        }
+
+        if (cascades & 1) {
+            output[0] = local_to_world.affine() * shadow::references::matrix_0.get() * texture;
+
+            return 1;
+        }
+
+        if (cascades & 2) {
+            output[0] = local_to_world.affine() * shadow::references::matrix_1.get() * texture;
+
+            return 1;
+        }
+
+        return 0;
     }
 
     i32 binding(const program_exports::pixel_pipeline_descriptor &pipeline,
@@ -241,10 +275,9 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
     }
 
     if (receive_shadows) {
-        context->shadow_count = shadow::build_projection_matrices(
-            context->prefix.light_to_screen,
-            local_to_world,
-            section->sphere);
+        context->shadow_count = build_shadow_projection_matrices(context->prefix.light_to_screen,
+                                                                 local_to_world,
+                                                                 section->sphere);
     }
 
     context->compressed_to_local = fx::get_compressed_to_local(node_data);

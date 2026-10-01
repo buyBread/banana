@@ -1,14 +1,13 @@
 #include <cmath>
 
+#include "treyarch/game/post_process/post_process.hh"
+#include "treyarch/game/shader_resource_manager.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/post_process/device_resources.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/shaders/smsky/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/ngl/resources/references.hh"
-#include "treyarch/ngl/resources/shader_resource_manager.hh"
 
 using namespace treyarch;
 
@@ -54,7 +53,7 @@ void ngl::shaders::smsky::render(render_node* value) {
     IDirect3DVertexShader9** vertex_slot = references::sky_vertex_program.read();
 
     if (!vertex_slot) {
-        vertex_slot = resources::find_vertex_program("rvb_skysphere_vs");
+        vertex_slot = treyarch::references::shader_resource_manager.read()->find_vertex_program("rvb_skysphere_vs");
         references::sky_vertex_program.write(vertex_slot);
     }
 
@@ -71,7 +70,7 @@ void ngl::shaders::smsky::render(render_node* value) {
     IDirect3DPixelShader9** pixel_slot = references::sky_pixel_program.read();
 
     if (!pixel_slot) {
-        pixel_slot = resources::find_pixel_program("rvb_skybox");
+        pixel_slot = treyarch::references::shader_resource_manager.read()->find_pixel_program("rvb_skybox");
         references::sky_pixel_program.write(pixel_slot);
     }
 

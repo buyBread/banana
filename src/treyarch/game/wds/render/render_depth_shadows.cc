@@ -3,6 +3,7 @@
 #include "retail.hh"
 #include "treyarch/game/geometry/geometry_manager.hh"
 #include "treyarch/game/light/light_source_data.hh"
+#include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/region.hh"
@@ -15,7 +16,6 @@
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
-#include "treyarch/ngl/shadow/device_resources.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
 
 using namespace treyarch;
@@ -116,22 +116,22 @@ void treyarch::set_shadow_cascades(f32         distance_0,
                                    f32         start_1,
                                    ngl::scene* value) {
 
-    ngl::shadow::references::distance_0.write(distance_0);
-    ngl::shadow::references::distance_1.write(distance_1);
+    shadow::references::distance_0.write(distance_0);
+    shadow::references::distance_1.write(distance_1);
 
     // both cascades get the scene being entered, so after cascade 1 they match
-    ngl::shadow::references::scene_0.write(value);
-    ngl::shadow::references::scene_1.write(value);
+    shadow::references::scene_0.write(value);
+    shadow::references::scene_1.write(value);
 
     ngl::validate_matrices(value);
 
     f64 range_0 = (f64)distance_0 - (f64)start_0;
     f64 range_1 = (f64)distance_1 - (f64)start_1;
 
-    ngl::shadow::references::shadow_distances.write(vector4((f32)(1.0 / range_0),
-                                                            (f32)(1.0 / range_1),
-                                                            (f32)((f64)start_0 / range_0),
-                                                            (f32)((f64)start_1 / range_1)));
+    shadow::references::shadow_distances.write(vector4((f32)(1.0 / range_0),
+                                                       (f32)(1.0 / range_1),
+                                                       (f32)((f64)start_0 / range_0),
+                                                       (f32)((f64)start_1 / range_1)));
 }
 
 // sub_95D3F0
@@ -146,9 +146,9 @@ void treyarch::enter_shadow_scene(void* context) {
     const matrix4x4 &world_to_screen = *ngl::get_world_to_screen(ngl::references::current_scene.read());
 
     if (index == 0)
-        ngl::shadow::references::matrix_0.write(world_to_screen);
+        shadow::references::matrix_0.write(world_to_screen);
     else
-        ngl::shadow::references::matrix_1.write(world_to_screen);
+        shadow::references::matrix_1.write(world_to_screen);
 }
 
 // sub_95D460
@@ -162,10 +162,8 @@ void wds_render_manager::render_depth_shadows() {
     vector3 center = references::camera_position.get().get_xyz();
     const f32 span_caps[2] = { 20.0f, 60.0f };
 
-    ngl::shadow::device_resource_state &targets =
-        ngl::shadow::references::device_resources.get();
-    ngl::shadow::target_dimensions &dimensions =
-        ngl::shadow::references::dimensions.get();
+    shadow::device_resource_state &targets    = shadow::references::device_resources.get();
+    shadow::target_dimensions     &dimensions = shadow::references::dimensions.get();
 
     for (u32 index = 0; index < 2; ++index) {
         f32 span_cap = span_caps[index];

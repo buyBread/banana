@@ -17,6 +17,7 @@
 
 using namespace treyarch;
 
+// inlined into sub_9772D0
 bool wds_render_manager::is_special_case_level() {
     cutscene_player* player = treyarch::references::cutscene_player.read();
 
@@ -26,6 +27,7 @@ bool wds_render_manager::is_special_case_level() {
            (!std::strncmp(level_name, "act4_h", 6) || !std::strcmp(level_name, "Act3_Vulture_Hive"));
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::publish_scene_parameter(ngl::scene* value) {
     u32 parameter_id    = ngl::fx::references::parameter_id_scene_light_source.read();
     u32 parameter_value = retail::sub_7D72F0();
@@ -37,6 +39,7 @@ void wds_render_manager::publish_scene_parameter(ngl::scene* value) {
     value->parameters->values[parameter_id] = parameter_value;
 }
 
+// inlined into sub_9772D0
 f32 wds_render_manager::calculate_scene_near_plane(world_dynamics_system* world) {
     cutscene_player* player = treyarch::references::cutscene_player.read();
     f32 result = 0.25f;
@@ -70,6 +73,7 @@ f32 wds_render_manager::calculate_scene_near_plane(world_dynamics_system* world)
     return result;
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::configure_game_scene() {
     ngl::scene_callback_function null_callback =
         (ngl::scene_callback_function)retail::sub_5B4A70;
@@ -87,6 +91,7 @@ void wds_render_manager::configure_game_scene() {
                             (ngl::scene_callback_function)retail::sub_95CEF0);
 }
 
+// inlined into sub_9772D0
 void wds_render_manager::render_z_pre_pass(ngl::scene* game_scene, f32 near_plane) {
     ngl::scene* z_pre_pass = ngl::list_begin_scene(ngl::scene_parameter_parent);
 

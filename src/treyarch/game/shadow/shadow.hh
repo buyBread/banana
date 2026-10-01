@@ -2,6 +2,7 @@
 
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/types/vector3.hh"
 #include "treyarch/shared/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -11,7 +12,7 @@ namespace treyarch { namespace ngl {
     struct scene;
 }}
 
-namespace treyarch { namespace ngl { namespace shadow {
+namespace treyarch { namespace shadow {
     struct device_resource_state {
         ngl::texture* depth_targets[2];
         ngl::texture* color_targets[2];
@@ -22,8 +23,8 @@ namespace treyarch { namespace ngl { namespace shadow {
         u32 heights[2];
     };
 
-    void release_device_resources();
-    void restore_device_resources();
+    // bit 0: sphere inside cascade scene 0, bit 1: inside cascade scene 1
+    u32 get_cascade_mask(const vector3 &center, f32 radius);
 
     namespace references {
         inline util::memory_reference<u8>                    initialized           { 0x01073DFB };
@@ -47,4 +48,4 @@ namespace treyarch { namespace ngl { namespace shadow {
     ASSERT_SIZEOF  (target_dimensions,          0x10);
     ASSERT_OFFSETOF(target_dimensions, widths,  0x00);
     ASSERT_OFFSETOF(target_dimensions, heights, 0x08);
-}}} // treyarch::ngl::shadow
+}} // treyarch::shadow

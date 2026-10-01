@@ -1,7 +1,11 @@
 #pragma once
 
+#include <d3d9.h>
+
 #include "treyarch/game/wds/render/far_away_render_list.hh"
 #include "treyarch/game/wds/render/render_data.hh"
+#include "treyarch/ngl/fx/effect.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/math/types/vector4.hh"
 #include "treyarch/shared/mutex.hh"
@@ -20,6 +24,20 @@ namespace treyarch { namespace references {
     inline util::memory_reference<render_data*> render_data    { 0x010FB39C };
     inline util::memory_reference<region*>      current_region { 0x010FB398 };
 
+    // ensure_resources' lazily resolved resources
+    inline util::memory_reference<ngl::fx::effect*>        highlight_zprime_shader { 0x010FC598 };
+    inline util::memory_reference<ngl::fx::effect*>        highlight_shader        { 0x010FC59C };
+    inline util::memory_reference<ngl::fx::effect*>        highlight_skin_zprime   { 0x010FC5A0 };
+    inline util::memory_reference<ngl::fx::effect*>        highlight_skin          { 0x010FC5A4 };
+    inline util::memory_reference<ngl::fx::effect*>        buildinglod_zpass       { 0x010FC5A8 };
+    inline util::memory_reference<ngl::fx::effect*>        buildinglod_foam_core   { 0x010FC5AC };
+    inline util::memory_reference<ngl::fx::effect*>        roadlod_foam_core       { 0x010FC5B0 };
+    inline util::memory_reference<ngl::fx::effect*>        buildinglod_radar       { 0x010FC5B4 };
+    inline util::memory_reference<IDirect3DPixelShader9**> rvb_radar               { 0x010FC5B8 };
+    inline util::memory_reference<ngl::texture*>           radar_stroke            { 0x010FC5BC };
+    inline util::memory_reference<ngl::texture*>           dither_texture          { 0x010FC584 };
+    inline util::memory_reference<ngl::texture*>           horizon_clouds          { 0x010FC588 };
+
     inline util::memory_reference<ngl::scene*>                 published_scene      { 0x010FC5C8 };
     inline util::memory_reference<ngl::scene*>                 z_pre_pass_scene     { 0x010FC590 };
     inline util::memory_reference<far_away_render_list_entry*> far_away_render_list { 0x010FC50C };
@@ -37,13 +55,13 @@ namespace treyarch { namespace references {
 
     inline util::memory_reference<engine_recursive_lock> render_lock { 0x01075978 };
 
-    inline util::memory_reference<vector4>   near_plane_reference { 0x011161D0 };
+    inline util::memory_reference<vector4> near_plane_reference { 0x011161D0 };
 
     inline util::memory_reference<ngl::scene*> shadow_scene_0        { 0x01036E98 };
     inline util::memory_reference<ngl::scene*> shadow_scene_1        { 0x01036E9C };
     inline util::memory_reference<f32>         shadow_far_adjustment { 0x01110E64 };
 
-    // .rdata, both 1; gate the two sky directions the shadow light fit may use
+    // both 1
     inline util::memory_reference<u8> shadow_use_sky_direction_050 { 0x00BD3B13 };
     inline util::memory_reference<u8> shadow_use_sky_direction_070 { 0x00BD3B14 };
 }} // treyarch::references
