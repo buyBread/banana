@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+#include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/dinkumware/list.hh"
@@ -71,10 +72,10 @@ namespace treyarch {
         chuck::vm::script_function* script_function() const noexcept { return function; }
 
     private:
-        static void on_instance_lifecycle(i32                          reason,
+        static void on_instance_lifecycle(chuck::vm::e_script_instance_callback_reason reason,
                                           chuck::vm::script_instance*,
                                           chuck::vm::vm_thread*,
-                                          void*                        user_data);
+                                          void*                                        user_data);
     };
 
     ASSERT_SIZEOF(event_callback,        0x10);

@@ -1,61 +1,42 @@
 #pragma once
 
-#include <map>
-
-#include "treyarch/shared/mash/string.hh"
+#include "treyarch/chuck/vm/so_data_block.hh"
 #include "treyarch/shared/mash/vector.hh"
+#include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     struct script_var_debug_info {
-        std::map<mash::string, i32>* var_to_offset;
+        void* var_to_offset; // VC8 std::map<mash::string, int>
     };
 
     struct script_var_address_entry {
-        u32 name_hash; // mash::vector stores by ascending order of `name_hash`
-        u8* address;
+        u32 name_hash;
+        u8* address; // serialized as an offset into script_var_block, fixed up by sub_A20810
     };
 
-    struct script_variable_block {
-        void* buffer;
-        u32   size;
-        u32   ownership_flags;
-        void* fixed_block_owner;
+    enum e_script_var_container_flags : u32 {
+        script_var_container_flag_from_mash = 0x01, // teardown leaves image-embedded storage alone
+        script_var_container_flag_game      = 0x02, // the game container (resource type 10), otherwise shared (11)
+        script_var_container_flag_unk_04    = 0x04  // set after caller data is copied into the game block
     };
 
-    enum script_var_container_flags : u32 {
-        script_var_from_mash = 1u << 0,
-        script_var_is_game   = 1u << 1, // selects the game container
-        script_var_unk_04    = 1u << 2, // is set after copying caller data into game-variable storage
+    class script_var_container {
+
+    public:
+        u32                                    unk_00;                // written by resource-root construction, read by nothing known
+        so_data_block                          script_var_block;
+        mash::vector<script_var_address_entry> script_var_to_address; // sorted by name_hash; searched by sub_A20780
+        script_var_debug_info*                 debug_info;
+        e_script_var_container_flags           flags;
     };
 
-    struct script_var_container {
-        u32                            unk_00; // overwritten during resource root construction, then... nothing?
-        script_variable_block          script_var_block;
-        mash::vector
-            <script_var_address_entry> script_var_to_address;
-        script_var_debug_info*         debug_info;
-        script_var_container_flags     flags;
+    ASSERT_SIZEOF  (script_var_debug_info,    0x04);
+    ASSERT_SIZEOF  (script_var_address_entry, 0x08);
 
-        void* find(u32 hash) const {
-            i32 low  = 0;
-            i32 high = script_var_to_address.size - 1;
-
-            while (low <= high) {
-                i32 middle = (low + high) / 2;
-                
-                auto* entry = script_var_to_address.data[middle];
-
-                if (entry->name_hash == hash)
-                    return entry->address;
-
-                if (entry->name_hash < hash)
-                    low  = middle + 1;
-                else
-                    high = middle - 1;
-            }
-
-            return nullptr;
-        }
-    };
+    ASSERT_SIZEOF  (script_var_container,                        0x30);
+    ASSERT_OFFSETOF(script_var_container, script_var_block,      0x04);
+    ASSERT_OFFSETOF(script_var_container, script_var_to_address, 0x14);
+    ASSERT_OFFSETOF(script_var_container, debug_info,            0x28);
+    ASSERT_OFFSETOF(script_var_container, flags,                 0x2C);
 }}} // treyarch::chuck::vm

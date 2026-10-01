@@ -12,7 +12,7 @@
 
 namespace treyarch {
     namespace chuck { namespace vm {
-        struct script_executable;
+        class script_executable;
     }} // chuck::vm
 
     enum e_mission_manager_state : u32 {

@@ -11,9 +11,9 @@ namespace treyarch {
     class event_type;
 
     namespace chuck { namespace vm {
-        struct script_executable;
-        struct script_function;
-        struct script_instance;
+        class script_executable;
+        class script_function;
+        class script_instance;
     }}
 
     class event_manager {

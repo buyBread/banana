@@ -69,8 +69,7 @@ void event_recipient_entry::clear_script_callbacks(chuck::vm::script_executable*
             auto* script_callback = (script_event_callback*)callback;
             auto* instance        = script_callback->script_instance();
 
-            remove = instance &&
-                     (!executable || instance->object->executable == executable);
+            remove = instance && (!executable || instance->parent->parent == executable);
         }
 
         if (remove) {
@@ -93,7 +92,7 @@ void event_recipient_entry::clear_script_callback(string_hash function_name) {
             auto* script_callback = (script_event_callback*)callback;
 
             remove = script_callback->script_instance() &&
-                     script_callback->script_function()->signature_hash == function_name.source_hash_code;
+                     script_callback->script_function()->fullname == function_name;
         }
 
         if (remove) {

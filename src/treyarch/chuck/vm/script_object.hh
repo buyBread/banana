@@ -1,50 +1,53 @@
 #pragma once
 
-#include "treyarch/shared/mutex.hh"
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/vm_simple_list.hh"
+#include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/mutex.hh"
+#include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
-    struct script_executable;
+    class script_executable;
 
-    namespace fn {
-        inline auto object_find_function_by_index =
-            (script_function*(__thiscall*)
-            (script_object*, u32))
-            0x00A1CFE0;
-    }
-
-    struct script_object {
-        u32                       name_hash;
-        script_object*            parent;
-        script_executable*        executable;
-        script_instance*          global_instance;
-        u32                       instance_data_size;
-        u32                       function_container;
-        u32                       function_count;
-        script_function**         functions;
-        u32                       function_capacity;
-        u32                       function_state;
-        i32                       constructor_index;
-        i32                       destructor_index;
-        u8                        unk_30[0x18];
-        script_instance*          first_instance;
-        script_instance*          last_instance;
-        u32                       instance_count;
-        u32                       flags; //  0x1: [chuckvm] ( m_flags & SCRIPT_INSTANCE_FLAG_RUN_CALLED ) == 0
-                                         // 0x20: [chuckvm] !( is_flagged( SCRIPT_INSTANCE_FLAG_RUNNING_CALLBACKS ) )
-        ref_counted_simple_mutex* instance_lock;
-
-        script_function* function(u32 index) const {
-            if (!functions || index >= function_count)
-                return nullptr;
-
-            return functions[index];
-        }
-
-        script_function* find_function(u32 flattened_index) {
-            return fn::object_find_function_by_index(this, flattened_index);
-        }
+    enum e_script_object_flags : u32 {
+        script_object_flag_global_object = 0x01,
+        script_object_flag_from_mash     = 0x02, // SM3; no retail consumer checked
+        script_object_flag_needs_run     = 0x10, // set by thread creation and AUTODEST, recomputed by each run (sub_A1D590)
+        script_object_flag_singleton     = 0x20  // first run creates and runs one "__singleton" instance
     };
+
+    // funcs only holds this level;
+    // a serialized function index is flattened across the parent chain and resolved by sub_A1CFE0.
+    class script_object {
+
+    public:
+        string_hash                      name;
+        script_object*                   parent_object;
+        script_executable*               parent;
+        script_instance*                 global_instance;
+        i32                              data_blocksize;
+        mash::vector<script_function>    funcs;
+        i32                              constructor_index;
+        i32                              destructor_index; // negative when absent
+        u8                               unk_30[0x18];
+        vm_simple_list<script_instance*> instances;
+        e_script_object_flags            flags;
+        ref_counted_simple_mutex*        instance_lock;    // pooled
+    };
+
+    ASSERT_SIZEOF  (script_object,                    0x5C);
+    ASSERT_OFFSETOF(script_object, name,              0x00);
+    ASSERT_OFFSETOF(script_object, parent_object,     0x04);
+    ASSERT_OFFSETOF(script_object, parent,            0x08);
+    ASSERT_OFFSETOF(script_object, global_instance,   0x0C);
+    ASSERT_OFFSETOF(script_object, data_blocksize,    0x10);
+    ASSERT_OFFSETOF(script_object, funcs,             0x14);
+    ASSERT_OFFSETOF(script_object, constructor_index, 0x28);
+    ASSERT_OFFSETOF(script_object, destructor_index,  0x2C);
+    ASSERT_OFFSETOF(script_object, instances,         0x48);
+    ASSERT_OFFSETOF(script_object, flags,             0x54);
+    ASSERT_OFFSETOF(script_object, instance_lock,     0x58);
 }}} // treyarch::chuck::vm

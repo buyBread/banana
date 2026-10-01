@@ -1,116 +1,86 @@
 #pragma once
 
-#include "treyarch/shared/mutex.hh"
+#include "treyarch/chuck/vm/so_data_block.hh"
+#include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/chuck/vm/script_var_container.hh"
-#include "treyarch/chuck/vm/script_function.hh"
+#include "treyarch/shared/mutex.hh"
+#include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
-    struct vm_thread;
-    struct script_instance;
+    class script_instance;
+    class script_object;
+    class vm_thread;
 
-    namespace callback {
-        // reason 0: instance teardown; reason 1: thread destroy
-        using script_instance_lifecycle =
-            void(__cdecl*)
-            (i32 reason, script_instance* instance, vm_thread* thread, void* user_data);
+    enum e_script_instance_flags : u32 {
+        script_instance_flag_run_called         = 0x01,
+        script_instance_flag_auto_destruct      = 0x02, // AUTODEST; collected by the next object run once threadless
+        script_instance_flag_small_stack        = 0x04, // 128-byte thread stacks
+        script_instance_flag_large_stack        = 0x08, // 512-byte thread stacks
+        script_instance_flag_running_destructor = 0x10,
+        script_instance_flag_running_callbacks  = 0x20
+    };
 
-        // game_variables selects game-variable resource type 10 or shared-variable resource type 11
-        using get_script_var_resource =
-            script_var_container* (__cdecl*)
-            (const string_hash* name, i32* out_mash_data_size, bool game_variables); 
-    } // callback
+    enum e_script_instance_callback_reason : i32 {
+        script_instance_callback_reason_instance_about_to_die = 0,
+        script_instance_callback_reason_thread_about_to_die   = 1
+    };
 
+    using script_instance_callback_t = void(*)(e_script_instance_callback_reason reason,
+                                               script_instance*                  si,
+                                               vm_thread*                        vmt,
+                                               void*                             user_data);
+
+    using script_instance_created_callback_t   = void(*)(script_instance* inst);
+    using script_instance_destroyed_callback_t = void(*)(script_instance* inst);
+
+    namespace references {
+        // set_script_instance_callbacks (sub_A1DF80) from sub_843300: nothing, and the game's shadow teardown (sub_825DE0)
+        inline util::memory_reference<script_instance_created_callback_t>   script_instance_created_callback   { 0x01124BA8 };
+        inline util::memory_reference<script_instance_destroyed_callback_t> script_instance_destroyed_callback { 0x01124BAC };
+    } // references
+
+    // add: sub_A1DDC0, remove: sub_A1E160; pushed at the head, retail keeps no back link
     struct script_instance_callback_node {
         void*                          user_data;
         script_instance_callback_node* next;
     };
 
-    namespace fn {
-        inline auto instance_add_thread_with_arguments =
-            (vm_thread*(__thiscall*)
-            (script_instance*, script_function*, const void*, i32, void*, i32))
-            0x00A1E0F0;
+    class script_instance {
 
-        inline auto instance_add_lifecycle_callback =
-            (script_instance_callback_node*(__thiscall*)
-            (script_instance*, callback::script_instance_lifecycle, void*))
-            0x00A1DDC0;
-
-        inline auto instance_remove_lifecycle_callback =
-            (script_instance_callback_node*(__thiscall*)
-            (script_instance*, void*))
-            0x00A1E160;
-    }
-
-    struct script_instance {
-        u32                                 flags;
-        u32                                 name_hash;
-        script_variable_block               script_variables;
-        vm_thread*                          first_thread;
-        vm_thread*                          last_thread;
-        u32                                 thread_count;
-        script_object*                      object;
-        callback::script_instance_lifecycle lifecycle_callback;
-        script_instance_callback_node*      callback_list_head;
-        u8                                  unk_30[0x10];
-        engine_recursive_lock               thread_lock;
-        u8                                  unk_50[0x10];
-        script_instance**                   instance_list_owner;
-        script_instance*                    previous;
-        script_instance*                    next;
-        u32                                 unk_6c;
-
-        vm_thread* add_thread(script_function* function,
-                              const void*      arguments     = nullptr,
-                              i32              argument_size = 0,
-                              void*            context       = nullptr,
-                              i32              stack_size    = 0) {
-
-            if (!function || argument_size < 0 || (argument_size && !arguments))
-                return nullptr;
-
-            u32 maximum_initial_push = 0;
-
-            switch (stack_size) {
-                case 0:
-                case 128:
-                    maximum_initial_push = 284;
-                    break;
-
-                case 284:
-                    maximum_initial_push = 512;
-                    break;
-
-                case 512:
-                case 1024:
-                    maximum_initial_push = 1024;
-                    break;
-
-                default:
-                    return nullptr;
-            }
-
-            if ((u32)argument_size > maximum_initial_push)
-                return nullptr;
-
-            return fn::instance_add_thread_with_arguments(
-                this,
-                function,
-                arguments,
-                argument_size,
-                context,
-                stack_size);
-        }
-
-        void add_lifecycle_callback(callback::script_instance_lifecycle callback, void* user_data) {
-            fn::instance_add_lifecycle_callback(this, callback, user_data);
-        }
-
-        void remove_lifecycle_callback(void* user_data) {
-            fn::instance_remove_lifecycle_callback(this, user_data);
-        }
+    public:
+        e_script_instance_flags           flags;
+        string_hash                       name;          // "__singleton" for first-run singletons
+        so_data_block                     data;
+        vm_simple_list<vm_thread*>        threads;
+        script_object*                    parent;
+        script_instance_callback_t        callback;
+        script_instance_callback_node*    callback_nodes;
+        u8                                unk_30[0x08];
+        void*                             client_space;  // the game's script_instance_shadow (sub_825600)
+        u32                               unk_3c;
+        engine_recursive_lock             thread_lock;
+        u8                                unk_50[0x10];
+        vm_simple_list<script_instance*>* instance_list; // the parent's `instances`
+        script_instance*                  vm_simple_list_previous;
+        script_instance*                  vm_simple_list_next;
+        u32                               unk_6c;
     };
 
+    ASSERT_SIZEOF  (script_instance_callback_node, 0x08);
+
+    ASSERT_SIZEOF  (script_instance,                          0x70);
+    ASSERT_OFFSETOF(script_instance, flags,                   0x00);
+    ASSERT_OFFSETOF(script_instance, name,                    0x04);
+    ASSERT_OFFSETOF(script_instance, data,                    0x08);
+    ASSERT_OFFSETOF(script_instance, threads,                 0x18);
+    ASSERT_OFFSETOF(script_instance, parent,                  0x24);
+    ASSERT_OFFSETOF(script_instance, callback,                0x28);
+    ASSERT_OFFSETOF(script_instance, callback_nodes,          0x2C);
+    ASSERT_OFFSETOF(script_instance, client_space,            0x38);
+    ASSERT_OFFSETOF(script_instance, thread_lock,             0x40);
+    ASSERT_OFFSETOF(script_instance, instance_list,           0x60);
+    ASSERT_OFFSETOF(script_instance, vm_simple_list_previous, 0x64);
+    ASSERT_OFFSETOF(script_instance, vm_simple_list_next,     0x68);
 }}} // treyarch::chuck::vm

@@ -1,58 +1,64 @@
 #pragma once
 
+#include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/vector_basic.hh"
+#include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
-    struct script_object;
-    struct script_function;
+    class script_object;
 
-    namespace fn {
-        inline auto function_retain_argument_references =
-            (void(__thiscall*)(script_function*, i32, void*, u32, bool, bool))
-            0x00A20440;
+    enum e_script_function_flags : u16 {
+        script_function_flag_static                  = 0x01,
+        script_function_flag_from_mash               = 0x02,
+        script_function_flag_locals                  = 0x04,
+        script_function_flag_small_stack_recommended = 0x08, // 128-byte thread stack
+        script_function_flag_large_stack_recommended = 0x10, // 512-byte thread stack
+        script_function_flag_parms_builder           = 0x20
+    };
 
-        inline auto function_release_argument_references =
-            (void(__thiscall*)(script_function*, void*, u32))
-            0x00A20560;
-    }
-
-    enum class vm_reference_kind : u16 {
-        dynamic_array                 = 0,
-        string                        = 1,
-        ignored                       = 2,
-        string_dynamic_array          = 3,
-        script_instance_dynamic_array = 4
+    // how a reference-bearing argument is retained (sub_A20440) and released (sub_A20560)
+    enum e_vm_reference_kind : u16 {
+        vm_reference_kind_dynamic_array                 = 0,
+        vm_reference_kind_string                        = 1,
+        vm_reference_kind_ignored                       = 2,
+        vm_reference_kind_string_dynamic_array          = 3,
+        vm_reference_kind_script_instance_dynamic_array = 4
     };
 
     struct vm_reference_descriptor {
-        vm_reference_kind kind;
-        u16               offset;
+        e_vm_reference_kind kind;
+        u16                 offset; // into the argument block
     };
 
-    struct script_function {
-        u32                      record_size; // allocation extent used to distinguish inline from separately allocated descriptor storage
-        u32                      reference_descriptor_count;
-        vm_reference_descriptor* reference_descriptors;
-        u32                      unk_0c;
-        u32                      signature_hash; // includes the qualified typed parameter list
-        u32                      function_hash;  // omits it
-        u32                      optional_string_hash;
-        script_object*           object;
-        u8*                      code;
-        u32                      stack_metadata; // 16 low bits hold the argument byte size
-        u16                      unk_28;
-        u16                      flags;
+    ASSERT_SIZEOF(vm_reference_descriptor, 0x04);
 
-        u16 argument_size() const noexcept {
-            return (u16)stack_metadata;
-        }
+    class script_function {
 
-        void retain_argument_references(void* arguments, u32 size) {
-            fn::function_retain_argument_references(this, 0, arguments, size, true, false);
-        }
+    public:
+        // retail addition; the container's mash_image_offset is what separates inline from allocated records
+        mash::vector_basic<vm_reference_descriptor> reference_descriptors;
 
-        void release_argument_references(void* arguments, u32 size) {
-            fn::function_release_argument_references(this, arguments, size);
-        }
+        string_hash             fullname;        // typed signature; what CGC/CIC compare a name against
+        string_hash             name;            // without the parameter list
+        string_hash             event_parms_key;
+        script_object*          parent;
+        u16*                    buffer;          // linked wordcode
+        u16                     parms_stacksize; // argument bytes
+        u16                     event_parms_stacksize;
+        u16                     buffer_len;
+        e_script_function_flags flags;
     };
-}}} // treyarch::chuck
+
+    ASSERT_SIZEOF  (script_function,                        0x2C);
+    ASSERT_OFFSETOF(script_function, reference_descriptors, 0x00);
+    ASSERT_OFFSETOF(script_function, fullname,              0x10);
+    ASSERT_OFFSETOF(script_function, name,                  0x14);
+    ASSERT_OFFSETOF(script_function, event_parms_key,       0x18);
+    ASSERT_OFFSETOF(script_function, parent,                0x1C);
+    ASSERT_OFFSETOF(script_function, buffer,                0x20);
+    ASSERT_OFFSETOF(script_function, parms_stacksize,       0x24);
+    ASSERT_OFFSETOF(script_function, event_parms_stacksize, 0x26);
+    ASSERT_OFFSETOF(script_function, buffer_len,            0x28);
+    ASSERT_OFFSETOF(script_function, flags,                 0x2A);
+}}} // treyarch::chuck::vm
