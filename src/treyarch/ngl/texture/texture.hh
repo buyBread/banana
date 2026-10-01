@@ -56,9 +56,9 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<texture*>          white_texture               { 0x01118804 }; // "horizon_texture"
         inline util::memory_reference<texture*>          black_texture               { 0x01118808 };
         inline util::memory_reference<texture*>          invisible_texture           { 0x0111880C };
-        inline util::memory_reference<texture*>          framebuffer_texture         { 0x01123A1C };
-        inline util::memory_reference<texture*>          framebuffer_texture_general { 0x01123A20 };
-        inline util::memory_reference<texture*>          depth_texture               { 0x01123A28 };
+        inline util::memory_reference<fixed_string>      white_texture_name          { 0x011239B0 }; // "nglwhite", text null
+        inline util::memory_reference<fixed_string>      invisible_texture_name      { 0x011239B8 }; // "nglinvisible", text null
+        inline util::memory_reference<fixed_string>      black_texture_name          { 0x011239C0 }; // "nglblack", text null
         inline util::memory_reference<texture_directory> textures                    { 0x01118850 };
     } // references
 

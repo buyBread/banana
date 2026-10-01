@@ -9,12 +9,17 @@ namespace treyarch {
         char*       text;
         string_hash hash;
 
+        // shallow (stupid); retail's own copy is `assign`
         fixed_string &operator=(const fixed_string &other) {
             text = other.text;
             hash = other.hash;
 
             return *this;
         }
+
+        void set_text(const char* value);
+        
+        fixed_string &assign (const fixed_string &other);
     };
 
     inline fixed_string make_fixed_string(const char* text) {

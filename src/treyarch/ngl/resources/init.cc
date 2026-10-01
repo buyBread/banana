@@ -11,8 +11,8 @@
 
 using namespace treyarch;
 
-ngl::texture* create_solid_texture(u32 color, const char* name) {
-    ngl::texture* value = ngl::create_runtime_texture(0, D3DFMT_A8R8G8B8, 1, 1, 1);
+ngl::texture* create_solid_texture(u32 color, const fixed_string &name) {
+    ngl::texture* value = ngl::create_runtime_texture(0, D3DFMT_A8R8G8B8, 1, 1, 0, 1);
 
     auto resource = (IDirect3DTexture9*)value->gpu_texture.resource;
     
@@ -29,9 +29,9 @@ ngl::texture* create_solid_texture(u32 color, const char* name) {
 
 // sub_9E7AC0
 void initialize_builtin_textures() {
-    ngl::references::white_texture    .write(create_solid_texture(0xFFFFFFFF, "nglwhite"));
-    ngl::references::black_texture    .write(create_solid_texture(0xFF000000, "nglblack"));
-    ngl::references::invisible_texture.write(create_solid_texture(0x00000000, "nglinvisible"));
+    ngl::references::white_texture    .write(create_solid_texture(0xFFFFFFFF, ngl::references::white_texture_name.get()));
+    ngl::references::black_texture    .write(create_solid_texture(0xFF000000, ngl::references::black_texture_name.get()));
+    ngl::references::invisible_texture.write(create_solid_texture(0x00000000, ngl::references::invisible_texture_name.get()));
 }
 
 // sub_9E2240

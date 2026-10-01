@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
@@ -1177,7 +1178,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_depth_texture:
-                write_texture(entry, ngl::references::depth_texture.read());
+                write_texture(entry, ngl::d3d9::references::framebuffers.get().active_depth_buffer);
 
                 break;
             case parameter_temporary_0:
@@ -1275,8 +1276,8 @@ void ngl::fx::update_material_parameters(effect*         value,
             }
             case parameter_framebuffer_texture:
                 write_texture(entry, subset_effect ?
-                                ngl::references::framebuffer_texture.read() :
-                                ngl::references::framebuffer_texture_general.read());
+                                ngl::d3d9::references::framebuffers.get().back_buffer :
+                                ngl::d3d9::references::framebuffers.get().secondary_hdr_buffer);
                                             
                 break;
             case parameter_environment_map:

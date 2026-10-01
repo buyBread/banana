@@ -1,4 +1,5 @@
 #include "treyarch/shared/four_cc.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/memory/memory.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/ngl.hh"
@@ -78,8 +79,12 @@ void ngl::release_texture(texture* value) {
     if (value->render_target)
         value->render_target->Release();
 
-    if (owned)
+    if (owned) {
+        if (value->name.text)
+            memory::heap::free(value->name.text);
+
         memory::free(value);
+    }
 }
 
 void ngl::initialize_texture_directory() {

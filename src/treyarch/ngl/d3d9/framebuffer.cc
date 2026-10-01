@@ -26,6 +26,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
                                                      D3DFMT_A8R8G8B8,
                                                      mode.width,
                                                      mode.height,
+                                                     0,
                                                      1);
     ngl::name_runtime_texture(state.front_buffer, "nglFrontBuffer");
 
@@ -63,6 +64,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
              D3DFMT_R32F,
              mode.width,
              mode.height,
+             0,
              1);
         back_buffer_flags |= runtime_texture_depth_texture;
     }
@@ -71,6 +73,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
                                                     D3DFMT_A8R8G8B8,
                                                     mode.width,
                                                     mode.height,
+                                                    0,
                                                     1);
     ngl::name_runtime_texture(state.back_buffer, "nglBackBuffer");
 
@@ -82,6 +85,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
          D3DFMT_A8R8G8B8,
          mode.width,
          mode.height,
+         0,
          1);
     ngl::name_runtime_texture(state.secondary_ldr_buffer, "nglBackBufferLDR2");
 
@@ -90,6 +94,7 @@ ULONG ngl::d3d9::initialize_framebuffers() {
          D3DFMT_A8R8G8B8,
          mode.width,
          mode.height,
+         0,
          1);
     ngl::name_runtime_texture(state.secondary_hdr_buffer, "nglBackBufferHDR2");
 

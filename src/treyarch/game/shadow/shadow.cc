@@ -34,6 +34,7 @@ void shadow::create_device_resources() {
                                                                    format,
                                                                    dimensions.widths[index],
                                                                    dimensions.heights[index],
+                                                                   1,
                                                                    1);
 
         if (references::create_color_targets.read()) {
@@ -41,6 +42,7 @@ void shadow::create_device_resources() {
                                                                        D3DFMT_A8R8G8B8,
                                                                        dimensions.widths[index],
                                                                        dimensions.heights[index],
+                                                                       1,
                                                                        1);
         }
     }

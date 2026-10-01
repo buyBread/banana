@@ -1,25 +1,96 @@
 #include <cstring>
 
+#include "retail.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/texture/runtime.hh"
 #include "treyarch/shared/hash/algo.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
+
+// sub_9E23D0
+bool ngl::initialize_cube_resource(d3d9::texture_resource &resource,
+                                   u32                     edge_length,
+                                   u32                     level_count,
+                                   D3DFORMAT               format,
+                                   u8                      creation_flags) {
+
+    DWORD render_target = (creation_flags & 2) != 0;
+
+    resource.width         = edge_length;
+    resource.height        = edge_length;
+    resource.level_count   = level_count;
+    resource.depth         = 6;
+    resource.format        = format;
+    resource.usage         = render_target;
+    resource.resource_type = D3DRTYPE_CUBETEXTURE;
+    resource.resource      = nullptr;
+
+    if (creation_flags & 1)
+        resource.usage = render_target | 0x10;
+    else if (creation_flags & 6)
+        resource.usage = render_target | 0x08;
+
+    return true;
+}
+
+// sub_9E2440
+bool ngl::initialize_volume_resource(d3d9::texture_resource &resource,
+                                     u32                     width,
+                                     u32                     height,
+                                     u32                     depth,
+                                     u32                     level_count,
+                                     D3DFORMAT               format,
+                                     u8                      creation_flags) {
+
+    DWORD render_target = (creation_flags & 2) != 0;
+
+    resource.width         = width;
+    resource.height        = height;
+    resource.depth         = depth;
+    resource.level_count   = level_count;
+    resource.format        = format;
+    resource.usage         = render_target;
+    resource.resource_type = D3DRTYPE_VOLUMETEXTURE;
+    resource.resource      = nullptr;
+
+    if (creation_flags & 1)
+        resource.usage = render_target | 0x10;
+    else if (creation_flags & 6)
+        resource.usage = render_target | 0x08;
+
+    return true;
+}
 
 // sub_9E25B0
 ngl::texture* ngl::create_runtime_texture(u32       flags,
                                           D3DFORMAT format,
                                           u32       width,
                                           u32       height,
+                                          u32       depth,
                                           u32       level_count) {
 
     texture* value = (texture*)memory::allocate(sizeof(texture), 8, 0);
 
     std::memset(value, 0, sizeof(texture));
 
+    u32 guard = references::created_texture_name_guard.read();
+
+    if (!(guard & 1)) {
+        references::created_texture_name_guard.write(guard | 1);
+
+        fixed_string &name = references::created_texture_name.get();
+
+        name.hash = string_hash(hash::djb2("created"));
+        name.set_text("created");
+
+        retail::sub_ADE5FD(&ngl::release_created_texture_name); // the game's CRT atexit
+    }
+
+    value->name.assign(references::created_texture_name.get());
     value->flags = flags;
 
     u8 creation_flags = (flags & 0x00100000) != 0;
@@ -52,19 +123,16 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
             return value;
         }
 
-        value->gpu_texture.width       = width;
-        value->gpu_texture.height      = height;
-        value->gpu_texture.depth       = 1;
-        value->gpu_texture.level_count = 1;
-        value->gpu_texture.format      = format;
-        value->gpu_texture.usage       = d3d9::is_depth_surface_format(format) ?
-            D3DUSAGE_DEPTHSTENCIL : D3DUSAGE_RENDERTARGET;
-
+        // the descriptor stays zeroed; only the surface exists
         d3d9::create_surface_resource(&value->render_target,
                                       width,
                                       height,
                                       format);
-    } else
+    } else if (flags & texture_cube)
+        initialize_cube_resource(value->gpu_texture, width, level_count, format, creation_flags);
+    else if (flags & texture_volume)
+        initialize_volume_resource(value->gpu_texture, width, height, depth, level_count, format, creation_flags);
+    else
         d3d9::initialize_2d_resource(value->gpu_texture,
                                      width,
                                      height,
@@ -76,8 +144,8 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
     value->flags |= runtime_texture_owned;
 
     if (value->flags & runtime_texture_render_target)
-        ((IDirect3DTexture9*)value->gpu_texture.resource)->GetSurfaceLevel
-            (0, &value->render_target);
+        ( (IDirect3DTexture9*)value->gpu_texture.resource )
+            ->GetSurfaceLevel(0, &value->render_target);
 
     if (flags & runtime_texture_auto_depth) {
         u32 depth_flags = (flags & 0x210) | runtime_texture_surface_only;
@@ -94,6 +162,7 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
                                                      depth_format,
                                                      width,
                                                      height,
+                                                     1,
                                                      1);
     }
 
@@ -102,15 +171,28 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
     return value;
 }
 
-void ngl::name_runtime_texture(texture* value, const char* name) {
-    value->name.text  = nullptr;
-    value->name.hash  = string_hash(hash::djb2(name));
-    value->flags     |= runtime_texture_named_target;
+// sub_B77B50
+void ngl::release_created_texture_name() {
+    fixed_string &name = references::created_texture_name.get();
+
+    if (name.text)
+        memory::heap::free(name.text);
 }
 
-void ngl::register_runtime_texture(texture* value, const char* name) {
-    value->name.text = (char*)name;
-    value->name.hash = string_hash(hash::djb2(name));
+// inlined into sub_9E85D0
+void ngl::name_runtime_texture(texture* value, const char* name) {
+    fixed_string replacement;
+
+    replacement.text = nullptr;
+    replacement.hash = string_hash(hash::djb2(name));
+
+    value->name.assign(replacement);
+    value->flags |= runtime_texture_named_target;
+}
+
+// inlined into sub_9E7AC0
+void ngl::register_runtime_texture(texture* value, const fixed_string &name) {
+    value->name.assign(name);
 
     references::textures.get().insert(value);
 }

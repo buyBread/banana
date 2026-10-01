@@ -39,10 +39,10 @@ void post_process::create_device_resources() {
 
     const u32 target_flags = ngl::runtime_texture_render_target | 0x10;
 
-    state.render_targets[0]   = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width,      height,      1);
-    state.quarter_target      = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 2, height >> 2, 1);
-    state.eighth_target       = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 3, height >> 3, 1);
-    state.sixty_fourth_target = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 6, height >> 6, 1);
+    state.render_targets[0]   = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width,      height,      1, 1);
+    state.quarter_target      = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 2, height >> 2, 1, 1);
+    state.eighth_target       = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 3, height >> 3, 1, 1);
+    state.sixty_fourth_target = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 6, height >> 6, 1, 1);
 
     // position, texture coordinate
     const f32 quad[16] { -1.0f,  1.0f, 0.0f, 0.0f,
@@ -142,8 +142,8 @@ void post_process::create_device_resources() {
     i32 half_width  = width  >> 1;
     i32 half_height = height >> 1;
 
-    state.render_targets[1] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1);
-    state.render_targets[2] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1);
+    state.render_targets[1] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
+    state.render_targets[2] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
 
     f32 half_texel_u = (f32)(0.5 / (f64)(f32)half_width);
     f32 half_texel_v = (f32)(0.5 / (f64)(f32)half_height);
