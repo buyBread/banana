@@ -87,6 +87,36 @@ bool ngl::d3d9::is_depth_surface_format(D3DFORMAT format) {
     }
 }
 
+// sub_72BE50
+bool ngl::d3d9::initialize_2d_resource(texture_resource &resource,
+                                       u32               width,
+                                       u32               height,
+                                       u32               level_count,
+                                       D3DFORMAT         format,
+                                       u8                creation_flags) {
+
+    DWORD render_target = (creation_flags & 2) != 0;
+
+    resource.resource      = nullptr;
+    resource.width         = width;
+    resource.height        = height;
+    resource.depth         = 1;
+    resource.level_count   = level_count;
+    resource.format        = format;
+    resource.usage         = render_target;
+    resource.resource_type = D3DRTYPE_TEXTURE;
+
+    if (creation_flags & 1)
+        resource.usage = render_target | 0x10;
+    else if (creation_flags & 6)
+        resource.usage = render_target | 0x08;
+
+    if (creation_flags & 8)
+        resource.usage |= D3DUSAGE_DEPTHSTENCIL;
+
+    return true;
+}
+
 // sub_72BFF0
 void ngl::d3d9::create_surface_resource(IDirect3DSurface9** surface,
                                         u32                 width,

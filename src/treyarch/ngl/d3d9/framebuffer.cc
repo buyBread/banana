@@ -1,6 +1,7 @@
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/texture/runtime.hh"
 #include "treyarch/shared/four_cc.hh"
 
@@ -117,4 +118,43 @@ void ngl::d3d9::release_framebuffers() {
     ngl::release_texture(framebuffers.secondary_ldr_buffer);
     ngl::release_texture(framebuffers.front_buffer);
     ngl::release_texture(framebuffers.linear_depth_buffer);
+}
+
+// sub_9E7890
+ngl::texture* ngl::d3d9::get_back_buffer() {
+    return references::framebuffers.get().back_buffer;
+}
+
+// sub_72C3F0
+void ngl::d3d9::set_render_target(u32                 index,
+                                  IDirect3DSurface9** surface,
+                                  bool                release) {
+
+    IDirect3DDevice9* device =  references::device.get();
+    DWORD*            states = &references::render_states.get();
+
+    if (surface && *surface) {
+        IDirect3DSurface9* value = *surface;
+
+        if (!index) {
+            if (!references::color_writes_enabled.read() && states[D3DRS_COLORWRITEENABLE] != 15) {
+                states[D3DRS_COLORWRITEENABLE] = 15;
+                device->SetRenderState(D3DRS_COLORWRITEENABLE, 15);
+            }
+
+            references::color_writes_enabled.write(1);
+        }
+
+        device->SetRenderTarget(index, value);
+
+        if (release)
+            value->Release();
+    } else if (!index) {
+        if (references::color_writes_enabled.read() && states[D3DRS_COLORWRITEENABLE]) {
+            states[D3DRS_COLORWRITEENABLE] = 0;
+            device->SetRenderState(D3DRS_COLORWRITEENABLE, 0);
+        }
+
+        references::color_writes_enabled.write(0);
+    }
 }

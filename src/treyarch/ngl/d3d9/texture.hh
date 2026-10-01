@@ -22,6 +22,12 @@ namespace d3d9 {
 
     D3DPOOL get_texture_pool(const texture_resource* value);
     bool is_depth_surface_format(D3DFORMAT format);
+    bool initialize_2d_resource(texture_resource &resource,
+                                u32               width,
+                                u32               height,
+                                u32               level_count,
+                                D3DFORMAT         format,
+                                u8                creation_flags);
     void create_surface_resource(IDirect3DSurface9** surface,
                                  u32                 width,
                                  u32                 height,

@@ -5,23 +5,41 @@
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 
 namespace treyarch {
+    // RTTI Blitter
     struct blitter {
         void*                    vtable;
-        u32                      active;
+        u32                      reference_count; // one per owning filter, plus the system's
         IDirect3DVertexBuffer9*  vertex_buffer;
-        u8                       reserved_00c[0x18];
+        D3DVERTEXELEMENT9        vertex_elements[3];
         ngl::vertex_definition   vertex_format;
         IDirect3DVertexShader9** vertex_program;
-        u8                       reserved_034[0x10];
+        IDirect3DPixelShader9**  texture_program;
+        IDirect3DPixelShader9**  solid_color_program;
+        IDirect3DPixelShader9**  depth_texture_program;
+        IDirect3DPixelShader9**  color_depth_texture_program;
         matrix4x4                transforms[4];
 
+        blitter();
+
+        bool initialize();
+        void release();
         void draw_fullscreen();
     };
 
-    ASSERT_OFFSETOF(blitter, vertex_buffer,  0x08);
-    ASSERT_OFFSETOF(blitter, vertex_format,  0x24);
-    ASSERT_OFFSETOF(blitter, vertex_program, 0x30);
-    ASSERT_OFFSETOF(blitter, transforms,     0x44);
+    namespace references {
+        inline util::memory_reference<void*> blitter_vtable { 0x00BCA07C };
+    } // references
+
+    ASSERT_SIZEOF  (blitter,                              0x144);
+    ASSERT_OFFSETOF(blitter, reference_count,             0x04);
+    ASSERT_OFFSETOF(blitter, vertex_buffer,               0x08);
+    ASSERT_OFFSETOF(blitter, vertex_elements,             0x0C);
+    ASSERT_OFFSETOF(blitter, vertex_format,               0x24);
+    ASSERT_OFFSETOF(blitter, vertex_program,              0x30);
+    ASSERT_OFFSETOF(blitter, texture_program,             0x34);
+    ASSERT_OFFSETOF(blitter, color_depth_texture_program, 0x40);
+    ASSERT_OFFSETOF(blitter, transforms,                  0x44);
 } // treyarch

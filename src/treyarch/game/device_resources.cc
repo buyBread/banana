@@ -1,13 +1,14 @@
-#include "retail.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/movie_manager.hh"
+#include "treyarch/game/post_process/post_process.hh"
+#include "treyarch/game/shadow/shadow.hh"
 
 using namespace treyarch;
 
 // sub_97B160
 void game::release_device_resources() {
-    retail::sub_7660F0(); // post-process targets
-    retail::sub_771B10(); // shadow targets
+    post_process::release_device_resources();
+    shadow::release_device_resources();
 
     movie_manager* movies = references::movie_manager.read();
 
@@ -17,8 +18,8 @@ void game::release_device_resources() {
 
 // sub_97B180
 void game::restore_device_resources() {
-    retail::sub_765070(); // post-process targets
-    retail::sub_7719A0(); // shadow targets
+    post_process::create_device_resources();
+    shadow::create_device_resources();
 
     movie_manager* movies = references::movie_manager.read();
 

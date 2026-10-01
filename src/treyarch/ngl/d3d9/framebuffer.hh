@@ -30,7 +30,13 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void copy_active_depth();
     void generate_mipmaps(texture* value);
 
+    texture* get_back_buffer();
+    void set_render_target(u32                 index,
+                           IDirect3DSurface9** surface,
+                           bool                release);
+
     namespace references {
+        inline util::memory_reference<u8>                color_writes_enabled             { 0x00E796D0 }; // initial value 1
         inline util::memory_reference<u8>                particle_depth_texture_requested { 0x00F4CD42 };
         inline util::memory_reference<framebuffer_state> framebuffers                     { 0x01123A10 };
     } // references

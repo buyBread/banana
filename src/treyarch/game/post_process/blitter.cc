@@ -1,8 +1,75 @@
 #include "treyarch/game/post_process/blitter.hh"
+#include "treyarch/game/shader_resource_manager.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 
 using namespace treyarch;
+
+// sub_73C090
+blitter::blitter() {
+    vtable          = &references::blitter_vtable.get();
+    reference_count = 1;
+
+    for (u32 index = 0; index < 4; ++index) {
+        transforms[0][index] = vector4(1.0f);
+        transforms[1][index] = vector4(1.0f);
+        transforms[2][index] = vector4(0.0f);
+        transforms[3][index] = vector4(0.0f);
+    }
+}
+
+// sub_75E8A0
+bool blitter::initialize() {
+    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+
+    vertex_elements[0] = { 0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 };
+    vertex_elements[1] = { 0, 8, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 };
+    vertex_elements[2] = D3DDECL_END();
+
+    vertex_format.elements    = vertex_elements;
+    vertex_format.vertex_size = 16;
+    vertex_format.declaration = nullptr;
+
+    device->CreateVertexDeclaration(vertex_elements, &vertex_format.declaration);
+
+    shader_resource_manager* programs = references::shader_resource_manager.read();
+
+    vertex_program              = programs->find_vertex_program("blitter_vs");
+    texture_program             = programs->find_pixel_program ("blitter_texture_ps");
+    solid_color_program         = programs->find_pixel_program ("blitter_solid_color_ps");
+    depth_texture_program       = programs->find_pixel_program ("blitter_depth_texture_ps");
+    color_depth_texture_program = programs->find_pixel_program ("blitter_color_depth_texture_ps");
+
+    device->CreateVertexBuffer(3 * vertex_format.vertex_size,
+                               0,
+                               0,
+                               D3DPOOL_MANAGED,
+                               &vertex_buffer,
+                               nullptr);
+
+    f32* vertices = nullptr;
+    vertex_buffer->Lock(0, 0, (void**)&vertices, 0);
+
+    if (!vertices)
+        return false;
+
+    // one oversized triangle covering the viewport: position, texture coordinate
+    vertices[ 0] = 0.0f; vertices[ 1] = 0.0f; vertices[ 2] = 0.0f; vertices[ 3] = 0.0f;
+    vertices[ 4] = 2.0f; vertices[ 5] = 0.0f; vertices[ 6] = 2.0f; vertices[ 7] = 0.0f;
+    vertices[ 8] = 0.0f; vertices[ 9] = 2.0f; vertices[10] = 0.0f; vertices[11] = 2.0f;
+
+    vertex_buffer->Unlock();
+
+    return true;
+}
+
+// inlined into sub_75EB00
+void blitter::release() {
+    using deleting_destructor = void*(__thiscall*)(blitter*, u8);
+
+    if ((i32)reference_count > 0 && !--reference_count)
+        ((deleting_destructor*)vtable)[0](this, 1);
+}
 
 // sub_72F210
 void blitter::draw_fullscreen() {

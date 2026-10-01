@@ -9,34 +9,6 @@
 
 using namespace treyarch;
 
-// sub_72BE50
-void initialize_2d_resource(ngl::d3d9::texture_resource &resource,
-                            u32                          width,
-                            u32                          height,
-                            u32                          level_count,
-                            D3DFORMAT                    format,
-                            u8                           creation_flags) {
-
-    DWORD render_target = (creation_flags & 2) != 0;
-
-    resource.resource      = nullptr;
-    resource.width         = width;
-    resource.height        = height;
-    resource.depth         = 1;
-    resource.level_count   = level_count;
-    resource.format        = format;
-    resource.usage         = render_target;
-    resource.resource_type = D3DRTYPE_TEXTURE;
-
-    if (creation_flags & 1)
-        resource.usage = render_target | 0x10;
-    else if (creation_flags & 6)
-        resource.usage = render_target | 0x08;
-
-    if (creation_flags & 8)
-        resource.usage |= D3DUSAGE_DEPTHSTENCIL;
-}
-
 // sub_9E25B0
 ngl::texture* ngl::create_runtime_texture(u32       flags,
                                           D3DFORMAT format,
@@ -63,12 +35,12 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
 
     if (flags & runtime_texture_surface_only) {
         if (flags & runtime_texture_surface_level) {
-            initialize_2d_resource(value->gpu_texture,
-                                   width,
-                                   height,
-                                   1,
-                                   format,
-                                   (creation_flags & 0xF5) | 8);
+            d3d9::initialize_2d_resource(value->gpu_texture,
+                                         width,
+                                         height,
+                                         1,
+                                         format,
+                                         (creation_flags & 0xF5) | 8);
 
             d3d9::create_texture_resource(&value->gpu_texture);
             ( (IDirect3DTexture9*)value->gpu_texture.resource )->GetSurfaceLevel
@@ -93,12 +65,12 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
                                       height,
                                       format);
     } else
-        initialize_2d_resource(value->gpu_texture,
-                               width,
-                               height,
-                               level_count,
-                               format,
-                               creation_flags);
+        d3d9::initialize_2d_resource(value->gpu_texture,
+                                     width,
+                                     height,
+                                     level_count,
+                                     format,
+                                     creation_flags);
 
     d3d9::create_texture_resource(&value->gpu_texture);
     value->flags |= runtime_texture_owned;

@@ -26,7 +26,11 @@ namespace treyarch { namespace shadow {
     // bit 0: sphere inside cascade scene 0, bit 1: inside cascade scene 1
     u32 get_cascade_mask(const vector3 &center, f32 radius);
 
+    void create_device_resources();
+    void release_device_resources();
+
     namespace references {
+        inline util::memory_reference<u8>                    create_color_targets  { 0x00BE93CC }; // initial value 1, never written
         inline util::memory_reference<u8>                    initialized           { 0x01073DFB };
         inline util::memory_reference<device_resource_state> device_resources      { 0x01075FC0 };
         inline util::memory_reference<target_dimensions>     dimensions            { 0x00E7AFC4 };

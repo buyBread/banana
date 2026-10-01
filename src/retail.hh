@@ -13140,6 +13140,7 @@ namespace retail {
     inline auto const sub_73C760 = (u32 (__thiscall*)(void*self))0x0073C760;
     inline auto const sub_73C840 = (i32 (__cdecl*)(i32, i32, u32*, u32*))0x0073C840;
     inline auto const sub_73CEC0 = (i32 (__cdecl*)(i32, i32, u32*, f32*))0x0073CEC0;
+    inline auto const sub_73D140 = (i32 (__cdecl*)(i32, i32, i32, i32))0x0073D140; // manual: filter setup reached only through Filter+0x0C, never made a function in the IDA database
     inline auto const sub_73D250 = (i32 (__cdecl*)(i32, i32, i32, i32, f32*))0x0073D250; // __usercall
     inline auto const sub_73D3F0 = (char (__cdecl*)(i32, u32*, i32))0x0073D3F0; // __usercall
     inline auto const sub_73D5D0 = (u32 (__thiscall*)(u32*self, i32, i32, u64*))0x0073D5D0;
