@@ -148,4 +148,16 @@ namespace treyarch {
 
         vector3(const phys_vec3&); /* hey, what are you? */
     };
+
+    // L15938: SM3 .ii
+    inline f32 dot(const vector3 &a, const vector3 &b) {
+        return a.x*b.x + a.y*b.y + a.z*b.z;
+    }
+
+    // L15951: SM3 .ii
+    inline vector3 cross(const vector3 &a, const vector3 &b) {
+        return vector3(a.y * b.z - a.z * b.y,
+                       a.z * b.x - a.x * b.z,
+                       a.x * b.y - a.y * b.x);
+    }
 } // treyarch

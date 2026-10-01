@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
+#include "treyarch/game/geometry/geometry_manager.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/wds/terrain.hh"
 #include "treyarch/game/wds/render/references.hh"
@@ -40,7 +41,7 @@ void wds_render_manager::render() {
 
     ngl::scene* game_scene = ngl::references::current_scene.read();
 
-    ngl::set_world_to_view_matrix(&references::world_to_view.get());
+    ngl::set_world_to_view_matrix(&geometry_manager::references::world_to_view.get());
 
     ngl::calculate_matrices(game_scene);
     publish_scene_parameter(game_scene);

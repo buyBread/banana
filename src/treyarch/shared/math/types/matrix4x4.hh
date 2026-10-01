@@ -43,7 +43,7 @@ namespace treyarch {
               vector3 &w_row()       { return *(vector3*)&w; }
         const vector3 &w_row() const { return *(vector3*)&w; }        
 
-        void make_projection(f32 field_of_view=1.570795f, f32 aspect=1.0f, f32 near_plane=1.0f, f32 far_plane=1000.0f, f32 push=0.0f); /* hey, what are you? */
+        void make_projection(f32 field_of_view=1.570795f, f32 aspect=1.0f, f32 near_plane=1.0f, f32 far_plane=1000.0f, f32 push=0.0f);
         void make_frustum(f32 left=-1.0f, f32 top=-1.0f, f32 right=1.0f, f32 bottom=1.0f, f32 znear=1.0f,f32 zfar=1000.0f, f32 push=0.0f); /* hey, what are you? */ 
 
         matrix4x4& operator*=(f32 s) {

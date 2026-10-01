@@ -4,19 +4,24 @@
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
 #include "treyarch/game/wds/entity/interface_storage.hh"
+#include "treyarch/shared/container/fixed_vector.hh"
 #include "treyarch/shared/math/po.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch {
+    struct region;
+
     class entity {
 
     public:
-        void**             vtable;
-        u8                 reserved_004[0x0C];
-        po*                my_abs_po;
-        u8                 reserved_014[0x08];
-        interface_storage* my_ifc_storage;
+        void**                              vtable;
+        u8                                  reserved_004[0x0C];
+        po*                                 my_abs_po;
+        u8                                  reserved_014[0x08];
+        interface_storage*                  my_ifc_storage;
+        u8                                  reserved_020[0x30];
+        container::fixed_vector<region*, 8> regions; // the primary region is regions[0] (sub_612D30)
 
         // inlined; the milestone's has_<name>_ifc()
         bool has_ifc(e_entity_ifc index) const {
@@ -41,4 +46,5 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
+    ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch

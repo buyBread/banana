@@ -11,8 +11,7 @@ namespace treyarch {
     class generic_interface;
 
     /* the retail vtable prefix shared by every entity interface. it follows SM3's declaration order:
-       mash_virtual_base (0-8), generic_interface (9-17), then actor_/entity_interface::set_owner (18).
-       retail confirms the order through time_interface, which overrides only get/set_ifc_num of slots 9-14 */
+       mash_virtual_base (0-8), generic_interface (9-17), then actor_/entity_interface::set_owner (18). */
     struct generic_interface_vtable {
         void*        mash_virtual_base_slots[9];
         void*        get_ifc_num;

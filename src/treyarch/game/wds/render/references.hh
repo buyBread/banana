@@ -37,10 +37,13 @@ namespace treyarch { namespace references {
 
     inline util::memory_reference<engine_recursive_lock> render_lock { 0x01075978 };
 
-    inline util::memory_reference<matrix4x4> world_to_view        { 0x011107B0 };
     inline util::memory_reference<vector4>   near_plane_reference { 0x011161D0 };
 
     inline util::memory_reference<ngl::scene*> shadow_scene_0        { 0x01036E98 };
     inline util::memory_reference<ngl::scene*> shadow_scene_1        { 0x01036E9C };
     inline util::memory_reference<f32>         shadow_far_adjustment { 0x01110E64 };
+
+    // .rdata, both 1; gate the two sky directions the shadow light fit may use
+    inline util::memory_reference<u8> shadow_use_sky_direction_050 { 0x00BD3B13 };
+    inline util::memory_reference<u8> shadow_use_sky_direction_070 { 0x00BD3B14 };
 }} // treyarch::references

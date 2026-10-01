@@ -77,8 +77,6 @@ void ui_frontend::draw_startup() {
 
 // sub_6F5A70
 void ui_frontend::draw() {
-    using camera_fov_method = f32 (__thiscall*)(camera* self);
-
     retail::sub_698F40((i32)this);
     scene_draw_state_278 = 1;
 
@@ -95,9 +93,7 @@ void ui_frontend::draw() {
     if (!(fov_cache.state & 1)) {
         fov_cache.state |= 1;
 
-        camera* view_camera = references::game.read()->get_current_view_camera();
-        camera_fov_method get_fov = (camera_fov_method)view_camera->vtable[0x28C / 4];
-        fov_cache.field_of_view = get_fov(view_camera);
+        fov_cache.field_of_view = references::game.read()->get_current_view_camera()->get_fov();
     }
 
     const igo_draw_projection &projection = references::draw_projection.get();

@@ -170,3 +170,11 @@ void ngl::validate_matrices(scene* value) {
     if (value && value->derived_matrices_dirty)
         calculate_matrices(value);
 }
+
+// sub_9D7F20
+matrix4x4* ngl::get_world_to_screen(scene* value) {
+    if (value && value->derived_matrices_dirty)
+        calculate_matrices(value);
+
+    return &value->world_to_screen;
+}

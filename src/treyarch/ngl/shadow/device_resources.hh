@@ -35,6 +35,8 @@ namespace treyarch { namespace ngl { namespace shadow {
         inline util::memory_reference<matrix4x4>             projection_to_texture { 0x01075ED0 };
         inline util::memory_reference<ngl::scene*>           scene_0               { 0x01075F60 };
         inline util::memory_reference<ngl::scene*>           scene_1               { 0x01075FB0 };
+        inline util::memory_reference<f32>                   distance_0            { 0x01075F64 };
+        inline util::memory_reference<f32>                   distance_1            { 0x01075FB4 };
         inline util::memory_reference<u8>                    active                { 0x00F4CD40 };
     } // references
 
