@@ -1,5 +1,6 @@
 #include <d3d9.h>
 
+#include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
@@ -24,12 +25,24 @@ ULONG ngl::d3d9::init() {
     D3DDEVTYPE device_type = (D3DDEVTYPE)
         ((references::force_reference_device.read() != 0) + 1);
 
-    references::d3d9.get()->CreateDevice( 0,
-                                          device_type,
-                                          ngl::references::render_window.read(),
-                                          D3DCREATE_HARDWARE_VERTEXPROCESSING,
-                                         &references::presentation.get(),
-                                         &references::device.get());
+    HRESULT result = references::d3d9.get()->CreateDevice( 0,
+                                                           device_type,
+                                                           ngl::references::render_window.read(),
+                                                           D3DCREATE_HARDWARE_VERTEXPROCESSING,
+                                                          &references::presentation.get(),
+                                                          &references::device.get());
+
+    const D3DPRESENT_PARAMETERS &presentation = references::presentation.get();
+
+    banana::log.ngl("device created -- 0x{:08X} -- {} | {}x{} | {} | back buffer format: {} | refresh: {}Hz | interval: 0x{:08X}",
+                    (u32)result,
+                    device_type == D3DDEVTYPE_REF ? "reference" : "hardware",
+                    presentation.BackBufferWidth,
+                    presentation.BackBufferHeight,
+                    presentation.Windowed ? "windowed" : "fullscreen",
+                    (u32)presentation.BackBufferFormat,
+                    presentation.FullScreen_RefreshRateInHz,
+                    presentation.PresentationInterval);
 
     provision_default_work_buffers();
     references::device.get()->GetDeviceCaps(&references::capabilities.get());

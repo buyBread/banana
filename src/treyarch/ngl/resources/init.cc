@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "banana/logging.hh"
 #include "treyarch/amalga/apkf/loader.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/resources/init.hh"
@@ -51,6 +52,10 @@ void ngl::resources::init() {
 
     fixed_string system_font_name = make_fixed_string("ngl_sysfont");
     ngl::references::system_font.write((font*)resolve(&system_font_name, four_cc('F', 'O', 'N', 'T')));
+
+    banana::log.ngl("default resources -- ngl_default: {} | ngl_sysfont: {}",
+                    ngl::references::default_texture.read() ? "found" : "missing",
+                    ngl::references::system_font.read()     ? "found" : "missing");
 
     initialize_builtin_textures();
     amalga::apkf::set_resource_resolver(resolve);

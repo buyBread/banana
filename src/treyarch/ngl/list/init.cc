@@ -25,8 +25,8 @@ ngl::scene* ngl::list_init() {
     lighting::references::default_context.write
         (lighting::create_context());
 
-    if (references::synchronized_debug.get().disable_missing_texture_warning)
-        references::debug.get().disable_missing_texture_warning = 0;
+    if (references::synchronized_debug.get().dump_frame_log)
+        references::debug.get().dump_frame_log = 0;
 
     if (references::synchronized_debug.get().dump_scene_file) {
         references::debug.get().dump_scene_file = 0;

@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "banana/logging.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
@@ -106,8 +107,11 @@ ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
 void ngl::list_end_scene() {
     scene* value = references::current_scene.read();
 
-    if (value == references::root_scene.read())
+    if (value == references::root_scene.read()) {
         memory::report("Scene stack underflow (too many nglListEndScene calls!).\n");
+
+        banana::log.ngl("scene stack underflow; too many ngl::list_end_scene calls!");
+    }
 
     references::current_scene.write(value->parent);
 }
@@ -135,6 +139,8 @@ void ngl::set_scene_callback(e_scene_callback_type type,
 
     if ((u32)type > scene_callback_4) {
         memory::report("Unknown type for scene callback.");
+
+        banana::log.ngl("unknown type for scene callback ({})", (u32)type);
 
         return;
     }

@@ -1,3 +1,4 @@
+#include "banana/logging.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/material/material.hh"
@@ -18,21 +19,52 @@ void* ngl::resources::resolve(fixed_string* name, u32 type) {
     if (callback)
         return callback(name, type);
 
+    const char* display_name = name->text ? name->text : "(null)";
+
     switch (type) {
-        case four_cc('M', 'E', 'S', 'H'):
-            return ngl::references::meshes.get().find(name->hash);
+        case four_cc('M', 'E', 'S', 'H'): {
+            mesh* value = ngl::references::meshes.get().find(name->hash);
 
-        case four_cc('F', 'O', 'N', 'T'):
-            return ngl::references::fonts.get().find(name->hash);
+            if (!value)
+                banana::log.ngl("unable to find mesh \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
 
-        case four_cc('M', 'O', 'R', 'H'):
-            return ngl::references::morphs.get().find(name->hash);
+            return value;
+        }
 
-        case four_cc('M', 'A', 'T'):
-            return ngl::references::materials.get().find(name->hash);
+        case four_cc('F', 'O', 'N', 'T'): {
+            font* value = ngl::references::fonts.get().find(name->hash);
+
+            if (!value)
+                banana::log.ngl("unable to find font \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+
+            return value;
+        }
+
+        case four_cc('M', 'O', 'R', 'H'): {
+            morph_set* value = ngl::references::morphs.get().find(name->hash);
+
+            if (!value)
+                banana::log.ngl("unable to find morph \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+
+            return value;
+        }
+
+        case four_cc('M', 'A', 'T'): {
+            material* value = ngl::references::materials.get().find(name->hash);
+
+            if (!value)
+                banana::log.ngl("unable to find material \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+
+            return value;
+        }
 
         case four_cc('T', 'E', 'X'): {
             texture* value = ngl::references::textures.get().find(name->hash);
+
+            if (!value)
+                banana::log.ngl("unable to locate texture resource \"{}\" (0x{:08X}) -- assigning default texture",
+                                display_name,
+                                name->hash.source_hash_code);
 
             return value ? value : ngl::references::default_texture.read();
         }
@@ -40,8 +72,13 @@ void* ngl::resources::resolve(fixed_string* name, u32 type) {
         case four_cc('F', 'X', '\0'): {
             fx::effect* value = fx::find(name->hash);
 
-            if (!value)
+            if (!value) {
                 memory::report("NGL: Unable to locate effect resource %s - bailing.\n", name->text);
+
+                banana::log.ngl("unable to locate effect resource \"{}\" (0x{:08X}) -- bailing",
+                                display_name,
+                                name->hash.source_hash_code);
+            }
 
             return value;
         }

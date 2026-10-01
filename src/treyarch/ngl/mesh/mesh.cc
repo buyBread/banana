@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "banana/logging.hh"
 #include "treyarch/shared/four_cc.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/material/material.hh"
@@ -60,14 +61,24 @@ void ngl::release_mesh_section(mesh_section* section) {
 
 // sub_9DB0C0
 void ngl::process_mesh_section(mesh* owner, mesh_section* section) {
-    if (!section->material_data)
+    const char* mesh_name = owner->name.text ? owner->name.text : "(null)";
+
+    if (!section->material_data) {
+        banana::log.ngl("section of mesh \"{}\" is missing a material -- assigning default material", mesh_name);
+
         section->material_data = &get_default_material();
+    }
 
     material* section_material = section->material_data;
     shader*   section_shader   = section_material->shader_data;
 
-    if (section_shader && !section_shader->check_vertex_definition_version(section))
+    if (section_shader && !section_shader->check_vertex_definition_version(section)) {
+        banana::log.ngl("shader \"{}\" rejected the vertex definition of a mesh \"{}\" section -- assigning default shader",
+                        section_shader->get_name().text ? section_shader->get_name().text : "(null)",
+                        mesh_name);
+
         section_material->shader_data = &get_default_shader();
+    }
 
     upload_mesh_section(section);
 

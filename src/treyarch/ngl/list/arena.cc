@@ -1,3 +1,4 @@
+#include "banana/logging.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/shared/memory/memory.hh"
 
@@ -21,6 +22,11 @@ void* ngl::list::allocate(u32 size, u32 alignment) {
                    state.capacity,
                    size,
                    arena_end - aligned);
+
+    banana::log.ngl("render list allocation overflow -- reserved: {} | requested: {} | free: {}",
+                    state.capacity,
+                    size,
+                    (i32)(arena_end - aligned));
 
     return nullptr;
 }

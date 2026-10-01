@@ -1,3 +1,4 @@
+#include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/work_buffers.hh"
@@ -33,18 +34,28 @@ void ngl::set_buffer_size(e_buffer_type buffer,
 
     switch (buffer) {
         case buffer_list_work:
+            banana::log.ngl("list work buffer size -> 0x{:X} bytes", size);
             list::replace_storage(size);
+
             break;
         case buffer_scratch_index:
+            banana::log.ngl("scratch index buffer size -> 0x{:X} indices", size);
             d3d9::replace_scratch_index_buffers(size);
+
             break;
         case buffer_scratch_vertex:
+            banana::log.ngl("scratch vertex buffer size -> 0x{:X} bytes", size);
             d3d9::replace_scratch_vertex_buffers(size);
+
             break;
         case buffer_platform_work:
+            banana::log.ngl("platform work buffer size -> 0x{:X} bytes", size);
             d3d9::replace_platform_work_buffer(size);
+
             break;
         default:
+            banana::log.ngl("unknown buffer type {} (size 0x{:X})", (u32)buffer, size);
+            
             break;
     }
 

@@ -1,3 +1,4 @@
+#include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/geometry_stream.hh"
 #include "treyarch/shared/memory/memory.hh"
@@ -113,6 +114,8 @@ ngl::d3d9::geometry_stream::segment* ngl::d3d9::geometry_stream::allocate_segmen
 
     if (value->allocation_start.buffer_index > 0) {
         memory::report("Ran out of geometry shader vertex buffer memory.  Increase size in ngl_geometryshader.cpp.");
+
+        banana::log.ngl("ran out of geometry shader vertex buffer memory -- requested: {} bytes", byte_count);
 
         LeaveCriticalSection(&references::critical_section.get());
 

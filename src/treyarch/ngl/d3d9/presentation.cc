@@ -47,9 +47,15 @@ void ngl::d3d9::flip() {
     if (!references::window_inactive.read()) {
         HRESULT result = device->Present(nullptr, nullptr, nullptr, nullptr);
 
-        if (result == D3DERR_DEVICELOST) {
-            banana::log.ngl("device lost");
+        static bool device_lost = false; // logging only, retail keeps no such state
 
+        if (device_lost != (result == D3DERR_DEVICELOST)) {
+            device_lost = !device_lost;
+
+            banana::log.ngl(device_lost ? "device lost" : "device restored");
+        }
+
+        if (result == D3DERR_DEVICELOST) {
             Sleep(100);
 
             if (device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)

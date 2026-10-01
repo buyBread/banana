@@ -103,11 +103,11 @@ void ngl::d3d9::reset_device() {
     game::release_device_resources();
 
     references::presentation.get().PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-    references::device.get()->Reset(&references::presentation.get());
+    HRESULT result = references::device.get()->Reset(&references::presentation.get());
 
     initialize_framebuffers();
 
     game::restore_device_resources();
 
-    banana::log.ngl("device has been reset");
+    banana::log.ngl("device reset -- 0x{:08X}", (u32)result);
 }
