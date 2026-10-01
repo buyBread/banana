@@ -65,8 +65,8 @@ app::app() {
     retail::sub_428F60();
     retail::sub_42A700();
     mission_manager::create_inst();
-    retail::sub_428B00();
-    retail::sub_428C20();
+    retail::sub_428B00(); // quest_manager::create_inst
+    retail::sub_428C20(); // game_meter_manager::create_inst
     retail::sub_428C80();
     retail::sub_428D40();
     retail::sub_428CE0();
@@ -81,7 +81,7 @@ app::app() {
     mash::string string_hash_dictionary = *(mash::string*)retail::sub_7EFAB0(platform_pc) + "debug\\string_hash_dictionary";
 
     retail::sub_428F00(); // mission_memory_manager::create_inst
-    retail::sub_428A10();
+    retail::sub_428A10(); // trigger_manager::create_inst
     retail::sub_4290F0(); // dinput_mgr::create_inst
     retail::sub_428E90(); // input_mgr::create_inst
 

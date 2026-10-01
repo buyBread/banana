@@ -19,15 +19,18 @@ namespace treyarch {
 
     class ui_frontend;
 
-    using ui_frontend_method = void (__thiscall*)(ui_frontend* self);
+    using ui_frontend_method         = void (__thiscall*)(ui_frontend* self);
+    using ui_frontend_advance_method = void (__thiscall*)(ui_frontend* self, f32 time_inc);
 
     struct ui_frontend_vtable {
-        void*              reserved_000[9];
-        ui_frontend_method draw;
-        ui_frontend_method draw_startup;
-        ui_frontend_method draw_quad_list;
-        ui_frontend_method draw_pass_1;
-        ui_frontend_method draw_pass_2;
+        void*                      reserved_000[6];
+        ui_frontend_advance_method update; // KSPS IGOUpdate, SM3 IGOFrontEnd::Update; see game::frame_advance_game_overlays
+        void*                      reserved_01c[2];
+        ui_frontend_method         draw;
+        ui_frontend_method         draw_startup;
+        ui_frontend_method         draw_quad_list;
+        ui_frontend_method         draw_pass_1;
+        ui_frontend_method         draw_pass_2;
     };
 
     namespace references {
@@ -131,6 +134,7 @@ namespace treyarch {
     };
 
     ASSERT_SIZEOF  (ui_frontend_vtable,                 0x38);
+    ASSERT_OFFSETOF(ui_frontend_vtable, update,         0x18);
     ASSERT_OFFSETOF(ui_frontend_vtable, draw,           0x24);
     ASSERT_OFFSETOF(ui_frontend_vtable, draw_startup,   0x28);
     ASSERT_OFFSETOF(ui_frontend_vtable, draw_quad_list, 0x2C);

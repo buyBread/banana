@@ -51,15 +51,15 @@ game::game() {
     i_quit                          = 0;
     level_is_loaded                 = 0;
     level_is_unloading              = 0;
-    unk_04b                         = 0;
+    load_new_level                  = 0;
     unk_04d                         = 1;
-    unk_04e                         = 0;
-    unk_04f                         = 0;
+    debug_single_step               = 0;
+    debug_stop_physics              = 0;
     unk_050                         = 0;
     unk_054                         = 0.45f;
     game_paused                     = 0;
     use_default_hero_start_position = 1;
-    unk_05c                         = 0;
+    wait_for_intro_scene_anim       = 0;
 
     base_camera         = nullptr;
     current_game_camera = nullptr;

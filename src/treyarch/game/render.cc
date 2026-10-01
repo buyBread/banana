@@ -5,6 +5,7 @@
 #include "treyarch/game/movie_manager.hh"
 #include "treyarch/game/wds/render/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
+#include "treyarch/game/zombie_manager.hh"
 #include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
@@ -13,15 +14,13 @@
 #include "util/memory_reference.hh"
 
 namespace treyarch {
-    // fancy "we know what these are" statement
-    class zombie_manager;
-
     namespace references {
-        util::memory_reference<u8>              render_flag_00bcd0ba { 0x00BCD0BA };
-        util::memory_reference<u8>              movie_clears_screen  { 0x0102CDDA };
-        util::memory_reference<movie_manager*>  movies               { 0x0102F2DC };
-        util::memory_reference<zombie_manager*> zombies              { 0x0102FFF0 };
-        util::memory_reference<void*>           scene_callback_state { 0x010FB390 };
+        util::memory_reference<u8> render_flag_00bcd0ba { 0x00BCD0BA };
+        util::memory_reference<u8> movie_clears_screen  { 0x0102CDDA };
+
+        util::memory_reference<movie_manager*> movies { 0x0102F2DC };
+
+        util::memory_reference<void*> scene_callback_state { 0x010FB390 };
     } // references
 
     namespace helpers {

@@ -88,18 +88,18 @@ namespace treyarch {
         u8                               disable_interface;
         u8                               disable_start_menu;
         u8                               i_quit;
-        u8                               unk_04b;
+        u8                               load_new_level;
         u8                               level_is_loaded;
         u8                               unk_04d;
-        u8                               unk_04e;
-        u8                               unk_04f;
+        u8                               debug_single_step;
+        u8                               debug_stop_physics;
         u32                              unk_050;
         f32                              unk_054;
         u8                               game_paused;
-        u8                               reserved_059;
+        u8                               unk_059; // set by sub_97CA40 on top of game_paused; scripts keep running while set
         u8                               use_default_hero_start_position;
         u8                               level_is_unloading;
-        u8                               unk_05c;
+        u8                               wait_for_intro_scene_anim;
         u8                               reserved_05d[0x03];
         i32                              hero_freeze_depth;
         world_dynamics_system*           the_world;
@@ -139,6 +139,10 @@ namespace treyarch {
         void pop_process();
 
         void handle_game_states(f32* time_inc);
+        void advance_state_running(f32 time_inc);
+        void advance_state_paused(f32 time_inc);
+        void soft_reset_process();
+        void frame_advance_game_overlays(f32 time_inc);
 
         camera_handle get_current_view_camera();
         

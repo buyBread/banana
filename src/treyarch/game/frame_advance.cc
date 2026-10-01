@@ -1,7 +1,9 @@
 #include "retail.hh"
+#include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/quest_manager.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
@@ -15,8 +17,6 @@ namespace treyarch {
         util::memory_reference<frame_delta_history> delta_history      { 0x00F4D0E0 };
         util::memory_reference<void*>               raw_delta_consumer { 0x010F9BEC };
         util::memory_reference<i32>                 frame_delta_index  { 0x01111398 };
-
-        util::memory_reference<void*> unk_01087fd4 { 0x01087FD4 };
 
         // static data only read by frame_advance_level: 1 and 0 respectively
         util::memory_reference<u8> unk_00b88707 { 0x00B88707 };
@@ -99,11 +99,21 @@ void game::frame_advance_level(f32 time_inc) {
 
     references::mission_manager.read()->frame_advance(time_inc);
     
-    retail::sub_801790((i32)references::unk_01087fd4.read(), time_inc);
+    retail::sub_801790((i32)references::quest_manager.read(), time_inc);
     this->handle_game_states(&time_inc);
 
     if (!references::cameras_handled.read())
         retail::sub_97C060((i32)this, (i32)input_manager, &time_inc);
 
     retail::sub_7D1EB0();
+}
+
+// sub_97AF90
+void game::frame_advance_game_overlays(f32 time_inc) {
+    frontend_manager &frontend = references::frontend.get();
+
+    frontend.igo->vtable->update(frontend.igo, time_inc);
+    frontend.pause_menu_timer = (f32)((f64)frontend.pause_menu_timer - (f64)time_inc);
+
+    retail::sub_698A30(&frontend, time_inc);
 }
