@@ -63,8 +63,8 @@ void ui_frontend::draw_script_widgets() {
 
                         bracketed = label->data()[0] == '[';
 
-                        // the temporary dies through this twin of the string destructor, not sub_A6CEE0
-                        retail::sub_A6CCA0(label, 0);
+                        // the temporary dies through finalize, the destructor's twin
+                        label->finalize(mash::ALLOCATED);
                     }
 
                     if (bracketed)

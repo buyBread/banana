@@ -11,6 +11,7 @@
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
+#include "util/gimmie/fn.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
