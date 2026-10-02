@@ -75,7 +75,7 @@ void draw_fullscreen_quad(const fullscreen_vertex* vertices) {
 
     binding_cache &bindings = references::bindings.get();
 
-    bindings.stream_source      = nullptr;
+    bindings.stream_sources[0]  = nullptr;
     bindings.vertex_declaration = nullptr;
 
     IDirect3DDevice9* device = references::device.get();

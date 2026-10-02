@@ -24,7 +24,7 @@ void ngl::d3d9::reset_bindings() {
     IDirect3DDevice9* device = references::device.get();
     binding_cache& bindings = references::bindings.get();
 
-    bindings.stream_source = nullptr;
+    bindings.stream_sources[0] = nullptr;
     bindings.vertex_declaration = nullptr;
     device->SetStreamSource(0, nullptr, 0, 0);
 
@@ -85,6 +85,33 @@ void ngl::d3d9::set_vertex_definition(const vertex_definition* value) {
 
     bindings.vertex_declaration = declaration;
     references::device.get()->SetVertexDeclaration(declaration);
+}
+
+// sub_72C260
+void ngl::d3d9::set_stream_source(      IDirect3DVertexBuffer9** buffer,
+                                  const vertex_definition*       definition,
+                                        u32                      offset,
+                                        u32                      stream) {
+
+    binding_cache &bindings = references::bindings.get();
+
+    IDirect3DVertexDeclaration9* declaration = definition->declaration;
+
+    // the cache stores where the buffer pointer lives, shifted by the offset and the stream
+    u32 key = (stream << 16) + (u32)buffer + offset;
+
+    if ((u32)bindings.stream_sources[stream] == key && bindings.vertex_declaration == declaration)
+        return;
+
+    IDirect3DDevice9* device = references::device.get();
+
+    if (bindings.vertex_declaration != declaration)
+        device->SetVertexDeclaration(declaration);
+
+    device->SetStreamSource(stream, *buffer, offset, definition->vertex_size);
+
+    bindings.stream_sources[stream] = (IDirect3DVertexBuffer9*)key;
+    bindings.vertex_declaration     = declaration;
 }
 
 // sub_9DCC80

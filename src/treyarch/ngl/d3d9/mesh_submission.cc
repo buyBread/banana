@@ -33,7 +33,7 @@ void bind_mesh_section_with_offset(ngl::mesh_section* value,
 
     u32 stream_key = (u32)&value->vertex_buffer + vertex_offset;
 
-    if ((u32)bindings.stream_source      == stream_key &&
+    if ((u32)bindings.stream_sources[0]  == stream_key &&
              bindings.vertex_declaration == declaration) {
 
         return;
@@ -52,7 +52,7 @@ void bind_mesh_section_with_offset(ngl::mesh_section* value,
                             vertex_offset,
                             value->vertex_definition_data->vertex_size);
 
-    bindings.stream_source = (IDirect3DVertexBuffer9*)stream_key;
+    bindings.stream_sources[0] = (IDirect3DVertexBuffer9*)stream_key;
 }
 
 void ngl::d3d9::bind_mesh_section(mesh_section* value) {

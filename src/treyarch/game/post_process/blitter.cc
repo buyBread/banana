@@ -84,7 +84,7 @@ void blitter::draw_fullscreen() {
 
     u32 stream_key = (u32)&vertex_buffer;
 
-    if ((u32)bindings.stream_source != stream_key ||
+    if ((u32)bindings.stream_sources[0] != stream_key ||
         bindings.vertex_declaration != vertex_format.declaration) {
 
         if (bindings.vertex_declaration != vertex_format.declaration) {
@@ -93,7 +93,7 @@ void blitter::draw_fullscreen() {
         }
 
         device->SetStreamSource(0, vertex_buffer, 0, vertex_format.vertex_size);
-        bindings.stream_source = (IDirect3DVertexBuffer9*)stream_key;
+        bindings.stream_sources[0] = (IDirect3DVertexBuffer9*)stream_key;
     }
 
     f32 constants[19][4] {};

@@ -151,7 +151,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
         }
 
         d3d9::binding_cache &bindings = d3d9::references::bindings.get();
-        bindings.stream_source      = nullptr;
+        bindings.stream_sources[0]  = nullptr;
         bindings.vertex_declaration = nullptr;
 
         d3d9::references::device.get()->SetStreamSource(0, nullptr, 0, 0);
@@ -253,7 +253,7 @@ void ngl::morph_geometry::render(render_node* value) {
 
     material_node->base.render();
 
-    bindings.unk_044[0] = 0;
+    bindings.stream_sources[1]  = nullptr;
     bindings.vertex_declaration = nullptr;
 
     device->SetStreamSource(1, nullptr, 0, 0);

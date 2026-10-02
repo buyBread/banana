@@ -207,6 +207,11 @@ namespace treyarch { namespace post_process {
     void render_pause_menu_blur(f32 strength);
     void render_zoom_map_effect();
 
+    void draw_pause_menu_blur(void* data);
+    void draw_zoom_map_effect(void* data);
+
+    void set_render_target(ngl::texture* target);
+
     // `filter::setup` callbacks; each falls back to its own defaults when `parameters` is null
     void setup_luminosity_filter(      treyarch::blitter*     owner,
                                        texture_array*         targets,
@@ -292,6 +297,13 @@ namespace treyarch { namespace post_process {
         // the taps times the blur strength, written by render_pause_menu_blur for its callback
         inline util::memory_reference<blur_taps> pause_menu_blur_scaled_horizontal_taps { 0x01030940 }; // x
         inline util::memory_reference<blur_taps> pause_menu_blur_scaled_vertical_taps   { 0x010319F0 }; // y
+
+        // 13 gaussian weights in x, one per tap
+        inline util::memory_reference<vector4> pause_menu_blur_weights { 0x00E76F98 };
+        inline util::memory_reference<vector4> unk_00e79590            { 0x00E79590 }; // (1, 0, 0, 0)
+        inline util::memory_reference<vector4> zoom_map_effect_color   { 0x01032030 }; // function-local static
+
+        inline util::memory_reference<u32> zoom_map_effect_color_guard { 0x01032040 };
 
         // offset vectors written by create_device_resources and never read in PC
         inline util::memory_reference<vector4> unk_010311d0 { 0x010311D0 };

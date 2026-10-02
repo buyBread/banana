@@ -149,7 +149,7 @@ void ngl::string_renderer::render(node* value) {
                                              { left,  bottom, depth, current->color, rectangle.u, bottom_v    } };
 
             d3d9::binding_cache &bindings = d3d9::references::bindings.get();
-            bindings.stream_source      = nullptr;
+            bindings.stream_sources[0]  = nullptr;
             bindings.vertex_declaration = nullptr;
 
             device->SetVertexDeclaration(d3d9::references::quad_position_color_uv_format.get().declaration);

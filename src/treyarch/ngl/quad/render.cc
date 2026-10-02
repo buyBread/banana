@@ -79,7 +79,7 @@ void ngl::quad_renderer::render(node* value) {
     d3d9::set_pixel_program(*pixel_program);
 
     d3d9::binding_cache &bindings = d3d9::references::bindings.get();
-    bindings.stream_source      = nullptr;
+    bindings.stream_sources[0]  = nullptr;
     bindings.vertex_declaration = nullptr;
 
     auto* device = d3d9::references::device.get();
