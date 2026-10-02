@@ -24,80 +24,80 @@ u32 ngl::d3d9::get_primitive_count(D3DPRIMITIVETYPE primitive_type,
     }
 }
 
-void bind_mesh_section_with_offset(ngl::mesh_section* value,
-                                   i32                vertex_offset) {
+// sub_72C2E0
+void ngl::d3d9::draw_primitive(      D3DPRIMITIVETYPE         primitive_type,
+                                     u32                      vertex_count,
+                                     u32                      vertex_offset,
+                                     IDirect3DVertexBuffer9** vertex_buffer,
+                               const vertex_definition*       definition) {
 
-    ngl::d3d9::binding_cache &bindings = ngl::d3d9::references::bindings.get();
+    set_vertex_buffer(vertex_buffer, definition, vertex_offset, 0);
 
-    IDirect3DVertexDeclaration9* declaration = value->vertex_definition_data->declaration;
-
-    u32 stream_key = (u32)&value->vertex_buffer + vertex_offset;
-
-    if ((u32)bindings.stream_sources[0]  == stream_key &&
-             bindings.vertex_declaration == declaration) {
-
-        return;
-    }
-
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
-
-    if (bindings.vertex_declaration != declaration) {
-        bindings.vertex_declaration = declaration;
-
-        device->SetVertexDeclaration(declaration);
-    }
-
-    device->SetStreamSource(0,
-                            value->vertex_buffer,
-                            vertex_offset,
-                            value->vertex_definition_data->vertex_size);
-
-    bindings.stream_sources[0] = (IDirect3DVertexBuffer9*)stream_key;
+    references::device.get()->DrawPrimitive(primitive_type,
+                                            0,
+                                            get_primitive_count(primitive_type, vertex_count));
 }
 
-void ngl::d3d9::bind_mesh_section(mesh_section* value) {
-    bind_mesh_section_with_offset(value, value->vertex_offset);
+// sub_7AD120
+void ngl::d3d9::draw_indexed_primitive(      D3DPRIMITIVETYPE         primitive_type,
+                                             u32                      index_count,
+                                             u32                      index_offset,
+                                             IDirect3DIndexBuffer9**  index_buffer,
+                                             D3DFORMAT                index_format,
+                                             u32                      vertex_count,
+                                             u32                      vertex_offset,
+                                             IDirect3DVertexBuffer9** vertex_buffer,
+                                       const vertex_definition*       definition) {
+
+    set_vertex_buffer(vertex_buffer, definition, vertex_offset, 0);
+
+    binding_cache &bindings = references::bindings.get();
+
+    // like the vertex streams, the cache holds where the buffer pointer lives
+    if ((u32)bindings.indices != (u32)index_buffer) {
+        bindings.indices = (IDirect3DIndexBuffer9*)index_buffer;
+
+        references::device.get()->SetIndices(*index_buffer);
+    }
+
+    u32 index_size = index_format != D3DFMT_INDEX16 ? 4 : 2;
+
+    references::device.get()->DrawIndexedPrimitive(primitive_type,
+                                                   0,
+                                                   0,
+                                                   vertex_count,
+                                                   index_offset / index_size,
+                                                   get_primitive_count(primitive_type, index_count));
 }
 
 // sub_9E5EA0
 void ngl::d3d9::draw_mesh_section(mesh_section* value) {
-    IDirect3DDevice9* device = references::device.get();
-
     D3DPRIMITIVETYPE primitive_type = (D3DPRIMITIVETYPE)value->primitive_type;
 
-    // only indexed sections bind their vertex offset here
-    if (!value->index_count) {
-        bind_mesh_section_with_offset(value, 0);
-
-        device->DrawPrimitive(primitive_type,
-                              0,
-                              get_primitive_count(primitive_type, value->vertex_count));
+    if (value->index_count) {
+        draw_indexed_primitive(primitive_type,
+                               value->index_count,
+                               value->index_offset,
+                               &value->index_buffer,
+                               value->index_size != 2 ? D3DFMT_INDEX32 : D3DFMT_INDEX16,
+                               value->vertex_count,
+                               value->vertex_offset,
+                               &value->vertex_buffer,
+                               value->vertex_definition_data);
 
         return;
     }
 
-    bind_mesh_section(value);
+    // the non-indexed branch is draw_primitive inlined, with no vertex offset
+    set_vertex_buffer(&value->vertex_buffer, value->vertex_definition_data, 0, 0);
 
-    binding_cache &bindings = references::bindings.get();
-
-    if ((u32)bindings.indices != (u32)&value->index_buffer) {
-        bindings.indices = (IDirect3DIndexBuffer9*)&value->index_buffer;
-        
-        device->SetIndices(value->index_buffer);
-    }
-
-    u32 index_size = value->index_size == 2 ? 2 : 4;
-
-    device->DrawIndexedPrimitive(primitive_type,
-                                 0,
-                                 0,
-                                 value->vertex_count,
-                                 value->index_offset / index_size,
-                                 get_primitive_count(primitive_type, value->index_count));
+    references::device.get()->DrawPrimitive(primitive_type,
+                                            0,
+                                            get_primitive_count(primitive_type, value->vertex_count));
 }
 
 void ngl::d3d9::draw_mesh_section_runs(mesh_section* value, const i32* runs) {
-    bind_mesh_section_with_offset(value, 0);
+    set_vertex_buffer(&value->vertex_buffer, value->vertex_definition_data, 0, 0);
 
     IDirect3DDevice9* device = references::device.get();
     

@@ -88,7 +88,7 @@ void ngl::d3d9::set_vertex_definition(const vertex_definition* value) {
 }
 
 // sub_72C260
-void ngl::d3d9::set_stream_source(      IDirect3DVertexBuffer9** buffer,
+void ngl::d3d9::set_vertex_buffer(      IDirect3DVertexBuffer9** buffer,
                                   const vertex_definition*       definition,
                                         u32                      offset,
                                         u32                      stream) {

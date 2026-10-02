@@ -10,7 +10,7 @@
 namespace treyarch { namespace ngl { namespace d3d9 {
     struct binding_cache {
         IDirect3DBaseTexture9*       textures[16];
-        IDirect3DVertexBuffer9*      stream_sources[16]; // not the buffers, see set_stream_source
+        IDirect3DVertexBuffer9*      stream_sources[16]; // not the buffers, see set_vertex_buffer
         IDirect3DIndexBuffer9*       indices;
         IDirect3DPixelShader9*       pixel_shader;
         IDirect3DVertexShader9*      vertex_shader;
@@ -27,7 +27,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void set_vertex_program(IDirect3DVertexShader9* value);
     void set_pixel_program(IDirect3DPixelShader9* value);
     void set_vertex_definition(const vertex_definition* value);
-    void set_stream_source(      IDirect3DVertexBuffer9** buffer,
+    void set_vertex_buffer(      IDirect3DVertexBuffer9** buffer,
                            const vertex_definition*       definition,
                                  u32                      offset,
                                  u32                      stream);

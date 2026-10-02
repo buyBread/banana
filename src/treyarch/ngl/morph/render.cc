@@ -239,14 +239,20 @@ void ngl::morph_geometry::render(render_node* value) {
 
     write_morph_stream(value, morph_binding, morph_stride);
 
-    d3d9::binding_cache &bindings = d3d9::references::bindings.get();
-    bindings.vertex_declaration = nullptr;
+    // the definition carries the morph stride while binding stream 1, then the mesh's own size for the draw
+    morphed_definition.vertex_size = morph_stride;
 
-    device->SetVertexDeclaration(morphed_definition.declaration);
-    device->SetStreamSource(1,
-                            d3d9::geometry_stream::references::active_buffer.read(),
+    d3d9::set_vertex_buffer(&d3d9::geometry_stream::references::active_buffer.get(),
+                            &morphed_definition,
                             value->stream_segment->allocation_start.byte_offset,
-                            morph_stride);
+                            1);
+
+    d3d9::binding_cache &bindings = d3d9::references::bindings.get();
+
+    u32 vertex_size = material_node->section->vertex_definition_data->vertex_size;
+
+    bindings.vertex_declaration    = nullptr;
+    morphed_definition.vertex_size = vertex_size;
 
     vertex_definition* original_definition = material_node->section->vertex_definition_data;
     material_node->section->vertex_definition_data = &morphed_definition;

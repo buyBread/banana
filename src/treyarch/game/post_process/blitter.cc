@@ -73,28 +73,13 @@ void blitter::release() {
 
 // sub_72F210
 void blitter::draw_fullscreen() {
-    ngl::d3d9::binding_cache &bindings = ngl::d3d9::references::bindings.get();
-    
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 
     D3DVIEWPORT9 viewport;
     device->GetViewport(&viewport);
 
     ngl::d3d9::set_vertex_program(*vertex_program);
-
-    u32 stream_key = (u32)&vertex_buffer;
-
-    if ((u32)bindings.stream_sources[0] != stream_key ||
-        bindings.vertex_declaration != vertex_format.declaration) {
-
-        if (bindings.vertex_declaration != vertex_format.declaration) {
-            bindings.vertex_declaration = vertex_format.declaration;
-            device->SetVertexDeclaration(vertex_format.declaration);
-        }
-
-        device->SetStreamSource(0, vertex_buffer, 0, vertex_format.vertex_size);
-        bindings.stream_sources[0] = (IDirect3DVertexBuffer9*)stream_key;
-    }
+    ngl::d3d9::set_vertex_buffer(&vertex_buffer, &vertex_format, 0, 0);
 
     f32 constants[19][4] {};
 

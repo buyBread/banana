@@ -17,8 +17,30 @@ void draw_single_pass(ngl::fx::render_node* value) {
     if (ngl::has_scene_parameter(parameters, parameter_id)) {
         const i32* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);
         ngl::d3d9::draw_mesh_section_runs(value->section, runs);
-    } else
-        ngl::d3d9::draw_mesh_section(value->section);
+
+        return;
+    }
+
+    // draw_mesh_section's logic, but calling draw_primitive where that one inlines it
+    ngl::mesh_section* section        = value->section;
+    D3DPRIMITIVETYPE   primitive_type = (D3DPRIMITIVETYPE)section->primitive_type;
+
+    if (section->index_count)
+        ngl::d3d9::draw_indexed_primitive(primitive_type,
+                                          section->index_count,
+                                          section->index_offset,
+                                          &section->index_buffer,
+                                          section->index_size != 2 ? D3DFMT_INDEX32 : D3DFMT_INDEX16,
+                                          section->vertex_count,
+                                          section->vertex_offset,
+                                          &section->vertex_buffer,
+                                          section->vertex_definition_data);
+    else
+        ngl::d3d9::draw_primitive(primitive_type,
+                                  section->vertex_count,
+                                  0,
+                                  &section->vertex_buffer,
+                                  section->vertex_definition_data);
 }
 
 // sub_9E0420

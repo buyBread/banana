@@ -104,7 +104,7 @@ void post_process::draw_pause_menu_blur(void*) {
     ngl::d3d9::bind_texture(0, back_buffer, 1, 3);
     ngl::d3d9::set_vertex_program(programs.fullscreen_position_3d_vertex);
     ngl::d3d9::set_pixel_program(programs.sample_texture_1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
     // horizontal pass into the second one
@@ -114,7 +114,7 @@ void post_process::draw_pause_menu_blur(void*) {
     device->SetPixelShaderConstantF(13, &references::pause_menu_blur_scaled_horizontal_taps.get().taps[0].x, 13);
     device->SetPixelShaderConstantF(0, weights, 13);
     device->SetPixelShaderConstantF(26, unknown, 1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_1, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_1, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
     // vertical pass back into the first
@@ -124,7 +124,7 @@ void post_process::draw_pause_menu_blur(void*) {
     device->SetPixelShaderConstantF(13, &references::pause_menu_blur_scaled_vertical_taps.get().taps[0].x, 13);
     device->SetPixelShaderConstantF(0, weights, 13);
     device->SetPixelShaderConstantF(26, unknown, 1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_1, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_1, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
     // and the result over the back buffer
@@ -132,7 +132,7 @@ void post_process::draw_pause_menu_blur(void*) {
     set_render_target(back_buffer);
     ngl::d3d9::bind_texture(0, state.render_targets[1], 1, 3);
     ngl::d3d9::set_pixel_program(programs.sample_texture_1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 }
 
@@ -166,13 +166,13 @@ void post_process::draw_zoom_map_effect(void*) {
     ngl::d3d9::set_vertex_program(programs.fullscreen_position_3d_vertex);
     ngl::d3d9::set_pixel_program(programs.tone_map_desaturated);
     device->SetPixelShaderConstantF(0, &references::zoom_map_effect_color.get().x, 1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
     ngl::d3d9::apply_blend_mode(0);
     set_render_target(back_buffer);
     ngl::d3d9::bind_texture(0, state.render_targets[1], 1, 3);
     ngl::d3d9::set_pixel_program(programs.sample_texture_1);
-    ngl::d3d9::set_stream_source(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
+    ngl::d3d9::set_vertex_buffer(&state.half_texel_vertex_buffer_0, &state.half_texel_vertex_definition, 0, 0);
     device->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 }
