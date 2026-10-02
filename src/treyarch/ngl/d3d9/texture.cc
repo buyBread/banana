@@ -155,39 +155,39 @@ bool ngl::d3d9::create_texture_resource(texture_resource* value) {
 
     switch (value->resource_type) {
         case D3DRTYPE_TEXTURE:
-            result = references::device.get()->CreateTexture
-                (value->width,
-                 value->height,
-                 value->level_count,
-                 usage,
-                 value->format,
-                 pool,
-                 (IDirect3DTexture9**)&value->resource,
-                 nullptr);
+            result = references::device.get()
+                ->CreateTexture(value->width,
+                                value->height,
+                                value->level_count,
+                                usage,
+                                value->format,
+                                pool,
+                                (IDirect3DTexture9**)&value->resource,
+                                nullptr);
 
             break;
         case D3DRTYPE_CUBETEXTURE:
-            result = references::device.get()->CreateCubeTexture
-                (value->width,
-                 value->level_count,
-                 usage,
-                 value->format,
-                 pool,
-                 (IDirect3DCubeTexture9**)&value->resource,
-                 nullptr);
+            result = references::device.get()
+                ->CreateCubeTexture(value->width,
+                                    value->level_count,
+                                    usage,
+                                    value->format,
+                                    pool,
+                                    (IDirect3DCubeTexture9**)&value->resource,
+                                    nullptr);
 
             break;
         case D3DRTYPE_VOLUMETEXTURE:
-            result = references::device.get()->CreateVolumeTexture
-                (value->width,
-                 value->height,
-                 value->depth,
-                 value->level_count,
-                 usage,
-                 value->format,
-                 pool,
-                 (IDirect3DVolumeTexture9**)&value->resource,
-                 nullptr);
+            result = references::device.get()
+                ->CreateVolumeTexture(value->width,
+                                      value->height,
+                                      value->depth,
+                                      value->level_count,
+                                      usage,
+                                      value->format,
+                                      pool,
+                                      (IDirect3DVolumeTexture9**)&value->resource,
+                                      nullptr);
 
             break;
         default:
@@ -198,6 +198,45 @@ bool ngl::d3d9::create_texture_resource(texture_resource* value) {
         value->resource = nullptr;
 
     return value->resource != nullptr;
+}
+
+// sub_687030
+void* ngl::d3d9::lock_texture_resource(texture_resource* value,
+                                       u32               face,
+                                       u32               level,
+                                       u32*              pitch) {
+
+    switch (value->resource_type) {
+        case D3DRTYPE_TEXTURE: {
+            D3DLOCKED_RECT locked;
+            ((IDirect3DTexture9*)value->resource)
+                ->LockRect(level, &locked, nullptr, 0);
+
+            if (pitch)
+                *pitch = locked.Pitch;
+
+            return locked.pBits;
+        }
+        case D3DRTYPE_CUBETEXTURE: {
+            D3DLOCKED_RECT locked;
+            ((IDirect3DCubeTexture9*)value->resource)
+                ->LockRect((D3DCUBEMAP_FACES)face, level, &locked, nullptr, 0);
+
+            if (pitch)
+                *pitch = locked.Pitch;
+
+            return locked.pBits;
+        }
+        case D3DRTYPE_VOLUMETEXTURE: {
+            D3DLOCKED_BOX locked;
+            ((IDirect3DVolumeTexture9*)value->resource)
+                ->LockBox(level, &locked, nullptr, 0);
+
+            return locked.pBits;
+        }
+        default:
+            return nullptr;
+    }
 }
 
 // sub_9EAAE0

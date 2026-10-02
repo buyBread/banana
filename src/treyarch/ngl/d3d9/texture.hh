@@ -33,6 +33,10 @@ namespace d3d9 {
                                  u32                 height,
                                  D3DFORMAT           format);
     bool create_texture_resource(texture_resource* value);
+    void* lock_texture_resource(texture_resource* value,
+                                u32               face,
+                                u32               level,
+                                u32*              pitch);
     u32 get_surface_size(D3DFORMAT format, u32 width, u32 height);
     void upload_texture(texture_resource* value, const void* &source);
     void upload_cube_texture(texture_resource* value, const void* &source);
