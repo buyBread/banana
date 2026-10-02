@@ -40,7 +40,12 @@ namespace treyarch { namespace dinkumware {
             memory::heap::free(sentinel);
         }
 
-        list(const list&) = delete;
+        // sub_6F04C0
+        list(const list &other) : list() {
+            for (node* position = other.begin(); position != other.end(); position = position->next)
+                push_back(position->value);
+        }
+
         list &operator=(const list&) = delete;
 
         node* head()  const noexcept { return sentinel; }

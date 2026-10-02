@@ -45,7 +45,7 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
     else if (parameter_source == ngl::scene_parameter_root)
         ngl::copy_scene_parameters(value->parameters, ngl::references::root_scene.read()->parameters);
 
-    value->local_list_state = 0;
+    value->locked_textures  = nullptr;
     value->options          = 0;
     value->parent           = parent;
     value->next_sibling     = nullptr;
@@ -212,4 +212,19 @@ ngl::scene* ngl::set_scene_option_group_1(bool first,
         value->options |= 0x40;
 
     return value;
+}
+
+// sub_9D54E0
+ngl::locked_texture_node* ngl::lock_texture(texture* value) {
+    auto* node = (locked_texture_node*)list::allocate(sizeof(locked_texture_node), 16);
+
+    if (node) {
+        scene* current = references::current_scene.read();
+
+        node->texture_data       = value;
+        node->next               = current->locked_textures;
+        current->locked_textures = node;
+    }
+
+    return node;
 }

@@ -209,7 +209,6 @@ void post_process::setup_noise_filter(      treyarch::blitter* owner,
     ngl::d3d9::set_sampler_filters(1, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(1, D3DTADDRESS_WRAP, D3DTADDRESS_WRAP);
 
-    // x87; __ftol2_sse truncates and only the low dword is used
     f32 elapsed = (f32)(i32)(ngl::get_vblank_milliseconds() * (f32)ngl::timing::references::list_tick.read());
 
     f32 drift   = (f32)((f64)elapsed * (f64)3.90625e-6f);

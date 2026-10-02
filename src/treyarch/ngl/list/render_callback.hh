@@ -8,11 +8,6 @@
 namespace treyarch { namespace ngl { namespace render_callback {
     using function = void (__cdecl*)(void* data);
 
-    struct sort_info {
-        u32                  type;
-        render_node_sort_key key;
-    };
-
     struct node {
         render_node base;
         u32         type;
@@ -23,13 +18,11 @@ namespace treyarch { namespace ngl { namespace render_callback {
 
     void render(node* value);
 
+    scene* list_add_custom_node(function callback, void* data, const sort_info* sorting);
+
     namespace references {
         inline util::memory_reference<void*> node_vtable { 0x00DB716C };
     } // references
-
-    ASSERT_SIZEOF  (sort_info,       0x08);
-    ASSERT_OFFSETOF(sort_info, type, 0x00);
-    ASSERT_OFFSETOF(sort_info, key,  0x04);
 
     ASSERT_SIZEOF  (node,           0x20);
     ASSERT_OFFSETOF(node, base,     0x00);

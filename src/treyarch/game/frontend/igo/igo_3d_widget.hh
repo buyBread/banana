@@ -47,7 +47,9 @@ namespace treyarch {
         u8    reserved_004[0x0C];
         void* element;
         u32   flags;
-        u8    reserved_018[0x138];
+        u8    reserved_018[0xC0];
+        u8    unk_0d8;             // the base constructor sets it; while the pauseless dialog has it set, no mission or hint text is drawn
+        u8    reserved_0d9[0x77];
 
         u8 is_visible() {
             return vtable->is_visible(this);
@@ -63,6 +65,7 @@ namespace treyarch {
     ASSERT_SIZEOF  (igo_3d_widget,                            0x150);
     ASSERT_OFFSETOF(igo_3d_widget,        element,            0x010);
     ASSERT_OFFSETOF(igo_3d_widget,        flags,              0x014);
+    ASSERT_OFFSETOF(igo_3d_widget,        unk_0d8,            0x0D8);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, draw,               0x00C);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, is_visible,         0x010);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, method_014,         0x014);

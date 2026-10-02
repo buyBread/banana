@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/scene/parameters.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 namespace treyarch { namespace ngl {
     scene* list_begin_scene(e_scene_parameter_source parameter_source);
@@ -8,6 +9,8 @@ namespace treyarch { namespace ngl {
     scene* list_select_scene(scene* value);
 
     const char* set_scene_name(const char* name);
+
+    locked_texture_node* lock_texture(texture* value);
 
     void set_scene_callback(e_scene_callback_type   type,
                             scene_callback_function function,

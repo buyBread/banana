@@ -153,6 +153,11 @@ namespace treyarch {
         return (f32)((f64)a.x*b.x + (f64)a.y*b.y + (f64)a.z*b.z);
     }
 
+    // sub_4020C0
+    inline f32 float_dot(const vector3 &a, const vector3 &b) {
+        return a.y * b.y + a.x * b.x + a.z * b.z;
+    }
+
     inline vector3 cross(const vector3 &a, const vector3 &b) {
         return vector3((f32)((f64)a.y * b.z - (f64)a.z * b.y),
                        (f32)((f64)a.z * b.x - (f64)a.x * b.z),

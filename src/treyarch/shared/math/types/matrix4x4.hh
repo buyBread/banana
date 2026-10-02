@@ -4,6 +4,7 @@
 #include "treyarch/shared/math/types/vector3.hh"
 #include "treyarch/shared/math/types/vector4.hh"
 #include "treyarch/shared/mash/mash.hh"
+#include "treyarch/shared/math/references.hh"
 
 namespace treyarch {
     using row = vector4;
@@ -76,6 +77,14 @@ namespace treyarch {
         void make_rotate(const vector3 &u, f32 a); /* hey, what are you? */
         void make_scale(const vector3 &s); /* hey, what are you? */
         void make_mirror(const vector3 &n, f32 d); /* hey, what are you? */
+
+        // sub_5FC080
+        void assign_rows(const vector4 (&rows)[3]) {
+            x = rows[0];
+            y = rows[1];
+            z = rows[2];
+            w = math::references::w_row.read();
+        }
 
         void identity() {
             *this = matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,

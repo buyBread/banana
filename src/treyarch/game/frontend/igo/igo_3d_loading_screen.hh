@@ -6,6 +6,7 @@
 
 namespace treyarch {
     class igo_3d_loading_screen : public igo_3d_widget {
+        
     public:
         u8  reserved_150[0x04];
         f32 fade;

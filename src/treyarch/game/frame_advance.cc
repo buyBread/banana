@@ -4,6 +4,7 @@
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/quest_manager.hh"
+#include "treyarch/game/region_spawn_manager.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {

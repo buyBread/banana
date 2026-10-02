@@ -204,6 +204,9 @@ namespace treyarch { namespace post_process {
     void release_device_resources();
     void apply_default_parameters();
 
+    void render_pause_menu_blur(f32 strength);
+    void render_zoom_map_effect();
+
     // `filter::setup` callbacks; each falls back to its own defaults when `parameters` is null
     void setup_luminosity_filter(      treyarch::blitter*     owner,
                                        texture_array*         targets,
@@ -285,6 +288,10 @@ namespace treyarch { namespace post_process {
         inline util::memory_reference<blur_taps>             pause_menu_blur_horizontal_taps { 0x00E793F0 }; // x components
         inline util::memory_reference<blur_taps>             pause_menu_blur_vertical_taps   { 0x00E794C0 }; // y components
         inline util::memory_reference<u8>                    pause_menu_blur_taps_scaled     { 0x01036E50 }; // never written
+
+        // the taps times the blur strength, written by render_pause_menu_blur for its callback
+        inline util::memory_reference<blur_taps> pause_menu_blur_scaled_horizontal_taps { 0x01030940 }; // x
+        inline util::memory_reference<blur_taps> pause_menu_blur_scaled_vertical_taps   { 0x010319F0 }; // y
 
         // offset vectors written by create_device_resources and never read in PC
         inline util::memory_reference<vector4> unk_010311d0 { 0x010311D0 };

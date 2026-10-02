@@ -41,6 +41,13 @@ namespace treyarch { namespace ngl {
         projection_perspective  = 1
     };
 
+    // old_format is never written on PC
+    struct locked_texture_node {
+        texture*             texture_data;
+        u32                  old_format;
+        locked_texture_node* next;
+    };
+
     struct scene {
         u32                      cube_map_face;
         u8                       platform_scene_state_004[0x0C];
@@ -85,7 +92,7 @@ namespace treyarch { namespace ngl {
         u32                      specialized_render_list_count_3;
         render_node*             specialized_render_list_4;
         u32                      specialized_render_list_count_4;
-        u32                      local_list_state;
+        locked_texture_node*     locked_textures;
         u32                      options;
         u32                      scene_state_424;
         u32                      scene_state_428;
@@ -190,7 +197,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(scene, specialized_render_list_count_3, 0x410);
     ASSERT_OFFSETOF(scene, specialized_render_list_4,       0x414);
     ASSERT_OFFSETOF(scene, specialized_render_list_count_4, 0x418);
-    ASSERT_OFFSETOF(scene, local_list_state,                0x41C);
+    ASSERT_OFFSETOF(scene, locked_textures,                 0x41C);
     ASSERT_OFFSETOF(scene, options,                         0x420);
     ASSERT_OFFSETOF(scene, scene_state_424,                 0x424);
     ASSERT_OFFSETOF(scene, scene_state_428,                 0x428);
@@ -219,4 +226,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(scene, scalar_4d4,                      0x4D4);
     ASSERT_OFFSETOF(scene, parameters,                      0x4D8);
     ASSERT_OFFSETOF(scene, platform_scene_state_4dc,        0x4DC);
+
+    ASSERT_SIZEOF  (locked_texture_node,       0x0C);
+    ASSERT_OFFSETOF(locked_texture_node, next, 0x08);
 }} // treyarch::ngl

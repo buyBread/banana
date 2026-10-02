@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/cutscene/toa_cutscene.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_camera_widget.hh"
 #include "treyarch/game/frontend/igo/igo_3d_face_button_system.hh"
@@ -9,6 +10,8 @@
 #include "treyarch/game/frontend/ui_frontend_projection.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/quest_manager.hh"
+#include "treyarch/game/region_spawn_manager.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
@@ -23,7 +26,7 @@ void ui_frontend::draw_startup() {
     if (!startup_widget_17c)
         return;
 
-    retail::sub_698F40((i32)this);
+    render_background_effects();
     scene_draw_state_278 = 1;
 
     ngl::lighting::light_context* previous_context = ngl::lighting::references::current_context.read();
@@ -77,7 +80,7 @@ void ui_frontend::draw_startup() {
 
 // sub_6F5A70
 void ui_frontend::draw() {
-    retail::sub_698F40((i32)this);
+    render_background_effects();
     scene_draw_state_278 = 1;
 
     ngl::lighting::light_context* previous_context = ngl::lighting::references::current_context.read();
@@ -130,7 +133,7 @@ void ui_frontend::draw() {
 
     vtable->draw_pass_1(this);
     update_widget_suppression_conditions();
-    retail::sub_6CD220((u32*)this);
+    draw_widgets();
 
     ui_frontend* current_igo  = references::frontend.get().igo;
     game*        current_game = references::game.read();
@@ -148,10 +151,8 @@ void ui_frontend::draw() {
         if (!current_game->disable_interface) {
             if (!current_game->game_paused) {
                 if (!current_igo->letterbox || !current_igo->letterbox->is_visible()) {
-                    u32* state = retail::sub_809590();
-
-                    if (!retail::sub_805390((u8*)state)) {
-                        if (!retail::sub_68BF40((u8*)conversation_menu_system)) {
+                    if (!toa_cutscene::get()->is_running()) {
+                        if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0c0)
                                 unknown_widget_0c0->draw();
                             if (button_tips)
@@ -159,7 +160,7 @@ void ui_frontend::draw() {
                         }
 
                         if (ped_warning)
-                            retail::sub_6A1490((i32)ped_warning);
+                            ped_warning->draw();
 
                         if (unknown_widget_0c8)
                             unknown_widget_0c8->draw();
@@ -167,10 +168,10 @@ void ui_frontend::draw() {
                             unknown_widget_0cc->draw();
 
                         if (widget_group_1a4)
-                            retail::sub_68CAA0((u32*)widget_group_1a4);
+                            widget_group_1a4->draw();
 
                         if (enemy_health_manager)
-                            retail::sub_68CFF0((u32**)enemy_health_manager);
+                            enemy_health_manager->draw();
 
                         if (unknown_widget_1a8)
                             unknown_widget_1a8->draw();
@@ -194,7 +195,7 @@ void ui_frontend::draw() {
                             spidey_distance->draw();
 
                         if (boss_meter_system)
-                            retail::sub_6D0990((u32*)boss_meter_system);
+                            boss_meter_system->draw();
 
                         if (district_marker)
                             district_marker->draw();
@@ -216,7 +217,7 @@ void ui_frontend::draw() {
                         if (unknown_widget_14c)
                             unknown_widget_14c->draw();
 
-                        if (!retail::sub_68BF40((u8*)conversation_menu_system)) {
+                        if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0bc)
                                 unknown_widget_0bc->draw();
                             if (buddy_summon)
@@ -249,14 +250,14 @@ void ui_frontend::draw() {
                 text_debug_widget->draw();
 
             if (!current_igo->conversation_state_168) {
-                retail::sub_6D2710((i32)current_igo->ui_object_manager);
+                current_igo->ui_object_manager->draw();
                 retail::sub_9818F0((i32)references::mission_manager.read());
             }
 
-            retail::sub_7EA9D0();
+            quest_manager::draw_text();
 
             if (references::region_spawns_enabled.read() && references::region_spawn_manager.read())
-                retail::sub_90F5C0();
+                region_spawn_manager::draw_text();
 
             if (conversation_menu_system)
                 ((igo_3d_widget*)((u8*)conversation_menu_system + 0x10))->draw();
@@ -264,7 +265,7 @@ void ui_frontend::draw() {
             if (widget_owner_164)
                 ((igo_3d_widget*)((u8*)widget_owner_164 + 0x10))->draw();
 
-            retail::sub_6F1FD0((u32**)this);
+            draw_script_widgets();
 
             if (scrapbook && !scrapbook->is_active()) {
                 if (objective_text)
@@ -274,7 +275,7 @@ void ui_frontend::draw() {
             }
         }
 
-        retail::sub_6CD0E0((i32)this, current_game->disable_interface);
+        draw_interface_disabled_script_widgets(current_game->disable_interface);
 
         if (letterbox && (!scrapbook || !scrapbook->is_active()))
             letterbox->draw();
@@ -308,9 +309,7 @@ void ui_frontend::draw() {
         (!current_igo->letterbox ||
          !current_igo->letterbox->is_visible())) {
 
-        u32* state = retail::sub_809590();
-
-        if (!retail::sub_805390((u8*)state) && !retail::sub_68BF40((u8*)conversation_menu_system))
+        if (!toa_cutscene::get()->is_running() && !conversation_menu_system->is_conversation_active())
             if (radar_widget)
                 radar_widget->draw();
     }

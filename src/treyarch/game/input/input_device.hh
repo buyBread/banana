@@ -35,6 +35,11 @@ namespace treyarch {
         virtual f32         get_axis_old_state(i32 axis, i32 control_axis) const = 0;
         virtual f32         get_axis_delta(i32 axis, i32 control_axis) const = 0;
         virtual void        poll() = 0;
+        virtual void        unk_024() = 0;
+        virtual void        unk_028() = 0;
+        virtual void        unk_02c() = 0;
+        virtual void        unk_030() = 0;
+        virtual u8          unk_034() = 0; // xenon_input_device: always false (sub_71F870)
     };
 
     ASSERT_SIZEOF(input_device, 0x08);

@@ -6,6 +6,7 @@
 
 namespace treyarch {
     class igo_3d_scrapbook : public igo_3d_drawable {
+        
     public:
         u8 reserved_004[0x2C];
         u8 active;

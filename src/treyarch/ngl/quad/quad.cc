@@ -55,3 +55,35 @@ void ngl::set_quad_color(quad* value, u32 color) {
 void ngl::set_quad_z(quad* value, f32 z) {
     value->z = z;
 }
+
+// sub_9E4AC0
+void ngl::set_quad_texture(quad* value, texture* texture_data) {
+    value->texture_data = texture_data;
+}
+
+// sub_9E4AE0
+void ngl::set_quad_map_flags(quad* value, u32 map_flags) {
+    value->map_flags = map_flags;
+}
+
+// sub_9E4AF0
+void ngl::set_quad_blend_mode(quad* value, u32 mode, u32 source) {
+    value->blend_mode = ((u64)source << 32) | mode;
+}
+
+// sub_9E4B10
+void ngl::set_quad_uv(quad* value,
+                      f32   left,
+                      f32   top,
+                      f32   right,
+                      f32   bottom) {
+
+    value->vertices[0].u = left;
+    value->vertices[2].u = left;
+    value->vertices[0].v = top;
+    value->vertices[1].u = right;
+    value->vertices[1].v = top;
+    value->vertices[2].v = bottom;
+    value->vertices[3].u = right;
+    value->vertices[3].v = bottom;
+}

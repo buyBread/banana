@@ -115,4 +115,38 @@ namespace treyarch { namespace math {
     inline f32 fast_recip_sqrt(f32 x) {
         return 1.0f / (f32)sqrtf(x);
     }
+
+    // sub_401DA0
+    inline f32 arcsin(f32 value) {
+        f32 x = (f32)std::fabs((f64)value);
+        
+        f32 result;
+
+        if (x < 0.5f) {
+            f32 x2 = x  * x;
+            f32 x3 = x2 * x;
+            f32 x5 = x3 * x2;
+            f32 x7 = x5 * x2;
+
+            result = (f32)((f64)(f32)
+                          ((f64)(f32)((f64)x7 * (f64)0.05398124f) +
+                                      (f64)x5 * (f64)0.075f) +
+                                      (f64)x3 * (f64)0.1666667f);
+            result = (f32)((f64)result + (f64)x);
+        } else {
+            f32 t  = (f32)std::fabs((f64)(f32)((1.0 - (f64)x) * 0.5));
+            f32 s  = (f32)std::sqrt((f64)t);
+            f32 s2 = s  * s;
+            f32 s3 = s2 * s;
+            f32 s5 = s3 * s2;
+            f32 s7 = s5 * s2;
+
+            result = (f32)((f64)(f32)((f64)s7 * (f64)-0.1079625f) - (f64)s5 * (f64)0.15f);
+            result = (f32)((f64)result - (f64)s3 * (f64)0.3333333f);
+            result = (f32)((f64)result - (f64)s * 2.0);
+            result = (f32)((f64)result + (f64)1.570796f);
+        }
+
+        return value < 0.0f ? -result : result;
+    }
 }} // treyarch::math

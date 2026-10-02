@@ -7,6 +7,7 @@
 
 namespace treyarch {
     class igo_3d_camera_widget : public igo_3d_widget {
+        
     public:
         u8        reserved_150[0x10];
         matrix4x4 camera_matrix;

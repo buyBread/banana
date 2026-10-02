@@ -5,6 +5,8 @@
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/quad/quad.hh"
+#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
 #include "treyarch/ngl/shaders/puv/render_node.hh"
@@ -115,4 +117,34 @@ void ngl::render_node::render() {
 
     fn(this);
 #endif
+}
+
+void ngl::render_node::get_sort_info(sort_info* result) {
+    using get_sort_info_function = void (__thiscall*)(render_node* self, sort_info* result);
+
+    ((get_sort_info_function*)vtable)[4](this, result);
+}
+
+// sub_884E10
+ngl::scene* ngl::list_add_node(render_node* value) {
+    sort_info sorting;
+    value->get_sort_info(&sorting);
+
+    value->sort_key = sorting.key;
+
+    scene* current = references::current_scene.read();
+
+    if (sorting.type == sort_translucent) {
+        value->next = current->translucent_render_list;
+
+        ++current->translucent_render_list_count;
+        current->translucent_render_list = value;
+    } else {
+        value->next = current->opaque_render_list;
+
+        ++current->opaque_render_list_count;
+        current->opaque_render_list = value;
+    }
+
+    return current;
 }

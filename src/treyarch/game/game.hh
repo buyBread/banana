@@ -22,9 +22,6 @@ namespace treyarch {
     namespace references {
         // set by game::handle_cameras on entry; cleared once per frame_advance_level
         inline util::memory_reference<u8> cameras_handled { 0x01111392 };
-
-        inline util::memory_reference<u8>    region_spawns_enabled { 0x00BE73FE };
-        inline util::memory_reference<void*> region_spawn_manager  { 0x010FA2C4 };
     } // references
 
     struct game_frame_timing {

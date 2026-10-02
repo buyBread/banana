@@ -10,11 +10,12 @@
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/movie_manager.hh"
 #include "treyarch/game/pathfinder/obstacle_manager.hh"
+#include "treyarch/game/region_spawn_manager.hh"
 #include "treyarch/game/trigger_manager.hh"
-#include "treyarch/shared/platform.hh"
-#include "treyarch/shared/singleton.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/platform.hh"
+#include "treyarch/shared/singleton.hh"
 
 namespace treyarch {
     namespace references {
