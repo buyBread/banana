@@ -1,6 +1,5 @@
 #include <new>
 
-#include "retail.hh"
 #include "treyarch/game/post_process/post_process.hh"
 #include "treyarch/game/shader_resource_manager.hh"
 #include "treyarch/ngl/display.hh"
@@ -201,23 +200,23 @@ post_process::system::system() {
     if (!queue)
         return;
 
-    luminosity_filter->setup                 = (void*)retail::sub_730120;
-    gaussian_blur_3x3_filter->setup          = (void*)retail::sub_73C840;
-    gaussian_blur_7x7_filter->setup          = (void*)retail::sub_73C840;
-    gaussian_blur_15x15_filter->setup        = (void*)retail::sub_73C840;
-    poisson_disc_blur_filter->setup          = (void*)retail::sub_73CEC0;
-    luminosity_range_avg_filter->setup       = (void*)retail::sub_73D140;
-    luminosity_range_avg_accum_filter->setup = (void*)retail::sub_73D140;
-    adapt_filter->setup                      = (void*)retail::sub_7301E0;
-    blend_filter->setup                      = (void*)retail::sub_730290;
-    bloom_filter->setup                      = (void*)retail::sub_730330;
-    radial_blur_filter->setup                = (void*)retail::sub_7305C0;
-    depth_of_field_blur_filter->setup        = (void*)retail::sub_73D250;
-    depth_of_field_filter->setup             = (void*)retail::sub_7306B0;
-    spherize_filter->setup                   = (void*)retail::sub_730710;
-    vignette_filter->setup                   = (void*)retail::sub_730790;
-    noise_filter->setup                      = (void*)retail::sub_7308D0;
-    color_adjust_filter->setup               = (void*)retail::sub_730CC0;
+    luminosity_filter->setup                 = (filter_setup_function)setup_luminosity_filter;
+    gaussian_blur_3x3_filter->setup          = (filter_setup_function)setup_gaussian_blur_filter;
+    gaussian_blur_7x7_filter->setup          = (filter_setup_function)setup_gaussian_blur_filter;
+    gaussian_blur_15x15_filter->setup        = (filter_setup_function)setup_gaussian_blur_filter;
+    poisson_disc_blur_filter->setup          = (filter_setup_function)setup_poisson_disc_blur_filter;
+    luminosity_range_avg_filter->setup       = (filter_setup_function)setup_luminosity_range_avg_filter;
+    luminosity_range_avg_accum_filter->setup = (filter_setup_function)setup_luminosity_range_avg_filter;
+    adapt_filter->setup                      = (filter_setup_function)setup_adapt_filter;
+    blend_filter->setup                      = (filter_setup_function)setup_blend_filter;
+    bloom_filter->setup                      = (filter_setup_function)setup_bloom_filter;
+    radial_blur_filter->setup                = (filter_setup_function)setup_radial_blur_filter;
+    depth_of_field_blur_filter->setup        = (filter_setup_function)setup_depth_of_field_blur_filter;
+    depth_of_field_filter->setup             = (filter_setup_function)setup_depth_of_field_filter;
+    spherize_filter->setup                   = (filter_setup_function)setup_spherize_filter;
+    vignette_filter->setup                   = (filter_setup_function)setup_vignette_filter;
+    noise_filter->setup                      = (filter_setup_function)setup_noise_filter;
+    color_adjust_filter->setup               = (filter_setup_function)setup_color_adjust_filter;
 
     set_luminosity(nullptr, 0);
     set_blur(nullptr, 0);

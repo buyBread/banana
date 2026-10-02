@@ -11,12 +11,18 @@ namespace treyarch {
     struct blitter;
 
 namespace post_process {
+    // the render slot (sub_73C320) calls it after binding targets, sources and program, before the blitter draw
+    using filter_setup_function = void(*)(treyarch::blitter* owner,
+                                          texture_array*     targets,
+                                          texture_array*     sources,
+                                          const void*        parameters);
+
     // RTTI Filter
     struct filter {
         void*                  vtable;
         treyarch::blitter*     blitter;
         IDirect3DPixelShader9* program;
-        void*                  setup; // called before the blitter draw; null for the down-sample filter
+        filter_setup_function  setup; // null for the down-sample filter
 
         filter(treyarch::blitter* owner);
 

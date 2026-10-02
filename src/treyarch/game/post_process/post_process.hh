@@ -8,6 +8,7 @@
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -54,12 +55,18 @@ namespace treyarch { namespace post_process {
     struct blur_parameters {
         i32 iterations;
         i32 radius;
-        i32 unk_08;
+        i32 vertical; // the gaussian setup offsets its taps along v when set, along u when clear
     };
 
     struct poisson_disc_blur_parameters {
         i32 iterations;
-        f32 unk_04; // the pass runs while above 0.001
+        f32 radius; // in texels, scales the disc taps; the pass runs while above 0.001
+    };
+
+    // built per pass by the render pass (sub_74E440), not a blended block
+    struct blend_parameters {
+        f32 unk_00;
+        f32 unk_04;
     };
 
     struct bloom_parameters {
@@ -76,11 +83,11 @@ namespace treyarch { namespace post_process {
 
     // the cutscene player writes the first three values and sets `unk_0c` to 1
     struct depth_of_field_blur_parameters {
-        f32   unk_00;
-        f32   unk_04;
-        f32   unk_08;
-        i32   unk_0c;
-        void* unk_10; // the filter reads a matrix through it when set
+        f32              unk_00;
+        f32              unk_04;
+        f32              unk_08;
+        i32              unk_0c;
+        const matrix4x4* unk_10; // the setup uploads its transpose when set, identity otherwise
     };
 
     struct vignette_parameters {
@@ -197,6 +204,77 @@ namespace treyarch { namespace post_process {
     void release_device_resources();
     void apply_default_parameters();
 
+    // `filter::setup` callbacks; each falls back to its own defaults when `parameters` is null
+    void setup_luminosity_filter(      treyarch::blitter*     owner,
+                                       texture_array*         targets,
+                                       texture_array*         sources,
+                                 const luminosity_parameters* parameters);
+
+    void setup_adapt_filter(      treyarch::blitter* owner,
+                                  texture_array*     targets,
+                                  texture_array*     sources,
+                            const f32*               parameters);
+
+    void setup_blend_filter(      treyarch::blitter* owner,
+                                  texture_array*     targets,
+                                  texture_array*     sources,
+                            const blend_parameters*  parameters);
+
+    void setup_bloom_filter(      treyarch::blitter* owner,
+                                  texture_array*     targets,
+                                  texture_array*     sources,
+                            const bloom_parameters*  parameters);
+
+    void setup_radial_blur_filter(      treyarch::blitter*      owner,
+                                        texture_array*          targets,
+                                        texture_array*          sources,
+                                  const radial_blur_parameters* parameters);
+
+    void setup_depth_of_field_filter(      treyarch::blitter* owner,
+                                           texture_array*     targets,
+                                           texture_array*     sources,
+                                     const void*              parameters);
+
+    void setup_spherize_filter(      treyarch::blitter* owner,
+                                     texture_array*     targets,
+                                     texture_array*     sources,
+                               const f32*               parameters);
+
+    void setup_vignette_filter(      treyarch::blitter*   owner,
+                                     texture_array*       targets,
+                                     texture_array*       sources,
+                               const vignette_parameters* parameters);
+
+    void setup_noise_filter(      treyarch::blitter* owner,
+                                  texture_array*     targets,
+                                  texture_array*     sources,
+                            const noise_parameters*  parameters);
+
+    void setup_color_adjust_filter(      treyarch::blitter*       owner,
+                                         texture_array*           targets,
+                                         texture_array*           sources,
+                                   const color_adjust_parameters* parameters);
+
+    void setup_gaussian_blur_filter(      treyarch::blitter* owner,
+                                          texture_array*     targets,
+                                          texture_array*     sources,
+                                    const blur_parameters*   parameters);
+
+    void setup_poisson_disc_blur_filter(      treyarch::blitter*            owner,
+                                              texture_array*                targets,
+                                              texture_array*                sources,
+                                        const poisson_disc_blur_parameters* parameters);
+
+    void setup_luminosity_range_avg_filter(      treyarch::blitter* owner,
+                                                 texture_array*     targets,
+                                                 texture_array*     sources,
+                                           const void*              parameters);
+
+    void setup_depth_of_field_blur_filter(      treyarch::blitter*              owner,
+                                                texture_array*                  targets,
+                                                texture_array*                  sources,
+                                          const depth_of_field_blur_parameters* parameters);
+
     namespace references {
         inline util::memory_reference<u8>                    active                     { 0x00F4CD41 };
         inline util::memory_reference<u8>                    bloom_enabled              { 0x00E76F4E }; // initial value 1; also chuck enable_bloom
@@ -238,6 +316,7 @@ namespace treyarch { namespace post_process {
     ASSERT_SIZEOF  (luminosity_parameters,          0x08);
     ASSERT_SIZEOF  (blur_parameters,                0x0C);
     ASSERT_SIZEOF  (poisson_disc_blur_parameters,   0x08);
+    ASSERT_SIZEOF  (blend_parameters,               0x08);
     ASSERT_SIZEOF  (bloom_parameters,               0x44);
     ASSERT_SIZEOF  (radial_blur_parameters,         0x14);
     ASSERT_SIZEOF  (depth_of_field_blur_parameters, 0x14);

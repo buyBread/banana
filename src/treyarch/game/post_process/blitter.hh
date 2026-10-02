@@ -3,7 +3,6 @@
 #include <d3d9.h>
 
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 
@@ -20,7 +19,13 @@ namespace treyarch {
         IDirect3DPixelShader9**  solid_color_program;
         IDirect3DPixelShader9**  depth_texture_program;
         IDirect3DPixelShader9**  color_depth_texture_program;
-        matrix4x4                transforms[4];
+
+        // the draw sends tap i as vertex constant c[i] = { scale_u[i], scale_v[i], offset_u[i], offset_v[i] };
+        // filter setups write texel offsets into the taps, and noise also doubles the scale per tap
+        f32 tap_scale_u[16];
+        f32 tap_scale_v[16];
+        f32 tap_offset_u[16];
+        f32 tap_offset_v[16];
 
         blitter();
 
@@ -41,5 +46,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(blitter, vertex_program,              0x30);
     ASSERT_OFFSETOF(blitter, texture_program,             0x34);
     ASSERT_OFFSETOF(blitter, color_depth_texture_program, 0x40);
-    ASSERT_OFFSETOF(blitter, transforms,                  0x44);
+    ASSERT_OFFSETOF(blitter, tap_scale_u,                 0x44);
+    ASSERT_OFFSETOF(blitter, tap_scale_v,                 0x84);
+    ASSERT_OFFSETOF(blitter, tap_offset_u,                0xC4);
+    ASSERT_OFFSETOF(blitter, tap_offset_v,                0x104);
 } // treyarch

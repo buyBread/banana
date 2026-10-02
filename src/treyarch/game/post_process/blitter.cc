@@ -10,11 +10,11 @@ blitter::blitter() {
     vtable          = &references::blitter_vtable.get();
     reference_count = 1;
 
-    for (u32 index = 0; index < 4; ++index) {
-        transforms[0][index] = vector4(1.0f);
-        transforms[1][index] = vector4(1.0f);
-        transforms[2][index] = vector4(0.0f);
-        transforms[3][index] = vector4(0.0f);
+    for (u32 tap = 0; tap < 16; ++tap) {
+        tap_scale_u[tap]  = 1.0f;
+        tap_scale_v[tap]  = 1.0f;
+        tap_offset_u[tap] = 0.0f;
+        tap_offset_v[tap] = 0.0f;
     }
 }
 
@@ -97,11 +97,12 @@ void blitter::draw_fullscreen() {
     }
 
     f32 constants[19][4] {};
-    const f32* source = (const f32*)transforms;
 
-    for (u32 row = 0; row < 16; ++row) {
-        for (u32 column = 0; column < 4; ++column)
-            constants[row][column] = source[column * 16 + row];
+    for (u32 tap = 0; tap < 16; ++tap) {
+        constants[tap][0] = tap_scale_u[tap];
+        constants[tap][1] = tap_scale_v[tap];
+        constants[tap][2] = tap_offset_u[tap];
+        constants[tap][3] = tap_offset_v[tap];
     }
 
     constants[16][0] =  2.0f;
