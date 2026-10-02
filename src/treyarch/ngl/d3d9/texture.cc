@@ -25,36 +25,72 @@ void ngl::d3d9::bind_texture(u32      stage,
     if (value->owner_file)
         value->owner_file->last_frame_reference = frame_epoch;
 
-    set_texture(stage, value->gpu_texture.resource);
-
     u8 flags = (u8)map_flags;
-    
+
     u32 address_u = (flags & 0x10) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
     u32 address_v = (flags & 0x20) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
 
-    set_sampler_state(stage, D3DSAMP_ADDRESSU, address_u);
-    set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
-
-    if (value->flags & texture_volume) {
-        u32 address_w = (flags & 0x40) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
-        set_sampler_state(stage, D3DSAMP_ADDRESSW, address_w);
-    }
-
     u32 filter = flags & 3;
 
+    // retail passes the min filter as the mag filter too; set_sampler_filters turns anisotropic mag into linear
     u32 min_filter = filter == 0 ?
         D3DTEXF_POINT : filter == 3 ? D3DTEXF_ANISOTROPIC : D3DTEXF_LINEAR;
-
-    u32 mag_filter = min_filter == D3DTEXF_ANISOTROPIC ?
-        D3DTEXF_LINEAR : min_filter;
 
     u32 mip_filter = filter >= 2 ?
         D3DTEXF_LINEAR : D3DTEXF_POINT;
 
-    set_sampler_state(stage, D3DSAMP_MINFILTER,     min_filter);
-    set_sampler_state(stage, D3DSAMP_MAGFILTER,     mag_filter);
-    set_sampler_state(stage, D3DSAMP_MIPFILTER,     mip_filter);
-    set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, anisotropy);
+    if (value->flags & texture_volume) {
+        u32 address_w = (flags & 0x40) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
+
+        bind_volume_texture_resource(stage,
+                                     &value->gpu_texture,
+                                     address_u,
+                                     address_v,
+                                     address_w,
+                                     min_filter,
+                                     min_filter,
+                                     mip_filter,
+                                     anisotropy);
+    } else
+        bind_texture_resource(stage,
+                              &value->gpu_texture,
+                              address_u,
+                              address_v,
+                              min_filter,
+                              min_filter,
+                              mip_filter,
+                              anisotropy);
+}
+
+// sub_8A24F0
+void ngl::d3d9::bind_texture_resource(      u32               stage,
+                                      const texture_resource* value,
+                                            DWORD             address_u,
+                                            DWORD             address_v,
+                                            DWORD             min_filter,
+                                            DWORD             mag_filter,
+                                            DWORD             mip_filter,
+                                            DWORD             maximum_anisotropy) {
+
+    set_texture(stage, value->resource);
+    set_sampler_address(stage, address_u, address_v);
+    set_sampler_filters(stage, min_filter, mag_filter, mip_filter, maximum_anisotropy);
+}
+
+// sub_9E2540
+void ngl::d3d9::bind_volume_texture_resource(      u32               stage,
+                                             const texture_resource* value,
+                                                   DWORD             address_u,
+                                                   DWORD             address_v,
+                                                   DWORD             address_w,
+                                                   DWORD             min_filter,
+                                                   DWORD             mag_filter,
+                                                   DWORD             mip_filter,
+                                                   DWORD             maximum_anisotropy) {
+
+    set_texture(stage, value->resource);
+    set_sampler_address(stage, address_u, address_v, address_w);
+    set_sampler_filters(stage, min_filter, mag_filter, mip_filter, maximum_anisotropy);
 }
 
 D3DPOOL ngl::d3d9::get_texture_pool(const texture_resource* value) {

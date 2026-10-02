@@ -27,6 +27,13 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_sampler_filters();
     void set_render_state(D3DRENDERSTATETYPE state, DWORD value);
     void set_sampler_state(u32 stage, D3DSAMPLERSTATETYPE state, DWORD value);
+    void set_sampler_filters(u32   stage,
+                             DWORD min_filter,
+                             DWORD mag_filter,
+                             DWORD mip_filter,
+                             DWORD maximum_anisotropy);
+    void set_sampler_address(u32 stage, DWORD address_u, DWORD address_v);
+    void set_sampler_address(u32 stage, DWORD address_u, DWORD address_v, DWORD address_w);
     void apply_blend_mode(u64 value);
 
     namespace references {

@@ -41,6 +41,23 @@ namespace d3d9 {
     void upload_texture(texture_resource* value, const void* &source);
     void upload_cube_texture(texture_resource* value, const void* &source);
     void bind_texture(u32 stage, texture* value, u32 map_flags, u32 anisotropy);
+    void bind_texture_resource(      u32               stage,
+                               const texture_resource* value,
+                                     DWORD             address_u,
+                                     DWORD             address_v,
+                                     DWORD             min_filter,
+                                     DWORD             mag_filter,
+                                     DWORD             mip_filter,
+                                     DWORD             maximum_anisotropy);
+    void bind_volume_texture_resource(      u32               stage,
+                                      const texture_resource* value,
+                                            DWORD             address_u,
+                                            DWORD             address_v,
+                                            DWORD             address_w,
+                                            DWORD             min_filter,
+                                            DWORD             mag_filter,
+                                            DWORD             mip_filter,
+                                            DWORD             maximum_anisotropy);
 
     ASSERT_SIZEOF  (texture_resource,                0x20);
     ASSERT_OFFSETOF(texture_resource, resource,      0x00);

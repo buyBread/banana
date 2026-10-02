@@ -74,13 +74,8 @@ void apply_render_states(const ngl::fx::render_states &states) {
 void apply_sampler_states(u32 stage, const u32* sampler) {
     using namespace ngl::d3d9;
 
-    set_sampler_state(stage, D3DSAMP_ADDRESSU, sampler[1]);
-    set_sampler_state(stage, D3DSAMP_ADDRESSV, sampler[2]);
-    set_sampler_state(stage, D3DSAMP_ADDRESSW, sampler[3]);
-    set_sampler_state(stage, D3DSAMP_MINFILTER, sampler[5]);
-    set_sampler_state(stage, D3DSAMP_MAGFILTER, sampler[6] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[6]);
-    set_sampler_state(stage, D3DSAMP_MIPFILTER, sampler[4] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[4]);
-    set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, 1);
+    set_sampler_address(stage, sampler[1], sampler[2], sampler[3]);
+    set_sampler_filters(stage, sampler[5], sampler[6], sampler[4], 1);
 }
 
 void bind_texture(      ngl::fx::effect*           effect_data,

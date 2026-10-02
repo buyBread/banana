@@ -30,6 +30,32 @@ void ngl::d3d9::set_sampler_state(u32                 stage,
     references::device.get()->SetSamplerState(stage, state, value);
 }
 
+// sub_72C140
+void ngl::d3d9::set_sampler_filters(u32   stage,
+                                    DWORD min_filter,
+                                    DWORD mag_filter,
+                                    DWORD mip_filter,
+                                    DWORD maximum_anisotropy) {
+
+    set_sampler_state(stage, D3DSAMP_MINFILTER, min_filter);
+    set_sampler_state(stage, D3DSAMP_MAGFILTER, mag_filter == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : mag_filter);
+    set_sampler_state(stage, D3DSAMP_MIPFILTER, mip_filter == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : mip_filter);
+    set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, maximum_anisotropy);
+}
+
+// sub_72C200
+void ngl::d3d9::set_sampler_address(u32 stage, DWORD address_u, DWORD address_v) {
+    set_sampler_state(stage, D3DSAMP_ADDRESSU, address_u);
+    set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
+}
+
+// sub_9E24B0
+void ngl::d3d9::set_sampler_address(u32 stage, DWORD address_u, DWORD address_v, DWORD address_w) {
+    set_sampler_state(stage, D3DSAMP_ADDRESSU, address_u);
+    set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
+    set_sampler_state(stage, D3DSAMP_ADDRESSW, address_w);
+}
+
 // sub_9E7E00
 void ngl::d3d9::initialize_sampler_filters() {
     sampler_state_cache* states = &references::sampler_states.get();

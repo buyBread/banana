@@ -154,10 +154,7 @@ void ngl::shaders::pcuv::render(render_node* value) {
     texture* texture_data = value->material_data->texture_data;
     d3d9::set_texture(0, texture_data->gpu_texture.resource);
 
-    d3d9::set_sampler_state(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    d3d9::set_sampler_state(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    d3d9::set_sampler_state(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-    d3d9::set_sampler_state(0, D3DSAMP_MAXANISOTROPY, 1);
+    d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_POINT, 1);
 
     u32 map_flags = value->material_data->map_flags;
 
@@ -166,8 +163,7 @@ void ngl::shaders::pcuv::render(render_node* value) {
     u32 address_v = (map_flags & 0x100) ? D3DTADDRESS_MIRROR :
                     (map_flags & 0x20) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
 
-    d3d9::set_sampler_state(0, D3DSAMP_ADDRESSU, address_u);
-    d3d9::set_sampler_state(0, D3DSAMP_ADDRESSV, address_v);
+    d3d9::set_sampler_address(0, address_u, address_v);
 
     d3d9::draw_mesh_section(value->section);
 

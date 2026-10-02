@@ -82,12 +82,8 @@ void ngl::shaders::smsky::render(render_node* value) {
         texture_data = ngl::references::black_texture.read();
 
     d3d9::set_texture(0, texture_data->gpu_texture.resource);
-    d3d9::set_sampler_state(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-    d3d9::set_sampler_state(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-    d3d9::set_sampler_state(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    d3d9::set_sampler_state(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    d3d9::set_sampler_state(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-    d3d9::set_sampler_state(0, D3DSAMP_MAXANISOTROPY, 1);
+    d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
+    d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_POINT, 1);
 
     f32 half_angle = (f32)(current_scene->field_of_view * 0.5f * 0.01745329300562541);
     

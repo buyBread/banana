@@ -1,6 +1,7 @@
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
+#include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
@@ -18,13 +19,14 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_CW);
 
     if (value->queue_class && material->opacity_texture) {
-        d3d9::set_texture(0, material->opacity_texture->gpu_texture.resource);
-        d3d9::set_sampler_state(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-        d3d9::set_sampler_state(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-        d3d9::set_sampler_state(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-        d3d9::set_sampler_state(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-        d3d9::set_sampler_state(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-        d3d9::set_sampler_state(0, D3DSAMP_MAXANISOTROPY, 1);
+        d3d9::bind_texture_resource(0,
+                                    &material->opacity_texture->gpu_texture,
+                                    D3DTADDRESS_WRAP,
+                                    D3DTADDRESS_WRAP,
+                                    D3DTEXF_LINEAR,
+                                    D3DTEXF_LINEAR,
+                                    D3DTEXF_LINEAR,
+                                    1);
         d3d9::set_render_state(D3DRS_ALPHATESTENABLE, TRUE);
         d3d9::set_render_state(D3DRS_ALPHAFUNC, D3DCMP_GREATER);
         d3d9::set_render_state(D3DRS_ALPHAREF, 0);
