@@ -9416,6 +9416,7 @@ namespace retail {
     inline auto const sub_660F10 = (i32 (__thiscall*)(i32 self, i32))0x00660F10;
     inline auto const sub_661070 = (void (__cdecl*)(i32*, i32, u32*))0x00661070;
     inline auto const sub_6615B0 = (char (__cdecl*)(i32, i32))0x006615B0;
+    inline auto const sub_661710 = (char (__cdecl*)(i32, i32))0x00661710; // manual: FOOTSTEP_L default event handler, reached only through sub_667060's registration, never made a function in the IDA database
     inline auto const sub_661770 = (char (__cdecl*)(i32, i32))0x00661770;
     inline auto const sub_6617D0 = (char (__cdecl*)(i32, i32))0x006617D0;
     inline auto const sub_6618A0 = (void (__cdecl*)(i32, i32))0x006618A0;

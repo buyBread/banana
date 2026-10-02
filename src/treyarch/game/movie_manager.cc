@@ -1,8 +1,25 @@
+#include <new>
+
 #include "bink/bink.hh"
 #include "treyarch/game/movie_manager.hh"
 #include "treyarch/ngl/texture/runtime.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
+
+// sub_6930C0; `state` is left as allocated
+movie_manager::movie_manager() {
+    vtable  = &references::movie_manager_vtable.get();
+    unk_008 = 2;
+    bink    = nullptr;
+}
+
+// sub_429150
+void movie_manager::create_inst() {
+    void* allocation = memory::heap::allocate(sizeof(movie_manager));
+
+    references::movie_manager.write(allocation ? new (allocation) movie_manager() : nullptr);
+}
 
 // loc_6930E0 (a chunk sub_97B160 tail-jumps into)
 void movie_manager::release_device_resources() {

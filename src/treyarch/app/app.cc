@@ -2,10 +2,15 @@
 
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/environment_progression.hh"
+#include "treyarch/game/event/default_callbacks.hh"
+#include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/glass_house_manager.hh"
 #include "treyarch/game/mission/mission_manager.hh"
-#include "treyarch/game/event/event_manager.hh"
+#include "treyarch/game/movie_manager.hh"
+#include "treyarch/game/pathfinder/obstacle_manager.hh"
+#include "treyarch/game/trigger_manager.hh"
 #include "treyarch/shared/platform.hh"
 #include "treyarch/shared/singleton.hh"
 #include "treyarch/shared/mash/string.hh"
@@ -62,7 +67,7 @@ app::app() {
 
     retail::sub_429090(); // zombie_manager::create_inst
     references::unk_010fa26c.write(memory::heap::allocate(8));
-    retail::sub_428F60();
+    environment_progression_state::create_inst();
     retail::sub_42A700();
     mission_manager::create_inst();
     retail::sub_428B00(); // quest_manager::create_inst
@@ -81,25 +86,24 @@ app::app() {
     mash::string string_hash_dictionary = *(mash::string*)retail::sub_7EFAB0(platform_pc) + "debug\\string_hash_dictionary";
 
     retail::sub_428F00(); // mission_memory_manager::create_inst
-    retail::sub_428A10(); // trigger_manager::create_inst
+    trigger_manager::create_inst();
     retail::sub_4290F0(); // dinput_mgr::create_inst
     retail::sub_428E90(); // input_mgr::create_inst
 
     if (!references::pack_mode.read())
-        retail::sub_428FC0();
+        pathfinder::obstacle_manager::create_inst();
 
     retail::sub_904610();
-    retail::sub_429150(); // movie_manager::create_inst
+    movie_manager::create_inst();
     retail::sub_8FD3A0();
     retail::sub_5FDFB0(0);
     retail::sub_7A78F0();
-    retail::sub_667060(); // event_manager default callbacks
+    register_default_event_callbacks();
     retail::sub_7F9D50();
     retail::sub_42A6A0(); // navmesh_obstacle_manager::create_inst
     retail::sub_823280();
 
     void* allocation = memory::heap::allocate(sizeof(game));
-
     the_game = allocation ? new (allocation) game() : nullptr;
     references::game.write(the_game);
 }
