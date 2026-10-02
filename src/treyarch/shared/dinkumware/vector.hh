@@ -137,6 +137,24 @@ namespace treyarch { namespace dinkumware {
             return result;
         }
 
+        // sub_87E470 (12-byte elements)
+        T* erase(T* range_first, T* range_last) noexcept {
+            if (range_first == range_last)
+                return range_first;
+
+            T* position = range_first;
+
+            for (T* next = range_last; next != last; ++position, ++next)
+                *position = std::move(*next);
+
+            while (last != position) {
+                --last;
+                last->~T();
+            }
+
+            return range_first;
+        }
+
     private:
         void reserve_for_size(u32 requested_size) {
             u32 old_size     = size();

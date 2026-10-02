@@ -5,6 +5,7 @@
 #include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -13,7 +14,6 @@ namespace treyarch { namespace chuck { namespace vm {
     class script_function;
     class script_instance;
     class vm_thread;
-    struct vm_thread_local_reference; // at least { tracked allocation, mode | 1 }
 
     /*  game-side event services the interpreter calls (installed by sub_843300).
         "library" signallers are native objects, i.e. entity handles. */
@@ -67,6 +67,9 @@ namespace treyarch { namespace chuck { namespace vm {
     namespace references {
         inline util::memory_reference<u32> id_counter { 0x01124C70 };
 
+        inline util::memory_reference<memory::fixed_pool> thread_pool          { 0x01124CA8 };
+        inline util::memory_reference<memory::fixed_pool> local_reference_pool { 0x01124768 };
+
         inline util::memory_reference<raise_global_signal_callback_t>   raise_global_signal_callback   { 0x01124C74 };
         inline util::memory_reference<raise_instance_signal_callback_t> raise_instance_signal_callback { 0x01124C78 };
         inline util::memory_reference<raise_library_signal_callback_t>  raise_library_signal_callback  { 0x01124C7C };
@@ -104,6 +107,22 @@ namespace treyarch { namespace chuck { namespace vm {
         } word_pair;
     };
 
+    // a reference the thread releases when it dies
+    struct vm_thread_local_reference {
+        void*                                       allocation;
+        u32                                         mode; // 0 plain, 4 string array, 8 script-instance array; always stored | 1
+        vm_simple_list<vm_thread_local_reference*>* list;
+        vm_thread_local_reference*                  vm_simple_list_previous;
+        vm_thread_local_reference*                  vm_simple_list_next;
+
+        // sub_A182B0
+        vm_thread_local_reference(void* requested_allocation, u32 requested_mode) : allocation(requested_allocation),
+                                                                                    mode(requested_mode),
+                                                                                    list(nullptr),
+                                                                                    vm_simple_list_previous(nullptr),
+                                                                                    vm_simple_list_next(nullptr) {}
+    };
+
     // individually pooled; a linked chain, not a contiguous stack
     struct vm_thread_flow_stack_element {
         u16*                          pc;       // return address
@@ -114,35 +133,45 @@ namespace treyarch { namespace chuck { namespace vm {
     class vm_thread {
 
     public:
-        script_instance*              inst;
-        const script_function*        ex;      // entry function, never changes; derive the running one from `pc`
-        vm_thread*                    creator;
-        vm_stack                      dstack;
-        u16*                          pc;
-        e_next_push_pop_modifier      next_push_pop_modifier;
-        argument_t                    next_push_pop_modifier_arg;
-        f32                           next_push_pop_modifier_subscript;
-        vm_thread_flow_stack_element* flow_stack;
-        e_opcode                      current_opcode;
-        e_opcode_arg                  current_opcode_arg;
-        argument_t                    current_arg;
-        u32                           current_dsize;
-        script_instance*              current_instance;
-        u32                           entry;           // native recall state for a BSL that returned false
-        void*                         user_data;
-        u32                           unk_60;
-        f32                           camera_priority; // inherited by BST/BTH children
-        u32                           thread_id;
-        vm_thread_local_reference*    local_references;
-        u32                           unk_70;
-        u32                           unk_74;
-        vm_simple_list<vm_thread*>*   thread_list;     // the owning instance's `threads`
-        vm_thread*                    vm_simple_list_previous;
-        vm_thread*                    vm_simple_list_next;
+        script_instance*                 inst;
+        const script_function*           ex;      // entry function, never changes; derive the running one from `pc`
+        vm_thread*                       creator;
+        vm_stack                         dstack;
+        u16*                             pc;
+        e_next_push_pop_modifier         next_push_pop_modifier;
+        argument_t                       next_push_pop_modifier_arg;
+        f32                              next_push_pop_modifier_subscript;
+        vm_thread_flow_stack_element*    flow_stack;
+        e_opcode                         current_opcode;
+        e_opcode_arg                     current_opcode_arg;
+        argument_t                       current_arg;
+        u32                              current_dsize;
+        script_instance*                 current_instance;
+        u32                              entry;           // native recall state for a BSL that returned false
+        void*                            user_data;
+        u32                              unk_60;
+        f32                              camera_priority; // inherited by BST/BTH children
+        u32                              thread_id;
+        vm_simple_list
+            <vm_thread_local_reference*> local_references;
+        vm_simple_list<vm_thread*>*      thread_list;     // the owning instance's `threads`
+        vm_thread*                       vm_simple_list_previous;
+        vm_thread*                       vm_simple_list_next;
+
+        // leaves the push/pop modifier and current-operand state as the pool left it
+        vm_thread(script_instance* instance, const script_function* function, void* requested_user_data, u32 stack_size);
+
+        void add_local_reference(void* allocation, u32 mode);
     };
 
     ASSERT_SIZEOF  (argument_t,                   0x0C);
     ASSERT_SIZEOF  (vm_thread_flow_stack_element, 0x0C);
+
+    ASSERT_SIZEOF  (vm_thread_local_reference,                          0x14);
+    ASSERT_OFFSETOF(vm_thread_local_reference, mode,                    0x04);
+    ASSERT_OFFSETOF(vm_thread_local_reference, list,                    0x08);
+    ASSERT_OFFSETOF(vm_thread_local_reference, vm_simple_list_previous, 0x0C);
+    ASSERT_OFFSETOF(vm_thread_local_reference, vm_simple_list_next,     0x10);
 
     ASSERT_SIZEOF  (vm_thread,                                   0x84);
     ASSERT_OFFSETOF(vm_thread, inst,                             0x00);

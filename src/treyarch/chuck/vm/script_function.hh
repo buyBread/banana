@@ -7,6 +7,7 @@
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_object;
+    class vm_thread;
 
     enum e_script_function_flags : u16 {
         script_function_flag_static                  = 0x01,
@@ -17,7 +18,7 @@ namespace treyarch { namespace chuck { namespace vm {
         script_function_flag_parms_builder           = 0x20
     };
 
-    // how a reference-bearing argument is retained (sub_A20440) and released (sub_A20560)
+    // how a reference-bearing argument is retained (add_references) and released (release_references)
     enum e_vm_reference_kind : u16 {
         vm_reference_kind_dynamic_array                 = 0,
         vm_reference_kind_string                        = 1,
@@ -48,6 +49,17 @@ namespace treyarch { namespace chuck { namespace vm {
         u16                     event_parms_stacksize;
         u16                     buffer_len;
         e_script_function_flags flags;
+
+        // `retain` adds a manager reference, `track` hands the reference to `thread` for release when it dies
+        void add_references(vm_thread*  thread,
+                            const void* block,
+                            u32         block_size,
+                            bool        retain,
+                            bool        track) const;
+        void release_references(const void* block, u32 block_size) const;
+
+        // over the thread's argument bytes
+        void add_thread_references(vm_thread* thread, bool retain, bool track) const;
     };
 
     ASSERT_SIZEOF  (script_function,                        0x2C);

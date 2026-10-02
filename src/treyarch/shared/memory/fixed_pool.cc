@@ -76,7 +76,7 @@ void fixed_pool::add_blocks(u32 count) {
 void* fixed_pool::allocate() {
     engine_lock_scope scope(&lock);
 
-    if (!free_list && growable)
+    if (!free_list && (growable || !block_count))
         add_blocks(1);
 
     void* allocation = free_list;

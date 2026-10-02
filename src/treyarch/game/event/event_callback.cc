@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "retail.hh"
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
@@ -61,20 +60,20 @@ script_event_callback::script_event_callback(      chuck::vm::script_instance* r
     if (size) {
         parameters = memory::heap::allocate(size);
         std::memcpy(parameters, requested_parameters, size);
-        retail::sub_A20440((u32*)function, 0, (i32)parameters, size, 1, 0); // script_function: retain argument references
+        function->add_references(nullptr, parameters, size, true, false);
     } else
         parameters = nullptr;
 
-    retail::sub_A1DDC0((u32*)instance, (i32)&script_event_callback::on_instance_lifecycle, (i32)this); // script_instance::register_callback
+    instance->register_callback(&script_event_callback::on_instance_lifecycle, this);
 }
 
 // sub_683A00
 script_event_callback::~script_event_callback() {
     if (references::g_world_ptr.read() && instance) {
-        retail::sub_A1E160((u32*)instance, (i32)this); // script_instance::unregister_callback
+        instance->unregister_callback(this);
 
         if (parameters)
-            retail::sub_A20560((u32*)function, (i32)parameters, function->parms_stacksize); // script_function: release argument references
+            function->release_references(parameters, function->parms_stacksize);
     }
 
     if (parameters)
@@ -92,11 +91,8 @@ void script_event_callback::on_instance_lifecycle(chuck::vm::e_script_instance_c
 
     script_event_callback* callback = (script_event_callback*)user_data;
 
-    if (callback->instance && callback->parameters && callback->function) {
-        retail::sub_A20560((u32*)callback->function, // script_function: release argument references
-                           (i32)callback->parameters,
-                           callback->function->parms_stacksize);
-    }
+    if (callback->instance && callback->parameters && callback->function)
+        callback->function->release_references(callback->parameters, callback->function->parms_stacksize);
 
     callback->instance = nullptr;
 }
@@ -106,19 +102,17 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
     if (disabled || !instance)
         return;
 
-    // script_instance::add_thread
-    chuck::vm::vm_thread* thread = (chuck::vm::vm_thread*)retail::sub_A1E0F0((u32*)instance,
-                                                                             (i32)function,
-                                                                             parameters,
-                                                                             function->parms_stacksize,
-                                                                             0,
-                                                                             0);
+    chuck::vm::vm_thread* thread = instance->add_thread(function,
+                                                        parameters,
+                                                        function->parms_stacksize,
+                                                        nullptr,
+                                                        0);
 
     if (raised_event->is_or_is_subclass_of(references::chuck_event_type.read())) {
         i32 size = *(i32*)((u8*)raised_event + 0x10);
 
         if (size > 0)
-            retail::sub_4E4F70((i32)&thread->dstack, (u8*)raised_event + 0x14, size); // vm_stack::push
+            thread->dstack.push((u8*)raised_event + 0x14, size);
 
         return;
     }
@@ -136,7 +130,7 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
     if (size > 0) {
         const void* data = ((get_data_function)vtable[12])(raised_event);
 
-        retail::sub_4E4F70((i32)&thread->dstack, (void*)data, size); // vm_stack::push
+        thread->dstack.push(data, size);
     }
 }
 
