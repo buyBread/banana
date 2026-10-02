@@ -17,6 +17,7 @@
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
+#include "treyarch/shared/math/vmath.hh"
 
 using namespace treyarch;
 
@@ -78,7 +79,7 @@ void treyarch::build_shadow_frustum_corners(      vector3*  corners,
                                                   f32       aspect_ratio,
                                                   f32       distance) {
 
-    f32 half_width  = std::tan(field_of_view * 0.5f) * distance;
+    f32 half_width  = math::tan(field_of_view * 0.5f) * distance;
     f32 half_height = half_width * aspect_ratio;
 
     vector3 right_offset    = right;

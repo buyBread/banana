@@ -990,7 +990,12 @@ void ngl::fx::update_material_parameters(effect*         value,
     texture* active_horizon_texture = nullptr;
 
     if (!subset_effect) {
-        build_general_lighting(&general_lighting, node_data, section);
+        // depth-bias scenes only get the default lighting
+        if (!depth_bias_enabled)
+            build_general_lighting(&general_lighting, node_data, section);
+        else
+            initialize_general_lighting(&general_lighting);
+
         active_horizon_texture = general_lighting.horizon_texture;
     } else if (!depth_bias_enabled) {
         get_subset_lighting(&lighting, node_data);

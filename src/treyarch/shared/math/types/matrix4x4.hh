@@ -98,21 +98,7 @@ namespace treyarch {
         void orthonormalize(); /* hey, what are you? */
         void mash_convert(mash::generic_mash_info *inf, void *begin_image); /* hey, what are you? */
 
-        matrix4x4 inverse() {
-            f32 det = determinant();
-
-            if (det != 0.0f) {
-                matrix4x4 result = adjugate();
-                result *= 1.0f / det;
-
-                return result;
-            }
-
-            matrix4x4 result;
-            result.identity();
-
-            return result;
-        }
+        matrix4x4 inverse() const;
 
         // retail affine packets leave the fourth column uninitialized,
         // read only xyz from each row before using one in a full matrix product
@@ -139,56 +125,11 @@ namespace treyarch {
                              x.w, y.w, z.w, w.w);
         }
 
-        matrix4x4 cof() {
-            matrix4x4 result;
+        // the cofactor matrix, transposed into the adjugate when asked to
+        matrix4x4 cofactors(bool transposed) const;
 
-            for (i32 row = 0; row < 4; ++row) {
-                for (i32 column = 0; column < 4; ++column)
-                    result[row][column] = cofactor(row, column);
-            }
-
-            return result;
-        }
-
-        matrix4x4 adjugate() {
-            matrix4x4 result = cof();
-
-            return result.transpose();
-        }
-
-        f32 cofactor(int excluded_row, int excluded_column) const {
-            f32 minor[3][3];
-            i32 minor_row = 0;
-
-            for (i32 row = 0; row < 4; ++row) {
-                if (row == excluded_row)
-                    continue;
-
-                i32 minor_column = 0;
-
-                for (i32 column = 0; column < 4; ++column) {
-                    if (column == excluded_column)
-                        continue;
-
-                    minor[minor_row][minor_column] = (*this)[row][column];
-                    
-                    ++minor_column;
-                }
-
-                ++minor_row;
-            }
-
-            f32 sign = ((excluded_row ^ excluded_column) & 1) ? -1.0f : 1.0f;
-
-            f32 minor_determinant = minor[0][0] * minor[1][1] * minor[2][2] +
-                                    minor[0][1] * minor[1][2] * minor[2][0] +
-                                    minor[0][2] * minor[1][0] * minor[2][1] -
-                                    minor[0][2] * minor[1][1] * minor[2][0] -
-                                    minor[0][0] * minor[1][2] * minor[2][1] -
-                                    minor[0][1] * minor[1][0] * minor[2][2];
-
-            return sign * minor_determinant;
-        }
+        matrix4x4 cof()      const { return cofactors(false); }
+        matrix4x4 adjugate() const { return cofactors(true);  }
 
         f32 determinant3() const {
             return x.x * y.y * z.z - y.x * z.z * x.y +
@@ -196,13 +137,6 @@ namespace treyarch {
                    z.x * x.y * y.z - x.x * z.y * y.z;
         };
 
-        f32 determinant() const {
-            f32 result = 0.0f;
-
-            for (i32 column = 0; column < 4; ++column)
-                result += (*this)[0][column] * cofactor(0, column);
-
-            return result;
-        }
+        f32 determinant() const;
     };
 } // treyarch

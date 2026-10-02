@@ -8,8 +8,6 @@ namespace treyarch { namespace ngl { namespace lighting {
 
 namespace treyarch { namespace ngl { namespace fx {
     effect* select_effect(render_node* value);
-    
-    void record_hash_name(const fixed_string &value);
 
     lighting::light_context* prepare_light_context(const mesh_node_data* node_data);
 

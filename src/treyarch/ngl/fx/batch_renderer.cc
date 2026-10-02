@@ -1,4 +1,5 @@
 #include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/batch_renderer.hh"
@@ -66,47 +67,47 @@ void draw_single_pass_batch_node(ngl::fx::render_node* value) {
     }
 
     // non-indexed meshes use the section's vertex offset here, unlike the regular draw path
-    ngl::d3d9::draw_mesh_section(value->section);
+    ngl::mesh_section* section        = value->section;
+    D3DPRIMITIVETYPE   primitive_type = (D3DPRIMITIVETYPE)section->primitive_type;
+
+    ngl::d3d9::bind_mesh_section(section);
+
+    ngl::d3d9::references::device.get()
+        ->DrawPrimitive(primitive_type,
+                        0,
+                        ngl::d3d9::get_primitive_count(primitive_type, section->vertex_count));
 }
 
 void begin_depth_only_technique(ngl::fx::pass*      pass_data,
-                                       IDirect3DSurface9** saved_color_target) {
+                                IDirect3DSurface9** saved_color_target) {
 
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
     if (!current_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
         return;
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    ngl::d3d9::references::device.get()->GetRenderTarget(0, saved_color_target);
 
-    device->GetRenderTarget(0, saved_color_target);
-
-    ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, 0);
+    // binding nothing to target 0 only turns color writes off
+    ngl::d3d9::set_render_target(0, nullptr, false);
 }
 
 void finish_depth_only_technique(ngl::fx::pass*     pass_data,
-                                        IDirect3DSurface9* saved_color_target) {
+                                 IDirect3DSurface9* saved_color_target) {
 
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
     if (!current_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
         return;
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
-
-    if (saved_color_target) {
-        ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, 0x0F);
-        device->SetRenderTarget(0, saved_color_target);
-        saved_color_target->Release();
-    } else
-        ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, 0);
+    ngl::d3d9::set_render_target(0, &saved_color_target, true);
 }
 
 i32 render_technique_batch(ngl::fx::effect*          effect_data,
                            ngl::fx::technique*       technique_data,
                            ngl::fx::technique_batch* batch) {
 
-    ngl::fx::record_hash_name(technique_data->name);
+    technique_data->name.get_text();
 
     ngl::fx::pass* first_pass = technique_data->passes;
     IDirect3DSurface9* saved_color_target = nullptr;
@@ -163,7 +164,7 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
 i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
     ngl::fx::effect* effect_data = runtime->owner;
 
-    ngl::fx::record_hash_name(effect_data->name);
+    effect_data->name.get_text();
     ngl::fx::prepare_effect_scene(effect_data);
 
     i32 rendered_count = 0;

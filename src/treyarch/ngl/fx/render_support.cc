@@ -16,14 +16,9 @@
 
 using namespace treyarch;
 
-namespace treyarch { namespace ngl { namespace fx { namespace references {
-    util::memory_reference<char> effect_hash_names      { 0x00FC6950 };
-    util::memory_reference<u32>  effect_hash_name_index { 0x00FC6A00 };
-}}}} // treyarch::ngl::fx::references
-
 struct point_light_candidate {
     u32 index;
-    i32 integer_distance;
+    u32 integer_distance;
     f32 squared_distance;
     u32 reserved;
 };
@@ -61,17 +56,12 @@ i32 visit_point_light(math::visitor* base, i32 index) {
         point_light_candidate &candidate = visitor->candidates[visitor->count++];
 
         candidate.index            = index;
-        candidate.integer_distance = (i32)(i64)squared_distance;
+        candidate.integer_distance = (u32)(i64)squared_distance;
         candidate.squared_distance = squared_distance;
     }
 
     return 0;
 }
-
-static math::visitor_vtable point_light_visitor_methods {
-    nullptr,
-    visit_point_light
-};
 
 // this is the same heap sort the original game uses; changing it can pick
 // different lights when two of them are the same distance away
@@ -174,9 +164,9 @@ i32 select_nearest_point_lights(point_light_visitor* visitor) {
 }
 
 // sub_7DDA40
-void query_point_lights(      ngl::fx::mesh_node_data* node_data,
+void query_point_lights(      ngl::fx::mesh_node_data*  node_data,
                         const vector4                  &sphere,
-                              f32                      radius) {
+                              f32                       radius) {
 
     ngl::lighting::light_context* context =
         ngl::lighting::references::selected_light_context.read();
@@ -184,8 +174,13 @@ void query_point_lights(      ngl::fx::mesh_node_data* node_data,
     if (context->head.next == &context->head)
         return;
 
+    static math::visitor_vtable methods {
+        nullptr,
+        visit_point_light
+    };
+
     point_light_visitor visitor;
-    visitor.base.vtable   = &point_light_visitor_methods;
+    visitor.base.vtable   = &methods;
     visitor.reserved_004  = 0;
     visitor.count         = 0;
     visitor.reserved_200C = 0;
@@ -291,21 +286,6 @@ ngl::fx::effect* ngl::fx::select_effect(render_node* value) {
         return runtime->four_point_lights;
 
     return base;
-}
-
-void ngl::fx::record_hash_name(const fixed_string &value) {
-    if (value.text)
-        return;
-
-    // room for sixteen names in the form "0x12345678"
-    u32 index = references::effect_hash_name_index.read();
-    char* names = &references::effect_hash_names.get();
-
-    std::sprintf(names + 11 * index,
-                 "0x%08X",
-                 value.hash.source_hash_code);
-
-    references::effect_hash_name_index.write((index + 1) & 0x0F);
 }
 
 void ngl::fx::prepare_effect_scene(effect* value) {

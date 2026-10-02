@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstring>
 
 #include "treyarch/ngl/d3d9/shader_program_cache.hh"
@@ -14,47 +13,6 @@ using namespace treyarch;
 
 struct effect_variant_family {
     const char* names[4];
-};
-
-struct effect_priority_prefix {
-    const char* prefix;
-          i32   priority;
-};
-
-static const effect_variant_family effect_variant_families[] {
-    {{ "building_quad",                  "building_quad_0ptlights",                  "building_quad_2ptlights",                  "building_quad_4ptlights"                  }},
-    {{ "building_walls",                 "building_walls_0ptlights",                 "building_walls_2ptlights",                 "building_walls_4ptlights"                 }},
-    {{ "building_walls_dirty_diff",      "building_walls_dirty_diff_0ptlights",      "building_walls_dirty_diff_2ptlights",      "building_walls_dirty_diff_4ptlights"      }},
-    {{ "building_walls_dirty_norm",      "building_walls_dirty_norm_0ptlights",      "building_walls_dirty_norm_2ptlights",      "building_walls_dirty_norm_4ptlights"      }},
-    {{ "building_walls_dirty_diff_norm", "building_walls_dirty_diff_norm_0ptlights", "building_walls_dirty_diff_norm_2ptlights", "building_walls_dirty_diff_norm_4ptlights" }},
-    {{ "road",                           "road_0ptlights",                           "road_2ptlights",                           "road_4ptlights"                           }},
-    {{ "road_flat",                      "road_flat_0ptlights",                      "road_flat_2ptlights",                      "road_flat_4ptlights"                      }},
-    {{ "road_decal",                     "road_decal_0ptlights",                     "road_decal_2ptlights",                     "road_decal_4ptlights"                     }},
-    {{ "road_flat_decal",                "road_flat_decal_0ptlights",                "road_flat_decal_2ptlights",                "road_flat_decal_4ptlights"                }},
-    {{ "sidewalk",                       "sidewalk_0ptlights",                       "sidewalk_2ptlights",                       "sidewalk_4ptlights"                       }},
-    {{ "sidewalk_flat",                  "sidewalk_flat_0ptlights",                  "sidewalk_flat_2ptlights",                  "sidewalk_flat_4ptlights"                  }},
-    {{ "sidewalk_decal",                 "sidewalk_decal_0ptlights",                 "sidewalk_decal_2ptlights",                 "sidewalk_decal_4ptlights"                 }},
-    {{ "sidewalk_flat_decal",            "sidewalk_flat_decal_0ptlights",            "sidewalk_flat_decal_2ptlights",            "sidewalk_flat_decal_4ptlights"            }},
-    {{ "terrain_shared",                 "terrain_shared_0ptlights",                 "terrain_shared_2ptlights",                 "terrain_shared_4ptlights"                 }},
-    {{ "rvb_symbiote",                   "rvb_symbiote_0ptlights",                   "rvb_symbiote_2ptlights",                   "rvb_symbiote_4ptlights"                   }}
-};
-
-static const effect_priority_prefix effect_priority_prefixes[] {
-    { "building_walls",      100 },
-    { "building_quad",        90 },
-    { "storefront",           80 },
-    { "buildinglod_roof",     70 },
-    { "buildinglod_shared",   70 },
-    { "jumbotron",            20 },
-    { "carpaint",             20 },
-    { "shell_Skin",           20 },
-    { "shell_",               20 },
-    { "spidey_",              20 },
-    { "subsurface",           20 },
-    { "tentacle",             20 },
-    { "terrain",              10 },
-    { "sidewalk",              0 },
-    { "road",                  0 }
 };
 
 ngl::fx::parameter* find_parameter_by_name(ngl::fx::effect* value,
@@ -84,11 +42,11 @@ ngl::fx::parameter* find_parameter_by_semantic(ngl::fx::effect* value,
 }
 
 bool is_direct_binding_type(ngl::fx::e_parameter_type type) {
-    if ((type >= ngl::fx::parameter_horizon_projection_u && type <= ngl::fx::parameter_horizon_info) ||
-        (type >= ngl::fx::parameter_light_info && type <= ngl::fx::parameter_view_projection_shadow_2) ||
-        (type >= ngl::fx::parameter_temporary_0 && type <= ngl::fx::parameter_number_directional_lights) ||
-        (type >= ngl::fx::parameter_ibl_parameters && type <= ngl::fx::parameter_tentacle_width_frequency_offset_x) ||
-        (type >= ngl::fx::parameter_environment_color && type <= ngl::fx::parameter_tentacle_basis_color_1) ||
+    if ((type >= ngl::fx::parameter_horizon_projection_u              && type <= ngl::fx::parameter_horizon_info)                      ||
+        (type >= ngl::fx::parameter_light_info                        && type <= ngl::fx::parameter_view_projection_shadow_2)          ||
+        (type >= ngl::fx::parameter_temporary_0                       && type <= ngl::fx::parameter_number_directional_lights)         ||
+        (type >= ngl::fx::parameter_ibl_parameters                    && type <= ngl::fx::parameter_tentacle_width_frequency_offset_x) ||
+        (type >= ngl::fx::parameter_environment_color                 && type <= ngl::fx::parameter_tentacle_basis_color_1)            ||
         (type >= ngl::fx::parameter_tentacle_width_frequency_offset_y && type <= ngl::fx::parameter_last)) {
 
         return true;
@@ -169,7 +127,7 @@ void resolve_texture_parameter(ngl::fx::parameter &parameter) {
 }
 
 void initialize_binding(ngl::fx::effect           &value,
-                               ngl::fx::function_binding &binding) {
+                        ngl::fx::function_binding &binding) {
 
     ngl::fx::parameter &parameter = value.parameters[binding.parameter_index];
 
@@ -192,19 +150,25 @@ void initialize_binding(ngl::fx::effect           &value,
     if (type == ngl::fx::parameter_sampler) {
         i32 texture_parameter_index = *(i32*)parameter.data;
 
-        if (texture_parameter_index != -1) {
-            ngl::fx::parameter &texture_parameter = value.parameters[texture_parameter_index];
-
-            if (is_forced_default_texture_type(texture_parameter.type))
-                *(ngl::texture**)texture_parameter.data = ngl::references::default_texture.read();
-
-            resolve_texture_parameter(texture_parameter);
-
-            binding.source_class  = ngl::fx::binding_parameters;
-            binding.source_offset = (u32)texture_parameter.data - (u32)value.parameter_data;
+        // samplers without a texture always use the fallback, whatever the destination
+        if (texture_parameter_index == -1) {
+            binding.source_class  = ngl::fx::binding_fallback_texture;
+            binding.source_offset = 0;
 
             return;
         }
+
+        ngl::fx::parameter &texture_parameter = value.parameters[texture_parameter_index];
+
+        if (is_forced_default_texture_type(texture_parameter.type))
+            *(ngl::texture**)texture_parameter.data = ngl::references::default_texture.read();
+
+        resolve_texture_parameter(texture_parameter);
+
+        binding.source_class  = ngl::fx::binding_parameters;
+        binding.source_offset = (u32)texture_parameter.data - (u32)value.parameter_data;
+
+        return;
     } else if (type == ngl::fx::parameter_bone_array_world) {
         binding.source_class  = ngl::fx::binding_bones;
         binding.source_offset = 0;
@@ -223,14 +187,14 @@ void initialize_binding(ngl::fx::effect           &value,
 
 // sub_9E0770
 void initialize_function_bindings(ngl::fx::effect   &value,
-                                         ngl::fx::function &function) {
+                                  ngl::fx::function &function) {
 
     for (i32 index = 0; index < function.binding_count; ++index)
         initialize_binding(value, function.bindings[index]);
 }
 
 void create_vertex_program(ngl::fx::effect   &value,
-                                  ngl::fx::function &function) {
+                           ngl::fx::function &function) {
 
     if (!function.microcode)
         return;
@@ -242,7 +206,7 @@ void create_vertex_program(ngl::fx::effect   &value,
 }
 
 void create_pixel_program(ngl::fx::effect   &value,
-                                 ngl::fx::function &function) {
+                          ngl::fx::function &function) {
 
     if (!function.microcode)
         return;
@@ -255,7 +219,7 @@ void create_pixel_program(ngl::fx::effect   &value,
 
 // sub_9E0990
 void initialize_pass(ngl::fx::effect &value,
-                            ngl::fx::pass   &pass) {
+                     ngl::fx::pass   &pass) {
 
     pass.active_programs = &pass.programs;
 
@@ -280,7 +244,7 @@ enum e_matrix_components : u32 {
     matrix_transpose = 0x80
 };
 
-ngl::fx::e_parameter_type specialized_view_direction_type(u32 component_mask) {
+ngl::fx::e_parameter_type specialized_scene_matrix_type(u32 component_mask) {
     switch (component_mask) {
         case matrix_world: return ngl::fx::parameter_world;
         case matrix_view: return ngl::fx::parameter_view;
@@ -306,7 +270,7 @@ ngl::fx::e_parameter_type specialized_view_direction_type(u32 component_mask) {
         case matrix_world_view | matrix_inverse | matrix_transpose: return ngl::fx::parameter_world_view_inverse_transpose;
         case matrix_view_projection | matrix_inverse | matrix_transpose: return ngl::fx::parameter_view_projection_inverse_transpose;
         case matrix_world_view_projection | matrix_inverse | matrix_transpose: return ngl::fx::parameter_world_view_projection_inverse_transpose;
-        default:   return ngl::fx::parameter_scene_matrix;
+        default: return ngl::fx::parameter_scene_matrix;
     }
 }
 
@@ -319,7 +283,7 @@ void specialize_parameter_types(ngl::fx::effect& value) {
 
         u32 component_mask = *(u32*)((u8*)parameter.data + 0x40);
 
-        parameter.type = specialized_view_direction_type(component_mask);
+        parameter.type = specialized_scene_matrix_type(component_mask);
     }
 }
 
@@ -425,40 +389,47 @@ void classify_effect(ngl::fx::effect &value) {
         value.flags |= 0x100;
 }
 
-ngl::fx::effect* resolve_effect(const char* name) {
-    fixed_string lookup = make_fixed_string(name);
-
-    return (ngl::fx::effect*)ngl::resources::resolve(&lookup, four_cc('F', 'X', '\0'));
-}
-
 void resolve_light_variants(ngl::fx::effect_runtime &runtime) {
-    for (const effect_variant_family &family : effect_variant_families) {
+    // retail hashes these names once into a function-local static
+    static const effect_variant_family families[] {
+        {{ "building_quad",                  "building_quad_0ptlights",                  "building_quad_2ptlights",                  "building_quad_4ptlights"                  }},
+        {{ "building_walls",                 "building_walls_0ptlights",                 "building_walls_2ptlights",                 "building_walls_4ptlights"                 }},
+        {{ "building_walls_dirty_diff",      "building_walls_dirty_diff_0ptlights",      "building_walls_dirty_diff_2ptlights",      "building_walls_dirty_diff_4ptlights"      }},
+        {{ "building_walls_dirty_norm",      "building_walls_dirty_norm_0ptlights",      "building_walls_dirty_norm_2ptlights",      "building_walls_dirty_norm_4ptlights"      }},
+        {{ "building_walls_dirty_diff_norm", "building_walls_dirty_diff_norm_0ptlights", "building_walls_dirty_diff_norm_2ptlights", "building_walls_dirty_diff_norm_4ptlights" }},
+        {{ "road",                           "road_0ptlights",                           "road_2ptlights",                           "road_4ptlights"                           }},
+        {{ "road_flat",                      "road_flat_0ptlights",                      "road_flat_2ptlights",                      "road_flat_4ptlights"                      }},
+        {{ "road_decal",                     "road_decal_0ptlights",                     "road_decal_2ptlights",                     "road_decal_4ptlights"                     }},
+        {{ "road_flat_decal",                "road_flat_decal_0ptlights",                "road_flat_decal_2ptlights",                "road_flat_decal_4ptlights"                }},
+        {{ "sidewalk",                       "sidewalk_0ptlights",                       "sidewalk_2ptlights",                       "sidewalk_4ptlights"                       }},
+        {{ "sidewalk_flat",                  "sidewalk_flat_0ptlights",                  "sidewalk_flat_2ptlights",                  "sidewalk_flat_4ptlights"                  }},
+        {{ "sidewalk_decal",                 "sidewalk_decal_0ptlights",                 "sidewalk_decal_2ptlights",                 "sidewalk_decal_4ptlights"                 }},
+        {{ "sidewalk_flat_decal",            "sidewalk_flat_decal_0ptlights",            "sidewalk_flat_decal_2ptlights",            "sidewalk_flat_decal_4ptlights"            }},
+        {{ "terrain_shared",                 "terrain_shared_0ptlights",                 "terrain_shared_2ptlights",                 "terrain_shared_4ptlights"                 }},
+        {{ "rvb_symbiote",                   "rvb_symbiote_0ptlights",                   "rvb_symbiote_2ptlights",                   "rvb_symbiote_4ptlights"                   }}
+    };
+
+    for (const effect_variant_family &family : families) {
         if (runtime.owner->name.hash != string_hash(hash::djb2(family.names[0])))
             continue;
 
-        runtime.zero_point_lights = resolve_effect(family.names[1]);
-        runtime.two_point_lights  = resolve_effect(family.names[2]);
-        runtime.four_point_lights = resolve_effect(family.names[3]);
+        ngl::resources::resolve_effect(runtime.zero_point_lights, family.names[1]);
+        ngl::resources::resolve_effect(runtime.two_point_lights,  family.names[2]);
+        ngl::resources::resolve_effect(runtime.four_point_lights, family.names[3]);
 
         return;
     }
 }
 
 i32 get_effect_priority(const ngl::fx::effect &value) {
-    char hash_name[11];
+    const char* name = value.name.get_text();
 
-    const char* name = value.name.text;
+    const ngl::fx::priority_prefix* prefixes = &ngl::fx::references::priority_prefixes.get();
 
-    if (!name) {
-        std::sprintf(hash_name, "0x%08X", value.name.hash.source_hash_code);
-        
-        name = hash_name;
-    }
+    for (i32 index = 0; index < 15; ++index) {
+        const ngl::fx::priority_prefix &entry = prefixes[index];
 
-    for (const effect_priority_prefix &entry : effect_priority_prefixes) {
-        size_t length = std::strlen(entry.prefix);
-
-        if (!_strnicmp(name, entry.prefix, length))
+        if (!_strnicmp(name, entry.prefix, std::strlen(entry.prefix)))
             return entry.priority;
     }
 
@@ -468,7 +439,7 @@ i32 get_effect_priority(const ngl::fx::effect &value) {
 // sub_9E13A0
 ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     auto* runtime = (ngl::fx::effect_runtime*)
-        memory::heap::allocate_small_block(sizeof(ngl::fx::effect_runtime));
+        memory::heap::allocate(sizeof(ngl::fx::effect_runtime));
 
     runtime->owner             = &value;
     runtime->zero_point_lights = nullptr;
@@ -477,7 +448,7 @@ ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
 
     if (value.technique_count) {
         runtime->technique_batches = (ngl::fx::technique_batch*)
-            memory::heap::allocate_small_block(sizeof(ngl::fx::technique_batch) * value.technique_count);
+            memory::heap::allocate(sizeof(ngl::fx::technique_batch) * value.technique_count);
 
         for (i32 index = 0; index < value.technique_count; ++index) {
             runtime->technique_batches[index].head  = nullptr;
@@ -486,11 +457,12 @@ ngl::fx::effect_runtime* create_effect_runtime(ngl::fx::effect &value) {
     } else
         runtime->technique_batches = nullptr;
 
-    runtime->next     = nullptr;
-    runtime->priority = get_effect_priority(value);
-    runtime->queued   = 0;
+    runtime->next   = nullptr;
+    runtime->queued = 0;
 
     resolve_light_variants(*runtime);
+
+    runtime->priority = get_effect_priority(value);
 
     return runtime;
 }
@@ -507,14 +479,14 @@ void destroy_effect_runtime(ngl::fx::effect &value) {
     runtime->four_point_lights = nullptr;
 
     if (runtime->technique_batches) {
-        memory::heap::free_small_block(runtime->technique_batches);
+        memory::heap::free(runtime->technique_batches);
         runtime->technique_batches = nullptr;
     }
 
     runtime->next   = nullptr;
     runtime->queued = 0;
 
-    memory::heap::free_small_block(runtime);
+    memory::heap::free(runtime);
 
     value.runtime = nullptr;
 }

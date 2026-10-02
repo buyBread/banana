@@ -267,6 +267,11 @@ namespace treyarch { namespace ngl { namespace fx {
     struct effect;
     struct render_node;
 
+    struct priority_prefix {
+        const char* prefix;
+        i32         priority;
+    };
+
     struct technique_batch {
         render_node* head;
         i32          count;
@@ -329,6 +334,9 @@ namespace treyarch { namespace ngl { namespace fx {
         inline util::memory_reference<texture**> parameter_texture_fallback_pointer { 0x01117E5C };
         inline util::memory_reference<u32>       parameter_binding_sentinel         { 0x01117E70 };
         inline util::memory_reference<u32>       parameter_chain_sentinel           { 0x01117E9C };
+
+        // fifteen entries, checked in order; unmatched effects get 50
+        inline util::memory_reference<priority_prefix> priority_prefixes { 0x00F52AC8 };
     } // references
 
     ASSERT_SIZEOF  (function_binding,                   0x18);
@@ -383,6 +391,9 @@ namespace treyarch { namespace ngl { namespace fx {
     ASSERT_OFFSETOF(parameter, data_size,                   0x20);
     ASSERT_OFFSETOF(parameter, annotation_count,            0x24);
     ASSERT_OFFSETOF(parameter, annotations,                 0x28);
+
+    ASSERT_SIZEOF  (priority_prefix,           0x08);
+    ASSERT_OFFSETOF(priority_prefix, priority, 0x04);
 
     ASSERT_SIZEOF  (technique_batch,        0x08);
     ASSERT_OFFSETOF(technique_batch, head,  0x00);

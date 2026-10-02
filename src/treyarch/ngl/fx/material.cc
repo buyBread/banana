@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -43,16 +42,11 @@ void ngl::fx::bind_material(material* value, effect* effect_data) {
         }
 
         if (technique_index == effect_data->technique_count) {
-            const char* name = value->technique_name.text;
-            char hash_name[11];
+            const char* name = value->technique_name.get_text();
 
-            if (!name) {
-                std::sprintf(hash_name, "0x%08X", technique_hash);
-                name = hash_name;
-            }
-
+            // a hash-only name gets formatted again for atoi
             if (*name >= '0' && *name <= '9')
-                value->technique_index = std::atoi(name);
+                value->technique_index = std::atoi(value->technique_name.get_text());
         }
     }
 

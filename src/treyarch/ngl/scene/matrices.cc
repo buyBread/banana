@@ -2,6 +2,7 @@
 
 #include "treyarch/ngl/display.hh"
 #include "treyarch/shared/math/projection.hh"
+#include "treyarch/shared/math/vmath.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 
 using namespace treyarch;
@@ -30,6 +31,34 @@ matrix4x4 make_ui_to_screen(const ngl::scene* value) {
                       0.0f,              1.0f / half_height, 0.0f, 0.0f,
                       0.0f,              0.0f,               1.0f, 0.0f,
                      -1.0f,             -1.0f,               0.0f, 1.0f);
+}
+
+// sub_9D3D90
+matrix4x4 make_ui_to_device(const ngl::scene* value) {
+    const matrix4x4 &viewport   = value->view;
+    const matrix4x4 &projection = value->projection;
+
+    // the viewport and the projection are inverted on their own, not as a product
+    matrix4x4 viewport_inverse( 1.0f / viewport.x.x,           0.0f,                          0.0f, 0.0f,
+                                0.0f,                          1.0f / viewport.y.y,           0.0f, 0.0f,
+                                0.0f,                          0.0f,                          1.0f, 0.0f,
+                               -viewport.w.x / viewport.x.x,  -viewport.w.y / viewport.y.y,  0.0f, 1.0f);
+
+    matrix4x4 projection_inverse;
+
+    if (value->projection_type == ngl::projection_perspective) {
+        projection_inverse = matrix4x4(1.0f / projection.x.x, 0.0f,                 0.0f, 0.0f,
+                                       0.0f,                 1.0f / projection.y.y, 0.0f, 0.0f,
+                                       0.0f,                 0.0f,                 0.0f, 1.0f / projection.w.z,
+                                       0.0f,                 0.0f,                 1.0f, -projection.z.z / projection.w.z);
+    } else {
+        projection_inverse = matrix4x4(1.0f / projection.x.x, 0.0f,                 0.0f,                            0.0f,
+                                       0.0f,                 1.0f / projection.y.y, 0.0f,                            0.0f,
+                                       0.0f,                 0.0f,                 1.0f / projection.z.z,           0.0f,
+                                       0.0f,                 0.0f,                 -projection.w.z / projection.z.z, 1.0f);
+    }
+
+    return viewport_inverse * projection_inverse;
 }
 
 // sub_9D5510
@@ -70,7 +99,7 @@ void ngl::calculate_matrices(scene* value) {
     f32 viewport_bottom = value->viewport_bottom;
 
     if (value->projection_type == projection_perspective) {
-        f32 tangent            = std::tan(value->field_of_view * 0.008726646502812704f);
+        f32 tangent            = math::tan(value->field_of_view * 0.008726646502812704f);
         f32 horizontal_tangent = value->aspect_ratio * tangent;
 
         f32 maximum_x = std::fmax(std::fabs(value->pixel_scissor_left),
@@ -149,10 +178,8 @@ void ngl::calculate_matrices(scene* value) {
     value->view_to_screen    = value->projection * value->view * value->device;
     value->view_to_world     = value->world_to_view.inverse_orthonormal();
     value->world_to_screen   = value->world_to_view * value->view_to_screen;
-    value->viewport_to_world = value->world_to_screen.inverse();
-
-    matrix4x4 view_to_viewport = value->projection * value->view;
-    value->ui_to_device = view_to_viewport.inverse();
+    value->viewport_to_world = math::inverse(value->world_to_screen);
+    value->ui_to_device      = make_ui_to_device(value);
     
     value->derived_matrix_250 = value->ui_to_device * value->view_to_world;
     value->derived_matrix_290 = value->world_to_screen.inverse();

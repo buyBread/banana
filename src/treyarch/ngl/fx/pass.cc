@@ -77,15 +77,15 @@ void apply_sampler_states(u32 stage, const u32* sampler) {
     set_sampler_state(stage, D3DSAMP_ADDRESSU, sampler[1]);
     set_sampler_state(stage, D3DSAMP_ADDRESSV, sampler[2]);
     set_sampler_state(stage, D3DSAMP_ADDRESSW, sampler[3]);
-    set_sampler_state(stage, D3DSAMP_MAGFILTER, sampler[5]);
-    set_sampler_state(stage, D3DSAMP_MINFILTER, sampler[6] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[6]);
+    set_sampler_state(stage, D3DSAMP_MINFILTER, sampler[5]);
+    set_sampler_state(stage, D3DSAMP_MAGFILTER, sampler[6] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[6]);
     set_sampler_state(stage, D3DSAMP_MIPFILTER, sampler[4] == D3DTEXF_ANISOTROPIC ? D3DTEXF_LINEAR : sampler[4]);
     set_sampler_state(stage, D3DSAMP_MAXANISOTROPY, 1);
 }
 
 void bind_texture(      ngl::fx::effect*           effect_data,
-                         const ngl::fx::function_binding &binding,
-                               void**                     sources) {
+                  const ngl::fx::function_binding &binding,
+                        void**                     sources) {
 
     ngl::texture* texture = *(ngl::texture**)((u8*)sources[binding.source_class] + binding.source_offset);
 
@@ -95,10 +95,10 @@ void bind_texture(      ngl::fx::effect*           effect_data,
     apply_sampler_states(binding.handle, (const u32*)parameter.data);
 }
 
-// sub_9EA730
+// sub_9EA5B0
 void bind_vertex_function(ngl::fx::effect*   effect_data,
-                                 ngl::fx::function* value,
-                                 void**             sources) {
+                          ngl::fx::function* value,
+                          void**             sources) {
 
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 
@@ -135,10 +135,10 @@ void bind_vertex_function(ngl::fx::effect*   effect_data,
     }
 }
 
-// sub_9EA5B0
-void bind_pixel_function(ngl::fx::effect* effect_data,
-                                ngl::fx::function* value,
-                                void** sources) {
+// sub_9EA730
+void bind_pixel_function(ngl::fx::effect*   effect_data,
+                         ngl::fx::function* value,
+                         void**             sources) {
 
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 

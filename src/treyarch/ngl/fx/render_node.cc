@@ -18,7 +18,7 @@ void draw_single_pass(ngl::fx::render_node* value) {
         const i32* runs = (const i32*)ngl::get_scene_parameter(parameters, parameter_id);
         ngl::d3d9::draw_mesh_section_runs(value->section, runs);
     } else
-        ngl::d3d9::draw_mesh_section_individual(value->section);
+        ngl::d3d9::draw_mesh_section(value->section);
 }
 
 // sub_9E0420
@@ -26,7 +26,7 @@ void ngl::fx::render(render_node* value) {
     effect* effect_data = select_effect(value);
 
     value->effect_data = effect_data;
-    record_hash_name(effect_data->name);
+    effect_data->name.get_text();
     prepare_effect_scene(effect_data);
     prepare_effect_material(effect_data, value->material_data);
     prepare_animated_textures(effect_data,

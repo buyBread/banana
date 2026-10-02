@@ -18,6 +18,8 @@ namespace treyarch {
         }
 
         void set_text(const char* value);
+
+        const char* get_text() const;
         
         fixed_string &assign (const fixed_string &other);
     };

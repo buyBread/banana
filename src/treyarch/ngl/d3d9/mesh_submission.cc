@@ -65,15 +65,18 @@ void ngl::d3d9::draw_mesh_section(mesh_section* value) {
 
     D3DPRIMITIVETYPE primitive_type = (D3DPRIMITIVETYPE)value->primitive_type;
 
-    bind_mesh_section(value);
-
+    // only indexed sections bind their vertex offset here
     if (!value->index_count) {
+        bind_mesh_section_with_offset(value, 0);
+
         device->DrawPrimitive(primitive_type,
                               0,
                               get_primitive_count(primitive_type, value->vertex_count));
 
         return;
     }
+
+    bind_mesh_section(value);
 
     binding_cache &bindings = references::bindings.get();
 
@@ -91,23 +94,6 @@ void ngl::d3d9::draw_mesh_section(mesh_section* value) {
                                  value->vertex_count,
                                  value->index_offset / index_size,
                                  get_primitive_count(primitive_type, value->index_count));
-}
-
-void ngl::d3d9::draw_mesh_section_individual(mesh_section* value) {
-    if (value->index_count) {
-        draw_mesh_section(value);
-        
-        return;
-    }
-
-    bind_mesh_section_with_offset(value, 0);
-
-    D3DPRIMITIVETYPE primitive_type = (D3DPRIMITIVETYPE)value->primitive_type;
-
-    references::device.get()
-        ->DrawPrimitive(primitive_type,
-                        0,
-                        get_primitive_count(primitive_type, value->vertex_count));
 }
 
 void ngl::d3d9::draw_mesh_section_runs(mesh_section* value, const i32* runs) {

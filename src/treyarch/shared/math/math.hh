@@ -27,11 +27,6 @@ namespace treyarch { namespace math {
                             const f32  min_value,
                             const f32  max_value ) {
 
-        /*
-        if(!(min_value <= max_value))
-            hacky_halter::global = debug_message(debug_message::ASSERT_MESSAGE, 15, "oldmath_usefulmath.h", __FUNCTION__ ).send( "min_value <= max_value");
-        */
-
         if (*value < min_value){
             *value = min_value;
             
@@ -81,11 +76,6 @@ namespace treyarch { namespace math {
 
     template <class T>
     inline T lerp(T v1, T v2, f32 t) {
-        /*
-        if (!(t >= 0.0f && t <= 1.0f))
-            hacky_halter::global = debug_message(debug_message::ASSERT_MESSAGE, 74, "oldmath_usefulmath.h", __FUNCTION__ ).send( "t >= 0.0f && t <= 1.0f");
-        */
-
         return v1 + (v2 - v1) * t;
     }
 
