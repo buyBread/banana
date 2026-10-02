@@ -91,7 +91,7 @@ void ngl::shaders::smsky::render(render_node* value) {
 
     f32 half_angle = (f32)(current_scene->field_of_view * 0.5f * 0.01745329300562541);
     
-    f32 vertical_extent   = (f32)std::tan(half_angle) * current_scene->far_plane;
+    f32 vertical_extent   = (f32)std::tan((f64)half_angle) * current_scene->far_plane;
     f32 horizontal_extent = current_scene->aspect_ratio * vertical_extent;
 
     f32 camera_height = current_scene->view_to_world.w.y;

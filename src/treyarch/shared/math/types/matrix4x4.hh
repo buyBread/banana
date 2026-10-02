@@ -55,28 +55,21 @@ namespace treyarch {
             return *this;
         }
 
+        // retail sums each element in double and rounds it once
         matrix4x4 operator*(const matrix4x4 &b) const {
             const matrix4x4 &a = *this;
 
-            return matrix4x4(a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0] + a[0][3]*b[3][0], // x row
-                             a[0][0]*b[0][1] + a[0][1]*b[1][1] + a[0][2]*b[2][1] + a[0][3]*b[3][1],
-                             a[0][0]*b[0][2] + a[0][1]*b[1][2] + a[0][2]*b[2][2] + a[0][3]*b[3][2],
-                             a[0][0]*b[0][3] + a[0][1]*b[1][3] + a[0][2]*b[2][3] + a[0][3]*b[3][3],
+            auto element = [&](i32 row, i32 column) {
+                return (f32)((f64)a[row][0] * b[0][column] +
+                             (f64)a[row][1] * b[1][column] +
+                             (f64)a[row][2] * b[2][column] +
+                             (f64)a[row][3] * b[3][column]);
+            };
 
-                             a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0] + a[1][3]*b[3][0], // y row
-                             a[1][0]*b[0][1] + a[1][1]*b[1][1] + a[1][2]*b[2][1] + a[1][3]*b[3][1],
-                             a[1][0]*b[0][2] + a[1][1]*b[1][2] + a[1][2]*b[2][2] + a[1][3]*b[3][2],
-                             a[1][0]*b[0][3] + a[1][1]*b[1][3] + a[1][2]*b[2][3] + a[1][3]*b[3][3],
-
-                             a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0] + a[2][3]*b[3][0], // z row
-                             a[2][0]*b[0][1] + a[2][1]*b[1][1] + a[2][2]*b[2][1] + a[2][3]*b[3][1],
-                             a[2][0]*b[0][2] + a[2][1]*b[1][2] + a[2][2]*b[2][2] + a[2][3]*b[3][2],
-                             a[2][0]*b[0][3] + a[2][1]*b[1][3] + a[2][2]*b[2][3] + a[2][3]*b[3][3],
-
-                             a[3][0]*b[0][0] + a[3][1]*b[1][0] + a[3][2]*b[2][0] + a[3][3]*b[3][0], // w row
-                             a[3][0]*b[0][1] + a[3][1]*b[1][1] + a[3][2]*b[2][1] + a[3][3]*b[3][1],
-                             a[3][0]*b[0][2] + a[3][1]*b[1][2] + a[3][2]*b[2][2] + a[3][3]*b[3][2],
-                             a[3][0]*b[0][3] + a[3][1]*b[1][3] + a[3][2]*b[2][3] + a[3][3]*b[3][3]);
+            return matrix4x4(element(0, 0), element(0, 1), element(0, 2), element(0, 3),
+                             element(1, 0), element(1, 1), element(1, 2), element(1, 3),
+                             element(2, 0), element(2, 1), element(2, 2), element(2, 3),
+                             element(3, 0), element(3, 1), element(3, 2), element(3, 3));
         }
 
         void make_translate(const vector3 &t); /* hey, what are you? */
@@ -112,9 +105,9 @@ namespace treyarch {
                              x.y, y.y, z.y, 0.0f,
                              x.z, y.z, z.z, 0.0f,
                              // w
-                             -(w.x * x.x + w.y * x.y + w.z * x.z),
-                             -(w.x * y.x + w.y * y.y + w.z * y.z),
-                             -(w.x * z.x + w.y * z.y + w.z * z.z),
+                             -(f32)((f64)w.x * x.x + (f64)w.y * x.y + (f64)w.z * x.z),
+                             -(f32)((f64)w.x * y.x + (f64)w.y * y.y + (f64)w.z * y.z),
+                             -(f32)((f64)w.x * z.x + (f64)w.y * z.y + (f64)w.z * z.z),
                              1.0f);
         }
 
@@ -132,9 +125,9 @@ namespace treyarch {
         matrix4x4 adjugate() const { return cofactors(true);  }
 
         f32 determinant3() const {
-            return x.x * y.y * z.z - y.x * z.z * x.y +
-                   y.x * z.y * x.z - z.x * y.y * x.z +
-                   z.x * x.y * y.z - x.x * z.y * y.z;
+            return (f32)((f64)x.x * y.y * z.z - (f64)y.x * z.z * x.y +
+                         (f64)y.x * z.y * x.z - (f64)z.x * y.y * x.z +
+                         (f64)z.x * x.y * y.z - (f64)x.x * z.y * y.z);
         };
 
         f32 determinant() const;

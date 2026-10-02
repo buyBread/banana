@@ -23,7 +23,13 @@ vector4 math::cos(const vector4 &radians, const vector4 &frequency) {
         f32 x7 = x3 * x4;
         f32 x9 = x5 * x4;
 
-        result[lane] = x9 * cos_k9 + x7 * cos_k7 + x5 * cos_k5 + x3 * cos_k3 + x1 * cos_k1;
+        f32 accumulator = x9 * cos_k9;
+            accumulator = (f32)((f64)accumulator + (f64)x7 * cos_k7);
+            accumulator = (f32)((f64)accumulator + (f64)x5 * cos_k5);
+            accumulator = (f32)((f64)accumulator + (f64)x3 * cos_k3);
+            accumulator = (f32)((f64)accumulator + (f64)x1 * cos_k1);
+
+        result[lane] = accumulator;
     }
 
     return result;
@@ -33,8 +39,9 @@ vector4 math::cos(const vector4 &radians, const vector4 &frequency) {
 f32 math::tan(f32 radians) {
     // SinCos<_sin, _cos, _sin, _cos>, where cos(x + 3pi/2) is sin(x)
     f32 sin_radians = radians + 3.0f * sin_cos_pi_over_two;
+    f32 cos_radians = radians + 0.0f * sin_cos_pi_over_two;
 
-    vector4 values = cos(vector4(sin_radians, radians, sin_radians, radians));
+    vector4 values = cos(vector4(sin_radians, cos_radians, sin_radians, cos_radians));
 
     return values.x / values.y;
 }
@@ -43,47 +50,52 @@ f32 math::tan(f32 radians) {
 matrix4x4 math::inverse(const matrix4x4 &value) {
     const matrix4x4 &m = value;
 
-    // 2x2 minors of the bottom two rows
-    f32 lower_yz = m.z.y * m.w.z - m.z.z * m.w.y;
-    f32 lower_zx = m.z.z * m.w.x - m.z.x * m.w.z;
-    f32 lower_xy = m.z.x * m.w.y - m.z.y * m.w.x;
+    // 2x2 minors of the bottom two rows; the ones with the w column round each product first
+    f32 lower_yz = (f32)((f64)m.z.y * m.w.z - (f64)m.z.z * m.w.y);
+    f32 lower_zx = (f32)((f64)m.z.z * m.w.x - (f64)m.z.x * m.w.z);
+    f32 lower_xy = (f32)((f64)m.z.x * m.w.y - (f64)m.z.y * m.w.x);
     f32 lower_zw = m.z.z * m.w.w - m.z.w * m.w.z;
     f32 lower_yw = m.z.y * m.w.w - m.z.w * m.w.y;
     f32 lower_xw = m.z.x * m.w.w - m.z.w * m.w.x;
 
     // and of the top two rows
-    f32 upper_yz = m.x.y * m.y.z - m.x.z * m.y.y;
-    f32 upper_zx = m.x.z * m.y.x - m.x.x * m.y.z;
-    f32 upper_xy = m.x.x * m.y.y - m.x.y * m.y.x;
+    f32 upper_yz = (f32)((f64)m.x.y * m.y.z - (f64)m.x.z * m.y.y);
+    f32 upper_zx = (f32)((f64)m.x.z * m.y.x - (f64)m.x.x * m.y.z);
+    f32 upper_xy = (f32)((f64)m.x.x * m.y.y - (f64)m.x.y * m.y.x);
     f32 upper_zw = m.x.z * m.y.w - m.x.w * m.y.z;
     f32 upper_yw = m.x.y * m.y.w - m.x.w * m.y.y;
     f32 upper_xw = m.x.x * m.y.w - m.x.w * m.y.x;
 
-    f32 cofactor_xx = m.y.w * lower_yz + m.y.y * lower_zw - m.y.z * lower_yw;
-    f32 cofactor_xy = m.y.w * lower_zx + m.y.z * lower_xw - m.y.x * lower_zw;
-    f32 cofactor_xz = m.y.w * lower_xy + m.y.x * lower_yw - m.y.y * lower_xw;
+    f32 cofactor_xx = (m.y.w * lower_yz + (f32)((f64)m.y.y * lower_zw - (f64)m.y.z * lower_yw)) + 0.0f;
+    f32 cofactor_xy = (m.y.w * lower_zx + (f32)((f64)m.y.z * lower_xw - (f64)m.y.x * lower_zw)) + 0.0f;
+    f32 cofactor_xz = (m.y.w * lower_xy + (f32)((f64)m.y.x * lower_yw - (f64)m.y.y * lower_xw)) + 0.0f;
 
-    f32 determinant = cofactor_xx * m.x.x + cofactor_xy * m.x.y + cofactor_xz * m.x.z;
+    f32 determinant = (f32)((f64)cofactor_xz * m.x.z + ((f64)cofactor_xy * m.x.y + (f64)cofactor_xx * m.x.x));
 
-    matrix4x4 result( cofactor_xx,
-                      cofactor_xy,
-                      cofactor_xz,
-                     -(lower_yz * m.y.x + lower_zx * m.y.y + lower_xy * m.y.z),
+    f32 y_w_lane = 0.0f * m.y.w + 0.0f;
+    f32 x_w_lane = 0.0f - 0.0f * m.x.w;
+    f32 w_w_lane = 0.0f * m.w.w + 0.0f;
+    f32 z_w_lane = 0.0f - 0.0f * m.z.w;
 
-                      lower_yw * m.x.z - lower_zw * m.x.y - m.x.w * lower_yz,
-                      lower_zw * m.x.x - lower_xw * m.x.z - m.x.w * lower_zx,
-                      lower_xw * m.x.y - lower_yw * m.x.x - m.x.w * lower_xy,
-                      lower_yz * m.x.x + lower_zx * m.x.y + lower_xy * m.x.z,
+    matrix4x4 result(cofactor_xx,
+                     cofactor_xy,
+                     cofactor_xz,
+                     y_w_lane - (f32)((f64)lower_xy * m.y.z + ((f64)lower_zx * m.y.y + (f64)lower_yz * m.y.x)),
 
-                      m.w.w * upper_yz + upper_zw * m.w.y - upper_yw * m.w.z,
-                      m.w.w * upper_zx + upper_xw * m.w.z - upper_zw * m.w.x,
-                      m.w.w * upper_xy + upper_yw * m.w.x - upper_xw * m.w.y,
-                     -(upper_yz * m.w.x + upper_zx * m.w.y + upper_xy * m.w.z),
+                     ((f32)((f64)lower_yw * m.x.z - (f64)lower_zw * m.x.y) - m.x.w * lower_yz) + 0.0f,
+                     ((f32)((f64)lower_zw * m.x.x - (f64)lower_xw * m.x.z) - m.x.w * lower_zx) + 0.0f,
+                     ((f32)((f64)lower_xw * m.x.y - (f64)lower_yw * m.x.x) - m.x.w * lower_xy) + 0.0f,
+                     (f32)((f64)lower_xy * m.x.z + ((f64)lower_zx * m.x.y + (f64)lower_yz * m.x.x)) + x_w_lane,
 
-                      upper_yw * m.z.z - upper_zw * m.z.y - m.z.w * upper_yz,
-                      upper_zw * m.z.x - upper_xw * m.z.z - m.z.w * upper_zx,
-                      upper_xw * m.z.y - upper_yw * m.z.x - m.z.w * upper_xy,
-                      upper_yz * m.z.x + upper_zx * m.z.y + upper_xy * m.z.z);
+                     (m.w.w * upper_yz + (f32)((f64)upper_zw * m.w.y - (f64)upper_yw * m.w.z)) + 0.0f,
+                     (m.w.w * upper_zx + (f32)((f64)upper_xw * m.w.z - (f64)upper_zw * m.w.x)) + 0.0f,
+                     (m.w.w * upper_xy + (f32)((f64)upper_yw * m.w.x - (f64)upper_xw * m.w.y)) + 0.0f,
+                     w_w_lane - (f32)((f64)upper_xy * m.w.z + ((f64)upper_yz * m.w.x + (f64)upper_zx * m.w.y)),
+
+                     ((f32)((f64)upper_yw * m.z.z - (f64)upper_zw * m.z.y) - m.z.w * upper_yz) + 0.0f,
+                     ((f32)((f64)upper_zw * m.z.x - (f64)upper_xw * m.z.z) - m.z.w * upper_zx) + 0.0f,
+                     ((f32)((f64)upper_xw * m.z.y - (f64)upper_yw * m.z.x) - m.z.w * upper_xy) + 0.0f,
+                     (f32)((f64)upper_xy * m.z.z + ((f64)upper_yz * m.z.x + (f64)upper_zx * m.z.y)) + z_w_lane);
 
     // a singular matrix keeps the unscaled cofactors
     if (determinant != 0.0f)

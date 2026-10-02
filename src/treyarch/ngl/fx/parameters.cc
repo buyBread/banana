@@ -1042,15 +1042,15 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_lightmap_color: {
-                f32 hour = treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0f;
-                f32 night = hour < 3.0f || hour > 23.9f ? 1.0f : 0.0f;
+                f64 hour = (f64)treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0;
+                f32 night = hour < 3.0 || hour > 23.9 ? 1.0f : 0.0f;
                 vectors[0] = vector4(0.60000002f * night, 0.5f * night, 0.40000001f * night, 1.0f);
 
                 break;
             }
             case parameter_window_color: {
-                f32 hour = treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0f;
-                f32 night = hour < 3.0f || hour > 23.9f ? 1.0f : 0.0f;
+                f64 hour = (f64)treyarch::references::mission_manager.read()->game_time_get_full_time() / 3600.0;
+                f32 night = hour < 3.0 || hour > 23.9 ? 1.0f : 0.0f;
                 vectors[0] = vector4(1.3f, 1.2f, 0.8f, night);
 
                 break;

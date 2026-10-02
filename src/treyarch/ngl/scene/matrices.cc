@@ -99,7 +99,7 @@ void ngl::calculate_matrices(scene* value) {
     f32 viewport_bottom = value->viewport_bottom;
 
     if (value->projection_type == projection_perspective) {
-        f32 tangent            = math::tan(value->field_of_view * 0.008726646502812704f);
+        f32 tangent            = math::tan((f32)((f64)value->field_of_view * 0.008726646502812704));
         f32 horizontal_tangent = value->aspect_ratio * tangent;
 
         f32 maximum_x = std::fmax(std::fabs(value->pixel_scissor_left),

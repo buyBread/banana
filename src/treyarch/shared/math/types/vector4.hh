@@ -104,11 +104,11 @@ namespace treyarch {
               f32 &operator[](int i)       { return (&x)[i]; }
 
         f32 length2() const {
-            return x*x + y*y + z*z + w*w;
+            return (f32)((f64)x*x + (f64)y*y + (f64)z*z + (f64)w*w);
         }
 
         f32 length() const {
-            return (f32)sqrtf(x*x + y*y + z*z + w*w);
+            return (f32)sqrtf(length2());
         }
 
         vector4 &normalize() {

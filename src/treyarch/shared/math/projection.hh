@@ -8,7 +8,7 @@ namespace treyarch { namespace math {
                                       f32 near_plane,
                                       f32 far_plane) {
 
-        f32 depth_scale = far_plane / (far_plane - near_plane);
+        f32 depth_scale = (f32)((f64)far_plane / ((f64)far_plane - near_plane));
 
         return matrix4x4(horizontal_scale, 0.0f,           0.0f,                     0.0f,
                          0.0f,             vertical_scale, 0.0f,                     0.0f,
@@ -21,7 +21,7 @@ namespace treyarch { namespace math {
                                        f32 near_plane,
                                        f32 far_plane) {
 
-        f32 depth_scale = 1.0f / (far_plane - near_plane);
+        f32 depth_scale = (f32)(1.0 / ((f64)far_plane - near_plane));
 
         return matrix4x4(horizontal_scale, 0.0f,           0.0f,                     0.0f,
                          0.0f,             vertical_scale, 0.0f,                     0.0f,

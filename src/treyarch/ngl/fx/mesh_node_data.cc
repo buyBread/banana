@@ -9,10 +9,14 @@ matrix4x4 ngl::fx::get_unscaled_local_to_world(const mesh_node_data* value) {
     if (value->node_info[0] & 2) {
         const vector3 &scales = *(const vector3*)(value->node_info + 0x10);
 
+        vector3 reciprocals(1.0f / scales.x,
+                            1.0f / scales.y,
+                            1.0f / scales.z);
+
         for (u32 column = 0; column < 4; ++column) {
-            result[0][column] /= scales.x;
-            result[1][column] /= scales.y;
-            result[2][column] /= scales.z;
+            result[0][column] *= reciprocals.x;
+            result[1][column] *= reciprocals.y;
+            result[2][column] *= reciprocals.z;
         }
     }
 

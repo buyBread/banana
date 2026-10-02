@@ -93,11 +93,11 @@ namespace treyarch {
               f32 &operator[](int i)       { return (&x)[i]; }
 
         f32 length2() const {
-            return x*x + y*y + z*z;
+            return (f32)((f64)x*x + (f64)y*y + (f64)z*z);
         }
 
         f32 length() const {
-            return (f32)sqrtf(x*x + y*y + z*z);
+            return (f32)sqrtf(length2());
         }
 
         vector3 &normalize() {
@@ -124,13 +124,13 @@ namespace treyarch {
         const vector2 &get_yz() const { return *(vector2*)&y; }
         const vector2 get_xz() const { return vector2(x, z); }
 
-        f32 xy_length2() const { return x*x + y*y; }
-        f32 yz_length2() const { return y*y + z*z; }
-        f32 xz_length2() const { return x*x + z*z; }
+        f32 xy_length2() const { return (f32)((f64)x*x + (f64)y*y); }
+        f32 yz_length2() const { return (f32)((f64)y*y + (f64)z*z); }
+        f32 xz_length2() const { return (f32)((f64)x*x + (f64)z*z); }
 
-        f32 xy_length() const { return (f32)sqrtf(x*x + y*y); }
-        f32 yz_length() const { return (f32)sqrtf(y*y + z*z); }
-        f32 xz_length() const { return (f32)sqrtf(x*x + z*z); }
+        f32 xy_length() const { return (f32)sqrtf(xy_length2()); }
+        f32 yz_length() const { return (f32)sqrtf(yz_length2()); }
+        f32 xz_length() const { return (f32)sqrtf(xz_length2()); }
 
         bool is_valid() const {
             return x > -HUGE_DIST && x < HUGE_DIST &&
@@ -150,12 +150,12 @@ namespace treyarch {
     };
 
     inline f32 dot(const vector3 &a, const vector3 &b) {
-        return a.x*b.x + a.y*b.y + a.z*b.z;
+        return (f32)((f64)a.x*b.x + (f64)a.y*b.y + (f64)a.z*b.z);
     }
 
     inline vector3 cross(const vector3 &a, const vector3 &b) {
-        return vector3(a.y * b.z - a.z * b.y,
-                       a.z * b.x - a.x * b.z,
-                       a.x * b.y - a.y * b.x);
+        return vector3((f32)((f64)a.y * b.z - (f64)a.z * b.y),
+                       (f32)((f64)a.z * b.x - (f64)a.x * b.z),
+                       (f32)((f64)a.x * b.y - (f64)a.y * b.x));
     }
 } // treyarch

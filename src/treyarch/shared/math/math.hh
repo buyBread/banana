@@ -79,6 +79,10 @@ namespace treyarch { namespace math {
         return v1 + (v2 - v1) * t;
     }
 
+    inline f32 lerp(f32 v1, f32 v2, f32 t) {
+        return (f32)((f64)v1 + ((f64)v2 - v1) * t);
+    }
+
     inline i32 positorial( i32 x ) {
         if (x % 2)
             return ((x + 1) * (x / 2)) + (x / 2) + 1;
@@ -87,15 +91,15 @@ namespace treyarch { namespace math {
     }
 
     inline f32 fast_length2(f32 x, f32 y, f32 z) {
-        return x*x + y*y + z*z;
+        return (f32)((f64)x*x + (f64)y*y + (f64)z*z);
     }
 
     inline f32 fast_length(f32 x, f32 y, f32 z) {
-        return (f32)sqrtf(x*x + y*y + z*z);
+        return (f32)sqrtf(fast_length2(x, y, z));
     }
 
     inline f32 fast_recip_length(f32 x, f32 y, f32 z) {
-        return 1.0f / (f32)sqrtf(x*x + y*y + z*z);
+        return 1.0f / (f32)sqrtf(fast_length2(x, y, z));
     }
 
     inline f32 fast_distance(f32 x1, f32 y1, f32 z1, f32 v2[3]) {
@@ -105,7 +109,7 @@ namespace treyarch { namespace math {
         dy = y1 - v2[1];
         dz = z1 - v2[2];
 
-        return (f32)sqrtf(dx*dx + dy*dy + dz*dz);
+        return (f32)sqrtf(fast_length2(dx, dy, dz));
     }
 
     inline f32 fast_recip_sqrt(f32 x) {
