@@ -1,13 +1,17 @@
 # Banana
-"Spider-Man: Web of Shadows" reverse-engineering playground.
+"Spider-Man: Web of Shadows" reverse-engineering playground (kind off...). Basically, this is a scope explosion problem on my end. This was initially just a silly codebase where I messed around with ideas here and there, then decided to own the rendering (NGL) and the rest is just me slowly being in denial that I've started a decompilation project.
 
 ## Project Status
-At the moment, Banana doesn't provide any truly unique functionality to Web of Shadows beyond a handful of tiny miscellaneous additions. Development is mainly focused on achieving an implementation of NGL that has parity with the retail PC version of the game. The code also lacks clarity in places and only contains comments sparsely, but the good news is that I've largely stuck to what the IDA disassembler had shown me, so it should be possible to "intuit" your way around the codebase by viewing the game's assembly side-by-side.
+A lot of the game's rendering goes through owned methods, but basically every other part is still majority native.  
+  
+The goal is "simple": reach full (or near-full) parity with the binary and branch into modifying things to make the game better. There are definitely better choices for doing individual fixes that everyone wants (i.e. making post processing work), but my long-term vision includes extending the entire game with cut content as well one day, so this is the only sane choice to be honest.  
 
-No, I'm not sure what percentage of NGL I've covered at this point. While it is at a point where it's rendering a substantial amount of the game, a large portion of that work still relies on binary-owned callbacks, constructors and so on.
+## Prerequisites
+* `(MSVC) Build Tools`
+* `xmake`
+* v1.1 of the video game in question.
 
 ## Installing
-> prerequisites: `(MSVC) Build Tools` & `xmake`
 1. Select the build mode with `xmake f -m MODE` (`release`/`devel`/`debug`).
 2. Compile with `xmake`.
 3. Place the resulting `.dll` in `/image/pc/` and launch the game.
