@@ -1,33 +1,45 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/wds/references.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
+#include "treyarch/shared/dinkumware/list.hh"
+#include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mutex.hh"
+#include "util/memory_reference.hh"
+
+namespace treyarch { namespace references {
+    util::memory_reference<string_hash> unk_0102c2b8 { 0x0102C2B8 };
+    util::memory_reference<string_hash> unk_0102c75c { 0x0102C75C };
+}} // treyarch::references
 
 using namespace treyarch;
 
 // sub_986520
 void mission_manager::frame_advance(f32 time_inc) {
-    retail::sub_9806F0((i32)this);
+    advance_act_transition();
 
     switch (sky_swap_state) {
         case 0:
-            retail::sub_980880((i32)this);
+            check_sky_name();
 
             break;
 
         case 1:
-            if (retail::sub_902810())
+            if (retail::sub_902810()) // is_bank_loader_idle
                 sky_swap_state = 2;
 
             break;
 
         case 2:
-            retail::sub_97E610((i32)this);
+            load_sky_pack();
 
             break;
 
         case 3:
-            retail::sub_980950((u32*)this);
+            apply_sky_pack();
 
             break;
     }
@@ -62,74 +74,74 @@ void mission_manager::frame_advance(f32 time_inc) {
     }
 
     if (real_time_ticked) {
-        retail::sub_981D50((i32*)this);
-        retail::sub_97F7B0((i32)this);
-        retail::sub_97F550((i32)this);
+        update_hero_proximity_event();
+        update_hero_tracking_flags();
+        run_district_scripts();
     }
 
     switch (state) {
         case mission_manager_state_initial_startup:
-            retail::sub_9847F0((i32)this, time_inc);
+            process_state_initial_startup(time_inc);
 
             break;
 
         case mission_manager_state_idle:
-            retail::sub_9860E0((i32)this, time_inc);
+            process_state_idle(time_inc);
 
             break;
 
         case mission_manager_state_start_loading:
-            retail::sub_984960((i32)this);
+            process_state_start_loading();
 
             break;
 
         case mission_manager_state_loading:
-            retail::sub_984C90((i32*)this);
+            process_state_loading();
 
             break;
 
         case mission_manager_state_running_mission:
-            retail::sub_97EF50((u32*)this);
+            process_state_running_mission();
 
             break;
 
         case mission_manager_state_unk_5:
-            retail::sub_980C10((i32)this);
+            process_state_unk_5();
 
             break;
 
         case mission_manager_state_unk_6:
-            retail::sub_984EE0((i32)this);
+            process_state_unk_6();
 
             break;
 
         case mission_manager_state_start_unloading:
-            retail::sub_985000((i32)this);
+            process_state_start_unloading();
 
             break;
 
         case mission_manager_state_unloading:
-            retail::sub_9853B0((i32)this);
+            process_state_unloading();
 
             break;
 
         case mission_manager_state_maloring_player_wait_for_blackscreen:
-            retail::sub_97F060((i32)this, time_inc);
+            process_state_maloring_player_wait_for_blackscreen(time_inc);
 
             break;
 
         case mission_manager_state_maloring_player_wait_for_district:
-            retail::sub_980D40((i32)this);
+            process_state_maloring_player_wait_for_district();
 
             break;
 
         case mission_manager_state_start_mission_failed_dialog:
-            retail::sub_980FE0((i32)this);
+            process_state_start_mission_failed_dialog();
 
             break;
 
         case mission_manager_state_running_mission_failed_dialog:
-            retail::sub_9864B0((i32)this);
+            process_state_running_mission_failed_dialog();
 
             break;
 
@@ -139,12 +151,12 @@ void mission_manager::frame_advance(f32 time_inc) {
             break;
 
         case mission_manager_state_running_mission_succeeded_dialog:
-            retail::sub_97F2B0((i32)this);
+            process_state_running_mission_succeeded_dialog();
 
             break;
 
         case mission_manager_state_blackscreen_on:
-            retail::sub_981110((u32*)this);
+            process_state_blackscreen_on();
 
             break;
 
@@ -157,12 +169,119 @@ void mission_manager::frame_advance(f32 time_inc) {
     frame_clock.reset();
 }
 
-// sub_97F2F0
-void mission_manager::process_state_wait_for_blackscreen_on(f32 time_inc) {
-    state_timer = (f32)((f64)time_inc + (f64)state_timer);
+// sub_981D50
+void mission_manager::update_hero_proximity_event() {
+    entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (state_timer > 1.5f) {
-        state_timer = 0.0f;
-        state       = mission_manager_state_start_loading;
+    u8* unk_object = (u8*)retail::sub_602830((u32*)hero);
+    u8* container  = *(u8**)(unk_object + 0x684);
+    u8* owner      = nullptr;
+
+    if (container) {
+        u32 mask = *(u32*)(unk_object + 0x688);
+
+        if (mask & 0x40000000)
+            owner = (*(u8***)(container + 8))[retail::sub_401F50(mask & 0x3FFFFFFF)];
+    }
+
+    engine_recursive_lock &lock = *(engine_recursive_lock*)(owner + 0x98);
+
+    lock.acquire();
+
+    vector3 hero_position = hero->my_abs_po->get_position();
+    bool    hero_nearby   = false;
+
+    auto* nearby = *(dinkumware::list<u32*>**)(owner + 0x94);
+
+    for (auto* node = nearby->begin(); node != nearby->end(); node = node->next) {
+        const vector3 &position = ((entity*)retail::sub_4C3A70(node->value))->my_abs_po->get_position();
+
+        f32 dx = (f32)((f64)position.x - (f64)hero_position.x);
+        f32 dy = (f32)((f64)position.y - (f64)hero_position.y);
+        f32 dz = (f32)((f64)position.z - (f64)hero_position.z);
+
+        if ((f32)((f64)dx * (f64)dx + (f64)dy * (f64)dy + (f64)dz * (f64)dz) <= 10000.0f) {
+            hero_nearby = true;
+
+            break;
+        }
+    }
+
+    if (!unk_200) {
+        if (hero_nearby) {
+            unk_200 = 1;
+
+            retail::sub_601750((u32*)hero, references::unk_0102c2b8.read().source_hash_code);
+        }
+    } else if (!hero_nearby) {
+        unk_200 = 0;
+
+        retail::sub_601750((u32*)hero, references::unk_0102c75c.read().source_hash_code);
+    }
+
+    lock.release();
+}
+
+// sub_97F7B0
+void mission_manager::update_hero_tracking_flags() {
+    u32 current_flags = flags;
+
+    if (!(current_flags & mission_manager_flag_unk_00004000) && !(current_flags & mission_manager_flag_unk_00008000))
+        return;
+
+    entity* hero = references::g_world_ptr.read()->hero_ptr;
+
+    if (!hero)
+        return;
+
+    if (current_flags & mission_manager_flag_unk_00004000) {
+        bool in_district = false;
+
+        if (hero_region) {
+            for (i32 index = 0; index < district_count; ++index) {
+                if (district_containers[index].region == hero_region) {
+                    in_district = true;
+
+                    break;
+                }
+            }
+        }
+
+        if (!in_district) {
+            flags       = current_flags & ~mission_manager_flag_unk_00004000;
+            hero_region = nullptr;
+        }
+    }
+
+    if (!(flags & mission_manager_flag_unk_00008000))
+        return;
+
+    const vector3 &position = hero->my_abs_po->get_position();
+
+    f32 dx = (f32)((f64)position.x - (f64)hero_reference_position.x);
+    f32 dy = (f32)((f64)position.y - (f64)hero_reference_position.y);
+    f32 dz = (f32)((f64)position.z - (f64)hero_reference_position.z);
+
+    if ((f32)((f64)dx * (f64)dx + (f64)dy * (f64)dy + (f64)dz * (f64)dz) > 90000.0f) {
+        flags                   &= ~mission_manager_flag_unk_00008000;
+        hero_reference_position  = references::unk_011117a0.read();
+    }
+}
+
+// sub_97F550
+void mission_manager::run_district_scripts() {
+    for (i32 index = 0; index < district_count; ++index) {
+        mission_district_info &district = district_containers[index];
+
+        if (!district.gen_dis_exec || district.gen_dis_script_frame_count <= 0)
+            continue;
+
+        if (--district.gen_dis_script_frame_count)
+            continue;
+
+        while (retail::sub_A1FA30((u32*)district.gen_dis_exec))
+            retail::sub_A1B960((i32)&chuck::vm::script_manager::get(), (i32*)&district.gen_dis_exec_name, 0, 0.0f, 0);
+
+        retail::sub_97F4F0((char*)this, index);
     }
 }

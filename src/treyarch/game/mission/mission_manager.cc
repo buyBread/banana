@@ -7,10 +7,6 @@
 namespace treyarch {
     namespace references {
         util::memory_reference<i32> global_act { 0x0111186C };
-
-        util::memory_reference<u32> unk_00bb6d68 { 0x00BB6D68 };
-
-        util::memory_reference<vector3> unk_011117a0 { 0x011117A0 };
     } // references
 } // treyarch
 

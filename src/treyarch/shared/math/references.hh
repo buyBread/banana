@@ -10,6 +10,9 @@ namespace treyarch { namespace math { namespace references {
     inline util::memory_reference<vector3> yvec { 0x00E6AE5C };
     inline util::memory_reference<vector3> zvec { 0x00E6AE68 };
 
+    // another (0, 1, 0); SM3 also had a vector3d_YVEC next to YVEC
+    inline util::memory_reference<vector3> unk_00f4d3ac { 0x00F4D3AC };
+
     // (0, 0, 0, 1); sub_5FC080 copies it in as a matrix's w row
     inline util::memory_reference<vector4> w_row { 0x00E6ADC0 };
 }}} // treyarch::math::references

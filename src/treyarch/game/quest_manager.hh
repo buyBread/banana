@@ -8,6 +8,8 @@ namespace treyarch {
     class quest_manager {
 
     public:
+        u8 unk_000;
+
         static void draw_text();
     };
 

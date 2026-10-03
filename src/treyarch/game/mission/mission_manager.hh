@@ -13,6 +13,7 @@
 namespace treyarch {
     namespace chuck { namespace vm {
         class script_executable;
+        class script_instance;
     }} // chuck::vm
 
     enum e_mission_manager_state : u32 {
@@ -41,20 +42,35 @@ namespace treyarch {
         mission_manager_flag_using_trigger  = 0x00000008,
         mission_manager_flag_using_icon     = 0x00000010,
         mission_manager_flag_need_to_malor  = 0x00000020,
-        mission_manager_flag_unk_10000000   = 0x10000000, // no milestone
+
+        // no milestone names past this point
+        mission_manager_flag_unk_00001000 = 0x00001000,
+        mission_manager_flag_unk_00002000 = 0x00002000,
+        mission_manager_flag_unk_00004000 = 0x00004000,
+        mission_manager_flag_unk_00008000 = 0x00008000,
+        mission_manager_flag_unk_00010000 = 0x00010000,
+        mission_manager_flag_unk_00020000 = 0x00020000,
+        mission_manager_flag_unk_00040000 = 0x00040000,
+        mission_manager_flag_unk_00200000 = 0x00200000,
+        mission_manager_flag_unk_00400000 = 0x00400000,
+        mission_manager_flag_unk_00800000 = 0x00800000,
+        mission_manager_flag_unk_02000000 = 0x02000000,
+        mission_manager_flag_unk_08000000 = 0x08000000,
+        mission_manager_flag_unk_10000000 = 0x10000000,
+        mission_manager_flag_unk_20000000 = 0x20000000
     };
 
     struct mission_info {
-        mash::string name;
-        i32          mission_index           = 0;
-        u32          icon                    = 0;
-        u32          ped                     = 0;
-        vector3      key_position;
-        const void*  mission_header_instance = nullptr;
-        mash::string gen_dis_exec_name;
-        u32          unk_034                 = 0;
-        i32          retry_count             = 0;
-        u32          unk_03c                 = 0;
+        mash::string                      name;
+        i32                               mission_index           = 0;
+        u32                               icon                    = 0;
+        u32                               ped                     = 0;
+        vector3                           key_position;
+        const chuck::vm::script_instance* mission_header_instance = nullptr;
+        mash::string                      gen_dis_exec_name;
+        chuck::vm::script_executable*     exec                    = nullptr;
+        i32                               retry_count             = 0;
+        u32                               unk_03c                 = 0;
 
         mission_info();
     };
@@ -165,8 +181,8 @@ namespace treyarch {
         u8                            act_force_reload;
         u8                            reserved_271[0x03];
         u32                           act_transition_frames;
+        mash::string                  sky_name;
         mash::string                  wanted_sky_name;
-        mash::string                  loaded_sky_name;
         i32                           sky_swap_state;
         u8                            sky_force_reload;
         u8                            unk_295;
@@ -200,11 +216,54 @@ namespace treyarch {
 
         void frame_advance(f32 time_inc);
 
+        void advance_act_transition();
+        void begin_act_transition();
+        void load_act_pack();
+
+        mash::string get_sky_name() const;
+
+        void check_sky_name();
+        void load_sky_pack();
+        void apply_sky_pack();
+
+        void update_hero_proximity_event();
+        void update_hero_tracking_flags();
+        void run_district_scripts();
+
+        void process_state_initial_startup(f32 time_inc);
+        void process_state_idle(f32 time_inc);
+        void process_state_start_loading();
+        void process_state_loading();
+        void process_state_running_mission();
+        void process_state_unk_5();
+        void process_state_unk_6();
+        void process_state_start_unloading();
+        void process_state_unloading();
+        void process_state_maloring_player_wait_for_blackscreen(f32 time_inc);
+        void process_state_maloring_player_wait_for_district();
+        void process_state_start_mission_failed_dialog();
+        void process_state_running_mission_failed_dialog();
+        void process_state_running_mission_succeeded_dialog();
+        void process_state_blackscreen_on();
         void process_state_wait_for_blackscreen_on(f32 time_inc);
     };
 
     namespace references {
         inline util::memory_reference<mission_manager*> mission_manager { 0x01111760 };
+
+        // .rdata 0; the unset value of the zoom-map callback ids
+        inline util::memory_reference<u32> unk_00bb6d68 { 0x00BB6D68 };
+
+        // a zero vector; reset target for the hero reference position
+        inline util::memory_reference<vector3> unk_011117a0 { 0x011117A0 };
+
+        // the loading paths give up for the frame while its +0x14 is set, after sub_90FC00 sets its +0x40
+        inline util::memory_reference<u8*> unk_010fa238 { 0x010FA238 };
+
+        // set_mission_finished_screen_has_appeared can notify it too
+        inline util::memory_reference<u32*> unk_010fb18c { 0x010FB18C };
+
+        inline util::memory_reference<u8*> unk_010fb2b4 { 0x010FB2B4 };
     } // references
 
     ASSERT_SIZEOF  (mission_info,                          0x40);
@@ -212,6 +271,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(mission_info, key_position,            0x18);
     ASSERT_OFFSETOF(mission_info, mission_header_instance, 0x24);
     ASSERT_OFFSETOF(mission_info, gen_dis_exec_name,       0x28);
+    ASSERT_OFFSETOF(mission_info, exec,                    0x34);
     ASSERT_OFFSETOF(mission_info, retry_count,             0x38);
 
     ASSERT_SIZEOF  (mission_district_info,                             0x14);
@@ -253,8 +313,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(mission_manager, act,                               0x258);
     ASSERT_OFFSETOF(mission_manager, act_transition_state,              0x268);
     ASSERT_OFFSETOF(mission_manager, act_transition_frames,             0x274);
-    ASSERT_OFFSETOF(mission_manager, wanted_sky_name,                   0x278);
-    ASSERT_OFFSETOF(mission_manager, loaded_sky_name,                   0x284);
+    ASSERT_OFFSETOF(mission_manager, sky_name,                          0x278);
+    ASSERT_OFFSETOF(mission_manager, wanted_sky_name,                   0x284);
     ASSERT_OFFSETOF(mission_manager, sky_swap_state,                    0x290);
     ASSERT_OFFSETOF(mission_manager, leave_radius_squared,              0x298);
     ASSERT_OFFSETOF(mission_manager, poi_locations,                     0x29C);

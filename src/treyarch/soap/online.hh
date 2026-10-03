@@ -20,6 +20,8 @@ namespace treyarch { namespace soap {
 
     public:
         online_vtable* vtable;
+        u8             reserved_004[0x28];
+        i32            unk_02c;
 
         void frame_advance() {
             vtable->frame_advance(this);
@@ -32,4 +34,6 @@ namespace treyarch { namespace soap {
 
     ASSERT_OFFSETOF(online_vtable, frame_advance, 0x14);
     ASSERT_OFFSETOF(online_vtable, method_024,    0x24);
+
+    ASSERT_OFFSETOF(online, unk_02c, 0x2C);
 }} // treyarch::soap

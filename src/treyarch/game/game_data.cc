@@ -16,14 +16,6 @@
 #include "treyarch/soap/storage.hh"
 #include "util/memory_reference.hh"
 
-namespace treyarch { namespace references {
-    // a pending load gives up for the frame while its +0x14 is set and sub_90FC00 sets its +0x40 on the way out
-    util::memory_reference<u8*> unk_010fa238 { 0x010FA238 };
-
-    // mission_manager::set_mission_finished_screen_has_appeared can notify it too
-    util::memory_reference<u32*> unk_010fb18c { 0x010FB18C };
-}} // treyarch::references
-
 using namespace treyarch;
 
 // sub_7973D0
