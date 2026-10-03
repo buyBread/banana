@@ -3,7 +3,10 @@
 #include "retail.hh"
 #include "treyarch/amalga/paths.hh"
 #include "treyarch/amalga/resource_manager.hh"
+#include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/game.hh"
+#include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/four_cc.hh"
 #include "treyarch/shared/mash/unmash.hh"
@@ -125,4 +128,77 @@ void* amalga::resource_manager::resolve_vrml_section(apkf::file*,
                                                      void*) {
 
     return references::resource_context.read();
+}
+
+// sub_7702F0
+void amalga::resource_manager::frame_advance(f32 dt) {
+    frame_advance(dt, 0.002f);
+}
+
+// sub_76FF50
+void amalga::resource_manager::frame_advance(f32 dt, f32 max_ms) {
+    references::advancing.write(true);
+
+    // max_ms is taken as is only while 0x01111391 is set and the igo's check says no; otherwise it just raises the 30ms floor
+    f32 limit = 0.03f;
+
+    ui_frontend* igo = treyarch::references::frontend.get().igo;
+
+    if (treyarch::references::unk_01111391.read() && igo && !retail::sub_6884D0((u32*)igo))
+        limit = max_ms;
+    else
+        limit = max_ms > 0.03f ? max_ms : 0.03f;
+
+    limited_timer time_limit(limit);
+    time_limit.reset();
+
+    retail::sub_87EF10((u32*)references::unk_010f7760.read(), dt);
+
+    dinkumware::vector<resource_partition*>* partitions = references::partitions.read();
+
+    for (u32 index = 0; index < partitions->size(); ++index)
+        (*partitions)[index]->streamer.frame_advance(dt, &time_limit);
+
+    references::advancing.write(false);
+}
+
+// sub_739C50
+amalga::resource_partition* amalga::resource_manager::get_partition_pointer(resource_pack_slot* pack_slot) {
+    dinkumware::vector<resource_partition*>* partitions = references::partitions.read();
+
+    for (u32 index = 0; index < partitions->size(); ++index) {
+        resource_partition* partition = (*partitions)[index];
+
+        const u32 slot_count = partition->pack_slots.size();
+
+        for (u32 slot = 0; slot < slot_count; ++slot) {
+            if (partition->pack_slots[slot] == pack_slot)
+                return partition;
+        }
+    }
+
+    return nullptr;
+}
+
+// sub_456290
+amalga::push_resource_context_stack_object::push_resource_context_stack_object(resource_pack_slot* slot) {
+    resource_manager::references::unk_010300a8.get().acquire();
+    resource_manager::references::resource_context_stack_mutex.read()->acquire();
+
+    if (slot) {
+        m_context = (resource_pack_slot*)retail::sub_767760((i32)slot); // push_resource_context
+        m_pushed  = true;
+    } else {
+        m_context = (resource_pack_slot*)retail::sub_456240(); // get_resource_context
+        m_pushed  = false;
+    }
+}
+
+// sub_44E6C0
+amalga::push_resource_context_stack_object::~push_resource_context_stack_object() {
+    if (m_pushed)
+        retail::sub_757240(); // pop_resource_context
+
+    resource_manager::references::resource_context_stack_mutex.read()->release();
+    resource_manager::references::unk_010300a8.get().release();
 }

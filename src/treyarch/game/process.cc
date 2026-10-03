@@ -1,4 +1,6 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
+#include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/game.hh"
@@ -6,11 +8,13 @@
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/development_options.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace references {
-    // only advance_state_running touches these. the milestone hands the copy of the string to a debug
-    // console object once, like KSPS's processCommand(g_console_command, 1); retail keeps only the copy
+    // only advance_state_running touches these.
+    // the milestone hands the copy of the string to a debug console object once, like KSPS's processCommand(g_console_command, 1);
+    // retail keeps only the copy.
     util::memory_reference<u8> unk_01036e68 { 0x01036E68 };
 
     util::memory_reference<mash::string> unk_01030110 { 0x01030110 };
@@ -118,7 +122,7 @@ void game::handle_game_states(f32* time_inc) {
        start (1, 2, 3, 4, 5, 20), main (8, 9, 10, 11, 20), pause (12, 20), movie (18, 20) */
     switch ((i32)process_stack.back().get_cur_state()) {
         case 1:
-            retail::sub_76F6F0((u32*)this, *time_inc);
+            advance_state_legal(*time_inc);
 
             return;
 
@@ -196,5 +200,49 @@ void game::handle_game_states(f32* time_inc) {
 
         default:
             return;
+    }
+}
+
+// sub_76F6F0
+void game::advance_state_legal(f32) {
+    // retail constructs this and never reads it
+    hires_clock_t unused_clock;
+
+    retail::sub_72C8C0();
+
+    amalga::resource_partition* partition =
+        (*amalga::resource_manager::references::partitions.read())[amalga::resource_partition_game];
+
+    partition->streamer.load_callback = (amalga::resource_pack_slot_callback)retail::sub_7DD220;
+    partition->streamer.load("game", 0);
+    partition->streamer.flush((amalga::resource_pack_streamer::flush_callback)retail::sub_771950, 0.02f);
+
+    engine_recursive_lock &lock = amalga::resource_manager::references::unk_010300a8.get();
+
+    lock.acquire();
+
+    amalga::resource_pack_slot* slot =
+        (*amalga::resource_manager::references::partitions.read())[amalga::resource_partition_game]->pack_slots[0];
+
+    lock.release();
+
+    {
+        amalga::push_resource_context_stack_object context(slot);
+
+        void* previous = references::unk_00fc64ec.read();
+
+        if (previous) {
+            retail::sub_5416B0((u32*)previous); // its destructor
+            memory::heap::free(previous);
+        }
+
+        references::unk_00fc64ec.write(nullptr);
+
+        retail::sub_99CC10();
+        retail::sub_736F80();
+        retail::sub_6ABA30();
+        retail::sub_97DD10((u32*)this);
+
+        process_stack.back().go_next_state();
     }
 }

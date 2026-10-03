@@ -20,8 +20,14 @@ namespace treyarch {
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
 
     namespace references {
+        // cleared with level_is_unloading at the end of a level 
+        inline util::memory_reference<u8> unk_01111391 { 0x01111391 };
+
         // set by game::handle_cameras on entry; cleared once per frame_advance_level
         inline util::memory_reference<u8> cameras_handled { 0x01111392 };
+
+        // freed and cleared by game::advance_state_legal
+        inline util::memory_reference<void*> unk_00fc64ec { 0x00FC64EC };
     } // references
 
     struct game_frame_timing {
@@ -136,6 +142,7 @@ namespace treyarch {
         void pop_process();
 
         void handle_game_states(f32* time_inc);
+        void advance_state_legal(f32 time_inc);
         void advance_state_running(f32 time_inc);
         void advance_state_paused(f32 time_inc);
         void soft_reset_process();

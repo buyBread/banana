@@ -1,28 +1,24 @@
 #pragma once
 
 #include "treyarch/amalga/resource_directory.hh"
-#include "treyarch/shared/timing/hires_clock.hh"
+#include "treyarch/amalga/resource_pack_slot.hh"
+#include "treyarch/shared/timing/limited_timer.hh"
 #include "util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace amalga {
-    struct resource_budget {
-        hires_clock_t clock;
-        f32           deadline;
-    };
-
     struct resource_handler {
         virtual resource_handler* destroy(u8 mode) = 0;
         virtual i32 begin(i32 operation) = 0;
         virtual i32 progress(i32                  operation,
                              resource_descriptor* descriptor,
-                             resource_budget*     budget) = 0;
+                             limited_timer*       time_limit) = 0;
 
         i32                 state;
         resource_pack_slot* pack_slot;
         e_resource_type     type;
         i32                 descriptor_cursor;
 
-        bool advance(i32 operation, resource_budget* budget);
+        bool advance(i32 operation, limited_timer* time_limit);
     };
 
     struct merged_apk_resource_handler : resource_handler {
@@ -33,9 +29,6 @@ namespace treyarch { namespace amalga {
         i32 progress_merged_apk(i32                  operation,
                                 resource_descriptor* descriptor);
     };
-
-    ASSERT_SIZEOF  (resource_budget,           0x10);
-    ASSERT_OFFSETOF(resource_budget, deadline, 0x08);
 
     ASSERT_SIZEOF  (resource_handler,                    0x14);
     ASSERT_OFFSETOF(resource_handler, state,             0x04);

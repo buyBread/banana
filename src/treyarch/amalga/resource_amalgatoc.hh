@@ -9,8 +9,6 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace amalga {
-    struct resource_pack_slot;
-
     enum e_resource_amalgatoc_pack_entry_flags : u32 {
         resource_amalgatoc_pack_entry_flag_compressed  = 0x01, // read stored_size and decode NCH chunks, otherwise copy data_size raw bytes
         resource_amalgatoc_pack_entry_flag_shared_file = 0x02  // read from amalgapak_id instead of a loose pack file
@@ -29,8 +27,11 @@ namespace treyarch { namespace amalga {
         u32                                   source_offset;
         u32                                   archive_header_size;
         u32                                   stored_size_total;   // the loose file's length
-        resource_pack_slot*                   pack_slot;
+        u32                                   unk_40;              // copied into a slot that starts loading the pack
         e_resource_amalgatoc_pack_entry_flags flags;
+
+        // key is a string_hash*, entry a resource_amalgatoc_pack_entry**
+        static i32 compare_name_hash(const void* key, const void* entry);
 
         // inlined @ sub_7624E0
         void construct_mashed_class() {
@@ -77,7 +78,7 @@ namespace treyarch { namespace amalga {
     ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, source_offset,       0x34);
     ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, archive_header_size, 0x38);
     ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, stored_size_total,   0x3C);
-    ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, pack_slot,           0x40);
+    ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, unk_40,              0x40);
     ASSERT_OFFSETOF(resource_amalgatoc_pack_entry, flags,               0x44);
 
     ASSERT_SIZEOF  (resource_amalgatoc,                       0x58);

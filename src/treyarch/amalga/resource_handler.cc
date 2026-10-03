@@ -6,11 +6,11 @@
 using namespace treyarch;
 
 // sub_73A4D0
-bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
+bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit) {
     if (state == 2)
         return false;
 
-    resource_directory* directory = pack_slot->directory;
+    resource_directory* directory = pack_slot->pack_directory;
 
     if (state == 0) {
         state             = 1;
@@ -31,11 +31,11 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
                 break;
         }
 
-        if (budget && budget->clock.elapsed() >= budget->deadline)
+        if (time_limit && time_limit->out_of_time())
             return true;
     }
 
-    directory = pack_slot->directory;
+    directory = pack_slot->pack_directory;
 
     i32 end = directory->type_starts[type] + directory->type_counts[type];
 
@@ -46,7 +46,7 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
     }
 
     while (true) {
-        resource_descriptor* descriptor = pack_slot->directory->descriptors[descriptor_cursor];
+        resource_descriptor* descriptor = pack_slot->pack_directory->descriptors[descriptor_cursor];
 
         i32 result;
 
@@ -57,7 +57,7 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
                 break;
 
             default:
-                result = progress(operation, descriptor, budget);
+                result = progress(operation, descriptor, time_limit);
 
                 break;
         }
@@ -68,7 +68,7 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
         if (result == 0)
             ++descriptor_cursor;
 
-        if (budget && budget->clock.elapsed() >= budget->deadline)
+        if (time_limit && time_limit->out_of_time())
             return true;
 
         if (descriptor_cursor >= end) {
@@ -81,7 +81,7 @@ bool amalga::resource_handler::advance(i32 operation, resource_budget* budget) {
 
 // sub_73A5E0
 void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
-    resource_directory* directory = pack_slot->directory;
+    resource_directory* directory = pack_slot->pack_directory;
 
     if (!directory->type_counts[e_resource_type::merged_apk])
         return;
@@ -92,7 +92,7 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     if (operation)
         return;
 
-    resource_manager::references::resource_context.write(pack_slot->reference_context);
+    resource_manager::references::resource_context.write(pack_slot->header_mem_addr[buffer_location_vram]);
 
     apkf::data_reference* &resource_references = descriptor->extension->resource_references;
     u8*                   &string_base         = descriptor->extension->string_base;

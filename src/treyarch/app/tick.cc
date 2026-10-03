@@ -1,8 +1,10 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
+#include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/ngl.hh"
 
 namespace treyarch {    
@@ -38,9 +40,9 @@ void app::tick() {
 
     this->real_clock.reset();
     retail::sub_453700(0, 0);
-    retail::sub_A173E0();
+    nfl::update();
     retail::sub_734610((f32*)&references::callback_timers.get(), time_inc);
-    retail::sub_7702F0(time_inc);
+    amalga::resource_manager::frame_advance(time_inc);
     retail::sub_5F8870(0);
     this->the_game->frame_advance(time_inc);
 
