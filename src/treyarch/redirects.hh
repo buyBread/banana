@@ -5,7 +5,6 @@
 #include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_handler.hh"
 #include "treyarch/app/app.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
@@ -22,17 +21,6 @@ namespace treyarch {
             u32 address;
             u8  expected[5];
         };
-
-        if (!util::redirect_rel32(0x0068643C, { 0xE8, 0x3F, 0xFD, 0xFF, 0xFF }, &event_manager::clear)                  ||
-            !util::redirect_rel32(0x0068674A, { 0xE8, 0x11, 0xFB, 0xFF, 0xFF }, &event_manager::register_event_type)    ||
-            !util::redirect_rel32(0x0068690A, { 0xE8, 0x51, 0xF9, 0xFF, 0xFF }, &event_manager::register_event_type)    ||
-            !util::redirect_rel32(0x00429ADC, { 0xE8, 0x6F, 0xC8, 0x25, 0x00 }, &event_manager::garbage_collect)        ||
-            !util::redirect_rel32(0x006867DD, { 0xE8, 0x2E, 0xFF, 0xFF, 0xFF }, &event_manager::create_event_recipient) ||
-            !util::redirect_rel32(0x0068686D, { 0xE8, 0x9E, 0xFE, 0xFF, 0xFF }, &event_manager::create_event_recipient))
-            
-            FATAL_BREAKPOINT();
-
-        // ====== //
 
         using clear_script_callbacks_function = void(__cdecl*)
             (arch_base_vhandle, chuck::vm::script_executable*);
@@ -171,9 +159,6 @@ namespace treyarch {
                                                   { 0x0097E4FC, { 0xE8, 0x9F, 0x6F, 0xD0, 0xFF } },
                                                   { 0x0097E5E9, { 0xE8, 0xB2, 0x6E, 0xD0, 0xFF } },
                                                   { 0x0097EFF2, { 0xE8, 0xA9, 0x64, 0xD0, 0xFF } },
-                                                  { 0x0097F3BB, { 0xE8, 0xE0, 0x60, 0xD0, 0xFF } },
-                                                  { 0x0097F3F8, { 0xE8, 0xA3, 0x60, 0xD0, 0xFF } },
-                                                  { 0x0097F455, { 0xE8, 0x46, 0x60, 0xD0, 0xFF } },
                                                   { 0x0098065E, { 0xE8, 0x3D, 0x4E, 0xD0, 0xFF } },
                                                   { 0x00984B45, { 0xE8, 0x56, 0x09, 0xD0, 0xFF } },
                                                   { 0x0098566F, { 0xE8, 0x2C, 0xFE, 0xCF, 0xFF } },
@@ -290,45 +275,14 @@ namespace treyarch {
         if (!util::redirect_rel32(0x006ABCEB, { 0xE8, 0xE0, 0xD5, 0x2A, 0x00 }, &input_mgr::poll_devices))
             FATAL_BREAKPOINT();
 
-        banana::log.msg("redirecting cutscene_player::is_playing callsites");
-
-        if (!util::redirect_rel32(0x004E0869, { 0xE8, 0xB2, 0x47, 0x32, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x004ECC8B, { 0xE8, 0x90, 0x83, 0x31, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x005D663B, { 0xE8, 0xE0, 0xE9, 0x22, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0061F718, { 0xE8, 0x03, 0x59, 0x1E, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0061F9B7, { 0xE8, 0x64, 0x56, 0x1E, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x006567E1, { 0xE8, 0x3A, 0xE8, 0x1A, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0065A96D, { 0xE8, 0xAE, 0xA6, 0x1A, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x006CC8A3, { 0xE8, 0x78, 0x87, 0x13, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00715183, { 0xE8, 0x98, 0xFE, 0x0E, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x007A1C93, { 0xE8, 0x88, 0x33, 0x06, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x007A1DEA, { 0xE8, 0x31, 0x32, 0x06, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x007A1E45, { 0xE8, 0xD6, 0x31, 0x06, 0x00 }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00824EA6, { 0xE8, 0x75, 0x01, 0xFE, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00842487, { 0xE8, 0x94, 0x2B, 0xFC, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00876618, { 0xE8, 0x03, 0xEA, 0xF8, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0090453E, { 0xE8, 0xDD, 0x0A, 0xF0, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0090A9C4, { 0xE8, 0x57, 0xA6, 0xEF, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00948907, { 0xE8, 0x14, 0xC7, 0xEB, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x00950AD7, { 0xE8, 0x44, 0x45, 0xEB, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0095111B, { 0xE8, 0x00, 0x3F, 0xEB, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x009691F6, { 0xE8, 0x25, 0xBE, 0xE9, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x009772FF, { 0xE8, 0x1C, 0xDD, 0xE8, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x0097773A, { 0xE8, 0xE1, 0xD8, 0xE8, 0xFF }, &cutscene_player::is_playing) ||
-            !util::redirect_rel32(0x009778E9, { 0xE8, 0x32, 0xD7, 0xE8, 0xFF }, &cutscene_player::is_playing))
-
-            FATAL_BREAKPOINT();
-
         banana::log.msg("redirecting nglPresent (movie_manager)");
 
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.msg("redirecting game::clear_screen callsites");
+        banana::log.msg("redirecting game::clear_screen (load_this_level)");
 
-        if (!util::redirect_rel32(0x0076BC14, { 0xE8, 0xF7, 0xF3, 0x20, 0x00 }, &game::clear_screen) ||
-            !util::redirect_rel32(0x0097B495, { 0xE8, 0x76, 0xFB, 0xFF, 0xFF }, &game::clear_screen))
-
+        if (!util::redirect_rel32(0x0097B495, { 0xE8, 0x76, 0xFB, 0xFF, 0xFF }, &game::clear_screen))
             FATAL_BREAKPOINT();
 
         banana::log.msg("redirecting level_load_stuff lifecycle");

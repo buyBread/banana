@@ -18,6 +18,11 @@ namespace treyarch {
         void draw_pages() {
             vtable->method_068(this);
         }
+
+        // slot 27
+        void activate(u8 unk) {
+            ((void (__thiscall*)(igo_3d_scrapbook*, u8))vtable->method_06c)(this, unk);
+        }
     };
 
     ASSERT_OFFSETOF(igo_3d_scrapbook, active, 0x030);

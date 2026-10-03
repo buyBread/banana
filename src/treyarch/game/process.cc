@@ -3,12 +3,18 @@
 #include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/frontend/frontend_manager.hh"
+#include "treyarch/game/frontend/igo/igo_3d_loading_screen.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/game_data.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/development_options.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/soap/online.hh"
+#include "treyarch/soap/profile.hh"
+#include "treyarch/soap/storage.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace references {
@@ -65,7 +71,7 @@ void game::advance_state_running(f32 time_inc) {
     }
 
     retail::sub_8095F0((i32)references::cutscene_player.read(), time_inc); // cut_scene_player::frame_advance
-    retail::sub_76BAF0((i32)data);
+    frame_advance_soap(data);
 
     mission_manager* missions = references::mission_manager.read();
 
@@ -91,29 +97,33 @@ void game::advance_state_running(f32 time_inc) {
 
 // sub_72C930
 void game::advance_state_paused(f32 time_inc) {
-    using service_method = void (__thiscall*)(void* self);
-
     if (unk_059)
         retail::sub_A1AE50((u32*)&chuck::vm::script_manager::get(), time_inc, 0); // script_manager::run
 
     frame_advance_game_overlays(time_inc);
 
-    /* three lazily created singletons, each advanced through vtable slot 5. sub_76BAF0 (running state)
-       runs the same sequence behind the static switches at 0x00B88728..0x00B8872A */
-    retail::sub_9EDF60();
+    // the same sequence as frame_advance_soap, minus its soap switches
+    retail::sub_9EDF60(); // the message box and notification managers' frame_advance
 
-    void* service = (void*)retail::sub_9ED670();
-    ((service_method)(*(void***)service)[5])(service);
+    ((soap::profile*)retail::sub_9ED670())->frame_advance();
+    ((soap::storage*)retail::sub_9EDA50())->frame_advance();
+    ((soap::online*)retail::sub_9ED060())->frame_advance();
 
-    service = (void*)retail::sub_9EDA50();
-    ((service_method)(*(void***)service)[5])(service);
-
-    service = (void*)retail::sub_9ED060();
-    ((service_method)(*(void***)service)[5])(service);
-
-    retail::sub_7A19F0(data);
+    data->frame_advance();
 
     // retail ends with an empty call (nullsub_1)
+}
+
+// sub_76BBD0
+void game::advance_state_credits(f32) {
+    process_stack.back().go_next_state();
+
+    retail::sub_8FF2F0();
+    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+
+    clear_screen();
+
+    retail::sub_76BA90((u32*)this, "credits"); // push movie process
 }
 
 // sub_770480
@@ -174,7 +184,7 @@ void game::handle_game_states(f32* time_inc) {
             return;
 
         case 10:
-            retail::sub_76BBD0((u32*)this, *time_inc);
+            advance_state_credits(*time_inc);
 
             return;
 

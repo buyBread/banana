@@ -193,6 +193,7 @@ namespace treyarch {
         static void create_inst();
 
         bool is_idle() const;
+        bool is_mission_running() const;
 
         f32  game_time_get_full_time() const;
         void frame_advance_game_time(f32 time_inc);

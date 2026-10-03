@@ -158,3 +158,8 @@ void mission_manager::create_inst() {
 bool mission_manager::is_idle() const {
     return state == mission_manager_state_idle;
 }
+
+// sub_97E1F0
+bool mission_manager::is_mission_running() const {
+    return state == mission_manager_state_running_mission;
+}

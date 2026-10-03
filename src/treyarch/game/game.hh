@@ -12,7 +12,7 @@
 
 namespace treyarch {
     struct level_descriptor; // impl?
-    class game_data; // impl?
+    class game_data;
     class localized_string_table; // impl?
     class message_board; // impl?
     class world_dynamics_system;
@@ -145,6 +145,7 @@ namespace treyarch {
         void advance_state_legal(f32 time_inc);
         void advance_state_running(f32 time_inc);
         void advance_state_paused(f32 time_inc);
+        void advance_state_credits(f32 time_inc);
         void soft_reset_process();
         void frame_advance_game_overlays(f32 time_inc);
 
