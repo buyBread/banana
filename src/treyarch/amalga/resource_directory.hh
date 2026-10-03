@@ -40,8 +40,11 @@ namespace treyarch { namespace amalga {
         u8                    remaining[0x14];
     };
 
+    // polymorphic (vtable 0x00BCA360);
+    // worldly_pack_slot (0x00BCA37C) derives from it and owns the 104 handlers
     struct resource_pack_slot {
-        u8                  unknown_00[0x28];
+        void*               vtable;
+        u8                  unknown_04[0x24];
         void*               reference_context;
         resource_directory* directory;
     };
@@ -63,6 +66,7 @@ namespace treyarch { namespace amalga {
     ASSERT_OFFSETOF(resource_directory, type_state,      0x358);
     ASSERT_OFFSETOF(resource_directory, merged_apk_file, 0x3C0);
 
+    ASSERT_OFFSETOF(resource_pack_slot, unknown_04,        0x04);
     ASSERT_OFFSETOF(resource_pack_slot, reference_context, 0x28);
     ASSERT_OFFSETOF(resource_pack_slot, directory,         0x2C);
 }} // treyarch::amalga

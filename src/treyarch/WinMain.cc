@@ -21,6 +21,7 @@
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/os_file.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 
 namespace treyarch {

@@ -95,10 +95,6 @@ ASSERT_OFFSETOF(heap_state, small_block_bytes, 0x38);
 ASSERT_OFFSETOF(heap_state, small_block_heap,  0x54);
 
 /*
-    i'm severely out of my depth here and i don't ever want to touch this again.
-    even after eventually getting it to work ((now)), everything here is (mostly) bogus code to me without any comments.
-    probably because the process included ChatGPT re-explaining the same concepts six or seven times to me.
-
     https://www.cs.rochester.edu/u/scott/papers/1996_PODC_queues.pdf
     https://en.wikipedia.org/wiki/Treiber_stack
     https://en.wikipedia.org/wiki/ABA_problem
@@ -109,7 +105,6 @@ using namespace treyarch::memory;
 
 namespace treyarch { namespace memory { namespace heap { 
     namespace references {
-        util::memory_reference<heap_state*>   heap_default          { 0x00FFDA58 };
         util::memory_reference<u32>           heap_page_directories { 0x00FFDA70 };
         util::memory_reference<volatile i64>  heap_queue_node_pool  { 0x00FFE1D8 };
         util::memory_reference<volatile LONG> heap_page_lock        { 0x00FFDE70 };

@@ -1,11 +1,7 @@
 #include "treyarch/amalga/resource_handler.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/apkf/loader.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "util/memory_reference.hh"
-
-namespace treyarch { namespace amalga { namespace references {
-    util::memory_reference<void*> resource_context { 0x0102FE74 };
-}}} // treyarch::amalga::references
 
 using namespace treyarch;
 
@@ -96,7 +92,7 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     if (operation)
         return;
 
-    references::resource_context.write(pack_slot->reference_context);
+    resource_manager::references::resource_context.write(pack_slot->reference_context);
 
     apkf::data_reference* &resource_references = descriptor->extension->resource_references;
     u8*                   &string_base         = descriptor->extension->string_base;
@@ -106,7 +102,7 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     directory->merged_apk_file = owner;
     owner->apply_references(resource_references, string_base);
 
-    references::resource_context.write(nullptr);
+    resource_manager::references::resource_context.write(nullptr);
 
     owner->invoke_section_load_callbacks();
 

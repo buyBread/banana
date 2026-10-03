@@ -1,6 +1,7 @@
 #include <new>
 
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/environment_progression.hh"
 #include "treyarch/game/event/default_callbacks.hh"
@@ -14,6 +15,7 @@
 #include "treyarch/game/trigger_manager.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/os_file.hh"
 #include "treyarch/shared/platform.hh"
 #include "treyarch/shared/singleton.hh"
 
@@ -47,7 +49,7 @@ app::app() {
 
     mash::string host_ini = *(mash::string*)retail::sub_7EFAB0(platform_pc) + "DEBUG\\HOST.INI";
 
-    if (retail::sub_9C8D90((i32)&host_ini))
+    if (os_file::file_exists(host_ini))
         retail::sub_7DF700(host_ini.data());
 
     // retail keeps only the by-value copies of the milestone's log arguments
@@ -57,7 +59,7 @@ app::app() {
     references::platform.write(platform_pc);
 
     event_manager::create_inst();
-    retail::sub_770160();
+    amalga::resource_manager::create_inst();
     retail::sub_428B60(); // glass_house_manager::create_inst
     retail::sub_730F10((u32*)references::glass_house_manager.read(), 1); // set_glass_house_level
     retail::sub_428BC0(); // cutscene_player::create_inst
