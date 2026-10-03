@@ -18,12 +18,17 @@ namespace treyarch { namespace nfl {
         i32 (__cdecl* bind)(i32 media, const char* path, char* bound_path, u32 bound_path_size);
     };
 
+    struct driver_file_info {
+        u32 unk_00; // the win32 driver writes 0
+        u32 size;
+    };
+
     struct driver_file_operations {
         u32   handle_size;
         u32   handle_alignment;
-        void* open;
-        void* close;
-        void* get_info;
+        i32   (__cdecl* open)(u8* handle, const char* path, u32 flags, u32 size); // 0 on success
+        i32   (__cdecl* close)(u8* handle);
+        i32   (__cdecl* get_info)(u8* handle, driver_file_info* info);            // 0 on success
         void* get_native_handle;
     };
 
@@ -78,6 +83,9 @@ namespace treyarch { namespace nfl {
         inline util::memory_reference<platform_settings>  default_platform_settings { 0x00FB8538 };
         inline util::memory_reference<platform_settings*> current_platform_settings { 0x01124728 };
     } // references
+
+    ASSERT_SIZEOF  (driver_file_info,       0x08);
+    ASSERT_OFFSETOF(driver_file_info, size, 0x04);
 
     ASSERT_SIZEOF  (driver_initialization,             0x0C);
     ASSERT_SIZEOF  (driver_binding,                    0x08);

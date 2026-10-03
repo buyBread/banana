@@ -12,6 +12,26 @@
 namespace treyarch { namespace nfl {
     using request_callback = void (__cdecl*)(i32 state, i32 request, void* user);
 
+    // NFS_REQUEST_STATE_*
+    enum e_internal_request_state : i32 {
+        internal_request_state_waiting,
+        internal_request_state_working,
+        internal_request_state_workdone,
+        internal_request_state_canceling,
+        internal_request_state_canceled,
+        internal_request_state_timeout,       // nothing sets it on pc
+        internal_request_state_io_error,
+        internal_request_state_io_error_waiting
+    };
+
+    enum e_file_flags : u32 {
+        file_flag_read           = 0x01,
+        file_flag_write          = 0x02,
+        file_flag_create         = 0x04,
+        file_flag_lazy_open      = 0x08,
+        file_flag_deferred_close = 0x10  // close once the outstanding requests finish
+    };
+
     struct request {
         u32              offset;
         i32              type;                  // 0 read, 1 write
@@ -74,8 +94,25 @@ namespace treyarch { namespace nfl {
         i32 in_use;
     };
 
-    u32 pre_allocate(u8* work_space);
-    u8* pre_allocate_block(u32 size, u32 alignment);
+    u32 nfs_pre_allocate(u8* work_space);
+    u8* nfs_pre_allocate_block(u32 size, u32 alignment);
+
+    void lock();
+    void unlock();
+
+    i32 to_public_request_state(i32 state);
+
+    request* get_request(i32 id);
+    file*    get_file(i32 id);
+    i32      resolve_file(i32 id);
+    u8*      get_file_handle(i32 id);
+
+    i32  nfs_open_file(u32 media_mask, const char* path, u32 flags, u32* size);
+    void nfd_close_file(i32 id);
+    void nfs_close_file(i32 id, bool deferred);
+    void nfs_cancel_request(i32 id);
+    i32  nfs_allocate_decompress_batch_job();
+    bool nfs_validate_destination(u8* destination);
 
     namespace references {
         inline util::memory_reference<u8*> work_space { 0x01124644 };
@@ -94,6 +131,7 @@ namespace treyarch { namespace nfl {
         inline util::memory_reference<u8*>         file_handles { 0x011246E0 };
 
         inline util::memory_reference<u32> file_handle_stride { 0x011246E4 };
+        inline util::memory_reference<i32> completion_count   { 0x011246D4 };
 
         inline util::memory_reference<std::array<decompress_group, 8>> decompress_groups { 0x011246E8 };
 
