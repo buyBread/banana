@@ -35,6 +35,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
     void set_sampler_address(u32 stage, DWORD address_u, DWORD address_v);
     void set_sampler_address(u32 stage, DWORD address_u, DWORD address_v, DWORD address_w);
     void apply_blend_mode(u64 value);
+    void set_scissor(i32 x1, i32 y1, i32 x2, i32 y2);
 
     namespace references {
         inline util::memory_reference<sampler_state_cache> sampler_states { 0x011168BC };

@@ -7,7 +7,6 @@
 #include "util/memory_reference.hh"
 
 namespace treyarch {
-    // RTTI Blitter
     struct blitter {
         void*                    vtable;
         u32                      reference_count; // one per owning filter, plus the system's
@@ -31,7 +30,33 @@ namespace treyarch {
 
         bool initialize();
         void release();
+
+        // the rectangles are in 0..1 viewport space;
+        // z lands in vertex constant c18.z
+        void draw(f32 x,
+                  f32 y,
+                  f32 width,
+                  f32 height,
+                  f32 u,
+                  f32 v,
+                  f32 u_size,
+                  f32 v_size,
+                  f32 z);
+
         void draw_fullscreen();
+
+        void draw_texture(f32                     x,
+                          f32                     y,
+                          f32                     width,
+                          f32                     height,
+                          f32                     u,
+                          f32                     v,
+                          f32                     u_size,
+                          f32                     v_size,
+                          f32                     z,
+                          IDirect3DBaseTexture9** texture);
+
+        void draw_texture_fullscreen(IDirect3DBaseTexture9** texture);
     };
 
     namespace references {

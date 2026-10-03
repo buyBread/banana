@@ -49,6 +49,15 @@ void ngl::d3d9::set_sampler_address(u32 stage, DWORD address_u, DWORD address_v)
     set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
 }
 
+// sub_72C4F0
+void ngl::d3d9::set_scissor(i32 x1, i32 y1, i32 x2, i32 y2) {
+    set_render_state(D3DRS_SCISSORTESTENABLE, TRUE);
+
+    RECT rectangle { x1, y1, x2, y2 };
+
+    references::device.get()->SetScissorRect(&rectangle);
+}
+
 // sub_9E24B0
 void ngl::d3d9::set_sampler_address(u32 stage, DWORD address_u, DWORD address_v, DWORD address_w) {
     set_sampler_state(stage, D3DSAMP_ADDRESSU, address_u);
