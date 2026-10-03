@@ -15,6 +15,7 @@
 #include "treyarch/game/post_process/post_process.hh"
 #include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/camera/references.hh"
+#include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/d3d9/display.hh"
@@ -27,8 +28,8 @@ namespace treyarch {
         inline util::memory_reference<u8>        video_confirmation_running { 0x00F4E295 };
         inline util::memory_reference<u64>       log_callback_table         { 0x00F4E2B0 };
         inline util::memory_reference<HINSTANCE> application_instance       { 0x011136FC };
-        inline util::memory_reference<void*>     memory_allocation          { 0x01113700 };
-        inline util::memory_reference<u32>       memory_capacity            { 0x01113704 };
+        inline util::memory_reference<void*>     nfl_work_space             { 0x01113700 };
+        inline util::memory_reference<u32>       nfl_work_space_size        { 0x01113704 };
     } // references
 } // treyarch
 
@@ -132,10 +133,10 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     retail::sub_9CC900((i64*)&references::log_callback_table.get());
     retail::sub_4291C0();
 
-    const u32 memory_config[5] { references::pack_mode.read() ? 1024u : 128u, 64, 64, 3, 1 };
-    references::memory_capacity.write(retail::sub_A15470((i32)memory_config));
-    references::memory_allocation.write(memory::heap::allocate(references::memory_capacity.read()));
-    retail::sub_A17830((i32)references::memory_allocation.read());
+    const nfl::init_params nfl_params { references::pack_mode.read() ? 1024 : 128, 64, 64, 3, 1 };
+    references::nfl_work_space_size.write(nfl::init(&nfl_params));
+    references::nfl_work_space.write(memory::heap::allocate(references::nfl_work_space_size.read()));
+    nfl::start(references::nfl_work_space.read());
 
     std::srand(_time32(nullptr));
 
