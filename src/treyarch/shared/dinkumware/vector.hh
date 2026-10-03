@@ -29,7 +29,27 @@ namespace treyarch { namespace dinkumware {
             destroy();
         }
 
-        vector(const vector&) = delete;
+        // sub_75F6C0
+        vector(const vector &other) : first(nullptr),
+                                      last(nullptr),
+                                      capacity_end(nullptr) {
+
+            const u32 count = other.size();
+
+            if (!count)
+                return;
+
+            if (count > 0xFFFFFFFF / sizeof(T))
+                throw std::length_error("vector<T> too long");
+
+            first        = (T*)memory::heap::allocate(count * sizeof(T));
+            last         = first;
+            capacity_end = first + count;
+
+            for (const T* source = other.first; source != other.last; ++source, ++last)
+                new (last) T(*source);
+        }
+
         vector &operator=(const vector&) = delete;
 
               T &operator[](u32 index)       noexcept { return first[index]; }
