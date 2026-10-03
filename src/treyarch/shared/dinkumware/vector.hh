@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <utility>
 
 #include "treyarch/shared/memory/heap.hh"
@@ -87,6 +88,33 @@ namespace treyarch { namespace dinkumware {
 
                 ++last;
             }
+        }
+
+        // sub_766EB0
+        void reserve(u32 count) {
+            if (count > 0xFFFFFFFF / sizeof(T))
+                throw std::length_error("vector<T> too long");
+
+            if (capacity() >= count)
+                return;
+
+            T* allocation = (T*)memory::heap::allocate(count * sizeof(T));
+
+            for (T* source = first, *destination = allocation; source != last; ++source, ++destination)
+                new (destination) T(*source);
+
+            u32 old_size = 0;
+
+            if (first) {
+                old_size = size();
+
+                clear();
+                memory::heap::free(first);
+            }
+
+            capacity_end = allocation + count;
+            last         = allocation + old_size;
+            first        = allocation;
         }
 
         // sub_444540
