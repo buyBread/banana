@@ -110,7 +110,9 @@ namespace treyarch {
         u8                                  conversation_state_168;
         u8                                  reserved_169[0x03];
         treyarch::ui_object_manager*        ui_object_manager;
-        u8                                  reserved_170[0x0C];
+        u8                                  reserved_170[0x04];
+        void*                               unknown_widget_174;
+        u8                                  reserved_178[0x04];
         igo_3d_drawable*                    startup_widget_17c;
         igo_3d_drawable*                    startup_widget_180;
         igo_3d_drawable*                    startup_widget_184;
@@ -188,6 +190,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, button_tips,                   0x15C);
     ASSERT_OFFSETOF(ui_frontend, conversation_menu_system,      0x160);
     ASSERT_OFFSETOF(ui_frontend, ui_object_manager,             0x16C);
+    ASSERT_OFFSETOF(ui_frontend, unknown_widget_174,            0x174);
     ASSERT_OFFSETOF(ui_frontend, startup_widget_17c,            0x17C);
     ASSERT_OFFSETOF(ui_frontend, camera_widget,                 0x18C);
     ASSERT_OFFSETOF(ui_frontend, optional_widgets_begin,        0x194);

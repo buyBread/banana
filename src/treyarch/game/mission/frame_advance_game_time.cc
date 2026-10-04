@@ -11,9 +11,24 @@ namespace treyarch {
 
 using namespace treyarch;
 
+// sub_97E730
+i32 mission_manager::game_time_get_military_time_hour() const {
+    return (i32)(game_time / 60) / 60 % 24;
+}
+
+// sub_97E780
+u32 mission_manager::game_time_get_seconds_since_midnight() const {
+    return game_time % 86400;
+}
+
 // sub_97E7A0
 f32 mission_manager::game_time_get_full_time() const {
     return (f32)game_time + game_time_timer;
+}
+
+// sub_97E7D0
+bool mission_manager::is_daytime() const {
+    return (u32)((i32)(game_time / 60) / 60 % 24 - 6) <= 12;
 }
 
 // sub_97F340

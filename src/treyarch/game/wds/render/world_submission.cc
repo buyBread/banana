@@ -36,7 +36,7 @@ void wds_render_manager::submit_light(render_region_info* entry,
             break;
 
         case light_flavor_directional:
-            if ((region*)retail::sub_612D30((u32*)selected_render_entity) != entry->reg)
+            if (selected_render_entity->get_primary_region() != entry->reg)
                 return;
 
             light_render_submission::submit_directional_light(source);

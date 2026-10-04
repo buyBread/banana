@@ -143,3 +143,37 @@ void mission_manager::load_act_pack() {
 
     act_transition_state = 4;
 }
+
+// sub_97EE80
+i32 mission_manager::get_mission_act(const mission_info&) const {
+    i32 mission_act = -1;
+
+    // looks at current_mission whatever it's given
+    string_hash pack_hash;
+    pack_hash.initialize(mash::ALLOCATED, current_mission.name.c_str());
+
+    auto* amalgatoc = (u32*)amalga::resource_manager::references::amalgatoc.read();
+    auto* pack      = (amalga::resource_amalgatoc_pack_entry*)retail::sub_73A200(amalgatoc, pack_hash.source_hash_code);
+
+    if (!pack)
+        return mission_act;
+
+    auto* group = (amalga::resource_amalgatoc_pack_entry*)retail::sub_73A200(amalgatoc, pack->group_hash.source_hash_code);
+
+    if (!group)
+        return mission_act;
+
+    mash::string group_name(group->name);
+    group_name.to_lower();
+
+    i32 index = group_name.find("act");
+
+    if (index >= 0) {
+        char digit = group_name.c_str()[index + 3];
+
+        if ((u8)(digit - '1') <= 4)
+            mission_act = digit - '1';
+    }
+
+    return mission_act;
+}

@@ -18,6 +18,7 @@
 #include "treyarch/game/region_pack_manager.hh"
 #include "treyarch/game/region_spawn_manager.hh"
 #include "treyarch/game/shadow/shadow.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
@@ -133,13 +134,13 @@ void game::one_time_init_stuff() {
         }
 
         if (soap::references::enable_profiles.read())
-            ((soap::profile*)retail::sub_9ED670())->initialize(1, false);
+            soap::profile::inst()->initialize(1, false);
 
         if (soap::references::enable_storage.read())
-            ((soap::storage*)retail::sub_9EDA50())->initialize(4, 10, 20000);
+            soap::storage::inst()->initialize(4, 10, 20000);
 
         if (soap::references::enable_online.read())
-            ((soap::online*)retail::sub_9ED060())->initialize();
+            soap::online::inst()->initialize();
     }
 
     if (data)
@@ -305,11 +306,11 @@ void game::freeze_hero(bool freeze) {
 
     hero->player_ifc()->set_enabled(!freeze);
 
-    if (retail::sub_602830((u32*)hero)) { // actor::get_ai_core
+    if (((actor*)hero)->get_ai_core()) {
         if (freeze)
-            retail::sub_4DF470((i32*)retail::sub_602830((u32*)hero), 0); // ai_core::push_ai_disable
+            retail::sub_4DF470((i32*)((actor*)hero)->get_ai_core(), 0); // ai_core::push_ai_disable
         else
-            retail::sub_4DF4B0((i32*)retail::sub_602830((u32*)hero), 0); // ai_core::pop_ai_disable
+            retail::sub_4DF4B0((i32*)((actor*)hero)->get_ai_core(), 0); // ai_core::pop_ai_disable
     }
 }
 

@@ -2,6 +2,7 @@
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/core_ai_resource.hh"
 #include "treyarch/game/wds/ai/fight_director.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 
@@ -124,7 +125,7 @@ bool ai_core::should_be_in_limbo() const {
         if (owner->unk_014 & 1)
             return true;
 
-        if (!retail::sub_612D30((u32*)owner)) // entity::get_primary_region
+        if (!owner->get_primary_region())
             return true;
     }
 
@@ -237,7 +238,7 @@ void ai_core::frame_advance_all_core_ais(f32 delta_t) {
     retail::sub_4F5C80(delta_t);
     retail::sub_436250(delta_t);
 
-    ai_core* hero_core = (ai_core*)retail::sub_602830((u32*)references::g_world_ptr.read()->hero_ptr); // actor::get_ai_core
+    ai_core* hero_core = ((actor*)references::g_world_ptr.read()->hero_ptr)->get_ai_core();
 
     if (hero_core) {
         if (info_node* hero_targets = hero_core->get_info_node(info_node_type_combat_target))

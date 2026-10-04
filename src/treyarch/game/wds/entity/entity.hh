@@ -22,7 +22,7 @@ namespace treyarch {
         u8                                  reserved_018[0x04];
         interface_storage*                  my_ifc_storage;
         u8                                  reserved_020[0x30];
-        container::fixed_vector<region*, 8> regions; // the primary region is regions[0] (sub_612D30)
+        container::fixed_vector<region*, 8> regions;
 
         // inlined; the milestone's has_<name>_ifc()
         bool has_ifc(e_entity_ifc index) const {
@@ -43,6 +43,8 @@ namespace treyarch {
         }
 
         void invoke_render_phase();
+
+        region* get_primary_region();
     };
 
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);

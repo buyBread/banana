@@ -1,13 +1,38 @@
 #include <new>
 
 #include "retail.hh"
+#include "treyarch/app/app.hh"
+#include "treyarch/chuck/vm/script_manager.hh"
+#include "treyarch/game/frontend/frontend_manager.hh"
+#include "treyarch/game/frontend/ui_frontend.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "util/memory_reference.hh"
+
+namespace treyarch { namespace references {
+    util::memory_reference<void*> unk_010f7084 { 0x010F7084 };
+}} // treyarch::references
 
 using namespace treyarch;
 
 // sub_97FFA0
 mission_info::mission_info() {}
+
+// sub_97E2C0
+mission_info &mission_info::operator=(const mission_info &other) {
+    name                    = other.name;
+    mission_index           = other.mission_index;
+    icon                    = other.icon;
+    ped                     = other.ped;
+    key_position            = other.key_position;
+    mission_header_instance = other.mission_header_instance;
+    gen_dis_exec_name       = other.gen_dis_exec_name;
+    exec                    = other.exec;
+    retry_count             = other.retry_count;
+    unk_03c                 = other.unk_03c;
+
+    return *this;
+}
 
 // sub_97DFF0
 mission_district_info::mission_district_info() {}
@@ -68,8 +93,8 @@ mission_manager::mission_manager() {
     zoom_map_poi_selected_callback_id   = references::unk_00bb6d68.read();
     zoom_map_poi_unselected_callback_id = references::unk_00bb6d68.read();
     selected_poi_icon                   = nullptr;
-    selected_poi.icon                   = (u32)-1;
-    selected_poi.poi_index              = 0;
+    selected_poi.poi_index              = -1;
+    selected_poi.instance               = nullptr;
     unk_238                             = nullptr;
     unk_23c                             = 0;
     unk_244                             = 0.0f;
@@ -106,22 +131,22 @@ mission_manager::mission_manager() {
 
     allocation = memory::heap::allocate(sizeof(*mission_icons));
     mission_icons = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
-    retail::sub_982750((u32*)mission_icons, 0x14);
+    mission_icons->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*mission_triggers));
     mission_triggers = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
-    retail::sub_982750((u32*)mission_triggers, 0x14);
+    mission_triggers->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*mission_ped_triggers));
     mission_ped_triggers = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
-    retail::sub_982750((u32*)mission_ped_triggers, 0x14);
+    mission_ped_triggers->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*eligible_mission_instances));
-    eligible_mission_instances = allocation ? new (allocation) dinkumware::vector<void*>() : nullptr;
-    retail::sub_982DD0((u32*)eligible_mission_instances, 0x28);
+    eligible_mission_instances = allocation ? new (allocation) dinkumware::vector<const chuck::vm::script_instance*>() : nullptr;
+    eligible_mission_instances->reserve(40);
 
     allocation = memory::heap::allocate(sizeof(*auto_launch_instances));
-    auto_launch_instances = allocation ? new (allocation) dinkumware::list<void*>() : nullptr;
+    auto_launch_instances = allocation ? new (allocation) dinkumware::list<const chuck::vm::script_instance*>() : nullptr;
 
     unk_0d8[0] = 0;
     unk_0d8[1] = 0;
@@ -152,4 +177,124 @@ bool mission_manager::is_idle() const {
 // sub_97E1F0
 bool mission_manager::is_mission_running() const {
     return state == mission_manager_state_running_mission;
+}
+
+// sub_97E200
+bool mission_manager::is_mission_ready() const {
+    return flags & mission_manager_flag_mission_ready;
+}
+
+// sub_97E220
+bool mission_manager::needs_to_malor() const {
+    return flags & mission_manager_flag_need_to_malor;
+}
+
+// sub_97E230
+bool mission_manager::is_maloring() const {
+    return state == mission_manager_state_maloring_player_wait_for_blackscreen ||
+           state == mission_manager_state_maloring_player_wait_for_district;
+}
+
+// sub_97E260
+e_mission_manager_state mission_manager::get_state() const {
+    return state;
+}
+
+// sub_97E270
+chuck::vm::script_executable* mission_manager::get_running_mission_exec() const {
+    return state == mission_manager_state_running_mission ? current_mission.exec : nullptr;
+}
+
+// sub_97E320
+bool mission_manager::get_mission_caption_index(u32, i32* index) {
+    *index = -1;
+
+    return false;
+}
+
+// sub_97E330
+vector3 mission_manager::get_mission_key_position() const {
+    if (state == mission_manager_state_running_mission)
+        return current_mission.key_position;
+
+    return vector3(0.0f, 0.0f, 0.0f);
+}
+
+// sub_97E370
+i32 mission_manager::get_running_script_index() const {
+    return state == mission_manager_state_running_mission ? current_mission.mission_index : 0;
+}
+
+// sub_97E390
+const char* mission_manager::get_running_mission_name() const {
+    return state == mission_manager_state_running_mission ? current_mission.name.c_str() : nullptr;
+}
+
+// sub_97E3B0
+i32 mission_manager::get_mission_script_retry_count() const {
+    return state == mission_manager_state_running_mission ? current_mission.retry_count : 0;
+}
+
+// sub_97E3E0
+i32 mission_manager::get_current_act() const {
+    return current_act;
+}
+
+// sub_97E3F0
+i32 mission_manager::get_current_act_internal() const {
+    return act;
+}
+
+// sub_97E400
+i32 mission_manager::get_requested_act() const {
+    return requested_act;
+}
+
+// sub_97E410
+bool mission_manager::is_act_transitioning() const {
+    return act_transition_state != 0;
+}
+
+// sub_9803F0
+bool mission_manager::has_auto_launch_instances() const {
+    return auto_launch_instances && auto_launch_instances->size();
+}
+
+// sub_980540
+i32 mission_manager::get_total_times_script_has_been_successfully_completed() const {
+    if (state == mission_manager_state_running_mission)
+        return (i32)mission_vars[current_mission.mission_index];
+
+    return -1;
+}
+
+// sub_97FA30
+void mission_manager::play_open_city_music() {
+    // script_manager::find_shared_var
+    f32* music_in_mission = ((f32* (__thiscall*)
+                            (chuck::vm::script_manager*, const char*))retail::sub_A1A220)
+                            (&chuck::vm::script_manager::get(), "g_music_in_mission");
+
+    if (!(*music_in_mission > 0.0f))
+        return;
+
+    string_hash function_name;
+    function_name.initialize(mash::ALLOCATED, "music_enable_city_music()");
+
+    i32 call = ((i32 (__cdecl*)
+               (string_hash, void*, i32))retail::sub_842DD0)
+               (function_name, references::unk_010f7084.read(), 0);
+    retail::sub_824FB0(call, 1);
+}
+
+// sub_97E290
+void mission_manager::unpause_and_notify_frontend() {
+    game* the_game = references::game.read();
+
+    if (the_game->game_paused)
+        retail::sub_97BB70((i32)the_game); // game::unpause_action
+
+    void* widget = references::frontend.get().igo->unknown_widget_174;
+
+    ((void (__thiscall*)(void*))(*(void***)widget)[0xD8 / 4])(widget); // slot 54
 }

@@ -22,7 +22,7 @@ using namespace treyarch;
 
 // sub_7973D0
 void game_data::read_notifications() {
-    soap::notification_list* notifications = ((soap::notification_manager*)retail::sub_9EF540())->notifications();
+    soap::notification_list* notifications = soap::notification_manager::inst()->notifications();
 
     for (i32* notification = notifications->begin(); notification != notifications->end(); ++notification) {
         if (*notification == 0)
@@ -40,20 +40,20 @@ void game_data::frame_advance() {
         m->online_context_set = 1;
 
         if (soap::references::enable_online.read()) {
-            retail::sub_9EB5D0((u32*)retail::sub_9ED060(), 1, 4); // online::set_context
-            ((soap::online*)retail::sub_9ED060())->method_024(0);
+            retail::sub_9EB5D0((u32*)soap::online::inst(), 1, 4); // online::set_context
+            soap::online::inst()->method_024(0);
         }
     }
 
-    auto* boxes = (soap::message_box_manager*)retail::sub_9EEC20();
+    auto* boxes = soap::message_box_manager::inst();
 
     if (m->blocked_by_notification || boxes->is_box_showing())
         return;
 
-    if (((soap::profile*)retail::sub_9ED670())->busy())
+    if (soap::profile::inst()->busy())
         return;
 
-    if (((soap::storage*)retail::sub_9EDA50())->busy())
+    if (soap::storage::inst()->busy())
         return;
 
     if (m->saving_or_loading) {
@@ -63,10 +63,10 @@ void game_data::frame_advance() {
         m->request_outstanding = 0;
 
         if (m->created_new_slot) {
-            ((soap::storage*)retail::sub_9EDA50())->method_048();
+            soap::storage::inst()->method_048();
 
             for (i32 slot = 0; slot < 4; ++slot) {
-                soap::storage_article* article = ((soap::storage*)retail::sub_9EDA50())->article(0, slot);
+                soap::storage_article* article = soap::storage::inst()->article(0, slot);
 
                 if ((u8)retail::sub_9ED910((u32*)article)) // article state is 3
                     m->slot_status[slot] = 3;
@@ -77,13 +77,13 @@ void game_data::frame_advance() {
     }
 
     if (m->state != game_data_state_idle) {
-        if (((soap::storage*)retail::sub_9EDA50())->must_show_active_device_unavailable) {
+        if (soap::storage::inst()->must_show_active_device_unavailable) {
             boxes->show(soap::message_box_storage_active_device_unavailable);
 
             m->state        = game_data_state_device_unavailable;
             m->request_kind = game_data_request_enumerate;
 
-            ((soap::storage*)retail::sub_9EDA50())->set_must_show_active_device_unavailable(false);
+            soap::storage::inst()->set_must_show_active_device_unavailable(false);
         } else
             retail::sub_79CAF0((u32*)this); // one step of the state machine
 
@@ -94,7 +94,7 @@ void game_data::frame_advance() {
         retail::sub_77C8C0((u32*)this, m->requested_slot, 1); // the load request
 
     if (m->waiting_for_result) {
-        if (((soap::storage*)retail::sub_9EDA50())->test_04c()) {
+        if (soap::storage::inst()->test_04c()) {
             m->waiting_for_result = 0;
             m->request_kind       = game_data_request_plain;
         } else {
@@ -133,7 +133,7 @@ void game_data::frame_advance() {
     }
 
     // state 8 fills in the level name before a level loads
-    if (((soap::storage*)retail::sub_9EDA50())->must_show_active_device_unavailable &&
+    if (soap::storage::inst()->must_show_active_device_unavailable &&
         (i32)references::game.read()->get_cur_state() != 8) {
 
         bool open_scrapbook = true;
@@ -220,13 +220,13 @@ void treyarch::frame_advance_soap(game_data* data) {
         retail::sub_9EDF60(); // the message box and notification managers' frame_advance
 
         if (soap::references::enable_profiles.read())
-            ((soap::profile*)retail::sub_9ED670())->frame_advance();
+            soap::profile::inst()->frame_advance();
 
         if (soap::references::enable_storage.read())
-            ((soap::storage*)retail::sub_9EDA50())->frame_advance();
+            soap::storage::inst()->frame_advance();
 
         if (soap::references::enable_online.read())
-            ((soap::online*)retail::sub_9ED060())->frame_advance();
+            soap::online::inst()->frame_advance();
     }
 
     data->frame_advance();

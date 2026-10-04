@@ -23,6 +23,7 @@
 #include "treyarch/game/summon_state.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/camera/camera.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/zombie_manager.hh"
@@ -41,7 +42,6 @@ namespace treyarch { namespace references {
     util::memory_reference<string_hash> last_selected_zoom_map_destination_long { 0x0102CC10 };
     util::memory_reference<string_hash> unk_0102c498                            { 0x0102C498 };
     util::memory_reference<string_hash> unk_0102cc20                            { 0x0102CC20 };
-    util::memory_reference<string_hash> unk_011117c4                            { 0x011117C4 };
 
     util::memory_reference<u8> unk_00be7455 { 0x00BE7455 };
     util::memory_reference<u8> unk_0102fed8 { 0x0102FED8 };
@@ -64,22 +64,22 @@ void mission_manager::process_state_initial_startup(f32 time_inc) {
     startup_timer  = 1.0f;
     state          = mission_manager_state_idle;
 
-    retail::sub_983F30((i32)this); // update_eligible_missions
+    update_eligible_missions();
 
     while (flags & mission_manager_flag_unk_00200000)
-        retail::sub_983F30((i32)this);
+        update_eligible_missions();
 
     if (zoom_map_poi_selected_callback_id == references::unk_00bb6d68.read())
         zoom_map_poi_selected_callback_id = event_manager::add_callback(references::zoom_map_poi_selected.read(),
                                                                         arch_base_vhandle(),
-                                                                        (code_event_callback_function)retail::sub_984190,
+                                                                        on_zoom_map_poi_selected,
                                                                         nullptr,
                                                                         false);
 
     if (zoom_map_poi_unselected_callback_id == references::unk_00bb6d68.read())
         zoom_map_poi_unselected_callback_id = event_manager::add_callback(references::zoom_map_poi_unselected.read(),
                                                                           arch_base_vhandle(),
-                                                                          (code_event_callback_function)retail::sub_97FB80,
+                                                                          on_zoom_map_poi_unselected,
                                                                           nullptr,
                                                                           false);
 
@@ -131,7 +131,7 @@ void mission_manager::process_state_idle(f32 time_inc) {
     if ((!((i32)state_timer % 30) || (flags & mission_manager_flag_unk_00200000)) &&
         !(flags & mission_manager_flag_mission_ready)) {
 
-        retail::sub_983F30((i32)this); // update_eligible_missions
+        update_eligible_missions();
         state_timer = 0.0f;
     }
 
@@ -166,31 +166,32 @@ void mission_manager::process_state_idle(f32 time_inc) {
 
     if (idle_event_cooldown > 0.0f && !auto_launch_instances->size()) {
         if (!(flags & mission_manager_flag_mission_ready)) {
-            retail::sub_983E40((i32)this);
+            update_mission_icons();
 
             return;
         }
     } else if (!(flags & mission_manager_flag_mission_ready)) {
         if (auto_launch_instances->size()) {
-            void* instance = auto_launch_instances->begin()->value;
+            const chuck::vm::script_instance* instance = auto_launch_instances->begin()->value;
 
             retail::sub_5A85E0((u32*)auto_launch_instances); // pop_front
-            retail::sub_9821E0((u32*)this, (i32)instance);   // launch it
+            launch_auto_launch_instance(instance);
         } else {
-            retail::sub_983E40((i32)this);
-            retail::sub_985D60((u32*)this);
+            update_mission_icons();
+            check_mission_triggers();
         }
     }
 
     if (flags & mission_manager_flag_mission_ready) {
-        retail::sub_97E2C0((i32)&current_mission, (i32)&next_mission); // mission_info assignment
+        current_mission = next_mission;
 
         state = mission_manager_state_start_loading;
 
         if (flags & mission_manager_flag_using_icon) {
-            u32 header_flags = *(u32*)(current_mission.mission_header_instance->data.buffer + 0x3C);
+            u32 header_flags = ((mission_header_instance_base*)current_mission.mission_header_instance->data.buffer)->flags;
 
-            if ((!(header_flags & 0x4000) && !(header_flags & 0x2000000)) || (flags & mission_manager_flag_unk_08000000))
+            if ((!(header_flags & mission_header_flag_unk_00004000) && !(header_flags & mission_header_flag_unk_02000000)) ||
+                (flags & mission_manager_flag_unk_08000000))
                 state = mission_manager_state_blackscreen_on;
         }
 
@@ -199,14 +200,14 @@ void mission_manager::process_state_idle(f32 time_inc) {
     }
 
     if (unk_295) {
-        retail::sub_97E290();
+        unpause_and_notify_frontend();
         unk_295 = 0;
     }
 }
 
 // sub_984960
 void mission_manager::process_state_start_loading() {
-    retail::sub_983E40((i32)this);
+    update_mission_icons();
 
     if (references::summon_state.read()) {
         retail::sub_90FC00(references::summon_state.read());
@@ -234,7 +235,7 @@ void mission_manager::process_state_start_loading() {
     if (act_transition_state)
         return;
 
-    i32 mission_act = retail::sub_97EE80((u32*)this, (i32)&current_mission);
+    i32 mission_act = get_mission_act(current_mission);
 
     if (mission_act != -1 && mission_act != act) {
         if (act_transition_state)
@@ -268,24 +269,24 @@ void mission_manager::process_state_start_loading() {
 
     retail::sub_7F09B0((u32*)references::quest_manager.read(), (i32)&current_mission);
 
-    i32 presence = ((soap::online*)retail::sub_9ED060())->unk_02c;
+    i32 presence = soap::online::inst()->unk_02c;
 
     if (flags & mission_manager_flag_mission_ready) {
         i32 context = retail::sub_7342C0(1, current_mission.mission_index);
 
         if (context == -1) {
-            retail::sub_9EB5D0((u32*)retail::sub_9ED060(), 1, 3); // online::set_context
+            retail::sub_9EB5D0((u32*)soap::online::inst(), 1, 3); // online::set_context
 
             presence = 0;
         } else {
-            retail::sub_9EB5D0((u32*)retail::sub_9ED060(), 2, current_act);
-            retail::sub_9EB5D0((u32*)retail::sub_9ED060(), 5, context);
+            retail::sub_9EB5D0((u32*)soap::online::inst(), 2, current_act);
+            retail::sub_9EB5D0((u32*)soap::online::inst(), 5, context);
 
             presence = 2;
         }
     }
 
-    ((soap::online*)retail::sub_9ED060())->method_024(presence);
+    soap::online::inst()->method_024(presence);
 
     if (references::unk_0102fed8.read())
         flags |= mission_manager_flag_unk_00020000;
@@ -301,12 +302,12 @@ void mission_manager::process_state_start_loading() {
     saved_game_time_rate = game_time_rate;
 
     if (flags & mission_manager_flag_mission_ready) {
-        if (*(u32*)(next_mission.mission_header_instance->data.buffer + 0x3C) & 0x4000000)
+        if (((mission_header_instance_base*)next_mission.mission_header_instance->data.buffer)->flags & mission_header_flag_unk_04000000)
             flags |= mission_manager_flag_unk_00400000;
         else
             flags &= ~mission_manager_flag_unk_00400000;
 
-        retail::sub_97FA90((u32*)this, 1);
+        clear_selected_poi(true);
     }
 
     state = mission_manager_state_loading;
@@ -314,15 +315,15 @@ void mission_manager::process_state_start_loading() {
 
 // sub_984C90
 void mission_manager::process_state_loading() {
-    retail::sub_983E40((i32)this);
+    update_mission_icons();
 
     if (retail::sub_824870((u32*)amalga::resource_manager::references::unk_010f7760.read(), 3))
         return;
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (hero && retail::sub_602830((u32*)hero)) { // actor::get_ai_core
-        auto* node = (u32*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(info_node_type_std_carry);
+    if (hero && ((actor*)hero)->get_ai_core()) {
+        auto* node = (u32*)((actor*)hero)->get_ai_core()->get_info_node(info_node_type_std_carry);
 
         if (node && retail::sub_425020(node))
             retail::sub_4BA230(node, 0, 1);
@@ -365,10 +366,7 @@ void mission_manager::process_state_loading() {
         state  = mission_manager_state_running_mission;
     }
 
-    // checkpoint registry save
-    ((void (__thiscall*)
-    (mission_manager*, const vector3*, vector3))retail::sub_97EA50)
-    (this, &hero->my_abs_po->get_position(), hero->my_abs_po->matrix.z_row());
+    save_player_restart(hero->my_abs_po->get_position(), hero->my_abs_po->matrix.z_row());
 }
 
 // sub_97EF50
@@ -419,7 +417,7 @@ void mission_manager::process_state_unk_5() {
 
     unk_240 = string_hash();
 
-    retail::sub_97FA30(); // city music
+    play_open_city_music();
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
@@ -434,7 +432,7 @@ void mission_manager::process_state_unk_5() {
     }
 
     hero_reference_position = hero->my_abs_po->get_position();
-    hero_region             = (void*)retail::sub_612D30((u32*)hero);
+    hero_region             = hero->get_primary_region();
 
     if ((f64)hero_reference_position.y > 25.0)
         leave_radius_squared = 122500.0f;
@@ -472,7 +470,7 @@ void mission_manager::process_state_unk_6() {
             state = mission_manager_state_start_unloading;
     }
 
-    retail::sub_983E40((i32)this);
+    update_mission_icons();
 }
 
 // sub_985000
@@ -490,7 +488,7 @@ void mission_manager::process_state_start_unloading() {
     if (!(flags & mission_manager_flag_mission_ready)) {
         unk_240 = string_hash();
 
-        retail::sub_97FA30(); // city music
+        play_open_city_music();
     }
 
     {
@@ -509,7 +507,7 @@ void mission_manager::process_state_start_unloading() {
             retail::sub_A1C2D0((u32*)&scripts, (i32*)&exec_name, 1, 0);
     }
 
-    retail::sub_983F30((i32)this); // update_eligible_missions
+    update_eligible_missions();
 
     app::get().get_game()->unk_078 = 0;
 
@@ -543,9 +541,9 @@ void mission_manager::process_state_start_unloading() {
     for (; saved_script_hero_suspend_count > 0; --saved_script_hero_suspend_count)
         ((void (__thiscall*)(entity*, i32))hero->vtable[0x1D4 / 4])(hero, 1);
 
-    if (retail::sub_602830((u32*)hero)) { // actor::get_ai_core
+    if (((actor*)hero)->get_ai_core()) {
         for (; saved_script_hero_ai_disable_count > 0; --saved_script_hero_ai_disable_count)
-            retail::sub_4DF4B0((i32*)retail::sub_602830((u32*)hero), 1);
+            retail::sub_4DF4B0((i32*)((actor*)hero)->get_ai_core(), 1);
     }
 
     for (; saved_script_hero_invulnerable_count > 0; --saved_script_hero_invulnerable_count)
@@ -561,7 +559,7 @@ void mission_manager::process_state_start_unloading() {
 
         if (hero) {
             hero_reference_position = hero->my_abs_po->get_position();
-            hero_region             = (void*)retail::sub_612D30((u32*)hero);
+            hero_region             = hero->get_primary_region();
 
             flags |= mission_manager_flag_unk_00004000 | mission_manager_flag_unk_00008000;
         } else {
@@ -576,7 +574,7 @@ void mission_manager::process_state_start_unloading() {
 
 // sub_9853B0
 void mission_manager::process_state_unloading() {
-    retail::sub_983E40((i32)this);
+    update_mission_icons();
 
     flags |= mission_manager_flag_unk_02000000;
 
@@ -639,8 +637,8 @@ void mission_manager::process_state_unloading() {
         if (header && !current_mission.gen_dis_exec_name.size()) {
             string_hash parent_name;
 
-            if (*(string_hash*)retail::sub_5FD120((u32*)header->parent, (u32*)&parent_name) == references::unk_011117c4.read() &&
-                (header->data.buffer[0x3F] & 1))
+            if (*(string_hash*)retail::sub_5FD120((u32*)header->parent, (u32*)&parent_name) == references::mission_header_instance_base_name.read() &&
+                (((mission_header_instance_base*)header->data.buffer)->flags & mission_header_flag_unk_01000000))
 
                 end_fade = false;
         }
@@ -658,9 +656,9 @@ void mission_manager::process_state_unloading() {
 void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
     retail::sub_789BA0((u32*)references::g_world_ptr.read()->the_terrain);
 
-    malor_region = (void*)retail::sub_7A7400((i32*)references::g_world_ptr.read()->the_terrain,
-                                             (i32)&player_restart_position,
-                                             1);
+    malor_region = (region*)retail::sub_7A7400((i32*)references::g_world_ptr.read()->the_terrain,
+                                               (i32)&player_restart_position,
+                                               1);
 
     retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)&player_restart_position, 0, 1);
 
@@ -705,7 +703,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 void mission_manager::process_state_maloring_player_wait_for_district() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (!(*((u8*)hero + 0x14) & 1) && retail::sub_612D30((u32*)hero) && retail::sub_77BF80())
+    if (!(hero->unk_014 & 1) && hero->get_primary_region() && retail::sub_77BF80())
         ++malor_wait_frames;
     else
         malor_wait_frames = 0;
@@ -779,9 +777,14 @@ void mission_manager::process_state_start_mission_failed_dialog() {
         dialog->method_0e4()(dialog, mash::string(""));
     } else {
         dialog->method_0d8(311);
-        dialog->method_0e4()(dialog, ((mash::string (__thiscall*)
-                                      (void*))retail::sub_687300)
-                                      (retail::sub_7685B0()));
+
+        // constructs the name into the given slot; a by-value return cast would swap the slot and this
+        alignas(mash::string) u8 name[sizeof(mash::string)];
+        ((mash::string* (__thiscall*)(void*, void*))retail::sub_687300)(retail::sub_7685B0(), name);
+
+        dialog->method_0e4()(dialog, *(mash::string*)name);
+
+        ((mash::string*)name)->~string();
     }
 
     dialog->unk_22c = 0;
@@ -836,7 +839,7 @@ void mission_manager::process_state_blackscreen_on() {
 
     state_timer = 0.0f;
 
-    retail::sub_97FA90((u32*)this, 1);
+    clear_selected_poi(true);
 
     state = mission_manager_state_wait_for_blackscreen_on;
 }

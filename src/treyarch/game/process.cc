@@ -239,9 +239,9 @@ void game::advance_state_paused(f32 time_inc) {
     // the same sequence as frame_advance_soap, minus its soap switches
     retail::sub_9EDF60(); // the message box and notification managers' frame_advance
 
-    ((soap::profile*)retail::sub_9ED670())->frame_advance();
-    ((soap::storage*)retail::sub_9EDA50())->frame_advance();
-    ((soap::online*)retail::sub_9ED060())->frame_advance();
+    soap::profile::inst()->frame_advance();
+    soap::storage::inst()->frame_advance();
+    soap::online::inst()->frame_advance();
 
     data->frame_advance();
 
