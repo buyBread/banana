@@ -9,14 +9,11 @@ namespace treyarch { namespace mash {
     class mash_virtual_base {
 
     public:
-        // order matters here; retail calls these by the offsets documented in the mash notes
-        virtual void construct_mashed_class() {}
-        virtual void destruct_mashed_class() {}
-
                  mash_virtual_base() = default;
         explicit mash_virtual_base(generating_vtable_version) {}
         virtual ~mash_virtual_base() = default;
-
+        virtual void construct_mashed_class() {}
+        virtual void destruct_mashed_class() {}
         virtual void unmash(mash_info_struct*, void*, buffer_type) {}
         virtual virtual_types_key get_virtual_type_key() const;
         virtual void copy_values(const mash_virtual_base* other);
