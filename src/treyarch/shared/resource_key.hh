@@ -8,6 +8,12 @@ namespace treyarch {
     struct resource_key {
         string_hash hash;
         u32         type;
+
+        // sub_72DDE0
+        void set(string_hash value, u32 resource_type) {
+            hash = value;
+            type = resource_type;
+        }
     };
 
     ASSERT_SIZEOF  (resource_key,       0x08);

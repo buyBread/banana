@@ -15,9 +15,8 @@ namespace treyarch {
     ASSERT_SIZEOF(frame_delta_history, 0x3C);
 
     namespace references {
-        util::memory_reference<frame_delta_history> delta_history      { 0x00F4D0E0 };
-        util::memory_reference<void*>               raw_delta_consumer { 0x010F9BEC };
-        util::memory_reference<i32>                 frame_delta_index  { 0x01111398 };
+        util::memory_reference<frame_delta_history> delta_history     { 0x00F4D0E0 };
+        util::memory_reference<i32>                 frame_delta_index { 0x01111398 };
 
         // static data only read by frame_advance_level: 1 and 0 respectively
         util::memory_reference<u8> unk_00b88707 { 0x00B88707 };

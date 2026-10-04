@@ -272,11 +272,6 @@ namespace treyarch {
         if (!util::redirect_rel32(0x006ABC12, { 0xE8, 0xE9, 0xE8, 0x32, 0x00 }, &ngl::present))
             FATAL_BREAKPOINT();
 
-        banana::log.msg("redirecting game::clear_screen (load_this_level)");
-
-        if (!util::redirect_rel32(0x0097B495, { 0xE8, 0x76, 0xFB, 0xFF, 0xFF }, &game::clear_screen))
-            FATAL_BREAKPOINT();
-
         banana::log.msg("redirecting level_load_stuff lifecycle");
 
         if (!util::redirect_rel32(0x0097DFD6, { 0xE8, 0x65, 0xCC, 0xFF, 0xFF }, &util::thunk::dtor<level_load_stuff>::invoke) ||

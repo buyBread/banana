@@ -65,10 +65,7 @@ void app::tick() {
 
     ngl::present();
 
-    /*
-        mega dead ad client here;
-        no reason to include that dumb vtable thingamajig calling.
-    */
+    // dead ad client
 
     retail::sub_8FDF00(0, 1);
 

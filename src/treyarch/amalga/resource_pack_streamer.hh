@@ -51,13 +51,17 @@ namespace treyarch { namespace amalga {
         void finish_streaming();
 
         void flush(flush_callback callback, f32 callback_interval);
+        void flush(flush_callback callback);
 
         void load(const char* pack_name, i32 slot_idx);
         void load_internal(const char* pack_name, i32 slot_idx, resource_pack_slot_callback callback);
         void finish_data_read();
 
+        void unload_all();
+
         resource_pack_slot* find_loaded_pack(const resource_key &pack_name, resource_partition* partition_to_search);
 
+        bool is_idle() const;
         bool all_slots_idle() const;
     };
 

@@ -129,6 +129,11 @@ void amalga::resource_pack_streamer::flush(flush_callback callback, f32 callback
     }
 }
 
+// sub_76F6A0
+void amalga::resource_pack_streamer::flush(flush_callback callback) {
+    flush(callback, 0.02f);
+}
+
 // sub_76F200
 void amalga::resource_pack_streamer::load(const char* pack_name, i32 slot_idx) {
     string_hash name_hash;
@@ -334,6 +339,28 @@ amalga::resource_pack_slot* amalga::resource_pack_streamer::find_loaded_pack(con
         else
             return nullptr;
     }
+}
+
+// sub_74D9F0
+void amalga::resource_pack_streamer::unload_all() {
+    load_queue.clear();
+
+    for (u32 index = 0; index < pack_slots->size(); ++index) {
+        resource_pack_slot* slot = (*pack_slots)[index];
+
+        if (slot->slot_state != slot_state_ready)
+            continue;
+
+        if (slot->my_callback)
+            slot->my_callback(callback_pre_destruct, &slot->my_partition->streamer, slot, nullptr);
+
+        slot->slot_state = slot_state_destructing;
+    }
+}
+
+// sub_74DAB0
+bool amalga::resource_pack_streamer::is_idle() const {
+    return !currently_streaming && !load_queue.size() && all_slots_idle();
 }
 
 // sub_74DA80

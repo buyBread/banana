@@ -16,6 +16,13 @@ namespace treyarch { namespace soap {
         message_box_storage_savedata_exists
     };
 
+    // what game::one_time_init_stuff builds through sub_97D790; the third label is always empty
+    struct message_box_definition {
+        wchar_t title[64];
+        wchar_t text[256];
+        wchar_t labels[3][32];
+    };
+
     class message_box_manager;
 
     using message_box_manager_test = bool (__thiscall*)(message_box_manager* self);
@@ -41,6 +48,10 @@ namespace treyarch { namespace soap {
             return vtable->show(this, box);
         }
     };
+
+    ASSERT_SIZEOF  (message_box_definition,         0x340);
+    ASSERT_OFFSETOF(message_box_definition, text,   0x080);
+    ASSERT_OFFSETOF(message_box_definition, labels, 0x280);
 
     ASSERT_OFFSETOF(message_box_manager_vtable, is_box_showing, 0x08);
     ASSERT_OFFSETOF(message_box_manager_vtable, show,           0x10);

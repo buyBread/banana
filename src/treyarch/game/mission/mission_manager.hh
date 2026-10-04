@@ -251,6 +251,9 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<mission_manager*> mission_manager { 0x01111760 };
 
+        // seeds mission_manager::current_act
+        inline util::memory_reference<i32> global_act { 0x0111186C };
+
         // .rdata 0; the unset value of the zoom-map callback ids
         inline util::memory_reference<u32> unk_00bb6d68 { 0x00BB6D68 };
 

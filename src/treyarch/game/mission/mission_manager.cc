@@ -4,12 +4,6 @@
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/shared/memory/heap.hh"
 
-namespace treyarch {
-    namespace references {
-        util::memory_reference<i32> global_act { 0x0111186C };
-    } // references
-} // treyarch
-
 using namespace treyarch;
 
 // sub_97FFA0

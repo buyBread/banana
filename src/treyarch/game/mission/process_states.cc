@@ -536,7 +536,7 @@ void mission_manager::process_state_start_unloading() {
     retail::sub_7A4CE0(references::g_world_ptr.read()->the_terrain);
 
     for (; saved_script_hero_frozen_count > 0; --saved_script_hero_frozen_count)
-        retail::sub_97BD40((u32*)references::game.read(), 0); // game::freeze_hero
+        references::game.read()->freeze_hero(false);
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 

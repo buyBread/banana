@@ -43,6 +43,10 @@ namespace treyarch {
             return get_vtable()->is_enabled(this);
         }
 
+        void set_enabled(bool value) {
+            get_vtable()->set_enabled(this, value);
+        }
+
         void render_phase() {
             get_vtable()->render_phase(this);
         }

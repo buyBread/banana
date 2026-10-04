@@ -15,6 +15,8 @@ namespace treyarch { namespace chuck { namespace script_library {
 
     public:
         dinkumware::vector<script_library_class*>* classes; // registration order; looked up by index (sub_A20F90)
+
+        static void destroy();
     };
 
     ASSERT_SIZEOF(slc_manager, 0x04);

@@ -24,8 +24,6 @@ namespace treyarch {
         // the milestone logs these two as "username" and "email" right after reading DEBUG\HOST.INI
         util::memory_reference<mash::string> username { 0x00FC3284 };
         util::memory_reference<mash::string> email    { 0x00FC3350 };
-
-        util::memory_reference<void*> unk_010fa26c { 0x010FA26C };
     } // references
 } // treyarch
 

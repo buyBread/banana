@@ -16,6 +16,7 @@ namespace treyarch { namespace soap {
 
     class storage;
 
+    using storage_initialize  = void             (__thiscall*)(storage* self, i32 article_count, i32 unk, i32 payload_size);
     using storage_method      = void             (__thiscall*)(storage* self);
     using storage_query       = i32              (__thiscall*)(storage* self);
     using storage_test        = bool             (__thiscall*)(storage* self);
@@ -23,7 +24,8 @@ namespace treyarch { namespace soap {
     using storage_flag_set    = void             (__thiscall*)(storage* self, bool value);
 
     struct storage_vtable {
-        void*               reserved_000[5]; // attach, detach, notify, destructor, initialize
+        void*               reserved_000[4]; // attach, detach, notify, destructor
+        storage_initialize  initialize;
         storage_method      frame_advance;
         storage_query       busy;            // the pending service
         void*               reserved_01c[6];
@@ -41,6 +43,10 @@ namespace treyarch { namespace soap {
         u8              reserved_004[0x18];
         bool            must_show_error_box;
         bool            must_show_active_device_unavailable;
+
+        void initialize(i32 article_count, i32 unk, i32 payload_size) {
+            vtable->initialize(this, article_count, unk, payload_size);
+        }
 
         void frame_advance() {
             vtable->frame_advance(this);
@@ -72,6 +78,7 @@ namespace treyarch { namespace soap {
     ASSERT_OFFSETOF(storage_article, name,         0x28);
     ASSERT_OFFSETOF(storage_article, display_name, 0x34);
 
+    ASSERT_OFFSETOF(storage_vtable, initialize,                              0x10);
     ASSERT_OFFSETOF(storage_vtable, frame_advance,                           0x14);
     ASSERT_OFFSETOF(storage_vtable, busy,                                    0x18);
     ASSERT_OFFSETOF(storage_vtable, article,                                 0x34);

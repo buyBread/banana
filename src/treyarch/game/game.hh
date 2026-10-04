@@ -11,7 +11,7 @@
 #include "util/memory_reference.hh"
 
 namespace treyarch {
-    struct level_descriptor; // impl?
+    struct level_descriptor;
     class game_data;
     class localized_string_table; // impl?
     class message_board; // impl?
@@ -28,6 +28,25 @@ namespace treyarch {
 
         // freed and cleared by game::advance_state_legal
         inline util::memory_reference<void*> unk_00fc64ec { 0x00FC64EC };
+
+        // set by game::load_this_level; cleared by game::unload_current_level
+        inline util::memory_reference<void*> unk_00fc7a90 { 0x00FC7A90 };
+
+        // game::frame_advance hands it the raw delta every frame
+        inline util::memory_reference<void*> raw_delta_consumer { 0x010F9BEC };
+
+        // the 0x8DC-byte object game::game creates through sub_83EF20
+        inline util::memory_reference<void*> unk_010f7074 { 0x010F7074 };
+
+        inline util::memory_reference<void*> unk_0102ce40 { 0x0102CE40 };
+
+        // app::app allocates 8 raw bytes here; game::load_this_level hands it to sub_90FCB0
+        inline util::memory_reference<void*> unk_010fa26c { 0x010FA26C };
+
+        // set by game::unload_current_level once the new world exists
+        inline util::memory_reference<u32> unk_00f4cd30 { 0x00F4CD30 };
+
+        inline util::memory_reference<u8> unk_010769cc { 0x010769CC };
     } // references
 
     struct game_frame_timing {
@@ -73,7 +92,8 @@ namespace treyarch {
         u8                reserved_02c[0x04];
         hires_clock_t     level_clock;
         u8                load_widgets_created;
-        u8                reserved_039[0x07];
+        u8                reserved_039[0x03];
+        i32               unk_03c; // a loading stage the frontend's frame_advance gets
         u8                load_complete_called;
         u8                load_this_level_finished;
         u8                reserved_042[0x06];
@@ -82,6 +102,9 @@ namespace treyarch {
        ~level_load_stuff() = default;
 
         void reset_level_load_data();
+        void construct_loading_widgets();
+        void destroy_loading_widgets();
+        void look_up_level_descriptor();
     };
 
     class game {
@@ -128,7 +151,8 @@ namespace treyarch {
         f32                              current_frame_delta;
         game_data*                       data;
         f32                              blur;
-        u8                               reserved_1c4[0x08];
+        f32                              unk_1c4;
+        f32                              unk_1c8;
         u8                               unk_1cc;
         u8                               unk_1cd;
         u8                               unk_1ce;
@@ -143,11 +167,21 @@ namespace treyarch {
 
         void handle_game_states(f32* time_inc);
         void advance_state_legal(f32 time_inc);
+        void advance_state_unk_2(f32 time_inc);
+        void advance_state_load_level(f32 time_inc);
         void advance_state_running(f32 time_inc);
         void advance_state_paused(f32 time_inc);
         void advance_state_credits(f32 time_inc);
         void soft_reset_process();
+        void frame_advance_frontend(f32 time_inc);
         void frame_advance_game_overlays(f32 time_inc);
+
+        void one_time_init_stuff();
+        void load_this_level(bool start_only, bool finish_only);
+        void unload_current_level();
+        static void load_complete();
+
+        void freeze_hero(bool freeze);
 
         camera_handle get_current_view_camera();
         
@@ -181,6 +215,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(level_load_stuff, loading_meter_val,        0x28);
     ASSERT_OFFSETOF(level_load_stuff, level_clock,              0x30);
     ASSERT_OFFSETOF(level_load_stuff, load_widgets_created,     0x38);
+    ASSERT_OFFSETOF(level_load_stuff, unk_03c,                  0x3C);
     ASSERT_OFFSETOF(level_load_stuff, load_complete_called,     0x40);
     ASSERT_OFFSETOF(level_load_stuff, load_this_level_finished, 0x41);
 
@@ -214,5 +249,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(game, current_frame_delta,             0x1B8);
     ASSERT_OFFSETOF(game, data,                            0x1BC);
     ASSERT_OFFSETOF(game, blur,                            0x1C0);
+    ASSERT_OFFSETOF(game, unk_1c4,                         0x1C4);
+    ASSERT_OFFSETOF(game, unk_1c8,                         0x1C8);
     ASSERT_OFFSETOF(game, unk_1cc,                         0x1CC);
 }

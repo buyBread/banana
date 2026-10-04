@@ -61,6 +61,15 @@ namespace treyarch {
         inline game* get_game() {
             return this->the_game;
         }
+
+        inline void* get_arch_base() {
+            return &this->arch_base_vtable;
+        }
+
+        void skip_some_frames(i32 count) {
+            if (count >= 0)
+                frames_to_skip += count;
+        }
     };
 
     ASSERT_SIZEOF(treyarch::app, 0x20);

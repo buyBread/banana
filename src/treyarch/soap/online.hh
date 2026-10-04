@@ -10,7 +10,8 @@ namespace treyarch { namespace soap {
     using online_method_arg = void (__thiscall*)(online* self, i32 unk);
 
     struct online_vtable {
-        void*             reserved_000[5]; // subject's attach, detach, notify, the deleting destructor, initialize
+        void*             reserved_000[4]; // subject's attach, detach, notify, the deleting destructor
+        online_method     initialize;
         online_method     frame_advance;
         void*             reserved_018[3];
         online_method_arg method_024;      // nullsub on pc; called with 0 right after context writes
@@ -23,6 +24,10 @@ namespace treyarch { namespace soap {
         u8             reserved_004[0x28];
         i32            unk_02c;
 
+        void initialize() {
+            vtable->initialize(this);
+        }
+
         void frame_advance() {
             vtable->frame_advance(this);
         }
@@ -32,6 +37,7 @@ namespace treyarch { namespace soap {
         }
     };
 
+    ASSERT_OFFSETOF(online_vtable, initialize,    0x10);
     ASSERT_OFFSETOF(online_vtable, frame_advance, 0x14);
     ASSERT_OFFSETOF(online_vtable, method_024,    0x24);
 

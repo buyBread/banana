@@ -18,6 +18,10 @@ namespace util {
             *(T**)address = instance;
         }
 
+        static T* instance() {
+            return *(T**)address;
+        }
+
     public:
         singleton_external           (const singleton_external&) = delete;
         singleton_external& operator=(const singleton_external&) = delete;

@@ -4,6 +4,7 @@
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace script_library {
@@ -27,7 +28,16 @@ namespace treyarch { namespace chuck { namespace script_library {
         dinkumware::vector
             <script_library_function*>* functions;   // registration order
         const char*                     parent_name;
+
+        u32 find_instance(const mash::string &name) const {
+            return vtable->find_instance(this, name);
+        }
     };
+
+    namespace references {
+        inline util::memory_reference<script_library_class*> slc_entity            { 0x010F70A4 };
+        inline util::memory_reference<script_library_class*> slc_script_controller { 0x010F70B8 };
+    } // references
 
     ASSERT_SIZEOF(script_library_class_vtable, 0x08);
 
