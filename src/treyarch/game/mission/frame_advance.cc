@@ -3,6 +3,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/dinkumware/list.hh"
@@ -173,16 +174,7 @@ void mission_manager::frame_advance(f32 time_inc) {
 void mission_manager::update_hero_proximity_event() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    u8* unk_object = (u8*)retail::sub_602830((u32*)hero);
-    u8* container  = *(u8**)(unk_object + 0x684);
-    u8* owner      = nullptr;
-
-    if (container) {
-        u32 mask = *(u32*)(unk_object + 0x688);
-
-        if (mask & 0x40000000)
-            owner = (*(u8***)(container + 8))[retail::sub_401F50(mask & 0x3FFFFFFF)];
-    }
+    auto* owner = (u8*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(30); // actor::get_ai_core
 
     engine_recursive_lock &lock = *(engine_recursive_lock*)(owner + 0x98);
 

@@ -17,7 +17,11 @@
 #include "treyarch/game/glass_house_manager.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/quest_manager.hh"
+#include "treyarch/game/region_pack_manager.hh"
 #include "treyarch/game/region_spawn_manager.hh"
+#include "treyarch/game/spawn_table_manager.hh"
+#include "treyarch/game/summon_state.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/camera/camera.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
@@ -99,10 +103,10 @@ void mission_manager::process_state_idle(f32 time_inc) {
         flags &= ~mission_manager_flag_unk_02000000;
 
         if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-            references::unk_010fb2b4.read()) {
+            references::spawn_table_manager.read()) {
 
-            retail::sub_9547F0(*(i32*)(references::unk_010fb2b4.read() + 0x4C));
-            retail::sub_94F010((i32)references::unk_010fb18c.read());
+            retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
+            retail::sub_94F010((i32)references::region_pack_manager.read());
         }
     }
 
@@ -204,28 +208,28 @@ void mission_manager::process_state_idle(f32 time_inc) {
 void mission_manager::process_state_start_loading() {
     retail::sub_983E40((i32)this);
 
-    if (references::unk_010fa238.read()) {
-        retail::sub_90FC00(references::unk_010fa238.read());
+    if (references::summon_state.read()) {
+        retail::sub_90FC00(references::summon_state.read());
 
-        if (retail::sub_920420(references::unk_010fb18c.read()))
+        if (retail::sub_920420((u32*)references::region_pack_manager.read()))
             return;
     }
 
     if (references::region_spawns_enabled.read() && references::region_spawn_manager.read()) {
-        retail::sub_951C40((i32)references::unk_010fb18c.read(), 1);
+        retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
 
-        if (!retail::sub_90F610((i32)references::unk_010fb18c.read()))
+        if (!retail::sub_90F610((i32)references::region_pack_manager.read()))
             return;
 
-        if (retail::sub_90F5E0((i32)references::unk_010fb18c.read()))
+        if (retail::sub_90F5E0((i32)references::region_pack_manager.read()))
             return;
 
-        retail::sub_9585E0((i32)references::unk_010fb2b4.read());
-        ((u8*)references::zombies.read())[0x6D] = 0;
+        retail::sub_9585E0((i32)references::spawn_table_manager.read());
+        references::zombies.read()->suspended = 0;
     }
 
-    if (references::unk_00be7455.read() && references::unk_010fa238.read())
-        retail::sub_983D00((i32)references::unk_010fa238.read());
+    if (references::unk_00be7455.read() && references::summon_state.read())
+        retail::sub_983D00((i32)references::summon_state.read());
 
     if (act_transition_state)
         return;
@@ -317,34 +321,25 @@ void mission_manager::process_state_loading() {
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (hero && retail::sub_602830((u32*)hero)) {
-        u8* unk_object = (u8*)retail::sub_602830((u32*)hero);
-        u8* container  = *(u8**)(unk_object + 0x684);
+    if (hero && retail::sub_602830((u32*)hero)) { // actor::get_ai_core
+        auto* node = (u32*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(15);
 
-        if (container) {
-            u32 mask = *(u32*)(unk_object + 0x688);
-
-            if (mask & 0x8000) {
-                u32* member = (*(u32***)(container + 8))[retail::sub_401F50(mask & 0x7FFF)];
-
-                if (member && retail::sub_425020(member))
-                    retail::sub_4BA230(member, 0, 1);
-            }
-        }
+        if (node && retail::sub_425020(node))
+            retail::sub_4BA230(node, 0, 1);
     }
 
-    if (references::region_spawns_enabled.read() && references::unk_010fb18c.read()) {
-        retail::sub_951C40((i32)references::unk_010fb18c.read(), 1);
+    if (references::region_spawns_enabled.read() && (u32*)references::region_pack_manager.read()) {
+        retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
 
-        if (retail::sub_90F5E0((i32)references::unk_010fb18c.read()))
+        if (retail::sub_90F5E0((i32)references::region_pack_manager.read()))
             return;
 
-        retail::sub_9585E0((i32)references::unk_010fb2b4.read());
-        ((u8*)references::zombies.read())[0x6D] = 0;
+        retail::sub_9585E0((i32)references::spawn_table_manager.read());
+        references::zombies.read()->suspended = 0;
     }
 
-    if (references::unk_00be7455.read() && references::unk_010fa238.read())
-        retail::sub_983D00((i32)references::unk_010fa238.read());
+    if (references::unk_00be7455.read() && references::summon_state.read())
+        retail::sub_983D00((i32)references::summon_state.read());
 
     {
         auto* slot = (amalga::resource_pack_slot*)
@@ -548,7 +543,7 @@ void mission_manager::process_state_start_unloading() {
     for (; saved_script_hero_suspend_count > 0; --saved_script_hero_suspend_count)
         ((void (__thiscall*)(entity*, i32))hero->vtable[0x1D4 / 4])(hero, 1);
 
-    if (retail::sub_602830((u32*)hero)) {
+    if (retail::sub_602830((u32*)hero)) { // actor::get_ai_core
         for (; saved_script_hero_ai_disable_count > 0; --saved_script_hero_ai_disable_count)
             retail::sub_4DF4B0((i32*)retail::sub_602830((u32*)hero), 1);
     }
@@ -588,21 +583,21 @@ void mission_manager::process_state_unloading() {
     retail::sub_93D770();
 
     if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-        references::unk_010fb18c.read() && references::unk_010fb2b4.read()) {
+        (u32*)references::region_pack_manager.read() && references::spawn_table_manager.read()) {
 
-        ((u8*)references::region_spawn_manager.read())[0x08] = 0;
+        references::region_spawn_manager.read()->unk_008 = 0;
 
-        retail::sub_9585E0((i32)references::unk_010fb2b4.read());
-        ((u8*)references::zombies.read())[0x6D] = 0;
+        retail::sub_9585E0((i32)references::spawn_table_manager.read());
+        references::zombies.read()->suspended = 0;
     }
 
-    if (references::unk_00be7455.read() && references::unk_010fa238.read()) {
-        retail::sub_90FC00(references::unk_010fa238.read());
+    if (references::unk_00be7455.read() && references::summon_state.read()) {
+        retail::sub_90FC00(references::summon_state.read());
 
-        if (retail::sub_920420(references::unk_010fb18c.read()))
+        if (retail::sub_920420((u32*)references::region_pack_manager.read()))
             return;
 
-        retail::sub_983D00((i32)references::unk_010fa238.read());
+        retail::sub_983D00((i32)references::summon_state.read());
     }
 
     u32* unk_object = (u32*)amalga::resource_manager::references::unk_010f7760.read();
@@ -617,19 +612,19 @@ void mission_manager::process_state_unloading() {
         return;
 
     if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-        references::unk_010fb18c.read() && references::unk_010fb2b4.read()) {
+        (u32*)references::region_pack_manager.read() && references::spawn_table_manager.read()) {
 
-        retail::sub_951C40((i32)references::unk_010fb18c.read(), 0);
+        retail::sub_951C40((i32)references::region_pack_manager.read(), 0);
 
         if (flags & mission_manager_flag_mission_ready)
-            retail::sub_951C40((i32)references::unk_010fb18c.read(), 1);
+            retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
 
         retail::sub_92E640((u32*)references::region_spawn_manager.read());
-        retail::sub_9547F0(*(i32*)(references::unk_010fb2b4.read() + 0x4C));
+        retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
     }
 
-    if (references::unk_00be7455.read() && references::unk_010fa238.read())
-        retail::sub_951330((u32*)references::unk_010fa238.read());
+    if (references::unk_00be7455.read() && references::summon_state.read())
+        retail::sub_951330((u32*)references::summon_state.read());
 
     {
         mash::string name(current_mission.name.c_str());
@@ -759,9 +754,9 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
     malor_region = nullptr;
     state        = mission_manager_state_idle;
 
-    if (references::region_spawn_manager.read() && references::unk_010fb2b4.read()) {
+    if (references::region_spawn_manager.read() && references::spawn_table_manager.read()) {
         retail::sub_92E640((u32*)references::region_spawn_manager.read());
-        retail::sub_9547F0(*(i32*)(references::unk_010fb2b4.read() + 0x4C));
+        retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
     }
 }
 

@@ -256,14 +256,6 @@ namespace treyarch {
 
         // a zero vector; reset target for the hero reference position
         inline util::memory_reference<vector3> unk_011117a0 { 0x011117A0 };
-
-        // the loading paths give up for the frame while its +0x14 is set, after sub_90FC00 sets its +0x40
-        inline util::memory_reference<u8*> unk_010fa238 { 0x010FA238 };
-
-        // set_mission_finished_screen_has_appeared can notify it too
-        inline util::memory_reference<u32*> unk_010fb18c { 0x010FB18C };
-
-        inline util::memory_reference<u8*> unk_010fb2b4 { 0x010FB2B4 };
     } // references
 
     ASSERT_SIZEOF  (mission_info,                          0x40);

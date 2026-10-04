@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -9,6 +10,10 @@ namespace treyarch {
     class region_spawn_manager {
 
     public:
+        void** vtable;
+        u8     reserved_004[0x04];
+        u8     unk_008;
+
         static void draw_text();
     };
 
@@ -19,4 +24,6 @@ namespace treyarch {
 
         inline util::memory_reference<igo_3d_text*> region_spawn_text { 0x010F9BC4 };
     } // references
+
+    ASSERT_OFFSETOF(region_spawn_manager, unk_008, 0x08);
 } // treyarch

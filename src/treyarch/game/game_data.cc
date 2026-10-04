@@ -8,6 +8,8 @@
 #include "treyarch/game/game.hh"
 #include "treyarch/game/game_data.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/region_pack_manager.hh"
+#include "treyarch/game/summon_state.hh"
 #include "treyarch/soap/message_box_manager.hh"
 #include "treyarch/soap/notification_manager.hh"
 #include "treyarch/soap/online.hh"
@@ -98,15 +100,15 @@ void game_data::frame_advance() {
         } else {
             // an enumerate is consumed right away, a load has to wait for a quiet moment
             if (m->request_kind != game_data_request_enumerate) {
-                u8* unk_object = references::unk_010fa238.read();
+                summon_state* summons = references::summon_state.read();
 
-                if (*(u32*)(unk_object + 0x14)) {
-                    retail::sub_90FC00(unk_object);
+                if (summons->active_summon) {
+                    retail::sub_90FC00(summons); // end the summon
 
                     return;
                 }
 
-                if (retail::sub_920420(references::unk_010fb18c.read()))
+                if (retail::sub_920420((u32*)references::region_pack_manager.read()))
                     return;
 
                 mission_manager* missions = references::mission_manager.read();
