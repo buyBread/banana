@@ -322,7 +322,7 @@ void mission_manager::process_state_loading() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
     if (hero && retail::sub_602830((u32*)hero)) { // actor::get_ai_core
-        auto* node = (u32*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(15);
+        auto* node = (u32*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(info_node_type_std_carry);
 
         if (node && retail::sub_425020(node))
             retail::sub_4BA230(node, 0, 1);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/game/wds/ai/a_star.hh"
+#include "treyarch/game/wds/ai/astar.hh"
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
@@ -11,7 +11,7 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace ai {
+namespace treyarch {
     class nugget; // impl (mash)
 
     class path;
@@ -25,7 +25,7 @@ namespace treyarch { namespace ai {
         path_graph*             my_path_graph;
         nugget*                 node_nugget;
         mash::vector_basic<i16> edge_indices;
-        a_star::node_handle     my_node_handle;
+        astar_node_handle       my_node_handle;
         i32                     neighbor_it;
     };
 
@@ -75,7 +75,7 @@ namespace treyarch { namespace ai {
     ASSERT_OFFSETOF(path_graph, edges,       0x20);
     ASSERT_OFFSETOF(path_graph, search_path, 0x34);
 
-    class path : public a_star::search_record {
+    class path : public astar_search_record {
 
     protected:
         dinkumware::vector
@@ -86,16 +86,16 @@ namespace treyarch { namespace ai {
         u8                     reserved_045[0x03];
         mash::string           reserved_048;
         u8                     reserved_054[0x04];
-        a_star::node_pool_t    node_pool_storage;
+        astar_node_pool        node_pool_storage;
 
     protected:
-        virtual bool                 assign_astar_node_handle (a_star::searchable_t searchable, a_star::node_handle new_handle);
-        virtual a_star::node_handle  get_astar_node_handle    (a_star::searchable_t searchable );
-        virtual void*                reset_neighbor_iterator  (a_star::searchable_t current_location);
-        virtual a_star::searchable_t get_next_neighbor        (a_star::searchable_t current_location, void* iterator);
-        virtual f32                  get_travel_cost          (a_star::searchable_t from_location, a_star::searchable_t to_location);
-        virtual f32                  get_cost_estimate_to_goal(a_star::searchable_t current_location, a_star::searchable_t search_goal);
+        virtual bool               assign_astar_node_handle (astar_searchable_t searchable, astar_node_handle new_handle);
+        virtual astar_node_handle  get_astar_node_handle    (astar_searchable_t searchable);
+        virtual void*              reset_neighbor_iterator  (astar_searchable_t current_location);
+        virtual astar_searchable_t get_next_neighbor        (astar_searchable_t current_location, void* iterator);
+        virtual f32                get_travel_cost          (astar_searchable_t from_location, astar_searchable_t to_location);
+        virtual f32                get_cost_estimate_to_goal(astar_searchable_t current_location, astar_searchable_t search_goal);
     };
 
     ASSERT_SIZEOF(path, 0xA8);
-}} // treyarch::ai
+} // treyarch

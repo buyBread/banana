@@ -5,6 +5,7 @@
 #include "treyarch/game/game_meter_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/game/trigger_manager.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/entity/interface/morph_interface.hh"
 #include "treyarch/game/wds/references.hh"
@@ -101,7 +102,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
         hero_ptr->player_ifc()->frame_advance_disabled(hero_time_inc);
     }
 
-    retail::sub_4E1780(time_inc); // ai frame advance
+    ai_core::frame_advance_all_core_ais(time_inc);
     retail::sub_65C2A0(dilate_world_time(time_inc)); // ise_interface registry
     retail::sub_625F70(time_inc); // simple_rotators::frame_advance_rotators
     retail::sub_638890(time_inc); // physical_interface::frame_advance_all_phys_interfaces

@@ -174,7 +174,7 @@ void mission_manager::frame_advance(f32 time_inc) {
 void mission_manager::update_hero_proximity_event() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    auto* owner = (u8*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(30); // actor::get_ai_core
+    auto* owner = (u8*)((ai_core*)retail::sub_602830((u32*)hero))->get_info_node(info_node_type_combat_target); // actor::get_ai_core
 
     engine_recursive_lock &lock = *(engine_recursive_lock*)(owner + 0x98);
 

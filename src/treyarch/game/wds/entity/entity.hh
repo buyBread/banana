@@ -18,7 +18,8 @@ namespace treyarch {
         void**                              vtable;
         u8                                  reserved_004[0x0C];
         po*                                 my_abs_po;
-        u8                                  reserved_014[0x08];
+        u32                                 unk_014;
+        u8                                  reserved_018[0x04];
         interface_storage*                  my_ifc_storage;
         u8                                  reserved_020[0x30];
         container::fixed_vector<region*, 8> regions; // the primary region is regions[0] (sub_612D30)
@@ -45,6 +46,7 @@ namespace treyarch {
     };
 
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
+    ASSERT_OFFSETOF(entity, unk_014,        0x14);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
     ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch

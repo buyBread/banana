@@ -9,8 +9,8 @@ namespace treyarch {
     
     private:
         dinkumware::vector
-            <ai::path_graph*> path_graph_list;
-        ai::path_graph*       cached_path_graph;
+            <path_graph*> path_graph_list;
+        path_graph*       cached_path_graph;
     };
 
     ASSERT_SIZEOF(wds_ai_manager, 0x14);
