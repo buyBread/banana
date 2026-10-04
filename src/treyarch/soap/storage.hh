@@ -3,6 +3,7 @@
 #include <ctime>
 
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace soap {
@@ -43,6 +44,9 @@ namespace treyarch { namespace soap {
         u8              reserved_004[0x18];
         bool            must_show_error_box;
         bool            must_show_active_device_unavailable;
+        u8              reserved_01e[0xFA];
+
+        static storage* inst();
 
         void initialize(i32 article_count, i32 unk, i32 payload_size) {
             vtable->initialize(this, article_count, unk, payload_size);
@@ -73,6 +77,10 @@ namespace treyarch { namespace soap {
         }
     };
 
+    namespace references {
+        inline util::memory_reference<storage*> storage { 0x01123D0C };
+    } // references
+
     ASSERT_SIZEOF  (storage_article,               0x38);
     ASSERT_OFFSETOF(storage_article, state,        0x24);
     ASSERT_OFFSETOF(storage_article, name,         0x28);
@@ -86,6 +94,7 @@ namespace treyarch { namespace soap {
     ASSERT_OFFSETOF(storage_vtable, method_048,                              0x48);
     ASSERT_OFFSETOF(storage_vtable, test_04c,                                0x4C);
 
-    ASSERT_OFFSETOF(storage, must_show_error_box,                 0x1C);
-    ASSERT_OFFSETOF(storage, must_show_active_device_unavailable, 0x1D);
+    ASSERT_SIZEOF  (storage,                                      0x118);
+    ASSERT_OFFSETOF(storage, must_show_error_box,                 0x01C);
+    ASSERT_OFFSETOF(storage, must_show_active_device_unavailable, 0x01D);
 }} // treyarch::soap

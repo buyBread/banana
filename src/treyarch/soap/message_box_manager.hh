@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace soap {
@@ -39,6 +40,9 @@ namespace treyarch { namespace soap {
 
     public:
         message_box_manager_vtable* vtable;
+        void*                       unk_004; // a one-byte allocation
+
+        static message_box_manager* inst();
 
         bool is_box_showing() {
             return vtable->is_box_showing(this);
@@ -49,10 +53,18 @@ namespace treyarch { namespace soap {
         }
     };
 
+    namespace references {
+        inline util::memory_reference<message_box_manager*> message_box_manager { 0x01123D10 };
+
+        inline util::memory_reference<message_box_manager_vtable> message_box_manager_vtable { 0x00DBC288 };
+    } // references
+
     ASSERT_SIZEOF  (message_box_definition,         0x340);
     ASSERT_OFFSETOF(message_box_definition, text,   0x080);
     ASSERT_OFFSETOF(message_box_definition, labels, 0x280);
 
     ASSERT_OFFSETOF(message_box_manager_vtable, is_box_showing, 0x08);
     ASSERT_OFFSETOF(message_box_manager_vtable, show,           0x10);
+
+    ASSERT_SIZEOF(message_box_manager, 0x08);
 }} // treyarch::soap

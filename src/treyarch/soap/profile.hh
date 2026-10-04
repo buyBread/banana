@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace soap {
@@ -21,6 +22,9 @@ namespace treyarch { namespace soap {
 
     public:
         profile_vtable* vtable;
+        u8              reserved_004[0x08];
+
+        static profile* inst();
 
         void initialize(i32 required_users, bool flag) {
             vtable->initialize(this, required_users, flag);
@@ -35,7 +39,13 @@ namespace treyarch { namespace soap {
         }
     };
 
+    namespace references {
+        inline util::memory_reference<profile*> profile { 0x01123D04 };
+    } // references
+
     ASSERT_OFFSETOF(profile_vtable, initialize,    0x10);
     ASSERT_OFFSETOF(profile_vtable, frame_advance, 0x14);
     ASSERT_OFFSETOF(profile_vtable, busy,          0x18);
+
+    ASSERT_SIZEOF(profile, 0x0C);
 }} // treyarch::soap

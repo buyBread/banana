@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace soap {
@@ -24,6 +25,8 @@ namespace treyarch { namespace soap {
         u8             reserved_004[0x28];
         i32            unk_02c;
 
+        static online* inst();
+
         void initialize() {
             vtable->initialize(this);
         }
@@ -37,9 +40,16 @@ namespace treyarch { namespace soap {
         }
     };
 
+    namespace references {
+        inline util::memory_reference<online*> online { 0x01123D00 };
+
+        inline util::memory_reference<online_vtable> online_pc_vtable { 0x00DBC13C };
+    } // references
+
     ASSERT_OFFSETOF(online_vtable, initialize,    0x10);
     ASSERT_OFFSETOF(online_vtable, frame_advance, 0x14);
     ASSERT_OFFSETOF(online_vtable, method_024,    0x24);
 
+    ASSERT_SIZEOF  (online,          0x30);
     ASSERT_OFFSETOF(online, unk_02c, 0x2C);
 }} // treyarch::soap

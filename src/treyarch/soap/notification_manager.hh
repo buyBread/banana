@@ -2,6 +2,7 @@
 
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace soap {
@@ -19,11 +20,20 @@ namespace treyarch { namespace soap {
 
     public:
         notification_manager_vtable* vtable;
+        u8                           reserved_004[0x04];
+
+        static notification_manager* inst();
 
         notification_list* notifications() {
             return vtable->notifications(this);
         }
     };
 
+    namespace references {
+        inline util::memory_reference<notification_manager*> notification_manager { 0x01123D14 };
+    } // references
+
     ASSERT_OFFSETOF(notification_manager_vtable, notifications, 0x08);
+
+    ASSERT_SIZEOF(notification_manager, 0x08);
 }} // treyarch::soap
