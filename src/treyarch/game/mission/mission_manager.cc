@@ -6,12 +6,9 @@
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/ui_frontend.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/script/script_access.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/memory_reference.hh"
-
-namespace treyarch { namespace references {
-    util::memory_reference<void*> unk_010f7084 { 0x010F7084 };
-}} // treyarch::references
 
 using namespace treyarch;
 
@@ -281,10 +278,7 @@ void mission_manager::play_open_city_music() {
     string_hash function_name;
     function_name.initialize(mash::ALLOCATED, "music_enable_city_music()");
 
-    i32 call = ((i32 (__cdecl*)
-               (string_hash, void*, i32))retail::sub_842DD0)
-               (function_name, references::unk_010f7084.read(), 0);
-    retail::sub_824FB0(call, 1);
+    script::start_thread(script::create_thread(function_name, references::master_global_instance.read(), 0), true);
 }
 
 // sub_97E290

@@ -109,6 +109,14 @@ namespace treyarch { namespace chuck { namespace vm {
 
         void run(bool ignore_suspended);
 
+        // true once the thread has finished (and been deleted); key_prefix is never read
+        bool run_single_thread            (vm_thread* t, bool ignore_suspended, string_hash key_prefix);
+        bool run_single_thread_with_return(vm_thread*  t,
+                                           bool        ignore_suspended,
+                                           void*       ret,
+                                           u32         return_value_byte_size,
+                                           string_hash key_prefix);
+
         void kill_thread(const script_function* ex, const vm_thread* ignore_thread);
         void kill_thread(vm_thread* thread_to_kill);
         bool massacre_threads_by_function(const script_function* ex, const vm_thread* ignore_thread);

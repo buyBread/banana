@@ -1,3 +1,4 @@
+#include <cstring>
 #include <new>
 
 #include "treyarch/chuck/vm/script_executable.hh"
@@ -143,6 +144,73 @@ void script_instance::run(bool ignore_suspended) {
         else
             thread = thread->vm_simple_list_next;
     } while (exec->suspend_count <= 0 && thread);
+}
+
+// sub_A1EAB0
+bool script_instance::run_single_thread(vm_thread* t, bool ignore_suspended, string_hash key_prefix) {
+    ref_lock_scope    instance_scope(parent->instance_lock);
+    engine_lock_scope thread_scope(&thread_lock);
+
+    script_executable* exec = parent->parent;
+
+    if ((exec->flags & script_executable_flag_suspended_for_script_vars) || exec->suspend_count > 0)
+        return false;
+
+    if (suspend_count > 0 && !ignore_suspended)
+        return false;
+
+    flags = (e_script_instance_flags)(flags | script_instance_flag_run_called);
+
+    if (!t->run())
+        return false;
+
+    for (vm_thread* thread = threads.head; thread; thread = thread->vm_simple_list_next) {
+        if (thread == t) {
+            delete_thread(thread);
+
+            break;
+        }
+    }
+
+    return true;
+}
+
+// sub_A1ECF0
+bool script_instance::run_single_thread_with_return(vm_thread*  t,
+                                                    bool        ignore_suspended,
+                                                    void*       ret,
+                                                    u32         return_value_byte_size,
+                                                    string_hash key_prefix) {
+
+    ref_lock_scope    instance_scope(parent->instance_lock);
+    engine_lock_scope thread_scope(&thread_lock);
+
+    script_executable* exec = parent->parent;
+
+    if ((exec->flags & script_executable_flag_suspended_for_script_vars) || exec->suspend_count > 0)
+        return false;
+
+    if (suspend_count > 0 && !ignore_suspended)
+        return false;
+
+    flags = (e_script_instance_flags)(flags | script_instance_flag_run_called);
+
+    if (!t->run())
+        return false;
+
+    // the return value is what the finished thread left on top of its stack
+    if (ret)
+        std::memcpy(ret, t->dstack.sp - return_value_byte_size, return_value_byte_size);
+
+    for (vm_thread* thread = threads.head; thread; thread = thread->vm_simple_list_next) {
+        if (thread == t) {
+            delete_thread(thread);
+
+            break;
+        }
+    }
+
+    return true;
 }
 
 // sub_A1E670
