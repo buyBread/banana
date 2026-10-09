@@ -113,6 +113,7 @@ namespace treyarch { namespace dinkumware {
         // sub_766EB0
         // sub_982750
         // sub_982DD0
+        // sub_A188F0
         void reserve(u32 count) {
             if (count > 0xFFFFFFFF / sizeof(T))
                 throw std::length_error("vector<T> too long");
@@ -139,6 +140,7 @@ namespace treyarch { namespace dinkumware {
             first        = allocation;
         }
 
+        // sub_41A3A0
         // sub_444540
         // sub_685A70
         // sub_983C70
@@ -160,6 +162,8 @@ namespace treyarch { namespace dinkumware {
         // sub_685B40
         // sub_9DD7E0
         // sub_9DD8D0
+        // sub_A18CE0
+        // sub_A18D70
         void resize(u32 count, const T &value) {
             while (size() > count) {
                 --last;
