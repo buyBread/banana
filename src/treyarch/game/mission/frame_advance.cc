@@ -272,8 +272,8 @@ void mission_manager::run_district_scripts() {
         if (--district.gen_dis_script_frame_count)
             continue;
 
-        while (retail::sub_A1FA30((u32*)district.gen_dis_exec))
-            retail::sub_A1B960((i32)chuck::vm::script_manager::inst(), (i32*)&district.gen_dis_exec_name, 0, 0.0f, 0);
+        while (district.gen_dis_exec->has_threads())
+            chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
 
         retail::sub_97F4F0((char*)this, index);
     }

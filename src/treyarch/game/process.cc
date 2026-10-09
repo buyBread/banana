@@ -232,7 +232,7 @@ void game::advance_state_running(f32 time_inc) {
 // sub_72C930
 void game::advance_state_paused(f32 time_inc) {
     if (unk_059)
-        retail::sub_A1AE50((u32*)chuck::vm::script_manager::inst(), time_inc, 0); // script_manager::run
+        chuck::vm::script_manager::inst()->run(time_inc, false);
 
     frame_advance_game_overlays(time_inc);
 

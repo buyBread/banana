@@ -449,8 +449,8 @@ void game::load_this_level(bool start_only, bool finish_only) {
         retail::sub_A1BC60((i32)&scripts, (i32*)&init_gv, 2, (i32)references::unk_01111754.read(), 0); // script_manager load
         retail::sub_A1BC60((i32)&scripts, (i32*)&init_sv, 2, (i32)references::unk_01111754.read(), 0);
 
-        retail::sub_A1B960((i32)&scripts, (i32*)&init_gv, 0, 0.0f, 0); // script_manager::run_single_exec
-        retail::sub_A1B960((i32)&scripts, (i32*)&init_sv, 0, 0.0f, 0);
+        scripts.run_single_exec(init_gv, string_hash(), 0.0f, false);
+        scripts.run_single_exec(init_sv, string_hash(), 0.0f, false);
 
         retail::sub_A1C2D0((u32*)&scripts, (i32*)&init_gv, 0, 0); // script_manager unload
         retail::sub_A1C2D0((u32*)&scripts, (i32*)&init_sv, 0, 0);

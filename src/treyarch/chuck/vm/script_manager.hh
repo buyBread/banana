@@ -11,6 +11,7 @@
 #include "treyarch/shared/platform.hh"
 #include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
@@ -40,8 +41,14 @@ namespace treyarch { namespace chuck { namespace vm {
     // all installed as `return false` (sub_71F870)
     using unk_predicate_callback_t = bool(*)();
 
+    namespace references {
+        // run hashes this once into a function-local static and never reads it
+        inline util::memory_reference<string_hash> run_name       { 0x011248E8 };
+        inline util::memory_reference<u32>         run_name_guard { 0x011248EC };
+    } // references
+
     /* created once by game::game (sub_97AB10) and kept for the process.
-       nothing runs until both variable containers exist (sub_A1AE50, sub_A1B960).
+       nothing runs until both variable containers exist (run, run_single_exec).
        lock order: exec_set_lock, then object instance_lock, then instance thread_lock. */
     class script_manager : public singleton_instance<script_manager, 0x011248E0> {
 
@@ -70,6 +77,14 @@ namespace treyarch { namespace chuck { namespace vm {
                                 unk_predicate_callback_t                     unk_predicate_2,
                                 unk_predicate_callback_t                     unk_predicate_3,
                                 get_platform_callback_t                      get_platform);
+
+        void run_notification_callback(e_script_manager_callback_reason reason, script_executable* se, void* user_data);
+
+        void run(f32 requested_time_inc, bool ignore_suspended);
+        bool run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended);
+
+    private:
+        void first_run_pending_execs(f32 requested_time_inc, bool ignore_suspended);
     };
 
     ASSERT_SIZEOF  (script_manager,                                             0x98);

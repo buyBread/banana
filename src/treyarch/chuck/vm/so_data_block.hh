@@ -17,6 +17,8 @@ namespace treyarch { namespace chuck { namespace vm {
         i32                       blocksize;
         e_so_data_block_flags     flags;
         fixed_so_data_block_base* fixed_block; // 32/128/512/1400/3000-byte pools; null for heap fallback
+
+        void set_to_zero();
     };
 
     ASSERT_SIZEOF  (so_data_block,              0x10);

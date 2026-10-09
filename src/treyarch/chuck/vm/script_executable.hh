@@ -41,7 +41,15 @@ namespace treyarch { namespace chuck { namespace vm {
         script_executable_flag_published                    = 0x20000
     };
 
-    // first-run initializer record (sub_A1F920 reads offset..uint)
+    // what first_run writes for an initializer record; ids -1 and -2 write nothing,
+    // and anything else indexes the permanent string table
+    enum e_script_executable_object_instance_info_id : i32 {
+        script_executable_object_instance_info_id_num           = -3,
+        script_executable_object_instance_info_id_made_from_num = -4,
+        script_executable_object_instance_info_id_uint          = -5
+    };
+
+    // first-run initializer record (first_run reads offset..uint)
     class script_executable_object_instance_info {
 
     public:
@@ -74,7 +82,12 @@ namespace treyarch { namespace chuck { namespace vm {
         u32                                                  checksum;           // the milestone verifies it against exe_image; retail never reads it
         u32                                                  client_library_key; // 0x6C0AE071 in every shipped script; retail never reads it
         e_script_executable_flags                            flags;
-        i32                                                  suspend_count;      // sub_A1FD60 skips the executable while positive
+        i32                                                  suspend_count;      // run skips the executable while positive
+
+        // time_inc is never read; only the manager keeps it
+        void first_run(f32 time_inc, bool ignore_suspended);
+        void run      (f32 time_inc, bool ignore_suspended);
+        bool has_threads() const;
 
         static void register_callbacks(resolve_signal_callback_t               resolve_signal,
                                        resolve_extern_callback_t               resolve_extern,

@@ -66,7 +66,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     retail::sub_7FEC90((u32*)&ent_mgr, time_inc);
     retail::sub_96F4E0(this, time_inc); // world_dynamics_system::update_ai_and_visibility_proximity_maps_for_moved_entities
     retail::sub_7851D0();
-    retail::sub_A1AE50((u32*)chuck::vm::script_manager::inst(), time_inc, 0); // script_manager::run
+    chuck::vm::script_manager::inst()->run(time_inc, false);
     retail::sub_763520(time_inc); // pedestrians
 
     if (zombie_manager* zombies = zombie_manager::inst())
