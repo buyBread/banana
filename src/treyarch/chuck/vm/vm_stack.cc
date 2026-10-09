@@ -133,3 +133,57 @@ void vm_stack::push(const void* source, i32 size) {
     if (copied == references::push_staging_buffer.read())
         references::push_staging_lock.read()->release();
 }
+
+// sub_A1C750
+void vm_stack::push_num(f32 value) {
+    if ((i32)(sp - buffer) + 4 > (i32)buffer_size)
+        grow();
+
+    *(f32*)sp = value;
+    sp += 4;
+}
+
+// sub_A21EB0
+void vm_stack::push_uint(u32 value) {
+    if ((i32)(sp - buffer) + 4 > (i32)buffer_size)
+        grow();
+
+    *(u32*)sp = value;
+    sp += 4;
+}
+
+// sub_8435B0
+void vm_stack::pop(i32 size) {
+    if (size <= 0 && (i32)(sp - buffer) - size > (i32)buffer_size)
+        grow();
+
+    sp -= size;
+}
+
+// sub_83D8F0
+void vm_stack::move_sp(i32 size) {
+    if (size >= 0 && size + (i32)(sp - buffer) > (i32)buffer_size)
+        grow();
+
+    sp += size;
+}
+
+// sub_A22100
+void vm_stack::move_sp_and_zero(i32 size) {
+    i32 used = (i32)(sp - buffer);
+
+    if (size >= 0 && used + size > (i32)buffer_size)
+        grow();
+
+    sp += size;
+
+    // a negative size reaches memset as is
+    std::memset(buffer + used, 0, size);
+}
+
+// sub_A220F0
+string_hash vm_stack::pop_signal() {
+    sp -= 4;
+
+    return string_hash(*(u32*)sp);
+}

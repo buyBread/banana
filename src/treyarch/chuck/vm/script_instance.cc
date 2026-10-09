@@ -1,6 +1,5 @@
 #include <new>
 
-#include "retail.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
@@ -139,7 +138,7 @@ void script_instance::run(bool ignore_suspended) {
 
     do {
         // true once the thread has finished
-        if (retail::sub_A22B70((i32)thread)) // vm_thread::run
+        if (thread->run())
             thread = delete_thread(thread);
         else
             thread = thread->vm_simple_list_next;
@@ -166,6 +165,23 @@ vm_thread* script_instance::delete_thread(vm_thread* thread) {
     }
 
     return next;
+}
+
+// sub_A1E7A0
+void script_instance::kill_thread(const script_function* ex, const vm_thread* ignore_thread) {
+    ref_lock_scope    instance_scope(parent->instance_lock);
+    engine_lock_scope thread_scope(&thread_lock);
+
+    vm_thread* thread = threads.head;
+
+    while (thread) {
+        bool matches = thread->inst == this && thread != ignore_thread && thread->ex->name == ex->name;
+
+        if (matches)
+            thread = delete_thread(thread);
+        else
+            thread = thread->vm_simple_list_next;
+    }
 }
 
 // sub_A1E8B0
@@ -227,6 +243,46 @@ bool script_instance::massacre_threads_by_function(const script_function* ex, co
     }
 
     return found;
+}
+
+// sub_A1F400
+bool script_instance::massacre_threads_by_thread(vm_thread* thread_to_massacre, const vm_thread* ignore_thread) {
+    ref_lock_scope    instance_scope(parent->instance_lock);
+    engine_lock_scope thread_scope(&thread_lock);
+
+    vm_thread* thread = threads.head;
+
+    while (thread && thread != thread_to_massacre)
+        thread = thread->vm_simple_list_next;
+
+    if (!thread)
+        return false;
+
+    bool found = false;
+
+    vm_thread* creator = thread->creator;
+
+    thread->creator = nullptr;
+
+    if (recursive_massacre_threads(ignore_thread, thread))
+        found = true;
+
+    thread->creator = creator;
+
+    if (thread != ignore_thread)
+        delete_thread(thread);
+
+    return found;
+}
+
+// sub_A1E140
+void script_instance::enable_auto_destruct() {
+    flags = (e_script_instance_flags)(flags | script_instance_flag_auto_destruct);
+
+    if (!threads.head) {
+        parent->flags         = (e_script_object_flags)    (parent->flags         | script_object_flag_needs_run);
+        parent->parent->flags = (e_script_executable_flags)(parent->parent->flags | script_executable_flag_needs_run);
+    }
 }
 
 // sub_A1EF10

@@ -4,20 +4,37 @@
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_executable;
     class vm_thread;
 
+    struct script_object_function_cache_element {
+        const script_object* parent;
+              string_hash    function_fullname;
+              i32            function_index;    // -1 marks a free slot
+              i32            usage;
+    };
+
+    namespace references {
+        // find_func remembers its last 20 hits; the least recently used slot is replaced
+        inline util::memory_reference<script_object_function_cache_element> function_cache       { 0x01124A60 };
+        inline util::memory_reference<engine_recursive_lock*>               function_cache_lock  { 0x01124A5C };
+        inline util::memory_reference<i32>                                  function_cache_usage { 0x01124A58 };
+    } // references
+
     enum e_script_object_flags : u32 {
         script_object_flag_global_object = 0x01,
         script_object_flag_from_mash     = 0x02,
         script_object_flag_needs_run     = 0x10, // set by thread creation and AUTODEST, recomputed by each run (sub_A1D590)
+        script_object_flag_sorted_funcs  = 0x08, // find_func binary-searches the functions past the constructor and destructor
         script_object_flag_singleton     = 0x20  // first run creates and runs one "__singleton" instance
     };
 
@@ -42,6 +59,10 @@ namespace treyarch { namespace chuck { namespace vm {
         ref_counted_simple_mutex*        instance_lock;    // pooled
 
         script_instance* add_instance(const char* inst_name, e_script_instance_stack_size stack_size);
+        script_instance* add_instance(const mash::string                 &inst_name,
+                                      const void*                         constructor_parms_buffer,
+                                            vm_thread**                   constructor_thread,
+                                            e_script_instance_stack_size  stack_size);
         void             construct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread);
         void             remove_instance(script_instance* delete_me, bool run_destructor_if_present);
 
@@ -49,6 +70,12 @@ namespace treyarch { namespace chuck { namespace vm {
 
         bool has_threads() const;
         void run(bool ignore_suspended);
+
+        // a flattened index counts this object's functions first, then its parents'
+        i32              find_func(string_hash func_fullname) const;
+        script_function* get_function_ptr(u32 index) const;
+
+        script_instance* first_instance() const;
 
     private:
         void add(script_instance* inst);

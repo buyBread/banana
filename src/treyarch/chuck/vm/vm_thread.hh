@@ -10,9 +10,14 @@
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
+namespace treyarch { namespace chuck { namespace script_library {
+    class script_library_function;
+}}} // treyarch::chuck::script_library
+
 namespace treyarch { namespace chuck { namespace vm {
     class script_function;
     class script_instance;
+    class script_object;
     class vm_thread;
 
     /*  game-side event services the interpreter calls (installed by sub_843300).
@@ -67,6 +72,10 @@ namespace treyarch { namespace chuck { namespace vm {
     namespace references {
         inline util::memory_reference<u32> id_counter { 0x01124C70 };
 
+        // held around every callback add/clear (and the GV accesses, for the other one)
+        inline util::memory_reference<engine_recursive_lock*> global_variable_lock { 0x01124C9C };
+        inline util::memory_reference<engine_recursive_lock*> callback_lock        { 0x01124CA0 };
+
         inline util::memory_reference<memory::fixed_pool> thread_pool             { 0x01124CA8 };
         inline util::memory_reference<memory::fixed_pool> local_reference_pool    { 0x01124768 };
         inline util::memory_reference<memory::fixed_pool> flow_stack_element_pool { 0x01125188 };
@@ -96,16 +105,33 @@ namespace treyarch { namespace chuck { namespace vm {
 
     // decoded operand; staged whole into the push/pop modifier argument
     union argument_t {
-        u8    raw[0x0C];
-        i16   word;          // element width while staged
-        f32   number;
-        u32   uint;
-        void* pointer;
+        u8                                       raw[0x0C];
+        i16                                      word;             // element width while staged
+        f32                                      number;
+        u32                                      uint;
+        void*                                    pointer;
+        const char*                              string;
+        const script_function*                   function;
+        script_library::script_library_function* library_function;
+        script_object*                           object;
 
         struct {
             i16 first,
                 second;
         } word_pair;
+
+        // BRA_JT; displacements are unsigned bytes from the end of the instruction
+        struct {
+            u16        count;
+            const u16* displacements;
+            u16        default_displacement;
+        } jump_table;
+
+        // PSH_NL; the values are pushed as raw words
+        struct {
+            u16        count;
+            const u16* values;
+        } number_list;
     };
 
     // a reference the thread releases when it dies
@@ -163,6 +189,9 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_thread(script_instance* instance, const script_function* function, void* requested_user_data, u32 stack_size);
         ~vm_thread();
 
+        // true once the thread has finished; false when it yields
+        bool run();
+
         void add_local_reference(void* allocation, u32 mode);
 
         static void register_callbacks(raise_global_signal_callback_t             raise_global_signal,
@@ -178,9 +207,37 @@ namespace treyarch { namespace chuck { namespace vm {
 
     private:
         void release_local_references();
+        void remove_local_reference(void* allocation);
+
+        void fill_argument();
+
+        bool call_script_library_function(const argument_t &arg, u16* old_pc);
+        void spawn_sub_thread            (const argument_t &arg);
+        void spawn_parallel_thread       (const argument_t &arg);
+
+        void create_event_callback       (e_opcode_arg argtype, const argument_t &arg, bool one_shot, bool remap);
+        void create_static_event_callback(e_opcode_arg argtype, const argument_t &arg, bool one_shot);
+
+        void execute_push_with_modifier(const u8* source, u16 dsize);
+        void execute_pop_with_modifier (u8* dest, u16 dsize, i32 limit);
+
+        void push_flow_stack(const script_function* current_exec);
+        void pop_flow_stack();
+
+        void create_new_instance(script_object* so, const char* inst_name);
+
+        // KIL, KL2, MAS, MS2; true when the running thread was among the victims
+        bool kill_selected_thread();
+        bool kill_threads_in_target();
+        bool massacre_selected_threads();
+        bool massacre_threads_in_target();
     };
 
-    ASSERT_SIZEOF  (argument_t,                   0x0C);
+    ASSERT_SIZEOF  (argument_t,                                  0x0C);
+    ASSERT_OFFSETOF(argument_t, jump_table.displacements,        0x04);
+    ASSERT_OFFSETOF(argument_t, jump_table.default_displacement, 0x08);
+    ASSERT_OFFSETOF(argument_t, number_list.values,              0x04);
+
     ASSERT_SIZEOF  (vm_thread_flow_stack_element, 0x0C);
 
     ASSERT_SIZEOF  (vm_thread_local_reference,                          0x14);

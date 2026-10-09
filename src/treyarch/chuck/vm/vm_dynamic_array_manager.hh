@@ -46,6 +46,13 @@ namespace treyarch { namespace chuck { namespace vm {
         // reserve_size is never read
         chuck_dynamic_array_t* create_new_dynamic_array(script_instance* si, i32 reserve_size);
 
+        // a `str` is the data of a 22-element array; reserve_size is never read
+        char* create_string_storage(script_instance* si, i32 reserve_size);
+        char* create_new_string(script_instance* si, i32 reserve_size, const char* first, const char* second);
+        char* append_string(char* string, const char* source);
+
+        void add_string_reference(const void* string);
+
         void add_reference(chuck_dynamic_array_t* array);
         bool find_by_data(const void* data, chuck_dynamic_array_t** found);
 
@@ -53,6 +60,8 @@ namespace treyarch { namespace chuck { namespace vm {
         void remove_string_reference(const void* string);
         void remove_string_array_reference(chuck_dynamic_array_t* array);
         void remove_instance_array_reference(script_instance* context, chuck_dynamic_array_t* array);
+
+        void release_string_elements(chuck_dynamic_array_t* array);
 
     private:
         void                   grow_pool();
@@ -63,8 +72,6 @@ namespace treyarch { namespace chuck { namespace vm {
         void release_reference(chuck_dynamic_array_t*          array,
                                script_instance*                context,
                                e_vm_dynamic_array_release_mode mode);
-
-        void release_string_elements(chuck_dynamic_array_t* array);
     };
 
     namespace references {

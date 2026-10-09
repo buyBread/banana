@@ -1,3 +1,4 @@
+#include <cstring>
 #include <new>
 
 #include "treyarch/chuck/vm/script_instance.hh"
@@ -106,6 +107,85 @@ chuck_dynamic_array_t* vm_dynamic_array_manager::create_new_dynamic_array(script
     engine_lock_scope scope(references::dynamic_array_lock.read());
 
     return alloc_array_from_pool(si, false);
+}
+
+// sub_A19600
+char* vm_dynamic_array_manager::create_string_storage(script_instance* si, i32 reserve_size) {
+    engine_lock_scope scope(references::dynamic_array_lock.read());
+
+    chuck_dynamic_array_t* array = alloc_array_from_pool(si, true);
+
+    std::memset(array->begin(), 0, sizeof(chuck_dynamic_array_element_t));
+
+    return (char*)array->begin();
+}
+
+// sub_A19690
+char* vm_dynamic_array_manager::create_new_string(script_instance* si, i32 reserve_size, const char* first, const char* second) {
+    char* string = create_string_storage(si, reserve_size);
+
+    if (first)
+        string = append_string(string, first);
+
+    if (second)
+        string = append_string(string, second);
+
+    return string;
+}
+
+// sub_A18650
+char* vm_dynamic_array_manager::append_string(char* string, const char* source) {
+    chuck_dynamic_array_t* array = nullptr;
+
+    find_by_data(string, &array);
+
+    char* terminator = nullptr;
+    u32   index      = 0;
+    u32   count      = array->size();
+
+    // the terminator is the first zero byte inside any one element
+    if (count) {
+        char* element = (char*)array->begin();
+
+        do {
+            i32 offset = 0;
+
+            while (element[offset] && ++offset < 12);
+
+            if (offset < 12) {
+                terminator = element + offset;
+
+                break;
+            }
+
+            ++index;
+            element += 12;
+        } while (index < count);
+    }
+
+    i32 length = (i32)std::strlen(source) + 1;
+
+    if (length <= 1)
+        return string;
+
+    // formats "string '%s' can't be combined with '%s', length exceeds max length of %d" for a stripped print (nullsub_1)
+    if (array->size() - index - 1 < (u32)(length / 12 + 1))
+        return string;
+
+    std::memcpy(terminator, source, length);
+
+    return string;
+}
+
+// sub_A187B0
+void vm_dynamic_array_manager::add_string_reference(const void* string) {
+    if (!string)
+        return;
+
+    chuck_dynamic_array_t* owner;
+
+    if (find_by_data(string, &owner))
+        add_reference(owner);
 }
 
 // sub_A18420

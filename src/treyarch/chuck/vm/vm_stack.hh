@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
@@ -26,6 +27,23 @@ namespace treyarch { namespace chuck { namespace vm {
         void allocate(u32 size);
         void grow();
         void push(const void* source, i32 size);
+        void push_num(f32 value);
+        void push_uint(u32 value);
+
+        // these three check for growth only when the cursor moves up
+        void pop(i32 size);
+        void move_sp(i32 size);
+        void move_sp_and_zero(i32 size);
+
+        f32         pop_num()    { sp -= 4; return *(f32*)sp; }
+        u32         pop_uint()   { sp -= 4; return *(u32*)sp; }
+        string_hash pop_signal();
+
+        f32 &top_num()  { return *(f32*)(sp - 4); }
+        u32 &top_uint() { return *(u32*)(sp - 4); }
+
+        f32 &local_num (i16 offset) { return *(f32*)(sp + offset); }
+        u32 &local_uint(i16 offset) { return *(u32*)(sp + offset); }
     };
 
     namespace references {

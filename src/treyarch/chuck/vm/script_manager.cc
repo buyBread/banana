@@ -80,6 +80,20 @@ void script_manager::run(f32 requested_time_inc, bool ignore_suspended) {
     }
 }
 
+// sub_A1B030
+vm_thread* script_manager::find_thread(u32 thread_id) {
+    engine_lock_scope scope(&exec_set_lock);
+
+    for (auto* node = exec_set->begin(); node != exec_set->end(); node = node->next()) {
+        vm_thread* thread = node->value->exec->find_thread(thread_id);
+
+        if (thread)
+            return thread;
+    }
+
+    return nullptr;
+}
+
 // sub_A1B960
 bool script_manager::run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended) {
     if (!game_var_container || !shared_var_container)

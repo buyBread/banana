@@ -97,3 +97,17 @@ void fixed_pool::release(void* allocation) {
 
     --allocation_count;
 }
+
+// sub_A21840
+bool fixed_pool::contains(const void* allocation) {
+    engine_lock_scope scope(&lock);
+
+    for (void** block = (void**)block_list; block; block = (void**)*block) {
+        if ((u32)allocation < (u32)block || (u32)allocation >= (u32)block + slot_size * slots_per_block)
+            continue;
+
+        return ((u32)allocation - ((u32)(block + 1) & ~(alignment - 1)) - alignment) % slot_size == 0;
+    }
+
+    return false;
+}

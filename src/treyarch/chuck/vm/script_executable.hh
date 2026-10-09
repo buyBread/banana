@@ -89,6 +89,14 @@ namespace treyarch { namespace chuck { namespace vm {
         void run      (f32 time_inc, bool ignore_suspended);
         bool has_threads() const;
 
+        script_object* get_object(i32 index) const;
+        script_object* get_global_script_object() const;
+
+        // script_objects is sorted by name
+        script_object* find_object(string_hash object_name, i32* index) const;
+
+        vm_thread* find_thread(u32 thread_id) const;
+
         static void register_callbacks(resolve_signal_callback_t               resolve_signal,
                                        resolve_extern_callback_t               resolve_extern,
                                        get_chuck_client_library_key_callback_t get_chuck_client_library_key,

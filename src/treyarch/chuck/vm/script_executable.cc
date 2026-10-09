@@ -1,5 +1,6 @@
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -101,4 +102,83 @@ bool script_executable::has_threads() const {
     }
 
     return false;
+}
+
+// sub_A1F790
+script_object* script_executable::get_object(i32 index) const {
+    return script_objects.data[index];
+}
+
+// sub_9ED9D0
+script_object* script_executable::get_global_script_object() const {
+    return global_script_object;
+}
+
+// sub_A1F6C0
+script_object* script_executable::find_object(string_hash object_name, i32* index) const {
+    i32 count = (i32)script_objects.size;
+
+    if (!count)
+        return nullptr;
+
+    i32 low  = 0;
+    i32 high = count - 1 < 0 ? 0 : count - 1;
+    i32 mid  = count / 2;
+
+    script_object* object = script_objects.data[mid];
+
+    while (!(object->name == object_name)) {
+        i32 previous = mid;
+
+        if (object->name.source_hash_code >= object_name.source_hash_code) {
+            high = mid - 1;
+
+            if (high < 0)
+                return nullptr;
+        } else {
+            low = mid + 1;
+
+            if (low >= count)
+                return nullptr;
+        }
+
+        if (low > high)
+            return nullptr;
+
+        mid = (high + low) / 2;
+
+        if (previous == mid)
+            return nullptr;
+
+        object = script_objects.data[mid];
+    }
+
+    if (index)
+        *index = mid;
+
+    return object;
+}
+
+// sub_A1FDE0
+vm_thread* script_executable::find_thread(u32 thread_id) const {
+    i32 count = (i32)script_objects.size;
+
+    for (i32 index = 0; index < count; ++index) {
+        script_object* object = script_objects.data[index];
+
+        if (!object)
+            continue;
+
+        for (script_instance* inst = object->instances.head; inst; inst = inst->vm_simple_list_next) {
+            ref_lock_scope    instance_scope(inst->parent->instance_lock);
+            engine_lock_scope thread_scope(&inst->thread_lock);
+
+            for (vm_thread* thread = inst->threads.head; thread; thread = thread->vm_simple_list_next) {
+                if (thread->thread_id == thread_id)
+                    return thread;
+            }
+        }
+    }
+
+    return nullptr;
 }

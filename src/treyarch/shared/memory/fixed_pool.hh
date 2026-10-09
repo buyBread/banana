@@ -32,6 +32,7 @@ namespace treyarch { namespace memory {
 
         void* allocate();
         void  release(void* allocation);
+        bool  contains(const void* allocation);
 
     private:
         void add_blocks(u32 count);

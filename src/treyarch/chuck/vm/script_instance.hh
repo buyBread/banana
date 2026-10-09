@@ -109,8 +109,12 @@ namespace treyarch { namespace chuck { namespace vm {
 
         void run(bool ignore_suspended);
 
+        void kill_thread(const script_function* ex, const vm_thread* ignore_thread);
         void kill_thread(vm_thread* thread_to_kill);
         bool massacre_threads_by_function(const script_function* ex, const vm_thread* ignore_thread);
+        bool massacre_threads_by_thread(vm_thread* thread_to_massacre, const vm_thread* ignore_thread);
+
+        void enable_auto_destruct();
 
         void run_callbacks(e_script_instance_callback_reason reason, vm_thread* vmt);
 

@@ -83,6 +83,8 @@ namespace treyarch { namespace chuck { namespace vm {
         script_instance_garbage_collection_callback_t get_garbage_collection_callback(e_script_garbage_collection_type type) const;
 
         void run(f32 requested_time_inc, bool ignore_suspended);
+
+        vm_thread* find_thread(u32 thread_id);
         bool run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended);
 
     private:

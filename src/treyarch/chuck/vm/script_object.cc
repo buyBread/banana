@@ -49,6 +49,26 @@ script_instance* script_object::add_instance(const char* inst_name, e_script_ins
     return inst;
 }
 
+// sub_A1D190
+script_instance* script_object::add_instance(const mash::string                 &inst_name,
+                                             const void*                         constructor_parms_buffer,
+                                                   vm_thread**                   constructor_thread,
+                                                   e_script_instance_stack_size  stack_size) {
+
+    void* memory = references::instance_pool.get().allocate();
+
+    script_instance* inst = memory ?
+        new (memory) script_instance(inst_name.c_str(), data_blocksize, 0) : nullptr;
+
+    inst->set_stack_size(stack_size);
+
+    add(inst);
+
+    construct_instance(inst, constructor_parms_buffer, constructor_thread);
+
+    return inst;
+}
+
 // sub_A1CCE0
 void script_object::construct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread) {
     inst->parent->instance_lock->lock_ref();
@@ -179,4 +199,141 @@ void script_object::run(bool ignore_suspended) {
         if ((current->flags & script_instance_flag_auto_destruct) && !current->threads.head)
             remove_instance(current, true);
     }
+}
+
+// sub_A1C780
+i32 script_object::find_func(string_hash func_fullname) const {
+    references::function_cache_lock.read()->acquire();
+
+    script_object_function_cache_element* cache = &references::function_cache.get();
+
+    i32 victim       = -1;
+    i32 lowest_usage = 0x7FFFFFFF;
+
+    for (i32 slot = 0; slot < 20; ++slot) {
+        script_object_function_cache_element &element = cache[slot];
+
+        if (element.function_index == -1) {
+            victim = slot;
+
+            break;
+        }
+
+        if (element.parent == this && element.function_fullname == func_fullname) {
+            element.usage = references::function_cache_usage.get()++;
+
+            i32 index = element.function_index;
+
+            references::function_cache_lock.read()->release();
+
+            return index;
+        }
+
+        if (lowest_usage > element.usage) {
+            lowest_usage = element.usage;
+            victim       = slot;
+        }
+    }
+
+    i32 found = -1;
+
+    if (flags & script_object_flag_sorted_funcs) {
+        if (constructor_index >= 0 && funcs.data[constructor_index]->fullname == func_fullname)
+            found = constructor_index;
+        else if (destructor_index >= 0 && funcs.data[destructor_index]->fullname == func_fullname)
+            found = destructor_index;
+        else {
+            i32 low = 0;
+
+            if (constructor_index >= 0)
+                low = constructor_index + 1;
+
+            if (destructor_index >= 0)
+                low = destructor_index + 1;
+
+            i32 high = (i32)funcs.size - 1;
+            i32 mid  = (low + high) >> 1;
+
+            script_function* function = funcs.data[mid];
+
+            if (function->fullname == func_fullname)
+                found = mid;
+
+            while (found < 0) {
+                i32 previous = mid;
+
+                if (function->fullname.source_hash_code >= func_fullname.source_hash_code) {
+                    high = mid - 1;
+
+                    if (high < 0)
+                        break;
+                } else {
+                    low = mid + 1;
+
+                    if (low >= (i32)funcs.size)
+                        break;
+                }
+
+                if (low > high)
+                    break;
+
+                mid = (low + high) >> 1;
+
+                if (previous == mid)
+                    break;
+
+                function = funcs.data[mid];
+
+                if (function->fullname == func_fullname)
+                    found = mid;
+            }
+        }
+    } else {
+        for (i32 index = 0; index < (i32)funcs.size; ++index) {
+            if (funcs.data[index]->fullname == func_fullname) {
+                found = index;
+
+                break;
+            }
+        }
+    }
+
+    if (found >= 0) {
+        script_object_function_cache_element &element = cache[victim];
+
+        element.parent            = this;
+        element.function_fullname = func_fullname;
+        element.function_index    = found;
+        element.usage             = references::function_cache_usage.get()++;
+
+        references::function_cache_lock.read()->release();
+
+        return found;
+    }
+
+    references::function_cache_lock.read()->release();
+
+    if (!parent_object)
+        return -1;
+
+    i32 inherited = parent_object->find_func(func_fullname);
+
+    return inherited == -1 ? -1 : inherited + (i32)funcs.size;
+}
+
+// sub_A1CFE0
+script_function* script_object::get_function_ptr(u32 index) const {
+    const script_object* object = this;
+
+    while (index >= object->funcs.size) {
+        index  -= object->funcs.size;
+        object  = object->parent_object;
+    }
+
+    return object->funcs.data[index];
+}
+
+// sub_A1D180
+script_instance* script_object::first_instance() const {
+    return instances.head;
 }
