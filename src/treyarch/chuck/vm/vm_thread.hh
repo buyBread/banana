@@ -67,8 +67,9 @@ namespace treyarch { namespace chuck { namespace vm {
     namespace references {
         inline util::memory_reference<u32> id_counter { 0x01124C70 };
 
-        inline util::memory_reference<memory::fixed_pool> thread_pool          { 0x01124CA8 };
-        inline util::memory_reference<memory::fixed_pool> local_reference_pool { 0x01124768 };
+        inline util::memory_reference<memory::fixed_pool> thread_pool             { 0x01124CA8 };
+        inline util::memory_reference<memory::fixed_pool> local_reference_pool    { 0x01124768 };
+        inline util::memory_reference<memory::fixed_pool> flow_stack_element_pool { 0x01125188 };
 
         inline util::memory_reference<raise_global_signal_callback_t>   raise_global_signal_callback   { 0x01124C74 };
         inline util::memory_reference<raise_instance_signal_callback_t> raise_instance_signal_callback { 0x01124C78 };
@@ -154,12 +155,13 @@ namespace treyarch { namespace chuck { namespace vm {
         u32                              thread_id;
         vm_simple_list
             <vm_thread_local_reference*> local_references;
-        vm_simple_list<vm_thread*>*      thread_list;     // the owning instance's `threads`
+        vm_simple_list<vm_thread*>*      list;            // the owning instance's `threads`
         vm_thread*                       vm_simple_list_previous;
         vm_thread*                       vm_simple_list_next;
 
         // leaves the push/pop modifier and current-operand state as the pool left it
         vm_thread(script_instance* instance, const script_function* function, void* requested_user_data, u32 stack_size);
+        ~vm_thread();
 
         void add_local_reference(void* allocation, u32 mode);
 
@@ -173,6 +175,9 @@ namespace treyarch { namespace chuck { namespace vm {
                                        add_global_callback_callback_t             add_global_callback,
                                        add_instance_callback_callback_t           add_instance_callback,
                                        add_library_callback_callback_t            add_library_callback);
+
+    private:
+        void release_local_references();
     };
 
     ASSERT_SIZEOF  (argument_t,                   0x0C);
@@ -204,7 +209,7 @@ namespace treyarch { namespace chuck { namespace vm {
     ASSERT_OFFSETOF(vm_thread, camera_priority,                  0x64);
     ASSERT_OFFSETOF(vm_thread, thread_id,                        0x68);
     ASSERT_OFFSETOF(vm_thread, local_references,                 0x6C);
-    ASSERT_OFFSETOF(vm_thread, thread_list,                      0x78);
+    ASSERT_OFFSETOF(vm_thread, list,                             0x78);
     ASSERT_OFFSETOF(vm_thread, vm_simple_list_previous,          0x7C);
     ASSERT_OFFSETOF(vm_thread, vm_simple_list_next,              0x80);
 }}} // treyarch::chuck::vm

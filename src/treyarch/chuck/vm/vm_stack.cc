@@ -16,6 +16,20 @@ vm_stack::vm_stack(vm_thread* owner, u32 size) : sp(nullptr),
     allocate(size);
 }
 
+// sub_A19F50
+vm_stack::~vm_stack() {
+    if (!stack_buffer)
+        return;
+
+    switch (buffer_size) {
+        case 128:  references::stack_pool_128 .get().release(stack_buffer); break;
+        case 284:  references::stack_pool_284 .get().release(stack_buffer); break;
+        case 512:  references::stack_pool_512 .get().release(stack_buffer); break;
+        case 1024: references::stack_pool_1024.get().release(stack_buffer); break;
+        default:   break;
+    }
+}
+
 // sub_A19A30
 void vm_stack::allocate(u32 size) {
     if (!size)

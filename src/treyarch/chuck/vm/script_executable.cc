@@ -1,4 +1,3 @@
-#include "retail.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 
@@ -46,7 +45,7 @@ void script_executable::first_run(f32 time_inc, bool ignore_suspended) {
                     break;
 
                 case script_executable_object_instance_info_id_made_from_num:
-                    *(i32*)target = retail::sub_A19590(vm_dynamic_array_manager::inst(), (i32)global_instance, (i32)info->num);
+                    *(chuck_dynamic_array_t**)target = vm_dynamic_array_manager::inst()->create_new_dynamic_array(global_instance, (i32)info->num);
                     break;
 
                 case script_executable_object_instance_info_id_uint:
@@ -66,8 +65,8 @@ void script_executable::first_run(f32 time_inc, bool ignore_suspended) {
         script_object* object = script_objects[index];
 
         if (object && (object->flags & script_object_flag_singleton)) {
-            retail::sub_A1D220((u32*)object, (i32)"__singleton", 1); // script_object::add_instance
-            retail::sub_A1D590((u32*)object, ignore_suspended);      // script_object::run
+            object->add_instance("__singleton", script_instance_stack_size_normal);
+            object->run(ignore_suspended);
         }
     }
 }
@@ -83,7 +82,7 @@ void script_executable::run(f32 time_inc, bool ignore_suspended) {
         if (object && object->instances.head && (object->flags & script_object_flag_needs_run)) {
             flags = (e_script_executable_flags)(flags | script_executable_flag_needs_run);
 
-            retail::sub_A1D590((u32*)object, ignore_suspended); // script_object::run
+            object->run(ignore_suspended);
         }
     }
 
@@ -97,7 +96,7 @@ bool script_executable::has_threads() const {
     for (i32 index = 0; index < count; ++index) {
         script_object* object = script_objects[index];
 
-        if (object && retail::sub_A1D520((u32*)object)) // script_object::has_threads
+        if (object && object->has_threads())
             return true;
     }
 

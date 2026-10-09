@@ -1,5 +1,8 @@
+#include <new>
+
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -19,6 +22,90 @@ i32 vm_dynamic_array_manager::find_slot(const chuck_dynamic_array_t* array) {
     }
 
     return -1;
+}
+
+// sub_A19300
+void vm_dynamic_array_manager::grow_pool() {
+    u32 slot_count   = array_pool->size();
+    u32 bucket_count = slot_buckets->size();
+
+    array_pool->resize(slot_count + 32, vm_dynamic_array_slot {});
+
+    u32 grown_slot_count = array_pool->size();
+
+    for (u32 slot = slot_count; slot < grown_slot_count; ++slot) {
+        void* memory = memory::heap::allocate(sizeof(chuck_dynamic_array_t));
+
+        (*array_pool)[slot].array = memory ? new (memory) chuck_dynamic_array_t() : nullptr;
+        (*array_pool)[slot].array->reserve(10);
+    }
+
+    // one bucket per 16 new slots, all free
+    slot_buckets->resize(bucket_count + 2, 0);
+
+    u32 grown_bucket_count = slot_buckets->size();
+
+    for (u32 bucket = bucket_count; bucket < grown_bucket_count; ++bucket)
+        (*slot_buckets)[bucket] = 0xFFFF;
+}
+
+// inlined @ sub_A19450
+i32 vm_dynamic_array_manager::take_free_slot() {
+    i32 bucket_count = (i32)slot_buckets->size();
+
+    for (i32 bucket = 0; bucket < bucket_count; ++bucket) {
+        u16 &free_bits = slot_buckets->begin()[bucket];
+
+        if (!free_bits)
+            continue;
+
+        i32 bit = 0;
+
+        for (u16 bits = free_bits; bits && !(bits & 1); bits >>= 1)
+            ++bit;
+
+        free_bits &= ~(1 << bit);
+
+        return bucket * 16 + bit;
+    }
+
+    return -1;
+}
+
+// sub_A19450
+chuck_dynamic_array_t* vm_dynamic_array_manager::alloc_array_from_pool(script_instance* si, bool for_string) {
+    i32 slot;
+
+    while ((slot = take_free_slot()) == -1)
+        grow_pool();
+
+    vm_dynamic_array_slot &entry = (*array_pool)[slot];
+
+    entry.ref_count = 1;
+    entry.owner     = si;
+
+    if (for_string) {
+        entry.unk_0c |= 1;
+
+        // pushes whatever is on the stack
+        chuck_dynamic_array_element_t element;
+
+        while (entry.array->size() < 22)
+            entry.array->push_back(element);
+    } else
+        entry.unk_0c &= ~1;
+
+    if (si)
+        si->add_allocated_stuff(script_garbage_collection_dynamic_array, (u32)entry.array);
+
+    return entry.array;
+}
+
+// sub_A19590
+chuck_dynamic_array_t* vm_dynamic_array_manager::create_new_dynamic_array(script_instance* si, i32 reserve_size) {
+    engine_lock_scope scope(references::dynamic_array_lock.read());
+
+    return alloc_array_from_pool(si, false);
 }
 
 // sub_A18420

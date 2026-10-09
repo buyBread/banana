@@ -2,6 +2,8 @@
 #include <windows.h>
 
 #include "treyarch/chuck/vm/script_function.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 
 using namespace treyarch;
@@ -19,16 +21,16 @@ void vm_thread::register_callbacks(raise_global_signal_callback_t             ra
                                    add_instance_callback_callback_t           add_instance_callback,
                                    add_library_callback_callback_t            add_library_callback) {
 
-    references::raise_global_signal_callback           .write(raise_global_signal);
-    references::raise_instance_signal_callback         .write(raise_instance_signal);
-    references::raise_library_signal_callback          .write(raise_library_signal);
+    references::raise_global_signal_callback            .write(raise_global_signal);
+    references::raise_instance_signal_callback          .write(raise_instance_signal);
+    references::raise_library_signal_callback           .write(raise_library_signal);
     references::clear_global_callback_by_name_callback  .write(clear_global_callback_by_name);
     references::clear_global_callback_by_id_callback    .write(clear_global_callback_by_id);
     references::clear_instance_callback_by_name_callback.write(clear_instance_callback_by_name);
     references::clear_instance_callback_by_id_callback  .write(clear_instance_callback_by_id);
-    references::add_global_callback_callback           .write(add_global_callback);
-    references::add_instance_callback_callback         .write(add_instance_callback);
-    references::add_library_callback_callback          .write(add_library_callback);
+    references::add_global_callback_callback            .write(add_global_callback);
+    references::add_instance_callback_callback          .write(add_instance_callback);
+    references::add_library_callback_callback           .write(add_library_callback);
 }
 
 // sub_A22140
@@ -47,11 +49,57 @@ vm_thread::vm_thread(      script_instance* instance,
                                                           unk_60(0),
                                                           camera_priority(0.0f),
                                                           local_references { nullptr, nullptr, 0 },
-                                                          thread_list(nullptr),
+                                                          list(nullptr),
                                                           vm_simple_list_previous(nullptr),
                                                           vm_simple_list_next(nullptr) {
 
     thread_id = _InterlockedIncrement((volatile LONG*)&references::id_counter.get());
+}
+
+// sub_A22AC0
+vm_thread::~vm_thread() {
+    if (inst)
+        inst->run_callbacks(script_instance_callback_reason_thread_about_to_die, this);
+
+    release_local_references();
+
+    while (flow_stack) {
+        vm_thread_flow_stack_element* element = flow_stack;
+
+        flow_stack = element->previous;
+
+        if (element)
+            references::flow_stack_element_pool.get().release(element);
+    }
+}
+
+// sub_A22A00
+void vm_thread::release_local_references() {
+    vm_thread_local_reference* reference = local_references.head;
+
+    if (!reference)
+        return;
+
+    do {
+        if (local_references.head)
+            local_references.erase(local_references.head);
+
+        if (reference->mode & 1) {
+            vm_dynamic_array_manager* manager = vm_dynamic_array_manager::inst();
+            auto*                     array   = (chuck_dynamic_array_t*)reference->allocation;
+
+            if (reference->mode & 4)
+                manager->remove_string_array_reference(array);
+            else if (reference->mode & 8)
+                manager->remove_instance_array_reference((script_instance*)this, array); // the context is never read
+            else
+                manager->remove_reference(array);
+        }
+
+        references::local_reference_pool.get().release(reference);
+
+        reference = local_references.head;
+    } while (local_references.head);
 }
 
 // sub_A21FE0

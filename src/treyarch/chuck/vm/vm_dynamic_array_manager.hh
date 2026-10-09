@@ -23,7 +23,7 @@ namespace treyarch { namespace chuck { namespace vm {
         chuck_dynamic_array_t* array;
         u32                    ref_count;
         script_instance*       owner;     // the array is listed in its garbage-collection stuff
-        u32                    unk_0c;
+        u32                    unk_0c;    // bit 0 set for string storage
     };
 
     enum e_vm_dynamic_array_release_mode : i32 {
@@ -43,6 +43,9 @@ namespace treyarch { namespace chuck { namespace vm {
         bool                                       unk_08;    // when set, dying arrays aren't unlisted from their owner
         u8                                         pad_09[3];
 
+        // reserve_size is never read
+        chuck_dynamic_array_t* create_new_dynamic_array(script_instance* si, i32 reserve_size);
+
         void add_reference(chuck_dynamic_array_t* array);
         bool find_by_data(const void* data, chuck_dynamic_array_t** found);
 
@@ -52,6 +55,10 @@ namespace treyarch { namespace chuck { namespace vm {
         void remove_instance_array_reference(script_instance* context, chuck_dynamic_array_t* array);
 
     private:
+        void                   grow_pool();
+        i32                    take_free_slot();
+        chuck_dynamic_array_t* alloc_array_from_pool(script_instance* si, bool for_string);
+
         i32  find_slot(const chuck_dynamic_array_t* array);
         void release_reference(chuck_dynamic_array_t*          array,
                                script_instance*                context,

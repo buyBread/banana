@@ -53,21 +53,21 @@ namespace treyarch { namespace chuck { namespace vm {
     class script_manager : public singleton_instance<script_manager, 0x011248E0> {
 
     public:
-        u32                                          flags;                            // SM3 position; no retail consumer found
-        f32                                          time_inc;
-        script_executable_entry_set_t*               exec_set;
-        script_executable*                           master_script;
-        script_var_container*                        game_var_container;
-        script_var_container*                        shared_var_container;
-        dinkumware::list<script_executable*>*        execs_pending_first_run;
-        void*                                        garbage_collection_callbacks[15]; // SM3 had 14 types
-        notification_callback_t                      notification_callback;
-        get_script_executable_resource_callback_t    get_script_executable_resource_callback;
-        get_script_var_container_resource_callback_t get_script_var_container_resource_callback;
-        unk_predicate_callback_t                     unk_predicate_callbacks[4];      // SM3's using_chuck_old_fashioned_callback is presumably one of these
-        get_platform_callback_t                      get_platform_callback;
-        engine_recursive_lock                        exec_set_lock;                   // held across load, run, and unload
-        engine_recursive_lock                        notification_lock;
+        u32                                           flags;                            // SM3 position; no retail consumer found
+        f32                                           time_inc;
+        script_executable_entry_set_t*                exec_set;
+        script_executable*                            master_script;
+        script_var_container*                         game_var_container;
+        script_var_container*                         shared_var_container;
+        dinkumware::list<script_executable*>*         execs_pending_first_run;
+        script_instance_garbage_collection_callback_t garbage_collection_callbacks[15]; // SM3 had 14 types
+        notification_callback_t                       notification_callback;
+        get_script_executable_resource_callback_t     get_script_executable_resource_callback;
+        get_script_var_container_resource_callback_t  get_script_var_container_resource_callback;
+        unk_predicate_callback_t                      unk_predicate_callbacks[4];       // SM3's using_chuck_old_fashioned_callback is presumably one of these
+        get_platform_callback_t                       get_platform_callback;
+        engine_recursive_lock                         exec_set_lock;                    // held across load, run, and unload
+        engine_recursive_lock                         notification_lock;
 
         void register_callbacks(notification_callback_t                      notification,
                                 get_script_executable_resource_callback_t    get_script_executable_resource,
@@ -79,6 +79,8 @@ namespace treyarch { namespace chuck { namespace vm {
                                 get_platform_callback_t                      get_platform);
 
         void run_notification_callback(e_script_manager_callback_reason reason, script_executable* se, void* user_data);
+
+        script_instance_garbage_collection_callback_t get_garbage_collection_callback(e_script_garbage_collection_type type) const;
 
         void run(f32 requested_time_inc, bool ignore_suspended);
         bool run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended);

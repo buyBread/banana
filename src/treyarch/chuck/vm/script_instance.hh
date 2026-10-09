@@ -24,6 +24,12 @@ namespace treyarch { namespace chuck { namespace vm {
         script_instance_flag_running_callbacks  = 0x20
     };
 
+    enum e_script_instance_stack_size : u32 {
+        script_instance_stack_size_small,
+        script_instance_stack_size_normal,
+        script_instance_stack_size_large
+    };
+
     enum e_script_instance_callback_reason : i32 {
         script_instance_callback_reason_instance_about_to_die = 0,
         script_instance_callback_reason_thread_about_to_die   = 1
@@ -36,7 +42,8 @@ namespace treyarch { namespace chuck { namespace vm {
 
     // WoS ordinals; SM3's list differs (it had dynamic arrays at 11)
     enum e_script_garbage_collection_type : u32 {
-        script_garbage_collection_dynamic_array = 6 // unlisted by vm_dynamic_array_manager when an array dies
+        script_garbage_collection_dynamic_array = 6, // listed when the manager creates an owned array, unlisted when it dies
+        script_garbage_collection_total_types   = 15
     };
 
     // SM3's element plus the owning-list backpointer every retail list element carries
@@ -47,6 +54,10 @@ namespace treyarch { namespace chuck { namespace vm {
         garbage_collection_element*                  vm_simple_list_next;
     };
 
+    // installed per type in script_manager; called before the type's list is emptied
+    using script_instance_garbage_collection_callback_t = void(*)(script_instance*                              si,
+                                                                  vm_simple_list<garbage_collection_element*> &stuff_to_delete);
+
     using script_instance_created_callback_t   = void(*)(script_instance* inst);
     using script_instance_destroyed_callback_t = void(*)(script_instance* inst);
 
@@ -55,7 +66,9 @@ namespace treyarch { namespace chuck { namespace vm {
         inline util::memory_reference<script_instance_created_callback_t>   script_instance_created_callback   { 0x01124BA8 };
         inline util::memory_reference<script_instance_destroyed_callback_t> script_instance_destroyed_callback { 0x01124BAC };
 
+        inline util::memory_reference<memory::fixed_pool> instance_pool                   { 0x01124BB0 };
         inline util::memory_reference<memory::fixed_pool> callback_node_pool              { 0x01124C00 };
+        inline util::memory_reference<memory::fixed_pool> allocated_stuff_pool            { 0x011250F0 }; // one slot holds all 15 lists
         inline util::memory_reference<memory::fixed_pool> garbage_collection_element_pool { 0x01125138 };
     } // references
 
@@ -78,15 +91,28 @@ namespace treyarch { namespace chuck { namespace vm {
 
         vm_simple_list<garbage_collection_element*>* allocated_stuff; // one list per garbage-collection type
 
-        u32                               unk_34;
+        i32                               suspend_count; // run skips the instance while positive, unless told to ignore it
         void*                             client_space;  // the game's script_instance_shadow (sub_825600)
         u32                               unk_3c;
         engine_recursive_lock             thread_lock;
         engine_recursive_lock             allocated_stuff_lock;
-        vm_simple_list<script_instance*>* instance_list; // the parent's `instances`
+        vm_simple_list<script_instance*>* list;          // the parent's `instances`
         script_instance*                  vm_simple_list_previous;
         script_instance*                  vm_simple_list_next;
         u32                               unk_6c;
+
+        // leaves unk_3c, unk_6c and the lock reserves as the pool left them
+        script_instance(const char* requested_name, i32 data_size, u32 requested_flags);
+       ~script_instance();
+
+        void set_stack_size(e_script_instance_stack_size stack_size);
+
+        void run(bool ignore_suspended);
+
+        void kill_thread(vm_thread* thread_to_kill);
+        bool massacre_threads_by_function(const script_function* ex, const vm_thread* ignore_thread);
+
+        void run_callbacks(e_script_instance_callback_reason reason, vm_thread* vmt);
 
         void register_callback(script_instance_callback_t requested_callback, void* user_data);
         void unregister_callback(void* user_data);
@@ -97,11 +123,20 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_thread* add_thread(const script_function* ex, void* user_data, u32 stack_size);
         vm_thread* add_thread(const script_function* ex,
                               const void*            arguments,
-                              i32                    argument_size,
-                              void*                  user_data,
-                              u32                    stack_size);
+                                    i32              argument_size,
+                                    void*            user_data,
+                                    u32              stack_size);
 
+        void add_allocated_stuff   (e_script_garbage_collection_type type, u32 stuff);
         void remove_allocated_stuff(e_script_garbage_collection_type type, u32 stuff);
+
+        void do_garbage_collection();
+
+    private:
+        bool       recursive_massacre_threads(const vm_thread* caller, const vm_thread* root);
+        vm_thread* delete_thread(vm_thread* thread);
+
+        void release_string_members();
     };
 
     ASSERT_SIZEOF  (script_instance_callback_node, 0x08);
@@ -120,10 +155,11 @@ namespace treyarch { namespace chuck { namespace vm {
     ASSERT_OFFSETOF(script_instance, callback,                0x28);
     ASSERT_OFFSETOF(script_instance, callback_nodes,          0x2C);
     ASSERT_OFFSETOF(script_instance, allocated_stuff,         0x30);
+    ASSERT_OFFSETOF(script_instance, suspend_count,           0x34);
     ASSERT_OFFSETOF(script_instance, client_space,            0x38);
     ASSERT_OFFSETOF(script_instance, thread_lock,             0x40);
     ASSERT_OFFSETOF(script_instance, allocated_stuff_lock,    0x50);
-    ASSERT_OFFSETOF(script_instance, instance_list,           0x60);
+    ASSERT_OFFSETOF(script_instance, list,                    0x60);
     ASSERT_OFFSETOF(script_instance, vm_simple_list_previous, 0x64);
     ASSERT_OFFSETOF(script_instance, vm_simple_list_next,     0x68);
 }}} // treyarch::chuck::vm

@@ -21,6 +21,7 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_thread* thread;
 
         vm_stack(vm_thread* owner, u32 size);
+        ~vm_stack();
 
         void allocate(u32 size);
         void grow();

@@ -31,6 +31,11 @@ void script_manager::run_notification_callback(e_script_manager_callback_reason 
     notification_callback(reason, se, user_data);
 }
 
+// sub_A1A120
+script_instance_garbage_collection_callback_t script_manager::get_garbage_collection_callback(e_script_garbage_collection_type type) const {
+    return garbage_collection_callbacks[type];
+}
+
 // inlined @ sub_A1AE50, sub_A1B960
 void script_manager::first_run_pending_execs(f32 requested_time_inc, bool ignore_suspended) {
     if (execs_pending_first_run->empty())

@@ -12,8 +12,11 @@ namespace treyarch { namespace chuck { namespace vm {
         T   last;
         i32 size;
 
-        // sub_A1E310 (garbage_collection_element); returns the next element, or null when `element` is on another list.
-        // the element's backpointer must be named `list`
+        // sub_A1D010 (script_instance)
+        // sub_A1E310 (garbage_collection_element)
+        // sub_A1E390 (vm_thread)
+        // sub_A22070 (vm_thread_local_reference)
+        // returns the next element, or null when `element` is on another list; the element's backpointer must be named `list`
         T erase(T element) noexcept {
             if (!element || element->list != this)
                 return nullptr;

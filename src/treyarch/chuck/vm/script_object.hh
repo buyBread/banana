@@ -5,16 +5,18 @@
 #include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_executable;
+    class vm_thread;
 
     enum e_script_object_flags : u32 {
         script_object_flag_global_object = 0x01,
-        script_object_flag_from_mash     = 0x02, // SM3; no retail consumer checked
+        script_object_flag_from_mash     = 0x02,
         script_object_flag_needs_run     = 0x10, // set by thread creation and AUTODEST, recomputed by each run (sub_A1D590)
         script_object_flag_singleton     = 0x20  // first run creates and runs one "__singleton" instance
     };
@@ -32,22 +34,37 @@ namespace treyarch { namespace chuck { namespace vm {
         mash::vector<script_function>    funcs;
         i32                              constructor_index;
         i32                              destructor_index; // negative when absent
-        u8                               unk_30[0x18];
+        u8                               unk_30[0x08];
+        mash::vector_basic
+            <vm_reference_descriptor>    reference_descriptors; // only kind 0 is checked, and it's released as a `str` when an instance dies
         vm_simple_list<script_instance*> instances;
         e_script_object_flags            flags;
         ref_counted_simple_mutex*        instance_lock;    // pooled
+
+        script_instance* add_instance(const char* inst_name, e_script_instance_stack_size stack_size);
+        void             construct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread);
+        void             remove_instance(script_instance* delete_me, bool run_destructor_if_present);
+
+        vm_thread* add_thread(script_instance* inst, i32 fidx);
+
+        bool has_threads() const;
+        void run(bool ignore_suspended);
+
+    private:
+        void add(script_instance* inst);
     };
 
-    ASSERT_SIZEOF  (script_object,                    0x5C);
-    ASSERT_OFFSETOF(script_object, name,              0x00);
-    ASSERT_OFFSETOF(script_object, parent_object,     0x04);
-    ASSERT_OFFSETOF(script_object, parent,            0x08);
-    ASSERT_OFFSETOF(script_object, global_instance,   0x0C);
-    ASSERT_OFFSETOF(script_object, data_blocksize,    0x10);
-    ASSERT_OFFSETOF(script_object, funcs,             0x14);
-    ASSERT_OFFSETOF(script_object, constructor_index, 0x28);
-    ASSERT_OFFSETOF(script_object, destructor_index,  0x2C);
-    ASSERT_OFFSETOF(script_object, instances,         0x48);
-    ASSERT_OFFSETOF(script_object, flags,             0x54);
-    ASSERT_OFFSETOF(script_object, instance_lock,     0x58);
+    ASSERT_SIZEOF  (script_object,                        0x5C);
+    ASSERT_OFFSETOF(script_object, name,                  0x00);
+    ASSERT_OFFSETOF(script_object, parent_object,         0x04);
+    ASSERT_OFFSETOF(script_object, parent,                0x08);
+    ASSERT_OFFSETOF(script_object, global_instance,       0x0C);
+    ASSERT_OFFSETOF(script_object, data_blocksize,        0x10);
+    ASSERT_OFFSETOF(script_object, funcs,                 0x14);
+    ASSERT_OFFSETOF(script_object, constructor_index,     0x28);
+    ASSERT_OFFSETOF(script_object, destructor_index,      0x2C);
+    ASSERT_OFFSETOF(script_object, reference_descriptors, 0x38);
+    ASSERT_OFFSETOF(script_object, instances,             0x48);
+    ASSERT_OFFSETOF(script_object, flags,                 0x54);
+    ASSERT_OFFSETOF(script_object, instance_lock,         0x58);
 }}} // treyarch::chuck::vm
