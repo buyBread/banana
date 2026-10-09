@@ -162,6 +162,17 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_thread(script_instance* instance, const script_function* function, void* requested_user_data, u32 stack_size);
 
         void add_local_reference(void* allocation, u32 mode);
+
+        static void register_callbacks(raise_global_signal_callback_t             raise_global_signal,
+                                       raise_instance_signal_callback_t           raise_instance_signal,
+                                       raise_library_signal_callback_t            raise_library_signal,
+                                       clear_global_callback_by_name_callback_t   clear_global_callback_by_name,
+                                       clear_global_callback_by_id_callback_t     clear_global_callback_by_id,
+                                       clear_instance_callback_by_name_callback_t clear_instance_callback_by_name,
+                                       clear_instance_callback_by_id_callback_t   clear_instance_callback_by_id,
+                                       add_global_callback_callback_t             add_global_callback,
+                                       add_instance_callback_callback_t           add_instance_callback,
+                                       add_library_callback_callback_t            add_library_callback);
     };
 
     ASSERT_SIZEOF  (argument_t,                   0x0C);

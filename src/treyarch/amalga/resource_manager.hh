@@ -35,6 +35,17 @@ namespace treyarch {
             push_resource_context_stack_object &operator=(const push_resource_context_stack_object&) = delete;
         };
 
+        // always pushes, always pops
+        class resource_context_stack_object {
+
+        public:
+            explicit resource_context_stack_object(resource_pack_slot* context);
+           ~resource_context_stack_object();
+
+            resource_context_stack_object           (const resource_context_stack_object&) = delete;
+            resource_context_stack_object &operator=(const resource_context_stack_object&) = delete;
+        };
+
         namespace resource_manager {
             void create_inst();
 
@@ -83,5 +94,6 @@ namespace treyarch {
         } // resource_manager
 
         ASSERT_SIZEOF(push_resource_context_stack_object, 0x08);
+        ASSERT_SIZEOF(resource_context_stack_object,      0x01);
     } // amalga
 } // treyarch

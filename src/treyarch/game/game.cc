@@ -17,6 +17,7 @@
 #include "treyarch/game/quest_manager.hh"
 #include "treyarch/game/region_pack_manager.hh"
 #include "treyarch/game/region_spawn_manager.hh"
+#include "treyarch/game/script/chuck_callbacks.hh"
 #include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
@@ -57,7 +58,7 @@ game::game() {
 
     retail::sub_773A80();
     retail::sub_97AB10();
-    retail::sub_843300();
+    chuck_callbacks::install();
     retail::sub_83EF20();
     retail::sub_603E00();
 
@@ -221,10 +222,10 @@ void game::unload_current_level() {
     while (hero_freeze_depth > 0)
         freeze_hero(false);
 
-    if (references::unk_010f7074.read())
-        retail::sub_601880((u32*)references::unk_010f7074.read(), 0); // arch_base::clear_script_callbacks
+    if (references::script_controller.read())
+        references::script_controller.read()->clear_script_callbacks(nullptr);
 
-    retail::sub_601880((u32*)app::get().get_arch_base(), 0); // arch_base::clear_script_callbacks
+    app::get().get_arch_base()->clear_script_callbacks(nullptr);
     retail::sub_7BCDF0();
 
     world_dynamics_system* world = the_world;

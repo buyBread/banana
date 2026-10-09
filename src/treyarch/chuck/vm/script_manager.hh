@@ -61,6 +61,15 @@ namespace treyarch { namespace chuck { namespace vm {
         get_platform_callback_t                      get_platform_callback;
         engine_recursive_lock                        exec_set_lock;                   // held across load, run, and unload
         engine_recursive_lock                        notification_lock;
+
+        void register_callbacks(notification_callback_t                      notification,
+                                get_script_executable_resource_callback_t    get_script_executable_resource,
+                                get_script_var_container_resource_callback_t get_script_var_container_resource,
+                                unk_predicate_callback_t                     unk_predicate_0,
+                                unk_predicate_callback_t                     unk_predicate_1,
+                                unk_predicate_callback_t                     unk_predicate_2,
+                                unk_predicate_callback_t                     unk_predicate_3,
+                                get_platform_callback_t                      get_platform);
     };
 
     ASSERT_SIZEOF  (script_manager,                                             0x98);

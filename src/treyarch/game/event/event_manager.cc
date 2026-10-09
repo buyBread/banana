@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_manager.hh"
@@ -33,6 +34,15 @@ namespace treyarch { namespace fn {
 }} // treyarch::fn
 
 using namespace treyarch;
+
+// sub_683AA0
+string_hash event_manager::register_script_event_type(const char* event_name) {
+    const char* separator = std::strrchr(event_name, ':');
+    string_hash event_type_id;
+    event_type_id.initialize(mash::ALLOCATED, separator ? separator + 1 : event_name);
+
+    return event_type_id;
+}
 
 // sub_683FC0
 event_type* event_manager::find_event_type(string_hash event_type_id) {

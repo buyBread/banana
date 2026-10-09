@@ -91,6 +91,9 @@ namespace treyarch { namespace chuck { namespace vm {
         void register_callback(script_instance_callback_t requested_callback, void* user_data);
         void unregister_callback(void* user_data);
 
+        static void set_script_instance_callbacks(script_instance_created_callback_t   created_callback,
+                                                  script_instance_destroyed_callback_t destroyed_callback);
+
         vm_thread* add_thread(const script_function* ex, void* user_data, u32 stack_size);
         vm_thread* add_thread(const script_function* ex,
                               const void*            arguments,

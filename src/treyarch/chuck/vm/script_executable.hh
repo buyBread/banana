@@ -75,6 +75,11 @@ namespace treyarch { namespace chuck { namespace vm {
         u32                                                  client_library_key; // 0x6C0AE071 in every shipped script; retail never reads it
         e_script_executable_flags                            flags;
         i32                                                  suspend_count;      // sub_A1FD60 skips the executable while positive
+
+        static void register_callbacks(resolve_signal_callback_t               resolve_signal,
+                                       resolve_extern_callback_t               resolve_extern,
+                                       get_chuck_client_library_key_callback_t get_chuck_client_library_key,
+                                       get_script_executable_folder_callback_t get_script_executable_folder);
     };
 
     ASSERT_OFFSETOF(script_executable_object_instance_info, offset, 0x14);

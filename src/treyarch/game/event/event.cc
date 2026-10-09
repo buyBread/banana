@@ -10,6 +10,13 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// sub_683C30
+event::event() : event_type_id(),
+                 raised_frame(0),
+                 autokill(false),
+                 from_mash(false),
+                 padding_0e {} {}
+
 // sub_5AAEB0
 event::event(string_hash requested_event_type_id, bool requested_autokill) : event_type_id(requested_event_type_id),
                                                                              raised_frame(0),
@@ -39,7 +46,7 @@ mash::virtual_types_key event::get_virtual_type_key() const {
     return references::event_type_key.read();
 }
 
-// sub_719950
+// sub_718FB0
 bool event::is_subclass_of(mash::virtual_types_key parent_class) const {
     return parent_class == mash::mash_virtual_base::get_virtual_type_key();
 }

@@ -202,3 +202,19 @@ amalga::push_resource_context_stack_object::~push_resource_context_stack_object(
     resource_manager::references::resource_context_stack_mutex.read()->release();
     resource_manager::references::unk_010300a8.get().release();
 }
+
+// sub_42AC10
+amalga::resource_context_stack_object::resource_context_stack_object(resource_pack_slot* context) {
+    resource_manager::references::unk_010300a8.get().acquire();
+    resource_manager::references::resource_context_stack_mutex.read()->acquire();
+
+    retail::sub_767760((i32)context); // push_resource_context
+}
+
+// sub_42AC40
+amalga::resource_context_stack_object::~resource_context_stack_object() {
+    retail::sub_757240(); // pop_resource_context
+
+    resource_manager::references::resource_context_stack_mutex.read()->release();
+    resource_manager::references::unk_010300a8.get().release();
+}

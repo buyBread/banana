@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/game/arch_base.hh"
 #include "treyarch/game/wds/entity/interface/combo_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
@@ -12,14 +13,13 @@
 namespace treyarch {
     struct region;
 
-    class entity {
+    class entity : public arch_base {
 
     public:
-        void**                              vtable;
-        u8                                  reserved_004[0x0C];
+        u8                                  reserved_008[0x08];
         po*                                 my_abs_po;
         u32                                 unk_014;
-        u8                                  reserved_018[0x04];
+        u32                                 unk_018;
         interface_storage*                  my_ifc_storage;
         u8                                  reserved_020[0x30];
         container::fixed_vector<region*, 8> regions;
@@ -49,6 +49,7 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
     ASSERT_OFFSETOF(entity, unk_014,        0x14);
+    ASSERT_OFFSETOF(entity, unk_018,        0x18);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
     ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch

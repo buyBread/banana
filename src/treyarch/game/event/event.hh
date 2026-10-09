@@ -10,6 +10,7 @@
 namespace treyarch {
     class event : public mash::mash_virtual_base {
 
+    protected:
         string_hash event_type_id;
         u32         raised_frame;
         bool        autokill;
@@ -17,6 +18,7 @@ namespace treyarch {
         u8          padding_0e[2];
 
     public:
+                 event();
         explicit event(string_hash event_type_id, bool autokill = false);
 
         void* operator new(std::size_t size);

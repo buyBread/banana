@@ -9,6 +9,14 @@
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
 
+// sub_A1DF80
+void script_instance::set_script_instance_callbacks(script_instance_created_callback_t   created_callback,
+                                                    script_instance_destroyed_callback_t destroyed_callback) {
+
+    references::script_instance_created_callback  .write(created_callback);
+    references::script_instance_destroyed_callback.write(destroyed_callback);
+}
+
 // sub_A1DDC0
 void script_instance::register_callback(script_instance_callback_t requested_callback, void* user_data) {
     ref_lock_scope    instance_scope(parent->instance_lock);

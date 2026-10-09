@@ -62,8 +62,8 @@ namespace treyarch {
             return this->the_game;
         }
 
-        inline void* get_arch_base() {
-            return &this->arch_base_vtable;
+        inline arch_base* get_arch_base() {
+            return (arch_base*)&this->arch_base_vtable;
         }
 
         void skip_some_frames(i32 count) {

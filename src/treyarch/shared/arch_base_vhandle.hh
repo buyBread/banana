@@ -5,9 +5,11 @@
 #include "util/types.hh"
 
 namespace treyarch {
+    class arch_base;
+
     struct arch_base_vhandle_entry {
-        void* object;
-        u32   handle;
+        arch_base* object;
+        u32        handle;
     };
 
     namespace references {
@@ -21,7 +23,7 @@ namespace treyarch {
         explicit constexpr arch_base_vhandle(u32 value) noexcept : value(value) {}
 
         // sub_605300
-        void* resolve() const noexcept {
+        arch_base* resolve() const noexcept {
             if (!value)
                 return nullptr;
 

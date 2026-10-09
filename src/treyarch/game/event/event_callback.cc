@@ -3,6 +3,7 @@
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/game/event/chuck_parameter_event.hh"
 #include "treyarch/game/event/event.hh"
 #include "treyarch/game/event/event_callback.hh"
 #include "treyarch/game/wds/references.hh"
@@ -11,7 +12,6 @@
 
 namespace treyarch { namespace references {
     util::memory_reference<u32>                     callback_id_counter { 0x0102C230 };
-    util::memory_reference<mash::virtual_types_key> chuck_event_type    { 0x010F7160 };
     util::memory_reference<mash::virtual_types_key> data_event_type     { 0x010F7188 };
 }} // treyarch::references
 
@@ -108,11 +108,12 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
                                                         nullptr,
                                                         0);
 
-    if (raised_event->is_or_is_subclass_of(references::chuck_event_type.read())) {
-        i32 size = *(i32*)((u8*)raised_event + 0x10);
+    if (raised_event->is_or_is_subclass_of(references::chuck_parameter_event_type_key.read())) {
+        chuck_parameter_event* parameter_event = (chuck_parameter_event*)raised_event;
+        i32 size = parameter_event->args_stack_size;
 
         if (size > 0)
-            thread->dstack.push((u8*)raised_event + 0x14, size);
+            thread->dstack.push(parameter_event->parameters, size);
 
         return;
     }

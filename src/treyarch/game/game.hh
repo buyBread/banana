@@ -35,8 +35,8 @@ namespace treyarch {
         // game::frame_advance hands it the raw delta every frame
         inline util::memory_reference<void*> raw_delta_consumer { 0x010F9BEC };
 
-        // the 0x8DC-byte object game::game creates through sub_83EF20
-        inline util::memory_reference<void*> unk_010f7074 { 0x010F7074 };
+        // created by game::game through sub_83EF20
+        inline util::memory_reference<arch_base*> script_controller { 0x010F7074 };
 
         inline util::memory_reference<void*> unk_0102ce40 { 0x0102CE40 };
 

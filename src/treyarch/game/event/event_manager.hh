@@ -34,6 +34,7 @@ namespace treyarch {
         static void clear();
 
         static event_type* register_event_type(string_hash event_type_id);
+        static string_hash register_script_event_type(const char* event_name);
 
         static void garbage_collect();
 
