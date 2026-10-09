@@ -1,15 +1,15 @@
 #pragma once
 
 #include "treyarch/game/input/input_device.hh"
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
-    class input_mgr {
+    class input_mgr : public singleton<input_mgr, 0x010FC63C> {
 
     public:
-        u8            reserved_000[0x04];
         void*         unk_004;
         u8            reserved_008[0x804];
         u8            unk_80c; // cleared by game::unload_current_level
@@ -18,10 +18,6 @@ namespace treyarch {
 
         void poll_devices();
     };
-
-    namespace references {
-        inline util::memory_reference<input_mgr*> input_manager { 0x010FC63C };
-    } // references
 
     ASSERT_SIZEOF  (input_mgr,          0x848);
     ASSERT_OFFSETOF(input_mgr, unk_004, 0x004);

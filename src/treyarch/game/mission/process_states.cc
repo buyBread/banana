@@ -102,11 +102,11 @@ void mission_manager::process_state_idle(f32 time_inc) {
     if (flags & mission_manager_flag_unk_02000000) {
         flags &= ~mission_manager_flag_unk_02000000;
 
-        if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-            references::spawn_table_manager.read()) {
+        if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
+            spawn_table_manager::inst()) {
 
-            retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
-            retail::sub_94F010((i32)references::region_pack_manager.read());
+            retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
+            retail::sub_94F010((i32)region_pack_manager::inst());
         }
     }
 
@@ -212,21 +212,21 @@ void mission_manager::process_state_start_loading() {
     if (references::summon_state.read()) {
         retail::sub_90FC00(references::summon_state.read());
 
-        if (retail::sub_920420((u32*)references::region_pack_manager.read()))
+        if (retail::sub_920420((u32*)region_pack_manager::inst()))
             return;
     }
 
-    if (references::region_spawns_enabled.read() && references::region_spawn_manager.read()) {
-        retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
-        if (!retail::sub_90F610((i32)references::region_pack_manager.read()))
+        if (!retail::sub_90F610((i32)region_pack_manager::inst()))
             return;
 
-        if (retail::sub_90F5E0((i32)references::region_pack_manager.read()))
+        if (retail::sub_90F5E0((i32)region_pack_manager::inst()))
             return;
 
-        retail::sub_9585E0((i32)references::spawn_table_manager.read());
-        references::zombies.read()->suspended = 0;
+        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        zombie_manager::inst()->suspended = 0;
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read())
@@ -267,7 +267,7 @@ void mission_manager::process_state_start_loading() {
     if (flags & mission_manager_flag_mission_ready)
         event_manager::raise_event(references::unk_0102cc20.read(), arch_base_vhandle());
 
-    retail::sub_7F09B0((u32*)references::quest_manager.read(), (i32)&current_mission);
+    retail::sub_7F09B0((u32*)quest_manager::inst(), (i32)&current_mission);
 
     i32 presence = soap::online::inst()->unk_02c;
 
@@ -329,14 +329,14 @@ void mission_manager::process_state_loading() {
             retail::sub_4BA230(node, 0, 1);
     }
 
-    if (references::region_spawns_enabled.read() && (u32*)references::region_pack_manager.read()) {
-        retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
+    if (references::region_spawns_enabled.read() && (u32*)region_pack_manager::inst()) {
+        retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
-        if (retail::sub_90F5E0((i32)references::region_pack_manager.read()))
+        if (retail::sub_90F5E0((i32)region_pack_manager::inst()))
             return;
 
-        retail::sub_9585E0((i32)references::spawn_table_manager.read());
-        references::zombies.read()->suspended = 0;
+        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        zombie_manager::inst()->suspended = 0;
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read())
@@ -352,7 +352,7 @@ void mission_manager::process_state_loading() {
         string_hash exec_name;
         exec_name.initialize(mash::ALLOCATED, current_mission.name.c_str());
 
-        chuck::vm::script_manager &scripts = chuck::vm::script_manager::get();
+        chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
         retail::sub_A1BC60((i32)&scripts, (i32*)&exec_name, 0, (i32)slot, 0);
         current_mission.exec = (chuck::vm::script_executable*)retail::sub_A1B7A0((u32*)&scripts, (i32*)&exec_name, 0);
@@ -501,7 +501,7 @@ void mission_manager::process_state_start_unloading() {
         string_hash exec_name;
         exec_name.initialize(mash::ALLOCATED, current_mission.name.c_str());
 
-        chuck::vm::script_manager &scripts = chuck::vm::script_manager::get();
+        chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
         if (retail::sub_A1B840((u32*)&scripts, (i32*)&exec_name, 0))
             retail::sub_A1C2D0((u32*)&scripts, (i32*)&exec_name, 1, 0);
@@ -509,7 +509,7 @@ void mission_manager::process_state_start_unloading() {
 
     update_eligible_missions();
 
-    app::get().get_game()->unk_078 = 0;
+    app::inst()->get_game()->unk_078 = 0;
 
     if (references::frontend.get().igo && references::frontend.get().igo->face_button_system)
         retail::sub_6DE2E0((u32*)references::frontend.get().igo->face_button_system);
@@ -580,19 +580,19 @@ void mission_manager::process_state_unloading() {
 
     retail::sub_93D770();
 
-    if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-        (u32*)references::region_pack_manager.read() && references::spawn_table_manager.read()) {
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
+        (u32*)region_pack_manager::inst() && spawn_table_manager::inst()) {
 
-        references::region_spawn_manager.read()->unk_008 = 0;
+        region_spawn_manager::inst()->unk_008 = 0;
 
-        retail::sub_9585E0((i32)references::spawn_table_manager.read());
-        references::zombies.read()->suspended = 0;
+        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        zombie_manager::inst()->suspended = 0;
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read()) {
         retail::sub_90FC00(references::summon_state.read());
 
-        if (retail::sub_920420((u32*)references::region_pack_manager.read()))
+        if (retail::sub_920420((u32*)region_pack_manager::inst()))
             return;
 
         retail::sub_983D00((i32)references::summon_state.read());
@@ -609,16 +609,16 @@ void mission_manager::process_state_unloading() {
     if (retail::sub_879F10(unk_object, 3))
         return;
 
-    if (references::region_spawns_enabled.read() && references::region_spawn_manager.read() &&
-        (u32*)references::region_pack_manager.read() && references::spawn_table_manager.read()) {
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
+        (u32*)region_pack_manager::inst() && spawn_table_manager::inst()) {
 
-        retail::sub_951C40((i32)references::region_pack_manager.read(), 0);
+        retail::sub_951C40((i32)region_pack_manager::inst(), 0);
 
         if (flags & mission_manager_flag_mission_ready)
-            retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
+            retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
-        retail::sub_92E640((u32*)references::region_spawn_manager.read());
-        retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
+        retail::sub_92E640((u32*)region_spawn_manager::inst());
+        retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read())
@@ -752,9 +752,9 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
     malor_region = nullptr;
     state        = mission_manager_state_idle;
 
-    if (references::region_spawn_manager.read() && references::spawn_table_manager.read()) {
-        retail::sub_92E640((u32*)references::region_spawn_manager.read());
-        retail::sub_9547F0((i32)references::spawn_table_manager.read()->unk_04c);
+    if (region_spawn_manager::inst() && spawn_table_manager::inst()) {
+        retail::sub_92E640((u32*)region_spawn_manager::inst());
+        retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
     }
 }
 
@@ -824,7 +824,7 @@ void mission_manager::process_state_running_mission_failed_dialog() {
 // sub_97F2B0
 void mission_manager::process_state_running_mission_succeeded_dialog() {
     if (!mission_finished_screen_has_appeared)
-        retail::sub_7FEF20((u32*)references::quest_manager.read(), (i32)&current_mission);
+        retail::sub_7FEF20((u32*)quest_manager::inst(), (i32)&current_mission);
 
     flags &= ~mission_manager_flag_unk_00001000;
     state  = mission_manager_state_running_mission;

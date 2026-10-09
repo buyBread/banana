@@ -166,7 +166,7 @@ mission_manager::mission_manager() {
 void mission_manager::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(mission_manager));
 
-    references::mission_manager.write(allocation ? new (allocation) mission_manager() : nullptr);
+    mission_manager::instance() = allocation ? new (allocation) mission_manager() : nullptr;
 }
 
 // sub_97E1E0
@@ -273,7 +273,7 @@ void mission_manager::play_open_city_music() {
     // script_manager::find_shared_var
     f32* music_in_mission = ((f32* (__thiscall*)
                             (chuck::vm::script_manager*, const char*))retail::sub_A1A220)
-                            (&chuck::vm::script_manager::get(), "g_music_in_mission");
+                            (chuck::vm::script_manager::inst(), "g_music_in_mission");
 
     if (!(*music_in_mission > 0.0f))
         return;

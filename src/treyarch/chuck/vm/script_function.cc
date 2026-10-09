@@ -12,7 +12,7 @@ void script_function::add_references(vm_thread*  thread,
                                      bool        retain,
                                      bool        track) const {
 
-    vm_dynamic_array_manager* manager = references::dynamic_array_manager.read();
+    vm_dynamic_array_manager* manager = vm_dynamic_array_manager::inst();
 
     for (u32 index = 0; index < reference_descriptors.size; ++index) {
         const vm_reference_descriptor &descriptor = reference_descriptors.data[index];
@@ -65,7 +65,7 @@ void script_function::add_references(vm_thread*  thread,
 
 // sub_A20560
 void script_function::release_references(const void* block, u32 block_size) const {
-    vm_dynamic_array_manager* manager = references::dynamic_array_manager.read();
+    vm_dynamic_array_manager* manager = vm_dynamic_array_manager::inst();
 
     for (u32 index = 0; index < reference_descriptors.size; ++index) {
         const vm_reference_descriptor &descriptor = reference_descriptors.data[index];

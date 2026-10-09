@@ -60,7 +60,7 @@ void mission_manager::on_zoom_map_poi_selected(event*            raised_event,
 
     on_zoom_map_poi_unselected(raised_event, recipient, parameters);
 
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
 
     for (mission_icon_info* trigger = missions->mission_triggers->begin(); trigger != missions->mission_triggers->end(); ++trigger) {
         if (trigger->poi_index == poi_index) {
@@ -100,7 +100,7 @@ void mission_manager::on_zoom_map_poi_selected(event*            raised_event,
 
 // sub_97FB80
 void mission_manager::on_zoom_map_poi_unselected(event*, arch_base_vhandle, void*) {
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
 
     if (missions->flags & mission_manager_flag_unk_04000000)
         return;

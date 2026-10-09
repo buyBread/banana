@@ -91,7 +91,7 @@ void chuck_callbacks::resolve_signal_callback(const char* signal_name, u32* sign
 
 // sub_825B90
 u32 chuck_callbacks::resolve_extern_callback(const char* script_object_name, const char* instance_name) {
-    return (u32)retail::sub_AD2860(references::mission_manager.read(), (i32)script_object_name, (i32)instance_name);
+    return (u32)retail::sub_AD2860(mission_manager::inst(), (i32)script_object_name, (i32)instance_name);
 }
 
 // sub_825BB0
@@ -277,7 +277,7 @@ u32 chuck_callbacks::vm_thread_add_library_callback_callback(      vm_thread*,
 
 // sub_843300
 void chuck_callbacks::install() {
-    script_manager::get().register_callbacks(script_manager_notification_callback,
+    script_manager::inst()->register_callbacks(script_manager_notification_callback,
                                              get_script_executable_resource_callback,
                                              get_script_var_container_resource_callback,
                                              unk_predicate_callback,

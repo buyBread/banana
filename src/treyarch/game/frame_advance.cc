@@ -30,7 +30,7 @@ using namespace treyarch;
 void game::frame_advance(f32 time_inc) {
     this->current_frame_delta = time_inc;
 
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
     bool block_external_updates = missions->is_idle()                  &&
                                   missions->script_globals_initialized &&
                                   !retail::sub_77C9E0(this->data);
@@ -51,7 +51,7 @@ void game::frame_advance(f32 time_inc) {
     averaged_delta = (f32)((f64)averaged_delta / 15.0);
 
     if (advance_region_spawns) {
-        void* manager = references::region_spawn_manager.read();
+        void* manager = region_spawn_manager::inst();
 
         if (manager && this->level_is_loaded && !block_external_updates)
             retail::sub_956960(manager, averaged_delta);
@@ -68,7 +68,7 @@ void game::frame_advance(f32 time_inc) {
 
 // sub_97CAE0
 void game::frame_advance_level(f32 time_inc) {
-    input_mgr* input_manager = references::input_manager.read();
+    input_mgr* input_manager = input_mgr::inst();
 
     references::cameras_handled.write(0);
     retail::sub_9CC680((u32*)input_manager);
@@ -92,14 +92,14 @@ void game::frame_advance_level(f32 time_inc) {
 
     retail::sub_8FDF30(time_inc);
     retail::sub_8FF040();
-    retail::sub_959220((i32*)references::input_manager.read(), time_inc);
+    retail::sub_959220((i32*)input_mgr::inst(), time_inc);
 
     if (time_inc != 0.0f)
         retail::sub_9C8EA0(time_inc);
 
-    references::mission_manager.read()->frame_advance(time_inc);
+    mission_manager::inst()->frame_advance(time_inc);
     
-    retail::sub_801790((i32)references::quest_manager.read(), time_inc);
+    retail::sub_801790((i32)quest_manager::inst(), time_inc);
     this->handle_game_states(&time_inc);
 
     if (!references::cameras_handled.read())

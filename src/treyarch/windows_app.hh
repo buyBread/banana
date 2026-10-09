@@ -2,20 +2,19 @@
 
 #include <windows.h>
 
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch {
-    class windows_app {
+    class windows_app : public singleton<windows_app, 0x011137A4> {
 
     public:
-        void** vtable;
-        HWND   window;
+        HWND window;
     };
 
     namespace references {
-        inline util::memory_reference<void*>        windows_app_vtable { 0x00BF01B8 };
-        inline util::memory_reference<windows_app*> application        { 0x011137A4 };
+        inline util::memory_reference<void*> windows_app_vtable { 0x00BF01B8 };
     } // references
 
     ASSERT_SIZEOF  (windows_app,         0x08);

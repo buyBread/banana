@@ -66,10 +66,10 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     retail::sub_7FEC90((u32*)&ent_mgr, time_inc);
     retail::sub_96F4E0(this, time_inc); // world_dynamics_system::update_ai_and_visibility_proximity_maps_for_moved_entities
     retail::sub_7851D0();
-    retail::sub_A1AE50((u32*)&chuck::vm::script_manager::get(), time_inc, 0); // script_manager::run
+    retail::sub_A1AE50((u32*)chuck::vm::script_manager::inst(), time_inc, 0); // script_manager::run
     retail::sub_763520(time_inc); // pedestrians
 
-    if (zombie_manager* zombies = references::zombies.read())
+    if (zombie_manager* zombies = zombie_manager::inst())
         retail::sub_76C610((i32)zombies, time_inc);
 
     references::unk_010fc550.write(0);
@@ -127,7 +127,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     morph_interface::frame_advance_all_morph_ifcs(time_inc);
 
     // game::handle_cameras may rewrite time_inc for everything below
-    retail::sub_97C060((i32)references::game.read(), (i32)references::input_manager.read(), &time_inc);
+    retail::sub_97C060((i32)references::game.read(), (i32)input_mgr::inst(), &time_inc);
 
     f32 hero_time_inc = dilate_entity_time(hero_ptr, time_inc);
 
@@ -152,7 +152,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     retail::sub_9676F0(this, time_inc); // dynamic rtree update
     retail::sub_77F1F0(0, 0);
     retail::sub_801660(time_inc);
-    retail::sub_756130(references::trigger_manager.read()); // trigger_manager::update
+    retail::sub_756130(trigger_manager::inst()); // trigger_manager::update
     retail::sub_77B960(the_terrain, time_inc);              // terrain::frame_advance
     retail::sub_7474E0(); // ped spawn search batches
     retail::sub_94C790((i32)references::unk_010f9bf0.read(), time_inc);

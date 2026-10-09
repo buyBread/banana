@@ -27,7 +27,7 @@ void app::tick() {
     
     event_manager::garbage_collect();
 
-    references::input_manager.read()->poll_devices();
+    input_mgr::inst()->poll_devices();
 
     f32 time_inc = 0.0f; do {
         time_inc = this->real_clock.elapsed();

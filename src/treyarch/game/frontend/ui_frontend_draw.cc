@@ -251,12 +251,12 @@ void ui_frontend::draw() {
 
             if (!current_igo->conversation_state_168) {
                 current_igo->ui_object_manager->draw();
-                retail::sub_9818F0((i32)references::mission_manager.read());
+                retail::sub_9818F0((i32)mission_manager::inst());
             }
 
             quest_manager::draw_text();
 
-            if (references::region_spawns_enabled.read() && references::region_spawn_manager.read())
+            if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
                 region_spawn_manager::draw_text();
 
             if (conversation_menu_system)

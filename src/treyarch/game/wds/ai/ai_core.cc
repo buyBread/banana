@@ -246,7 +246,7 @@ void ai_core::frame_advance_all_core_ais(f32 delta_t) {
     }
 
     retail::sub_4CBD30();
-    retail::sub_4CE750((u32*)references::fight_director.read(), delta_t); // fight director frame
+    retail::sub_4CE750((u32*)fight_director::inst(), delta_t); // fight director frame
     retail::sub_99CB30(delta_t);
     retail::sub_4E0F90(delta_t, false); // info node pass
     retail::sub_4DCA30();

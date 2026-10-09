@@ -1,10 +1,11 @@
 #pragma once
 
+#include "treyarch/game/arch_base.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/shared/mutex.hh"
+#include "treyarch/shared/singleton.hh"
 #include "util/types.hh"
 #include "util/memory_reference.hh"
-#include "util/singleton_external.hh"
 #include "util/macros/sanity_assert.hh"
 
 namespace treyarch {
@@ -39,12 +40,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(callback_timer_set, unk_38, 0x38);
     ASSERT_OFFSETOF(callback_timer_set, unk_40, 0x40);
 
-    class app : public util::singleton_external<app, 0x00FC2FCC> {
-        // also inherited from arch_base; impl?
-
-        void* singleton_vtable; // 0x00
-        void* arch_base_vtable; // 0x04
-        u32   arch_handle;      // 0x08
+    class app : public singleton<app, 0x00FC2FCC>, public arch_base {
 
         game*         the_game; // who gave a thumbs up at this name?
         hires_clock_t real_clock;
@@ -60,10 +56,6 @@ namespace treyarch {
 
         inline game* get_game() {
             return this->the_game;
-        }
-
-        inline arch_base* get_arch_base() {
-            return (arch_base*)&this->arch_base_vtable;
         }
 
         void skip_some_frames(i32 count) {

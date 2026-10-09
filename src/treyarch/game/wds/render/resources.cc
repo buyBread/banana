@@ -38,7 +38,7 @@ void wds_render_manager::request_environment_texture() {
         return;
 
     const char* empty_name = "";
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
 
     __asm {
         push 0

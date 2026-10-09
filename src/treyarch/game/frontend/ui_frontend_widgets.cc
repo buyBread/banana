@@ -35,7 +35,7 @@ void ui_frontend::draw_script_widgets() {
 
     for (auto* position = script_widgets.begin(); position != script_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
-        input_mgr*            inputs = references::input_manager.read();
+        input_mgr*            inputs = input_mgr::inst();
 
         input_device* device = inputs->devices[joystick_2_device];
 

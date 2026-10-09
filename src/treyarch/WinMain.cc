@@ -99,7 +99,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
         application->window = nullptr;
     }
 
-    references::application.write(application);
+    windows_app::instance() = application;
 
     mash::string root;
     mash::string image_directory;
@@ -130,7 +130,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     }
 
     HWND window = (HWND)retail::sub_9C8A20(instance);
-    references::application.read()->window = window;
+    windows_app::inst()->window = window;
     retail::sub_9CC900((i64*)&references::log_callback_table.get());
     retail::sub_4291C0();
 
@@ -242,13 +242,13 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
                 hires_clock_t frame_clock;
                 timing::get_cpu_cycle();
 
-                app::get().tick();
-                app::get().get_game()->frame_timing.total_delta = frame_clock.elapsed();
+                app::inst()->tick();
+                app::inst()->get_game()->frame_timing.total_delta = frame_clock.elapsed();
             } else {
                 if (was_active) {
                     was_active = false;
                     retail::sub_9012B0(1);
-                    app::get().tick();
+                    app::inst()->tick();
                 }
 
                 Sleep(250);

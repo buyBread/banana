@@ -9,8 +9,8 @@
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/platform.hh"
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
-#include "util/singleton_external.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
@@ -43,7 +43,7 @@ namespace treyarch { namespace chuck { namespace vm {
     /* created once by game::game (sub_97AB10) and kept for the process.
        nothing runs until both variable containers exist (sub_A1AE50, sub_A1B960).
        lock order: exec_set_lock, then object instance_lock, then instance thread_lock. */
-    class script_manager : public util::singleton_external<script_manager, 0x011248E0> {
+    class script_manager : public singleton_instance<script_manager, 0x011248E0> {
 
     public:
         u32                                          flags;                            // SM3 position; no retail consumer found

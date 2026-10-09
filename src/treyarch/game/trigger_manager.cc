@@ -29,7 +29,7 @@ trigger_manager::trigger_manager() {
 void trigger_manager::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(trigger_manager));
 
-    references::trigger_manager.write(allocation ? new (allocation) trigger_manager() : nullptr);
+    trigger_manager::instance() = allocation ? new (allocation) trigger_manager() : nullptr;
 
     // retail ends with an empty call (nullsub_1)
 }

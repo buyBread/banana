@@ -273,7 +273,7 @@ void mission_manager::run_district_scripts() {
             continue;
 
         while (retail::sub_A1FA30((u32*)district.gen_dis_exec))
-            retail::sub_A1B960((i32)&chuck::vm::script_manager::get(), (i32*)&district.gen_dis_exec_name, 0, 0.0f, 0);
+            retail::sub_A1B960((i32)chuck::vm::script_manager::inst(), (i32*)&district.gen_dis_exec_name, 0, 0.0f, 0);
 
         retail::sub_97F4F0((char*)this, index);
     }

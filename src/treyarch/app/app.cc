@@ -17,7 +17,6 @@
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/os_file.hh"
 #include "treyarch/shared/platform.hh"
-#include "treyarch/shared/singleton.hh"
 
 namespace treyarch {
     namespace references {
@@ -33,15 +32,14 @@ using namespace treyarch;
 void app::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(app));
 
-    set(allocation ? new (allocation) app() : nullptr);
+    instance() = allocation ? new (allocation) app() : nullptr;
 }
 
 // sub_42A760
 app::app() {
-    singleton_vtable = &references::singleton_vtable.get();
-    retail::sub_639100((u32*)&arch_base_vtable);
-    arch_base_vtable = &references::app_arch_base_vtable.get();
-    singleton_vtable = &references::app_vtable.get();
+    retail::sub_639100((u32*)(arch_base*)this); // arch_base::arch_base
+    arch_base::vtable = (void**)&references::app_arch_base_vtable.get();
+    singleton::vtable = (void**)&references::app_vtable.get();
 
     references::master_clock_is_up.write(1);
 

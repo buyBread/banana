@@ -177,10 +177,10 @@ void game::unload_current_level() {
 
     level_is_unloading = 1;
 
-    retail::sub_7F0920((u32*)references::quest_manager.read());
+    retail::sub_7F0920((u32*)quest_manager::inst());
 
     if (references::region_spawns_enabled.read())
-        retail::sub_951C40((i32)references::region_pack_manager.read(), 1);
+        retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
     retail::sub_824830((u32*)amalga::resource_manager::references::unk_010f7760.read(), 0);
 
@@ -217,7 +217,7 @@ void game::unload_current_level() {
     level_is_loaded = 0;
 
     retail::sub_900F70();
-    retail::sub_7F7340((u32*)references::input_manager.read()->unk_004);
+    retail::sub_7F7340((u32*)input_mgr::inst()->unk_004);
 
     while (hero_freeze_depth > 0)
         freeze_hero(false);
@@ -225,7 +225,7 @@ void game::unload_current_level() {
     if (references::script_controller.read())
         references::script_controller.read()->clear_script_callbacks(nullptr);
 
-    app::get().get_arch_base()->clear_script_callbacks(nullptr);
+    app::inst()->clear_script_callbacks(nullptr);
     retail::sub_7BCDF0();
 
     world_dynamics_system* world = the_world;
@@ -238,7 +238,7 @@ void game::unload_current_level() {
     the_world = nullptr;
     references::g_world_ptr.write(nullptr);
 
-    chuck::vm::script_manager &scripts = chuck::vm::script_manager::get();
+    chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
     retail::sub_A1C430((u32*)&scripts);   // script_manager::unload_all
     retail::sub_A1BF30((void**)&scripts); // releases both variable containers
@@ -256,7 +256,7 @@ void game::unload_current_level() {
 
     level_is_loaded = 0;
 
-    references::input_manager.read()->unk_80c = 0;
+    input_mgr::inst()->unk_80c = 0;
 
     // the next level gets a fresh world
     void* world_allocation = memory::heap::allocate(sizeof(world_dynamics_system));
@@ -382,7 +382,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
 
         clear_screen();
 
-        app::get().skip_some_frames(10);
+        app::inst()->skip_some_frames(10);
 
         unk_1c8 = 0.0f;
         blur    = 0.0f;
@@ -427,10 +427,10 @@ void game::load_this_level(bool start_only, bool finish_only) {
     chuck::script_library::references::slc_entity.read()->find_instance(mash::string("ANIMATED_CAM"));
     chuck::script_library::references::slc_script_controller.read()->find_instance(mash::string("CONTROLLER_1"));
 
-    chuck::vm::script_manager &scripts = chuck::vm::script_manager::get();
+    chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
     retail::sub_A1B8C0((i32)&scripts); // loads the master game and shared variable containers
-    retail::sub_97E060((u32*)references::mission_manager.read()); // mission_manager::setup_game_var_refs
+    retail::sub_97E060((u32*)mission_manager::inst()); // mission_manager::setup_game_var_refs
 
     {
         mash::string busy_teaching("busy_teaching");
@@ -482,13 +482,13 @@ void game::load_this_level(bool start_only, bool finish_only) {
             retail::sub_7D9CA0((u32*)unk_07c);
     }
 
-    retail::sub_980000((i32*)references::mission_manager.read(), (void*)level_name, (i32)references::unk_01111754.read());
-    retail::sub_7F7760((i32)references::quest_manager.read(), (i32)level_name, (i32)references::unk_01111754.read());
+    retail::sub_980000((i32*)mission_manager::inst(), (void*)level_name, (i32)references::unk_01111754.read());
+    retail::sub_7F7760((i32)quest_manager::inst(), (i32)level_name, (i32)references::unk_01111754.read());
     retail::sub_90FCB0((i32*)references::unk_010fa26c.read(), (i32)level_name, (i32)references::unk_01111754.read());
     retail::sub_7EB4D0((i32*)references::environment_progression_state.read(), (i32)level_name, (i32)references::unk_01111754.read());
 
-    if (references::region_spawns_enabled.read() && references::region_spawn_manager.read())
-        retail::sub_954750((u32*)references::region_spawn_manager.read(), (i32)level_name, (i32)references::unk_01111754.read());
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        retail::sub_954750((u32*)region_spawn_manager::inst(), (i32)level_name, (i32)references::unk_01111754.read());
 
     {
         string_hash vehicles_hash;

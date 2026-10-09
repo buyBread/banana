@@ -1,11 +1,11 @@
 #pragma once
 
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
-    class trigger_manager {
+    class trigger_manager : public singleton_instance<trigger_manager, 0x0102FE48> {
 
     public:
         u32 unk_0000[2];        // the 8-byte type sub_95C220 zeroes
@@ -21,10 +21,6 @@ namespace treyarch {
 
         static void create_inst();
     };
-
-    namespace references {
-        inline util::memory_reference<trigger_manager*> trigger_manager { 0x0102FE48 };
-    } // references
 
     ASSERT_SIZEOF  (trigger_manager,           0x2044);
     ASSERT_OFFSETOF(trigger_manager, unk_000c, 0x000C);

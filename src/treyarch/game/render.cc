@@ -60,7 +60,7 @@ void game::render() {
 
     retail::sub_7BA6C0();
 
-    movie_manager* cur_movie_manager = references::movie_manager.read();
+    movie_manager* cur_movie_manager = movie_manager::inst();
 
     if (cur_movie_manager->is_playing() && references::movie_clears_screen.read()) {
         retail::sub_6C7660((i32)cur_movie_manager); // render movie
@@ -142,7 +142,7 @@ void game::render() {
 
         retail::sub_7476C0();
 
-        retail::sub_748BD0((u32*)references::zombies.read()); // render zombie symbiotes
+        retail::sub_748BD0((u32*)zombie_manager::inst()); // render zombie symbiotes
 
         retail::sub_590040();
         retail::sub_7D77A0();
@@ -154,7 +154,7 @@ void game::render() {
 
     references::frontend.get().draw_igo();
 
-    cur_movie_manager = references::movie_manager.read();
+    cur_movie_manager = movie_manager::inst();
 
     if (cur_movie_manager->is_playing())
         retail::sub_6C7660((i32)cur_movie_manager); // render movie

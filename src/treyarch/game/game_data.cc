@@ -108,10 +108,10 @@ void game_data::frame_advance() {
                     return;
                 }
 
-                if (retail::sub_920420((u32*)references::region_pack_manager.read()))
+                if (retail::sub_920420((u32*)region_pack_manager::inst()))
                     return;
 
-                mission_manager* missions = references::mission_manager.read();
+                mission_manager* missions = mission_manager::inst();
 
                 if (missions->is_mission_running()) {
                     retail::sub_9855F0((i32)missions, 0, 1); // mission_manager::terminate_script
@@ -154,7 +154,7 @@ void game_data::frame_advance() {
     ++m->idle_frames;
 
     if (m->autosave_pending && !references::game.read()->game_paused) {
-        mission_manager* missions = references::mission_manager.read();
+        mission_manager* missions = mission_manager::inst();
 
         if (!m->autosave_enabled) {
             m->autosave_pending = 0;

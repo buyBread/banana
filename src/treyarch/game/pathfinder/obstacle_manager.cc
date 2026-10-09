@@ -15,5 +15,5 @@ pathfinder::obstacle_manager::obstacle_manager() {
 void pathfinder::obstacle_manager::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(obstacle_manager));
 
-    references::obstacle_manager.write(allocation ? new (allocation) obstacle_manager() : nullptr);
+    obstacle_manager::instance() = allocation ? new (allocation) obstacle_manager() : nullptr;
 }

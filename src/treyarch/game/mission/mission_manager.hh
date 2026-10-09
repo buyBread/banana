@@ -6,6 +6,7 @@
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/singleton.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -143,7 +144,7 @@ namespace treyarch {
         i32     unk_014;
     };
 
-    class mission_manager {
+    class mission_manager : public singleton_instance<mission_manager, 0x01111760> {
 
     public:
         chuck::vm::script_executable* gen_global_exec;
@@ -338,8 +339,6 @@ namespace treyarch {
     };
 
     namespace references {
-        inline util::memory_reference<mission_manager*> mission_manager { 0x01111760 };
-
         // seeds mission_manager::current_act
         inline util::memory_reference<i32> global_act { 0x0111186C };
 

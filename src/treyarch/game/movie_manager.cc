@@ -18,7 +18,7 @@ movie_manager::movie_manager() {
 void movie_manager::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(movie_manager));
 
-    references::movie_manager.write(allocation ? new (allocation) movie_manager() : nullptr);
+    movie_manager::instance() = allocation ? new (allocation) movie_manager() : nullptr;
 }
 
 // loc_6930E0 (a chunk sub_97B160 tail-jumps into)

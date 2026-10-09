@@ -10,7 +10,7 @@ void game::release_device_resources() {
     post_process::release_device_resources();
     shadow::release_device_resources();
 
-    movie_manager* movies = references::movie_manager.read();
+    movie_manager* movies = movie_manager::inst();
 
     if (movies)
         movies->release_device_resources();
@@ -21,7 +21,7 @@ void game::restore_device_resources() {
     post_process::create_device_resources();
     shadow::create_device_resources();
 
-    movie_manager* movies = references::movie_manager.read();
+    movie_manager* movies = movie_manager::inst();
 
     if (movies)
         movies->restore_device_resources();

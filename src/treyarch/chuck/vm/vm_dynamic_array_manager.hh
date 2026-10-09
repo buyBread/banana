@@ -2,6 +2,7 @@
 
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mutex.hh"
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -31,9 +32,10 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_dynamic_array_release_plain   = 2
     };
 
-    /* one bucket per 16 slots; a set bit marks a free slot and 0xFFFF a bucket with none in use.
+    /* built by sub_A20E10 during slc_manager::setup.
+       one bucket per 16 slots; a set bit marks a free slot and 0xFFFF a bucket with none in use.
        lookups compare every slot of a bucket that has any slot in use, free ones included. */
-    class vm_dynamic_array_manager {
+    class vm_dynamic_array_manager : public singleton_instance<vm_dynamic_array_manager, 0x0112475C> {
 
     public:
         dinkumware::vector<vm_dynamic_array_slot>* array_pool;
@@ -59,9 +61,6 @@ namespace treyarch { namespace chuck { namespace vm {
     };
 
     namespace references {
-        // built by sub_A20E10 during slc_manager::setup
-        inline util::memory_reference<vm_dynamic_array_manager*> dynamic_array_manager { 0x0112475C };
-
         inline util::memory_reference<engine_recursive_lock*> dynamic_array_lock { 0x01124758 };
     } // references
 

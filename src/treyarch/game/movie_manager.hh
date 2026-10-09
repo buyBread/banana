@@ -2,6 +2,7 @@
 
 #include "bink/bink.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -20,10 +21,9 @@ namespace treyarch {
         u8            frame_decoded[2];
     };
 
-    class movie_manager {
+    class movie_manager : public singleton<movie_manager, 0x0102F2DC> {
 
     public:
-        void*            vtable;
         i32              state;
         i32              unk_008;
         HBINK            bink;
@@ -60,7 +60,6 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<f32>            frame_maximum_v { 0x00E6C684 }; // bottom texture coordinate of the movie quad
         inline util::memory_reference<movie_textures> movie_textures  { 0x0102CDDC };
-        inline util::memory_reference<movie_manager*> movie_manager   { 0x0102F2DC };
 
         inline util::memory_reference<void*> movie_manager_vtable { 0x00BBA37C };
     } // references

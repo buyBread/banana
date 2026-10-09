@@ -81,7 +81,7 @@ void mission_manager::advance_act_transition() {
 
             if (!(flags & mission_manager_flag_mission_ready) && state != mission_manager_state_running_mission &&
                 (!auto_launch_instances || !auto_launch_instances->size()) &&
-                !references::quest_manager.read()->unk_000)
+                !quest_manager::inst()->unk_000)
 
                 retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.25f, 0);
 
@@ -109,7 +109,7 @@ void mission_manager::load_act_pack() {
     act         = requested_act;
     current_act = act < 2 ? act : 2;
 
-    retail::sub_7EAA10((u8*)references::quest_manager.read());
+    retail::sub_7EAA10((u8*)quest_manager::inst());
     event_manager::raise_event(references::current_act_updated.read(), arch_base_vhandle());
 
     const char* level     = &references::level_name_buffer.get();

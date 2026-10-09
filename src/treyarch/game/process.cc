@@ -166,7 +166,7 @@ void game::advance_state_load_level(f32 time_inc) {
     level.destroy_loading_widgets();
     retail::sub_707E90((u8*)frontend.igo->loading_screen, 0.0f, 1, 0, 0, 0, 45.0f);
 
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
 
     if (missions->first_act_request) {
         retail::sub_980570((i32)missions, references::global_act.read(), 1); // mission_manager::set_current_act
@@ -174,7 +174,7 @@ void game::advance_state_load_level(f32 time_inc) {
         missions->first_act_request = 0;
     }
 
-    app::get().skip_some_frames(3);
+    app::inst()->skip_some_frames(3);
 
     level_is_loaded = 1;
     load_new_level  = 0;
@@ -207,7 +207,7 @@ void game::advance_state_running(f32 time_inc) {
     retail::sub_8095F0((i32)references::cutscene_player.read(), time_inc); // cut_scene_player::frame_advance
     frame_advance_soap(data);
 
-    mission_manager* missions = references::mission_manager.read();
+    mission_manager* missions = mission_manager::inst();
 
     if (missions->is_idle() && missions->script_globals_initialized && !retail::sub_77C9E0(data))
         process_stack.back().go_next_state();
@@ -232,7 +232,7 @@ void game::advance_state_running(f32 time_inc) {
 // sub_72C930
 void game::advance_state_paused(f32 time_inc) {
     if (unk_059)
-        retail::sub_A1AE50((u32*)&chuck::vm::script_manager::get(), time_inc, 0); // script_manager::run
+        retail::sub_A1AE50((u32*)chuck::vm::script_manager::inst(), time_inc, 0); // script_manager::run
 
     frame_advance_game_overlays(time_inc);
 
