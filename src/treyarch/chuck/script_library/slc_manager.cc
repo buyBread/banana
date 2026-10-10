@@ -5,6 +5,11 @@
 using namespace treyarch;
 using namespace treyarch::chuck::script_library;
 
+// sub_A20F90
+script_library_class* slc_manager::get_class(i32 index) const {
+    return (*classes)[index];
+}
+
 // inlined @ sub_97CEA0
 void slc_manager::destroy() {
     slc_manager* manager = inst();

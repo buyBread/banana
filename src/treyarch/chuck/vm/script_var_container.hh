@@ -29,9 +29,12 @@ namespace treyarch { namespace chuck { namespace vm {
     public:
         u32                                    unk_00;                // written by resource-root construction, read by nothing known
         so_data_block                          script_var_block;
-        mash::vector<script_var_address_entry> script_var_to_address; // sorted by name_hash; searched by sub_A20780
+        mash::vector<script_var_address_entry> script_var_to_address; // sorted by name_hash
         script_var_debug_info*                 debug_info;
         e_script_var_container_flags           flags;
+
+        // null when the name isn't in this container
+        u8* get_address(const char* name) const;
     };
 
     ASSERT_SIZEOF  (script_var_debug_info,    0x04);

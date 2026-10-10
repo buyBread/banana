@@ -354,8 +354,8 @@ void mission_manager::process_state_loading() {
 
         chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
-        retail::sub_A1BC60((i32)&scripts, (i32*)&exec_name, 0, (i32)slot, 0);
-        current_mission.exec = (chuck::vm::script_executable*)retail::sub_A1B7A0((u32*)&scripts, (i32*)&exec_name, 0);
+        scripts.load(exec_name, 0, slot, string_hash());
+        current_mission.exec = scripts.find_executable(exec_name, string_hash());
 
         while (current_mission.exec->suspend_count > 0)
             --current_mission.exec->suspend_count;
@@ -503,8 +503,8 @@ void mission_manager::process_state_start_unloading() {
 
         chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
-        if (retail::sub_A1B840((u32*)&scripts, (i32*)&exec_name, 0))
-            retail::sub_A1C2D0((u32*)&scripts, (i32*)&exec_name, 1, 0);
+        if (scripts.is_loaded(exec_name, string_hash()))
+            scripts.un_load(exec_name, true, string_hash());
     }
 
     update_eligible_missions();

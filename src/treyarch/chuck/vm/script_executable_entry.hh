@@ -2,11 +2,17 @@
 
 #include "treyarch/shared/dinkumware/set.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_executable;
+
+    namespace references {
+        inline util::memory_reference<memory::fixed_pool> executable_entry_pool { 0x00FB8678 };
+    } // references
 
     // one per loaded (filename, key_prefix); loading it again only bumps ref_cnt (sub_A1BC60)
     class script_executable_entry {

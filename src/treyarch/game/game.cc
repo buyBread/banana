@@ -240,8 +240,8 @@ void game::unload_current_level() {
 
     chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
-    retail::sub_A1C430((u32*)&scripts);   // script_manager::unload_all
-    retail::sub_A1BF30((void**)&scripts); // releases both variable containers
+    scripts.clear();
+    scripts.destroy_game_var();
     retail::sub_645E10();
 
     // retail follows with an empty call (nullsub_1)
@@ -429,31 +429,38 @@ void game::load_this_level(bool start_only, bool finish_only) {
 
     chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
-    retail::sub_A1B8C0((i32)&scripts); // loads the master game and shared variable containers
+    scripts.init_game_var();
     retail::sub_97E060((u32*)mission_manager::inst()); // mission_manager::setup_game_var_refs
 
     {
         mash::string busy_teaching("busy_teaching");
 
         references::g_world_ptr.read()->gv_busy_teaching =
-            (f32*)retail::sub_A1A1B0((u32*)&scripts, (u32*)&busy_teaching, nullptr);
+            (f32*)scripts.get_game_var_address(busy_teaching, nullptr);
     }
 
-    if (retail::sub_A1A170((u32*)&scripts, "init_gv")) {
+    if (scripts.is_loadable("init_gv")) {
         string_hash init_gv;
         init_gv.initialize(mash::ALLOCATED, "init_gv");
 
         string_hash init_sv;
         init_sv.initialize(mash::ALLOCATED, "init_sv");
 
-        retail::sub_A1BC60((i32)&scripts, (i32*)&init_gv, 2, (i32)references::unk_01111754.read(), 0); // script_manager load
-        retail::sub_A1BC60((i32)&scripts, (i32*)&init_sv, 2, (i32)references::unk_01111754.read(), 0);
+        scripts.load(init_gv,
+                     chuck::vm::script_manager_load_flag_set_stall_for_breakpoints_flag,
+                     references::unk_01111754.read(),
+                     string_hash());
+
+        scripts.load(init_sv,
+                     chuck::vm::script_manager_load_flag_set_stall_for_breakpoints_flag,
+                     references::unk_01111754.read(),
+                     string_hash());
 
         scripts.run_single_exec(init_gv, string_hash(), 0.0f, false);
         scripts.run_single_exec(init_sv, string_hash(), 0.0f, false);
 
-        retail::sub_A1C2D0((u32*)&scripts, (i32*)&init_gv, 0, 0); // script_manager unload
-        retail::sub_A1C2D0((u32*)&scripts, (i32*)&init_sv, 0, 0);
+        scripts.un_load(init_gv, false, string_hash());
+        scripts.un_load(init_sv, false, string_hash());
 
         // retail follows with an empty call (nullsub_1)
     }
@@ -517,7 +524,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
 
         auto* slot = (amalga::resource_pack_slot*)retail::sub_74D900(amalga::resource_partition_common); // get_best_context
 
-        retail::sub_A1BC60((i32)&scripts, (i32*)&global_script, 1, (i32)slot, 0); // script_manager load
+        scripts.load(global_script, chuck::vm::script_manager_load_flag_master, slot, string_hash());
     }
 
     retail::sub_95CC60((i32*)&the_world->render_mgr);

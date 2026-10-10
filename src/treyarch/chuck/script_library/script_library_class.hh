@@ -32,6 +32,11 @@ namespace treyarch { namespace chuck { namespace script_library {
         u32 find_instance(const mash::string &name) const {
             return vtable->find_instance(this, name);
         }
+
+        // sub_A20F80
+        script_library_function* get_function(i32 index) const {
+            return (*functions)[index];
+        }
     };
 
     namespace references {

@@ -66,6 +66,16 @@ namespace treyarch { namespace chuck { namespace vm {
         void             construct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread);
         void             remove_instance(script_instance* delete_me, bool run_destructor_if_present);
 
+        // only for a constructor taking exactly one 4-byte argument; null otherwise
+        script_instance* create_auto_instance(f32 argument);
+
+        void destruct_instances(bool call_all_destructors);
+        void delete_all_instances();
+
+        // parent_object is serialized as an index into the executable's objects, -1 for none
+        void post_un_mash_fixup(script_executable* requested_parent);
+        void quick_post_un_mash_fixup();
+
         vm_thread* add_thread(script_instance* inst, i32 fidx);
 
         bool has_threads() const;

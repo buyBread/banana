@@ -1,9 +1,18 @@
+#include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
+
+// sub_A20400
+void script_function::post_un_mash_fixup(script_object* requested_parent) {
+    u32 offset = (u32)buffer;
+
+    parent = requested_parent;
+    buffer = requested_parent->parent->lookup_sx_code_segment(offset);
+}
 
 // sub_A20440
 void script_function::add_references(vm_thread*  thread,

@@ -14,7 +14,9 @@ namespace treyarch { namespace chuck { namespace script_library {
     class slc_manager : public singleton_instance<slc_manager, 0x01124C64> {
 
     public:
-        dinkumware::vector<script_library_class*>* classes; // registration order; looked up by index (sub_A20F90)
+        dinkumware::vector<script_library_class*>* classes; // registration order
+
+        script_library_class* get_class(i32 index) const;
 
         static void destroy();
     };

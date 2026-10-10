@@ -12,12 +12,12 @@ namespace treyarch { namespace chuck { namespace vm {
         T   last;
         i32 size;
 
-        // sub_A1D010 (script_instance)
-        // sub_A1E310 (garbage_collection_element)
-        // sub_A1E390 (vm_thread)
-        // sub_A22070 (vm_thread_local_reference)
-        // returns the next element, or null when `element` is on another list; the element's backpointer must be named `list`
-        T erase(T element) noexcept {
+        // sub_A1D010
+        // sub_A1E310
+        // sub_A1E390
+        // sub_A22070
+        T erase(T element) noexcept { // returns the next element, or null when `element` is on another list;
+                                      // the element's backpointer must be named `list`
             if (!element || element->list != this)
                 return nullptr;
 
@@ -48,6 +48,40 @@ namespace treyarch { namespace chuck { namespace vm {
             --size;
 
             return next;
+        }
+
+        // sub_A1C720
+        void push_back(T element) noexcept {
+            element->list                    = this;
+            element->vm_simple_list_previous = last;
+            element->vm_simple_list_next     = nullptr;
+
+            if (last)
+                last->vm_simple_list_next = element;
+
+            ++size;
+
+            last = element;
+
+            if (!head)
+                head = element;
+        }
+
+        // inlined @ sub_A1CB30
+        void push_front(T element) noexcept {
+            element->list                    = this;
+            element->vm_simple_list_previous = nullptr;
+            element->vm_simple_list_next     = head;
+
+            if (head)
+                head->vm_simple_list_previous = element;
+
+            head = element;
+
+            if (!last)
+                last = element;
+
+            ++size;
         }
     };
 

@@ -7,6 +7,7 @@
 #include "treyarch/chuck/vm/script_var_container.hh"
 #include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/platform.hh"
 #include "treyarch/shared/singleton.hh"
@@ -26,7 +27,13 @@ namespace treyarch { namespace chuck { namespace vm {
         script_manager_callback_reason_just_ran      // ...this; the game switches resource context here
     };
 
-    // SM3 passes a message buffer third; retail passes the entry's user_data
+    // only master is read
+    enum e_script_manager_load_flags : u32 {
+        script_manager_load_flag_master                         = 0x01,
+        script_manager_load_flag_set_stall_for_breakpoints_flag = 0x02
+    };
+
+    // passes the entry's user_data around a run, the entry itself around a load and null around an unload.
     using notification_callback_t = void(*)(e_script_manager_callback_reason reason,
                                             script_executable*               se,
                                             void*                            user_data);
@@ -60,13 +67,13 @@ namespace treyarch { namespace chuck { namespace vm {
         script_var_container*                         game_var_container;
         script_var_container*                         shared_var_container;
         dinkumware::list<script_executable*>*         execs_pending_first_run;
-        script_instance_garbage_collection_callback_t garbage_collection_callbacks[15]; // SM3 had 14 types
+        script_instance_garbage_collection_callback_t garbage_collection_callbacks[15];
         notification_callback_t                       notification_callback;
         get_script_executable_resource_callback_t     get_script_executable_resource_callback;
         get_script_var_container_resource_callback_t  get_script_var_container_resource_callback;
         unk_predicate_callback_t                      unk_predicate_callbacks[4];       // SM3's using_chuck_old_fashioned_callback is presumably one of these
         get_platform_callback_t                       get_platform_callback;
-        engine_recursive_lock                         exec_set_lock;                    // held across load, run, and unload
+        engine_recursive_lock                         exec_set_lock;                    // held across load, run and unload
         engine_recursive_lock                         notification_lock;
 
         void register_callbacks(notification_callback_t                      notification,
@@ -82,13 +89,40 @@ namespace treyarch { namespace chuck { namespace vm {
 
         script_instance_garbage_collection_callback_t get_garbage_collection_callback(e_script_garbage_collection_type type) const;
 
+        // false when (filename, key_prefix) was already loaded; that only adds a reference
+        bool load(const string_hash &filename, u32 load_flags, void* user_data, string_hash key_prefix);
+
+        // drops a reference; the last one unloads
+        void un_load(const string_hash &filename, bool call_all_destructors, string_hash key_prefix);
+
+        // unloads everything regardless of references
+        void clear();
+
+        bool               is_loadable    (const char* filename);
+        bool               is_loaded      (const string_hash &filename, string_hash key_prefix);
+        script_executable* find_executable(const string_hash &filename, string_hash key_prefix);
+
         void run(f32 requested_time_inc, bool ignore_suspended);
 
         vm_thread* find_thread(u32 thread_id);
         bool run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended);
 
+        // loads both "master" variable containers, then links whatever was waiting on them
+        void init_game_var();
+        void destroy_game_var();
+
+        // the game container first, then the shared one
+        u8* get_game_var_address(const mash::string &game_var_name, bool* is_game_var) const;
+
+        u8* get_game_var_addr  (const char* game_var_name)   const;
+        u8* get_shared_var_addr(const char* shared_var_name) const;
+
+        u8* get_game_var_address  (i32 offset) const;
+        u8* get_shared_var_address(i32 offset) const;
+
     private:
         void first_run_pending_execs(f32 requested_time_inc, bool ignore_suspended);
+        void unsuspend_execs_for_script_vars();
     };
 
     ASSERT_SIZEOF  (script_manager,                                             0x98);

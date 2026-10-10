@@ -162,6 +162,122 @@ void script_object::remove_instance(script_instance* delete_me, bool run_destruc
     }
 }
 
+// sub_A1CB30
+script_instance* script_object::create_auto_instance(f32 argument) {
+    ref_lock_scope scope(instance_lock);
+
+    const script_function* constructor = funcs.data[constructor_index];
+
+    if (constructor->parms_stacksize != 4)
+        return nullptr;
+
+    script_instance* inst;
+
+    if (flags & script_object_flag_global_object) {
+        if (!global_instance) {
+            void* memory = references::instance_pool.get().allocate();
+
+            global_instance = memory ?
+                new (memory) script_instance("__global", data_blocksize, 0) : nullptr;
+
+            global_instance->parent = this;
+
+            instances.push_back(global_instance);
+        }
+
+        inst = global_instance;
+    } else {
+        void* memory = references::instance_pool.get().allocate();
+
+        inst = memory ?
+            new (memory) script_instance("__auto", data_blocksize, 0) : nullptr;
+
+        inst->parent = this;
+
+        instances.push_front(inst);
+    }
+
+    vm_thread* thread = inst->add_thread(constructor, nullptr, 0);
+
+    // the global instance gets the argument, an auto instance gets itself
+    if (flags & script_object_flag_global_object)
+        thread->dstack.push_num(argument);
+    else
+        thread->dstack.push(&inst, sizeof(inst));
+
+    return inst;
+}
+
+// sub_A1D470
+void script_object::destruct_instances(bool call_all_destructors) {
+    ref_lock_scope scope(instance_lock);
+
+    for (script_instance* inst = instances.head; inst; inst = inst->vm_simple_list_next) {
+        if (inst->flags & script_instance_flag_running_destructor)
+            continue;
+
+        inst->run_callbacks(script_instance_callback_reason_instance_about_to_die, nullptr);
+        inst->massacre_threads_by_function(nullptr, nullptr);
+    }
+
+    if (!call_all_destructors || destructor_index < 0)
+        return;
+
+    for (script_instance* inst = instances.head; inst; inst = inst->vm_simple_list_next) {
+        if ((inst->flags & script_instance_flag_running_destructor) || !(inst->flags & script_instance_flag_run_called))
+            continue;
+
+        inst->flags = (e_script_instance_flags)(inst->flags | script_instance_flag_running_destructor);
+
+        add_thread(inst, destructor_index);
+    }
+}
+
+// sub_A1D630
+void script_object::delete_all_instances() {
+    ref_lock_scope scope(instance_lock);
+
+    while (instances.head) {
+        script_instance* inst = instances.head;
+
+        inst->do_garbage_collection();
+
+        if (inst == global_instance)
+            global_instance = nullptr;
+
+        if (instances.head)
+            instances.erase(instances.head);
+
+        if (inst) {
+            inst->~script_instance();
+
+            references::instance_pool.get().release(inst);
+        }
+    }
+}
+
+// sub_A1D090
+void script_object::post_un_mash_fixup(script_executable* requested_parent) {
+    parent = requested_parent;
+
+    parent_object = (i32)parent_object == -1 ?
+        nullptr : requested_parent->get_object((i32)parent_object);
+
+    i32 count = (i32)funcs.size;
+
+    for (i32 index = 0; index < count; ++index)
+        funcs.data[index]->post_un_mash_fixup(this);
+
+    if (flags & script_object_flag_global_object)
+        create_auto_instance(0.0f);
+}
+
+// sub_A1CF50
+void script_object::quick_post_un_mash_fixup() {
+    if (flags & script_object_flag_global_object)
+        create_auto_instance(0.0f);
+}
+
 // sub_A1D520
 bool script_object::has_threads() const {
     ref_lock_scope scope(instance_lock);

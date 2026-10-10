@@ -60,6 +60,9 @@ namespace treyarch { namespace chuck { namespace vm {
 
         // over the thread's argument bytes
         void add_thread_references(vm_thread* thread, bool retain, bool track) const;
+
+        // buffer is serialized as a byte offset into the parent executable's code image
+        void post_un_mash_fixup(script_object* requested_parent);
     };
 
     ASSERT_SIZEOF  (script_function,                        0x2C);
