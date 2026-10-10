@@ -500,10 +500,10 @@ void ngl::fx::initialize_directory() {
 }
 
 // sub_9E1A90
-void ngl::fx::load(amalga::apkf::file*       owner,
-                   amalga::apkf::file_entry* entry,
-                   void**                    mapped_sections,
-                   void*                     user_data) {
+void ngl::fx::load(amalga::merged_apk::file*       owner,
+                   amalga::merged_apk::file_entry* entry,
+                   void**                          mapped_sections,
+                   void*                           user_data) {
 
     (void)entry;
     (void)user_data;
@@ -532,10 +532,10 @@ void ngl::fx::load(amalga::apkf::file*       owner,
 }
 
 // sub_9E12E0
-void ngl::fx::remove(amalga::apkf::file*       owner,
-                     amalga::apkf::file_entry* entry,
-                     void**                    mapped_sections,
-                     void*                     user_data) {
+void ngl::fx::remove(amalga::merged_apk::file*       owner,
+                     amalga::merged_apk::file_entry* entry,
+                     void**                          mapped_sections,
+                     void*                           user_data) {
 
     (void)entry;
     (void)user_data;

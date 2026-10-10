@@ -15,6 +15,19 @@ void amalga::resource_descriptor::unmash(mash::mash_info_struct* mash_info, void
         extension = nullptr;
 }
 
+// inlined @ sub_73A130, sub_75F8D0
+u8* amalga::resource_descriptor::calculate_adjusted_payload() const {
+    const u32 payload_mode = references::resource_type_records.get()[(u32)type].payload_mode;
+
+    if (!raw_payload)
+        return nullptr;
+
+    if (!payload_mode)
+        return raw_payload + *(u32*)(raw_payload + 4);
+
+    return payload_mode == 2 ? raw_payload + 8 : raw_payload;
+}
+
 // sub_76E550
 void amalga::resource_directory::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
     descriptors.unmash(mash_info, this, buffer);
@@ -37,17 +50,7 @@ void amalga::resource_directory::constructor_common(resource_pack_slot* slot) {
     for (u32 index = 0; index < descriptors.size; ++index) {
         resource_descriptor* descriptor = descriptors.data[index];
 
-        u8* raw_payload = base + descriptor->payload_offset;
-
-        descriptor->raw_payload = raw_payload;
-
-        const u32 payload_mode = references::resource_type_records.get()[descriptor->type].payload_mode;
-
-        if (!raw_payload)
-            descriptor->adjusted_payload = nullptr;
-        else if (!payload_mode)
-            descriptor->adjusted_payload = raw_payload + *(u32*)(raw_payload + 4);
-        else
-            descriptor->adjusted_payload = payload_mode == 2 ? raw_payload + 8 : raw_payload;
+        descriptor->raw_payload      = base + descriptor->payload_offset;
+        descriptor->adjusted_payload = descriptor->calculate_adjusted_payload();
     }
 }

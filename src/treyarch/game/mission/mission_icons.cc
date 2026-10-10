@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/wds/entity/entity.hh"
@@ -34,7 +35,7 @@ void mission_manager::update_eligible_missions() {
     visitor.unk_014       = unk_value;
 
     // fills eligible_mission_instances
-    retail::sub_A1FCF0((u32*)gen_global_exec, (i32)&visitor);
+    gen_global_exec->walk_instances((chuck::vm::script_instance_visitor*)&visitor);
 
     i32 count     = (i32)eligible_mission_instances->size();
     i32 processed = 0;

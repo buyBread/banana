@@ -146,6 +146,13 @@ namespace treyarch {
         volatile i32          ref_count;
                  u32          pad;
 
+        void reset() {
+            lock.owner = 0;
+            lock.state = 0;
+            lock.depth = 0;
+            ref_count  = 0;
+        }
+
         void lock_ref() {
             lock.acquire();
             

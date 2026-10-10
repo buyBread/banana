@@ -289,7 +289,7 @@ void amalga::resource_pack_streamer::finish_data_read() {
     no_group.initialize(mash::ALLOCATED);
 
     if (curr_pack_entry->group_hash != no_group) {
-        const resource_key group { curr_pack_entry->group_hash, e_resource_type::packfile };
+        const resource_key group { curr_pack_entry->group_hash, (u32)e_resource_type::packfile };
 
         resource_pack_slot* parent_slot = find_loaded_pack(group, resource_manager::get_partition_pointer(curr_slot));
 

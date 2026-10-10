@@ -121,9 +121,21 @@ void script_function::release_references(const void* block, u32 block_size) cons
     }
 }
 
+// sub_A20620
+void script_function::construct_mashed_class() {
+    reference_descriptors.construct_mashed_class();
+
+    flags = (e_script_function_flags)(flags | script_function_flag_from_mash);
+}
+
 // sub_A20650
 void script_function::destruct_mashed_class() {
     reference_descriptors.destruct_mashed_class();
+}
+
+// sub_A206C0
+void script_function::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    reference_descriptors.unmash(mash_info, this, buffer);
 }
 
 // sub_A206A0

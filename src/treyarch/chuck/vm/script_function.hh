@@ -28,7 +28,8 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_reference_kind_script_instance_dynamic_array = 4
     };
 
-    struct vm_reference_descriptor {
+    // the mash image keeps these four-aligned
+    struct alignas(4) vm_reference_descriptor {
         e_vm_reference_kind kind;
         u16                 offset; // into the argument block
     };
@@ -56,7 +57,11 @@ namespace treyarch { namespace chuck { namespace vm {
             finalize(mash::ALLOCATED);
         }
 
+        void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
         // `retain` adds a manager reference, `track` hands the reference to `thread` for release when it dies
         void add_references(vm_thread*  thread,

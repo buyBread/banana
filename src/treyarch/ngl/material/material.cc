@@ -51,10 +51,10 @@ void ngl::initialize_material_directory() {
 }
 
 // sub_9DC6B0
-void ngl::load_material(amalga::apkf::file*       owner,
-                        amalga::apkf::file_entry* entry,
-                        void**                    mapped_sections,
-                        void*                     user_data) {
+void ngl::load_material(amalga::merged_apk::file*       owner,
+                        amalga::merged_apk::file_entry* entry,
+                        void**                          mapped_sections,
+                        void*                           user_data) {
 
     (void)entry;
     (void)user_data;
@@ -70,10 +70,10 @@ void ngl::load_material(amalga::apkf::file*       owner,
 }
 
 // sub_9DC5F0
-void ngl::remove_material(amalga::apkf::file*       owner,
-                          amalga::apkf::file_entry* entry,
-                          void**                    mapped_sections,
-                          void*                     user_data) {
+void ngl::remove_material(amalga::merged_apk::file*       owner,
+                          amalga::merged_apk::file_entry* entry,
+                          void**                          mapped_sections,
+                          void*                           user_data) {
 
     (void)entry;
     (void)user_data;

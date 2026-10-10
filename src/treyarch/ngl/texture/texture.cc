@@ -14,7 +14,7 @@ bool ngl::can_release_texture(const texture* value) {
 }
 
 // sub_9EAE60
-void ngl::process_texture(amalga::apkf::file* owner, void** mapped_sections) {
+void ngl::process_texture(amalga::merged_apk::file* owner, void** mapped_sections) {
     i32 image_section = owner->find_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
@@ -92,10 +92,10 @@ void ngl::initialize_texture_directory() {
 }
 
 // sub_9E45E0
-void ngl::load_texture(amalga::apkf::file*       owner,
-                       amalga::apkf::file_entry* entry,
-                       void**                    mapped_sections,
-                       void*                     user_data) {
+void ngl::load_texture(amalga::merged_apk::file*       owner,
+                       amalga::merged_apk::file_entry* entry,
+                       void**                          mapped_sections,
+                       void*                           user_data) {
 
     (void)entry;
     (void)user_data;
@@ -112,10 +112,10 @@ void ngl::load_texture(amalga::apkf::file*       owner,
 }
 
 // sub_9E4620
-void ngl::remove_texture(amalga::apkf::file*       owner,
-                         amalga::apkf::file_entry* entry,
-                         void**                    mapped_sections,
-                         void*                     user_data) {
+void ngl::remove_texture(amalga::merged_apk::file*       owner,
+                         amalga::merged_apk::file_entry* entry,
+                         void**                          mapped_sections,
+                         void*                           user_data) {
 
     (void)entry;
     (void)user_data;

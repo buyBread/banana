@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "treyarch/amalga/apkf/file.hh"
+#include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/amalga/resource_amalgatoc.hh"
 #include "treyarch/amalga/resource_memory_map.hh"
@@ -56,9 +56,9 @@ namespace treyarch {
 
             resource_partition* get_partition_pointer(resource_pack_slot* pack_slot);
 
-            void* resolve_vrml_section(apkf::file*         owner,
-                                       apkf::file_section* section,
-                                       void*               user_data);
+            void* resolve_vrml_section(merged_apk::file*         owner,
+                                       merged_apk::file_section* section,
+                                       void*                     user_data);
 
             namespace references {
                 inline util::memory_reference<bool> initialized { 0x0102FE4C };

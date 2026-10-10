@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/amalga/apkf/file.hh"
+#include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
@@ -45,14 +45,14 @@ namespace treyarch { namespace ngl {
 
     struct font_directory : container::skip_list<font, font_name> {};
 
-    void load_font(amalga::apkf::file*       owner,
-                   amalga::apkf::file_entry* entry,
-                   void**                    mapped_sections,
-                   void*                     user_data);
-    void remove_font(amalga::apkf::file*       owner,
-                     amalga::apkf::file_entry* entry,
-                     void**                    mapped_sections,
-                     void*                     user_data);
+    void load_font(amalga::merged_apk::file*       owner,
+                   amalga::merged_apk::file_entry* entry,
+                   void**                          mapped_sections,
+                   void*                           user_data);
+    void remove_font(amalga::merged_apk::file*       owner,
+                     amalga::merged_apk::file_entry* entry,
+                     void**                          mapped_sections,
+                     void*                           user_data);
 
     namespace references {
         inline util::memory_reference<font*>          system_font { 0x011160D0 };

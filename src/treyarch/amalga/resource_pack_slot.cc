@@ -52,7 +52,7 @@ void amalga::resource_pack_slot::notify_load_started(resource_amalgatoc_pack_ent
 
     pack_name_str = entry->name;
     unk_30        = entry->unk_40;
-    pack_name     = resource_key { entry->name_hash, e_resource_type::packfile };
+    pack_name     = resource_key { entry->name_hash, (u32)e_resource_type::packfile };
     my_callback   = callback;
     slot_state    = slot_state_streaming;
 

@@ -7,7 +7,7 @@
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace amalga { namespace apkf {
+namespace treyarch { namespace amalga { namespace merged_apk {
     constexpr u32 file_identifier          = four_cc('A', 'P', 'K', 'F');
     constexpr u16 file_version             = 0x0107;
     constexpr u32 maximum_section_count    = 63;
@@ -263,4 +263,4 @@ namespace treyarch { namespace amalga { namespace apkf {
     ASSERT_OFFSETOF(section_handler, remove,    0x0C);
     ASSERT_OFFSETOF(section_handler, user_data, 0x10);
     ASSERT_OFFSETOF(section_handler, next,      0x14);
-}}} // treyarch::amalga::apkf
+}}} // treyarch::amalga::merged_apk

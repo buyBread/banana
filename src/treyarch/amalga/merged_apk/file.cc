@@ -1,10 +1,10 @@
-#include "treyarch/amalga/apkf/file.hh"
+#include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
 
 // sub_A6AC90
-i32 amalga::apkf::file::find_section_index(string_hash section_name) const {
+i32 amalga::merged_apk::file::find_section_index(string_hash section_name) const {
     for (u32 index = 0; index < section_count; ++index) {
         if (sections[index].name == section_name)
             return (i32)index;
@@ -14,9 +14,9 @@ i32 amalga::apkf::file::find_section_index(string_hash section_name) const {
 }
 
 // sub_A6AAA0
-u32 amalga::apkf::file::get_section_span(file_entry* entry,
-                                         i32         section_index,
-                                         u32         occurrence) const {
+u32 amalga::merged_apk::file::get_section_span(file_entry* entry,
+                                               i32         section_index,
+                                               u32         occurrence) const {
 
     (void)occurrence;
 
@@ -61,8 +61,8 @@ u32 amalga::apkf::file::get_section_span(file_entry* entry,
     return 0;
 }
 
-void* amalga::apkf::file::resolve_data_reference(      data_reference reference,
-                                                 const u8*            string_base) const {
+void* amalga::merged_apk::file::resolve_data_reference(      data_reference reference,
+                                                       const u8*            string_base) const {
 
     if (reference.section_index() == string_section_index)
         return (void*)(string_base + reference.byte_offset());
@@ -71,8 +71,8 @@ void* amalga::apkf::file::resolve_data_reference(      data_reference reference,
 }
 
 // sub_A6ACC0
-void amalga::apkf::file::apply_fixups(      data_reference* &fixup_data,
-                                      const u8*              string_base) {
+void amalga::merged_apk::file::apply_fixups(      data_reference* &fixup_data,
+                                            const u8*              string_base) {
 
     while (!fixup_data->is_terminator()) {
         auto target = (data_reference*)resolve_data_reference(*fixup_data++, string_base);
@@ -84,8 +84,8 @@ void amalga::apkf::file::apply_fixups(      data_reference* &fixup_data,
 }
 
 // sub_A6AD30
-void amalga::apkf::file::apply_references(      data_reference* reference_data,
-                                          const u8*             string_base) {
+void amalga::merged_apk::file::apply_references(      data_reference* reference_data,
+                                                const u8*             string_base) {
 
     if (!reference_data)
         return;
@@ -123,7 +123,7 @@ void amalga::apkf::file::apply_references(      data_reference* reference_data,
 }
 
 // sub_A6ABC0
-u32 amalga::apkf::file::count_file_type_entries() const {
+u32 amalga::merged_apk::file::count_file_type_entries() const {
     u32 count = 0;
 
     if (file_types) {
@@ -135,7 +135,7 @@ u32 amalga::apkf::file::count_file_type_entries() const {
 }
 
 // sub_A6AE90
-void amalga::apkf::file::invoke_section_load_callbacks() {
+void amalga::merged_apk::file::invoke_section_load_callbacks() {
     for (u32 index = 0; index < section_count; ++index) {
         file_section     &section = sections[index];
         section_handler*  handler = find_section_handler(section.name);
@@ -145,12 +145,12 @@ void amalga::apkf::file::invoke_section_load_callbacks() {
     }
 }
 
-void amalga::apkf::file::invoke_file_type_load_callbacks() {
+void amalga::merged_apk::file::invoke_file_type_load_callbacks() {
     invoke_file_type_load_callbacks(0, count_file_type_entries());
 }
 
 // sub_A6AEE0
-void amalga::apkf::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
+void amalga::merged_apk::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
     if (!file_types)
         return;
 
@@ -199,13 +199,13 @@ void amalga::apkf::file::invoke_file_type_load_callbacks(u32 start, u32 count) {
 }
 
 // sub_A6B1E0
-void amalga::apkf::file::invoke_load_callbacks() {
+void amalga::merged_apk::file::invoke_load_callbacks() {
     invoke_section_load_callbacks();
     invoke_file_type_load_callbacks();
 }
 
 // sub_A6B050
-void amalga::apkf::file::invoke_remove_callbacks() {
+void amalga::merged_apk::file::invoke_remove_callbacks() {
     if (!section_count || !file_types)
         return;
 
@@ -244,15 +244,15 @@ void amalga::apkf::file::invoke_remove_callbacks() {
 }
 
 // sub_A6B1B0
-void amalga::apkf::file::unload() {
+void amalga::merged_apk::file::unload() {
     invoke_remove_callbacks();
 
     if (flags & file_from_file_buffer)
         memory::free((u8*)this - sizeof(file_header));
 }
 
-amalga::apkf::file_type_handler* amalga::apkf::find_file_type_handler(u32 type,
-                                                                      u32 version) {
+amalga::merged_apk::file_type_handler* amalga::merged_apk::find_file_type_handler(u32 type,
+                                                                                  u32 version) {
 
     for (file_type_handler* handler = references::file_type_handlers.read(); handler; handler = handler->next) {
         if (handler->type == type && handler->version == version)
@@ -262,7 +262,7 @@ amalga::apkf::file_type_handler* amalga::apkf::find_file_type_handler(u32 type,
     return nullptr;
 }
 
-amalga::apkf::section_handler* amalga::apkf::find_section_handler(string_hash name) {
+amalga::merged_apk::section_handler* amalga::merged_apk::find_section_handler(string_hash name) {
     for (section_handler* handler = references::section_handlers.read(); handler; handler = handler->next) {
         if (handler->name == name)
             return handler;
@@ -272,11 +272,11 @@ amalga::apkf::section_handler* amalga::apkf::find_section_handler(string_hash na
 }
 
 // sub_A6A9A0
-amalga::apkf::file_type_handler* amalga::apkf::register_file_type(u32           type,
-                                                                  u32           version,
-                                                                  file_callback load,
-                                                                  file_callback remove,
-                                                                  void*         user_data) {
+amalga::merged_apk::file_type_handler* amalga::merged_apk::register_file_type(u32           type,
+                                                                              u32           version,
+                                                                              file_callback load,
+                                                                              file_callback remove,
+                                                                              void*         user_data) {
 
     auto handler = (file_type_handler*)memory::allocate
         (sizeof(file_type_handler), 8, 0);
@@ -294,11 +294,11 @@ amalga::apkf::file_type_handler* amalga::apkf::register_file_type(u32           
 }
 
 // sub_A6A9E0
-amalga::apkf::section_handler* amalga::apkf::register_section_type(string_hash      name,
-                                                                   section_resolver resolve,
-                                                                   section_callback load,
-                                                                   section_callback remove,
-                                                                   void*            user_data) {
+amalga::merged_apk::section_handler* amalga::merged_apk::register_section_type(string_hash      name,
+                                                                               section_resolver resolve,
+                                                                               section_callback load,
+                                                                               section_callback remove,
+                                                                               void*            user_data) {
 
     auto handler = (section_handler*)memory::allocate
         (sizeof(section_handler), 8, 0);
@@ -316,6 +316,6 @@ amalga::apkf::section_handler* amalga::apkf::register_section_type(string_hash  
 }
 
 // sub_A6AA20
-void amalga::apkf::set_resource_resolver(resource_resolver resolver) {
+void amalga::merged_apk::set_resource_resolver(resource_resolver resolver) {
     references::resource_resolver.write(resolver);
 }

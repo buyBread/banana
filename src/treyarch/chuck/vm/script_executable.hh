@@ -1,7 +1,9 @@
 #pragma once
 
+#include "treyarch/chuck/vm/script_instance_visitor.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -63,7 +65,18 @@ namespace treyarch { namespace chuck { namespace vm {
         u32              uint;
         i32              so_index;
 
+        // inlined @ sub_A20190
+        void construct_mashed_class() {
+            inst_name.construct_mashed_class();
+
+            if (parms)
+                parms->construct_mashed_class();
+        }
+
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
     };
 
     /*
@@ -73,7 +86,7 @@ namespace treyarch { namespace chuck { namespace vm {
     class script_executable {
 
     public:
-        void*                                                self;
+        void*                                                self;               // the resource handler points this at the executable itself
         mash::string                                         name;
         string_hash                                          resource_hash;
         mash::vector<script_object>                          script_objects;
@@ -92,6 +105,16 @@ namespace treyarch { namespace chuck { namespace vm {
             finalize(mash::ALLOCATED);
         }
 
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       buffer);
+
         // time_inc is never read; only the manager keeps it
         void first_run(f32 time_inc, bool ignore_suspended);
         void run      (f32 time_inc, bool ignore_suspended);
@@ -104,6 +127,8 @@ namespace treyarch { namespace chuck { namespace vm {
         script_object* find_object(string_hash object_name, i32* index) const;
 
         vm_thread* find_thread(u32 thread_id) const;
+
+        void walk_instances(script_instance_visitor* visitor) const;
 
         u16* lookup_sx_code_segment(u32 offset) const;
 
@@ -125,10 +150,14 @@ namespace treyarch { namespace chuck { namespace vm {
         void finalize(mash::allocation_scope scope);
     };
 
-    ASSERT_OFFSETOF(script_executable_object_instance_info, offset, 0x14);
-    ASSERT_OFFSETOF(script_executable_object_instance_info, id,     0x18);
-    ASSERT_OFFSETOF(script_executable_object_instance_info, num,    0x1C);
-    ASSERT_OFFSETOF(script_executable_object_instance_info, uint,   0x20);
+    ASSERT_SIZEOF  (script_executable_object_instance_info,           0x28);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, so_name,  0x0C);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, parms,    0x10);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, offset,   0x14);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, id,       0x18);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, num,      0x1C);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, uint,     0x20);
+    ASSERT_OFFSETOF(script_executable_object_instance_info, so_index, 0x24);
 
     ASSERT_SIZEOF  (script_executable,                         0x6C);
     ASSERT_OFFSETOF(script_executable, self,                   0x00);

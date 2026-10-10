@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "treyarch/amalga/apkf/loader.hh"
+#include "treyarch/amalga/merged_apk/loader.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/resources/init.hh"
 #include "treyarch/ngl/resources/resolver.hh"
@@ -45,7 +45,7 @@ void ngl::resources::init() {
                 &references::default_package_data.get(),
                 package_size);
 
-    amalga::apkf::load_file_in_place(package_copy);
+    amalga::merged_apk::load_file_in_place(package_copy);
 
     fixed_string default_name = make_fixed_string("ngl_default");
     ngl::references::default_texture.write((texture*)resolve(&default_name, four_cc('T', 'E', 'X')));
@@ -58,5 +58,5 @@ void ngl::resources::init() {
                     ngl::references::system_font.read()     ? "found" : "missing");
 
     initialize_builtin_textures();
-    amalga::apkf::set_resource_resolver(resolve);
+    amalga::merged_apk::set_resource_resolver(resolve);
 }

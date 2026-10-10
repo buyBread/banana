@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "treyarch/amalga/apkf/file.hh"
+#include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "util/macros/sanity_assert.hh"
@@ -318,14 +318,14 @@ namespace treyarch { namespace ngl { namespace fx {
     effect* find(string_hash name);
     void initialize_directory();
 
-    void load(amalga::apkf::file*       owner,
-              amalga::apkf::file_entry* entry,
-              void**                    mapped_sections,
-              void*                     user_data);
-    void remove(amalga::apkf::file*       owner,
-                amalga::apkf::file_entry* entry,
-                void**                    mapped_sections,
-                void*                     user_data);
+    void load(amalga::merged_apk::file*       owner,
+              amalga::merged_apk::file_entry* entry,
+              void**                          mapped_sections,
+              void*                           user_data);
+    void remove(amalga::merged_apk::file*       owner,
+                amalga::merged_apk::file_entry* entry,
+                void**                          mapped_sections,
+                void*                           user_data);
 
     namespace references {
         inline util::memory_reference<effect_directory> effects { 0x011171E4 };

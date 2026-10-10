@@ -5,7 +5,7 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace amalga {
-    enum e_resource_type : u32 {
+    enum class e_resource_type : u32 {
         error = 0,
         descriptor,
         sin,

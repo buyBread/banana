@@ -21,22 +21,9 @@ namespace treyarch { namespace amalga {
         bool advance(i32 operation, limited_timer* time_limit);
     };
 
-    struct merged_apk_resource_handler : resource_handler {
-        u32 entry_count;
-        u32 entry_cursor;
-
-        void begin_merged_apk(i32 operation);
-        i32 progress_merged_apk(i32                  operation,
-                                resource_descriptor* descriptor);
-    };
-
     ASSERT_SIZEOF  (resource_handler,                    0x14);
     ASSERT_OFFSETOF(resource_handler, state,             0x04);
     ASSERT_OFFSETOF(resource_handler, pack_slot,         0x08);
     ASSERT_OFFSETOF(resource_handler, type,              0x0C);
     ASSERT_OFFSETOF(resource_handler, descriptor_cursor, 0x10);
-
-    ASSERT_SIZEOF  (merged_apk_resource_handler,               0x1C);
-    ASSERT_OFFSETOF(merged_apk_resource_handler, entry_count,  0x14);
-    ASSERT_OFFSETOF(merged_apk_resource_handler, entry_cursor, 0x18);
 }} // treyarch::amalga

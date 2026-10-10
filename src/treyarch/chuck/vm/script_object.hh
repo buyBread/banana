@@ -67,7 +67,11 @@ namespace treyarch { namespace chuck { namespace vm {
             finalize(mash::ALLOCATED);
         }
 
+        void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
         script_instance* add_instance(const char* inst_name, e_script_instance_stack_size stack_size);
         script_instance* add_instance(const mash::string                 &inst_name,

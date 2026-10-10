@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/amalga/apkf/file.hh"
+#include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/shared/container/skip_list.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "util/macros/sanity_assert.hh"
@@ -43,14 +43,14 @@ namespace treyarch { namespace ngl {
 
     void initialize_morph_directory();
 
-    void load_morph(amalga::apkf::file*       owner,
-                    amalga::apkf::file_entry* entry,
-                    void**                    mapped_sections,
-                    void*                     user_data);
-    void remove_morph(amalga::apkf::file*       owner,
-                      amalga::apkf::file_entry* entry,
-                      void**                    mapped_sections,
-                      void*                     user_data);
+    void load_morph(amalga::merged_apk::file*       owner,
+                    amalga::merged_apk::file_entry* entry,
+                    void**                          mapped_sections,
+                    void*                           user_data);
+    void remove_morph(amalga::merged_apk::file*       owner,
+                      amalga::merged_apk::file_entry* entry,
+                      void**                          mapped_sections,
+                      void*                           user_data);
 
     namespace references {
         inline util::memory_reference<morph_directory> morphs { 0x01118660 };

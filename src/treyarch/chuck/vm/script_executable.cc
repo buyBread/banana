@@ -31,6 +31,56 @@ void script_executable_object_instance_info::destruct_mashed_class() {
     }
 }
 
+// sub_A1FF70
+void script_executable_object_instance_info::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    inst_name.unmash(mash_info, this, buffer);
+
+    u8 class_mashed = 0xFF;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(parms, this, buffer);
+    else
+        parms = nullptr;
+}
+
+// sub_A201F0
+void script_executable::construct_mashed_class() {
+    self = nullptr;
+
+    name                  .construct_mashed_class();
+    script_objects        .construct_mashed_class();
+    object_instances      .construct_mashed_class();
+    permanent_string_table.construct_mashed_class();
+
+    flags = (e_script_executable_flags)(flags | script_executable_flag_from_mash | script_executable_flag_needs_run);
+}
+
+// sub_A203A0
+void script_executable::destruct_mashed_class() {
+    finalize(mash::FROM_MASH);
+
+    name                  .destruct_mashed_class();
+    script_objects        .destruct_mashed_class();
+    object_instances      .destruct_mashed_class();
+    permanent_string_table.destruct_mashed_class();
+}
+
+// sub_A20290
+void script_executable::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    name                  .unmash(mash_info, this, buffer);
+    script_objects        .unmash(mash_info, this, buffer);
+    object_instances      .unmash(mash_info, this, buffer);
+    permanent_string_table.unmash(mash_info, this, buffer);
+
+    custom_unmash(mash_info, this, buffer);
+}
+
+// inlined @ sub_A20290
+void script_executable::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    exe_image = (u16*)mash_info->read_from_buffer(buffer, exe_image_size, 4);
+}
+
 // sub_A1F920
 void script_executable::first_run(f32 time_inc, bool ignore_suspended) {
     if ((flags & script_executable_flag_suspended_for_script_vars) || (flags & script_executable_flag_first_run_called))
@@ -424,4 +474,22 @@ vm_thread* script_executable::find_thread(u32 thread_id) const {
     }
 
     return nullptr;
+}
+
+// sub_A1FCF0
+void script_executable::walk_instances(script_instance_visitor* visitor) const {
+    for (script_object* object : script_objects) {
+        if (!visitor->allow_object(object))
+            continue;
+
+        for (script_instance* inst = object->instances.head; inst; inst = inst->vm_simple_list_next) {
+            e_visit_result result = visitor->visit(inst);
+
+            if (result == visit_result_halt_walk)
+                return;
+
+            if (result == visit_result_skip_object)
+                break;
+        }
+    }
 }

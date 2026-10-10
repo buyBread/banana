@@ -9,10 +9,10 @@ void ngl::initialize_morph_directory() {
 }
 
 // sub_9E40B0
-void ngl::load_morph(amalga::apkf::file*       owner,
-                     amalga::apkf::file_entry* entry,
-                     void**                    mapped_sections,
-                     void*                     user_data) {
+void ngl::load_morph(amalga::merged_apk::file*       owner,
+                     amalga::merged_apk::file_entry* entry,
+                     void**                          mapped_sections,
+                     void*                           user_data) {
 
     (void)entry;
     (void)user_data;
@@ -44,10 +44,10 @@ void ngl::load_morph(amalga::apkf::file*       owner,
 }
 
 // sub_9E41B0
-void ngl::remove_morph(amalga::apkf::file*       owner,
-                       amalga::apkf::file_entry* entry,
-                       void**                    mapped_sections,
-                       void*                     user_data) {
+void ngl::remove_morph(amalga::merged_apk::file*       owner,
+                       amalga::merged_apk::file_entry* entry,
+                       void**                          mapped_sections,
+                       void*                           user_data) {
 
     (void)entry;
     (void)user_data;

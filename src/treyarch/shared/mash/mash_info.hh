@@ -10,7 +10,7 @@
 namespace treyarch { namespace mash {
     class mash_info_struct {
 
-public:
+    public:
         struct mash_header {
             u32 master_marker;
             u32 unknown_04;

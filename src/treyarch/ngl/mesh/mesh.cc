@@ -129,10 +129,10 @@ void ngl::initialize_mesh_directory() {
 }
 
 // sub_9DC510
-void ngl::load_mesh(amalga::apkf::file*       owner,
-                    amalga::apkf::file_entry* entry,
-                    void**                    mapped_sections,
-                    void*                     user_data) {
+void ngl::load_mesh(amalga::merged_apk::file*       owner,
+                    amalga::merged_apk::file_entry* entry,
+                    void**                          mapped_sections,
+                    void*                           user_data) {
 
     (void)user_data;
 
@@ -159,10 +159,10 @@ void ngl::load_mesh(amalga::apkf::file*       owner,
 }
 
 // sub_9DC5A0
-void ngl::remove_mesh(amalga::apkf::file*       owner,
-                      amalga::apkf::file_entry* entry,
-                      void**                    mapped_sections,
-                      void*                     user_data) {
+void ngl::remove_mesh(amalga::merged_apk::file*       owner,
+                      amalga::merged_apk::file_entry* entry,
+                      void**                          mapped_sections,
+                      void*                           user_data) {
 
     (void)entry;
     (void)user_data;

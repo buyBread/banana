@@ -306,6 +306,52 @@ script_executable* script_manager::find_executable(const string_hash &filename, 
     return node->value->exec;
 }
 
+// sub_A1AD90
+script_object* script_manager::find_object(string_hash name) {
+    engine_lock_scope scope(&exec_set_lock);
+
+    for (auto* node = exec_set->begin(); node != exec_set->end(); node = node->next()) {
+        script_object* object = node->value->exec->find_object(name, nullptr);
+
+        if (object)
+            return object;
+    }
+
+    return nullptr;
+}
+
+// sub_A1B6B0
+script_object* script_manager::find_object(const string_hash &filename, string_hash obj_name, string_hash key_prefix) {
+    string_hash empty;
+    empty.initialize(mash::ALLOCATED);
+
+    if (filename == empty)
+        return find_object(obj_name);
+
+    engine_lock_scope scope(&exec_set_lock);
+
+    script_executable_entry key;
+    key.filename   = filename;
+    key.key_prefix = key_prefix;
+
+    auto* node = exec_set->find(&key);
+
+    if (node == exec_set->end())
+        return nullptr;
+
+    return node->value->exec->find_object(obj_name, nullptr);
+}
+
+// sub_A1A130
+script_object* script_manager::find_global_object() {
+    engine_lock_scope scope(&exec_set_lock);
+
+    if (!master_script)
+        return nullptr;
+
+    return master_script->get_global_script_object();
+}
+
 // inlined @ sub_A1AE50, sub_A1B960
 void script_manager::first_run_pending_execs(f32 requested_time_inc, bool ignore_suspended) {
     if (execs_pending_first_run->empty())

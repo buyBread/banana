@@ -104,6 +104,14 @@ namespace treyarch { namespace chuck { namespace vm {
         bool               is_loaded      (const string_hash &filename, string_hash key_prefix);
         script_executable* find_executable(const string_hash &filename, string_hash key_prefix);
 
+        // the first loaded executable that has it, in exec_set order
+        script_object* find_object(string_hash name);
+
+        // an empty filename searches every executable
+        script_object* find_object(const string_hash &filename, string_hash obj_name, string_hash key_prefix);
+
+        script_object* find_global_object();
+
         void run(f32 requested_time_inc, bool ignore_suspended);
 
         vm_thread* find_thread(u32 thread_id);

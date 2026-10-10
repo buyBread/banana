@@ -1,9 +1,9 @@
-#include "treyarch/amalga/apkf/loader.hh"
+#include "treyarch/amalga/merged_apk/loader.hh"
 
 using namespace treyarch;
 
-bool amalga::apkf::file::relocate_in_place(data_reference* &resource_references,
-                                           u8*             &string_base) {
+bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_references,
+                                                 u8*             &string_base) {
 
     flags |= file_loaded_in_place;
 
@@ -88,9 +88,9 @@ bool amalga::apkf::file::relocate_in_place(data_reference* &resource_references,
 }
 
 // sub_A6B2F0
-amalga::apkf::file* amalga::apkf::relocate_file_in_place(void*            image,
-                                                         data_reference* &resource_references,
-                                                         u8*             &string_base) {
+amalga::merged_apk::file* amalga::merged_apk::relocate_file_in_place(void*            image,
+                                                                     data_reference* &resource_references,
+                                                                     u8*             &string_base) {
 
     resource_references = nullptr;
     string_base         = nullptr;
@@ -112,7 +112,7 @@ amalga::apkf::file* amalga::apkf::relocate_file_in_place(void*            image,
 }
 
 // sub_A6B5D0
-amalga::apkf::file* amalga::apkf::load_file_in_place(void* image) {
+amalga::merged_apk::file* amalga::merged_apk::load_file_in_place(void* image) {
     data_reference* resource_references;
     u8*             string_base;
 

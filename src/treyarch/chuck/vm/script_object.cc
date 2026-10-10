@@ -314,12 +314,39 @@ void script_object::finalize(mash::allocation_scope scope) {
     destructor_common();
 }
 
+// sub_A1D8C0
+void script_object::construct_mashed_class() {
+    funcs.construct_mashed_class();
+    reference_descriptors.construct_mashed_class();
+
+    flags = (e_script_object_flags)(flags | script_object_flag_from_mash);
+
+    instance_lock = nullptr;
+
+    auto* lock = (ref_counted_simple_mutex*)references::instance_lock_pool.get().allocate();
+
+    if (lock)
+        lock->reset();
+
+    // yes, twice
+    instance_lock = lock;
+    instance_lock->reset();
+
+    flags = (e_script_object_flags)(flags | script_object_flag_needs_run);
+}
+
 // sub_A1D9C0
 void script_object::destruct_mashed_class() {
     destructor_common();
 
     funcs.destruct_mashed_class();
     reference_descriptors.destruct_mashed_class();
+}
+
+// sub_A1D940
+void script_object::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    funcs                .unmash(mash_info, this, buffer);
+    reference_descriptors.unmash(mash_info, this, buffer);
 }
 
 // sub_A1D090
