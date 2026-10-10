@@ -14,6 +14,12 @@ void script_function::post_un_mash_fixup(script_object* requested_parent) {
     buffer = requested_parent->parent->lookup_sx_code_segment(offset);
 }
 
+// sub_A20420
+void script_function::finalize(mash::allocation_scope scope) {
+    if (scope == mash::ALLOCATED)
+        buffer = nullptr;
+}
+
 // sub_A20440
 void script_function::add_references(vm_thread*  thread,
                                      const void* block,
@@ -91,24 +97,33 @@ void script_function::release_references(const void* block, u32 block_size) cons
         switch (descriptor.kind) {
             case vm_reference_kind_dynamic_array:
                 manager->remove_reference((chuck_dynamic_array_t*)value);
+                
                 break;
 
             case vm_reference_kind_string_dynamic_array:
                 manager->remove_string_array_reference((chuck_dynamic_array_t*)value);
+
                 break;
 
             case vm_reference_kind_script_instance_dynamic_array:
                 manager->remove_instance_array_reference(nullptr, (chuck_dynamic_array_t*)value);
+
                 break;
 
             case vm_reference_kind_string:
                 manager->remove_string_reference(value);
+
                 break;
 
             default:
                 break;
         }
     }
+}
+
+// sub_A20650
+void script_function::destruct_mashed_class() {
+    reference_descriptors.destruct_mashed_class();
 }
 
 // sub_A206A0

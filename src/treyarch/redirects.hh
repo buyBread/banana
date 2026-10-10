@@ -5,6 +5,7 @@
 #include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_handler.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
@@ -283,6 +284,13 @@ namespace treyarch {
 
         if (!util::redirect_rel32(0x0073BD01, { 0xE8, 0xCA, 0xE7, 0xFF, 0xFF }, &amalga::resource_handler::advance) ||
             !util::redirect_rel32(0x0076BDBB, { 0xE8, 0x10, 0xE7, 0xFC, 0xFF }, &amalga::resource_handler::advance))
+
+            FATAL_BREAKPOINT();
+
+        banana::log.msg("redirecting script_instance::run_single_thread_until_finished");
+
+        if (!util::redirect_rel32(0x0082505D, { 0xE8, 0x9E, 0x9B, 0x1F, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished) ||
+            !util::redirect_rel32(0x00A1CE06, { 0xE8, 0xF5, 0x1D, 0x00, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished))
 
             FATAL_BREAKPOINT();
 

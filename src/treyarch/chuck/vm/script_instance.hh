@@ -41,12 +41,26 @@ namespace treyarch { namespace chuck { namespace vm {
                                                void*                             user_data);
 
     // WoS ordinals; SM3's list differs (it had dynamic arrays at 11)
+    // what script library natives list on the creating instance; the names are the natives' script types
     enum e_script_garbage_collection_type : u32 {
-        script_garbage_collection_dynamic_array = 6, // listed when the manager creates an owned array, unlisted when it dies
-        script_garbage_collection_total_types   = 15
+        script_garbage_collection_unk_00                 = 0,  // nothing lists it
+        script_garbage_collection_entity_tracker         = 1,
+        script_garbage_collection_line_info              = 2,
+        script_garbage_collection_trigger                = 3,
+        script_garbage_collection_entity                 = 4,
+        script_garbage_collection_sound_response         = 5,
+        script_garbage_collection_dynamic_array          = 6,  // listed when the manager creates an owned array, unlisted when it dies
+        script_garbage_collection_generic_event_callback = 7,
+        script_garbage_collection_point_of_interest      = 8,
+        script_garbage_collection_mutex                  = 9,
+        script_garbage_collection_widget_3d              = 10,
+        script_garbage_collection_city_life_tracker      = 11,
+        script_garbage_collection_finger_of_god          = 12,
+        script_garbage_collection_fight_group            = 13,
+        script_garbage_collection_obstacle               = 14,
+        script_garbage_collection_total_types            = 15
     };
 
-    // SM3's element plus the owning-list backpointer every retail list element carries
     struct garbage_collection_element {
         u32                                          element;
         vm_simple_list<garbage_collection_element*>* list;
@@ -54,9 +68,11 @@ namespace treyarch { namespace chuck { namespace vm {
         garbage_collection_element*                  vm_simple_list_next;
     };
 
+    using stuff_to_delete_list_t = vm_simple_list<garbage_collection_element*>;
+
     // installed per type in script_manager; called before the type's list is emptied
-    using script_instance_garbage_collection_callback_t = void(*)(script_instance*                              si,
-                                                                  vm_simple_list<garbage_collection_element*> &stuff_to_delete);
+    using script_instance_garbage_collection_callback_t = void(*)(script_instance*        si,
+                                                                  stuff_to_delete_list_t &stuff_to_delete);
 
     using script_instance_created_callback_t   = void(*)(script_instance* inst);
     using script_instance_destroyed_callback_t = void(*)(script_instance* inst);
@@ -116,6 +132,9 @@ namespace treyarch { namespace chuck { namespace vm {
                                            void*       ret,
                                            u32         return_value_byte_size,
                                            string_hash key_prefix);
+
+        // false when nothing may run yet; otherwise it keeps running the thread until it finishes
+        bool run_single_thread_until_finished(vm_thread* t, bool ignore_suspended, string_hash key_prefix);
 
         void kill_thread(const script_function* ex, const vm_thread* ignore_thread);
         void kill_thread(vm_thread* thread_to_kill);

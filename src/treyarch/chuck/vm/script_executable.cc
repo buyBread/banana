@@ -4,6 +4,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -18,6 +19,16 @@ void script_executable::register_callbacks(resolve_signal_callback_t            
     references::resolve_extern_callback              .write(resolve_extern);
     references::get_chuck_client_library_key_callback.write(get_chuck_client_library_key);
     references::get_script_executable_folder_callback.write(get_script_executable_folder);
+}
+
+// sub_A1F690
+void script_executable_object_instance_info::destruct_mashed_class() {
+    inst_name.destruct_mashed_class();
+
+    if (parms) {
+        parms->destruct_mashed_class();
+        parms = nullptr;
+    }
 }
 
 // sub_A1F920
@@ -361,6 +372,34 @@ void script_executable::un_load(bool call_all_destructors) {
     flags = (e_script_executable_flags)(flags & ~(script_executable_flag_unloading | script_executable_flag_published));
 
     script_manager::inst()->run_notification_callback(script_manager_callback_reason_just_unloaded, this, nullptr);
+}
+
+// sub_A20340
+void script_executable::finalize(mash::allocation_scope scope) {
+    if (scope != mash::ALLOCATED) {
+        flags = (e_script_executable_flags)(flags & ~(script_executable_flag_awaiting_initial_breakpoints |
+                                                      script_executable_flag_has_initial_breakpoints      |
+                                                      script_executable_flag_first_run_called));
+
+        return;
+    }
+
+    flags = (e_script_executable_flags)(flags & ~script_executable_flag_linked);
+
+    script_objects.clear();
+    permanent_string_table.clear();
+
+    if (exe_image) {
+        memory::heap::free(exe_image);
+
+        exe_image      = nullptr;
+        exe_image_size = 0;
+    }
+
+    object_instances.clear();
+
+    flags = (e_script_executable_flags)(flags & ~(script_executable_flag_awaiting_initial_breakpoints |
+                                                  script_executable_flag_has_initial_breakpoints));
 }
 
 // sub_A1FDE0

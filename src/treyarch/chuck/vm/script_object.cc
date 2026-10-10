@@ -4,6 +4,7 @@
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -254,6 +255,71 @@ void script_object::delete_all_instances() {
             references::instance_pool.get().release(inst);
         }
     }
+}
+
+// sub_A1C6E0
+void script_object::create_function_cache_lock() {
+    auto lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (lock) {
+        lock->owner = 0;
+        lock->state = 0;
+        lock->depth = 0;
+    }
+
+    references::function_cache_lock.write(lock);
+
+    lock->owner = 0;
+    lock->state = 0;
+    lock->depth = 0;
+}
+
+// sub_A1D6E0
+void script_object::destroy_instances() {
+    ref_lock_scope scope(instance_lock);
+
+    while (instances.head) {
+        script_instance* inst = instances.head;
+
+        if (inst)
+            instances.erase(inst);
+
+        if (inst) {
+            inst->~script_instance();
+
+            references::instance_pool.get().release(inst);
+        }
+    }
+
+    global_instance = nullptr;
+}
+
+// sub_A1D790
+void script_object::destructor_common() {
+    destroy_instances();
+
+    instance_lock->ref_count = 0;
+
+    if (instance_lock)
+        references::instance_lock_pool.get().release(instance_lock);
+
+    instance_lock = nullptr;
+}
+
+// sub_A1D990
+void script_object::finalize(mash::allocation_scope scope) {
+    if (scope == mash::ALLOCATED && funcs.size)
+        funcs.clear();
+
+    destructor_common();
+}
+
+// sub_A1D9C0
+void script_object::destruct_mashed_class() {
+    destructor_common();
+
+    funcs.destruct_mashed_class();
+    reference_descriptors.destruct_mashed_class();
 }
 
 // sub_A1D090

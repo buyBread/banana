@@ -1,5 +1,6 @@
 #include "treyarch/chuck/vm/script_var_container.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -47,4 +48,32 @@ u8* script_var_container::get_address(const char* name) const {
     }
 
     return entry->address;
+}
+
+// sub_A20D60
+void script_var_container::destroy() {
+    if (flags & script_var_container_flag_from_mash)
+        return;
+
+    script_var_to_address.clear();
+
+    if (debug_info) {
+        if (debug_info->var_to_offset) {
+            debug_info->var_to_offset->~map();
+
+            memory::heap::free(debug_info->var_to_offset);
+        }
+
+        memory::heap::free(debug_info);
+
+        debug_info = nullptr;
+    }
+
+    flags = (e_script_var_container_flags)0;
+}
+
+// sub_A20DD0
+void script_var_container::finalize(mash::allocation_scope scope) {
+    if (scope == mash::ALLOCATED)
+        destroy();
 }

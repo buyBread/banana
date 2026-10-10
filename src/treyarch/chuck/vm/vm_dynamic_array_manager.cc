@@ -239,6 +239,18 @@ void vm_dynamic_array_manager::remove_reference(chuck_dynamic_array_t* array) {
     release_reference(array, nullptr, vm_dynamic_array_release_plain);
 }
 
+// sub_A187E0
+void vm_dynamic_array_manager::garbage_collect(script_instance*                             si,
+                                               vm_simple_list<garbage_collection_element*> &stuff_to_delete) {
+
+    inst()->unk_08 = true;
+
+    for (garbage_collection_element* element = stuff_to_delete.head; element; element = element->vm_simple_list_next)
+        inst()->remove_reference((chuck_dynamic_array_t*)element->element);
+
+    inst()->unk_08 = false;
+}
+
 // sub_A18780
 void vm_dynamic_array_manager::remove_string_reference(const void* string) {
     if (!string)
@@ -290,11 +302,13 @@ void vm_dynamic_array_manager::release_reference(chuck_dynamic_array_t*         
     switch (mode) {
         case vm_dynamic_array_release_strings:
             release_string_elements(array);
+            
             break;
 
         case vm_dynamic_array_release_erase:
             if (array)
                 array->erase(array->begin(), array->end());
+
             break;
 
         default:

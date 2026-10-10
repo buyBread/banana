@@ -57,7 +57,7 @@ game::game() {
     unk_1ce = 0;
 
     retail::sub_773A80();
-    retail::sub_97AB10();
+    chuck::vm::script_manager::setup();
     chuck_callbacks::install();
     retail::sub_83EF20();
     retail::sub_603E00();

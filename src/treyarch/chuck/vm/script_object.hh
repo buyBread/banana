@@ -5,8 +5,10 @@
 #include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
+#include "treyarch/shared/memory/fixed_pool.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -28,6 +30,8 @@ namespace treyarch { namespace chuck { namespace vm {
         inline util::memory_reference<script_object_function_cache_element> function_cache       { 0x01124A60 };
         inline util::memory_reference<engine_recursive_lock*>               function_cache_lock  { 0x01124A5C };
         inline util::memory_reference<i32>                                  function_cache_usage { 0x01124A58 };
+
+        inline util::memory_reference<memory::fixed_pool> instance_lock_pool { 0x00FB86C8 };
     } // references
 
     enum e_script_object_flags : u32 {
@@ -58,6 +62,13 @@ namespace treyarch { namespace chuck { namespace vm {
         e_script_object_flags            flags;
         ref_counted_simple_mutex*        instance_lock;    // pooled
 
+        // sub_A1C130
+        ~script_object() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void destruct_mashed_class();
+
         script_instance* add_instance(const char* inst_name, e_script_instance_stack_size stack_size);
         script_instance* add_instance(const mash::string                 &inst_name,
                                       const void*                         constructor_parms_buffer,
@@ -87,8 +98,16 @@ namespace treyarch { namespace chuck { namespace vm {
 
         script_instance* first_instance() const;
 
+        static void create_function_cache_lock();
+
     private:
         void add(script_instance* inst);
+
+        void finalize(mash::allocation_scope scope);
+        void destructor_common();
+
+        // unlike delete_all_instances, no garbage collection runs first
+        void destroy_instances();
     };
 
     ASSERT_SIZEOF  (script_object,                        0x5C);

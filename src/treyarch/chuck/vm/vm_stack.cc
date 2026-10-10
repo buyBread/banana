@@ -30,6 +30,23 @@ vm_stack::~vm_stack() {
     }
 }
 
+// sub_A196D0
+void vm_stack::create_push_staging_lock() {
+    auto* lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (lock) {
+        lock->owner = 0;
+        lock->state = 0;
+        lock->depth = 0;
+    }
+
+    references::push_staging_lock.write(lock);
+
+    lock->owner = 0;
+    lock->state = 0;
+    lock->depth = 0;
+}
+
 // sub_A19A30
 void vm_stack::allocate(u32 size) {
     if (!size)
@@ -186,4 +203,12 @@ string_hash vm_stack::pop_signal() {
     sp -= 4;
 
     return string_hash(*(u32*)sp);
+}
+
+// sub_A1A010
+void vm_stack::initialize_pools() {
+    references::stack_pool_128 .get().initialize("vm_stack_buffer", 0x80,  4, 0x40, 4);
+    references::stack_pool_284 .get().initialize("vm_stack_buffer", 0x11C, 4, 0x20, 1);
+    references::stack_pool_512 .get().initialize("vm_stack_buffer", 0x200, 4, 0x20, 2);
+    references::stack_pool_1024.get().initialize("vm_stack_buffer", 0x400, 4, 0x02, 1);
 }

@@ -54,7 +54,7 @@ namespace treyarch { namespace chuck { namespace vm {
         inline util::memory_reference<u32>         run_name_guard { 0x011248EC };
     } // references
 
-    /* created once by game::game (sub_97AB10) and kept for the process.
+    /* created once by game::game (setup) and kept for the process.
        nothing runs until both variable containers exist (run, run_single_exec).
        lock order: exec_set_lock, then object instance_lock, then instance thread_lock. */
     class script_manager : public singleton_instance<script_manager, 0x011248E0> {
@@ -75,6 +75,8 @@ namespace treyarch { namespace chuck { namespace vm {
         get_platform_callback_t                       get_platform_callback;
         engine_recursive_lock                         exec_set_lock;                    // held across load, run and unload
         engine_recursive_lock                         notification_lock;
+
+        static void setup();
 
         void register_callbacks(notification_callback_t                      notification,
                                 get_script_executable_resource_callback_t    get_script_executable_resource,
@@ -121,6 +123,10 @@ namespace treyarch { namespace chuck { namespace vm {
         u8* get_shared_var_address(i32 offset) const;
 
     private:
+        script_manager();
+
+        static void initialize_pools();
+
         void first_run_pending_execs(f32 requested_time_inc, bool ignore_suspended);
         void unsuspend_execs_for_script_vars();
     };

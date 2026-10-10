@@ -11,6 +11,7 @@
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_string.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -37,6 +38,37 @@ void vm_thread::register_callbacks(raise_global_signal_callback_t             ra
     references::add_global_callback_callback            .write(add_global_callback);
     references::add_instance_callback_callback          .write(add_instance_callback);
     references::add_library_callback_callback           .write(add_library_callback);
+}
+
+// sub_A21BD0
+void vm_thread::create_locks() {
+    auto* global_variable_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (global_variable_lock) {
+        global_variable_lock->owner = 0;
+        global_variable_lock->state = 0;
+        global_variable_lock->depth = 0;
+    }
+
+    references::global_variable_lock.write(global_variable_lock);
+
+    global_variable_lock->owner = 0;
+    global_variable_lock->state = 0;
+    global_variable_lock->depth = 0;
+
+    auto* callback_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (callback_lock) {
+        callback_lock->owner = 0;
+        callback_lock->state = 0;
+        callback_lock->depth = 0;
+    }
+
+    references::callback_lock.write(callback_lock);
+
+    callback_lock->owner = 0;
+    callback_lock->state = 0;
+    callback_lock->depth = 0;
 }
 
 // sub_A22140

@@ -3,6 +3,7 @@
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -61,6 +62,8 @@ namespace treyarch { namespace chuck { namespace vm {
         f32              num;
         u32              uint;
         i32              so_index;
+
+        void destruct_mashed_class();
     };
 
     /*
@@ -83,6 +86,11 @@ namespace treyarch { namespace chuck { namespace vm {
         u32                                                  client_library_key; // 0x6C0AE071 in every shipped script; retail never reads it
         e_script_executable_flags                            flags;
         i32                                                  suspend_count;      // run skips the executable while positive
+
+        // sub_A1C250
+        ~script_executable() {
+            finalize(mash::ALLOCATED);
+        }
 
         // time_inc is never read; only the manager keeps it
         void first_run(f32 time_inc, bool ignore_suspended);
@@ -112,6 +120,9 @@ namespace treyarch { namespace chuck { namespace vm {
                                        resolve_extern_callback_t               resolve_extern,
                                        get_chuck_client_library_key_callback_t get_chuck_client_library_key,
                                        get_script_executable_folder_callback_t get_script_executable_folder);
+
+    private:
+        void finalize(mash::allocation_scope scope);
     };
 
     ASSERT_OFFSETOF(script_executable_object_instance_info, offset, 0x14);

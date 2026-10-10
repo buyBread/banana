@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/singleton.hh"
@@ -8,7 +9,8 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
-    class script_instance;
+    class  script_instance;
+    struct garbage_collection_element;
 
     // SM3: one VM value (`argument_t`-sized)
     struct chuck_dynamic_array_element_t {
@@ -62,6 +64,10 @@ namespace treyarch { namespace chuck { namespace vm {
         void remove_instance_array_reference(script_instance* context, chuck_dynamic_array_t* array);
 
         void release_string_elements(chuck_dynamic_array_t* array);
+
+        // the manager's default for script_garbage_collection_dynamic_array
+        static void garbage_collect(script_instance*                             si,
+                                    vm_simple_list<garbage_collection_element*> &stuff_to_delete);
 
     private:
         void                   grow_pool();

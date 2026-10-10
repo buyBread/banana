@@ -205,6 +205,8 @@ namespace treyarch { namespace chuck { namespace vm {
                                        add_instance_callback_callback_t           add_instance_callback,
                                        add_library_callback_callback_t            add_library_callback);
 
+        static void create_locks();
+
     private:
         void release_local_references();
         void remove_local_reference(void* allocation);

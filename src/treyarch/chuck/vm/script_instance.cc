@@ -175,6 +175,30 @@ bool script_instance::run_single_thread(vm_thread* t, bool ignore_suspended, str
     return true;
 }
 
+// sub_A1EC00
+bool script_instance::run_single_thread_until_finished(vm_thread*  t,
+                                                       bool        ignore_suspended,
+                                                       string_hash key_prefix) {
+
+    {
+        ref_lock_scope    instance_scope(parent->instance_lock);
+        engine_lock_scope thread_scope(&thread_lock);
+
+        script_executable* exec = parent->parent;
+
+        if ((exec->flags & script_executable_flag_suspended_for_script_vars) || exec->suspend_count > 0)
+            return false;
+
+        if (suspend_count > 0 && !ignore_suspended)
+            return false;
+    }
+
+    // the locks are dropped between passes
+    while (!run_single_thread(t, ignore_suspended, key_prefix));
+
+    return true;
+}
+
 // sub_A1ECF0
 bool script_instance::run_single_thread_with_return(vm_thread*  t,
                                                     bool        ignore_suspended,

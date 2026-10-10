@@ -44,6 +44,9 @@ namespace treyarch { namespace chuck { namespace vm {
 
         f32 &local_num (i16 offset) { return *(f32*)(sp + offset); }
         u32 &local_uint(i16 offset) { return *(u32*)(sp + offset); }
+
+        static void initialize_pools();
+        static void create_push_staging_lock();
     };
 
     namespace references {

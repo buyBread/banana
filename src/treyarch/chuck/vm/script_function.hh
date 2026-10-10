@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -50,6 +51,13 @@ namespace treyarch { namespace chuck { namespace vm {
         u16                     buffer_len;
         e_script_function_flags flags;
 
+        // sub_A1AD20
+        ~script_function() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void destruct_mashed_class();
+
         // `retain` adds a manager reference, `track` hands the reference to `thread` for release when it dies
         void add_references(vm_thread*  thread,
                             const void* block,
@@ -63,6 +71,9 @@ namespace treyarch { namespace chuck { namespace vm {
 
         // buffer is serialized as a byte offset into the parent executable's code image
         void post_un_mash_fixup(script_object* requested_parent);
+
+    private:
+        void finalize(mash::allocation_scope scope);
     };
 
     ASSERT_SIZEOF  (script_function,                        0x2C);

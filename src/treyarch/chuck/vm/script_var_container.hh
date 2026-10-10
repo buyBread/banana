@@ -3,12 +3,13 @@
 #include "treyarch/chuck/vm/so_data_block.hh"
 #include "treyarch/shared/dinkumware/map.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
-    // heap-owned; teardown (sub_A20D60) erases and frees the map, then this
+    // heap-owned; destroy erases and frees the map, then this
     struct script_var_debug_info {
         dinkumware::map<mash::string, i32>* var_to_offset;
     };
@@ -16,6 +17,8 @@ namespace treyarch { namespace chuck { namespace vm {
     struct script_var_address_entry {
         u32 name_hash;
         u8* address; // serialized as an offset into script_var_block, fixed up by sub_A20810
+
+        void destruct_mashed_class() {}
     };
 
     enum e_script_var_container_flags : u32 {
@@ -33,8 +36,17 @@ namespace treyarch { namespace chuck { namespace vm {
         script_var_debug_info*                 debug_info;
         e_script_var_container_flags           flags;
 
+        // sub_A1BC00
+        ~script_var_container() {
+            finalize(mash::ALLOCATED);
+        }
+
         // null when the name isn't in this container
         u8* get_address(const char* name) const;
+
+    private:
+        void finalize(mash::allocation_scope scope);
+        void destroy();
     };
 
     ASSERT_SIZEOF  (script_var_debug_info,    0x04);
