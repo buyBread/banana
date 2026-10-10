@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/shared/mash/container_base.hh"
+#include "treyarch/shared/memory/memory.hh"
 #include "util/types.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -14,6 +15,26 @@ namespace treyarch { namespace mash {
     public:
         T*  data;
         u32 capacity;
+
+        ~vector_basic() {
+            clear();
+        }
+
+        void destruct_mashed_class() {
+            clear();
+            container_base::destruct_mashed_class();
+        }
+
+        void clear() {
+            // unlike vector, the storage goes back through the plain allocator
+            if (!is_pointer_in_mash_image(data))
+                memory::free(data);
+
+            data     = nullptr;
+            capacity = 0;
+
+            container_base::clear();
+        }
     };
 
     ASSERT_SIZEOF  (vector_basic<void*>,                     0x10);
