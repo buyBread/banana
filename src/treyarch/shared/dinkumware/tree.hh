@@ -107,7 +107,26 @@ namespace treyarch { namespace dinkumware {
         u32       count;
 
     public:
-        tree() = delete;
+        // inlined @ sub_A1BF80
+        tree() : head_node(buy_head_node()),
+                 count(0) {
+
+            head_node->is_nil = true;
+            head_node->parent = head_node;
+            head_node->left   = head_node;
+            head_node->right  = head_node;
+        }
+
+        // inlined @ sub_A20D60
+        ~tree() {
+            erase(begin(), end());
+
+            memory::heap::free(head_node);
+
+            head_node = nullptr;
+            count     = 0;
+        }
+
         tree(const tree&) = delete;
         tree &operator=(const tree&) = delete;
 
@@ -319,7 +338,56 @@ namespace treyarch { namespace dinkumware {
             return next_node;
         }
 
+        // sub_A20CA0
+        node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing
+            if (first == begin() && last == end()) {
+                erase_subtree(head_node->parent);
+
+                head_node->parent = head_node;
+                count             = 0;
+                head_node->left   = head_node;
+                head_node->right  = head_node;
+
+                return begin();
+            }
+
+            while (first != last) {
+                node* where = first;
+
+                first = first->next();
+
+                erase(where);
+            }
+
+            return first;
+        }
+
     private:
+        // sub_42A1C0
+        static node* buy_head_node() {
+            node* result = (node*)memory::heap::allocate(sizeof(node));
+
+            result->left   = nullptr;
+            result->parent = nullptr;
+            result->right  = nullptr;
+            result->color  = tree_color_black;
+            result->is_nil = false;
+
+            return result;
+        }
+
+        // sub_937860
+        void erase_subtree(node* root) {
+            for (node* position = root; !position->is_nil; root = position) {
+                erase_subtree(position->right);
+
+                position = position->left;
+
+                root->value.~T();
+                memory::heap::free(root);
+            }
+        }
+
         // sub_79B4D0
         node* buy_node(node* left, node* parent, node* right, const T &value, e_tree_color color) {
             node* result = (node*)memory::heap::allocate(sizeof(node));
