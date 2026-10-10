@@ -69,6 +69,11 @@ void so_data_block::finalize(mash::allocation_scope scope) {
         destroy();
 }
 
+// sub_A24A30
+void so_data_block::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type stream) {
+    buffer = (u8*)mash_info->read_from_buffer(stream, blocksize, 4);
+}
+
 // sub_A243D0
 void so_data_block::set_to_zero() {
     if (blocksize > 0)

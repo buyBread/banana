@@ -16,9 +16,11 @@ namespace treyarch { namespace chuck { namespace vm {
 
     struct script_var_address_entry {
         u32 name_hash;
-        u8* address; // serialized as an offset into script_var_block, fixed up by sub_A20810
+        u8* address; // serialized as an offset into script_var_block (game containers store -1 - offset), fixed up by initialize
 
+        void construct_mashed_class() {}
         void destruct_mashed_class() {}
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
     };
 
     enum e_script_var_container_flags : u32 {
@@ -30,7 +32,7 @@ namespace treyarch { namespace chuck { namespace vm {
     class script_var_container {
 
     public:
-        u32                                    unk_00;                // written by resource-root construction, read by nothing known
+        void*                                  self;                  // the resource handler points this at the container itself
         so_data_block                          script_var_block;
         mash::vector<script_var_address_entry> script_var_to_address; // sorted by name_hash
         script_var_debug_info*                 debug_info;
@@ -41,10 +43,17 @@ namespace treyarch { namespace chuck { namespace vm {
             finalize(mash::ALLOCATED);
         }
 
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+
         // null when the name isn't in this container
         u8* get_address(const char* name) const;
 
     private:
+        void initialize(mash::allocation_scope scope);
         void finalize(mash::allocation_scope scope);
         void destroy();
     };
@@ -53,6 +62,7 @@ namespace treyarch { namespace chuck { namespace vm {
     ASSERT_SIZEOF  (script_var_address_entry, 0x08);
 
     ASSERT_SIZEOF  (script_var_container,                        0x30);
+    ASSERT_OFFSETOF(script_var_container, self,                  0x00);
     ASSERT_OFFSETOF(script_var_container, script_var_block,      0x04);
     ASSERT_OFFSETOF(script_var_container, script_var_to_address, 0x14);
     ASSERT_OFFSETOF(script_var_container, debug_info,            0x28);

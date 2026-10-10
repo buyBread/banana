@@ -50,6 +50,50 @@ u8* script_var_container::get_address(const char* name) const {
     return entry->address;
 }
 
+// sub_A20C10
+void script_var_container::construct_mashed_class() {
+    self = nullptr;
+
+    script_var_block     .construct_mashed_class();
+    script_var_to_address.construct_mashed_class();
+
+    initialize(mash::FROM_MASH);
+}
+
+// sub_A20DE0
+void script_var_container::destruct_mashed_class() {
+    script_var_to_address.destruct_mashed_class();
+}
+
+// sub_A20C60
+void script_var_container::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    script_var_block     .unmash(mash_info, this, buffer);
+    script_var_to_address.unmash(mash_info, this, buffer);
+}
+
+// sub_A20810
+void script_var_container::initialize(mash::allocation_scope scope) {
+    if (scope == mash::ALLOCATED) {
+        flags      = (e_script_var_container_flags)0;
+        debug_info = nullptr;
+
+        return;
+    }
+
+    flags = (e_script_var_container_flags)(flags | script_var_container_flag_from_mash);
+
+    for (script_var_address_entry* entry : script_var_to_address) {
+        i32 offset = (i32)entry->address;
+
+        if (offset < 0)
+            offset = -1 - offset;
+
+        entry->address = script_var_block.buffer + offset;
+    }
+
+    flags = (e_script_var_container_flags)(flags & ~script_var_container_flag_unk_04);
+}
+
 // sub_A20D60
 void script_var_container::destroy() {
     if (flags & script_var_container_flag_from_mash)

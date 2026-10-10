@@ -25,6 +25,8 @@ bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit)
                 break;
 
             case e_resource_type::script:
+            case e_resource_type::script_gv:
+            case e_resource_type::script_sv:
                 break;
 
             default:
@@ -60,6 +62,12 @@ bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit)
 
             case e_resource_type::script:
                 result = ((script_resource_handler*)this)->progress_mashable(operation, descriptor);
+
+                break;
+
+            case e_resource_type::script_gv:
+            case e_resource_type::script_sv:
+                result = ((script_var_container_resource_handler*)this)->progress_mashable(operation, descriptor);
 
                 break;
 

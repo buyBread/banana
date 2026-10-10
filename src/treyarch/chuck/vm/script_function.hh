@@ -61,7 +61,7 @@ namespace treyarch { namespace chuck { namespace vm {
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,
                     void*                   containing_class_ptr,
-                    mash::buffer_type       buffer);
+                    mash::buffer_type       stream);
 
         // `retain` adds a manager reference, `track` hands the reference to `thread` for release when it dies
         void add_references(vm_thread*  thread,

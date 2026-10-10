@@ -134,8 +134,8 @@ void script_function::destruct_mashed_class() {
 }
 
 // sub_A206C0
-void script_function::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    reference_descriptors.unmash(mash_info, this, buffer);
+void script_function::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type stream) {
+    reference_descriptors.unmash(mash_info, this, stream);
 }
 
 // sub_A206A0

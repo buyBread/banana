@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/macros/sanity_assert.hh"
@@ -47,6 +48,23 @@ namespace treyarch { namespace chuck { namespace vm {
         ~so_data_block() {
             finalize(mash::ALLOCATED);
         }
+
+        // sub_A248B0
+        void construct_mashed_class() {
+            flags = (e_so_data_block_flags)(flags | so_data_block_flag_from_mash);
+        }
+
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       stream) {
+
+            custom_unmash(mash_info, containing_class_ptr, stream);
+        }
+
+        // the block's bytes follow in the stream
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       stream);
 
         void setup(i32 size);
         void destroy();

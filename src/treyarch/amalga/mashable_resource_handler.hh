@@ -12,6 +12,7 @@ namespace treyarch { namespace amalga {
     template<typename T>
     struct mashable_resource_handler : resource_handler {
         // sub_759EB0
+        // sub_759F60
         static T* construct(resource_descriptor* descriptor) {
             mash::mash_info_struct mash_info(mash::UNMASH_MODE,
                                              descriptor->raw_payload,
@@ -31,6 +32,7 @@ namespace treyarch { namespace amalga {
         }
 
         // sub_75F8D0
+        // sub_75F940
         i32 progress_mashable(i32                  operation,
                               resource_descriptor* descriptor) {
 
