@@ -118,18 +118,32 @@ void speed_tree_lighting::shade(const u8* color, vector4 (&result)[2]) const {
                         (f32)((f64)(f32)((f64)diffuse.w * range) + result[1].w));
 }
 
-// inlined @ sub_7CD8C0, sub_7CC710, sub_7CEA90, sub_7CFC10
+// inlined @ sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10
 bool speed_tree_instance::in_view(const matrix4x4 &basis) const {
-    vector3 point((f32)((f64)basis.x.x * position.x + (f64)basis.y.x * position.y + (f64)basis.z.x * position.z + basis.w.x),
-                  (f32)((f64)basis.x.y * position.x + (f64)basis.y.y * position.y + (f64)basis.z.y * position.z + basis.w.y),
-                  (f32)((f64)basis.x.z * position.x + (f64)basis.y.z * position.y + (f64)basis.z.z * position.z + basis.w.z));
+    vector3 transformed;
+
+    return speed_tree_wrapper::sphere_in_view(basis, position, radius, transformed);
+}
+
+// inlined @ sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10, sub_7D8390
+bool speed_tree_wrapper::sphere_in_view(const matrix4x4 &basis,
+                                        const vector3   &position,
+                                              f32        radius,
+                                              vector3   &transformed) {
+
+    transformed = vector3((f32)((f64)basis.x.x * position.x + (f64)basis.y.x * position.y + (f64)basis.z.x * position.z + basis.w.x),
+                          (f32)((f64)basis.x.y * position.x + (f64)basis.y.y * position.y + (f64)basis.z.y * position.z + basis.w.y),
+                          (f32)((f64)basis.x.z * position.x + (f64)basis.y.z * position.y + (f64)basis.z.z * position.z + basis.w.z));
 
     ngl::scene* scene = ngl::references::current_scene.read();
 
     for (u32 index = 0; index < 6; ++index) {
         const vector4 &plane = scene->clip_planes[index];
 
-        f32 distance = (f32)((f64)plane.x * point.x + (f64)plane.y * point.y + (f64)plane.z * point.z + (f64)plane.w * 0.0);
+        f32 distance = (f32)((f64)plane.x * transformed.x +
+                             (f64)plane.y * transformed.y +
+                             (f64)plane.z * transformed.z +
+                             (f64)plane.w * 0.0);
 
         distance = (f32)((f64)distance - plane.w);
 

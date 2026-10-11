@@ -4,6 +4,7 @@
 
 #include "speedtree/rt.hh"
 #include "treyarch/game/light/light_source_data.hh"
+#include "treyarch/game/wds/region.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
@@ -44,26 +45,21 @@ namespace treyarch {
 
     // the node payload; the milestone asserts on Params.region.InstanceCount
     struct speed_tree_region {
-        void*                unk_00;
+        region*              world_region;
         speed_tree_instance* instances;
         i32                  instance_count;
     };
 
-    struct speed_tree_horizon_source {
-        u8            reserved_000[0x08];
-        ngl::texture* texture;
-    };
-
     struct speed_tree_render_params {
-        speed_tree_region          region;
-        light_source_data*         light;
-        bool                       translucent;
-        u8                         pad_011[3];
-        f32*                       fades;
-        speed_tree_horizon_source* horizon;
-        u32                        unk_1c;
-        vector4                    horizon_projection_u;
-        vector4                    horizon_projection_v;
+        speed_tree_region  region;
+        light_source_data* light;
+        bool               translucent;
+        u8                 pad_011[3];
+        f32*               fades;
+        region_horizon*    horizon;
+        u32                unk_1c;
+        vector4            horizon_projection_u;
+        vector4            horizon_projection_v;
     };
 
     struct speed_tree_billboards_only_params {
@@ -141,7 +137,9 @@ namespace treyarch {
 
     public:
         ngl::fx::effect*         effect;
-        u8                       reserved_004[0x1CC];
+        u8                       reserved_004[0x04];
+        speed_tree_region        regions[16];
+        u8                       reserved_0c8[0x108];
         ngl::texture*            textures[24];
         speed_tree_parameters    parameters;
         u8                       reserved_2cc[0x10];
@@ -170,6 +168,10 @@ namespace treyarch {
         speed_tree_lighting      lighting;
 
         static matrix4x4 axis_basis();
+        static bool      sphere_in_view(const matrix4x4 &basis,
+                                        const vector3   &position,
+                                              f32        radius,
+                                              vector3   &transformed);
 
         void find_technique(u32                 &guard,
                             u32                  bit,
@@ -181,6 +183,9 @@ namespace treyarch {
         void upload_color(const u8* color);
         void upload_transforms(const matrix4x4 &basis);
         f32  upload_billboard_images();
+
+        void submit_nodes();
+        void submit_billboards_only(bool all_regions);
 
         void render_billboards_only(const speed_tree_billboards_only_params* params);
         void render_billboards(const speed_tree_render_params* params);
@@ -221,6 +226,15 @@ namespace treyarch {
 
         inline util::memory_reference<f32> speed_tree_view_heading { 0x01086E18 };
         inline util::memory_reference<f32> speed_tree_view_pitch   { 0x01086E1C };
+
+        inline util::memory_reference<void*> speed_tree_global_environment { 0x01086E8C };
+
+        // leaves in these regions fade with view depth
+        inline util::memory_reference<region*> speed_tree_fading_regions      { 0x01087D20 };
+        inline util::memory_reference<u32>     speed_tree_fading_region_count { 0x01087D5C };
+
+        inline util::memory_reference<vector4> speed_tree_fade_offset       { 0x01087F90 };
+        inline util::memory_reference<u32>     speed_tree_fade_offset_guard { 0x01087FA0 };
     } // references
 
     ASSERT_OFFSETOF(speed_tree_color_source, color, 0x08);
@@ -234,10 +248,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(speed_tree_instance, next,               0x114);
 
     ASSERT_SIZEOF  (speed_tree_region,                 0x0C);
+    ASSERT_OFFSETOF(speed_tree_region, world_region,   0x00);
     ASSERT_OFFSETOF(speed_tree_region, instances,      0x04);
     ASSERT_OFFSETOF(speed_tree_region, instance_count, 0x08);
-
-    ASSERT_OFFSETOF(speed_tree_horizon_source, texture, 0x08);
 
     ASSERT_SIZEOF  (speed_tree_render_params,                       0x40);
     ASSERT_OFFSETOF(speed_tree_render_params, light,                0x0C);
@@ -266,6 +279,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(speed_tree_leaf_lod, vertex_buffer, 0x04);
     ASSERT_OFFSETOF(speed_tree_leaf_lod, card_count,    0x08);
 
+    ASSERT_OFFSETOF(speed_tree_wrapper, regions,                 0x0008);
     ASSERT_OFFSETOF(speed_tree_wrapper, textures,                0x01D0);
     ASSERT_OFFSETOF(speed_tree_wrapper, parameters,              0x0230);
     ASSERT_OFFSETOF(speed_tree_wrapper, branch_vertex_count,     0x02DC);

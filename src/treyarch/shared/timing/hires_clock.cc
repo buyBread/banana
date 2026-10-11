@@ -4,10 +4,6 @@
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace timing {
-    namespace references {
-        util::memory_reference<f32> performance_counts_per_millisecond { 0x00F51E84 };
-    } // references
-
     // sub_9CCA70
     u64 get_cpu_cycle() {
         LARGE_INTEGER counter;

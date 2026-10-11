@@ -7,9 +7,12 @@ namespace treyarch {
     class terrain {
 
     public:
-        u8  reserved_000[0x0C];
-        u32 generation;
+        u8    reserved_000[0x04];
+        void* subdivision;
+        u8    reserved_008[0x04];
+        u32   generation;
     };
 
-    ASSERT_OFFSETOF(terrain, generation, 0x0C);
+    ASSERT_OFFSETOF(terrain, subdivision, 0x04);
+    ASSERT_OFFSETOF(terrain, generation,  0x0C);
 } // treyarch

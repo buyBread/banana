@@ -1,12 +1,17 @@
 #pragma once
 
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
     namespace timing {
         u64 get_cpu_cycle();
         f64 cycles_to_milliseconds(u64 cycles);
+
+        namespace references {
+            inline util::memory_reference<f32> performance_counts_per_millisecond { 0x00F51E84 };
+        } // references
     } // timing
 
     class hires_clock_t {

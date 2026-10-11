@@ -31,6 +31,7 @@ namespace treyarch { namespace ngl {
     };
 
     scene* list_add_node(render_node* value);
+    void   list_push_node(render_node* value, e_sort_type type);
 
     struct render_sort_entry {
         render_node*         node;

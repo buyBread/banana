@@ -179,3 +179,20 @@ ngl::scene* ngl::list_add_node(render_node* value) {
 
     return current;
 }
+
+// inlined @ sub_7D8160, sub_7D8390
+void ngl::list_push_node(render_node* value, e_sort_type type) { // keeps the node's own sort key
+    scene* current = references::current_scene.read();
+
+    if (type == sort_translucent) {
+        value->next = current->translucent_render_list;
+
+        ++current->translucent_render_list_count;
+        current->translucent_render_list = value;
+    } else {
+        value->next = current->opaque_render_list;
+
+        ++current->opaque_render_list_count;
+        current->opaque_render_list = value;
+    }
+}

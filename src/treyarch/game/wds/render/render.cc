@@ -2,6 +2,7 @@
 #include "treyarch/game/cutscene/cutscene_player.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/geometry/geometry_manager.hh"
+#include "treyarch/game/speedtree/manager.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/wds/terrain.hh"
 #include "treyarch/game/wds/render/references.hh"
@@ -67,7 +68,7 @@ void wds_render_manager::render() {
 
     render_z_pre_pass(game_scene, near_plane);
 
-    retail::sub_975C50();
+    render_speedtrees();
 
     igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
 
@@ -77,4 +78,18 @@ void wds_render_manager::render() {
         submit_blocked_world(world);
 
     references::render_lock.get().release();
+}
+
+// sub_975C50
+void wds_render_manager::render_speedtrees() {
+    igo_3d_zoom_map* zoom_map = treyarch::references::frontend.get().igo->zoom_map;
+
+    if ((!zoom_map || !zoom_map->blocks_world_rendering()) && treyarch::references::speed_trees_enabled.read()) {
+        speed_tree_manager &manager = treyarch::references::speed_tree_manager.get();
+
+        manager.update();
+        manager.render(false);
+    }
+
+    retail::sub_972BA0(); // submits the +0x50 LOD section partition
 }

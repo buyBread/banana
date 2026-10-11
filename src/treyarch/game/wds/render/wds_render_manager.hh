@@ -33,6 +33,7 @@ namespace treyarch {
         void configure_game_scene();
         f32  calculate_scene_near_plane(world_dynamics_system* world);
         void render_z_pre_pass(ngl::scene* game_scene, f32 near_plane);
+        void render_speedtrees();
         void submit_world(world_dynamics_system* world);
         void submit_blocked_world(world_dynamics_system* world);
         void submit_light(render_region_info* entry,
