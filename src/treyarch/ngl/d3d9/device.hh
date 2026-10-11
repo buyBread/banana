@@ -31,6 +31,7 @@ namespace treyarch { namespace ngl { namespace d3d9 {
                            const vertex_definition*       definition,
                                  u32                      offset,
                                  u32                      stream);
+    void set_index_buffer(IDirect3DIndexBuffer9** buffer);
 
     namespace references {
         inline util::memory_reference<IDirect3D9*>           d3d9         { 0x011170B8 };

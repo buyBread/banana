@@ -20,4 +20,10 @@ namespace treyarch { namespace math { namespace references {
 
     // (0, 0, 0, 1); sub_5FC080 copies it in as a matrix's w row
     inline util::memory_reference<vector4> w_row { 0x00E6ADC0 };
+
+    // (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0) and (0, 0, 0, 1)
+    inline util::memory_reference<vector4> unk_00e7ce30 { 0x00E7CE30 };
+    inline util::memory_reference<vector4> unk_00e7ce40 { 0x00E7CE40 };
+    inline util::memory_reference<vector4> unk_00e7ce50 { 0x00E7CE50 };
+    inline util::memory_reference<vector4> unk_00e7ce60 { 0x00E7CE60 };
 }}} // treyarch::math::references

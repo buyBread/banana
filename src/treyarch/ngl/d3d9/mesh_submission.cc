@@ -50,15 +50,7 @@ void ngl::d3d9::draw_indexed_primitive(      D3DPRIMITIVETYPE         primitive_
                                        const vertex_definition*       definition) {
 
     set_vertex_buffer(vertex_buffer, definition, vertex_offset, 0);
-
-    binding_cache &bindings = references::bindings.get();
-
-    // like the vertex streams, the cache holds where the buffer pointer lives
-    if ((u32)bindings.indices != (u32)index_buffer) {
-        bindings.indices = (IDirect3DIndexBuffer9*)index_buffer;
-
-        references::device.get()->SetIndices(*index_buffer);
-    }
+    set_index_buffer(index_buffer);
 
     u32 index_size = index_format != D3DFMT_INDEX16 ? 4 : 2;
 

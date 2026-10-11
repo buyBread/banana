@@ -1,3 +1,4 @@
+#include "treyarch/game/speedtree/render_node.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/font/render.hh"
 #include "treyarch/ngl/list/render_callback.hh"
@@ -88,6 +89,36 @@ void ngl::render_node::render() {
 
     if (vtable == &shaders::sm_phatnormal::references::node_vtable.get()) {
         shaders::sm_phatnormal::render((shaders::sm_phatnormal::render_node*)this);
+
+        return;
+    }
+
+    if (vtable == &treyarch::references::speed_tree_billboards_only_node_vtable.get()) {
+        ((speed_tree_billboards_only_node*)this)->render();
+
+        return;
+    }
+
+    if (vtable == &treyarch::references::speed_tree_billboards_node_vtable.get()) {
+        ((speed_tree_billboards_node*)this)->render();
+
+        return;
+    }
+
+    if (vtable == &treyarch::references::speed_tree_branches_node_vtable.get()) {
+        ((speed_tree_branches_node*)this)->render();
+
+        return;
+    }
+
+    if (vtable == &treyarch::references::speed_tree_fronds_node_vtable.get()) {
+        ((speed_tree_fronds_node*)this)->render();
+
+        return;
+    }
+
+    if (vtable == &treyarch::references::speed_tree_leafs_node_vtable.get()) {
+        ((speed_tree_leafs_node*)this)->render();
 
         return;
     }

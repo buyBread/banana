@@ -49,6 +49,13 @@ void ngl::d3d9::set_sampler_address(u32 stage, DWORD address_u, DWORD address_v)
     set_sampler_state(stage, D3DSAMP_ADDRESSV, address_v);
 }
 
+// sub_7AD1B0
+void ngl::d3d9::enable_alpha_test(DWORD function, DWORD reference) {
+    set_render_state(D3DRS_ALPHATESTENABLE, TRUE);
+    set_render_state(D3DRS_ALPHAFUNC, function);
+    set_render_state(D3DRS_ALPHAREF, reference);
+}
+
 // sub_72C4F0
 void ngl::d3d9::set_scissor(i32 x1, i32 y1, i32 x2, i32 y2) {
     set_render_state(D3DRS_SCISSORTESTENABLE, TRUE);

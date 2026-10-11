@@ -114,6 +114,19 @@ void ngl::d3d9::set_vertex_buffer(      IDirect3DVertexBuffer9** buffer,
     bindings.vertex_declaration     = declaration;
 }
 
+// inlined @ sub_7AD120, sub_7CC710, sub_7CD8C0
+void ngl::d3d9::set_index_buffer(IDirect3DIndexBuffer9** buffer) {
+    binding_cache &bindings = references::bindings.get();
+
+    // like the vertex streams, the cache holds where the buffer pointer lives
+    if ((u32)bindings.indices == (u32)buffer)
+        return;
+
+    bindings.indices = (IDirect3DIndexBuffer9*)buffer;
+
+    references::device.get()->SetIndices(*buffer);
+}
+
 // sub_9DCC80
 void ngl::d3d9::wait_for_rendering() {
     reset_bindings();

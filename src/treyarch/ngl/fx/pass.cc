@@ -216,3 +216,25 @@ void ngl::fx::finish_pass(effect* effect_data, pass* value) {
     ngl::d3d9::set_render_state(D3DRS_ZWRITEENABLE, current_scene->z_write_enabled);
     ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, current_scene->framebuffer_write_mask);
 }
+
+// sub_9DF630
+ngl::fx::technique* ngl::fx::find_technique(effect* value, const fixed_string &name) {
+    for (i32 index = 0; index < value->technique_count; ++index) {
+        if (value->techniques[index].name.hash == name.hash)
+            return &value->techniques[index];
+    }
+
+    return nullptr;
+}
+
+// sub_9DF230
+void ngl::fx::begin_pass(effect* effect_data, pass* value) {
+    apply_pass(effect_data, value);
+}
+
+// sub_9DF260
+void ngl::fx::end_pass(effect* effect_data, pass* value) {
+    finish_pass(effect_data, value);
+
+    value->active_programs = &value->programs;
+}

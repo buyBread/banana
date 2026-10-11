@@ -40,17 +40,34 @@ namespace treyarch { namespace ngl { namespace fx { namespace references {
     util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
     util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
 
-    util::memory_reference<vector4> lighting_default_value   { 0x01086F30 };
-    util::memory_reference<vector4> lighting_zero_value      { 0x01086F50 };
-    util::memory_reference<vector4> lighting_horizon_axis    { 0x01087690 };
     util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
     util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
     util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
 }}}} // treyarch::ngl::fx::references
 
+// sub_9DF680
+void ngl::fx::set_float(parameter* entry, f32 value) {
+    *(f32*)entry->data = value;
+}
+
+// sub_9DF6A0
+void ngl::fx::set_int(parameter* entry, i32 value) {
+    *(i32*)entry->data = value;
+}
+
+// sub_9DF6B0
+void ngl::fx::set_vector(parameter* entry, const vector4 &value) {
+    *(vector4*)entry->data = value;
+}
+
+// sub_9DF6D0
+void ngl::fx::set_matrix(parameter* entry, const matrix4x4 &value) {
+    *(matrix4x4*)entry->data = value;
+}
+
 // sub_9DF6F0
-void write_texture(ngl::fx::parameter* entry, ngl::texture* value) {
-    *(ngl::texture**)entry->data = value ? value : ngl::references::default_texture.read();
+void ngl::fx::set_texture(parameter* entry, texture* value) {
+    *(texture**)entry->data = value ? value : ngl::references::default_texture.read();
 }
 
 void copy_parameter_subset(      ngl::fx::effect*         value,
@@ -1097,8 +1114,8 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_horizon_texture: {
-                write_texture(entry,
-                              active_horizon_texture ? active_horizon_texture : ngl::references::white_texture.read());
+                fx::set_texture(entry,
+                                active_horizon_texture ? active_horizon_texture : ngl::references::white_texture.read());
 
                 break;
             }
@@ -1139,13 +1156,13 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_shadow_texture:
             case parameter_shadow_texture_1:
-                write_texture(entry,
-                              shadow::references::device_resources.get().depth_targets[0]);
+                fx::set_texture(entry,
+                                shadow::references::device_resources.get().depth_targets[0]);
 
                 break;
             case parameter_shadow_texture_2:
-                write_texture(entry,
-                              shadow::references::device_resources.get().depth_targets[1]);
+                fx::set_texture(entry,
+                                shadow::references::device_resources.get().depth_targets[1]);
 
                 break;
             case parameter_post_info:
@@ -1183,7 +1200,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_depth_texture:
-                write_texture(entry, ngl::d3d9::references::framebuffers.get().active_depth_buffer);
+                fx::set_texture(entry, ngl::d3d9::references::framebuffers.get().active_depth_buffer);
 
                 break;
             case parameter_temporary_0:
@@ -1280,14 +1297,14 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             }
             case parameter_framebuffer_texture:
-                write_texture(entry, subset_effect ?
-                                ngl::d3d9::references::framebuffers.get().back_buffer :
-                                ngl::d3d9::references::framebuffers.get().secondary_hdr_buffer);
+                fx::set_texture(entry, subset_effect ?
+                                    ngl::d3d9::references::framebuffers.get().back_buffer :
+                                    ngl::d3d9::references::framebuffers.get().secondary_hdr_buffer);
                                             
                 break;
             case parameter_environment_map:
                 if (!subset_effect)
-                    write_texture(entry, ngl::fx::references::environment_texture.read());
+                    fx::set_texture(entry, ngl::fx::references::environment_texture.read());
 
                 break;
             case parameter_environment_color: {

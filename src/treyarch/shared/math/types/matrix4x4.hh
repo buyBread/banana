@@ -23,6 +23,15 @@ namespace treyarch {
               y(y_row, 0.0f),
               z(z_row, 0.0f),
               w(w_row, 1.0f) {}
+        // sub_401BA0
+        matrix4x4(const row &x_row,
+                  const row &y_row,
+                  const row &z_row,
+                  const row &w_row)
+            : x(x_row),
+              y(y_row),
+              z(z_row),
+              w(w_row) {}
         matrix4x4(f32 _00, f32 _01, f32 _02, f32 _03,
                   f32 _10, f32 _11, f32 _12, f32 _13,
                   f32 _20, f32 _21, f32 _22, f32 _23,
@@ -86,6 +95,14 @@ namespace treyarch {
             w = math::references::w_row.read();
         }
 
+        // sub_7ACFF0
+        void assign_affine_rows(const vector4 (&rows)[3]) {
+            x = vector4(rows[0].get_xyz(), 0.0f);
+            y = vector4(rows[1].get_xyz(), 0.0f);
+            z = vector4(rows[2].get_xyz(), 0.0f);
+            w = math::references::unk_00e7ce60.read();
+        }
+
         void identity() {
             *this = matrix4x4(1.0f, 0.0f, 0.0f, 0.0f,
                               0.0f, 1.0f, 0.0f, 0.0f,
@@ -104,6 +121,7 @@ namespace treyarch {
 
         // retail affine packets leave the fourth column uninitialized,
         // read only xyz from each row before using one in a full matrix product
+        // sub_5FC100
         matrix4x4 affine() const {
             return matrix4x4(x_row(), y_row(), z_row(), w_row());
         }
@@ -120,6 +138,24 @@ namespace treyarch {
                              1.0f);
         }
 
+        // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90
+        matrix4x4 affine_product(const matrix4x4 &b) const { // both sides as affine transforms;
+                                                             // only the w row picks up b's translation
+            auto element = [&](i32 row, i32 column) {
+                f64 sum = (f64)(*this)[row][0] * b[0][column] +
+                          (f64)(*this)[row][1] * b[1][column] +
+                          (f64)(*this)[row][2] * b[2][column];
+
+                return (f32)(row == 3 ? sum + b[3][column] : sum);
+            };
+
+            return matrix4x4(element(0, 0), element(0, 1), element(0, 2), 0.0f,
+                             element(1, 0), element(1, 1), element(1, 2), 0.0f,
+                             element(2, 0), element(2, 1), element(2, 2), 0.0f,
+                             element(3, 0), element(3, 1), element(3, 2), 1.0f);
+        }
+
+        // sub_5FC7B0
         matrix4x4 transpose() const {
             return matrix4x4(x.x, y.x, z.x, w.x,
                              x.y, y.y, z.y, w.y,
