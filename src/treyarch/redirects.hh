@@ -28,8 +28,7 @@ namespace treyarch {
 
         clear_script_callbacks_function clear_script_callbacks = &event_manager::clear_script_callbacks;
 
-        const event_callsite clear_script_callbacks_calls[] { { 0x00601889, { 0xE8, 0xD2, 0x32, 0x08, 0x00 } },
-                                                              { 0x00825E71, { 0xE8, 0xEA, 0xEC, 0xE5, 0xFF } }, };
+        const event_callsite clear_script_callbacks_calls[] { { 0x00601889, { 0xE8, 0xD2, 0x32, 0x08, 0x00 } }, };
 
         for (const auto &callsite : clear_script_callbacks_calls) {
             if (!util::redirect_rel32(callsite.address, callsite.expected, clear_script_callbacks))
@@ -43,8 +42,7 @@ namespace treyarch {
 
         clear_script_callback_function clear_script_callback = &event_manager::clear_script_callback;
 
-        const event_callsite clear_script_function_calls[] { { 0x006018B2, { 0xE8, 0x29, 0x33, 0x08, 0x00 } },
-                                                             { 0x008259FB, { 0xE8, 0xE0, 0xF1, 0xE5, 0xFF } }, };
+        const event_callsite clear_script_function_calls[] { { 0x006018B2, { 0xE8, 0x29, 0x33, 0x08, 0x00 } }, };
 
         for (const auto &callsite : clear_script_function_calls) {
             if (!util::redirect_rel32(callsite.address, callsite.expected, clear_script_callback))
@@ -58,8 +56,7 @@ namespace treyarch {
 
         clear_script_id_function clear_script_id = &event_manager::clear_script_callback;
 
-        const event_callsite clear_script_id_calls[] { { 0x006018C9, { 0xE8, 0xA2, 0x33, 0x08, 0x00 } },
-                                                       { 0x00825A1E, { 0xE8, 0x4D, 0xF2, 0xE5, 0xFF } }, };
+        const event_callsite clear_script_id_calls[] { { 0x006018C9, { 0xE8, 0xA2, 0x33, 0x08, 0x00 } }, };
 
         for (const auto &callsite : clear_script_id_calls) {
             if (!util::redirect_rel32(callsite.address, callsite.expected, clear_script_id))
@@ -149,7 +146,6 @@ namespace treyarch {
                                                   { 0x006DED50, { 0xE8, 0x4B, 0x67, 0xFA, 0xFF } },
                                                   { 0x006DEE3C, { 0xE8, 0x5F, 0x66, 0xFA, 0xFF } },
                                                   { 0x006ED4E7, { 0xE8, 0xB4, 0x7F, 0xF9, 0xFF } },
-                                                  { 0x00843205, { 0xE8, 0x96, 0x22, 0xE4, 0xFF } },
                                                   { 0x00947DFE, { 0xE8, 0x9D, 0xD6, 0xD3, 0xFF } },
                                                   { 0x0094C443, { 0xE8, 0x58, 0x90, 0xD3, 0xFF } },
                                                   { 0x0094C45D, { 0xE8, 0x3E, 0x90, 0xD3, 0xFF } },
@@ -191,7 +187,6 @@ namespace treyarch {
                                                     { 0x007AC27E, { 0xE8, 0x9D, 0x92, 0xED, 0xFF } },
                                                     { 0x007AC40D, { 0xE8, 0x0E, 0x91, 0xED, 0xFF } },
                                                     { 0x00806348, { 0xE8, 0xD3, 0xF1, 0xE7, 0xFF } },
-                                                    { 0x008431C8, { 0xE8, 0x53, 0x23, 0xE4, 0xFF } },
                                                     { 0x0092E75A, { 0xE8, 0xC1, 0x6D, 0xD5, 0xFF } },
                                                     { 0x0092F260, { 0xE8, 0xBB, 0x62, 0xD5, 0xFF } },
                                                     { 0x00948A7E, { 0xE8, 0x9D, 0xCA, 0xD3, 0xFF } },
@@ -229,21 +224,6 @@ namespace treyarch {
 
         for (const auto &callsite : add_code_calls) {
             if (!util::redirect_rel32(callsite.address, callsite.expected, add_code))
-                FATAL_BREAKPOINT();
-        }
-
-        // ====== //
-
-        using add_script_function = u32(__cdecl*)
-            (string_hash, arch_base_vhandle, chuck::vm::script_instance*, chuck::vm::script_function*, const void*, bool);
-
-        add_script_function add_script = &event_manager::add_callback;
-
-        const event_callsite add_script_calls[] { { 0x00601823, { 0xE8, 0x08, 0x50, 0x08, 0x00 } },
-                                                  { 0x00825ABE, { 0xE8, 0x6D, 0x0D, 0xE6, 0xFF } }, };
-
-        for (const auto &callsite : add_script_calls) {
-            if (!util::redirect_rel32(callsite.address, callsite.expected, add_script))
                 FATAL_BREAKPOINT();
         }
 
