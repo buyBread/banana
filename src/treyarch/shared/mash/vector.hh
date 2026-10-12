@@ -24,6 +24,10 @@ namespace treyarch { namespace mash {
                    destroy_elements(true),
                    pad{} {}
 
+        // sub_A1BAE0
+        // sub_A1BAF0
+        // sub_A1C120
+        // sub_A1C240
         ~vector() {
             clear();
         }
@@ -48,6 +52,10 @@ namespace treyarch { namespace mash {
               T** end()       { return data ? data + size : nullptr; }
         T* const* end() const { return data ? data + size : nullptr; }
 
+        // sub_A1D7F0
+        // sub_A1FFF0
+        // sub_A200C0
+        // sub_A20880
         void custom_unmash(mash_info_struct* mash_info,
                            void*             containing_class_ptr,
                            buffer_type       buffer) {
@@ -101,6 +109,11 @@ namespace treyarch { namespace mash {
             return (i32)sizeof(*this);
         }
 
+        // sub_6CC4A0
+        // sub_A1ABC0
+        // sub_A1AC90
+        // sub_A1BEA0
+        // sub_A1C1B0
         void clear() {
             if (destroy_elements) {
                 while (size) {
