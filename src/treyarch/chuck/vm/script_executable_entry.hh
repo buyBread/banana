@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "treyarch/shared/dinkumware/set.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
@@ -23,6 +25,16 @@ namespace treyarch { namespace chuck { namespace vm {
         void*              user_data;  // the loader's resource context; handed to every notification
         string_hash        filename;
         string_hash        key_prefix;
+
+        // sub_A1A040
+        void* operator new(std::size_t) noexcept {
+            return references::executable_entry_pool.get().allocate();
+        }
+
+        // sub_A1A0E0
+        void operator delete(void* allocation) noexcept {
+            references::executable_entry_pool.get().release(allocation);
+        }
     };
 
     // inlined into retail's lower bound (sub_A1A670) and find (sub_A1B440)

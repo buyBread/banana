@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "treyarch/chuck/vm/opcodes.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
@@ -148,6 +150,9 @@ namespace treyarch { namespace chuck { namespace vm {
                                                                                     list(nullptr),
                                                                                     vm_simple_list_previous(nullptr),
                                                                                     vm_simple_list_next(nullptr) {}
+
+        void* operator new   (std::size_t size) noexcept;
+        void  operator delete(void* allocation) noexcept;
     };
 
     // individually pooled; a linked chain, not a contiguous stack
@@ -155,6 +160,9 @@ namespace treyarch { namespace chuck { namespace vm {
         u16*                          pc;       // return address
         script_instance*              instance; // current_instance to restore
         vm_thread_flow_stack_element* previous;
+
+        void* operator new   (std::size_t size) noexcept;
+        void  operator delete(void* allocation) noexcept;
     };
 
     class vm_thread {
@@ -189,10 +197,22 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_thread(script_instance* instance, const script_function* function, void* requested_user_data, u32 stack_size);
         ~vm_thread();
 
+        void* operator new   (std::size_t size) noexcept;
+        void  operator delete(void* allocation) noexcept;
+
         // true once the thread has finished; false when it yields
         bool run();
 
         void add_local_reference(void* allocation, u32 mode);
+
+        // 0 is the running instance, n the one saved in the nth frame, -1 the first of those that isn't null
+        script_instance* get_instance(i32 callstack_level) const;
+
+        // a new `str` owned by the thread's instance
+        char* create_string(const char* source);
+
+        // skips the object's unk_30 bytes of code
+        void advance_pc(const script_object* so);
 
         static void register_callbacks(raise_global_signal_callback_t             raise_global_signal,
                                        raise_instance_signal_callback_t           raise_instance_signal,
@@ -208,6 +228,9 @@ namespace treyarch { namespace chuck { namespace vm {
         static void create_locks();
 
     private:
+        static void release_global_variable_lock();
+        static void release_callback_lock();
+
         void release_local_references();
         void remove_local_reference(void* allocation);
 

@@ -22,10 +22,10 @@ vm_stack::~vm_stack() {
         return;
 
     switch (buffer_size) {
-        case 128:  references::stack_pool_128 .get().release(stack_buffer); break;
-        case 284:  references::stack_pool_284 .get().release(stack_buffer); break;
-        case 512:  references::stack_pool_512 .get().release(stack_buffer); break;
-        case 1024: references::stack_pool_1024.get().release(stack_buffer); break;
+        case 128:  delete (vm_stack_buffer_128*) stack_buffer; break;
+        case 284:  delete (vm_stack_buffer_284*) stack_buffer; break;
+        case 512:  delete (vm_stack_buffer_512*) stack_buffer; break;
+        case 1024: delete (vm_stack_buffer_1024*)stack_buffer; break;
         default:   break;
     }
 }
@@ -54,13 +54,11 @@ void vm_stack::allocate(u32 size) {
 
     buffer_size = size;
 
-    memory::fixed_pool* pool;
-
     switch (size) {
-        case 128:  pool = &references::stack_pool_128.get();  break;
-        case 284:  pool = &references::stack_pool_284.get();  break;
-        case 512:  pool = &references::stack_pool_512.get();  break;
-        case 1024: pool = &references::stack_pool_1024.get(); break;
+        case 128:  stack_buffer = new vm_stack_buffer_128;  break;
+        case 284:  stack_buffer = new vm_stack_buffer_284;  break;
+        case 512:  stack_buffer = new vm_stack_buffer_512;  break;
+        case 1024: stack_buffer = new vm_stack_buffer_1024; break;
 
         // other sizes get no buffer
         default:
@@ -69,56 +67,40 @@ void vm_stack::allocate(u32 size) {
             return;
     }
 
-    stack_buffer = pool->allocate();
-    buffer       = (u8*)stack_buffer;
-    sp           = buffer;
+    buffer = (u8*)stack_buffer;
+    sp     = buffer;
 }
 
-// sub_A19AC0
-void vm_stack::grow() {
-    memory::fixed_pool* source_pool;
-    memory::fixed_pool* target_pool;
-    u32                 target_size;
-
-    switch (buffer_size) {
-        case 128:
-            source_pool = &references::stack_pool_128.get();
-            target_pool = &references::stack_pool_284.get();
-            target_size = 284;
-            break;
-
-        case 284:
-            source_pool = &references::stack_pool_284.get();
-            target_pool = &references::stack_pool_512.get();
-            target_size = 512;
-            break;
-
-        case 512:
-            source_pool = &references::stack_pool_512.get();
-            target_pool = &references::stack_pool_1024.get();
-            target_size = 1024;
-            break;
-
-        // a 1024-byte stack cannot grow
-        default:
-            return;
-    }
-
+// inlined @ sub_A19AC0
+template<typename from_t, typename to_t>
+void vm_stack::grow_buffer(u32 target_size) {
     i32   used       = (i32)(sp - buffer);
-    void* allocation = target_pool->allocate();
+    to_t* allocation = new to_t;
 
     std::memcpy(allocation, buffer, buffer_size);
 
-    void* released = stack_buffer;
+    from_t* released = (from_t*)stack_buffer;
 
     buffer      = (u8*)allocation;
     buffer_size = target_size;
 
-    if (released)
-        source_pool->release(released);
+    delete released;
 
     sp           = buffer + used;
     stack_buffer = allocation;
+}
+
+// sub_A19AC0
+void vm_stack::grow() {
+    switch (buffer_size) {
+        case 128: grow_buffer<vm_stack_buffer_128, vm_stack_buffer_284> (284);  break;
+        case 284: grow_buffer<vm_stack_buffer_284, vm_stack_buffer_512> (512);  break;
+        case 512: grow_buffer<vm_stack_buffer_512, vm_stack_buffer_1024>(1024); break;
+
+        // a 1024-byte stack cannot grow
+        default:
+            break;
+    }
 }
 
 // sub_4E4F70

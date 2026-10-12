@@ -229,6 +229,7 @@ u16* script_executable::lookup_sx_code_segment(u32 offset) const {
 }
 
 // sub_A1FA70
+// sub_A1FD50
 void script_executable::link() {
     if ((flags & script_executable_flag_suspended_for_script_vars) || (flags & script_executable_flag_linked))
         return;
@@ -452,6 +453,28 @@ void script_executable::finalize(mash::allocation_scope scope) {
                                                   script_executable_flag_has_initial_breakpoints));
 }
 
+// sub_A1F7A0
+script_instance* script_executable::find_instance(string_hash object_name, string_hash instance_name) const {
+    script_object* object = find_object(object_name, nullptr);
+
+    if (!object)
+        return nullptr;
+
+    return object->find_instance(instance_name);
+}
+
+// sub_A1F7E0
+script_instance* script_executable::find_instance(string_hash instance_name) const {
+    for (u32 index = 0; index < script_objects.size; ++index) {
+        script_instance* inst = script_objects.data[index]->find_instance(instance_name);
+
+        if (inst)
+            return inst;
+    }
+
+    return nullptr;
+}
+
 // sub_A1FDE0
 vm_thread* script_executable::find_thread(u32 thread_id) const {
     i32 count = (i32)script_objects.size;
@@ -463,8 +486,7 @@ vm_thread* script_executable::find_thread(u32 thread_id) const {
             continue;
 
         for (script_instance* inst = object->instances.head; inst; inst = inst->vm_simple_list_next) {
-            ref_lock_scope    instance_scope(inst->parent->instance_lock);
-            engine_lock_scope thread_scope(&inst->thread_lock);
+            script_instance_lock_scope scope(inst);
 
             for (vm_thread* thread = inst->threads.head; thread; thread = thread->vm_simple_list_next) {
                 if (thread->thread_id == thread_id)

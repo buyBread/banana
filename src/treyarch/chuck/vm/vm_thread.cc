@@ -40,6 +40,36 @@ void vm_thread::register_callbacks(raise_global_signal_callback_t             ra
     references::add_library_callback_callback           .write(add_library_callback);
 }
 
+// sub_A1DC40
+void* vm_thread::operator new(std::size_t) noexcept {
+    return references::thread_pool.get().allocate();
+}
+
+// sub_A1DCE0
+void vm_thread::operator delete(void* allocation) noexcept {
+    references::thread_pool.get().release(allocation);
+}
+
+// sub_A218C0
+void* vm_thread_local_reference::operator new(std::size_t) noexcept {
+    return references::local_reference_pool.get().allocate();
+}
+
+// sub_A21960
+void vm_thread_local_reference::operator delete(void* allocation) noexcept {
+    references::local_reference_pool.get().release(allocation);
+}
+
+// sub_A219A0
+void* vm_thread_flow_stack_element::operator new(std::size_t) noexcept {
+    return references::flow_stack_element_pool.get().allocate();
+}
+
+// sub_A21A40
+void vm_thread_flow_stack_element::operator delete(void* allocation) noexcept {
+    references::flow_stack_element_pool.get().release(allocation);
+}
+
 // sub_A21BD0
 void vm_thread::create_locks() {
     auto* global_variable_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
@@ -106,8 +136,7 @@ vm_thread::~vm_thread() {
 
         flow_stack = element->previous;
 
-        if (element)
-            references::flow_stack_element_pool.get().release(element);
+        delete element;
     }
 }
 
@@ -134,7 +163,7 @@ void vm_thread::release_local_references() {
                 manager->remove_reference(array);
         }
 
-        references::local_reference_pool.get().release(reference);
+        delete reference;
 
         reference = local_references.head;
     } while (local_references.head);
@@ -145,10 +174,7 @@ void vm_thread::add_local_reference(void* allocation, u32 mode) {
     if (!allocation)
         return;
 
-    void* memory = references::local_reference_pool.get().allocate();
-
-    vm_thread_local_reference* reference = memory ?
-        new (memory) vm_thread_local_reference(allocation, mode | 1) : nullptr;
+    vm_thread_local_reference* reference = new vm_thread_local_reference(allocation, mode | 1);
 
     reference->list                    = &local_references;
     reference->vm_simple_list_previous = local_references.last;
@@ -185,8 +211,51 @@ void vm_thread::remove_local_reference(void* allocation) {
 
         reference = local_references.erase(reference);
 
-        references::local_reference_pool.get().release(removed);
+        delete removed;
     }
+}
+
+// sub_A21AB0
+void vm_thread::release_global_variable_lock() {
+    references::global_variable_lock.read()->release();
+}
+
+// sub_A21A80
+void vm_thread::release_callback_lock() {
+    references::callback_lock.read()->release();
+}
+
+// sub_A21AE0
+script_instance* vm_thread::get_instance(i32 callstack_level) const {
+    if (callstack_level == -1) {
+        if (current_instance)
+            return current_instance;
+
+        for (vm_thread_flow_stack_element* frame = flow_stack; frame; frame = frame->previous) {
+            if (frame->instance)
+                return frame->instance;
+        }
+    } else if (!callstack_level)
+        return current_instance;
+
+    i32 level = 1;
+
+    for (vm_thread_flow_stack_element* frame = flow_stack; frame; frame = frame->previous, ++level) {
+        if (level == callstack_level)
+            return frame->instance;
+    }
+
+    return nullptr;
+}
+
+// sub_A21EE0
+char* vm_thread::create_string(const char* source) {
+    return vm_dynamic_array_manager::inst()->create_new_string(inst, 10, source, "");
+}
+
+// sub_A21B40
+void vm_thread::advance_pc(const script_object* so) {
+    pc += so->unk_30 >> 1;
 }
 
 // sub_A21C30
@@ -539,10 +608,7 @@ void vm_thread::execute_pop_with_modifier(u8* dest, u16 dsize, i32 limit) { // l
 
 // sub_A21DB0
 void vm_thread::push_flow_stack(const script_function* current_exec) {
-    void* memory = references::flow_stack_element_pool.get().allocate();
-
-    vm_thread_flow_stack_element* element = memory ?
-        new (memory) vm_thread_flow_stack_element {} : nullptr;
+    vm_thread_flow_stack_element* element = new vm_thread_flow_stack_element {};
 
     element->pc       = pc;
     element->instance = current_instance;
@@ -572,7 +638,7 @@ void vm_thread::pop_flow_stack() {
     pc               = element->pc;
     current_instance = element->instance;
 
-    references::flow_stack_element_pool.get().release(element);
+    delete element;
 }
 
 // sub_A22740
@@ -1083,7 +1149,7 @@ bool vm_thread::run() {
 
                         execute_pop_with_modifier((u8*)current_arg.pointer, (u16)current_dsize, -1);
 
-                        references::global_variable_lock.read()->release();
+                        release_global_variable_lock();
 
                         break;
 
@@ -1146,7 +1212,7 @@ bool vm_thread::run() {
 
                         execute_push_with_modifier((const u8*)current_arg.pointer, (u16)current_dsize);
 
-                        references::global_variable_lock.read()->release();
+                        release_global_variable_lock();
 
                         break;
 
@@ -1543,7 +1609,7 @@ bool vm_thread::run() {
                 } else if (current_opcode_arg == e_opcode_arg::UINT_NULL)
                     references::clear_global_callback_by_id_callback.read()(this, dstack.pop_uint());
 
-                references::callback_lock.read()->release();
+                release_callback_lock();
 
                 break;
 
@@ -1561,7 +1627,7 @@ bool vm_thread::run() {
                 } else if (current_opcode_arg == e_opcode_arg::UINT_NULL)
                     references::clear_instance_callback_by_id_callback.read()(this, dstack.pop_uint(), target);
 
-                references::callback_lock.read()->release();
+                release_callback_lock();
 
                 break;
             }

@@ -7,14 +7,12 @@ using namespace treyarch;
 using namespace treyarch::chuck::vm;
 
 // inlined @ sub_A248D0
-void so_data_block::setup_fixed_block(memory::fixed_pool &pool, void** vtable) {
-    auto* block = (fixed_so_data_block_base*)pool.allocate();
-
-    if (block)
-        block->vtable = vtable;
+template<typename block_t>
+void so_data_block::setup_fixed_block() {
+    block_t* block = new block_t;
 
     // a failed allocation leaves the buffer at 4
-    buffer      = (u8*)(block + 1);
+    buffer      = (u8*)((fixed_so_data_block_base*)block + 1);
     fixed_block = block;
 }
 
@@ -27,15 +25,15 @@ void so_data_block::setup(i32 size) {
     if (!size)
         buffer = nullptr;
     else if (size <= 32)
-        setup_fixed_block(references::fixed_so_data_block_32_pool.get(), &references::fixed_so_data_block_32_vtable.get());
+        setup_fixed_block<fixed_so_data_block_32>();
     else if (size <= 128)
-        setup_fixed_block(references::fixed_so_data_block_128_pool.get(), &references::fixed_so_data_block_128_vtable.get());
+        setup_fixed_block<fixed_so_data_block_128>();
     else if (size <= 512)
-        setup_fixed_block(references::fixed_so_data_block_512_pool.get(), &references::fixed_so_data_block_512_vtable.get());
+        setup_fixed_block<fixed_so_data_block_512>();
     else if (size <= 1400)
-        setup_fixed_block(references::fixed_so_data_block_1400_pool.get(), &references::fixed_so_data_block_1400_vtable.get());
+        setup_fixed_block<fixed_so_data_block_1400>();
     else if (size <= 3000)
-        setup_fixed_block(references::fixed_so_data_block_3000_pool.get(), &references::fixed_so_data_block_3000_vtable.get());
+        setup_fixed_block<fixed_so_data_block_3000>();
     else {
         flags  = (e_so_data_block_flags)(flags | so_data_block_flag_buffer_allocated);
         buffer = (u8*)memory::heap::allocate(size);
@@ -54,8 +52,7 @@ void so_data_block::destroy() {
         blocksize = 0;
         buffer    = nullptr;
     } else if (fixed_block) {
-        // slot 0, deleting destructor
-        ((void (__thiscall*)(fixed_so_data_block_base*, u32))fixed_block->vtable[0])(fixed_block, 1);
+        delete fixed_block;
 
         fixed_block = nullptr;
         blocksize   = 0;

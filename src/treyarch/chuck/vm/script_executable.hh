@@ -126,6 +126,9 @@ namespace treyarch { namespace chuck { namespace vm {
         // script_objects is sorted by name
         script_object* find_object(string_hash object_name, i32* index) const;
 
+        script_instance* find_instance(string_hash object_name, string_hash instance_name) const;
+        script_instance* find_instance(string_hash instance_name) const; // first match in object order
+
         vm_thread* find_thread(u32 thread_id) const;
 
         void walk_instances(script_instance_visitor* visitor) const;

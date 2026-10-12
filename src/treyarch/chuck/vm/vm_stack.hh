@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "treyarch/shared/mutex.hh"
@@ -47,6 +49,10 @@ namespace treyarch { namespace chuck { namespace vm {
 
         static void initialize_pools();
         static void create_push_staging_lock();
+
+    private:
+        template<typename from_t, typename to_t>
+        void grow_buffer(u32 target_size);
     };
 
     namespace references {
@@ -62,6 +68,36 @@ namespace treyarch { namespace chuck { namespace vm {
 
         inline util::memory_reference<engine_recursive_lock*> push_staging_lock { 0x011247B8 };
     } // references
+
+    template<u32 size, util::memory_reference<memory::fixed_pool> &pool>
+    class vm_stack_buffer {
+
+    public:
+        u8 buffer[size];
+
+        // sub_A19990
+        // sub_A199E0
+        ~vm_stack_buffer() {}
+
+        // sub_A19710
+        // sub_A197B0
+        // sub_A19850
+        // sub_A198F0
+        void* operator new(std::size_t) noexcept {
+            return pool.get().allocate();
+        }
+
+        void operator delete(void* allocation) noexcept {
+            pool.get().release(allocation);
+        }
+    };
+
+    using vm_stack_buffer_128  = vm_stack_buffer<128,  references::stack_pool_128>;
+    using vm_stack_buffer_284  = vm_stack_buffer<284,  references::stack_pool_284>;
+    using vm_stack_buffer_512  = vm_stack_buffer<512,  references::stack_pool_512>;
+    using vm_stack_buffer_1024 = vm_stack_buffer<1024, references::stack_pool_1024>;
+
+    ASSERT_SIZEOF  (vm_stack_buffer_284, 0x11C);
 
     ASSERT_SIZEOF  (vm_stack,               0x14);
     ASSERT_OFFSETOF(vm_stack, sp,           0x00);

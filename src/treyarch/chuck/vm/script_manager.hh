@@ -130,6 +130,10 @@ namespace treyarch { namespace chuck { namespace vm {
         u8* get_game_var_address  (i32 offset) const;
         u8* get_shared_var_address(i32 offset) const;
 
+        // whole game-variable block copies for saves; both return the block size, 0 without a game container
+        i32 load_game_var_buffer(const void* source);
+        i32 save_game_var_buffer(void* dest) const;
+
     private:
         script_manager();
 

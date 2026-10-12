@@ -9,6 +9,19 @@
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
 
+script_object_ref_counted_simple_mutex::script_object_ref_counted_simple_mutex() {
+    reset();
+}
+
+// sub_A1C560
+void* script_object_ref_counted_simple_mutex::operator new(std::size_t) noexcept {
+    return references::instance_lock_pool.get().allocate();
+}
+
+void script_object_ref_counted_simple_mutex::operator delete(void* allocation) noexcept {
+    references::instance_lock_pool.get().release(allocation);
+}
+
 // sub_A1CF70
 void script_object::add(script_instance* inst) {
     ref_lock_scope scope(instance_lock);
@@ -33,15 +46,11 @@ void script_object::add(script_instance* inst) {
 
 // sub_A1D220
 script_instance* script_object::add_instance(const char* inst_name, e_script_instance_stack_size stack_size) {
-    void* memory = references::instance_pool.get().allocate();
-
-    script_instance* inst = memory ?
-        new (memory) script_instance(inst_name, data_blocksize, 0) : nullptr;
+    script_instance* inst = new script_instance(inst_name, data_blocksize, 0);
 
     add(inst);
 
-    ref_lock_scope    instance_scope(inst->parent->instance_lock);
-    engine_lock_scope thread_scope(&inst->thread_lock);
+    script_instance_lock_scope scope(inst);
 
     inst->set_stack_size(stack_size);
 
@@ -56,10 +65,7 @@ script_instance* script_object::add_instance(const mash::string                 
                                                    vm_thread**                   constructor_thread,
                                                    e_script_instance_stack_size  stack_size) {
 
-    void* memory = references::instance_pool.get().allocate();
-
-    script_instance* inst = memory ?
-        new (memory) script_instance(inst_name.c_str(), data_blocksize, 0) : nullptr;
+    script_instance* inst = new script_instance(inst_name.c_str(), data_blocksize, 0);
 
     inst->set_stack_size(stack_size);
 
@@ -104,8 +110,7 @@ void script_object::construct_instance(script_instance* inst, const void* constr
 vm_thread* script_object::add_thread(script_instance* inst, i32 fidx) {
     vm_thread* thread = inst->add_thread(funcs[fidx], nullptr, 0);
 
-    ref_lock_scope    instance_scope(inst->parent->instance_lock);
-    engine_lock_scope thread_scope(&inst->thread_lock);
+    script_instance_lock_scope scope(inst);
 
     thread->dstack.push(&inst, sizeof(inst));
 
@@ -156,11 +161,53 @@ void script_object::remove_instance(script_instance* delete_me, bool run_destruc
 
     instances.erase(inst);
 
-    if (inst) {
-        inst->~script_instance();
+    delete inst;
+}
 
-        references::instance_pool.get().release(inst);
+// sub_A1CDA0
+void script_object::reconstruct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread) {
+    script_instance_lock_scope scope(inst);
+
+    if (destructor_index >= 0) {
+        vm_thread* thread = inst->add_thread(funcs.data[destructor_index], nullptr, 0);
+
+        thread->dstack.push(&inst, sizeof(inst));
+
+        inst->run_single_thread_until_finished(thread, true, references::empty_key_prefix.read());
     }
+
+    inst->reset();
+
+    const script_function* constructor = funcs.data[constructor_index];
+
+    vm_thread* thread = inst->add_thread(constructor, nullptr, 0);
+
+    thread->dstack.push(&inst, sizeof(inst));
+
+    i32 parms_size = constructor->parms_stacksize;
+
+    if (!(constructor->flags & script_function_flag_static))
+        parms_size -= 4;
+
+    if (constructor_parms_buffer && parms_size > 0)
+        thread->dstack.push(constructor_parms_buffer, parms_size);
+
+    thread->advance_pc(this);
+
+    if (constructor_thread)
+        *constructor_thread = thread;
+}
+
+// sub_A1D0F0
+script_instance* script_object::find_instance(string_hash instance_name) {
+    ref_lock_scope scope(instance_lock);
+
+    for (script_instance* inst = instances.head; inst; inst = inst->vm_simple_list_next) {
+        if (inst->name == instance_name)
+            return inst;
+    }
+
+    return nullptr;
 }
 
 // sub_A1CB30
@@ -176,10 +223,7 @@ script_instance* script_object::create_auto_instance(f32 argument) {
 
     if (flags & script_object_flag_global_object) {
         if (!global_instance) {
-            void* memory = references::instance_pool.get().allocate();
-
-            global_instance = memory ?
-                new (memory) script_instance("__global", data_blocksize, 0) : nullptr;
+            global_instance = new script_instance("__global", data_blocksize, 0);
 
             global_instance->parent = this;
 
@@ -188,10 +232,7 @@ script_instance* script_object::create_auto_instance(f32 argument) {
 
         inst = global_instance;
     } else {
-        void* memory = references::instance_pool.get().allocate();
-
-        inst = memory ?
-            new (memory) script_instance("__auto", data_blocksize, 0) : nullptr;
+        inst = new script_instance("__auto", data_blocksize, 0);
 
         inst->parent = this;
 
@@ -249,11 +290,7 @@ void script_object::delete_all_instances() {
         if (instances.head)
             instances.erase(instances.head);
 
-        if (inst) {
-            inst->~script_instance();
-
-            references::instance_pool.get().release(inst);
-        }
+        delete inst;
     }
 }
 
@@ -284,11 +321,7 @@ void script_object::destroy_instances() {
         if (inst)
             instances.erase(inst);
 
-        if (inst) {
-            inst->~script_instance();
-
-            references::instance_pool.get().release(inst);
-        }
+        delete inst;
     }
 
     global_instance = nullptr;
@@ -300,8 +333,7 @@ void script_object::destructor_common() {
 
     instance_lock->ref_count = 0;
 
-    if (instance_lock)
-        references::instance_lock_pool.get().release(instance_lock);
+    delete instance_lock;
 
     instance_lock = nullptr;
 }
@@ -323,13 +355,8 @@ void script_object::construct_mashed_class() {
 
     instance_lock = nullptr;
 
-    auto* lock = (ref_counted_simple_mutex*)references::instance_lock_pool.get().allocate();
-
-    if (lock)
-        lock->reset();
-
-    // yes, twice
-    instance_lock = lock;
+    // the constructor resets it too
+    instance_lock = new script_object_ref_counted_simple_mutex;
     instance_lock->reset();
 
     flags = (e_script_object_flags)(flags | script_object_flag_needs_run);

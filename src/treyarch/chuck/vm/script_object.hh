@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
@@ -32,6 +34,9 @@ namespace treyarch { namespace chuck { namespace vm {
         inline util::memory_reference<i32>                                  function_cache_usage { 0x01124A58 };
 
         inline util::memory_reference<memory::fixed_pool> instance_lock_pool { 0x00FB86C8 };
+
+        // built from a null name at startup
+        inline util::memory_reference<string_hash> empty_key_prefix { 0x01124BA0 };
     } // references
 
     enum e_script_object_flags : u32 {
@@ -42,25 +47,33 @@ namespace treyarch { namespace chuck { namespace vm {
         script_object_flag_singleton     = 0x20  // first run creates and runs one "__singleton" instance
     };
 
+    struct script_object_ref_counted_simple_mutex : ref_counted_simple_mutex {
+        script_object_ref_counted_simple_mutex();
+
+        void* operator new   (std::size_t size) noexcept;
+        void  operator delete(void* allocation) noexcept;
+    };
+
     // funcs only holds this level;
     // a serialized function index is flattened across the parent chain and resolved by sub_A1CFE0.
     class script_object {
 
     public:
-        string_hash                      name;
-        script_object*                   parent_object;
-        script_executable*               parent;
-        script_instance*                 global_instance;
-        i32                              data_blocksize;
-        mash::vector<script_function>    funcs;
-        i32                              constructor_index;
-        i32                              destructor_index; // negative when absent
-        u8                               unk_30[0x08];
+        string_hash                             name;
+        script_object*                          parent_object;
+        script_executable*                      parent;
+        script_instance*                        global_instance;
+        i32                                     data_blocksize;
+        mash::vector<script_function>           funcs;
+        i32                                     constructor_index;
+        i32                                     destructor_index; // negative when absent
+        i32                                     unk_30;           // reconstruct_instance starts the constructor this many bytes in
+        u32                                     unk_34;
         mash::vector_basic
-            <vm_reference_descriptor>    reference_descriptors; // only kind 0 is checked, and it's released as a `str` when an instance dies
-        vm_simple_list<script_instance*> instances;
-        e_script_object_flags            flags;
-        ref_counted_simple_mutex*        instance_lock;    // pooled
+            <vm_reference_descriptor>           reference_descriptors; // only kind 0 is checked, and it's released as a `str` when an instance dies
+        vm_simple_list<script_instance*>        instances;
+        e_script_object_flags                   flags;
+        script_object_ref_counted_simple_mutex* instance_lock;
 
         // sub_A1C130
         ~script_object() {
@@ -80,6 +93,11 @@ namespace treyarch { namespace chuck { namespace vm {
                                             e_script_instance_stack_size  stack_size);
         void             construct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread);
         void             remove_instance(script_instance* delete_me, bool run_destructor_if_present);
+
+        // runs the destructor to the end, then starts the constructor again on the same instance
+        void reconstruct_instance(script_instance* inst, const void* constructor_parms_buffer, vm_thread** constructor_thread);
+
+        script_instance* find_instance(string_hash instance_name);
 
         // only for a constructor taking exactly one 4-byte argument; null otherwise
         script_instance* create_auto_instance(f32 argument);
@@ -114,6 +132,8 @@ namespace treyarch { namespace chuck { namespace vm {
         void destroy_instances();
     };
 
+    ASSERT_SIZEOF  (script_object_ref_counted_simple_mutex, 0x18);
+
     ASSERT_SIZEOF  (script_object,                        0x5C);
     ASSERT_OFFSETOF(script_object, name,                  0x00);
     ASSERT_OFFSETOF(script_object, parent_object,         0x04);
@@ -123,6 +143,7 @@ namespace treyarch { namespace chuck { namespace vm {
     ASSERT_OFFSETOF(script_object, funcs,                 0x14);
     ASSERT_OFFSETOF(script_object, constructor_index,     0x28);
     ASSERT_OFFSETOF(script_object, destructor_index,      0x2C);
+    ASSERT_OFFSETOF(script_object, unk_30,                0x30);
     ASSERT_OFFSETOF(script_object, reference_descriptors, 0x38);
     ASSERT_OFFSETOF(script_object, instances,             0x48);
     ASSERT_OFFSETOF(script_object, flags,                 0x54);

@@ -1,3 +1,4 @@
+#include <cstring>
 #include <new>
 
 #include "retail.hh"
@@ -150,10 +151,7 @@ bool script_manager::load(const string_hash &filename, u32 load_flags, void* use
         return false;
     }
 
-    void* memory = references::executable_entry_pool.get().allocate();
-
-    script_executable_entry* entry = memory ?
-        new (memory) script_executable_entry : nullptr;
+    script_executable_entry* entry = new script_executable_entry;
 
     entry->filename   = filename;
     entry->key_prefix = key_prefix;
@@ -238,7 +236,7 @@ void script_manager::un_load(const string_hash &filename, bool call_all_destruct
 
     exec_set->erase(node);
 
-    references::executable_entry_pool.get().release(entry);
+    delete entry;
 }
 
 // sub_A1C430
@@ -263,7 +261,7 @@ void script_manager::clear() {
 
         exec_set->erase(node);
 
-        references::executable_entry_pool.get().release(entry);
+        delete entry;
     }
 
     execs_pending_first_run->clear();
@@ -529,4 +527,33 @@ u8* script_manager::get_game_var_address(i32 offset) const {
 // sub_A1A230
 u8* script_manager::get_shared_var_address(i32 offset) const {
     return shared_var_container->script_var_block.buffer + offset;
+}
+
+// sub_A1A240
+i32 script_manager::load_game_var_buffer(const void* source) {
+    script_var_container* container = game_var_container;
+
+    if (!container)
+        return 0;
+
+    if (source) {
+        std::memcpy(container->script_var_block.buffer, source, container->script_var_block.blocksize);
+
+        container->flags = (e_script_var_container_flags)(container->flags | script_var_container_flag_unk_04);
+    }
+
+    return container->script_var_block.blocksize;
+}
+
+// sub_A1A260
+i32 script_manager::save_game_var_buffer(void* dest) const {
+    script_var_container* container = game_var_container;
+
+    if (!container)
+        return 0;
+
+    if (dest)
+        std::memcpy(dest, container->script_var_block.buffer, container->script_var_block.blocksize);
+
+    return container->script_var_block.blocksize;
 }
