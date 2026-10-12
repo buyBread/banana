@@ -84,7 +84,8 @@ void vm_stack::grow_buffer(u32 target_size) {
     buffer      = (u8*)allocation;
     buffer_size = target_size;
 
-    delete released;
+    if (released)
+        delete released;
 
     sp           = buffer + used;
     stack_buffer = allocation;

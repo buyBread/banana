@@ -136,7 +136,8 @@ vm_thread::~vm_thread() {
 
         flow_stack = element->previous;
 
-        delete element;
+        if (element)
+            delete element;
     }
 }
 

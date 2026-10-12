@@ -333,7 +333,8 @@ void script_object::destructor_common() {
 
     instance_lock->ref_count = 0;
 
-    delete instance_lock;
+    if (instance_lock)
+        delete instance_lock;
 
     instance_lock = nullptr;
 }

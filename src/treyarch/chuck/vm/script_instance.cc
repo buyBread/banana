@@ -122,7 +122,8 @@ script_instance::~script_instance() {
     }
 
     // the lists are left as they are; do_garbage_collection empties them first
-    delete allocated_stuff;
+    if (allocated_stuff)
+        delete allocated_stuff;
 
     release_string_members();
 
@@ -488,7 +489,8 @@ void script_instance::run_callbacks(e_script_instance_callback_reason reason, vm
 
             callback_nodes = node->next;
 
-            delete node;
+            if (node)
+                delete node;
         } while (callback_nodes);
     }
 
@@ -661,7 +663,8 @@ void script_instance::do_garbage_collection() {
         }
     }
 
-    delete allocated_stuff;
+    if (allocated_stuff)
+        delete allocated_stuff;
 
     allocated_stuff = nullptr;
 }
