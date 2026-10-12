@@ -9,11 +9,10 @@ namespace treyarch { namespace chuck { namespace vm {
             bits 14..8  e_opcode
             bits 7..2   e_opcode_arg; alone decides the payload length (see A1FA70)
             bits 1..0   data width / 4
-
-        names come from the milestone's opcode_t_str table; 40, 41, 59 and 98..107 are behavioral.
     */
 
-    // sub_A22B70
+    // names come from the milestone's opcode_t_str table;
+    // 40, 41, 59 and 98..107 are behavioral.
     enum class e_opcode : u32 {
         NOP,                                          // retail: no-op; milestone: asserts corrupt bytecode
         ADD,                                          // lhs += rhs
@@ -125,13 +124,7 @@ namespace treyarch { namespace chuck { namespace vm {
         CREATE_TRACKED_NESTED_ARRAY   = 107           // create and recursively track empty array
     };
 
-    /*
-        opcode_arg_t: names come from the milestone's opcode_arg_t_str table.
-        retail dropped one of the milestone's SDRE/SFRE/NUME/STRE between GV and JT, so from JT on
-        retail values are the milestone's minus one. the extern forms (UNK_13..15, GSIG_SFRE..LSIG_SFRE,
-        UINTE) were already rejected by the milestone linker and carry no payload in retail.
-        linker kind (A1FA70) = value - 1.
-    */
+    // names come from the milestone's opcode_arg_t_str table.
     enum class e_opcode_arg : u32 {
         NULL_ARG,       // no payload
         NUM,            // u32 float literal
