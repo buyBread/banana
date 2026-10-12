@@ -14,6 +14,14 @@ namespace treyarch { namespace memory {
 using namespace treyarch;
 using namespace treyarch::memory;
 
+// sub_A19C60
+// sub_A19D10
+// sub_A19DC0
+// sub_A1A300
+// sub_A1A3B0
+// sub_A1A460
+// sub_A1A510
+// sub_A1A5C0
 void fixed_pool::initialize(const char* pool_name,
                             u32         requested_slot_size,
                             u32         requested_alignment,
