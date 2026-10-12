@@ -23,3 +23,27 @@ u32 slc_water_box_t::find_instance(const mash::string &name) const {
 
     return entity->my_handle.value;
 }
+
+bool slf__find_water_box__str__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878070)(this, stack);
+}
+
+bool slf__water_box__set_rel_position__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_877F80)(this, stack);
+}
+
+bool slf__water_box__get_water_height__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_877FB0)(this, stack);
+}
+
+bool slf__water_box__get_water_type__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878010)(this, stack);
+}
+
+bool slf__water_box__contains__entity__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_8780E0)(this, stack);
+}
+
+bool slf__water_box__surface_contains__entity__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878170)(this, stack);
+}

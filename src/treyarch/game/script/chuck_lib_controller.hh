@@ -1,6 +1,8 @@
 #pragma once
 
 #include "treyarch/chuck/script_library/script_library_class.hh"
+#include "treyarch/chuck/script_library/script_library_function.hh"
+#include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -16,6 +18,70 @@ namespace treyarch {
         u32 find_instance(const mash::string &name) const override;
 
         virtual void unk_008(u32, u32, u32) {}
+    };
+
+    class slf__script_controller__get_button_state__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__is_button_pressed__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__button_pressed_time__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__was_button_triggered__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__are_X_and_O_inverted__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__get_axis_dir__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__get_axis_angle__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
+    };
+
+    class slf__script_controller__get_axis_force__num__t : public chuck::script_library::script_library_function {
+
+    public:
+        using script_library_function::script_library_function;
+
+        bool operator()(chuck::vm::vm_stack &stack) override;
     };
 
     namespace references {

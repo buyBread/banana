@@ -16,6 +16,9 @@ namespace treyarch { namespace chuck { namespace script_library {
     class script_library_function {
 
     public:
+        // the vtable slot
+        using invoke_t = bool (__thiscall*)(script_library_function* self, vm::vm_stack &stack);
+
         explicit script_library_function(script_library_class* slc);
         script_library_function(); // global
 

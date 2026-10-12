@@ -24,3 +24,35 @@ u32 slc_web_wall_t::find_instance(const mash::string &name) const {
 
     return entity->my_handle.value;
 }
+
+bool slf__create_web_wall__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_8425F0)(this, stack);
+}
+
+bool slf__web_wall__clear__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_8789E0)(this, stack);
+}
+
+bool slf__web_wall__fire__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878A00)(this, stack);
+}
+
+bool slf__web_wall__fire__vector3d__vector3d__vector3d__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878AA0)(this, stack);
+}
+
+bool slf__web_wall__set_material__str__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878B90)(this, stack);
+}
+
+bool slf__web_wall__is_active__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878CB0)(this, stack);
+}
+
+bool slf__web_wall__is_building__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878D30)(this, stack);
+}
+
+bool slf__web_wall__get_build_point__t::operator()(chuck::vm::vm_stack &stack) {
+    return ((invoke_t)retail::sub_878DB0)(this, stack);
+}
