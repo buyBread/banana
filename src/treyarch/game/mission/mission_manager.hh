@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/chuck/vm/script_instance_visitor.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
@@ -13,9 +14,14 @@
 #include "util/types.hh"
 
 namespace treyarch {
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
     namespace chuck { namespace vm {
         class script_executable;
         class script_instance;
+        class script_object;
     }} // chuck::vm
 
     class event;
@@ -86,9 +92,9 @@ namespace treyarch {
     struct mission_header_instance_base {
         vector3                     key_position;
         u8                          reserved_00c[0x10];
-        f32                         unk_01c;
+        f32                         unk_01c; // index into mission_vars
         u8                          reserved_020[0x14];
-        chuck::vm::script_instance* child_inst;
+        chuck::vm::script_instance* child_inst; // holds the child's name until setup_global_data resolves it
         u32                         child_eligibility_id;
         u32                         flags;
         f32                         eligibility_array[10];
@@ -134,6 +140,30 @@ namespace treyarch {
     struct mission_poi_location_t {
         i32     key;
         vector3 position;
+    };
+
+    // RTTI fixup_mission_header_children_visitor
+    class fixup_mission_header_children_visitor : public chuck::vm::script_instance_visitor {
+
+    public:
+        chuck::vm::script_executable* exec;
+
+        explicit fixup_mission_header_children_visitor(chuck::vm::script_executable* exec) : exec(exec) {}
+
+        bool                      allow_object(const chuck::vm::script_object*   object) override;
+        chuck::vm::e_visit_result visit       (const chuck::vm::script_instance* inst)   override;
+    };
+
+    // RTTI fixup_mission_header_visitor
+    class fixup_mission_header_visitor : public chuck::vm::script_instance_visitor {
+
+    public:
+        chuck::vm::script_executable* exec;
+
+        explicit fixup_mission_header_visitor(chuck::vm::script_executable* exec) : exec(exec) {}
+
+        bool                      allow_object(const chuck::vm::script_object*   object) override;
+        chuck::vm::e_visit_result visit       (const chuck::vm::script_instance* inst)   override;
     };
 
     // RTTI eligible_mission_visitor, a script_instance_visitor
@@ -214,8 +244,8 @@ namespace treyarch {
         u32                           zoom_map_poi_unselected_callback_id;
         void*                         selected_poi_icon;
         mission_icon_info             selected_poi;
-        void*                         unk_238;
-        u8                            unk_23c;
+        void*                         icon_entity_pool;
+        u8                            unk_23c; // the level is _megacity
         u8                            reserved_23d[0x03];
         string_hash                   unk_240;
         f32                           unk_244;
@@ -258,6 +288,13 @@ namespace treyarch {
         mission_manager();
 
         static void create_inst();
+
+        void setup_game_var_refs();
+        void setup_global_data(const char* level_name, amalga::resource_pack_slot* slot);
+        void fixup_mission_headers();
+
+        static void on_icon_entity_acquired(arch_base_vhandle handle);
+        static void reset_icon_entity      (arch_base_vhandle handle);
 
         bool                          is_idle() const;
         bool                          is_mission_running() const;
@@ -302,6 +339,7 @@ namespace treyarch {
         void update_hero_proximity_event();
         void update_hero_tracking_flags();
         void run_district_scripts();
+        void run_district_script(i32 index);
 
         void update_eligible_missions();
         void add_mission_icon(const chuck::vm::script_instance* instance);
@@ -316,6 +354,9 @@ namespace treyarch {
         static void on_zoom_map_poi_unselected(event* raised_event, arch_base_vhandle recipient, void* parameters);
 
         void save_player_restart(const vector3 &position, vector3 xz_facing);
+
+        void play_failed_music();
+        void quit_failed_mission();
 
         static void play_open_city_music();
         static void unpause_and_notify_frontend();
@@ -352,6 +393,11 @@ namespace treyarch {
         inline util::memory_reference<string_hash> registry_player_restart_position  { 0x011117F4 };
         inline util::memory_reference<string_hash> registry_player_restart_xzfacing  { 0x0111187C };
         inline util::memory_reference<string_hash> mission_header_instance_base_name { 0x011117C4 };
+        inline util::memory_reference<string_hash> internal_generated_script_header  { 0x01111880 };
+
+        inline util::memory_reference<string_hash> mission_manager_get_restart_position { 0x011117C8 };
+        inline util::memory_reference<string_hash> mission_manager_get_failed_music     { 0x01111BA4 };
+        inline util::memory_reference<string_hash> mission_failed_stinger               { 0x011117C0 };
 
         inline util::memory_reference<void*> eligible_mission_visitor_vtable { 0x00BEA26C };
     } // references
@@ -379,6 +425,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(mission_icon_info, instance, 0x04);
 
     ASSERT_SIZEOF(mission_poi_location_t, 0x10);
+
+    ASSERT_SIZEOF(fixup_mission_header_children_visitor, 0x08);
+    ASSERT_SIZEOF(fixup_mission_header_visitor,          0x08);
 
     ASSERT_SIZEOF  (eligible_mission_visitor,                0x18);
     ASSERT_OFFSETOF(eligible_mission_visitor, hero_position, 0x08);
@@ -413,7 +462,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(mission_manager, zoom_map_poi_selected_callback_id, 0x220);
     ASSERT_OFFSETOF(mission_manager, selected_poi_icon,                 0x228);
     ASSERT_OFFSETOF(mission_manager, selected_poi,                      0x22C);
-    ASSERT_OFFSETOF(mission_manager, unk_238,                           0x238);
+    ASSERT_OFFSETOF(mission_manager, icon_entity_pool,                  0x238);
     ASSERT_OFFSETOF(mission_manager, saved_script_hero_frozen_count,    0x248);
     ASSERT_OFFSETOF(mission_manager, act,                               0x258);
     ASSERT_OFFSETOF(mission_manager, act_transition_state,              0x268);

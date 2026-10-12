@@ -275,6 +275,14 @@ void mission_manager::run_district_scripts() {
         while (district.gen_dis_exec->has_threads())
             chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
 
-        retail::sub_97F4F0((char*)this, index);
+        run_district_script(index);
     }
+}
+
+// sub_97F4F0
+void mission_manager::run_district_script(i32 index) {
+    mission_district_info &district = district_containers[index];
+
+    while (district.gen_dis_exec->has_threads())
+        chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
 }

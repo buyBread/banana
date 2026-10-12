@@ -42,6 +42,11 @@ namespace treyarch {
             return (combo_interface*)my_ifc_storage->get_ifc(entity_ifc_combo);
         }
 
+        // slot 67
+        void set_visible(bool visible, bool unk) {
+            ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, unk);
+        }
+
         void invoke_render_phase();
 
         region* get_primary_region();

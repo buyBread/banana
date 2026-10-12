@@ -433,7 +433,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
     chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 
     scripts.init_game_var();
-    retail::sub_97E060((u32*)mission_manager::inst()); // mission_manager::setup_game_var_refs
+    mission_manager::inst()->setup_game_var_refs();
 
     {
         mash::string busy_teaching("busy_teaching");
@@ -492,7 +492,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
             retail::sub_7D9CA0((u32*)unk_07c);
     }
 
-    retail::sub_980000((i32*)mission_manager::inst(), (void*)level_name, (i32)references::unk_01111754.read());
+    mission_manager::inst()->setup_global_data(level_name, references::unk_01111754.read());
     retail::sub_7F7760((i32)quest_manager::inst(), (i32)level_name, (i32)references::unk_01111754.read());
     retail::sub_90FCB0((i32*)references::unk_010fa26c.read(), (i32)level_name, (i32)references::unk_01111754.read());
     retail::sub_7EB4D0((i32*)references::environment_progression_state.read(), (i32)level_name, (i32)references::unk_01111754.read());

@@ -92,7 +92,7 @@ mission_manager::mission_manager() {
     selected_poi_icon                   = nullptr;
     selected_poi.poi_index              = -1;
     selected_poi.instance               = nullptr;
-    unk_238                             = nullptr;
+    icon_entity_pool                    = nullptr;
     unk_23c                             = 0;
     unk_244                             = 0.0f;
 
@@ -152,7 +152,7 @@ mission_manager::mission_manager() {
     hero_reference_position = references::unk_011117a0.read();
 
     allocation = memory::heap::allocate(0x40);
-    unk_238 = allocation ? retail::sub_804870((u32*)allocation) : nullptr;
+    icon_entity_pool = allocation ? retail::sub_804870((u32*)allocation) : nullptr;
 
     allocation = memory::heap::allocate(sizeof(*poi_locations));
     poi_locations = allocation ? new (allocation) dinkumware::vector<mission_poi_location_t>() : nullptr;
@@ -164,6 +164,29 @@ void mission_manager::create_inst() {
     void* allocation = memory::heap::allocate(sizeof(mission_manager));
 
     mission_manager::instance() = allocation ? new (allocation) mission_manager() : nullptr;
+}
+
+// sub_97E060
+void mission_manager::setup_game_var_refs() {
+    if (!real_time_var) {
+        real_time_var  = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_real_world_timer");
+        *real_time_var = 0.0f;
+    }
+
+    if (!game_time_var)
+        game_time_var = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_game_clock_timer");
+
+    if (!game_days_var)
+        game_days_var = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_game_days");
+
+    if (!game_day_of_the_week_var)
+        game_day_of_the_week_var = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_game_day_of_the_week");
+
+    if (!mission_vars)
+        mission_vars = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_missions");
+
+    if (!upgrade_vars)
+        upgrade_vars = (f32*)chuck::vm::script_manager::inst()->get_game_var_addr("gv_upgrades");
 }
 
 // sub_97E1E0

@@ -760,7 +760,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
 // sub_980FE0
 void mission_manager::process_state_start_mission_failed_dialog() {
-    retail::sub_97F930((u32*)this);
+    play_failed_music();
     retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0);
 
     entity*            hero   = references::g_world_ptr.read()->hero_ptr;
@@ -813,7 +813,7 @@ void mission_manager::process_state_running_mission_failed_dialog() {
     i32 selection = ((igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog)->method_120();
 
     if (is_quitable && selection != 1)
-        retail::sub_981F20((i32)this);
+        quit_failed_mission();
     else
         retail::sub_985EE0(this);
 

@@ -24,6 +24,11 @@ namespace treyarch {
             return ((bool (__thiscall*)(const arch_base*))vtable[10])(this);
         }
 
+        // slot 12
+        bool is_an_actor() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[12])(this);
+        }
+
         void raise_event(string_hash event_type_id);
         void raise_event(event* raised_event);
 
