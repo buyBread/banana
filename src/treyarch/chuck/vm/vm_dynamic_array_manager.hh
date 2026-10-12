@@ -34,7 +34,7 @@ namespace treyarch { namespace chuck { namespace vm {
         vm_dynamic_array_release_plain   = 2
     };
 
-    /* built by sub_A20E10 during slc_manager::setup.
+    /* built by setup during slc_manager::init, torn down with the slc_manager.
        one bucket per 16 slots; a set bit marks a free slot and 0xFFFF a bucket with none in use.
        lookups compare every slot of a bucket that has any slot in use, free ones included. */
     class vm_dynamic_array_manager : public singleton_instance<vm_dynamic_array_manager, 0x0112475C> {
@@ -44,6 +44,13 @@ namespace treyarch { namespace chuck { namespace vm {
         dinkumware::vector<u16>*                   slot_buckets;
         bool                                       unk_08;    // when set, dying arrays aren't unlisted from their owner
         u8                                         pad_09[3];
+
+        // also creates dynamic_array_lock
+        vm_dynamic_array_manager();
+       ~vm_dynamic_array_manager();
+
+        static void setup();
+        static void destroy();
 
         // reserve_size is never read
         chuck_dynamic_array_t* create_new_dynamic_array(script_instance* si, i32 reserve_size);
@@ -70,7 +77,11 @@ namespace treyarch { namespace chuck { namespace vm {
                                     vm_simple_list<garbage_collection_element*> &stuff_to_delete);
 
     private:
-        void                   grow_pool();
+        // 512 slots of arrays reserved for 10 elements, 32 buckets
+        void setup_array_pool();
+        void destroy_array_pool();
+
+        void                   expand_array_pool();
         i32                    take_free_slot();
         chuck_dynamic_array_t* alloc_array_from_pool(script_instance* si, bool for_string);
 

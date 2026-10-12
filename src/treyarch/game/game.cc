@@ -18,6 +18,8 @@
 #include "treyarch/game/region_pack_manager.hh"
 #include "treyarch/game/region_spawn_manager.hh"
 #include "treyarch/game/script/chuck_callbacks.hh"
+#include "treyarch/game/script/chuck_lib_controller.hh"
+#include "treyarch/game/script/chuck_lib_entity.hh"
 #include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
@@ -390,7 +392,8 @@ void game::load_this_level(bool start_only, bool finish_only) {
 
         post_process::create_device_resources();
         shadow::create_device_resources();
-        retail::sub_97AAB0(); // slc_manager::setup
+        
+        chuck::script_library::slc_manager::setup();
 
         auto* common = (amalga::resource_partition*)retail::sub_739C40(amalga::resource_partition_common);
 
@@ -422,10 +425,10 @@ void game::load_this_level(bool start_only, bool finish_only) {
     retail::sub_968670((i32**)&references::g_world_ptr.read()->camera_mgr);
 
     // the milestone asserts these class value refs exist before any script links; retail drops the results
-    chuck::script_library::references::slc_entity.read()->find_instance(mash::string("MARKY_CAM"));
-    chuck::script_library::references::slc_entity.read()->find_instance(mash::string("HERO_START"));
-    chuck::script_library::references::slc_entity.read()->find_instance(mash::string("ANIMATED_CAM"));
-    chuck::script_library::references::slc_script_controller.read()->find_instance(mash::string("CONTROLLER_1"));
+    references::slc_entity           .read()->find_instance(mash::string("MARKY_CAM"));
+    references::slc_entity           .read()->find_instance(mash::string("HERO_START"));
+    references::slc_entity           .read()->find_instance(mash::string("ANIMATED_CAM"));
+    references::slc_script_controller.read()->find_instance(mash::string("CONTROLLER_1"));
 
     chuck::vm::script_manager &scripts = *chuck::vm::script_manager::inst();
 

@@ -341,7 +341,7 @@ bool vm_thread::call_script_library_function(const argument_t &arg, u16* old_pc)
 
     script_library::script_library_function* function = arg.library_function;
 
-    if (function->vtable->invoke(function, dstack)) {
+    if ((*function)(dstack)) {
         entry = 0;
 
         return true;

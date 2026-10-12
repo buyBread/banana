@@ -8,6 +8,113 @@
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
 
+// sub_A182D0
+vm_dynamic_array_manager::vm_dynamic_array_manager() : array_pool(nullptr),
+                                                       slot_buckets(nullptr),
+                                                       unk_08(false) {
+
+    auto* lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (lock) {
+        lock->owner = 0;
+        lock->state = 0;
+        lock->depth = 0;
+    }
+
+    references::dynamic_array_lock.write(lock);
+
+    lock->owner = 0;
+    lock->state = 0;
+    lock->depth = 0;
+}
+
+// sub_A19070
+vm_dynamic_array_manager::~vm_dynamic_array_manager() {
+    destroy_array_pool();
+
+    if (references::dynamic_array_lock.read())
+        memory::heap::free(references::dynamic_array_lock.read());
+
+    references::dynamic_array_lock.write(nullptr);
+}
+
+// sub_A20E10
+void vm_dynamic_array_manager::setup() {
+    void* allocation = memory::heap::allocate(sizeof(vm_dynamic_array_manager));
+
+    instance() = allocation ? new (allocation) vm_dynamic_array_manager() : nullptr;
+
+    instance()->setup_array_pool();
+}
+
+// inlined @ sub_A21450
+void vm_dynamic_array_manager::destroy() {
+    vm_dynamic_array_manager* manager = inst();
+
+    if (manager) {
+        manager->~vm_dynamic_array_manager();
+        memory::heap::free(manager);
+    }
+
+    instance() = nullptr;
+}
+
+// sub_A191A0
+// sub_A19580
+void vm_dynamic_array_manager::setup_array_pool() {
+    void* pool_allocation = memory::heap::allocate(sizeof(dinkumware::vector<vm_dynamic_array_slot>));
+
+    array_pool = pool_allocation ?
+        new (pool_allocation) dinkumware::vector<vm_dynamic_array_slot>() : nullptr;
+
+    array_pool->resize(0x200, vm_dynamic_array_slot {});
+
+    for (u32 slot = 0; slot < array_pool->size(); ++slot) {
+        void* memory = memory::heap::allocate(sizeof(chuck_dynamic_array_t));
+
+        (*array_pool)[slot].array = memory ? new (memory) chuck_dynamic_array_t() : nullptr;
+        (*array_pool)[slot].array->reserve(10);
+    }
+
+    void* bucket_allocation = memory::heap::allocate(sizeof(dinkumware::vector<u16>));
+
+    slot_buckets = bucket_allocation ?
+        new (bucket_allocation) dinkumware::vector<u16>() : nullptr;
+
+    slot_buckets->resize(0x20, 0);
+
+    for (i32 bucket = 0; bucket < 0x20; ++bucket)
+        (*slot_buckets)[bucket] = 0xFFFF;
+}
+
+// sub_A18DE0
+void vm_dynamic_array_manager::destroy_array_pool() {
+    for (u32 slot = 0; slot < array_pool->size(); ++slot) {
+        chuck_dynamic_array_t* array = (*array_pool)[slot].array;
+
+        if (array) {
+            array->~vector();
+            memory::heap::free(array);
+        }
+    }
+
+    if (array_pool) {
+        array_pool->~vector();
+        memory::heap::free(array_pool);
+    }
+
+    dinkumware::vector<u16>* buckets = slot_buckets;
+
+    array_pool = nullptr;
+
+    if (buckets) {
+        buckets->~vector();
+        memory::heap::free(buckets);
+    }
+
+    slot_buckets = nullptr;
+}
+
 // inlined into add_reference and release_reference
 i32 vm_dynamic_array_manager::find_slot(const chuck_dynamic_array_t* array) {
     i32 bucket_count = (i32)slot_buckets->size();
@@ -26,7 +133,7 @@ i32 vm_dynamic_array_manager::find_slot(const chuck_dynamic_array_t* array) {
 }
 
 // sub_A19300
-void vm_dynamic_array_manager::grow_pool() {
+void vm_dynamic_array_manager::expand_array_pool() {
     u32 slot_count   = array_pool->size();
     u32 bucket_count = slot_buckets->size();
 
@@ -78,7 +185,7 @@ chuck_dynamic_array_t* vm_dynamic_array_manager::alloc_array_from_pool(script_in
     i32 slot;
 
     while ((slot = take_free_slot()) == -1)
-        grow_pool();
+        expand_array_pool();
 
     vm_dynamic_array_slot &entry = (*array_pool)[slot];
 
