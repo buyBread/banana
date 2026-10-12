@@ -191,6 +191,7 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_A1B180
+        // sub_A20950
         node* erase(node* where) { // returns the node after the erased one
             if (where->is_nil)
                 throw std::out_of_range("invalid map/set<T> iterator");

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -63,12 +65,20 @@ namespace treyarch { namespace dinkumware {
 
             new (&position->value) T(value);
 
-            before->previous->next = position;
-            before->previous       = position;
+            increment_size(1);
 
-            ++count;
+            before->previous         = position;
+            position->previous->next = position;
 
             return position;
+        }
+
+        // sub_A1AB20
+        void increment_size(u32 added) {
+            if (0x3FFFFFFF - count < added)
+                throw std::length_error("list<T> too long");
+
+            count += added;
         }
 
         node* push_back(const T &value) {
