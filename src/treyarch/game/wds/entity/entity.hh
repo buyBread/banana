@@ -2,6 +2,8 @@
 
 #include "treyarch/game/arch_base.hh"
 #include "treyarch/game/wds/entity/interface/combo_interface.hh"
+#include "treyarch/game/wds/entity/interface/damage_interface.hh"
+#include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
 #include "treyarch/game/wds/entity/interface_storage.hh"
@@ -30,6 +32,14 @@ namespace treyarch {
         }
 
         // inlined; the milestone's entity_base::<name>_ifc()
+        damage_interface* damage_ifc() const {
+            return (damage_interface*)my_ifc_storage->get_ifc(entity_ifc_damage);
+        }
+
+        physical_interface* physical_ifc() const {
+            return (physical_interface*)my_ifc_storage->get_ifc(entity_ifc_physical);
+        }
+
         time_interface* time_ifc() const {
             return (time_interface*)my_ifc_storage->get_ifc(entity_ifc_time);
         }

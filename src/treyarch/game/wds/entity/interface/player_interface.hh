@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/game/wds/entity/interface/generic_interface.hh"
+#include "treyarch/game/wds/entity/interface/player_reflexes.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -30,10 +31,13 @@ namespace treyarch {
     class player_interface : public actor_interface {
 
     public:
-        u8   reserved_00c[0x247];
+        u8                   reserved_00c[0x247];
         /* cleared by game::freeze_hero on the first freeze and set again on the last unfreeze and by unload_current_level;
            world_dynamics_system::frame_advance runs frame_advance while set and frame_advance_disabled otherwise */
-        bool enabled;
+        bool                 enabled;
+        u8                   reserved_254[0x180];
+        player_reflexes      reflexes;
+        player_spider_senses spider_senses;
 
         player_interface_vtable* get_vtable() const {
             return (player_interface_vtable*)vtable;
@@ -62,7 +66,17 @@ namespace treyarch {
         void unk_094(f32 delta_t) {
             get_vtable()->unk_094(this, delta_t);
         }
+
+        player_reflexes* get_reflexes() {
+            return &reflexes;
+        }
+
+        player_spider_senses* get_spider_senses() {
+            return &spider_senses;
+        }
     };
 
-    ASSERT_OFFSETOF(player_interface, enabled, 0x253);
+    ASSERT_OFFSETOF(player_interface, enabled,       0x253);
+    ASSERT_OFFSETOF(player_interface, reflexes,      0x3D4);
+    ASSERT_OFFSETOF(player_interface, spider_senses, 0x3FC);
 } // treyarch

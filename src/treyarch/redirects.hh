@@ -269,9 +269,7 @@ namespace treyarch {
 
         banana::log.msg("redirecting script_instance::run_single_thread_until_finished");
 
-        if (!util::redirect_rel32(0x0082505D, { 0xE8, 0x9E, 0x9B, 0x1F, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished) ||
-            !util::redirect_rel32(0x00A1CE06, { 0xE8, 0xF5, 0x1D, 0x00, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished))
-
+        if (!util::redirect_rel32(0x00A1CE06, { 0xE8, 0xF5, 0x1D, 0x00, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished))
             FATAL_BREAKPOINT();
 
         _redirect_event_manager();

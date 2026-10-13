@@ -134,6 +134,16 @@ bool script::push_entity(chuck::vm::vm_thread* thread, entity* ent) {
     return true;
 }
 
+// sub_842D60
+bool script::push_uint(chuck::vm::vm_thread* thread, u32 value) {
+    if (!thread)
+        return false;
+
+    thread->dstack.push_uint(value);
+
+    return true;
+}
+
 // sub_825480
 chuck::vm::script_instance* script::add_instance(const mash::string                            &name,
                                                        chuck::vm::script_object*                object,
@@ -188,6 +198,19 @@ bool script::run_thread(chuck::vm::vm_thread* thread) {
     key_prefix.initialize(mash::ALLOCATED);
 
     thread->inst->run_single_thread(thread, true, key_prefix);
+
+    return true;
+}
+
+// sub_825020
+bool script::run_thread_until_finished(chuck::vm::vm_thread* thread) {
+    if (!thread)
+        return false;
+
+    string_hash key_prefix;
+    key_prefix.initialize(mash::ALLOCATED);
+
+    thread->inst->run_single_thread_until_finished(thread, true, key_prefix);
 
     return true;
 }

@@ -65,6 +65,9 @@ namespace treyarch {
         // pushes the entity's handle or 0; false only for a null thread
         static bool push_entity(chuck::vm::vm_thread* thread, entity* ent);
 
+        // false only for a null thread
+        static bool push_uint(chuck::vm::vm_thread* thread, u32 value);
+
         // nothing for a null object or one without an executable
         static chuck::vm::script_instance* add_instance(const mash::string                            &name,
                                                               chuck::vm::script_object*                object,
@@ -81,6 +84,9 @@ namespace treyarch {
         // false only for a null thread
         static bool start_thread(chuck::vm::vm_thread* thread, bool run_now);
         static bool run_thread  (chuck::vm::vm_thread* thread);
+
+        // false only for a null thread
+        static bool run_thread_until_finished(chuck::vm::vm_thread* thread);
 
         // sub_825100
         // sub_825200

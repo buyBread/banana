@@ -763,16 +763,13 @@ void mission_manager::process_state_start_mission_failed_dialog() {
     play_failed_music();
     retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0);
 
-    entity*            hero   = references::g_world_ptr.read()->hero_ptr;
-    generic_interface* damage = hero->my_ifc_storage->get_ifc(entity_ifc_damage);
-
-    u32 unk_value = *(u32*)((u8*)damage + 0xB4);
+    i32 hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->hit_points.val;
 
     auto* dialog = (igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog;
 
     dialog->method_0e8();
 
-    if (!unk_value) {
+    if (!hit_points) {
         dialog->method_0d8(3234);
         dialog->method_0e4()(dialog, mash::string(""));
     } else {
@@ -815,7 +812,7 @@ void mission_manager::process_state_running_mission_failed_dialog() {
     if (is_quitable && selection != 1)
         quit_failed_mission();
     else
-        retail::sub_985EE0(this);
+        retry_failed_mission();
 
     flags &= ~mission_manager_flag_unk_00001000;
     state  = mission_manager_state_running_mission;

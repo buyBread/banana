@@ -167,9 +167,9 @@ void ai_core::refresh_alive() {
     bool    is_alive = true;
 
     if (owner->has_ifc(entity_ifc_damage)) {
-        u8* damage = (u8*)owner->my_ifc_storage->get_ifc(entity_ifc_damage);
+        damage_interface* damage = owner->damage_ifc();
 
-        is_alive = *(i32*)(damage + 0xB4) > 0;
+        is_alive = damage->hit_points.val > 0;
     }
 
     alive = is_alive;

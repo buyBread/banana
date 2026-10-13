@@ -93,7 +93,9 @@ namespace treyarch {
         vector3                     key_position;
         u8                          reserved_00c[0x10];
         f32                         unk_01c; // index into mission_vars
-        u8                          reserved_020[0x14];
+        u8                          reserved_020[0x08];
+        const char*                 gen_dis_exec_name;
+        u8                          reserved_02c[0x08];
         chuck::vm::script_instance* child_inst; // holds the child's name until setup_global_data resolves it
         u32                         child_eligibility_id;
         u32                         flags;
@@ -341,6 +343,10 @@ namespace treyarch {
         void run_district_scripts();
         void run_district_script(i32 index);
 
+        chuck::vm::script_instance* find_district_instance(const chuck::vm::script_instance* header, bool run_pending);
+
+        bool setup_mission_instance_parameters(chuck::vm::script_instance* parameters);
+
         void update_eligible_missions();
         void add_mission_icon(const chuck::vm::script_instance* instance);
         void update_mission_icons();
@@ -357,6 +363,7 @@ namespace treyarch {
 
         void play_failed_music();
         void quit_failed_mission();
+        void retry_failed_mission();
 
         static void play_open_city_music();
         static void unpause_and_notify_frontend();
@@ -403,6 +410,7 @@ namespace treyarch {
     } // references
 
     ASSERT_OFFSETOF(mission_header_instance_base, unk_01c,              0x1C);
+    ASSERT_OFFSETOF(mission_header_instance_base, gen_dis_exec_name,    0x28);
     ASSERT_OFFSETOF(mission_header_instance_base, child_inst,           0x34);
     ASSERT_OFFSETOF(mission_header_instance_base, child_eligibility_id, 0x38);
     ASSERT_OFFSETOF(mission_header_instance_base, flags,                0x3C);

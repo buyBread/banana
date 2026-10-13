@@ -1,4 +1,8 @@
 #include "retail.hh"
+#include "treyarch/chuck/vm/script_executable.hh"
+#include "treyarch/chuck/vm/script_object.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/script/chuck_lib_mission.hh"
 
 using namespace treyarch;
@@ -35,8 +39,17 @@ bool slf__get_mission_caption_index__entity__t::operator()(chuck::vm::vm_stack &
     return ((invoke_t)retail::sub_857210)(this, stack);
 }
 
+// sub_857280
 bool slf__setup_mission_instance_parameters__mission_district_instance_base__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857280)(this, stack);
+    auto* parameters = (chuck::vm::script_instance*)stack.pop_uint();
+
+    if (mission_manager::inst()->setup_mission_instance_parameters(parameters))
+        return true;
+
+    // suspends the calling executable
+    ++stack.thread->inst->parent->parent->suspend_count;
+
+    return false;
 }
 
 bool slf__is_mission_running__t::operator()(chuck::vm::vm_stack &stack) {

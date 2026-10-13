@@ -1,0 +1,28 @@
+#pragma once
+
+#include "treyarch/game/wds/entity/interface/generic_interface.hh"
+#include "treyarch/shared/math/types/vector3.hh"
+#include "util/macros/sanity_assert.hh"
+#include "util/types.hh"
+
+namespace treyarch {
+    enum e_physical_interface_flags : u32 {
+        physical_interface_flag_biped_running = 0x00080000
+    };
+
+    class physical_interface : public actor_interface {
+
+    public:
+        u32 flags;
+
+        // inlined
+        bool is_flagged(e_physical_interface_flags flag) const {
+            return (flags & flag) != 0;
+        }
+
+        void stop_biped_physics(bool on_destroyed = false);
+        void cancel_all_velocity(const vector3 &dir, bool both_dir = true);
+    };
+
+    ASSERT_OFFSETOF(physical_interface, flags, 0x0C);
+} // treyarch

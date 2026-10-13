@@ -3,6 +3,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/references.hh"
@@ -285,4 +286,66 @@ void mission_manager::run_district_script(i32 index) {
 
     while (district.gen_dis_exec->has_threads())
         chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
+}
+
+// sub_981540
+chuck::vm::script_instance* mission_manager::find_district_instance(const chuck::vm::script_instance* header, bool run_pending) {
+    string_hash exec_name;
+    exec_name.initialize(mash::ALLOCATED, ((mission_header_instance_base*)header->data.buffer)->gen_dis_exec_name);
+
+    for (i32 index = 0; index < district_count; ++index) {
+        mission_district_info &district = district_containers[index];
+
+        if (!district.gen_dis_exec || !(district.gen_dis_exec_name == exec_name))
+            continue;
+
+        // finishes whatever the district script still has queued
+        if (run_pending && (district.gen_dis_script_frame_count > 0 || district.gen_dis_exec->has_threads())) {
+            for (i32 pass = 0; pass < district.gen_dis_script_frame_count; ++pass)
+                chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
+
+            district.gen_dis_script_frame_count = 0;
+
+            while (district.gen_dis_exec->has_threads())
+                chuck::vm::script_manager::inst()->run_single_exec(district.gen_dis_exec_name, string_hash(), 0.0f, false);
+
+            run_district_script(index);
+        }
+
+        if (district.gen_dis_script_frame_count)
+            return nullptr;
+
+        string_hash instance_name;
+        retail::sub_5FD100((u32*)header, (u32*)&instance_name);
+
+        return district.gen_dis_exec->find_instance(instance_name);
+    }
+
+    return nullptr;
+}
+
+// sub_981990
+bool mission_manager::setup_mission_instance_parameters(chuck::vm::script_instance* parameters) {
+    chuck::vm::script_instance* inst = find_district_instance(current_mission.mission_header_instance, true);
+
+    if (!inst) {
+        flags |= mission_manager_flag_need_to_unload;
+
+        return false;
+    }
+
+    // the instance's first member names the global function that fills in the parameters
+    string_hash function_name;
+    function_name.initialize(mash::ALLOCATED, *(const char**)inst->data.buffer);
+
+    chuck::vm::script_instance* global_instance = inst->parent->parent->get_global_script_object()->global_instance;
+
+    chuck::vm::vm_thread* thread = script::create_thread(script::find_instance_function(function_name, global_instance),
+                                                         global_instance,
+                                                         0);
+
+    script::push_uint(thread, (u32)parameters);
+    script::run_thread_until_finished(thread);
+
+    return true;
 }

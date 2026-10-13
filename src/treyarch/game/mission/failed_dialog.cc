@@ -80,13 +80,9 @@ void mission_manager::quit_failed_mission() {
     retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
 
     {
-        i32 unk_value = *(i32*)((u8*)references::g_world_ptr.read()->hero_ptr->my_ifc_storage->get_ifc(entity_ifc_damage) + 0xBC);
+        i32 max_hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points();
 
-        retail::sub_6524F0((u32*)references::g_world_ptr.read()->hero_ptr->my_ifc_storage->get_ifc(entity_ifc_damage),
-                           unk_value,
-                           0,
-                           0,
-                           0);
+        references::g_world_ptr.read()->hero_ptr->damage_ifc()->set_hit_points(max_hit_points);
     }
 
     bool fall_back = true;
@@ -148,4 +144,50 @@ void mission_manager::quit_failed_mission() {
         if (((restart_from_registry)retail::sub_980A50)(this, &player_restart_position, &player_restart_xz_facing))
             flags |= mission_manager_flag_need_to_malor;
     }
+}
+
+// sub_985EE0
+void mission_manager::retry_failed_mission() {
+    {
+        f32 detail_count = 0.0f;
+
+        script_arg count;
+        count.type  = 1;
+        count.value = &detail_count;
+
+        string_hash clean_up_random_details;
+        clean_up_random_details.initialize(mash::ALLOCATED, "clean_up_random_details(num)");
+
+        script::call_function(nullptr,
+                              clean_up_random_details,
+                              count,
+                              script_arg(),
+                              script_arg(),
+                              script_arg(),
+                              script_arg(),
+                              script_arg(),
+                              script_arg(),
+                              script_arg());
+    }
+
+    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+
+    {
+        i32 max_hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points();
+
+        references::g_world_ptr.read()->hero_ptr->damage_ifc()->set_hit_points(max_hit_points);
+    }
+
+    if (references::g_world_ptr.read()->hero_ptr->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        references::g_world_ptr.read()->hero_ptr->physical_ifc()->stop_biped_physics();
+
+    references::g_world_ptr.read()->hero_ptr->physical_ifc()->cancel_all_velocity(references::unk_011117a0.get());
+
+    if (player_reflexes* reflexes = references::g_world_ptr.read()->hero_ptr->player_ifc()->get_reflexes())
+        reflexes->disable(false);
+
+    if (player_spider_senses* senses = references::g_world_ptr.read()->hero_ptr->player_ifc()->get_spider_senses())
+        senses->disable(true, false);
+
+    retail::sub_985A10((i32)this); // restart
 }
