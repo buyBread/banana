@@ -5,13 +5,15 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace amalga {
-    struct merged_apk_resource_handler : resource_handler {
+    struct merged_apk_resource_handler : resource_handler_base {
         u32 entry_count;
         u32 entry_cursor;
 
-        void begin_merged_apk(i32 operation);
-        i32 progress_merged_apk(i32                  operation,
-                                resource_descriptor* descriptor);
+        void pre_handle_resources(e_behavior behavior) override;
+
+        i32 handle_resource(e_behavior           behavior,
+                            resource_descriptor* descriptor,
+                            limited_timer*       time_limit) override;
     };
 
     ASSERT_SIZEOF  (merged_apk_resource_handler,               0x1C);

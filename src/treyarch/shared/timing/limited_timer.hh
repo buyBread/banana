@@ -31,10 +31,14 @@ namespace treyarch {
 
     struct progress {
         e_progress_state state;
+
+        progress() : state(progress_start) {}
     };
 
     struct timed_progress : progress {
         limited_timer* time_limit;
+
+        timed_progress() : time_limit(nullptr) {}
     };
 
     ASSERT_SIZEOF  (limited_timer,        0x10);

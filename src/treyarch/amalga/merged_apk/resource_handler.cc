@@ -6,7 +6,7 @@
 using namespace treyarch;
 
 // sub_73A5E0
-void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
+void amalga::merged_apk_resource_handler::pre_handle_resources(e_behavior behavior) {
     resource_directory* directory = pack_slot->pack_directory;
 
     if (!directory->type_counts[(u32)e_resource_type::merged_apk])
@@ -15,7 +15,7 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
     resource_descriptor* descriptor = directory->descriptors
         [directory->type_starts[(u32)e_resource_type::merged_apk]];
 
-    if (operation)
+    if (behavior == unload)
         return;
 
     resource_manager::references::resource_context.write(pack_slot->header_mem_addr[buffer_location_vram]);
@@ -37,12 +37,13 @@ void amalga::merged_apk_resource_handler::begin_merged_apk(i32 operation) {
 }
 
 // sub_73A670
-i32 amalga::merged_apk_resource_handler::progress_merged_apk(i32                  operation,
-                                                             resource_descriptor* descriptor) {
+i32 amalga::merged_apk_resource_handler::handle_resource(e_behavior           behavior,
+                                                         resource_descriptor* descriptor,
+                                                         limited_timer*) {
 
     merged_apk::file* owner = (merged_apk::file*)((u8*)descriptor->raw_payload + sizeof(merged_apk::file_header));
 
-    if (operation) {
+    if (behavior == unload) {
         if (owner->last_frame_reference + 1 >= (i32)ngl::references::frame_epoch.read())
             return 1;
 

@@ -7,6 +7,26 @@
 
 using namespace treyarch;
 
+// sub_739F90
+amalga::resource_pack_slot::resource_pack_slot() : pack_name { string_hash(), 0 } {
+    vtable     = &references::resource_pack_slot_vtable.get();
+    slot_state = slot_state_empty;
+
+    clear_slot();
+}
+
+// sub_72DEA0
+void amalga::resource_pack_slot::clear_slot() {
+    for (u32 location = 0; location < buffer_location_count; ++location) {
+        slot_size[location]       = 0;
+        header_mem_addr[location] = nullptr;
+    }
+
+    my_callback = nullptr;
+
+    vtable->clear_pack(this);
+}
+
 // sub_76A850
 void amalga::resource_pack_slot::frame_advance(f32, limited_timer* time_limit) {
     switch (slot_state) {

@@ -4,6 +4,7 @@
 #include "banana/logging.hh"
 #include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_handler.hh"
+#include "treyarch/amalga/worldly_pack_slot.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/game/event/event_manager.hh"
@@ -260,10 +261,15 @@ namespace treyarch {
 
             FATAL_BREAKPOINT();
 
+        banana::log.msg("redirecting worldly_pack_slot construction (resource handlers)");
+
+        if (!util::redirect_rel32(0x007678EB, { 0xE8, 0x20, 0x2E, 0xFD, 0xFF }, &util::thunk::ctor<amalga::worldly_pack_slot>::invoke))
+            FATAL_BREAKPOINT();
+
         banana::log.msg("redirecting resource handler progression (pack load/unload)");
 
-        if (!util::redirect_rel32(0x0073BD01, { 0xE8, 0xCA, 0xE7, 0xFF, 0xFF }, &amalga::resource_handler::advance) ||
-            !util::redirect_rel32(0x0076BDBB, { 0xE8, 0x10, 0xE7, 0xFC, 0xFF }, &amalga::resource_handler::advance))
+        if (!util::redirect_rel32(0x0073BD01, { 0xE8, 0xCA, 0xE7, 0xFF, 0xFF }, &amalga::resource_handler_base::handle) ||
+            !util::redirect_rel32(0x0076BDBB, { 0xE8, 0x10, 0xE7, 0xFC, 0xFF }, &amalga::resource_handler_base::handle))
 
             FATAL_BREAKPOINT();
 

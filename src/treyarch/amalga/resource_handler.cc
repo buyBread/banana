@@ -1,39 +1,23 @@
-#include "treyarch/amalga/merged_apk/resource_handler.hh"
 #include "treyarch/amalga/resource_handler.hh"
-#include "treyarch/amalga/script/resource_handler.hh"
+#include "treyarch/amalga/resource_pack_slot.hh"
 
 using namespace treyarch;
 
 // sub_73A4D0
-bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit) {
-    if (state == 2)
+bool amalga::resource_handler_base::handle(e_behavior behavior, limited_timer* time_limit) {
+    if (state == progress_done)
         return false;
 
     resource_directory* directory = pack_slot->pack_directory;
 
-    if (state == 0) {
-        state             = 1;
+    if (state == progress_start) {
+        state             = progress_active;
         descriptor_cursor = directory->type_starts[(u32)type];
 
-        if (operation == 1)
+        if (behavior == unload)
             directory->type_state[(u32)type] = 0;
 
-        switch(type) {
-            case e_resource_type::merged_apk:
-                ((merged_apk_resource_handler*)this)->begin_merged_apk(operation);
-
-                break;
-
-            case e_resource_type::script:
-            case e_resource_type::script_gv:
-            case e_resource_type::script_sv:
-                break;
-
-            default:
-                begin(operation);
-
-                break;
-        }
+        pre_handle_resources(behavior);
 
         if (time_limit && time_limit->out_of_time())
             return true;
@@ -44,38 +28,13 @@ bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit)
     i32 end = directory->type_starts[(u32)type] + directory->type_counts[(u32)type];
 
     if (descriptor_cursor >= end) {
-        state = 2;
+        state = progress_done;
 
         return false;
     }
 
     while (true) {
-        resource_descriptor* descriptor = pack_slot->pack_directory->descriptors[descriptor_cursor];
-
-        i32 result;
-
-        switch(type) {
-            case e_resource_type::merged_apk:
-                result = ((merged_apk_resource_handler*)this)->progress_merged_apk(operation, descriptor);
-
-                break;
-
-            case e_resource_type::script:
-                result = ((script_resource_handler*)this)->progress_mashable(operation, descriptor);
-
-                break;
-
-            case e_resource_type::script_gv:
-            case e_resource_type::script_sv:
-                result = ((script_var_container_resource_handler*)this)->progress_mashable(operation, descriptor);
-
-                break;
-
-            default:
-                result = progress(operation, descriptor, time_limit);
-
-                break;
-        }
+        i32 result = handle_resource(behavior, pack_slot->pack_directory->descriptors[descriptor_cursor], time_limit);
 
         if (result == 1)
             return true;
@@ -87,7 +46,7 @@ bool amalga::resource_handler::advance(i32 operation, limited_timer* time_limit)
             return true;
 
         if (descriptor_cursor >= end) {
-            state = 2;
+            state = progress_done;
 
             return false;
         }

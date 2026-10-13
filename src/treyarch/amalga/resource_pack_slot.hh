@@ -5,6 +5,7 @@
 #include "treyarch/shared/resource_key.hh"
 #include "treyarch/shared/timing/limited_timer.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace amalga {
@@ -37,7 +38,6 @@ namespace treyarch { namespace amalga {
                                                         resource_pack_slot*     slot,
                                                         limited_timer*          time_limit);
 
-    // resource_pack_slot's own vtable is 0x00BCA360; the handler-owning slots are worldly_pack_slot (0x00BCA37C)
     struct resource_pack_slot_vtable {
         bool                (__thiscall* on_load)(resource_pack_slot* self, limited_timer* time_limit);   // true while there's more to do
         bool                (__thiscall* on_unload)(resource_pack_slot* self, limited_timer* time_limit); // same
@@ -59,9 +59,16 @@ namespace treyarch { namespace amalga {
         resource_partition*         my_partition;
         resource_pack_slot_callback my_callback;
 
+        resource_pack_slot();
+
+        void clear_slot();
         void frame_advance(f32 dt, limited_timer* time_limit);
         void notify_load_started(resource_amalgatoc_pack_entry* entry, resource_pack_slot_callback callback);
     };
+
+    namespace references {
+        inline util::memory_reference<amalga::resource_pack_slot_vtable> resource_pack_slot_vtable { 0x00BCA360 };
+    } // references
 
     ASSERT_SIZEOF  (resource_pack_slot_vtable,             0x14);
     ASSERT_OFFSETOF(resource_pack_slot_vtable, clear_pack, 0x10);

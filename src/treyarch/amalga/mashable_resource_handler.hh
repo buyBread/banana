@@ -7,10 +7,9 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace amalga {
-    // the resource is unmashed in place, inside the pack's own allocation.
-    // there's no begin step.
+    // the resource is unmashed in place, inside the pack's own allocation
     template<typename T>
-    struct mashable_resource_handler : resource_handler {
+    struct mashable_resource_handler : resource_handler_base {
         // sub_759EB0
         // sub_759F60
         static T* construct(resource_descriptor* descriptor) {
@@ -33,10 +32,11 @@ namespace treyarch { namespace amalga {
 
         // sub_75F8D0
         // sub_75F940
-        i32 progress_mashable(i32                  operation,
-                              resource_descriptor* descriptor) {
+        i32 handle_resource(e_behavior           behavior,
+                            resource_descriptor* descriptor,
+                            limited_timer*) override {
 
-            if (!operation) {
+            if (behavior == load) {
                 construct(descriptor);
 
                 return 0;
