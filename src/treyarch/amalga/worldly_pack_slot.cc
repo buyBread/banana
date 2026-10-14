@@ -8,6 +8,7 @@
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
+#include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
 #include "treyarch/amalga/stall/resource_handler.hh"
 #include "treyarch/amalga/terrain_types/resource_handler.hh"
 #include "treyarch/amalga/textfile/resource_handler.hh"
@@ -37,7 +38,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<lang_resource_handler>(e_resource_type::language);
     create_resource_handler<district_graph_resource_handler>(e_resource_type::district_graph);
     create_resource_handler<speedtree_collection_resource_handler>(e_resource_type::speedtree_coll);
-    create_resource_handler<mashable_resource_handler<speedtree_collection_reference>>(e_resource_type::speedtree_coll_refs);
+    create_resource_handler<speedtree_collection_reference_resource_handler>(e_resource_type::speedtree_coll_refs);
     create_resource_handler<script_resource_handler>(e_resource_type::script);
     create_resource_handler<script_var_container_resource_handler>(e_resource_type::script_gv);
     create_resource_handler<script_var_container_resource_handler>(e_resource_type::script_sv);

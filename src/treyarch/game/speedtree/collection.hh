@@ -34,9 +34,30 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
+    class speedtree_collection_reference {
+
+    public:
+        void* self; // the resource handler points this at the reference itself
+        u32   unk_04[4];
+
+        // inlined @ sub_764C30
+        void construct_mashed_class() {
+            self = nullptr;
+        }
+
+        // inlined @ sub_766FB0
+        void destruct_mashed_class() {}
+
+        // inlined @ sub_764C30
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
+    };
+
     ASSERT_SIZEOF  (speedtree_collection_entry, 0x08);
 
     ASSERT_SIZEOF  (speedtree_collection,             0x2C);
     ASSERT_OFFSETOF(speedtree_collection, unk_04,     0x04);
     ASSERT_OFFSETOF(speedtree_collection, placements, 0x18);
+
+    ASSERT_SIZEOF  (speedtree_collection_reference,         0x14);
+    ASSERT_OFFSETOF(speedtree_collection_reference, unk_04, 0x04);
 } // treyarch
