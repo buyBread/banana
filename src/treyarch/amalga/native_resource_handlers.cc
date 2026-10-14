@@ -3,99 +3,95 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<Tilemap>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_75FB00)(this, behavior, descriptor, time_limit);
-}
-
-template<> i32 amalga::mashable_resource_handler<Environment>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<environment>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FB70)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<LightBehavior>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<light_behavior>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FBE0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<GraphicsOptions>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<graphics_options>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FC50)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<EffectContainer>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<effect_container>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FCC0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMDecalMaterial>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_decal_material>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FD30)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<PhatPalette>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<phat_palette>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FDA0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<CowbellFile>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<cowbell_file>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FE10)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<Meshmap>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<meshmap>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FE80)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<CloudTweak>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<cloud_tweak>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FEF0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<CityLODs>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<city_lods>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FF60)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMRoadParam>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_road_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_75FFD0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<AllBuildings>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<all_buildings>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760040)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<IGO3DWidgetParameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<igo_3d_widget_parameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7600B0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<IGO3DTextParameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<igo_3d_text_parameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760120)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMDecalParam>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_decal_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760190)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<AdjustmentLayersLibrary>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<adjustment_layers_library>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760200)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<Outdoors>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<outdoors>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760270)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<daySkyColor>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<day_sky_color>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7602E0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<nightSkyColor>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<night_sky_color>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760350)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<PreLight>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<pre_light>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7603C0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMBuildingLODParam>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_building_lod_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760430)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMRoadLODParam>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_road_lod_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7604A0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<SMRetrofitParam>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<sm_retrofit_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760510)(this, behavior, descriptor, time_limit);
 }
 
@@ -179,7 +175,7 @@ template<> i32 amalga::mashable_resource_handler<render_lod_mgr>::handle_resourc
     return ((handle_resource_t)retail::sub_760DD0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<VisemeStream>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
+template<> i32 amalga::mashable_resource_handler<viseme_stream>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760E40)(this, behavior, descriptor, time_limit);
 }
 

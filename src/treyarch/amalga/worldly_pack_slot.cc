@@ -14,6 +14,7 @@
 #include "treyarch/amalga/stall/resource_handler.hh"
 #include "treyarch/amalga/terrain_types/resource_handler.hh"
 #include "treyarch/amalga/textfile/resource_handler.hh"
+#include "treyarch/amalga/TILEMAP/resource_handler.hh"
 #include "treyarch/amalga/traffic_light_info/resource_handler.hh"
 #include "treyarch/amalga/vehicle_model_depot/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
@@ -63,30 +64,30 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<singular_apk_resource_handler>(e_resource_type::nal_skeleton_map);
     create_resource_handler<singular_apk_resource_handler>(e_resource_type::convex_hull_mesh);
     create_resource_handler<vehicle_model_depot_resource_handler>(e_resource_type::vehicle_model_depot);
-    create_resource_handler<mashable_resource_handler<Tilemap>>(e_resource_type::TILEMAP);
-    create_resource_handler<mashable_resource_handler<Environment>>(e_resource_type::ENVIRONMENT);
-    create_resource_handler<mashable_resource_handler<LightBehavior>>(e_resource_type::LIGHTBEHAVIOR);
-    create_resource_handler<mashable_resource_handler<GraphicsOptions>>(e_resource_type::GRAPHICSOPTIONS);
-    create_resource_handler<mashable_resource_handler<EffectContainer>>(e_resource_type::EFFECTCONTAINER);
-    create_resource_handler<mashable_resource_handler<SMDecalMaterial>>(e_resource_type::SMDECALMATERIAL);
-    create_resource_handler<mashable_resource_handler<PhatPalette>>(e_resource_type::PHATPALETTE);
-    create_resource_handler<mashable_resource_handler<CowbellFile>>(e_resource_type::COWBELL);
-    create_resource_handler<mashable_resource_handler<Meshmap>>(e_resource_type::MESHMAP);
-    create_resource_handler<mashable_resource_handler<CloudTweak>>(e_resource_type::CLOUDTWEAK);
-    create_resource_handler<mashable_resource_handler<CityLODs>>(e_resource_type::CITYLODS);
-    create_resource_handler<mashable_resource_handler<SMRoadParam>>(e_resource_type::SMROADPARAM);
-    create_resource_handler<mashable_resource_handler<AllBuildings>>(e_resource_type::ALLBUILDINGS);
-    create_resource_handler<mashable_resource_handler<IGO3DWidgetParameters>>(e_resource_type::UIP3DW);
-    create_resource_handler<mashable_resource_handler<IGO3DTextParameters>>(e_resource_type::UIP3DT);
-    create_resource_handler<mashable_resource_handler<SMDecalParam>>(e_resource_type::SMDECALPARAM);
-    create_resource_handler<mashable_resource_handler<AdjustmentLayersLibrary>>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
-    create_resource_handler<mashable_resource_handler<Outdoors>>(e_resource_type::OUTDOORS);
-    create_resource_handler<mashable_resource_handler<daySkyColor>>(e_resource_type::DAYSKYCOLOR);
-    create_resource_handler<mashable_resource_handler<nightSkyColor>>(e_resource_type::NIGHTSKYCOLOR);
-    create_resource_handler<mashable_resource_handler<PreLight>>(e_resource_type::PRELIGHT);
-    create_resource_handler<mashable_resource_handler<SMBuildingLODParam>>(e_resource_type::SMBUILDINGLODPARAM);
-    create_resource_handler<mashable_resource_handler<SMRoadLODParam>>(e_resource_type::SMROADLODPARAM);
-    create_resource_handler<mashable_resource_handler<SMRetrofitParam>>(e_resource_type::SMRETROFITPARAM);
+    create_resource_handler<tilemap_resource_handler>(e_resource_type::TILEMAP);
+    create_resource_handler<mashable_resource_handler<environment>>(e_resource_type::ENVIRONMENT);
+    create_resource_handler<mashable_resource_handler<light_behavior>>(e_resource_type::LIGHTBEHAVIOR);
+    create_resource_handler<mashable_resource_handler<graphics_options>>(e_resource_type::GRAPHICSOPTIONS);
+    create_resource_handler<mashable_resource_handler<effect_container>>(e_resource_type::EFFECTCONTAINER);
+    create_resource_handler<mashable_resource_handler<sm_decal_material>>(e_resource_type::SMDECALMATERIAL);
+    create_resource_handler<mashable_resource_handler<phat_palette>>(e_resource_type::PHATPALETTE);
+    create_resource_handler<mashable_resource_handler<cowbell_file>>(e_resource_type::COWBELL);
+    create_resource_handler<mashable_resource_handler<meshmap>>(e_resource_type::MESHMAP);
+    create_resource_handler<mashable_resource_handler<cloud_tweak>>(e_resource_type::CLOUDTWEAK);
+    create_resource_handler<mashable_resource_handler<city_lods>>(e_resource_type::CITYLODS);
+    create_resource_handler<mashable_resource_handler<sm_road_param>>(e_resource_type::SMROADPARAM);
+    create_resource_handler<mashable_resource_handler<all_buildings>>(e_resource_type::ALLBUILDINGS);
+    create_resource_handler<mashable_resource_handler<igo_3d_widget_parameters>>(e_resource_type::UIP3DW);
+    create_resource_handler<mashable_resource_handler<igo_3d_text_parameters>>(e_resource_type::UIP3DT);
+    create_resource_handler<mashable_resource_handler<sm_decal_param>>(e_resource_type::SMDECALPARAM);
+    create_resource_handler<mashable_resource_handler<adjustment_layers_library>>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
+    create_resource_handler<mashable_resource_handler<outdoors>>(e_resource_type::OUTDOORS);
+    create_resource_handler<mashable_resource_handler<day_sky_color>>(e_resource_type::DAYSKYCOLOR);
+    create_resource_handler<mashable_resource_handler<night_sky_color>>(e_resource_type::NIGHTSKYCOLOR);
+    create_resource_handler<mashable_resource_handler<pre_light>>(e_resource_type::PRELIGHT);
+    create_resource_handler<mashable_resource_handler<sm_building_lod_param>>(e_resource_type::SMBUILDINGLODPARAM);
+    create_resource_handler<mashable_resource_handler<sm_road_lod_param>>(e_resource_type::SMROADLODPARAM);
+    create_resource_handler<mashable_resource_handler<sm_retrofit_param>>(e_resource_type::SMRETROFITPARAM);
     create_resource_handler<mashable_resource_handler<region_spawn_interface>>(e_resource_type::JSON_REGIONINFO);
     create_resource_handler<mashable_resource_handler<meter_data_file>>(e_resource_type::JSON_METERDATA);
     create_resource_handler<mashable_resource_handler<meter_behavior_file>>(e_resource_type::JSON_METERBEHAVIOR);
@@ -107,7 +108,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<mashable_resource_handler<summon_progression>>(e_resource_type::JSON_SUMMONPROGRESSION);
     create_resource_handler<mashable_resource_handler<environment_progression>>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
     create_resource_handler<mashable_resource_handler<render_lod_mgr>>(e_resource_type::JSON_RENDERLOD);
-    create_resource_handler<mashable_resource_handler<VisemeStream>>(e_resource_type::viseme_stream);
+    create_resource_handler<mashable_resource_handler<viseme_stream>>(e_resource_type::viseme_stream);
     create_resource_handler<mashable_resource_handler<static_colgeom_root>>(e_resource_type::static_colgeom);
     create_resource_handler<mashable_resource_handler<lego_map_root_node>>(e_resource_type::lego_map);
     create_resource_handler<mashable_resource_handler<ai_pf_region_graph>>(e_resource_type::scn_quad_path);
