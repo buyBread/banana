@@ -59,6 +59,9 @@ namespace treyarch { namespace mash {
         // sub_6E6CA0
         // sub_75CD60
         // sub_7627E0
+        // sub_7A5B70
+        // sub_7DA390
+        // sub_7DA4C0
         // sub_7DA670
         // sub_7DA7C0
         // sub_7DC3F0
@@ -151,9 +154,11 @@ namespace treyarch { namespace mash {
         // sub_762770
         // sub_7D35E0
         // sub_7D8DC0
+        // sub_7DC210
         // sub_7DC280
         // sub_7DC310
         // sub_7DDDC0
+        // sub_7FB8F0
         // sub_804EF0
         // sub_A1ABC0
         // sub_A1AC90
@@ -178,6 +183,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_75CCD0
+        // sub_7DA450
         // sub_7DA730
         void destroy_element(T* &element) {
             // borrowed objects get their generated teardown, but the image owns their bytes

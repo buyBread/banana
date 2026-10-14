@@ -24,6 +24,8 @@ namespace treyarch { namespace mash {
         // sub_4A45B0
         // sub_5CD470
         // sub_620B30
+        // sub_7C2B00
+        // sub_7C2B70
         void custom_unmash(mash_info_struct* mash_info,
                            void*,
                            buffer_type       buffer) {
