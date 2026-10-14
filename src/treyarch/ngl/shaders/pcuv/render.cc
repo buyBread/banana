@@ -1,3 +1,5 @@
+#include <bit>
+
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
@@ -140,11 +142,10 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     f32 emissive = 0.0f;
 
-    void* emissive_parameter = find_scene_parameter(value->node_data->parameters,
-                                                    fx::references::parameter_id_emissive.read());
+    u32 emissive_parameter_id = fx::references::parameter_id_emissive.read();
 
-    if (emissive_parameter)
-        emissive = *(const f32*)emissive_parameter;
+    if (has_scene_parameter(value->node_data->parameters, emissive_parameter_id))
+        emissive = std::bit_cast<f32>(value->node_data->parameters->values[emissive_parameter_id]);
 
     d3d9::set_pixel_program(program_exports::pcuv::pixel_program.read());
 
