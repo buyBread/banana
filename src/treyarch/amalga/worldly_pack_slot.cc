@@ -1,6 +1,7 @@
 #include "treyarch/amalga/descriptor/resource_handler.hh"
 #include "treyarch/amalga/district_graph/resource_handler.hh"
 #include "treyarch/amalga/empty_resource_handler.hh"
+#include "treyarch/amalga/ENVIRONMENT/resource_handler.hh"
 #include "treyarch/amalga/GenBlockMap/resource_handler.hh"
 #include "treyarch/amalga/language/resource_handler.hh"
 #include "treyarch/amalga/merged_apk/resource_handler.hh"
@@ -65,7 +66,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<singular_apk_resource_handler>(e_resource_type::convex_hull_mesh);
     create_resource_handler<vehicle_model_depot_resource_handler>(e_resource_type::vehicle_model_depot);
     create_resource_handler<tilemap_resource_handler>(e_resource_type::TILEMAP);
-    create_resource_handler<mashable_resource_handler<environment>>(e_resource_type::ENVIRONMENT);
+    create_resource_handler<environment_resource_handler>(e_resource_type::ENVIRONMENT);
     create_resource_handler<mashable_resource_handler<light_behavior>>(e_resource_type::LIGHTBEHAVIOR);
     create_resource_handler<mashable_resource_handler<graphics_options>>(e_resource_type::GRAPHICSOPTIONS);
     create_resource_handler<mashable_resource_handler<effect_container>>(e_resource_type::EFFECTCONTAINER);
