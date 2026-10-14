@@ -77,6 +77,7 @@ namespace treyarch { namespace mash {
             value = *(T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
         }
 
+        // sub_594160
         // sub_767680
         // sub_767700
         // sub_769550

@@ -52,6 +52,10 @@ namespace treyarch { namespace mash {
               T** end()       { return data ? data + size : nullptr; }
         T* const* end() const { return data ? data + size : nullptr; }
 
+        // sub_594090
+        // sub_596030
+        // sub_596160
+        // sub_59C210
         // sub_6E6CA0
         // sub_75CD60
         // sub_7627E0
@@ -102,6 +106,7 @@ namespace treyarch { namespace mash {
             custom_unmash(mash_info, containing_class_ptr, buffer);
         }
 
+        // sub_597A50
         // sub_764A50
         // sub_7DCA80
         // sub_937950
@@ -111,6 +116,7 @@ namespace treyarch { namespace mash {
             initialize(FROM_MASH);
         }
 
+        // sub_5A6350
         // sub_7DDD40
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
@@ -137,6 +143,10 @@ namespace treyarch { namespace mash {
             return (i32)sizeof(*this);
         }
 
+        // sub_4BA940
+        // sub_595FA0
+        // sub_59C180
+        // sub_5A0A40
         // sub_6CC4A0
         // sub_762770
         // sub_7D35E0
