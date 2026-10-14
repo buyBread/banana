@@ -1,10 +1,15 @@
 #pragma once
 
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch {
+    namespace mash {
+        class mash_info_struct;
+    } // mash
+
     struct resource_key {
         string_hash hash;
         u32         type;
@@ -14,6 +19,12 @@ namespace treyarch {
             hash = value;
             type = resource_type;
         }
+
+        void construct_mashed_class() {}
+        void destruct_mashed_class() {}
+
+        // sub_636AB0
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
     };
 
     ASSERT_SIZEOF  (resource_key,       0x08);
