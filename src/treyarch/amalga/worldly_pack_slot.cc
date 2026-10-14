@@ -8,6 +8,7 @@
 #include "treyarch/amalga/native_resource_handlers.hh"
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
+#include "treyarch/amalga/singular_apk_resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
 #include "treyarch/amalga/stall/resource_handler.hh"

@@ -1,4 +1,5 @@
 #include "treyarch/amalga/merged_apk/file.hh"
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
@@ -241,6 +242,11 @@ void amalga::merged_apk::file::invoke_remove_callbacks() {
         if (handler && handler->remove)
             handler->remove(this, &section, handler->user_data);
     }
+}
+
+// sub_9E45C0
+bool amalga::merged_apk::file::can_release() const { // temp: for clean commit
+    return last_frame_reference + 1 < (i32)ngl::references::frame_epoch.read();
 }
 
 // sub_A6B1B0
