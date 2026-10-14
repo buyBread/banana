@@ -13,6 +13,7 @@
 #include "treyarch/amalga/stall/resource_handler.hh"
 #include "treyarch/amalga/terrain_types/resource_handler.hh"
 #include "treyarch/amalga/textfile/resource_handler.hh"
+#include "treyarch/amalga/traffic_light_info/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
 
 using namespace treyarch;
@@ -44,7 +45,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<script_var_container_resource_handler>(e_resource_type::script_gv);
     create_resource_handler<script_var_container_resource_handler>(e_resource_type::script_sv);
     create_resource_handler<gb_map_resource_handler>(e_resource_type::GenBlockMap);
-    create_resource_handler<mashable_resource_handler<region_traffic_light_info>>(e_resource_type::traffic_light_info);
+    create_resource_handler<region_traffic_light_info_resource_handler>(e_resource_type::traffic_light_info);
     create_resource_handler<merged_singular_apk_resource_handler>(e_resource_type::texture);
     create_resource_handler<merged_singular_apk_resource_handler>(e_resource_type::fxbinary);
     create_resource_handler<merged_singular_apk_resource_handler>(e_resource_type::material);

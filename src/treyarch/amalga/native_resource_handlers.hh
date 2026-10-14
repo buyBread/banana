@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class region_traffic_light_info;
     class vehicle_model_depot;
     class Tilemap;
     class Environment;
@@ -74,7 +73,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<region_traffic_light_info>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<vehicle_model_depot>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<Tilemap>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<Environment>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
