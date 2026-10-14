@@ -12,6 +12,7 @@ namespace treyarch { namespace amalga {
     struct mashable_resource_handler : resource_handler_base {
         // sub_759C40
         // sub_759D50
+        // sub_759E00
         // sub_759EB0
         // sub_759F60
         // sub_764B60
@@ -38,6 +39,7 @@ namespace treyarch { namespace amalga {
 
         // sub_75F780
         // sub_75F7F0
+        // sub_75F860
         // sub_75F8D0
         // sub_75F940
         // sub_766F80

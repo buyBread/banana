@@ -7,6 +7,7 @@
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/fx/effect.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/math/types/vector3.hh"
 #include "treyarch/shared/math/types/vector4.hh"
@@ -15,19 +16,31 @@
 #include "util/types.hh"
 
 namespace treyarch {
+    namespace mash {
+        class mash_info_struct;
+    } // mash
+
     namespace ngl {
         struct texture;
     } // ngl
 
+#pragma pack(push, 2)
+    // one placed tree in the level's speedtree_collection
     struct speed_tree_color_source {
-        u8  reserved_000[0x08];
+        i16 position[3]; // quarter units
+        u16 unk_06;
         u32 color;
 
         // sub_5FD110
         u32 get_color() const {
             return color;
         }
+
+        void construct_mashed_class() {}
+        void destruct_mashed_class() {}
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
     };
+#pragma pack(pop)
 
     struct speed_tree_instance {
         vector3                  position;
@@ -237,7 +250,9 @@ namespace treyarch {
         inline util::memory_reference<u32>     speed_tree_fade_offset_guard { 0x01087FA0 };
     } // references
 
-    ASSERT_OFFSETOF(speed_tree_color_source, color, 0x08);
+    ASSERT_SIZEOF  (speed_tree_color_source,         0x0C);
+    ASSERT_OFFSETOF(speed_tree_color_source, unk_06, 0x06);
+    ASSERT_OFFSETOF(speed_tree_color_source, color,  0x08);
 
     ASSERT_OFFSETOF(speed_tree_instance, radius,             0x01C);
     ASSERT_OFFSETOF(speed_tree_instance, rotation,           0x020);
