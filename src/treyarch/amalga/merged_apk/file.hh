@@ -179,8 +179,7 @@ namespace treyarch { namespace amalga { namespace merged_apk {
         void apply_references(      data_reference* reference_data,
                               const u8*             string_base);
 
-        u32  count_file_type_entries() const;
-        bool can_release() const;
+        u32 count_file_type_entries() const;
         void invoke_section_load_callbacks();
         void invoke_file_type_load_callbacks(u32 start, u32 count);
         void invoke_file_type_load_callbacks();

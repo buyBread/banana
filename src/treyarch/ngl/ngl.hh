@@ -6,26 +6,34 @@
 #include "util/types.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
-namespace treyarch { namespace ngl {
-    enum e_buffer_type : u32 {
-        buffer_list_work,
-        buffer_scratch_index,
-        buffer_scratch_vertex,
-        buffer_platform_work
-    };
+namespace treyarch {
+    namespace amalga { namespace merged_apk {
+        struct file;
+    }} // amalga::merged_apk
 
-    ngl::scene* init(HWND window);
-    ngl::scene* present();
-    void list_send();
-    void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
+    namespace ngl {
+        enum e_buffer_type : u32 {
+            buffer_list_work,
+            buffer_scratch_index,
+            buffer_scratch_vertex,
+            buffer_platform_work
+        };
 
-    using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
+        ngl::scene* init(HWND window);
+        ngl::scene* present();
+        void list_send();
+        void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
 
-    namespace references {
-        inline util::memory_reference<u8>   initialized   { 0x011184F0 };
-        inline util::memory_reference<u32>  frame_epoch   { 0x011184F4 };
-        inline util::memory_reference<HWND> render_window { 0x0111AA90 };
+        bool can_release_file(const amalga::merged_apk::file* file);
 
-        inline util::memory_reference<ngl::resource_callback> resource_callback { 0x01118510 };
-    } // references
-}} // treyarch::ngl
+        using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
+
+        namespace references {
+            inline util::memory_reference<u8>   initialized   { 0x011184F0 };
+            inline util::memory_reference<u32>  frame_epoch   { 0x011184F4 };
+            inline util::memory_reference<HWND> render_window { 0x0111AA90 };
+
+            inline util::memory_reference<ngl::resource_callback> resource_callback { 0x01118510 };
+        } // references
+    } // ngl
+} // treyarch

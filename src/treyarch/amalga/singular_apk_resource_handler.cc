@@ -1,6 +1,7 @@
 #include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/amalga/merged_apk/loader.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
+#include "treyarch/ngl/ngl.hh"
 
 using namespace treyarch;
 
@@ -12,7 +13,7 @@ i32 amalga::singular_apk_resource_handler::handle_resource(e_behavior           
     if (behavior == unload) {
         merged_apk::file* owner = (merged_apk::file*)((u8*)descriptor->raw_payload + sizeof(merged_apk::file_header));
 
-        if (!owner->can_release())
+        if (!ngl::can_release_file(owner))
             return 1;
 
         owner->unload();

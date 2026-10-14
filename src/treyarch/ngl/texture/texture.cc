@@ -9,7 +9,7 @@
 using namespace treyarch;
 
 // sub_9E45C0
-bool ngl::can_release_texture(const texture* value) {
+bool ngl::can_release_texture(const texture* value) { // nglCanReleaseTexture
     return value->last_frame_reference + 1 < (i32)references::frame_epoch.read();
 }
 

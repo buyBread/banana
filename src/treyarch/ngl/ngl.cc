@@ -13,6 +13,11 @@
 
 using namespace treyarch;
 
+// sub_9E45C0
+bool ngl::can_release_file(const amalga::merged_apk::file* file) { // nglCanReleaseFile
+    return file->last_frame_reference + 1 < (i32)references::frame_epoch.read();
+}
+
 // sub_9E5CD0
 ngl::scene* ngl::init(HWND window) {
     banana::log.ngl("Nyarlathotep's Graphics Laboratory"
