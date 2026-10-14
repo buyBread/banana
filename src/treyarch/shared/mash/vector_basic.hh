@@ -44,6 +44,10 @@ namespace treyarch { namespace mash {
             custom_unmash(mash_info, containing_class_ptr, buffer);
         }
 
+        void construct_mashed_class() {
+            container_base::construct_mashed_class();
+        }
+
         void destruct_mashed_class() {
             clear();
             container_base::destruct_mashed_class();

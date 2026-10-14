@@ -53,6 +53,8 @@ namespace treyarch { namespace mash {
         T* const* end() const { return data ? data + size : nullptr; }
 
         // sub_6E6CA0
+        // sub_75CD60
+        // sub_7627E0
         // sub_7FB980
         // sub_A1D7F0
         // sub_A1FFF0
@@ -92,6 +94,7 @@ namespace treyarch { namespace mash {
             custom_unmash(mash_info, containing_class_ptr, buffer);
         }
 
+        // sub_764A50
         // sub_937950
         void construct_mashed_class() {
             container_base::construct_mashed_class();
@@ -113,6 +116,8 @@ namespace treyarch { namespace mash {
         }
 
         // sub_6CC4A0
+        // sub_762770
+        // sub_7D35E0
         // sub_804EF0
         // sub_A1ABC0
         // sub_A1AC90
@@ -121,22 +126,9 @@ namespace treyarch { namespace mash {
         void clear() {
             if (destroy_elements) {
                 while (size) {
-                    T* element = data[--size];
+                    destroy_element(data[size - 1]);
 
-                    // borrowed objects get their generated teardown, but the image owns their bytes
-                    if (is_pointer_in_mash_image(element))
-                        element->destruct_mashed_class();
-                    else if (element) {
-                        // a native virtual deleting destructor knows which heap its own object came from
-                        if constexpr (std::has_virtual_destructor_v<T>)
-                            delete element;
-                        else {
-                            element->~T();
-                            memory::heap::free(element);
-                        }
-                    }
-
-                    data[size] = nullptr;
+                    --size;
                 }
             }
 
@@ -147,6 +139,24 @@ namespace treyarch { namespace mash {
             capacity = 0;
 
             container_base::clear();
+        }
+
+        // sub_75CCD0
+        void destroy_element(T* &element) {
+            // borrowed objects get their generated teardown, but the image owns their bytes
+            if (is_pointer_in_mash_image(element))
+                element->destruct_mashed_class();
+            else if (element) {
+                // a native virtual deleting destructor knows which heap its own object came from
+                if constexpr (std::has_virtual_destructor_v<T>)
+                    delete element;
+                else {
+                    element->~T();
+                    memory::heap::free(element);
+                }
+            }
+
+            element = nullptr;
         }
     };
 
