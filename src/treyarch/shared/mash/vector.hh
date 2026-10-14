@@ -52,6 +52,7 @@ namespace treyarch { namespace mash {
               T** end()       { return data ? data + size : nullptr; }
         T* const* end() const { return data ? data + size : nullptr; }
 
+        // sub_7FB980
         // sub_A1D7F0
         // sub_A1FFF0
         // sub_A200C0
@@ -90,6 +91,7 @@ namespace treyarch { namespace mash {
             custom_unmash(mash_info, containing_class_ptr, buffer);
         }
 
+        // sub_937950
         void construct_mashed_class() {
             container_base::construct_mashed_class();
 
@@ -110,6 +112,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_6CC4A0
+        // sub_804EF0
         // sub_A1ABC0
         // sub_A1AC90
         // sub_A1BEA0
