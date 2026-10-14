@@ -56,7 +56,12 @@ namespace treyarch { namespace mash {
         // sub_75CD60
         // sub_7627E0
         // sub_7DA670
+        // sub_7DA7C0
+        // sub_7DC3F0
+        // sub_7DC490
+        // sub_7DDFE0
         // sub_7FB980
+        // sub_976230
         // sub_A1D7F0
         // sub_A1FFF0
         // sub_A200C0
@@ -96,9 +101,23 @@ namespace treyarch { namespace mash {
         }
 
         // sub_764A50
+        // sub_7DCA80
         // sub_937950
         void construct_mashed_class() {
             container_base::construct_mashed_class();
+
+            initialize(FROM_MASH);
+        }
+
+        // sub_7DDD40
+        void initialize(allocation_scope scope) {
+            if (scope == ALLOCATED) {
+                data             = nullptr;
+                capacity         = 0;
+                destroy_elements = true;
+
+                return;
+            }
 
             if (!data)
                 return;
@@ -120,6 +139,9 @@ namespace treyarch { namespace mash {
         // sub_762770
         // sub_7D35E0
         // sub_7D8DC0
+        // sub_7DC280
+        // sub_7DC310
+        // sub_7DDDC0
         // sub_804EF0
         // sub_A1ABC0
         // sub_A1AC90
@@ -144,6 +166,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_75CCD0
+        // sub_7DA730
         void destroy_element(T* &element) {
             // borrowed objects get their generated teardown, but the image owns their bytes
             if (is_pointer_in_mash_image(element))

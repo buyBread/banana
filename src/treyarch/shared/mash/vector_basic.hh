@@ -16,10 +16,13 @@ namespace treyarch { namespace mash {
         T*  data;
         u32 capacity;
 
+        // sub_971580
         ~vector_basic() {
             clear();
         }
 
+        // sub_4A45B0
+        // sub_5CD470
         // sub_620B30
         void custom_unmash(mash_info_struct* mash_info,
                            void*,
