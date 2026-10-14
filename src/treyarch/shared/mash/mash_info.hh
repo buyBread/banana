@@ -77,6 +77,7 @@ namespace treyarch { namespace mash {
             value = *(T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
         }
 
+        // sub_767680
         template <typename T>
         void unmash_class(T*          &class_ptr,
                           void*        containing_class_ptr = nullptr,
@@ -92,10 +93,7 @@ namespace treyarch { namespace mash {
                 advance_buffer(buffer,
                                class_ptr->get_mash_sizeof() - (i32)sizeof(T));
             } else {
-                class_ptr = (T*)read_from_buffer(
-                    buffer,
-                    (i32)sizeof(T),
-                    (i32)alignof(T));
+                class_ptr = (T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
             }
 
             class_ptr->unmash(this, containing_class_ptr, buffer);
