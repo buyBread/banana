@@ -13,6 +13,7 @@ namespace treyarch { namespace amalga {
         // sub_759C40
         // sub_759EB0
         // sub_759F60
+        // sub_76B750
         static T* construct(resource_descriptor* descriptor) {
             mash::mash_info_struct mash_info(mash::UNMASH_MODE,
                                              descriptor->raw_payload,
@@ -34,21 +35,24 @@ namespace treyarch { namespace amalga {
         // sub_75F780
         // sub_75F8D0
         // sub_75F940
+        // sub_76D4F0
         i32 handle_resource(e_behavior           behavior,
                             resource_descriptor* descriptor,
                             limited_timer*) override {
 
-            if (behavior == load) {
+            if (behavior == load)
                 construct(descriptor);
+            else
+                destruct(descriptor);
 
-                return 0;
-            }
+            return 0;
+        }
 
+        // sub_762560
+        static void destruct(resource_descriptor* descriptor) {
             ((mash::mash_info_struct::mash_header*)descriptor->raw_payload)->in_use = 0;
 
             ((T*)descriptor->calculate_adjusted_payload())->destruct_mashed_class();
-
-            return 0;
         }
     };
 }} // treyarch::amalga

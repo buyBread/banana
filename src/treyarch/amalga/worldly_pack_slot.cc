@@ -4,6 +4,7 @@
 #include "treyarch/amalga/merged_singular_apk_resource_handler.hh"
 #include "treyarch/amalga/native_resource_handlers.hh"
 #include "treyarch/amalga/script/resource_handler.hh"
+#include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/stall/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
 
@@ -25,7 +26,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
 
     create_resource_handler<empty_resource_handler>(e_resource_type::error);
     create_resource_handler<level_descriptors_resource_handler>(e_resource_type::descriptor);
-    create_resource_handler<mashable_resource_handler<sin_container>>(e_resource_type::sin);
+    create_resource_handler<sin_resource_handler>(e_resource_type::sin);
     create_resource_handler<mashable_resource_handler<text_resource>>(e_resource_type::textfile);
     create_resource_handler<mashable_resource_handler<terrain_types_set>>(e_resource_type::terrain_types);
     create_resource_handler<mashable_resource_handler<localized_string_table>>(e_resource_type::language);
