@@ -40,6 +40,8 @@ namespace treyarch { namespace dinkumware {
             clear();
             
             memory::heap::free(sentinel);
+
+            sentinel = nullptr;
         }
 
         // sub_6F04C0
