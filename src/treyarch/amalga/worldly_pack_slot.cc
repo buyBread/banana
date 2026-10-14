@@ -15,6 +15,7 @@
 #include "treyarch/amalga/terrain_types/resource_handler.hh"
 #include "treyarch/amalga/textfile/resource_handler.hh"
 #include "treyarch/amalga/traffic_light_info/resource_handler.hh"
+#include "treyarch/amalga/vehicle_model_depot/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
 
 using namespace treyarch;
@@ -61,7 +62,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<merged_apk_resource_handler>(e_resource_type::merged_apk);
     create_resource_handler<singular_apk_resource_handler>(e_resource_type::nal_skeleton_map);
     create_resource_handler<singular_apk_resource_handler>(e_resource_type::convex_hull_mesh);
-    create_resource_handler<mashable_resource_handler<vehicle_model_depot>>(e_resource_type::vehicle_model_depot);
+    create_resource_handler<vehicle_model_depot_resource_handler>(e_resource_type::vehicle_model_depot);
     create_resource_handler<mashable_resource_handler<Tilemap>>(e_resource_type::TILEMAP);
     create_resource_handler<mashable_resource_handler<Environment>>(e_resource_type::ENVIRONMENT);
     create_resource_handler<mashable_resource_handler<LightBehavior>>(e_resource_type::LIGHTBEHAVIOR);
