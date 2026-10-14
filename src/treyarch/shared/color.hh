@@ -3,6 +3,8 @@
 #include "treyarch/shared/math/types/vector4.hh"
 #include "util/types.hh"
 
+// todo: move to math/types/color.hh
+
 namespace treyarch {
     inline u32 pack_color(const vector4 &color) {
         u32 red   = (u32)(color.x * 255.0f);
