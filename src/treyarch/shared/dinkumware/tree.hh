@@ -190,6 +190,7 @@ namespace treyarch { namespace dinkumware {
             return { where, false };
         }
 
+        // sub_8030D0
         // sub_A1B180
         // sub_A20950
         node* erase(node* where) { // returns the node after the erased one
@@ -339,6 +340,7 @@ namespace treyarch { namespace dinkumware {
             return next_node;
         }
 
+        // sub_8042E0
         // sub_A20CA0
         node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing
             if (first == begin() && last == end()) {
@@ -377,6 +379,7 @@ namespace treyarch { namespace dinkumware {
             return result;
         }
 
+        // sub_803390
         // sub_937860
         void erase_subtree(node* root) {
             for (node* position = root; !position->is_nil; root = position) {
