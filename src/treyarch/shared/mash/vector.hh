@@ -61,6 +61,7 @@ namespace treyarch { namespace mash {
         // sub_7DC490
         // sub_7DDFE0
         // sub_7FB980
+        // sub_7FBA70
         // sub_976230
         // sub_A1D7F0
         // sub_A1FFF0
@@ -69,6 +70,7 @@ namespace treyarch { namespace mash {
         void custom_unmash(mash_info_struct* mash_info,
                            void*             containing_class_ptr,
                            buffer_type       buffer) {
+
             capacity = size;
 
             if (size) {
