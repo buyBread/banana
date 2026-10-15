@@ -44,6 +44,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unit-tests-${{ matrix.mode }}
-          path: build/.gens/banana_tests/**/tests/**
+          path: build/.gens/tests/**/tests/**
           include-hidden-files: true
           if-no-files-found: ignore

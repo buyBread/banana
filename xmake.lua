@@ -155,11 +155,16 @@ if has_config("tests") then
         add_packages("doctest")
 
         add_files("tests/**.cc")
+        add_files("src/treyarch/shared/mash/mash_info.cc")
+        add_files("src/treyarch/shared/mash/string.cc")
+        add_files("src/treyarch/shared/mash/virtual_base.cc")
+        add_files("src/treyarch/amalga/resource_directory.cc")
         
-        add_includedirs("src")
+        add_includedirs("src", "tests")
+        add_defines("_CRT_SECURE_NO_WARNINGS")
 
         -- each entry runs one category in its own process
-        for _, category in ipairs({ "hash" }) do
+        for _, category in ipairs({ "hash", "mash" }) do
             add_tests(category, {
                 runargs = {
                     "--test-suite=" .. category,
