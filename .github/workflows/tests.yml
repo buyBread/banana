@@ -47,7 +47,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path build/test-results | Out-Null
           $failed = $false
 
-          foreach ($category in @("hash", "mash")) {
+          foreach ($category in @("hash", "mash", "containers")) {
             Write-Host "::group::$category"
             $output = & $test_executable "--test-suite=$category" --no-colors --no-breaks --order-by=name 2>&1 |
               Tee-Object -FilePath "build/test-results/$category.log"

@@ -155,6 +155,7 @@ if has_config("tests") then
         add_packages("doctest")
 
         add_files("tests/**.cc")
+
         add_files("src/treyarch/shared/mash/mash_info.cc")
         add_files("src/treyarch/shared/mash/string.cc")
         add_files("src/treyarch/shared/mash/virtual_base.cc")
@@ -164,7 +165,7 @@ if has_config("tests") then
         add_defines("_CRT_SECURE_NO_WARNINGS")
 
         -- each entry runs one category in its own process
-        for _, category in ipairs({ "hash", "mash" }) do
+        for _, category in ipairs({ "hash", "mash", "dinkumware" }) do
             add_tests(category, {
                 runargs = {
                     "--test-suite=" .. category,
@@ -174,7 +175,8 @@ if has_config("tests") then
                 },
                 -- fail if a suite filter selects no cases
                 pass_outputs = ".*%[doctest%] test cases:%s+[1-9]%d* |.*",
-                run_timeout = 60
+                -- xmake measures this timeout in milliseconds.
+                run_timeout = 60000
             } )
         end
     target_end()
