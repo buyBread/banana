@@ -36,14 +36,37 @@ jobs:
       - name: configure standalone tests
         run: xmake f -p windows -a x86 -m ${{ matrix.mode }} --game=n --tests=y -y
 
+      - name: build tests
+        run: xmake build -v tests
+
       - name: run tests
-        run: xmake test -v
+        timeout-minutes: 2
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $test_executable = ".\build\windows\x86\${{ matrix.mode }}\tests.exe"
+          New-Item -ItemType Directory -Force -Path build/test-results | Out-Null
+          $failed = $false
+
+          foreach ($category in @("hash", "mash")) {
+            Write-Host "::group::$category"
+            $output = & $test_executable "--test-suite=$category" --no-colors --no-breaks --order-by=name 2>&1 |
+              Tee-Object -FilePath "build/test-results/$category.log"
+            $test_exit_code = $LASTEXITCODE
+            $output | Write-Output
+            Write-Host "::endgroup::"
+
+            if ($test_exit_code -ne 0 -or ($output -join "`n") -notmatch '\[doctest\] test cases:\s+[1-9]\d*\s+\|') {
+              Write-Host "::error::$category failed or selected no test cases; exit code $test_exit_code"
+              $failed = $true
+            }
+          }
+
+          if ($failed) { exit 1 }
 
       - name: upload test logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-tests-${{ matrix.mode }}
-          path: build/.gens/tests/**/tests/**
-          include-hidden-files: true
+          path: build/test-results/*.log
           if-no-files-found: ignore
