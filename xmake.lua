@@ -1,28 +1,40 @@
-name    = "banana"
-version = "0.0.1"
+set_xmakever("3.0.9")
 
--- PROJECT
+-- project
 
-set_project     (name)
-set_version     (version)
-set_defaultarchs("x86")
-set_languages   ("c17", "c++23")
-set_warnings    ("all", "extra")
+set_project("banana")
+set_version("0.0.1")
+
 set_plat        ("windows")
 set_toolchains  ("msvc")
+set_defaultarchs("x86")
+set_allowedarchs("x86")
+set_defaultmode ("release")
+set_allowedmodes("debug", "devel", "release")
+set_languages   ("c17", "c++23")
+set_warnings    ("all", "extra")
 
--- DEPENDENCIES
+-- options
 
-add_requires("minhook", { arch = "x86" } )
-add_requires("imgui", { config = {
-        win32 = true,
-        dx9   = true }
-    })
+option("game")
+    set_default    (true)
+    set_showmenu   (true)
+    set_description("build banana")
+option_end()
+
+option("tests")
+    set_default    (false)
+    set_showmenu   (true)
+    set_description("build unit tests")
+option_end()
 
 set_policy("generator.compile_commands", true)
 add_rules("plugin.compile_commands.autoupdate")
 
--- MODES
+add_defines("WIN32_LEAN_AND_MEAN",
+            "NOMINMAX")
+
+-- build modes
 
 if is_mode("debug") then
     add_cxflags("/wd4100")
@@ -51,67 +63,114 @@ if is_mode("release") then
     set_policy  ("build.optimization.lto", true)
 end
 
--- NGL SHADER COMPILER
+-- banana
 
-rule("ngl.shader.package")
-    before_build(function(target)
-        local compiler = target:dep("ngl_shader_compiler"):targetfile()
+if has_config("game") then
+    add_requires("minhook",
+                 { arch = "x86" })
 
-        local source   = path.join(os.projectdir(), "src", "treyarch", "ngl", "shaders")
-        local output   = path.join(os.projectdir(), ".cache", "shaders", "ngl.pack")
-        local resource = path.join(source, "resources.rc")
+    add_requires("imgui",
+                 { configs = { win32 = true,
+                               dx9   = true } })
 
-        os.vrunv(compiler, { source, output, resource })
-    end)
+    rule("ngl.shader.package")
+        before_build(function (target)
+            local compiler = target:dep("ngl_shader_compiler"):targetfile()
 
-target("ngl_shader_compiler")
-    set_default(false)
+            local source   = path.join(os.projectdir(), "src", "treyarch", "ngl", "shaders")
+            local output   = path.join(os.projectdir(), ".cache", "shaders", "ngl.pack")
+            local resource = path.join(source, "resources.rc")
 
-    set_kind  ("binary")
-    set_policy("build.fence", true)
+            os.vrunv(compiler, {source, output, resource})
+        end)
+    rule_end()
 
-    add_defines("WIN32_LEAN_AND_MEAN")
-    add_defines("NOMINMAX") -- famous war criminal, bill gates
+    target("ngl_shader_compiler")
+        set_default(false)
 
-    add_files      ("src/tools/ngl_shader_compiler/main.cc")
-    add_files      ("src/tools/ngl_shader_compiler/compiler.cc")
-    add_files      ("src/treyarch/ngl/shaders/description.cc")
-    add_includedirs("src")
-    add_links      ("d3dcompiler")
+        set_group ("tools")
+        set_kind  ("binary")
+        set_policy("build.fence", true)
 
--- TARGET
+        add_files("src/tools/ngl_shader_compiler/main.cc")
+        add_files("src/tools/ngl_shader_compiler/compiler.cc")
+        add_files("src/treyarch/ngl/shaders/description.cc")
 
-target(name)
-    set_default(true)
-
-    set_kind    ("shared")
-    set_basename("d3d9")
-
-    add_deps("ngl_shader_compiler")
-    add_rules("ngl.shader.package")
-
-    add_packages("minhook")
-    add_packages("imgui")
-
-    add_defines("WIN32_LEAN_AND_MEAN")
-    add_defines("_CRT_SECURE_NO_WARNINGS")
-    add_defines("NOMINMAX") -- famous war criminal, bill gates
-
-    on_load(function (target)
-        local git_hash = "unknown"
+        add_includedirs("src")
         
-        try { function ()
-            git_hash = os.iorun("git rev-parse --short HEAD"):trim()
-        end }
+        add_links("d3dcompiler")
+    target_end()
 
-        -- add_defines("GIT_COMMIT_HASH=\""..git_hash.."\"")
-        target:add("defines", "GIT_COMMIT_HASH=\""..git_hash.."\"")
-    end)
+    target("banana")
+        set_default(true)
 
-    add_defines("BANANA_VERSION=\""..version.."\"")
+        set_group   ("game")
+        set_kind    ("shared")
+        set_basename("d3d9")
 
-    add_files      ("src/**.cc")
-    remove_files   ("src/tools/**.cc")
-    add_files      ("src/treyarch/ngl/shaders/resources.rc")
-    add_includedirs("src")
-    add_syslinks    ("winmm")
+        add_deps    ("ngl_shader_compiler")
+        add_rules   ("ngl.shader.package")
+        add_packages("minhook", "imgui")
+
+        add_defines("_CRT_SECURE_NO_WARNINGS")
+
+        on_load(function (target)
+            local git_hash = os.getenv("BANANA_GIT_COMMIT") or os.getenv("GITHUB_SHA")
+
+            if not git_hash or #git_hash == 0 then
+                git_hash = "unknown"
+
+                try { function ()
+                    git_hash = os.iorun("git rev-parse --short HEAD"):trim()
+                end }
+            end
+
+            target:add("defines", "GIT_COMMIT_HASH=\"" .. git_hash:sub(1, 7) .. "\"")
+            target:add("defines", "BANANA_VERSION=\"" .. target:version() .. "\"")
+        end)
+
+        add_files   ("src/**.cc")
+        add_files   ("src/treyarch/ngl/shaders/resources.rc")
+        remove_files("src/tools/**.cc")
+
+        add_includedirs("src")
+
+        add_syslinks("winmm")
+    target_end()
+end
+
+-- unit tests
+
+if has_config("tests") then
+    add_requires("doctest 2.5.2",
+                 { configs = { cmake = false } })
+
+    target("tests")
+        set_default(false)
+
+        set_group  ("tests")
+        set_kind   ("binary")
+        set_rundir("$(projectdir)")
+
+        add_packages("doctest")
+
+        add_files("tests/**.cc")
+        
+        add_includedirs("src")
+
+        -- each entry runs one category in its own process
+        for _, category in ipairs({ "hash" }) do
+            add_tests(category, {
+                runargs = {
+                    "--test-suite=" .. category,
+                    "--no-colors",
+                    "--no-breaks",
+                    "--order-by=name"
+                },
+                -- fail if a suite filter selects no cases
+                pass_outputs = ".*%[doctest%] test cases:%s+[1-9]%d* |.*",
+                run_timeout = 60
+            } )
+        end
+    target_end()
+end
