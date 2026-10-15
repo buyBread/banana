@@ -116,6 +116,8 @@ mash::mash_virtual_base* mash::mash_virtual_base::create_subclass_in_place(virtu
 
     *(virtual_types_key*)memory_buffer = class_to_make;
 
+    fixup_vtable(memory_buffer);
+
     return construct_class_helper(memory_buffer);
 }
 
@@ -129,9 +131,8 @@ void mash::mash_virtual_base::fixup_vtable(void* what_class_to_fixup) {
         *(vtable_value_t*)what_class_to_fixup = value;
 }
 
+// sub_A6B710
 mash::mash_virtual_base* mash::mash_virtual_base::construct_class_helper(void* class_ptr) {
-    fixup_vtable(class_ptr);
-
     mash_virtual_base* mashed_class = (mash_virtual_base*)class_ptr;
     mashed_class->construct_mashed_class();
 

@@ -81,6 +81,7 @@ namespace treyarch { namespace mash {
         // sub_767680
         // sub_767700
         // sub_769550
+        // sub_7D34D0
         // sub_7DAB60
         template <typename T>
         void unmash_class(T*          &class_ptr,
@@ -96,9 +97,8 @@ namespace treyarch { namespace mash {
                 // sizeof(T) only covered the declared base; the fixed vtable gives us the real tail size
                 advance_buffer(buffer,
                                class_ptr->get_mash_sizeof() - (i32)sizeof(T));
-            } else {
+            } else
                 class_ptr = (T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
-            }
 
             class_ptr->unmash(this, containing_class_ptr, buffer);
         }
