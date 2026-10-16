@@ -3,10 +3,6 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<all_buildings>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_760040)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<igo_3d_widget_parameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7600B0)(this, behavior, descriptor, time_limit);
 }
