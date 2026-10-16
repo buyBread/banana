@@ -28,6 +28,7 @@
 #include "treyarch/amalga/textfile/resource_handler.hh"
 #include "treyarch/amalga/TILEMAP/resource_handler.hh"
 #include "treyarch/amalga/traffic_light_info/resource_handler.hh"
+#include "treyarch/amalga/UIP3DT/resource_handler.hh"
 #include "treyarch/amalga/UIP3DW/resource_handler.hh"
 #include "treyarch/amalga/vehicle_model_depot/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
@@ -91,7 +92,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<sm_road_param_resource_handler>(e_resource_type::SMROADPARAM);
     create_resource_handler<all_buildings_resource_handler>(e_resource_type::ALLBUILDINGS);
     create_resource_handler<igo_3d_widget_parameters_resource_handler>(e_resource_type::UIP3DW);
-    create_resource_handler<mashable_resource_handler<igo_3d_text_parameters>>(e_resource_type::UIP3DT);
+    create_resource_handler<igo_3d_text_parameters_resource_handler>(e_resource_type::UIP3DT);
     create_resource_handler<mashable_resource_handler<sm_decal_param>>(e_resource_type::SMDECALPARAM);
     create_resource_handler<mashable_resource_handler<adjustment_layers_library>>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
     create_resource_handler<mashable_resource_handler<outdoors>>(e_resource_type::OUTDOORS);

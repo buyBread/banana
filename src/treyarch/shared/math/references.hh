@@ -31,6 +31,9 @@ namespace treyarch { namespace math { namespace references {
     inline util::memory_reference<vector4> unk_00e7ce50 { 0x00E7CE50 };
     inline util::memory_reference<vector4> unk_00e7ce60 { 0x00E7CE60 };
 
+    // (0, 0, 0, 1)
+    inline util::memory_reference<vector4> unk_00e735d0 { 0x00E735D0 };
+
     // one translation unit's copy of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
 }}} // treyarch::math::references

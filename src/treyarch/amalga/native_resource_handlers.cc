@@ -3,10 +3,6 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<igo_3d_text_parameters>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_760120)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<sm_decal_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760190)(this, behavior, descriptor, time_limit);
 }
