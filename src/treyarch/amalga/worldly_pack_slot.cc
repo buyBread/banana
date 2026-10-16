@@ -1,3 +1,4 @@
+#include "treyarch/amalga/CLOUDTWEAK/resource_handler.hh"
 #include "treyarch/amalga/COWBELL/resource_handler.hh"
 #include "treyarch/amalga/descriptor/resource_handler.hh"
 #include "treyarch/amalga/district_graph/resource_handler.hh"
@@ -81,7 +82,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<phat_palette_resource_handler>(e_resource_type::PHATPALETTE);
     create_resource_handler<cowbell_file_resource_handler>(e_resource_type::COWBELL);
     create_resource_handler<meshmap_resource_handler>(e_resource_type::MESHMAP);
-    create_resource_handler<mashable_resource_handler<cloud_tweak>>(e_resource_type::CLOUDTWEAK);
+    create_resource_handler<cloud_tweak_resource_handler>(e_resource_type::CLOUDTWEAK);
     create_resource_handler<mashable_resource_handler<city_lods>>(e_resource_type::CITYLODS);
     create_resource_handler<mashable_resource_handler<sm_road_param>>(e_resource_type::SMROADPARAM);
     create_resource_handler<mashable_resource_handler<all_buildings>>(e_resource_type::ALLBUILDINGS);
