@@ -3,10 +3,6 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<sm_road_param>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_75FFD0)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<all_buildings>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760040)(this, behavior, descriptor, time_limit);
 }
