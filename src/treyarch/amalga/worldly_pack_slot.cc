@@ -3,6 +3,7 @@
 #include "treyarch/amalga/CITYLODS/resource_handler.hh"
 #include "treyarch/amalga/CLOUDTWEAK/resource_handler.hh"
 #include "treyarch/amalga/COWBELL/resource_handler.hh"
+#include "treyarch/amalga/DAYSKYCOLOR/resource_handler.hh"
 #include "treyarch/amalga/descriptor/resource_handler.hh"
 #include "treyarch/amalga/district_graph/resource_handler.hh"
 #include "treyarch/amalga/EFFECTCONTAINER/resource_handler.hh"
@@ -99,7 +100,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<sm_decal_param_resource_handler>(e_resource_type::SMDECALPARAM);
     create_resource_handler<adjustment_layers_library_resource_handler>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
     create_resource_handler<outdoors_resource_handler>(e_resource_type::OUTDOORS);
-    create_resource_handler<mashable_resource_handler<day_sky_color>>(e_resource_type::DAYSKYCOLOR);
+    create_resource_handler<day_sky_color_resource_handler>(e_resource_type::DAYSKYCOLOR);
     create_resource_handler<mashable_resource_handler<night_sky_color>>(e_resource_type::NIGHTSKYCOLOR);
     create_resource_handler<mashable_resource_handler<pre_light>>(e_resource_type::PRELIGHT);
     create_resource_handler<mashable_resource_handler<sm_building_lod_param>>(e_resource_type::SMBUILDINGLODPARAM);
