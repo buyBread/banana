@@ -20,6 +20,7 @@
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
 #include "treyarch/amalga/SMDECALMATERIAL/resource_handler.hh"
+#include "treyarch/amalga/SMDECALPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMROADPARAM/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
@@ -93,7 +94,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<all_buildings_resource_handler>(e_resource_type::ALLBUILDINGS);
     create_resource_handler<igo_3d_widget_parameters_resource_handler>(e_resource_type::UIP3DW);
     create_resource_handler<igo_3d_text_parameters_resource_handler>(e_resource_type::UIP3DT);
-    create_resource_handler<mashable_resource_handler<sm_decal_param>>(e_resource_type::SMDECALPARAM);
+    create_resource_handler<sm_decal_param_resource_handler>(e_resource_type::SMDECALPARAM);
     create_resource_handler<mashable_resource_handler<adjustment_layers_library>>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
     create_resource_handler<mashable_resource_handler<outdoors>>(e_resource_type::OUTDOORS);
     create_resource_handler<mashable_resource_handler<day_sky_color>>(e_resource_type::DAYSKYCOLOR);
