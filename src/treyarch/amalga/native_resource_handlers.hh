@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class igo_3d_widget_parameters;
     class igo_3d_text_parameters;
     class sm_decal_param;
     class adjustment_layers_library;
@@ -59,7 +58,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<igo_3d_widget_parameters>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<igo_3d_text_parameters>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sm_decal_param>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<adjustment_layers_library>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
