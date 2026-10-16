@@ -70,6 +70,7 @@ namespace treyarch { namespace mash {
         // sub_7DAA20
         // sub_7DC3F0
         // sub_7DC490
+        // sub_7DCB50
         // sub_7DCBF0
         // sub_7DDFE0
         // sub_7DE0B0
@@ -119,6 +120,7 @@ namespace treyarch { namespace mash {
         // sub_6F1D60
         // sub_764A50
         // sub_7DCA80
+        // sub_7DE950
         // sub_8073B0
         // sub_937950
         void construct_mashed_class() {
@@ -165,6 +167,7 @@ namespace treyarch { namespace mash {
         // sub_762770
         // sub_7D35E0
         // sub_7D8DC0
+        // sub_7DC180
         // sub_7DC210
         // sub_7DC280
         // sub_7DC310
