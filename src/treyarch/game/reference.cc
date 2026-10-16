@@ -40,6 +40,23 @@ template<> void reference<adjustment_layers_library>::initialize(mash::allocatio
     pointer = (adjustment_layers_library*)*retail::sub_7D38F0(&found, (i32)name.source_hash_code); // universal_resource::get<adjustment_layers_library>
 }
 
+// inlined @ sub_7DA0F0
+template<> void reference<day_sky_color>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (day_sky_color*)*retail::sub_7D3950(&found, (i32)name.source_hash_code); // universal_resource::get<day_sky_color>
+}
+
 // inlined @ sub_7DA2D0
 template<> void reference<environment>::initialize(mash::allocation_scope) {
     string_hash empty;
@@ -106,6 +123,23 @@ template<> void reference<ngl::mesh>::initialize(mash::allocation_scope) {
     i32 found;
 
     pointer = (ngl::mesh*)*retail::sub_7D3830(&found, (i32)name.source_hash_code); // universal_resource::get<mesh>
+}
+
+// inlined @ sub_7DA150
+template<> void reference<night_sky_color>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (night_sky_color*)*retail::sub_7D3980(&found, (i32)name.source_hash_code); // universal_resource::get<night_sky_color>
 }
 
 // inlined @ sub_7DA1B0

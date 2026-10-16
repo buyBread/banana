@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/game/gradient.hh"
 #include "treyarch/game/reference.hh"
 #include "treyarch/game/sm3_light.hh"
 #include "treyarch/shared/boolx.hh"
@@ -65,28 +66,6 @@ namespace treyarch {
         // inlined @ sub_7DD630
         void unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
             brightness_multiplier.unmash(mash_info, this, buffer);
-        }
-    };
-
-    struct gradient {
-        mash::vector_basic<color> data;
-
-        // inlined @ sub_7C4BE0
-        // inlined @ sub_7C4E20
-        void construct_mashed_class() {
-            data.construct_mashed_class();
-        }
-
-        // inlined @ sub_7C4C40
-        // inlined @ sub_7C4F10
-        void destruct_mashed_class() {
-            data.destruct_mashed_class();
-        }
-
-        // inlined @ sub_7DAF00
-        // inlined @ sub_7DB000
-        void unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-            data.unmash(mash_info, this, buffer);
         }
     };
 
@@ -170,8 +149,6 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (blur,           0x14);
     ASSERT_OFFSETOF(blur, duration, 0x10);
-
-    ASSERT_SIZEOF  (gradient, 0x10);
 
     ASSERT_SIZEOF  (fog,                0xA0);
     ASSERT_OFFSETOF(fog, color,         0x40);

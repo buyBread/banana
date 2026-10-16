@@ -16,9 +16,11 @@ namespace treyarch {
     } // ngl
 
     class adjustment_layers_library;
+    class day_sky_color;
     class environment;
     class light_behavior;
     class meshmap;
+    class night_sky_color;
     class outdoors;
 
     // a named resource, looked up when the owner is constructed from mash
@@ -33,6 +35,8 @@ namespace treyarch {
 
         // sub_7A08A0
         // sub_7DA090
+        // sub_7DA0F0
+        // sub_7DA150
         // sub_7DA1B0
         // sub_7DA210
         // sub_7DA270
@@ -89,10 +93,12 @@ namespace treyarch {
     };
 
     template<> void reference<adjustment_layers_library>::initialize(mash::allocation_scope scope);
+    template<> void reference<day_sky_color>::initialize(mash::allocation_scope scope);
     template<> void reference<environment>::initialize(mash::allocation_scope scope);
     template<> void reference<light_behavior>::initialize(mash::allocation_scope scope);
     template<> void reference<meshmap>::initialize(mash::allocation_scope scope);
     template<> void reference<ngl::mesh>::initialize(mash::allocation_scope scope);
+    template<> void reference<night_sky_color>::initialize(mash::allocation_scope scope);
     template<> void reference<outdoors>::initialize(mash::allocation_scope scope);
 
     ASSERT_SIZEOF  (reference<void>,          0x08);
