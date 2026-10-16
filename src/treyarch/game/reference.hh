@@ -11,6 +11,7 @@ namespace treyarch {
     } // mash
 
     namespace ngl {
+        struct mesh;
         struct texture;
     } // ngl
 
@@ -31,6 +32,7 @@ namespace treyarch {
         }
 
         // sub_7A08A0
+        // sub_7DA090
         // sub_7DA1B0
         // sub_7DA210
         // sub_7DA270
@@ -90,6 +92,7 @@ namespace treyarch {
     template<> void reference<environment>::initialize(mash::allocation_scope scope);
     template<> void reference<light_behavior>::initialize(mash::allocation_scope scope);
     template<> void reference<meshmap>::initialize(mash::allocation_scope scope);
+    template<> void reference<ngl::mesh>::initialize(mash::allocation_scope scope);
     template<> void reference<outdoors>::initialize(mash::allocation_scope scope);
 
     ASSERT_SIZEOF  (reference<void>,          0x08);

@@ -91,6 +91,23 @@ template<> void reference<meshmap>::initialize(mash::allocation_scope) {
     pointer = (meshmap*)*retail::sub_7D38C0(&found, (i32)name.source_hash_code); // universal_resource::get<meshmap>
 }
 
+// inlined @ sub_7DA090
+template<> void reference<ngl::mesh>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (ngl::mesh*)*retail::sub_7D3830(&found, (i32)name.source_hash_code); // universal_resource::get<mesh>
+}
+
 // inlined @ sub_7DA1B0
 template<> void reference<outdoors>::initialize(mash::allocation_scope) {
     string_hash empty;
