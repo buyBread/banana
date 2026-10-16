@@ -3,10 +3,6 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<adjustment_layers_library>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_760200)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<outdoors>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760270)(this, behavior, descriptor, time_limit);
 }
