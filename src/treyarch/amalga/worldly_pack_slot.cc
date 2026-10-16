@@ -13,6 +13,7 @@
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
+#include "treyarch/amalga/SMDECALMATERIAL/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
 #include "treyarch/amalga/stall/resource_handler.hh"
@@ -73,7 +74,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<light_behavior_resource_handler>(e_resource_type::LIGHTBEHAVIOR);
     create_resource_handler<graphics_options_resource_handler>(e_resource_type::GRAPHICSOPTIONS);
     create_resource_handler<effect_container_resource_handler>(e_resource_type::EFFECTCONTAINER);
-    create_resource_handler<mashable_resource_handler<sm_decal_material>>(e_resource_type::SMDECALMATERIAL);
+    create_resource_handler<sm_decal_material_resource_handler>(e_resource_type::SMDECALMATERIAL);
     create_resource_handler<mashable_resource_handler<phat_palette>>(e_resource_type::PHATPALETTE);
     create_resource_handler<mashable_resource_handler<cowbell_file>>(e_resource_type::COWBELL);
     create_resource_handler<mashable_resource_handler<meshmap>>(e_resource_type::MESHMAP);

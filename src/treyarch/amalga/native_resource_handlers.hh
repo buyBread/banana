@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class sm_decal_material;
     class phat_palette;
     class cowbell_file;
     class meshmap;
@@ -67,7 +66,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<sm_decal_material>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<phat_palette>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<cowbell_file>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<meshmap>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
