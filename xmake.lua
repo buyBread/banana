@@ -164,19 +164,12 @@ if has_config("tests") then
         add_includedirs("src", "tests")
         add_defines("_CRT_SECURE_NO_WARNINGS")
 
-        -- each entry runs one category in its own process
-        for _, category in ipairs({ "hash", "mash", "dinkumware" }) do
-            add_tests(category, {
-                runargs = {
-                    "--test-suite=" .. category,
-                    "--no-colors",
-                    "--no-breaks",
-                    "--order-by=name"
-                },
-                -- fail if a suite filter selects no cases
-                pass_outputs = ".*%[doctest%] test cases:%s+[1-9]%d* |.*",
-                run_timeout = 60000
-            } )
-        end
+        add_tests("all")
+        on_test(function (target)
+            return os.execv("python", {
+                path.join(os.projectdir(), "scripts", "run_tests.py"),
+                path.absolute(target:targetfile())
+            }, { try = true }) == 0
+        end)
     target_end()
 end

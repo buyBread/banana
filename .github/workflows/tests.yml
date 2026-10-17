@@ -21,13 +21,14 @@ jobs:
       fail-fast: false
       matrix:
         mode: [debug, devel, release]
-    defaults:
-      run:
-        shell: pwsh
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
@@ -41,27 +42,7 @@ jobs:
 
       - name: run tests
         timeout-minutes: 2
-        run: |
-          $PSNativeCommandUseErrorActionPreference = $false
-          $test_executable = ".\build\windows\x86\${{ matrix.mode }}\tests.exe"
-          New-Item -ItemType Directory -Force -Path build/test-results | Out-Null
-          $failed = $false
-
-          foreach ($category in @("hash", "mash", "dinkumware")) {
-            Write-Host "::group::$category"
-            $output = & $test_executable "--test-suite=$category" --no-colors --no-breaks --order-by=name 2>&1 |
-              Tee-Object -FilePath "build/test-results/$category.log"
-            $test_exit_code = $LASTEXITCODE
-            $output | Write-Output
-            Write-Host "::endgroup::"
-
-            if ($test_exit_code -ne 0 -or ($output -join "`n") -notmatch '\[doctest\] test cases:\s+[1-9]\d*\s+\|') {
-              Write-Host "::error::$category failed or selected no test cases; exit code $test_exit_code"
-              $failed = $true
-            }
-          }
-
-          if ($failed) { exit 1 }
+        run: python scripts/run_tests.py build/windows/x86/${{ matrix.mode }}/tests.exe
 
       - name: upload test logs
         if: always()
