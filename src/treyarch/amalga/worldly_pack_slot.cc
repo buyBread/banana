@@ -17,6 +17,7 @@
 #include "treyarch/amalga/merged_singular_apk_resource_handler.hh"
 #include "treyarch/amalga/MESHMAP/resource_handler.hh"
 #include "treyarch/amalga/native_resource_handlers.hh"
+#include "treyarch/amalga/NIGHTSKYCOLOR/resource_handler.hh"
 #include "treyarch/amalga/OUTDOORS/resource_handler.hh"
 #include "treyarch/amalga/PHATPALETTE/resource_handler.hh"
 #include "treyarch/amalga/script/resource_handler.hh"
@@ -101,7 +102,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<adjustment_layers_library_resource_handler>(e_resource_type::ADJUSTMENTLAYERSLIBRARY);
     create_resource_handler<outdoors_resource_handler>(e_resource_type::OUTDOORS);
     create_resource_handler<day_sky_color_resource_handler>(e_resource_type::DAYSKYCOLOR);
-    create_resource_handler<mashable_resource_handler<night_sky_color>>(e_resource_type::NIGHTSKYCOLOR);
+    create_resource_handler<night_sky_color_resource_handler>(e_resource_type::NIGHTSKYCOLOR);
     create_resource_handler<mashable_resource_handler<pre_light>>(e_resource_type::PRELIGHT);
     create_resource_handler<mashable_resource_handler<sm_building_lod_param>>(e_resource_type::SMBUILDINGLODPARAM);
     create_resource_handler<mashable_resource_handler<sm_road_lod_param>>(e_resource_type::SMROADLODPARAM);
