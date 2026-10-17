@@ -11,6 +11,7 @@
 #include "treyarch/amalga/ENVIRONMENT/resource_handler.hh"
 #include "treyarch/amalga/GenBlockMap/resource_handler.hh"
 #include "treyarch/amalga/GRAPHICSOPTIONS/resource_handler.hh"
+#include "treyarch/amalga/JSON_REGIONINFO/resource_handler.hh"
 #include "treyarch/amalga/language/resource_handler.hh"
 #include "treyarch/amalga/LIGHTBEHAVIOR/resource_handler.hh"
 #include "treyarch/amalga/merged_apk/resource_handler.hh"
@@ -111,7 +112,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<sm_building_lod_param_resource_handler>(e_resource_type::SMBUILDINGLODPARAM);
     create_resource_handler<sm_road_lod_param_resource_handler>(e_resource_type::SMROADLODPARAM);
     create_resource_handler<sm_retrofit_param_resource_handler>(e_resource_type::SMRETROFITPARAM);
-    create_resource_handler<mashable_resource_handler<region_spawn_interface>>(e_resource_type::JSON_REGIONINFO);
+    create_resource_handler<region_spawn_interface_resource_handler>(e_resource_type::JSON_REGIONINFO);
     create_resource_handler<mashable_resource_handler<meter_data_file>>(e_resource_type::JSON_METERDATA);
     create_resource_handler<mashable_resource_handler<meter_behavior_file>>(e_resource_type::JSON_METERBEHAVIOR);
     create_resource_handler<mashable_resource_handler<combo_move_type_file>>(e_resource_type::JSON_COMBOMOVEINFO);
