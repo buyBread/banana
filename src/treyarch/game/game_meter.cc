@@ -25,3 +25,20 @@ void meter_data_file::destruct_mashed_class() {
 void meter_data_file::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
     game_meters.unmash(mash_info, this, buffer);
 }
+
+// sub_933C70
+void meter_behavior_file::construct_mashed_class() {
+    self = nullptr;
+
+    meter_behaviors.construct_mashed_class();
+}
+
+// sub_934C80
+void meter_behavior_file::destruct_mashed_class() {
+    meter_behaviors.destruct_mashed_class();
+}
+
+// sub_938040
+void meter_behavior_file::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    meter_behaviors.unmash(mash_info, this, buffer);
+}
