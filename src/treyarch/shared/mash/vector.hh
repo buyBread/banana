@@ -56,6 +56,7 @@ namespace treyarch { namespace mash {
         // sub_596030
         // sub_596160
         // sub_59C210
+        // sub_5E79A0
         // sub_5E7C70
         // sub_5E7D60
         // sub_63DF50
@@ -78,9 +79,12 @@ namespace treyarch { namespace mash {
         // sub_7DE0B0
         // sub_7FB980
         // sub_7FBA70
+        // sub_7FBB30
+        // sub_7FE860
+        // sub_8013F0
         // sub_801ED0
-        // sub_932E50
         // sub_932D60
+        // sub_932E50
         // sub_976230
         // sub_A1D7F0
         // sub_A1FFF0
@@ -136,6 +140,7 @@ namespace treyarch { namespace mash {
 
         // sub_5A6350
         // sub_7DDD40
+        // sub_7FFC70
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
                 data             = nullptr;
@@ -179,8 +184,10 @@ namespace treyarch { namespace mash {
         // sub_7DC380
         // sub_7DD520
         // sub_7DDDC0
+        // sub_7F8980
         // sub_7FB8F0
         // sub_801110
+        // sub_8011A0
         // sub_804EF0
         // sub_928F90
         // sub_A1ABC0
