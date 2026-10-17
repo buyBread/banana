@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class conversation;
     class spawn_table_interface;
     class spawn_item_collection;
     class spawn_point_list_collection;
@@ -42,7 +41,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<conversation>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<spawn_table_interface>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<spawn_item_collection>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<spawn_point_list_collection>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
