@@ -270,9 +270,9 @@ TEST_SUITE("mash") {
         CHECK(root->unpublished_at_construction);
         CHECK(root->in_use_at_unmash == 1);
         CHECK(root->header->in_use == 1);
-        CHECK(root->header->unknown_0d == 0x1E);
-        CHECK(root->header->unknown_0e == 0x49);
-        CHECK(root->header->unknown_0f == 0x28);
+        CHECK(root->header->unk_0d == 0x1E);
+        CHECK(root->header->unk_0e == 0x49);
+        CHECK(root->header->unk_0f == 0x28);
         REQUIRE(trace.events.size() == 2);
         CHECK(trace.events[0].kind == event_unmash);
         CHECK(trace.events[1].kind == event_construct);

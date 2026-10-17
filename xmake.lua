@@ -175,7 +175,6 @@ if has_config("tests") then
                 },
                 -- fail if a suite filter selects no cases
                 pass_outputs = ".*%[doctest%] test cases:%s+[1-9]%d* |.*",
-                -- xmake measures this timeout in milliseconds.
                 run_timeout = 60000
             } )
         end

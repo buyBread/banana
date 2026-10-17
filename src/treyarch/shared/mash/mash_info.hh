@@ -13,18 +13,18 @@ namespace treyarch { namespace mash {
     public:
         struct mash_header {
             u32 master_marker;
-            u32 unknown_04;
+            u32 unk_04;
             u32 shared_offset;
             u8  in_use;
-            u8  unknown_0d;
-            u8  unknown_0e;
-            u8  unknown_0f;
+            u8  unk_0d;
+            u8  unk_0e;
+            u8  unk_0f;
         };
 
         io_mode      mode;
         mash_state   state;
         mash_header* header;
-        u32          unknown_0c; // retail's constructor doesn't touch this PC-only word
+        u32          unk_0c; // retail's constructor doesn't touch this PC-only word
         u8*          mash_image_ptr[MAX_BUFFER_TYPES];
         u32          buffer_size_used[MAX_BUFFER_TYPES];
         u32          buffer_size_max[MAX_BUFFER_TYPES];
@@ -126,7 +126,7 @@ namespace treyarch { namespace mash {
 
     ASSERT_SIZEOF  (mash_info_struct::mash_header,                0x10);
     ASSERT_OFFSETOF(mash_info_struct::mash_header, master_marker, 0x00);
-    ASSERT_OFFSETOF(mash_info_struct::mash_header, unknown_04,    0x04);
+    ASSERT_OFFSETOF(mash_info_struct::mash_header, unk_04,        0x04);
     ASSERT_OFFSETOF(mash_info_struct::mash_header, shared_offset, 0x08);
     ASSERT_OFFSETOF(mash_info_struct::mash_header, in_use,        0x0C);
 
@@ -134,7 +134,7 @@ namespace treyarch { namespace mash {
     ASSERT_OFFSETOF(mash_info_struct, mode,             0x00);
     ASSERT_OFFSETOF(mash_info_struct, state,            0x04);
     ASSERT_OFFSETOF(mash_info_struct, header,           0x08);
-    ASSERT_OFFSETOF(mash_info_struct, unknown_0c,       0x0C);
+    ASSERT_OFFSETOF(mash_info_struct, unk_0c,           0x0C);
     ASSERT_OFFSETOF(mash_info_struct, mash_image_ptr,   0x10);
     ASSERT_OFFSETOF(mash_info_struct, buffer_size_used, 0x18);
     ASSERT_OFFSETOF(mash_info_struct, buffer_size_max,  0x20);

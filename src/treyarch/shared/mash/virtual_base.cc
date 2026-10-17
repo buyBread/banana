@@ -18,14 +18,14 @@ namespace treyarch { namespace mash { namespace detail {
     };
 
     struct vtable_registry {
-        u32                    unknown_00;
-        u32                    unknown_04;
+        u32                    unk_00;
+        u32                    unk_04;
         vtable_registry_node*  head;
-        u32                    unknown_0c;
-        u32                    unknown_10;
+        u32                    unk_0c;
+        u32                    unk_10;
         vtable_registry_node** bucket_bounds;
-        u32                    unknown_18;
-        u32                    unknown_1c;
+        u32                    unk_18;
+        u32                    unk_1c;
         u32                    bucket_mask;
         u32                    bucket_count;
     };

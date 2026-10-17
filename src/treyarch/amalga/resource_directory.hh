@@ -50,11 +50,11 @@ namespace treyarch { namespace amalga {
         u32                            payload_size;
         u32                            secondary_size;
         u8*                            raw_payload;
-        u32                            unknown_18;
+        u32                            unk_18;
         u8*                            adjusted_payload;
         resource_descriptor_extension* extension;
-        u32                            unknown_24;
-        u32                            unknown_28;
+        u32                            unk_24;
+        u32                            unk_28;
 
         // sub_735FF0
         u8* get_adjusted_payload() const {
