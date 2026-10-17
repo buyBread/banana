@@ -137,6 +137,11 @@ namespace treyarch { namespace dinkumware {
         u32  size()  const noexcept { return count; }
         bool empty() const noexcept { return count == 0; }
 
+        // inlined @ sub_93D010
+        void clear() {
+            erase(begin(), end());
+        }
+
         // first node whose key is not less than `key`
         node* lower_bound(const K &key) const {
             node* result   = head_node;
@@ -379,6 +384,7 @@ namespace treyarch { namespace dinkumware {
             return result;
         }
 
+        // sub_79B580
         // sub_803390
         // sub_937860
         void erase_subtree(node* root) {
