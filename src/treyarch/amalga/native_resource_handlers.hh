@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class meter_data_file;
     class meter_behavior_file;
     class combo_move_type_file;
     class quest_descriptions;
@@ -47,7 +46,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<meter_data_file>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<meter_behavior_file>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<combo_move_type_file>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<quest_descriptions>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
