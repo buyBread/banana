@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class sm_building_lod_param;
     class sm_road_lod_param;
     class sm_retrofit_param;
     class region_spawn_interface;
@@ -51,7 +50,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<sm_building_lod_param>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sm_road_lod_param>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sm_retrofit_param>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<region_spawn_interface>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);

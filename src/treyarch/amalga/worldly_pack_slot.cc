@@ -24,6 +24,7 @@
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
+#include "treyarch/amalga/SMBUILDINGLODPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMDECALMATERIAL/resource_handler.hh"
 #include "treyarch/amalga/SMDECALPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMROADPARAM/resource_handler.hh"
@@ -105,7 +106,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<day_sky_color_resource_handler>(e_resource_type::DAYSKYCOLOR);
     create_resource_handler<night_sky_color_resource_handler>(e_resource_type::NIGHTSKYCOLOR);
     create_resource_handler<pre_light_resource_handler>(e_resource_type::PRELIGHT);
-    create_resource_handler<mashable_resource_handler<sm_building_lod_param>>(e_resource_type::SMBUILDINGLODPARAM);
+    create_resource_handler<sm_building_lod_param_resource_handler>(e_resource_type::SMBUILDINGLODPARAM);
     create_resource_handler<mashable_resource_handler<sm_road_lod_param>>(e_resource_type::SMROADLODPARAM);
     create_resource_handler<mashable_resource_handler<sm_retrofit_param>>(e_resource_type::SMRETROFITPARAM);
     create_resource_handler<mashable_resource_handler<region_spawn_interface>>(e_resource_type::JSON_REGIONINFO);
