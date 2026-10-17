@@ -84,6 +84,7 @@ namespace treyarch { namespace mash {
         // sub_7D34D0
         // sub_7DAB60
         // sub_7DC580
+        // sub_7F9AA0
         template <typename T>
         void unmash_class(T*          &class_ptr,
                           void*        containing_class_ptr = nullptr,
@@ -115,6 +116,7 @@ namespace treyarch { namespace mash {
             class_ref.unmash(this, containing_class_ptr, buffer);
         }
 
+        // sub_7EB910
         template <typename T>
         static void construct_class(T* &class_ptr) {
             if constexpr (std::is_polymorphic_v<T>)
