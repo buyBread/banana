@@ -23,6 +23,9 @@ namespace treyarch {
     class night_sky_color;
     class outdoors;
     class quest_descriptions;
+    class spawn_item_collection;
+    class spawn_point_list_collection;
+    class static_spawn_item_collection;
 
     // a named resource, looked up when the owner is constructed from mash
     template<typename T>
@@ -43,6 +46,9 @@ namespace treyarch {
         // sub_7DA270
         // sub_7DA2D0
         // sub_7F9B30
+        // sub_933270
+        // sub_9332D0
+        // sub_933330
         void construct_mashed_class() {
             initialize(mash::FROM_MASH);
         }
@@ -103,6 +109,9 @@ namespace treyarch {
     template<> void reference<night_sky_color>::initialize(mash::allocation_scope scope);
     template<> void reference<outdoors>::initialize(mash::allocation_scope scope);
     template<> void reference<quest_descriptions>::initialize(mash::allocation_scope scope);
+    template<> void reference<spawn_item_collection>::initialize(mash::allocation_scope scope);
+    template<> void reference<spawn_point_list_collection>::initialize(mash::allocation_scope scope);
+    template<> void reference<static_spawn_item_collection>::initialize(mash::allocation_scope scope);
 
     ASSERT_SIZEOF  (reference<void>,          0x08);
     ASSERT_OFFSETOF(reference<void>, pointer, 0x04);

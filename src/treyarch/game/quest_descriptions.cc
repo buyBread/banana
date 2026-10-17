@@ -3,6 +3,7 @@
 
 using namespace treyarch;
 
+// sub_7EB3B0
 // inlined @ sub_7EB910
 // inlined @ sub_7FE0B0
 void quest_condition::construct_mashed_class() {

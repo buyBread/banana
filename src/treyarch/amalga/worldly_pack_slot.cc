@@ -18,6 +18,7 @@
 #include "treyarch/amalga/JSON_QUESTDESC/resource_handler.hh"
 #include "treyarch/amalga/JSON_QUESTLIST/resource_handler.hh"
 #include "treyarch/amalga/JSON_REGIONINFO/resource_handler.hh"
+#include "treyarch/amalga/JSON_SPAWNTABLE/resource_handler.hh"
 #include "treyarch/amalga/language/resource_handler.hh"
 #include "treyarch/amalga/LIGHTBEHAVIOR/resource_handler.hh"
 #include "treyarch/amalga/merged_apk/resource_handler.hh"
@@ -125,7 +126,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<quest_descriptions_resource_handler>(e_resource_type::JSON_QUESTDESC);
     create_resource_handler<quest_list_resource_handler>(e_resource_type::JSON_QUESTLIST);
     create_resource_handler<conversation_resource_handler>(e_resource_type::JSON_CONVERSATION);
-    create_resource_handler<mashable_resource_handler<spawn_table_interface>>(e_resource_type::JSON_SPAWNTABLE);
+    create_resource_handler<spawn_table_interface_resource_handler>(e_resource_type::JSON_SPAWNTABLE);
     create_resource_handler<mashable_resource_handler<spawn_item_collection>>(e_resource_type::JSON_SPAWNPROGRESSION);
     create_resource_handler<mashable_resource_handler<spawn_point_list_collection>>(e_resource_type::JSON_SPAWNPOINTS);
     create_resource_handler<mashable_resource_handler<neighborhood_interface>>(e_resource_type::JSON_NEIGHBORHOODINFO);

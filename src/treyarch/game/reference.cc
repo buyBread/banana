@@ -175,3 +175,54 @@ template<> void reference<quest_descriptions>::initialize(mash::allocation_scope
 
     pointer = (quest_descriptions*)*retail::sub_7F2C80(&found, (i32)name.source_hash_code); // universal_resource::get<quest_descriptions>
 }
+
+// inlined @ sub_933270
+template<> void reference<spawn_item_collection>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (spawn_item_collection*)*retail::sub_9225B0(&found, (i32)name.source_hash_code); // universal_resource::get<spawn_item_collection>
+}
+
+// inlined @ sub_9332D0
+template<> void reference<spawn_point_list_collection>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (spawn_point_list_collection*)*retail::sub_9225E0(&found, (i32)name.source_hash_code); // universal_resource::get<spawn_point_list_collection>
+}
+
+// inlined @ sub_933330
+template<> void reference<static_spawn_item_collection>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (static_spawn_item_collection*)*retail::sub_922610(&found, (i32)name.source_hash_code); // universal_resource::get<static_spawn_item_collection>
+}
