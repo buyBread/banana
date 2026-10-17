@@ -32,11 +32,11 @@ namespace treyarch {
         }
     };
 
-    struct quest_description_unk_110 {
-        u32                        unk_00[3];
-        mash::string               unk_0c;
-        quest_description_unk_110* unk_18;
-        quest_description_unk_110* unk_1c;
+    struct quest_condition {
+        u32              unk_00[3];
+        mash::string     term;
+        quest_condition* unk_18;
+        quest_condition* unk_1c;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -82,7 +82,7 @@ namespace treyarch {
         mash::vector<mash::string> reminders;
         bool                       unk_10c;
         u8                         pad_10d[3];
-        quest_description_unk_110* unk_110;
+        quest_condition*           unk_110;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -112,9 +112,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(quest_element_class_title, count,  0x10);
     ASSERT_OFFSETOF(quest_element_class_title, text,   0x14);
 
-    ASSERT_SIZEOF  (quest_description_unk_110,         0x20);
-    ASSERT_OFFSETOF(quest_description_unk_110, unk_0c, 0x0C);
-    ASSERT_OFFSETOF(quest_description_unk_110, unk_18, 0x18);
+    ASSERT_SIZEOF  (quest_condition,         0x20);
+    ASSERT_OFFSETOF(quest_condition, term,   0x0C);
+    ASSERT_OFFSETOF(quest_condition, unk_18, 0x18);
 
     ASSERT_SIZEOF  (quest_description,                          0x114);
     ASSERT_OFFSETOF(quest_description, ask_about_conversation,  0x03C);

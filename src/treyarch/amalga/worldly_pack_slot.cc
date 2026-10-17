@@ -15,6 +15,7 @@
 #include "treyarch/amalga/JSON_METERBEHAVIOR/resource_handler.hh"
 #include "treyarch/amalga/JSON_METERDATA/resource_handler.hh"
 #include "treyarch/amalga/JSON_QUESTDESC/resource_handler.hh"
+#include "treyarch/amalga/JSON_QUESTLIST/resource_handler.hh"
 #include "treyarch/amalga/JSON_REGIONINFO/resource_handler.hh"
 #include "treyarch/amalga/language/resource_handler.hh"
 #include "treyarch/amalga/LIGHTBEHAVIOR/resource_handler.hh"
@@ -121,7 +122,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<meter_behavior_file_resource_handler>(e_resource_type::JSON_METERBEHAVIOR);
     create_resource_handler<combo_move_type_file_resource_handler>(e_resource_type::JSON_COMBOMOVEINFO);
     create_resource_handler<quest_descriptions_resource_handler>(e_resource_type::JSON_QUESTDESC);
-    create_resource_handler<mashable_resource_handler<quest_list>>(e_resource_type::JSON_QUESTLIST);
+    create_resource_handler<quest_list_resource_handler>(e_resource_type::JSON_QUESTLIST);
     create_resource_handler<mashable_resource_handler<conversation>>(e_resource_type::JSON_CONVERSATION);
     create_resource_handler<mashable_resource_handler<spawn_table_interface>>(e_resource_type::JSON_SPAWNTABLE);
     create_resource_handler<mashable_resource_handler<spawn_item_collection>>(e_resource_type::JSON_SPAWNPROGRESSION);

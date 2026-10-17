@@ -5,8 +5,8 @@ using namespace treyarch;
 
 // inlined @ sub_7EB910
 // inlined @ sub_7FE0B0
-void quest_description_unk_110::construct_mashed_class() {
-    unk_0c.construct_mashed_class();
+void quest_condition::construct_mashed_class() {
+    term.construct_mashed_class();
 
     if (unk_18)
         mash::mash_info_struct::construct_class(unk_18);
@@ -16,8 +16,8 @@ void quest_description_unk_110::construct_mashed_class() {
 }
 
 // sub_7EB3D0
-void quest_description_unk_110::destruct_mashed_class() {
-    unk_0c.destruct_mashed_class();
+void quest_condition::destruct_mashed_class() {
+    term.destruct_mashed_class();
 
     if (unk_18) {
         unk_18->destruct_mashed_class();
@@ -31,8 +31,8 @@ void quest_description_unk_110::destruct_mashed_class() {
 }
 
 // sub_7F93C0
-void quest_description_unk_110::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    unk_0c.unmash(mash_info, this, buffer);
+void quest_condition::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    term.unmash(mash_info, this, buffer);
 
     u8 class_mashed;
     mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);

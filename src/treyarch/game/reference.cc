@@ -158,3 +158,20 @@ template<> void reference<outdoors>::initialize(mash::allocation_scope) {
 
     pointer = (outdoors*)*retail::sub_7D3920(&found, (i32)name.source_hash_code); // universal_resource::get<outdoors>
 }
+
+// inlined @ sub_7F9B30
+template<> void reference<quest_descriptions>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (quest_descriptions*)*retail::sub_7F2C80(&found, (i32)name.source_hash_code); // universal_resource::get<quest_descriptions>
+}

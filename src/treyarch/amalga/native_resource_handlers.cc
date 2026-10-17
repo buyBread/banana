@@ -3,10 +3,6 @@
 
 using namespace treyarch;
 
-template<> i32 amalga::mashable_resource_handler<quest_list>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_7607B0)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<conversation>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_760820)(this, behavior, descriptor, time_limit);
 }
