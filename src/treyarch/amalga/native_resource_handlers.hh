@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class static_spawn_item_collection;
     class rpg_upgrades;
     class sound_map;
     class ui_character_info_list;
@@ -35,7 +34,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<static_spawn_item_collection>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<rpg_upgrades>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sound_map>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<ui_character_info_list>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
