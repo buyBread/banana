@@ -53,9 +53,9 @@ namespace treyarch {
 
     public:
         void* self; // the resource handler points this at the conversation itself
-        i32   unk_04;
 
-        mash::vector_basic<i32> speakers;
+        i32                     hero_speaker; // the other side of every exchange, 10 (Spiderman Red) in every file
+        mash::vector_basic<i32> speakers;     // indices into the ui character info list
 
         u8    unk_18;
         bool  unk_19; // set when the quest manager attaches the conversation
