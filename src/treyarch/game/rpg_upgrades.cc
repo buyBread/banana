@@ -4,7 +4,7 @@
 using namespace treyarch;
 
 // sub_927F70
-void rpg_upgrades_unk_04::destruct_mashed_class() {
+void rpg_upgrade::destruct_mashed_class() {
     name        .destruct_mashed_class();
     title       .destruct_mashed_class();
     description .destruct_mashed_class();
@@ -16,7 +16,7 @@ void rpg_upgrades_unk_04::destruct_mashed_class() {
 }
 
 // sub_934FE0
-void rpg_upgrades_unk_04::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+void rpg_upgrade::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
     name        .unmash(mash_info, this, buffer);
     title       .unmash(mash_info, this, buffer);
     description .unmash(mash_info, this, buffer);

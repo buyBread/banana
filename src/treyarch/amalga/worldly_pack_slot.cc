@@ -21,6 +21,7 @@
 #include "treyarch/amalga/JSON_QUESTDESC/resource_handler.hh"
 #include "treyarch/amalga/JSON_QUESTLIST/resource_handler.hh"
 #include "treyarch/amalga/JSON_REGIONINFO/resource_handler.hh"
+#include "treyarch/amalga/JSON_SOUNDMAP/resource_handler.hh"
 #include "treyarch/amalga/JSON_SPAWNITEMS/resource_handler.hh"
 #include "treyarch/amalga/JSON_SPAWNPOINTS/resource_handler.hh"
 #include "treyarch/amalga/JSON_SPAWNPROGRESSION/resource_handler.hh"
@@ -141,7 +142,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<progression_messages_resource_handler>(e_resource_type::JSON_PROGRESSMESSAGES);
     create_resource_handler<static_spawn_item_collection_resource_handler>(e_resource_type::JSON_SPAWNITEMS);
     create_resource_handler<rpg_upgrades_resource_handler>(e_resource_type::JSON_UPGRADES);
-    create_resource_handler<mashable_resource_handler<sound_map>>(e_resource_type::JSON_SOUNDMAP);
+    create_resource_handler<sound_map_resource_handler>(e_resource_type::JSON_SOUNDMAP);
     create_resource_handler<mashable_resource_handler<ui_character_info_list>>(e_resource_type::JSON_UICHARINFO);
     create_resource_handler<mashable_resource_handler<summon_progression>>(e_resource_type::JSON_SUMMONPROGRESSION);
     create_resource_handler<mashable_resource_handler<environment_progression>>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
