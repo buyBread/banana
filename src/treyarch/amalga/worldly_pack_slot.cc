@@ -13,6 +13,7 @@
 #include "treyarch/amalga/GRAPHICSOPTIONS/resource_handler.hh"
 #include "treyarch/amalga/JSON_COMBOMOVEINFO/resource_handler.hh"
 #include "treyarch/amalga/JSON_CONVERSATION/resource_handler.hh"
+#include "treyarch/amalga/JSON_DEF_VALUES/resource_handler.hh"
 #include "treyarch/amalga/JSON_METERBEHAVIOR/resource_handler.hh"
 #include "treyarch/amalga/JSON_METERDATA/resource_handler.hh"
 #include "treyarch/amalga/JSON_NEIGHBORHOODINFO/resource_handler.hh"
@@ -133,7 +134,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<spawn_item_collection_resource_handler>(e_resource_type::JSON_SPAWNPROGRESSION);
     create_resource_handler<spawn_point_list_collection_resource_handler>(e_resource_type::JSON_SPAWNPOINTS);
     create_resource_handler<neighborhood_interface_resource_handler>(e_resource_type::JSON_NEIGHBORHOODINFO);
-    create_resource_handler<mashable_resource_handler<default_values>>(e_resource_type::JSON_DEF_VALUES);
+    create_resource_handler<default_values_resource_handler>(e_resource_type::JSON_DEF_VALUES);
     create_resource_handler<mashable_resource_handler<progression_messages>>(e_resource_type::JSON_PROGRESSMESSAGES);
     create_resource_handler<mashable_resource_handler<static_spawn_item_collection>>(e_resource_type::JSON_SPAWNITEMS);
     create_resource_handler<mashable_resource_handler<rpg_upgrades>>(e_resource_type::JSON_UPGRADES);
