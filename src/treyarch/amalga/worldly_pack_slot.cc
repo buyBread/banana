@@ -14,6 +14,7 @@
 #include "treyarch/amalga/JSON_COMBOMOVEINFO/resource_handler.hh"
 #include "treyarch/amalga/JSON_CONVERSATION/resource_handler.hh"
 #include "treyarch/amalga/JSON_DEF_VALUES/resource_handler.hh"
+#include "treyarch/amalga/JSON_ENVIRONMENTPROGRESSION/resource_handler.hh"
 #include "treyarch/amalga/JSON_METERBEHAVIOR/resource_handler.hh"
 #include "treyarch/amalga/JSON_METERDATA/resource_handler.hh"
 #include "treyarch/amalga/JSON_NEIGHBORHOODINFO/resource_handler.hh"
@@ -147,7 +148,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<sound_map_resource_handler>(e_resource_type::JSON_SOUNDMAP);
     create_resource_handler<ui_character_info_list_resource_handler>(e_resource_type::JSON_UICHARINFO);
     create_resource_handler<summon_progression_resource_handler>(e_resource_type::JSON_SUMMONPROGRESSION);
-    create_resource_handler<mashable_resource_handler<environment_progression>>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
+    create_resource_handler<environment_progression_resource_handler>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
     create_resource_handler<mashable_resource_handler<render_lod_mgr>>(e_resource_type::JSON_RENDERLOD);
     create_resource_handler<mashable_resource_handler<viseme_stream>>(e_resource_type::viseme_stream);
     create_resource_handler<mashable_resource_handler<static_colgeom_root>>(e_resource_type::static_colgeom);
