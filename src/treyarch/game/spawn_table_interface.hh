@@ -12,6 +12,7 @@
 
 namespace treyarch {
     class static_spawn_item;
+    struct spawn_point_list;
 
     // the base of every flag collection; mashed ones get their retail vtable from the type registry
     class flag_collection_base : public mash::mash_virtual_base {
@@ -98,7 +99,7 @@ namespace treyarch {
         dinkumware::map
             <mash::string, static_spawn_item*>*       spawn_items_by_name;
         dinkumware::map
-            <mash::string, void*>*                    spawn_point_lists_by_name;
+            <mash::string, spawn_point_list*>*        spawn_point_lists_by_name;
         dinkumware::map
             <mash::string, flag_collection_base*>*    flag_collections_by_name;
 
