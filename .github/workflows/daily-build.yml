@@ -1,0 +1,148 @@
+name: daily build
+
+on:
+  schedule:
+    - cron: '44 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-build-master
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: check master for changes
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.master.outputs.changed }}
+      sha: ${{ steps.master.outputs.sha }}
+      short_sha: ${{ steps.master.outputs.short_sha }}
+      tag: ${{ steps.master.outputs.tag }}
+      name: ${{ steps.master.outputs.name }}
+      previous_tag: ${{ steps.master.outputs.previous_tag }}
+    steps:
+      - name: compare master with the last published daily build
+        id: master
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data: master } = await github.rest.repos.getCommit({
+              ...context.repo,
+              ref: 'heads/master'
+            });
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              ...context.repo,
+              per_page: 100
+            });
+            const previous_release = releases
+              .filter(release => !release.draft && release.tag_name.startsWith('daily-'))
+              .sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at))[0];
+
+            if (previous_release) {
+              const { data: previous_commit } = await github.rest.repos.getCommit({
+                ...context.repo,
+                ref: previous_release.tag_name
+              });
+              if (previous_commit.sha === master.sha) {
+                core.setOutput('changed', 'false');
+                core.info(`master is still at ${master.sha}; skipping the daily build`);
+                return;
+              }
+              core.setOutput('previous_tag', previous_release.tag_name);
+            }
+
+            const date = new Date().toISOString().slice(0, 10);
+            core.setOutput('changed', 'true');
+            core.setOutput('sha', master.sha);
+            core.setOutput('short_sha', master.sha.slice(0, 7));
+            core.setOutput('tag', `daily-${date}-${context.runNumber}`);
+            core.setOutput('name', `Daily build ${date} (${master.sha.slice(0, 7)})`);
+
+  build:
+    name: Windows x86 / ${{ matrix.mode }}
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: windows-2025
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [debug, devel, release]
+    env:
+      BANANA_GIT_COMMIT: ${{ needs.check.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.check.outputs.sha }}
+          persist-credentials: false
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: '3.0.9'
+
+      - name: configure banana
+        run: xmake f -p windows -a x86 -m ${{ matrix.mode }} --game=y --tests=n -y
+
+      - name: build banana
+        run: xmake build -v banana
+
+      - name: package banana
+        shell: pwsh
+        env:
+          BUILD_COMMIT: ${{ needs.check.outputs.short_sha }}
+          BUILD_MODE: ${{ matrix.mode }}
+        run: |
+          $output_dir = "build/windows/x86/$env:BUILD_MODE"
+          $files = @((Get-Item -LiteralPath "$output_dir/d3d9.dll" -ErrorAction Stop).FullName)
+          if (Test-Path -LiteralPath "$output_dir/d3d9.pdb") {
+            $files += (Get-Item -LiteralPath "$output_dir/d3d9.pdb").FullName
+          }
+          Compress-Archive -LiteralPath $files -DestinationPath "banana-$env:BUILD_COMMIT-$env:BUILD_MODE.zip"
+
+      - name: upload banana
+        uses: actions/upload-artifact@v7
+        with:
+          name: banana-${{ needs.check.outputs.short_sha }}-${{ matrix.mode }}
+          path: banana-${{ needs.check.outputs.short_sha }}-${{ matrix.mode }}.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  release:
+    name: publish daily release
+    needs: [check, build]
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: banana-${{ needs.check.outputs.short_sha }}-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: publish all three builds
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          target_commitish: ${{ needs.check.outputs.sha }}
+          name: ${{ needs.check.outputs.name }}
+          prerelease: false
+          make_latest: 'true'
+          generate_release_notes: true
+          previous_tag: ${{ needs.check.outputs.previous_tag }}
+          body: |
+            banana from latest commit @ master.
+            debug and devel ship with the pdb.
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/banana-${{ needs.check.outputs.short_sha }}-debug.zip
+            artifacts/banana-${{ needs.check.outputs.short_sha }}-devel.zip
+            artifacts/banana-${{ needs.check.outputs.short_sha }}-release.zip
