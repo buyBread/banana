@@ -118,6 +118,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_7EB910
+        // sub_9038E0
         template <typename T>
         static void construct_class(T* &class_ptr) {
             if constexpr (std::is_polymorphic_v<T>)
