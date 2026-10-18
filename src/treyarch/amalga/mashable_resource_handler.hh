@@ -59,6 +59,7 @@ namespace treyarch { namespace amalga {
         // sub_75BC40
         // sub_75BCF0
         // sub_75BDA0
+        // sub_75BE50
         // sub_764B60
         // sub_764C30
         // sub_769390
@@ -131,6 +132,7 @@ namespace treyarch { namespace amalga {
         // sub_760BA0
         // sub_760C10
         // sub_760C80
+        // sub_760CF0
         // sub_766F80
         // sub_766FB0
         // sub_76B620
