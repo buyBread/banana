@@ -24,22 +24,6 @@ namespace treyarch {
         template<> i32 mashable_resource_handler<sound_toc>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sound_index>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
 
-        struct anchor_collection_resource_handler : resource_handler_base {
-            i32 unk_14;
-            i32 unk_18;
-            i32 unk_1C;
-
-            // sub_72E340
-            void pre_handle_resources(e_behavior) override {
-                unk_14 = -1;
-                unk_18 = 0;
-            }
-
-            i32 handle_resource(e_behavior           behavior,
-                                resource_descriptor* descriptor,
-                                limited_timer*       time_limit) override;
-        };
-
         struct ise_library_handler : resource_handler_base {
             i32 handle_resource(e_behavior           behavior,
                                 resource_descriptor* descriptor,
@@ -57,10 +41,5 @@ namespace treyarch {
                                 resource_descriptor* descriptor,
                                 limited_timer*       time_limit) override;
         };
-
-        ASSERT_SIZEOF  (anchor_collection_resource_handler,         0x20);
-        ASSERT_OFFSETOF(anchor_collection_resource_handler, unk_14, 0x14);
-        ASSERT_OFFSETOF(anchor_collection_resource_handler, unk_18, 0x18);
-        ASSERT_OFFSETOF(anchor_collection_resource_handler, unk_1C, 0x1C);
     } // amalga
 } // treyarch

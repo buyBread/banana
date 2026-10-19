@@ -1,6 +1,7 @@
 #include "treyarch/amalga/ADJUSTMENTLAYERSLIBRARY/resource_handler.hh"
 #include "treyarch/amalga/ai_state_graph/resource_handler.hh"
 #include "treyarch/amalga/ALLBUILDINGS/resource_handler.hh"
+#include "treyarch/amalga/anchor_coll/resource_handler.hh"
 #include "treyarch/amalga/base_ai/resource_handler.hh"
 #include "treyarch/amalga/box_trigger_info/resource_handler.hh"
 #include "treyarch/amalga/CITYLODS/resource_handler.hh"

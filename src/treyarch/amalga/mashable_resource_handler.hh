@@ -10,6 +10,7 @@ namespace treyarch { namespace amalga {
     // the resource is unmashed in place, inside the pack's own allocation
     template<typename T>
     struct mashable_resource_handler : resource_handler_base {
+        // sub_759AB0
         // sub_759C40
         // sub_759D50
         // sub_759E00
@@ -177,6 +178,7 @@ namespace treyarch { namespace amalga {
             return 0;
         }
 
+        // sub_735D10
         // sub_749FF0
         // sub_759CF0
         // sub_762560

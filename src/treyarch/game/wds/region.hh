@@ -7,6 +7,8 @@
 #include "util/types.hh"
 
 namespace treyarch {
+    class anchor_collection;
+
     namespace ngl {
         struct texture;
     } // ngl
@@ -17,18 +19,20 @@ namespace treyarch {
     };
 
     struct region {
-        u32             unk_000; // scene entities join the region only while it's set
-        u8              reserved_004[0x70];
-        u32*            renderables_begin;
-        u32*            renderables_end;
-        u8              reserved_07c[0x08];
-        light_source**  lights_begin;
-        light_source**  lights_end;
-        u8              reserved_08c[0x50];
-        vector3         center;
-        u8              reserved_0e8[0x38];
-        region_horizon* horizon;
-        u8              reserved_124[0x14];
+        u32                unk_000; // scene entities join the region only while it's set
+        u8                 reserved_004[0x14];
+        anchor_collection* anchors; // set once all of them are created
+        u8                 reserved_01c[0x58];
+        u32*               renderables_begin;
+        u32*               renderables_end;
+        u8                 reserved_07c[0x08];
+        light_source**     lights_begin;
+        light_source**     lights_end;
+        u8                 reserved_08c[0x50];
+        vector3            center;
+        u8                 reserved_0e8[0x38];
+        region_horizon*    horizon;
+        u8                 reserved_124[0x14];
     };
 
     namespace references {
@@ -39,6 +43,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(region_horizon, texture, 0x08);
 
     ASSERT_SIZEOF  (region,                    0x138);
+    ASSERT_OFFSETOF(region, anchors,           0x018);
     ASSERT_OFFSETOF(region, renderables_begin, 0x074);
     ASSERT_OFFSETOF(region, renderables_end,   0x078);
     ASSERT_OFFSETOF(region, lights_begin,      0x084);
