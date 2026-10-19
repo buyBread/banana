@@ -23,7 +23,9 @@ namespace treyarch {
         u32                                 unk_014;
         u32                                 unk_018;
         interface_storage*                  my_ifc_storage;
-        u8                                  reserved_020[0x30];
+        u8                                  reserved_020[0x1A];
+        u8                                  unk_03a; // cleared as scene entities are loaded
+        u8                                  reserved_03b[0x15];
         container::fixed_vector<region*, 8> regions;
 
         // inlined; the milestone's has_<name>_ifc()
@@ -66,5 +68,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity, unk_014,        0x14);
     ASSERT_OFFSETOF(entity, unk_018,        0x18);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
+    ASSERT_OFFSETOF(entity, unk_03a,        0x3A);
     ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch

@@ -48,6 +48,7 @@
 #include "treyarch/amalga/PHATPALETTE/resource_handler.hh"
 #include "treyarch/amalga/PRELIGHT/resource_handler.hh"
 #include "treyarch/amalga/scn_audio_box/resource_handler.hh"
+#include "treyarch/amalga/scn_entity/resource_handler.hh"
 #include "treyarch/amalga/scn_env_box/resource_handler.hh"
 #include "treyarch/amalga/scn_quad_path/resource_handler.hh"
 #include "treyarch/amalga/script/resource_handler.hh"

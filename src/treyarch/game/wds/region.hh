@@ -17,7 +17,8 @@ namespace treyarch {
     };
 
     struct region {
-        u8              reserved_000[0x74];
+        u32             unk_000; // scene entities join the region only while it's set
+        u8              reserved_004[0x70];
         u32*            renderables_begin;
         u32*            renderables_end;
         u8              reserved_07c[0x08];
