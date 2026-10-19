@@ -7,10 +7,6 @@ template<> i32 amalga::mashable_resource_handler<als::animation_logic_system_sha
     return ((handle_resource_t)retail::sub_7611C0)(this, behavior, descriptor, time_limit);
 }
 
-template<> i32 amalga::mashable_resource_handler<sound_toc>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_761460)(this, behavior, descriptor, time_limit);
-}
-
 template<> i32 amalga::mashable_resource_handler<sound_index>::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_7614D0)(this, behavior, descriptor, time_limit);
 }
