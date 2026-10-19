@@ -60,6 +60,7 @@
 #include "treyarch/amalga/UIP3DT/resource_handler.hh"
 #include "treyarch/amalga/UIP3DW/resource_handler.hh"
 #include "treyarch/amalga/vehicle_model_depot/resource_handler.hh"
+#include "treyarch/amalga/viseme_stream/resource_handler.hh"
 #include "treyarch/amalga/worldly_pack_slot.hh"
 
 using namespace treyarch;
@@ -151,7 +152,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<summon_progression_resource_handler>(e_resource_type::JSON_SUMMONPROGRESSION);
     create_resource_handler<environment_progression_resource_handler>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
     create_resource_handler<render_lod_mgr_resource_handler>(e_resource_type::JSON_RENDERLOD);
-    create_resource_handler<mashable_resource_handler<viseme_stream>>(e_resource_type::viseme_stream);
+    create_resource_handler<viseme_stream_resource_handler>(e_resource_type::viseme_stream);
     create_resource_handler<mashable_resource_handler<static_colgeom_root>>(e_resource_type::static_colgeom);
     create_resource_handler<mashable_resource_handler<lego_map_root_node>>(e_resource_type::lego_map);
     create_resource_handler<mashable_resource_handler<ai_pf_region_graph>>(e_resource_type::scn_quad_path);
