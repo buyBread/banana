@@ -53,6 +53,7 @@
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
 #include "treyarch/amalga/stall/resource_handler.hh"
+#include "treyarch/amalga/static_colgeom/resource_handler.hh"
 #include "treyarch/amalga/terrain_types/resource_handler.hh"
 #include "treyarch/amalga/textfile/resource_handler.hh"
 #include "treyarch/amalga/TILEMAP/resource_handler.hh"
@@ -153,7 +154,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<environment_progression_resource_handler>(e_resource_type::JSON_ENVIRONMENTPROGRESSION);
     create_resource_handler<render_lod_mgr_resource_handler>(e_resource_type::JSON_RENDERLOD);
     create_resource_handler<viseme_stream_resource_handler>(e_resource_type::viseme_stream);
-    create_resource_handler<mashable_resource_handler<static_colgeom_root>>(e_resource_type::static_colgeom);
+    create_resource_handler<static_colgeom_resource_handler>(e_resource_type::static_colgeom);
     create_resource_handler<mashable_resource_handler<lego_map_root_node>>(e_resource_type::lego_map);
     create_resource_handler<mashable_resource_handler<ai_pf_region_graph>>(e_resource_type::scn_quad_path);
     create_resource_handler<mashable_resource_handler<path_graph>>(e_resource_type::path);
