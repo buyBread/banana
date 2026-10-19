@@ -7,7 +7,7 @@
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/cutscene/toa_cutscene.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
@@ -413,7 +413,7 @@ void mission_manager::process_state_unk_5() {
         return;
     }
 
-    retail::sub_808FA0((i32*)references::cutscene_player.read(), 0);
+    retail::sub_808FA0((i32*)references::cut_scene_player.read(), 0); // cut_scene_player::stop
 
     unk_240 = string_hash();
 
@@ -476,7 +476,7 @@ void mission_manager::process_state_unk_6() {
 // sub_985000
 void mission_manager::process_state_start_unloading() {
     retail::sub_6179B0();
-    retail::sub_808FA0((i32*)references::cutscene_player.read(), 0);
+    retail::sub_808FA0((i32*)references::cut_scene_player.read(), 0); // cut_scene_player::stop
 
     if (current_mission.exec) {
         while (current_mission.exec->suspend_count > 0)

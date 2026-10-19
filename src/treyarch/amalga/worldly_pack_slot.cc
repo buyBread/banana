@@ -8,6 +8,7 @@
 #include "treyarch/amalga/CLOUDTWEAK/resource_handler.hh"
 #include "treyarch/amalga/cosmetic_environ/resource_handler.hh"
 #include "treyarch/amalga/COWBELL/resource_handler.hh"
+#include "treyarch/amalga/cut_scene/resource_handler.hh"
 #include "treyarch/amalga/DAYSKYCOLOR/resource_handler.hh"
 #include "treyarch/amalga/descriptor/resource_handler.hh"
 #include "treyarch/amalga/district_graph/resource_handler.hh"
@@ -187,7 +188,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<anchor_collection_resource_handler>(e_resource_type::anchor_coll);
     create_resource_handler<fx_cache_resource_handler>(e_resource_type::fx_cache);
     create_resource_handler<empty_resource_handler>(e_resource_type::entity);
-    create_resource_handler<mashable_resource_handler<cut_scene>>(e_resource_type::cut_scene);
+    create_resource_handler<cut_scene_resource_handler>(e_resource_type::cut_scene);
     create_resource_handler<empty_resource_handler>(e_resource_type::collision_mesh);
     create_resource_handler<empty_resource_handler>(e_resource_type::packfile);
     create_resource_handler<empty_resource_handler>(e_resource_type::speedtree_spt);

@@ -1,7 +1,7 @@
 #include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/app/app.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/nfl/nfl.hh"
@@ -19,7 +19,7 @@ using namespace treyarch;
 void app::tick() {
     references::master_clock_is_up.write(1);
 
-    f32 maximum_frame_time = references::cutscene_player.read()->is_playing() ? 0.5f : 0.05f;
+    f32 maximum_frame_time = references::cut_scene_player.read()->is_playing() ? 0.5f : 0.05f;
 
     hires_clock_t total_timer;
     retail::sub_773AD0();

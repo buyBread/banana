@@ -1,6 +1,6 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/cutscene/toa_cutscene.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_loading_screen.hh"
@@ -138,7 +138,7 @@ void game_data::frame_advance() {
 
         bool open_scrapbook = true;
 
-        if (references::cutscene_player.read() && references::cutscene_player.read()->is_playing())
+        if (references::cut_scene_player.read() && references::cut_scene_player.read()->is_playing())
             open_scrapbook = false;
 
         if (toa_cutscene::get() && toa_cutscene::get()->is_running())
@@ -180,7 +180,7 @@ void game_data::frame_advance() {
 
     bool interface_free = !references::game.read()->disable_interface &&
                           !retail::sub_967DF0() &&
-                          !references::cutscene_player.read()->is_playing();
+                          !references::cut_scene_player.read()->is_playing();
 
     bool loading_screen_visible = references::frontend.get().igo->loading_screen->is_visible();
 
@@ -191,7 +191,7 @@ void game_data::frame_advance() {
         return;
 
     if (m->unk_0bf &&
-        (references::cutscene_player.read()->is_playing() || retail::sub_6884D0((u32*)references::frontend.get().igo)))
+        (references::cut_scene_player.read()->is_playing() || retail::sub_6884D0((u32*)references::frontend.get().igo)))
 
         return;
 

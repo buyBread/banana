@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "retail.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
@@ -19,7 +19,7 @@ using namespace treyarch;
 
 // inlined into sub_9772D0
 bool wds_render_manager::is_special_case_level() {
-    cutscene_player* player = treyarch::references::cutscene_player.read();
+    cut_scene_player* player = treyarch::references::cut_scene_player.read();
 
     const char* level_name = (const char*)retail::sub_97E390((u32*)mission_manager::inst());
 
@@ -41,7 +41,7 @@ void wds_render_manager::publish_scene_parameter(ngl::scene* value) {
 
 // inlined into sub_9772D0
 f32 wds_render_manager::calculate_scene_near_plane(world_dynamics_system* world) {
-    cutscene_player* player = treyarch::references::cutscene_player.read();
+    cut_scene_player* player = treyarch::references::cut_scene_player.read();
     f32 result = 0.25f;
 
     if (!player->is_playing()) {

@@ -58,7 +58,7 @@ app::app() {
     amalga::resource_manager::create_inst();
     retail::sub_428B60(); // glass_house_manager::create_inst
     retail::sub_730F10((u32*)references::glass_house_manager.read(), 1); // set_glass_house_level
-    retail::sub_428BC0(); // cutscene_player::create_inst
+    retail::sub_428BC0(); // cut_scene_player::create_inst
     retail::sub_5FCC10();
 
     if (references::region_spawns_enabled.read())

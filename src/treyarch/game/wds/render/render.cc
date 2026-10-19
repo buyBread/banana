@@ -1,5 +1,5 @@
 #include "retail.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/geometry/geometry_manager.hh"
 #include "treyarch/game/speedtree/manager.hh"
@@ -20,7 +20,7 @@ void wds_render_manager::render() {
 
     retail::sub_96A350();
 
-    cutscene_player* player = treyarch::references::cutscene_player.read();
+    cut_scene_player* player = treyarch::references::cut_scene_player.read();
     bool cutscene_is_playing = player->is_playing();
     u8* active_cutscene = cutscene_is_playing ? *(u8**)player : nullptr;
 

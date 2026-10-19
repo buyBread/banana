@@ -4,7 +4,7 @@
 #include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
-#include "treyarch/game/cutscene/cutscene_player.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_loading_screen.hh"
 #include "treyarch/game/game.hh"
@@ -204,7 +204,7 @@ void game::advance_state_running(f32 time_inc) {
         return;
     }
 
-    retail::sub_8095F0((i32)references::cutscene_player.read(), time_inc); // cut_scene_player::frame_advance
+    retail::sub_8095F0((i32)references::cut_scene_player.read(), time_inc); // cut_scene_player::frame_advance
     frame_advance_soap(data);
 
     mission_manager* missions = mission_manager::inst();
