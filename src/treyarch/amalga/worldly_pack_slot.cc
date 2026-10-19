@@ -15,6 +15,7 @@
 #include "treyarch/amalga/empty_resource_handler.hh"
 #include "treyarch/amalga/ENVIRONMENT/resource_handler.hh"
 #include "treyarch/amalga/GenBlockMap/resource_handler.hh"
+#include "treyarch/amalga/fx_cache/resource_handler.hh"
 #include "treyarch/amalga/GRAPHICSOPTIONS/resource_handler.hh"
 #include "treyarch/amalga/JSON_COMBOMOVEINFO/resource_handler.hh"
 #include "treyarch/amalga/JSON_CONVERSATION/resource_handler.hh"
@@ -184,7 +185,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<box_trigger_resource_handler>(e_resource_type::box_trigger_info);
     create_resource_handler<scene_entity_container_resource_handler>(e_resource_type::scn_entity);
     create_resource_handler<anchor_collection_resource_handler>(e_resource_type::anchor_coll);
-    create_resource_handler<mashable_resource_handler<fx_cache>>(e_resource_type::fx_cache);
+    create_resource_handler<fx_cache_resource_handler>(e_resource_type::fx_cache);
     create_resource_handler<empty_resource_handler>(e_resource_type::entity);
     create_resource_handler<mashable_resource_handler<cut_scene>>(e_resource_type::cut_scene);
     create_resource_handler<empty_resource_handler>(e_resource_type::collision_mesh);
