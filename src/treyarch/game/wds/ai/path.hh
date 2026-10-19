@@ -1,19 +1,21 @@
 #pragma once
 
 #include "treyarch/game/wds/ai/astar.hh"
+#include "treyarch/game/wds/ai/nugget.hh"
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/math/types/vector3.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
-    class nugget; // impl (mash)
-
     class path;
     class path_graph;
 
@@ -27,6 +29,18 @@ namespace treyarch {
         mash::vector_basic<i16> edge_indices;
         astar_node_handle       my_node_handle;
         i32                     neighbor_it;
+
+        // sub_971900
+        ~path_graph_node() {
+            clear();
+        }
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+        void clear();
     };
 
     ASSERT_SIZEOF  (path_graph_node,                 0x30);
@@ -47,6 +61,28 @@ namespace treyarch {
         i16 node_indices[2];
         i16 destination_node;
         u8  reserved_012[0x02];
+
+        ~path_graph_edge() {
+            clear();
+        }
+
+        void construct_mashed_class() {}
+
+        void destruct_mashed_class() {
+            clear();
+        }
+
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
+
+        // inlined @ sub_9741C0
+        void clear() {
+            distance         = 0.0f;
+            node_indices[1]  = -1;
+            node_indices[0]  = -1;
+            flags            = 0;
+            weight_modifier  = 1.0f;
+            destination_node = -1;
+        }
     };
 
     ASSERT_SIZEOF  (path_graph_edge,                   0x14);
@@ -59,17 +95,27 @@ namespace treyarch {
     class path_graph {
 
     public:
-        void*                 vtable;
+        void*                 self; // the resource handler points this at the graph itself
         resource_key          id;
         mash::vector
             <path_graph_node> nodes;
         mash::vector
             <path_graph_edge> edges;
         path*                 search_path;
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+
+    private:
+        void initialize(mash::allocation_scope scope);
+        void finalize(mash::allocation_scope scope);
     };
 
     ASSERT_SIZEOF  (path_graph,              0x38);
-    ASSERT_OFFSETOF(path_graph, vtable,      0x00);
+    ASSERT_OFFSETOF(path_graph, self,        0x00);
     ASSERT_OFFSETOF(path_graph, id,          0x04);
     ASSERT_OFFSETOF(path_graph, nodes,       0x0C);
     ASSERT_OFFSETOF(path_graph, edges,       0x20);
@@ -96,6 +142,10 @@ namespace treyarch {
         virtual f32                get_travel_cost          (astar_searchable_t from_location, astar_searchable_t to_location);
         virtual f32                get_cost_estimate_to_goal(astar_searchable_t current_location, astar_searchable_t search_goal);
     };
+
+    namespace references {
+        inline util::memory_reference<vector3> zerovec { 0x010FC610 }; // SM3's ZEROVEC
+    } // references
 
     ASSERT_SIZEOF(path, 0xA8);
 } // treyarch

@@ -7,8 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class ai_pf_region_graph;
-    class path_graph;
     class environment_box_set;
     class cosmetic_environments_set;
     class sm3_light;
@@ -25,8 +23,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<ai_pf_region_graph>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
-        template<> i32 mashable_resource_handler<path_graph>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<environment_box_set>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<cosmetic_environments_set>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sm3_light>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);

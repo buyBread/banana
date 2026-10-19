@@ -40,8 +40,10 @@
 #include "treyarch/amalga/native_resource_handlers.hh"
 #include "treyarch/amalga/NIGHTSKYCOLOR/resource_handler.hh"
 #include "treyarch/amalga/OUTDOORS/resource_handler.hh"
+#include "treyarch/amalga/path/resource_handler.hh"
 #include "treyarch/amalga/PHATPALETTE/resource_handler.hh"
 #include "treyarch/amalga/PRELIGHT/resource_handler.hh"
+#include "treyarch/amalga/scn_quad_path/resource_handler.hh"
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
@@ -157,8 +159,8 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<viseme_stream_resource_handler>(e_resource_type::viseme_stream);
     create_resource_handler<static_colgeom_resource_handler>(e_resource_type::static_colgeom);
     create_resource_handler<lego_map_resource_handler>(e_resource_type::lego_map);
-    create_resource_handler<mashable_resource_handler<ai_pf_region_graph>>(e_resource_type::scn_quad_path);
-    create_resource_handler<mashable_resource_handler<path_graph>>(e_resource_type::path);
+    create_resource_handler<ai_region_paths_resource_handler>(e_resource_type::scn_quad_path);
+    create_resource_handler<path_resource_handler>(e_resource_type::path);
     create_resource_handler<mashable_resource_handler<environment_box_set>>(e_resource_type::scn_env_box);
     create_resource_handler<mashable_resource_handler<cosmetic_environments_set>>(e_resource_type::cosmetic_environ);
     create_resource_handler<mashable_resource_handler<sm3_light>>(e_resource_type::sm3_light);
