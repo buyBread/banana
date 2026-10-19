@@ -27,11 +27,11 @@ namespace treyarch {
     public:
         void* self; // the resource handler points this at the root itself
 
-        u8*                       unk_04;    // an offset into data until unmashed
+        u8*                       unk_04;      // an offset into data until unmashed
         static_colgeom_tree_root* tree_root;
-        void*                     my_aabb;   // 0x38 bytes
-        u32                       unk_10;
-        u32                       unk_14;    // no data block without it
+        void*                     my_aabb;     // 0x38 bytes
+        u32                       type;        // 3 for an environment box set's root
+        u32                       num_objects; // no data block without any
         u8*                       data;
         u32                       data_size;
         string_hash               hull_meshes_file;
@@ -57,7 +57,7 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (static_colgeom_root,                   0x30);
     ASSERT_OFFSETOF(static_colgeom_root, tree_root,        0x08);
-    ASSERT_OFFSETOF(static_colgeom_root, unk_14,           0x14);
+    ASSERT_OFFSETOF(static_colgeom_root, num_objects,      0x14);
     ASSERT_OFFSETOF(static_colgeom_root, data,             0x18);
     ASSERT_OFFSETOF(static_colgeom_root, hull_meshes_file, 0x20);
     ASSERT_OFFSETOF(static_colgeom_root, hull_count,       0x28);

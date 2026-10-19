@@ -21,7 +21,7 @@ void static_colgeom_root::unmash(mash::mash_info_struct* mash_info, void*, mash:
 
 // sub_785250
 void static_colgeom_root::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    if (!unk_14) {
+    if (!num_objects) {
         tree_root = nullptr;
         my_aabb   = nullptr;
 
