@@ -14,6 +14,7 @@ namespace treyarch { namespace mash {
     public:
         T* array;
 
+        // sub_901E80
         void initialize_helper_mash(u32 n) {
             if (!array)
                 return;
@@ -45,6 +46,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_7D90D0
+        // sub_903820
         void custom_unmash_helper(i32              n,
                                   mash_info_struct* mash_info,
                                   void*,
@@ -61,6 +63,7 @@ namespace treyarch { namespace mash {
     class array_replacement : public array_replacement_base<T> {
 
     public:
+        // sub_4EF670
         ~array_replacement() {
             finalize(ALLOCATED);
         }
