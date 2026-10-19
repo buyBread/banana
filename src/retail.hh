@@ -15129,7 +15129,7 @@ namespace retail {
     inline auto const sub_7DF520 = (i32 (__thiscall*)(u32*self))0x007DF520;
     inline auto const sub_7DF550 = (i32 (__cdecl*)())0x007DF550;
     inline auto const sub_7DF5B0 = (__m128i* (__cdecl*)(__m128i*))0x007DF5B0;
-    inline auto const sub_7DF620 = (i32 (__stdcall*)(i32, i32, f32*))0x007DF620;
+    inline auto const sub_7DF620 = (i32 (__thiscall*)(void* self, void*, f32*, void*))0x007DF620; // manual
     inline auto const sub_7DF6E0 = (i32 (__stdcall*)(u32*))0x007DF6E0;
     inline auto const sub_7DF700 = (char (__cdecl*)(char*Source))0x007DF700;
     inline auto const sub_7DF730 = (i32 (__cdecl*)(const char*))0x007DF730;

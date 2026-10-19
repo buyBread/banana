@@ -24,12 +24,6 @@ namespace treyarch {
         template<> i32 mashable_resource_handler<sound_toc>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<sound_index>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
 
-        struct box_trigger_resource_handler : resource_handler_base {
-            i32 handle_resource(e_behavior           behavior,
-                                resource_descriptor* descriptor,
-                                limited_timer*       time_limit) override;
-        };
-
         struct scene_entity_container_resource_handler : resource_handler_base {
             i32 unk_14;
             i32 unk_18;

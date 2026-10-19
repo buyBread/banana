@@ -22,6 +22,9 @@ namespace treyarch { namespace math { namespace references {
     inline util::memory_reference<vector3> unk_00f4d1ec { 0x00F4D1EC };
     inline util::memory_reference<vector3> unk_00f4d1f8 { 0x00F4D1F8 };
 
+    // (0, 0, 0); read by box triggers and other entity setup
+    inline util::memory_reference<vector3> unk_0102ff40 { 0x0102FF40 };
+
     // (0, 0, 0, 1); sub_5FC080 copies it in as a matrix's w row
     inline util::memory_reference<vector4> w_row { 0x00E6ADC0 };
 

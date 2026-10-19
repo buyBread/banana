@@ -5,6 +5,7 @@
 #include "treyarch/amalga/resource_handler.hh"
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/amalga/resource_types.hh"
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/timing/limited_timer.hh"
 #include "util/macros/sanity_assert.hh"
@@ -44,6 +45,9 @@ namespace treyarch { namespace amalga {
 
     namespace references {
         inline util::memory_reference<amalga::resource_pack_slot_vtable> worldly_pack_slot_vtable { 0x00BCA37C };
+
+        // an empty string_hash
+        inline util::memory_reference<string_hash> unk_01030eac { 0x01030EAC };
     } // references
 
     ASSERT_SIZEOF  (worldly_entity_instances,               0x0C);

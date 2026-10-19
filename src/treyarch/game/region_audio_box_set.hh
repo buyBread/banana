@@ -10,7 +10,7 @@
 #include "util/types.hh"
 
 namespace treyarch {
-    class subdivision_node;
+    struct subdivision_node;
     struct region;
 
     // sound event names, one per act (mission_manager::current_act);

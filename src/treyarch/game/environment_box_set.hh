@@ -10,7 +10,7 @@
 
 namespace treyarch {
     class environment;
-    class subdivision_node;
+    struct subdivision_node;
     struct region;
 
     // the set's activate resolves the environment and links the box to its node
