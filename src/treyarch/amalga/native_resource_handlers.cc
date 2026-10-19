@@ -35,10 +35,6 @@ template<> i32 amalga::mashable_resource_handler<sound_index>::handle_resource(e
     return ((handle_resource_t)retail::sub_7614D0)(this, behavior, descriptor, time_limit);
 }
 
-i32 amalga::slim_list_handler::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
-    return ((handle_resource_t)retail::sub_76DA70)(this, behavior, descriptor, time_limit);
-}
-
 i32 amalga::box_trigger_resource_handler::handle_resource(e_behavior behavior, resource_descriptor* descriptor, limited_timer* time_limit) {
     return ((handle_resource_t)retail::sub_764F30)(this, behavior, descriptor, time_limit);
 }

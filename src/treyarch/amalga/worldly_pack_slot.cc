@@ -49,6 +49,7 @@
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
+#include "treyarch/amalga/slim_list/resource_handler.hh"
 #include "treyarch/amalga/sm3_light/resource_handler.hh"
 #include "treyarch/amalga/SMBUILDINGLODPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMDECALMATERIAL/resource_handler.hh"
