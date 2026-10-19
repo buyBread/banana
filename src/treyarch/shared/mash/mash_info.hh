@@ -88,6 +88,7 @@ namespace treyarch { namespace mash {
         // sub_7DAB60
         // sub_7DC580
         // sub_7F9AA0
+        // sub_902B20
         // sub_94D1F0
         template <typename T>
         void unmash_class(T*          &class_ptr,

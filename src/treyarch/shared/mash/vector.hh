@@ -94,6 +94,7 @@ namespace treyarch { namespace mash {
         // sub_807430
         // sub_808670
         // sub_902E70
+        // sub_902F50
         // sub_905730
         // sub_932D60
         // sub_932E50
@@ -159,6 +160,7 @@ namespace treyarch { namespace mash {
         // sub_7DDD40
         // sub_7FFC70
         // sub_8085F0
+        // sub_902E10
         // sub_979970
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
@@ -216,6 +218,7 @@ namespace treyarch { namespace mash {
         // sub_806E50
         // sub_807C00
         // sub_9029F0
+        // sub_902A80
         // sub_905490
         // sub_928F90
         // sub_974250
