@@ -46,6 +46,7 @@
 #include "treyarch/amalga/path/resource_handler.hh"
 #include "treyarch/amalga/PHATPALETTE/resource_handler.hh"
 #include "treyarch/amalga/PRELIGHT/resource_handler.hh"
+#include "treyarch/amalga/scn_audio_box/resource_handler.hh"
 #include "treyarch/amalga/scn_env_box/resource_handler.hh"
 #include "treyarch/amalga/scn_quad_path/resource_handler.hh"
 #include "treyarch/amalga/script/resource_handler.hh"
@@ -176,7 +177,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<mashable_resource_handler<als::animation_logic_system_shared>>(e_resource_type::als_file);
     create_resource_handler<ai_state_graph_resource_handler>(e_resource_type::ai_state_graph);
     create_resource_handler<base_ai_resource_handler>(e_resource_type::base_ai);
-    create_resource_handler<mashable_resource_handler<region_audio_box_set>>(e_resource_type::scn_audio_box);
+    create_resource_handler<audio_box_set_resource_handler>(e_resource_type::scn_audio_box);
     create_resource_handler<box_trigger_resource_handler>(e_resource_type::box_trigger_info);
     create_resource_handler<scene_entity_container_resource_handler>(e_resource_type::scn_entity);
     create_resource_handler<anchor_collection_resource_handler>(e_resource_type::anchor_coll);

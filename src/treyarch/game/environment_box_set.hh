@@ -33,8 +33,8 @@ namespace treyarch {
     public:
         void* self; // the resource handler points this at the set itself
 
-        region*             my_region;
-        static_colgeom_root root;
+        region*               my_region;
+        static_colgeom_root   obb_root;
         mash::vector
             <environment_box> environment_boxes;
 
@@ -52,6 +52,6 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (environment_box_set,                    0x4C);
     ASSERT_OFFSETOF(environment_box_set, my_region,         0x04);
-    ASSERT_OFFSETOF(environment_box_set, root,              0x08);
+    ASSERT_OFFSETOF(environment_box_set, obb_root,          0x08);
     ASSERT_OFFSETOF(environment_box_set, environment_boxes, 0x38);
 } // treyarch

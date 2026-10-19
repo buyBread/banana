@@ -8,6 +8,10 @@
 #include "util/types.hh"
 
 namespace treyarch {
+    namespace mash {
+        class mash_info_struct;
+    } // mash
+
     namespace hash { namespace references {
         inline util::memory_reference<char> string_buffer { 0x01126CE0 };
     }} // hash::references
@@ -33,6 +37,10 @@ namespace treyarch {
             else
                 source_hash_code = 0;
         }
+
+        void construct_mashed_class() {}
+        void destruct_mashed_class() {}
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
 
         // sub_A6C7C0; retail keeps no names, so every hash prints as hex into one shared buffer
         const char* to_string() const {
