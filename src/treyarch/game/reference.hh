@@ -26,6 +26,7 @@ namespace treyarch {
     class spawn_item_collection;
     class spawn_point_list_collection;
     class static_spawn_item_collection;
+    class tilemap;
 
     // a named resource, looked up when the owner is constructed from mash
     template<typename T>
@@ -38,6 +39,7 @@ namespace treyarch {
         }
 
         // sub_7A08A0
+        // sub_7A1700
         // sub_7DA090
         // sub_7DA0F0
         // sub_7DA150
@@ -112,6 +114,7 @@ namespace treyarch {
     template<> void reference<spawn_item_collection>::initialize(mash::allocation_scope scope);
     template<> void reference<spawn_point_list_collection>::initialize(mash::allocation_scope scope);
     template<> void reference<static_spawn_item_collection>::initialize(mash::allocation_scope scope);
+    template<> void reference<tilemap>::initialize(mash::allocation_scope scope);
 
     ASSERT_SIZEOF  (reference<void>,          0x08);
     ASSERT_OFFSETOF(reference<void>, pointer, 0x04);

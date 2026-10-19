@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    struct lego_map_root_node;
     class ai_pf_region_graph;
     class path_graph;
     class environment_box_set;
@@ -26,7 +25,6 @@ namespace treyarch {
     } // als
 
     namespace amalga {
-        template<> i32 mashable_resource_handler<lego_map_root_node>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<ai_pf_region_graph>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<path_graph>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<environment_box_set>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);

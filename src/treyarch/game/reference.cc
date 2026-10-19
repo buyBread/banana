@@ -226,3 +226,20 @@ template<> void reference<static_spawn_item_collection>::initialize(mash::alloca
 
     pointer = (static_spawn_item_collection*)*retail::sub_922610(&found, (i32)name.source_hash_code); // universal_resource::get<static_spawn_item_collection>
 }
+
+// inlined @ sub_7A1700
+template<> void reference<tilemap>::initialize(mash::allocation_scope) {
+    string_hash empty;
+
+    empty.initialize(mash::ALLOCATED);
+
+    if (name == empty) {
+        pointer = nullptr;
+
+        return;
+    }
+
+    i32 found;
+
+    pointer = (tilemap*)*retail::sub_794AF0(&found, (i32)name.source_hash_code); // universal_resource::get<tilemap>
+}
