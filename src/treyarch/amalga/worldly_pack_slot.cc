@@ -65,6 +65,7 @@
 #include "treyarch/amalga/SMRETROFITPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMROADLODPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMROADPARAM/resource_handler.hh"
+#include "treyarch/amalga/sound_index/resource_handler.hh"
 #include "treyarch/amalga/sound_toc/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll/resource_handler.hh"
 #include "treyarch/amalga/speedtree_coll_refs/resource_handler.hh"
@@ -196,7 +197,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<empty_resource_handler>(e_resource_type::speedtree_seed);
     create_resource_handler<empty_resource_handler>(e_resource_type::speedtree_wind);
     create_resource_handler<sound_toc_resource_handler>(e_resource_type::sound_toc);
-    create_resource_handler<mashable_resource_handler<sound_index>>(e_resource_type::sound_index);
+    create_resource_handler<sound_index_resource_handler>(e_resource_type::sound_index);
     create_resource_handler<ise_library_handler>(e_resource_type::ise_library);
     create_resource_handler<vertex_shader_handler>(e_resource_type::vertex_shader);
     create_resource_handler<pixel_shader_handler>(e_resource_type::pixel_shader);
