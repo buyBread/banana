@@ -2,7 +2,7 @@ name: daily build
 
 on:
   schedule:
-    - cron: '44 4 * * *'
+    - cron: '33 1 * * *'
   workflow_dispatch:
 
 permissions:
@@ -150,9 +150,9 @@ jobs:
             `debug` and `devel` ship with the pdb.
           fail_on_unmatched_files: true
           files: |
-            artifacts/banana-${{ needs.check.outputs.short_sha }}-debug.zip
-            artifacts/banana-${{ needs.check.outputs.short_sha }}-devel.zip
-            artifacts/banana-${{ needs.check.outputs.short_sha }}-release.zip
+            artifacts/banana-debug.zip
+            artifacts/banana-devel.zip
+            artifacts/banana-release.zip
 
       - name: update master tag
         uses: actions/github-script@v9
