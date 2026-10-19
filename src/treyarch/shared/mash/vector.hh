@@ -90,6 +90,9 @@ namespace treyarch { namespace mash {
         // sub_7FE860
         // sub_8013F0
         // sub_801ED0
+        // sub_807080
+        // sub_807430
+        // sub_808670
         // sub_902E70
         // sub_905730
         // sub_932D60
@@ -143,6 +146,7 @@ namespace treyarch { namespace mash {
         // sub_7DCA80
         // sub_7DE950
         // sub_8073B0
+        // sub_8073F0
         // sub_905450
         // sub_937950
         void construct_mashed_class() {
@@ -154,6 +158,7 @@ namespace treyarch { namespace mash {
         // sub_5A6350
         // sub_7DDD40
         // sub_7FFC70
+        // sub_8085F0
         // sub_979970
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
@@ -208,6 +213,8 @@ namespace treyarch { namespace mash {
         // sub_801110
         // sub_8011A0
         // sub_804EF0
+        // sub_806E50
+        // sub_807C00
         // sub_9029F0
         // sub_905490
         // sub_928F90
