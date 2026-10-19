@@ -27,6 +27,8 @@ namespace treyarch {
         bool                  owns_params; // the list was allocated on the heap rather than unmashed
         u8                    pad_01d[0x03];
 
+        ~param_block();
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,

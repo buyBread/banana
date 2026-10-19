@@ -4,6 +4,17 @@
 
 using namespace treyarch;
 
+// sub_401750
+param_block::~param_block() {
+    if (params && owns_params) {
+        params->~vector();
+
+        memory::heap::free(params);
+
+        params = nullptr;
+    }
+}
+
 // sub_443E30
 void param_block::construct_mashed_class() {
     // sub_58CA60

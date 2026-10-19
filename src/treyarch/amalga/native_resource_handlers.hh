@@ -7,7 +7,6 @@
 
 // handlers that still forward to retail; each one moves out as its type gets owned (yay!)
 namespace treyarch {
-    class state_graph;
     class core_ai_resource;
     class region_audio_box_set;
     class fx_cache;
@@ -20,8 +19,8 @@ namespace treyarch {
     } // als
 
     namespace amalga {
+        // todo: after NAL and ALS work
         template<> i32 mashable_resource_handler<als::animation_logic_system_shared>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
-        template<> i32 mashable_resource_handler<state_graph>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<core_ai_resource>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<region_audio_box_set>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
         template<> i32 mashable_resource_handler<fx_cache>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
