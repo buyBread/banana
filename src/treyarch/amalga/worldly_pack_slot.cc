@@ -49,6 +49,7 @@
 #include "treyarch/amalga/script/resource_handler.hh"
 #include "treyarch/amalga/sin/resource_handler.hh"
 #include "treyarch/amalga/singular_apk_resource_handler.hh"
+#include "treyarch/amalga/sm3_light/resource_handler.hh"
 #include "treyarch/amalga/SMBUILDINGLODPARAM/resource_handler.hh"
 #include "treyarch/amalga/SMDECALMATERIAL/resource_handler.hh"
 #include "treyarch/amalga/SMDECALPARAM/resource_handler.hh"
@@ -165,7 +166,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<path_resource_handler>(e_resource_type::path);
     create_resource_handler<environment_box_set_resource_handler>(e_resource_type::scn_env_box);
     create_resource_handler<cosmetic_environments_set_resource_handler>(e_resource_type::cosmetic_environ);
-    create_resource_handler<mashable_resource_handler<sm3_light>>(e_resource_type::sm3_light);
+    create_resource_handler<sm3_light_resource_handler>(e_resource_type::sm3_light);
     create_resource_handler<stall_resource_handler>(e_resource_type::stall);
     create_resource_handler<empty_resource_handler>(e_resource_type::slim);
     create_resource_handler<slim_list_handler>(e_resource_type::slim_list);
