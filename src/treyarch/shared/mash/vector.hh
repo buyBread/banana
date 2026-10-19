@@ -52,6 +52,10 @@ namespace treyarch { namespace mash {
               T** end()       { return data ? data + size : nullptr; }
         T* const* end() const { return data ? data + size : nullptr; }
 
+        // sub_43B260
+        // sub_43E330
+        // sub_4422C0
+        // sub_445FC0
         // sub_594090
         // sub_596030
         // sub_596160
@@ -86,6 +90,7 @@ namespace treyarch { namespace mash {
         // sub_932D60
         // sub_932E50
         // sub_976230
+        // sub_978890
         // sub_A1D7F0
         // sub_A1FFF0
         // sub_A200C0
@@ -125,6 +130,7 @@ namespace treyarch { namespace mash {
             custom_unmash(mash_info, containing_class_ptr, buffer);
         }
 
+        // sub_4421F0
         // sub_597A50
         // sub_6F1D60
         // sub_764A50
@@ -141,6 +147,7 @@ namespace treyarch { namespace mash {
         // sub_5A6350
         // sub_7DDD40
         // sub_7FFC70
+        // sub_979970
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
                 data             = nullptr;
@@ -166,6 +173,8 @@ namespace treyarch { namespace mash {
             return (i32)sizeof(*this);
         }
 
+        // sub_4398F0
+        // sub_4450D0
         // sub_4BA940
         // sub_595FA0
         // sub_59C180
@@ -190,6 +199,8 @@ namespace treyarch { namespace mash {
         // sub_8011A0
         // sub_804EF0
         // sub_928F90
+        // sub_974250
+        // sub_976150
         // sub_A1ABC0
         // sub_A1AC90
         // sub_A1BEA0
@@ -216,6 +227,7 @@ namespace treyarch { namespace mash {
         // sub_7DA450
         // sub_7DA730
         // sub_7DAAE0
+        // sub_9741C0
         void destroy_element(T* &element) {
             // borrowed objects get their generated teardown, but the image owns their bytes
             if (is_pointer_in_mash_image(element))
