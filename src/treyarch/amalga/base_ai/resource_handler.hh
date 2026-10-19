@@ -1,0 +1,8 @@
+#pragma once
+
+#include "treyarch/amalga/mashable_resource_handler.hh"
+#include "treyarch/game/wds/ai/core_ai_resource.hh"
+
+namespace treyarch { namespace amalga {
+    using base_ai_resource_handler = mashable_resource_handler<core_ai_resource>;
+}} // treyarch::amalga

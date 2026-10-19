@@ -1,6 +1,8 @@
 #pragma once
 
 #include "treyarch/game/wds/ai/param_block.hh"
+#include "treyarch/shared/mash/mash_info.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
@@ -14,10 +16,12 @@ namespace treyarch {
     class info_node;
 
     // .BAI; each ai_core unmashes its own copy of the info node image
-    class core_ai_resource {
+    class alignas(8) core_ai_resource {
 
     public:
-        u8                            reserved_000[0x08];
+        void* self; // the resource handler points this at the resource itself
+
+        u32                           unk_04;
         param_block                   my_params;
         mash::vector<info_node>*      my_info_nodes;
         u8*                           shared_info_node_buffer;
@@ -28,8 +32,18 @@ namespace treyarch {
         u32                           shared_size_of_my_info_nodes;
         bool                          low_priority_advance;
         u8                            pad_065[0x03];
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       buffer);
     };
 
+    ASSERT_SIZEOF  (core_ai_resource,                               0x68);
     ASSERT_OFFSETOF(core_ai_resource, my_params,                    0x08);
     ASSERT_OFFSETOF(core_ai_resource, my_info_nodes,                0x28);
     ASSERT_OFFSETOF(core_ai_resource, shared_info_node_buffer,      0x2C);
