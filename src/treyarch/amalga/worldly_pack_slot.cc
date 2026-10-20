@@ -18,6 +18,7 @@
 #include "treyarch/amalga/GenBlockMap/resource_handler.hh"
 #include "treyarch/amalga/fx_cache/resource_handler.hh"
 #include "treyarch/amalga/GRAPHICSOPTIONS/resource_handler.hh"
+#include "treyarch/amalga/ise_library/resource_handler.hh"
 #include "treyarch/amalga/JSON_COMBOMOVEINFO/resource_handler.hh"
 #include "treyarch/amalga/JSON_CONVERSATION/resource_handler.hh"
 #include "treyarch/amalga/JSON_DEF_VALUES/resource_handler.hh"

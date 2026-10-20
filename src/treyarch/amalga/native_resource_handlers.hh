@@ -15,12 +15,6 @@ namespace treyarch {
         // todo: after NAL and ALS work
         template<> i32 mashable_resource_handler<als::animation_logic_system_shared>::handle_resource(e_behavior, resource_descriptor*, limited_timer*);
 
-        struct ise_library_handler : resource_handler_base {
-            i32 handle_resource(e_behavior           behavior,
-                                resource_descriptor* descriptor,
-                                limited_timer*       time_limit) override;
-        };
-
         struct vertex_shader_handler : resource_handler_base {
             i32 handle_resource(e_behavior           behavior,
                                 resource_descriptor* descriptor,
