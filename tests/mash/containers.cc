@@ -9,11 +9,12 @@
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
 
-// mash has two vector types with different element layouts.
-// vector<record_t> stores record_t pointers; its image has the pointer slots first, followed by the record bodies.
-// unmashing replaces each saved slot with the address of its record and calls that record's unmash method.
-// vector_basic<pair_t> stores pair_t values next to each other, so it needs no pointer table or per-value unmash call.
-// both can use storage inside the image; their ownership checks keep clear from freeing those borrowed bytes.
+// mash has two kinds of vectors, and both can keep their contents inside the image instead of in memory of their own.
+// vector<record_t> holds pointers to records; in the image, a table of pointer slots comes first and the records follow it.
+// loading rewrites each slot to point at its record and runs that record's unmash method.
+// vector_basic<pair_t> holds the values themselves back to back, so there are no pointers to fix and no unmash calls.
+// either way, the element count isn't kept in the vector's own bytes, it's read from the shared stream.
+// a vector remembers how far its image bytes reach, so clearing it later never frees memory that belongs to the image.
 namespace tests { namespace mash_support {
     struct alignas(4) pair_t {
         u16 first;
@@ -22,16 +23,16 @@ namespace tests { namespace mash_support {
 }}
 
 TEST_SUITE("mash") {
-    TEST_CASE("container ownership includes both image boundaries") {
+    TEST_CASE("a container counts anything from itself to the end of its image bytes as borrowed, both ends included") {
         image_t<128> image;
-        auto* value = ::new (image.at<mash::container_base>(16)) mash::container_base;
+        auto*        value = image.make<mash::container_base>(16);
 
         CHECK(value->empty());
         CHECK_FALSE(value->from_mash());
         CHECK(value->is_pointer_in_mash_image(value));
 
-        // mash_image_offset is a distance from this container to the end of its borrowed range.
-        // the container is at byte 16, so a distance of 64 includes pointers from byte 16 through byte 80.
+        // mash_image_offset is the distance from the container to the end of its image bytes.
+        // the container sits at 16, so a distance of 64 covers everything from byte 16 up to byte 80.
         value->mash_image_offset = 64;
         value->size              = 3;
 
@@ -56,12 +57,14 @@ TEST_SUITE("mash") {
         CHECK_FALSE(value->from_mash());
     }
 
-    TEST_CASE("container counts come from aligned shared bytes") {
+    TEST_CASE("a container's count comes from the shared stream, aligned to four") {
         image_t<128> image;
         image.header(80);
         image.put(84, u32{7});
-        auto* value = ::new (image.at<mash::container_base>(16)) mash::container_base;
 
+        auto* value = image.make<mash::container_base>(16);
+
+        // the 99 here is junk, like a saved count would be.
         value->size              = 99;
         value->mash_image_offset = 41;
 
@@ -74,6 +77,7 @@ TEST_SUITE("mash") {
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 16);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 8);
 
+        // custom_unmash_base is what each container calls once it's read everything it owns; it measures up to the cursor.
         value->custom_unmash_base(&reader, mash::SHARED_BUFFER);
 
         CHECK(value->mash_image_offset == 72);
@@ -85,7 +89,7 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "pointer vectors initialize owned state and null iterators") {
+                      "a new pointer vector is empty, owns its elements and iterates over nothing") {
 
         mash::vector<record_t> values;
 
@@ -102,6 +106,7 @@ TEST_SUITE("mash") {
         CHECK(constant.end() == nullptr);
         CHECK(values.get_mash_sizeof() == 20);
 
+        // initialize(ALLOCATED) is the reset for a vector that isn't from an image.
         values.destroy_elements = false;
         values.capacity         = 8;
         values.initialize(mash::ALLOCATED);
@@ -113,7 +118,7 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "pointer vectors replace table entries and traverse objects in either stream") {
+                      "loading a pointer vector points every slot at its record, in either stream") {
 
         for (auto selected : {mash::NORMAL_BUFFER, mash::SHARED_BUFFER}) {
             CAPTURE(selected);
@@ -123,24 +128,25 @@ TEST_SUITE("mash") {
             image.put(128, u32{2});
 
             trace_t trace;
-            auto* values = ::new (image.at<mash::vector<record_t>>(16)) mash::vector<record_t>;
+            auto*   values = image.make<mash::vector<record_t>>(16);
 
             values->size = 99;
 
+            // the vector's body is bytes 16 to 35; when it's loaded from the normal stream, its two pointer slots follow at 36.
+            // the shared stream starts with the count at 128, so the slots go to 132 when that's the selected stream instead.
+            // the two records come right after the slots, and the slots hold junk until loading replaces them.
             const u32 table = selected == mash::NORMAL_BUFFER ? 36 : 132;
 
-            // the vector body occupies bytes 16 through 35; two four-byte pointer slots follow it at byte 36.
-            // two eight-byte records follow those slots, so their addresses replace the deliberately invalid slot values.
-            // the shared-stream variant uses the same layout after its four-byte count, starting at byte 132 instead.
-            image.put(table, u32{0xDEAD0001});
+            image.put(table,     u32{0xDEAD0001});
             image.put(table + 4, u32{0xDEAD0002});
-            record_t* first  = put_record(image, table + 8, 1, trace);
+
+            record_t* first  = put_record(image, table + 8,  1, trace);
             record_t* second = put_record(image, table + 16, 2, trace);
 
             mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 256);
             reader.advance_buffer(mash::NORMAL_BUFFER, 20);
-            void* parent = &trace;
 
+            void* parent = &trace;
             values->unmash(&reader, parent, selected);
 
             CHECK(values->size == 2);
@@ -172,8 +178,8 @@ TEST_SUITE("mash") {
             CHECK(trace.events[2].id == 1);
             CHECK(trace.events[3].id == 2);
 
-            // these records point into the image; cleanup calls their destruct_mashed_class methods without freeing them.
-            // the event list also shows that cleanup visits the last record first.
+            // the records live in the image, so teardown calls their destruct_mashed_class and frees nothing.
+            // it also goes through them back to front.
             values->destruct_mashed_class();
 
             REQUIRE(trace.events.size() == 6);
@@ -191,11 +197,12 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "empty vectors record ownership without consuming element storage") {
+                      "an empty pointer vector reads no slots but still measures its image bytes") {
 
         image_t<128> image;
         image.header(80);
-        auto* values = ::new (image.at<mash::vector<record_t>>(16)) mash::vector<record_t>;
+
+        auto* values = image.make<mash::vector<record_t>>(16);
 
         values->capacity = 99;
         values->data     = image.at<record_t*>(64);
@@ -217,16 +224,16 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "custom pointer vector unmash uses the existing count without reading shared metadata") {
+                      "custom_unmash on its own uses the count already in the vector") {
 
-        // unmash normally reads the count first, then delegates to custom_unmash for the table and elements.
-        // calling that second stage directly must leave the deliberately different shared count unread.
+        // unmash reads the count from the shared stream and then hands off to custom_unmash for the slots and elements.
+        // calling custom_unmash directly skips that first step, so the 99 waiting in the shared stream is never read.
         image_t<128> image;
         image.header(96);
         image.put(96, u32{99});
 
         trace_t trace;
-        auto* values = ::new (image.at<mash::vector<record_t>>(16)) mash::vector<record_t>;
+        auto*   values = image.make<mash::vector<record_t>>(16);
 
         values->size = 1;
 
@@ -246,12 +253,13 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "pointer vector clear distinguishes borrowed owned and null elements") {
+                      "clearing a pointer vector handles borrowed, owned and null elements differently") {
 
+        // borrowed elements get destruct_mashed_class, owned ones get their destructor and get freed, and null slots are skipped.
         image_t<256> image;
 
         trace_t   trace;
-        auto*     values = ::new (image.at<mash::vector<record_t>>(16)) mash::vector<record_t>;
+        auto*     values = image.make<mash::vector<record_t>>(16);
         record_t* first  = put_record(image, 64, 1, trace);
         record_t* last   = put_record(image, 96, 3, trace);
         auto*     owned  = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{2, &trace};
@@ -264,7 +272,7 @@ TEST_SUITE("mash") {
         values->data = table;
         values->size = values->capacity = 4;
 
-        // the two image records fall inside this range; the allocated record and pointer table do not.
+        // this range covers both image records, but neither the owned record nor the table.
         values->mash_image_offset = 96;
         values->clear();
 
@@ -279,31 +287,33 @@ TEST_SUITE("mash") {
         CHECK(free_count(tests::heap_allocator) == 2);
         REQUIRE(find(table) != nullptr);
 
-        // the fixture saved the table just before freeing it, so this also checks that clear nulled every slot.
+        // the memory fixture saves a copy of the table right before it's freed, which shows every slot was nulled first.
         CHECK(find(table)->released_bytes == std::vector<u8>(16, 0));
         CHECK(values->data == nullptr);
         CHECK(values->size == 0);
         CHECK(values->mash_image_offset == 0);
 
+        // clearing twice is harmless.
         values->clear();
 
         CHECK(free_count(tests::heap_allocator) == 2);
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "nonowning pointer vectors leave elements alive while releasing their table") {
+                      "a vector that doesn't own its elements leaves them alive, but still frees its table") {
 
         trace_t trace;
-        auto*  owned = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{1, &trace};
-        auto** table = (record_t**)treyarch::memory::heap::allocate(sizeof(record_t*));
+        auto*   owned = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{1, &trace};
+        auto**  table = (record_t**)treyarch::memory::heap::allocate(sizeof(record_t*));
 
         table[0] = owned;
+
         {
             mash::vector<record_t> values;
             values.data = table;
             values.size = values.capacity = 1;
 
-            // this flag controls element destruction; construction still visits the element and clear still frees the table.
+            // destroy_elements only decides whether clear destroys the elements; construction still visits them.
             values.destroy_elements = false;
             values.construct_mashed_class();
 
@@ -315,9 +325,10 @@ TEST_SUITE("mash") {
             CHECK_FALSE(values.destroy_elements);
             CHECK(values.empty());
             CHECK(trace.events.size() == 1);
-            CHECK(find(owned)->released == false);
+            CHECK_FALSE(find(owned)->released);
             CHECK(find(table)->released);
         }
+
         owned->~record_t();
         treyarch::memory::heap::free(owned);
 
@@ -325,9 +336,11 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "pointer vector destruction dispatches virtual deleting destructors") {
+                      "owned elements with a virtual destructor are deleted through it") {
 
+        // delete on a class with a virtual destructor goes through its vtable, which lets the class free itself its own way.
         trace_t trace;
+
         {
             mash::vector<mash::mash_virtual_base> values;
             values.data    = (mash::mash_virtual_base**)treyarch::memory::heap::allocate(4);
@@ -344,13 +357,14 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "an element starting at the inclusive image end is borrowed") {
+                      "an element sitting exactly at the end of the image bytes still counts as borrowed") {
 
         image_t<128> image;
 
         trace_t trace;
-        auto* values = ::new (image.at<mash::vector<record_t>>(16)) mash::vector<record_t>;
+        auto*   values = image.make<mash::vector<record_t>>(16);
 
+        // 16 plus 48 puts the end of the image bytes at 64, exactly where the element starts.
         values->mash_image_offset = 48;
 
         record_t* element = put_record(image, 64, 4, trace);
@@ -361,24 +375,28 @@ TEST_SUITE("mash") {
         CHECK(trace.events[0].kind == event_destruct_mashed);
         CHECK(free_count(tests::heap_allocator) == 0);
 
+        // destroy_element nulls the pointer it's given, so a second call has nothing to do.
         values->destroy_element(element);
 
         CHECK(trace.events.size() == 1);
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "basic vectors borrow contiguous values from either stream") {
+                      "loading a basic vector borrows its values in place, from either stream") {
 
         for (auto selected : {mash::NORMAL_BUFFER, mash::SHARED_BUFFER}) {
+            CAPTURE(selected);
+
             image_t<256> image;
             image.header(128);
             image.put(128, u32{2});
-            auto* values = ::new (image.at<mash::vector_basic<pair_t>>(16))
-                mash::vector_basic<pair_t> {};
+
+            // a basic vector's body is sixteen bytes, 16 to 31 here; the values come right after it, or after the count in shared.
+            auto* values = image.make<mash::vector_basic<pair_t>>(16);
             values->size = 99;
 
             const u32 data_offset = selected == mash::NORMAL_BUFFER ? 32 : 132;
-            image.put(data_offset, pair_t{1, 2});
+            image.put(data_offset,     pair_t{1, 2});
             image.put(data_offset + 4, pair_t{3, 4});
 
             mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 256);
@@ -409,11 +427,12 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "empty basic vectors null stale pointers without reading a payload") {
+                      "an empty basic vector drops its old data pointer and reads no values") {
 
         image_t<128> image;
         image.header(80);
-        auto* values = ::new (image.at<mash::vector_basic<u32>>(16)) mash::vector_basic<u32> {};
+
+        auto* values = image.make<mash::vector_basic<u32>>(16);
 
         values->data     = image.at<u32>(64);
         values->capacity = 12;
@@ -430,12 +449,15 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "custom basic vector unmash respects the element alignment without child traversal") {
+                      "a basic vector aligns its values by their type and calls nothing on them") {
 
+        // a u64 needs eight byte alignment, so the cursor at 33 skips to 40 before the values are read.
+        // custom_unmash is called directly here as well, so the 99 in shared goes unread like before.
         image_t<128> image;
         image.header(96);
         image.put(96, u32{99});
-        auto* values = ::new (image.at<mash::vector_basic<u64>>(16)) mash::vector_basic<u64> {};
+
+        auto* values = image.make<mash::vector_basic<u64>>(16);
 
         values->size = 2;
         image.put(40, u64{0x1122334455667788});
@@ -458,9 +480,10 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "basic vector destruction uses the plain allocator once") {
+                      "a basic vector frees its own storage once, through the plain allocator") {
 
-        // the two vector types use different allocation families; the fixture checks that free uses the matching one.
+        // the engine has two allocators; pointer vectors free through the heap one, basic vectors through the plain one.
+        // the memory fixture flags any free that goes through the wrong one.
         {
             mash::vector_basic<u32> values {};
             values.data    = (u32*)treyarch::memory::allocate(12, 4, 0);

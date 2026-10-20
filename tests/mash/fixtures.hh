@@ -7,6 +7,7 @@
 #include <new>
 #include <utility>
 #include <vector>
+#include <doctest/doctest.h>
 
 #include "support/memory.hh"
 #include "treyarch/shared/mash/mash_info.hh"
@@ -21,26 +22,37 @@ namespace treyarch { namespace mash { namespace detail {
     }
 }}}
 
+// lets doctest print a mash string's text when a check on it fails.
+namespace doctest {
+    template<>
+    struct StringMaker<treyarch::mash::string> {
+        static String convert(const treyarch::mash::string &value) {
+            return String("\"") + value.c_str() + "\"";
+        }
+    };
+}
+
 namespace tests { namespace mash_support {
-    // mashing saves connected c++ objects into a block of bytes called a mash image.
-    // loading those bytes gives us the stored member values, but the saved pointers are not usable addresses.
-    // unmashing visits the objects and replaces their pointer fields with addresses inside the loaded block.
-    // the first object is called the root; its unmash method leads us to the objects it contains or points to.
+    // these tests double as a walkthrough of mash, the engine's way of loading saved objects straight out of memory.
 
-    // the bytes are split into two parts called the normal and shared streams.
-    // object bodies usually occupy the normal stream; counts and string lengths come from the shared stream.
-    // each stream has its own next-read position, called a cursor; reader.cc shows how these positions move.
+    // the game's tools take a bunch of connected c++ objects and write them all into one block of bytes, called a mash image.
+    // the game loads that block as-is and then unmashes it, which turns those bytes back into objects it can use.
+    // objects point at each other with pointers, which are just memory addresses.
+    // an address saved by the tools means nothing in the game, since the image gets loaded somewhere else entirely.
+    // so unmashing walks the image object by object and rewrites every saved pointer to the spot in the image where its target ended up.
+    // nothing gets copied out along the way; the objects keep living inside the image, so it has to stay alive while they're in use.
 
-    // unmash repairs the connections first; construct_mashed_class then initializes the objects for use.
-    // an ordinary constructor can reset loaded fields; these construction methods preserve what unmash just repaired.
-    // traversal.cc follows a parent and child through both steps; containers.cc and arrays.cc add collections.
+    // the image is split into two streams, normal and shared.
+    // normal holds the objects themselves, while shared holds the little things that steer the walk, like counts and string lengths.
+    // each stream has its own read position, a cursor, which only moves forward as things get read.
 
-    // borrowed objects use bytes inside the image rather than memory allocated just for that object.
-    // their destruct_mashed_class methods do cleanup, but the image must stay alive until its objects are finished.
-    // strings.cc covers borrowed characters; virtual_types.cc covers virtual methods; graphs.cc loads resource types.
+    // loading is two passes over the objects.
+    // unmash rewrites the pointers first; construct_mashed_class then gets every object ready for use.
+    // it can't be done with ordinary constructors, since those would reset the very fields that were just loaded.
+    // unloading has its own method too, destruct_mashed_class, which cleans up without freeing bytes that belong to the image.
 
-    // engine globals normally refer to addresses inside the running game.
-    // a binding points one of those globals at our test's storage, then restores its old address on scope exit.
+    // engine globals normally sit at fixed addresses inside the running game, which doesn't exist here.
+    // a binding points one of those globals at some storage in our test instead, then puts the old address back when it goes away.
     template<typename T>
     class c_reference_binding {
         util::memory_reference<T> &m_reference;
@@ -61,10 +73,9 @@ namespace tests { namespace mash_support {
         c_reference_binding &operator=(const c_reference_binding&) = delete;
     };
 
-    // each test builds a small image by hand; the numbers passed to put and at are byte offsets from its beginning.
-    // put writes a value at that offset, while at returns a pointer to those bytes as the requested type.
-    // for example, put(16, u32{7}) writes four bytes and at<u32>(16) points at the same value.
-    // neither helper constructs an object; the test decides when to run constructors or mash construction methods.
+    // a hand-built mash image; every number passed to its helpers is a byte offset from the start of the image.
+    // put(16, u32{7}) writes four bytes at offset 16, and at<u32>(16) gives a pointer to those same four bytes.
+    // neither of them runs any constructors, they only deal with raw bytes.
     template<size_t size = 1024>
     struct alignas(64) image_t {
         std::array<u8, size> bytes{};
@@ -79,11 +90,18 @@ namespace tests { namespace mash_support {
             std::memcpy(bytes.data() + offset, &value, sizeof(value));
         }
 
+        // builds a fresh T right inside the image, which is where loaded objects live too.
+        template<typename T>
+        T* make(u32 offset) {
+            return ::new (at<T>(offset)) T{};
+        }
+
         void header(u32 shared_offset) {
-            // a header occupies bytes 0 through 15; the root begins at byte 16 and shared_offset starts the shared data.
-            // in_use is a one-byte flag set by resource loading; its neighbors have distinct values to catch wider writes.
+            // the header takes up the first 16 bytes; the normal stream starts right after it and the shared one at shared_offset.
+            // in_use is a one byte flag that resource loading flips on and off.
+            // the three bytes after it get odd values, so a write that spills over in_use would get noticed.
             put(0,
-                treyarch::mash::mash_info_struct::mash_header{ 0x12345678,
+                treyarch::mash::mash_info_struct::mash_header{ treyarch::mash::mash_info_struct::get_master_crc(),
                                                                16,
                                                                shared_offset,
                                                                0,
@@ -110,9 +128,8 @@ namespace tests { namespace mash_support {
         u32                         shared_used;
     };
 
-    // a record is a small stand-in for a game object; each of its mash methods appends an event to this list.
-    // its id identifies the object, while normal_used and shared_used capture the reader positions at that moment.
-    // tests can then check which object was visited first and how much data had already been read.
+    // a log of the mash methods called on our stand-in objects, in the order they were called.
+    // normal_used and shared_used are snapshots of both cursors, which shows how much had been read at that point.
     struct trace_t {
         std::vector<event_t> events;
         bool destructor_saw_live_storage = true;
@@ -125,6 +142,8 @@ namespace tests { namespace mash_support {
                   treyarch::mash::mash_info_struct* reader = nullptr);
     };
 
+    // a tiny stand-in for a game object; every mash method it has just adds an event to its trace.
+    // it's eight bytes in this 32-bit build, its id and then its trace pointer.
     struct record_t {
         u32      id;
         trace_t* trace;
@@ -139,32 +158,40 @@ namespace tests { namespace mash_support {
         void destruct_mashed_class();
     };
 
+    // writes a saved record into the image and returns where it sits.
     template<size_t size>
     record_t* put_record(image_t<size> &image,
-                        u32             offset,
-                        u32             id,
-                        trace_t        &trace) {
+                         u32            offset,
+                         u32            id,
+                         trace_t       &trace) {
 
-        // a record occupies eight bytes in this 32-bit build; its id comes first and its trace pointer comes second.
-        // copying those fields leaves the event list untouched until the test actually visits the record.
-        image.put(offset, id);
+        image.put(offset,     id);
         image.put(offset + 4, &trace);
+
         return image.template at<record_t>(offset);
     }
 
-    // this record has virtual methods and extra fields beyond mash_virtual_base.
-    // the reader must restore its virtual table before asking how large the complete object is.
+    // c_virtual_record answers to virtual_record_key and claims to be a subclass of virtual_record_parent_key.
+    constexpr u32 virtual_record_key        = 0x1001;
+    constexpr u32 virtual_record_parent_key = 0x1000;
+
+    // the same stand-in as record_t, but with virtual methods.
+    // a class with virtual methods gets a hidden first field, a pointer to its vtable, which is a table of those methods.
+    // that makes it twelve bytes; the vtable pointer, the id and the trace pointer.
+    // a vtable's address changes between program runs, so a saved one is useless and the image holds a type key in its place.
+    // virtual_types.cc goes over how the key turns back into a vtable.
     class c_virtual_record : public treyarch::mash::mash_virtual_base {
+
     public:
         u32      id;
         trace_t* trace;
 
         c_virtual_record(u32 id, trace_t* trace);
        ~c_virtual_record() override;
-        
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
-       
+
         void unmash(treyarch::mash::mash_info_struct* reader,
                     void*                             parent,
                     treyarch::mash::buffer_type       buffer) override;
@@ -179,10 +206,30 @@ namespace tests { namespace mash_support {
         void  operator delete(void* allocation);
     };
 
-    // mash strings use several globals even when no resource is being loaded.
-    // empty strings point at empty_storage; string_count tracks constructed strings; upper_table maps uppercase bytes.
-    // source_slab is an address used as a label for borrowed characters; the string compares labels before freeing them.
+    // writes a saved virtual record into the image, with its type key where the vtable pointer goes.
+    template<size_t size>
+    c_virtual_record* put_virtual_record(image_t<size> &image,
+                                         u32            offset,
+                                         u32            id,
+                                         trace_t       &trace) {
+
+        image.put(offset,     virtual_record_key);
+        image.put(offset + 4, id);
+        image.put(offset + 8, &trace);
+
+        return image.template at<c_virtual_record>(offset);
+    }
+
+    // the first four bytes of an object with virtual methods; its vtable pointer, or a type key while it's still unloaded.
+    inline u32 first_word(const void* object) {
+        return *(const u32*)object;
+    }
+
+    // mash strings rely on a few globals even outside of loading.
+    // empty strings all point at one shared empty string, string_count tracks how many strings are alive and upper_table drives to_upper.
+    // source_slab is only ever compared by address; a string carrying it borrows its characters from an image and must never free them.
     class c_string_fixture : public c_memory_fixture {
+
     public:
         std::array<char, 32> empty_storage {};
         i32                  string_count = 0;
@@ -193,6 +240,14 @@ namespace tests { namespace mash_support {
         c_string_fixture();
         ~c_string_fixture();
 
+        // the shared empty string; it sits in the middle of empty_storage, so writes just before it stay inside the array.
+        char* empty_string() {
+            return empty_storage.data() + 16;
+        }
+
+        // makes value borrow characters, the same way unmash leaves a loaded string.
+        void borrow(treyarch::mash::string &value, char* characters);
+
     private:
         c_reference_binding<char>  m_empty_binding;
         c_reference_binding<i32>   m_count_binding;
@@ -200,12 +255,12 @@ namespace tests { namespace mash_support {
         c_reference_binding<u8>    m_upper_binding;
     };
 
-    // an ordinary string constructor does not initialize the field that marks borrowed characters.
-    // this helper starts with zeroed bytes, then uses placement new to run the constructor in that existing storage.
-    // it calls the destructor on scope exit unless release has handed cleanup back to the test.
+    // a mash string's ordinary constructors leave its source slab field alone, so a string on the stack would start with junk there.
+    // this keeps the string in zeroed storage instead and uses placement new, which runs a constructor on memory we already have.
+    // the destructor runs when the slot goes away, unless release handed that job back to the test.
     class c_string_slot {
         alignas(treyarch::mash::string) u8 m_storage[sizeof(treyarch::mash::string)] {};
-        
+
         treyarch::mash::string* m_value;
 
     public:
@@ -219,21 +274,21 @@ namespace tests { namespace mash_support {
                 m_value->~string();
         }
 
-        c_string_slot(const c_string_slot&) = delete;
+        c_string_slot(const c_string_slot&)            = delete;
         c_string_slot &operator=(const c_string_slot&) = delete;
 
         treyarch::mash::string* operator->() { return  m_value; }
         treyarch::mash::string &operator *() { return *m_value; }
 
         treyarch::mash::string* release() {
-            // tests that call finalize or destruct_mashed_class themselves must avoid a second teardown here.
+            // for tests that tear the string down themselves, so it doesn't get torn down twice.
             return std::exchange(m_value, nullptr);
         }
     };
 
-    // virtual objects store a type key in the image; the registry maps each key to a callable c++ virtual table.
-    // its entries form a linked list, divided into smaller search ranges called buckets.
-    // these structs reproduce the memory layout read by lookup; the fixture supplies entries without starting the game.
+    // the vtable registry maps type keys to vtables; it's normally built by the game while it starts up.
+    // its entries sit in one circular linked list sorted into buckets, which are runs of that list that lookup searches through.
+    // these structs copy the registry's memory layout, so a test can hand lookup a registry of its own.
     struct registry_node_t {
         registry_node_t* next;
         registry_node_t* previous;
@@ -255,7 +310,7 @@ namespace tests { namespace mash_support {
     };
 
     struct registry_entry_t {
-        // buckets are supplied explicitly rather than computed by the lookup code being tested.
+        // the bucket is spelled out rather than computed, so the test can't share a mistake with the lookup it's testing.
         u32 bucket;
         u32 key;
         u32 value;
@@ -271,10 +326,15 @@ namespace tests { namespace mash_support {
             <treyarch::mash::detail::vtable_registry> m_binding;
 
     public:
+        u32 virtual_record_vtable = 0;
+
         c_registry_fixture();
-        
+
         void set(std::initializer_list<registry_entry_t> entries,
-                 u32                                     mask = 7,
+                 u32                                     mask  = 7,
                  u32                                     count = 8);
+
+        // fills the registry with just c_virtual_record, so a saved virtual_record_key turns into its vtable.
+        void register_virtual_record();
     };
 }}

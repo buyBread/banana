@@ -44,7 +44,7 @@ void tests::mash_support::record_t::destruct_mashed_class() {
         trace->push(event_destruct_mashed, id, this);
 }
 
-tests::mash_support::c_virtual_record::c_virtual_record(u32 id,
+tests::mash_support::c_virtual_record::c_virtual_record(u32      id,
                                                         trace_t* trace) : id(id),
                                                                           trace(trace) {}
 
@@ -65,19 +65,20 @@ void tests::mash_support::c_virtual_record::destruct_mashed_class() {
         trace->push(event_destruct_mashed, id, this);
 }
 
-void tests::mash_support::c_virtual_record::unmash(treyarch::mash::mash_info_struct* reader, void* parent,
-                                                treyarch::mash::buffer_type buffer) {
-    
+void tests::mash_support::c_virtual_record::unmash(treyarch::mash::mash_info_struct* reader,
+                                                   void*                             parent,
+                                                   treyarch::mash::buffer_type       buffer) {
+
     if (trace)
         trace->push(event_unmash, id, this, parent, buffer, reader);
 }
 
 treyarch::mash::virtual_types_key tests::mash_support::c_virtual_record::get_virtual_type_key() const {
-    return 0x1001;
+    return virtual_record_key;
 }
 
 bool tests::mash_support::c_virtual_record::is_subclass_of(treyarch::mash::virtual_types_key key) const {
-    return key == 0x1000;
+    return key == virtual_record_parent_key;
 }
 
 i32 tests::mash_support::c_virtual_record::get_mash_sizeof() const {
@@ -92,19 +93,19 @@ void tests::mash_support::c_virtual_record::operator delete(void* allocation) {
     treyarch::memory::heap::free(allocation);
 }
 
-tests::mash_support::c_string_fixture::c_string_fixture() : m_empty_binding(treyarch::mash::references::null_string_guts, empty_storage.data() + 16),
+tests::mash_support::c_string_fixture::c_string_fixture() : m_empty_binding(treyarch::mash::references::null_string_guts, empty_string()),
                                                             m_count_binding(treyarch::mash::references::string_count, &string_count),
                                                             m_slab_binding (treyarch::mash::references::string_source_slab, &source_slab),
                                                             m_upper_binding(treyarch::mash::references::upper_case_table, upper_table.data()) {
 
-    // leave guard bytes on both sides of the empty string so negative clear offsets remain inside test storage.
+    // '?' fills the bytes around the empty string, so a stray write next to it is easy to spot.
     empty_storage.fill('?');
-    empty_storage[16] = '\0';
+    *empty_string() = '\0';
 
     for (u32 value = 'a'; value <= 'z'; ++value)
         upper_table[value] = (u8)(value - 32);
 
-    // a zero table entry means leave the input byte alone; this is a byte mapping rather than unicode casing.
+    // the table maps single bytes rather than unicode letters; a zero entry means the byte has no upper case and stays as is.
     for (u32 value = 0xE0; value <= 0xFF; ++value) {
         if (value != 0xF7)
             upper_table[value] = (u8)(value - 32);
@@ -113,6 +114,12 @@ tests::mash_support::c_string_fixture::c_string_fixture() : m_empty_binding(trey
 
 tests::mash_support::c_string_fixture::~c_string_fixture() {
     CHECK_MESSAGE(string_count == 0, "unbalanced string construction and teardown");
+}
+
+void tests::mash_support::c_string_fixture::borrow(treyarch::mash::string &value, char* characters) {
+    value.m_size        = (i32)std::strlen(characters);
+    value.m_data        = characters;
+    value.m_source_slab = source_slab;
 }
 
 tests::mash_support::c_registry_fixture::c_registry_fixture() : m_binding(treyarch::mash::detail::references::vtable_registry,
@@ -131,7 +138,7 @@ void tests::mash_support::c_registry_fixture::set(std::initializer_list<registry
         return left.bucket < right.bucket || (left.bucket == right.bucket && left.key < right.key);
     } );
 
-    // all buckets share one circular list; the head is also the end marker returned by a failed lookup.
+    // every bucket is a run of one circular list; the head node closes the circle and is what a failed lookup hands back.
     m_nodes.resize(sorted.size());
 
     m_head.next     = m_nodes.empty() ? &m_head :  m_nodes.data();
@@ -148,7 +155,7 @@ void tests::mash_support::c_registry_fixture::set(std::initializer_list<registry
         };
     }
 
-    // the next bucket's start is this bucket's end, including when several empty buckets share a boundary.
+    // a bucket ends where the next one starts, so empty buckets simply share the same boundary.
     for (u32 bucket = 0; bucket <= count; ++bucket) {
         u32 index = 0;
 
@@ -162,4 +169,12 @@ void tests::mash_support::c_registry_fixture::set(std::initializer_list<registry
     m_registry.bucket_bounds = m_bounds.data();
     m_registry.bucket_mask   = mask;
     m_registry.bucket_count  = count;
+}
+
+void tests::mash_support::c_registry_fixture::register_virtual_record() {
+    // the vtable belongs to the class rather than to this one object, so its address stays good after the object is gone.
+    c_virtual_record prototype(0, nullptr);
+    virtual_record_vtable = first_word(&prototype);
+
+    set({{0, virtual_record_key, virtual_record_vtable}}, 0, 1);
 }

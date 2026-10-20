@@ -6,14 +6,15 @@
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
 
-// a mash string has a length, a character pointer and a field called m_source_slab.
-// an ordinary string owns its allocated characters; a loaded string can point at characters already in the image.
-// m_source_slab labels those borrowed characters by matching the engine's current source_slab address.
-// cleanup compares those addresses and leaves matching storage alone, since freeing it would free part of the image.
-// the label is not reset by every edit; the mutation tests below show new allocations being left unfreed as a result.
+// a mash string is three fields; its length, a pointer to its characters and m_source_slab.
+// a string made at runtime owns its characters, which it allocates and frees itself.
+// a loaded string just points at characters sitting in the image, so it has to make sure never to free them.
+// m_source_slab is how it tells the two apart; a loaded string carries the source_slab address, and a string that does never frees its characters.
+// that mark isn't cleared when such a string gets edited, so a few tests below catch newly allocated characters that never get freed.
+// the class also has a few other odd habits, mostly around negative lengths and which length a copy goes by; those get pointed out where they show up.
 TEST_SUITE("mash") {
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "empty string constructors share null storage and balance the live count") {
+                      "empty strings all share one empty string and are counted while alive") {
 
         {
             c_string_slot empty;
@@ -21,11 +22,12 @@ TEST_SUITE("mash") {
             c_string_slot literal("");
 
             CHECK(string_count == 3);
+
             for (auto* value : {&*empty, &*null, &*literal}) {
                 CHECK(value->empty());
                 CHECK(value->size() == 0);
                 CHECK(value->length() == 0);
-                CHECK(value->c_str() == empty_storage.data() + 16);
+                CHECK(value->c_str() == empty_string());
                 CHECK(value->data() == value->c_str());
                 CHECK(value->get_mash_sizeof() == 12);
             }
@@ -38,32 +40,36 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "ordinary string construction leaves the source slab word untouched") {
+                      "an ordinary constructor never touches the source slab field") {
 
+        // that's the reason c_string_slot exists; a string on the stack would start out with junk in this field.
         image_t<64> image;
-        void* marker = &image;
+        void*       marker = &image;
         image.put(8, marker);
+
         auto* value = ::new (image.at<mash::string>(0)) mash::string;
 
         CHECK(value->m_source_slab == marker);
-        CHECK(value->m_data == empty_storage.data() + 16);
+        CHECK(value->m_data == empty_string());
         CHECK(value->m_size == 0);
 
         value->~string();
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "from mash string construction preserves all serialized fields") {
+                      "the from-mash constructor leaves every loaded field alone and only counts the string") {
 
+        // the null pointer argument is only a tag that picks this constructor.
         image_t<128> image;
         image.put(0, i32{5});
         image.put(4, image.at<char>(64));
         image.put(8, source_slab);
         std::memcpy(image.bytes.data() + 64, "hello", 6);
+
         std::array<u8, 12> original;
         std::memcpy(original.data(), image.bytes.data(), 12);
-        auto* value = ::new (image.at<mash::string>(0))
-            mash::string((mash::from_mash_in_place_constructor*)nullptr);
+
+        auto* value = ::new (image.at<mash::string>(0)) mash::string((mash::from_mash_in_place_constructor*)nullptr);
 
         CHECK(string_count == 1);
         CHECK(std::memcmp(original.data(), image.bytes.data(), 12) == 0);
@@ -75,16 +81,18 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string unmash borrows characters and aligns the selected stream") {
+                      "loading a string borrows its characters from the image and realigns the stream after them") {
 
         for (auto selected : {mash::NORMAL_BUFFER, mash::SHARED_BUFFER}) {
             for (i32 length : {1, 2, 3, 4, 5}) {
                 CAPTURE(selected);
                 CAPTURE(length);
 
+                // the string's twelve bytes are at 16; its characters follow at 28, or after its length in shared at 132.
                 image_t<256> image;
                 image.header(128);
                 image.put(128, length);
+
                 auto*     value = image.at<mash::string>(16);
                 const u32 start = selected == mash::NORMAL_BUFFER ? 28 : 132;
                 std::memcpy(image.bytes.data() + start, "abcde", length);
@@ -93,7 +101,7 @@ TEST_SUITE("mash") {
                 mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 256);
                 reader.advance_buffer(mash::NORMAL_BUFFER, 12);
 
-                // the length always comes from shared storage; characters plus their terminator use the selected stream.
+                // the length always comes from the shared stream; the characters and their terminating zero come from the selected one.
                 value->unmash(&reader, nullptr, selected);
 
                 CHECK(string_count == 0);
@@ -101,6 +109,7 @@ TEST_SUITE("mash") {
                 CHECK(value->m_data == image.at<char>(start));
                 CHECK(value->m_source_slab == source_slab);
 
+                // after the characters, the cursor rounds up to the next multiple of four.
                 const u32 end = (start + length + 1 + 3) / 4 * 4;
 
                 CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) ==
@@ -108,7 +117,7 @@ TEST_SUITE("mash") {
                 CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) ==
                     (selected == mash::SHARED_BUFFER ? (i32)end - 128 : 4));
 
-                // repair alone leaves the live count unchanged; only the construction method registers a live string.
+                // unmash alone doesn't count the string as alive; construct_mashed_class does that.
                 value->construct_mashed_class();
 
                 CHECK(string_count == 1);
@@ -116,7 +125,7 @@ TEST_SUITE("mash") {
                 value->destruct_mashed_class();
 
                 CHECK(string_count == 0);
-                CHECK(value->m_data == empty_storage.data() + 16);
+                CHECK(value->m_data == empty_string());
                 CHECK(value->m_size == length);
                 CHECK(value->m_source_slab == source_slab);
                 CHECK(allocations.empty());
@@ -125,20 +134,24 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "nonpositive mashed string lengths preserve the length and use null storage") {
+                      "a loaded length of zero or less reads no characters and keeps that length") {
 
         for (i32 length : {0, -1, -7}) {
+            CAPTURE(length);
+
             image_t<128> image;
             image.header(80);
             image.put(80, length);
+
             auto* value = image.at<mash::string>(16);
 
             mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128);
             reader.advance_buffer(mash::NORMAL_BUFFER, 12);
             value->unmash(&reader, nullptr, mash::NORMAL_BUFFER);
 
+            // a negative length isn't treated as empty, since empty only checks for exactly 0.
             CHECK(value->m_size == length);
-            CHECK(value->m_data == empty_storage.data() + 16);
+            CHECK(value->m_data == empty_string());
             CHECK(value->m_source_slab == nullptr);
             CHECK(value->empty() == (length == 0));
             CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 28);
@@ -152,16 +165,18 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "owned strings copy characters and release their heap storage") {
+                      "a string made from text copies it and frees the copy when it goes away") {
 
         char input[] = "hello";
+
         {
             c_string_slot value(input);
 
             CHECK(value->m_size == 5);
             CHECK(value->m_data != input);
-            CHECK(doctest::String(value->c_str()) == "hello");
+            CHECK(*value == "hello");
 
+            // changing the original text doesn't change the copy.
             input[0] = 'x';
 
             CHECK((*value)[0] == 'h');
@@ -179,13 +194,15 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "copy construction uses the terminator while string assignment uses stored size") {
+                      "the copy constructor stops at the first zero, while assignment and copy go by the stored length") {
 
-        // an embedded terminator separates the visible text length from the four bytes stored in the source.
-        // these overloads disagree about which length to copy, so ordinary text alone would miss the difference.
+        // a string can hold a zero in the middle, so how many characters it holds and where its text ends can differ.
+        // this one holds 4 characters, but its text ends after 1.
         const char bytes[]{'a', '\0', 'b', 'c'};
+
         c_string_slot source;
         source->copy(bytes, 4);
+
         c_string_slot copied(*source);
         c_string_slot assigned;
         *assigned = *source;
@@ -203,24 +220,28 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string substring constructors clamp count to the remaining suffix") {
+                      "the substring constructor cuts the count down to whatever's left") {
 
         c_string_slot source("abcdef");
+
         for (i32 count : {mash::string::npos, 20, 4}) {
+            CAPTURE(count);
+
             c_string_slot result(*source, 2, count);
 
             CHECK(result->size() == 4);
-            CHECK(doctest::String(result->c_str()) == "cdef");
+            CHECK(*result == "cdef");
         }
+
         c_string_slot middle(*source, 2, 2);
         c_string_slot at_end(*source, 6, mash::string::npos);
 
-        CHECK(doctest::String(middle->c_str()) == "cd");
+        CHECK(*middle == "cd");
         CHECK(at_end->empty());
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "numeric and formatted string constructors use the recovered formatting") {
+                      "number and format constructors print like printf, with floats at three decimals") {
 
         c_string_slot negative(i32{-123});
         c_string_slot integer(i32{0});
@@ -228,20 +249,20 @@ TEST_SUITE("mash") {
         c_string_slot negative_zero(-0.0f);
         c_string_slot formatted(mash::string::fmt, "%s:%04d", "item", 7);
 
-        CHECK(doctest::String(negative->c_str()) == "-123");
-        CHECK(doctest::String(integer->c_str()) == "0");
-        CHECK(doctest::String(number->c_str()) == "1.250");
-        CHECK(doctest::String(negative_zero->c_str()) == "-0.000");
-        CHECK(doctest::String(formatted->c_str()) == "item:0007");
+        CHECK(*negative == "-123");
+        CHECK(*integer == "0");
+        CHECK(*number == "1.250");
+        CHECK(*negative_zero == "-0.000");
+        CHECK(*formatted == "item:0007");
         CHECK(mash::string::from_int(42) == "42");
         CHECK(mash::string::from_float(-2.5f) == "-2.500");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "owned string updates reuse storage until the stored length grows") {
+                      "an owned string reuses its storage until the new text is longer than its current length") {
 
         c_string_slot value("abcdef");
-        char* original = value->data();
+        char*         original = value->data();
         value->update_guts("xy", 2);
 
         CHECK(value->data() == original);
@@ -249,24 +270,26 @@ TEST_SUITE("mash") {
         CHECK(value->data()[2] == '\0');
         CHECK(allocation_count(tests::heap_allocator) == 1);
 
-        // reuse compares against the current length of two, not the room originally allocated for six characters.
+        // the check is against the current length of 2, not the 6 characters there's actually room for, so this reallocates.
         value->update_guts("12345");
 
         CHECK(value->size() == 5);
         CHECK(allocation_count(tests::heap_allocator) == 2);
         CHECK(free_count(tests::heap_allocator) == 1);
-        CHECK(doctest::String(value->c_str()) == "12345");
+        CHECK(*value == "12345");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "zero and negative explicit copy lengths retain their signed value") {
+                      "copying zero or a negative count keeps that count as the length") {
 
         for (i32 length : {0, -2, -3}) {
+            CAPTURE(length);
+
             c_string_slot value("abcdef");
             value->copy("ignored", length);
 
             CHECK(value->size() == length);
-            CHECK(value->c_str() == empty_storage.data() + 16);
+            CHECK(value->c_str() == empty_string());
             CHECK(value->empty() == (length == 0));
         }
 
@@ -274,82 +297,76 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "self assignment is inert and character assignment returns the same object") {
+                      "assigning a string to itself does nothing, and assignment hands back the same string") {
 
         c_string_slot value("hello");
-        char* original = value->data();
+        char*         original = value->data();
 
         CHECK(&(*value = *value) == &*value);
         CHECK(value->data() == original);
         CHECK(allocation_count(tests::heap_allocator) == 1);
         CHECK(&(*value = "bye") == &*value);
         CHECK(value->data() == original);
-        CHECK(doctest::String(value->c_str()) == "bye");
+        CHECK(*value == "bye");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "borrowed string mutation retains its slab marker and heap allocations") {
+                      "editing a borrowed string allocates new characters, but the borrowed mark stays and they're never freed") {
 
-        // this local array stands in for characters inside an image; the matching label makes the string borrow it.
-        char borrowed[] = "borrowed";
-        c_string_slot slot((mash::from_mash_in_place_constructor*)nullptr);
-        slot->m_size        = 8;
-        slot->m_data        = borrowed;
-        slot->m_source_slab = source_slab;
+        // a local array stands in for characters inside an image.
+        char          borrowed[] = "borrowed";
+        c_string_slot value((mash::from_mash_in_place_constructor*)nullptr);
+        borrow(*value, borrowed);
 
-        slot->update_guts("x");
+        value->update_guts("x");
 
-        CHECK(slot->m_data != borrowed);
-        CHECK(slot->m_source_slab == source_slab);
-        CHECK(doctest::String(slot->c_str()) == "x");
+        CHECK(value->m_data != borrowed);
+        CHECK(value->m_source_slab == source_slab);
+        CHECK(*value == "x");
         CHECK(doctest::String(borrowed) == "borrowed");
 
-        slot->update_guts("y");
+        // still marked as borrowed, so this allocates yet again instead of reusing, and the previous allocation is dropped without a free.
+        value->update_guts("y");
 
         CHECK(allocation_count(tests::heap_allocator) == 2);
         CHECK(free_count(tests::heap_allocator) == 0);
 
-        // the retained marker also prevents teardown from freeing the new heap bytes.
-        // the fixture reclaims those leftovers after the test has checked them.
-        slot.release()->destruct_mashed_class();
+        // teardown skips freeing as well; the memory fixture cleans the leftovers up after the test.
+        value.release()->destruct_mashed_class();
 
         CHECK(string_count == 0);
         CHECK(live_count(tests::heap_allocator) == 2);
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "an empty borrowed update still allocates without freeing the new storage") {
+                      "emptying a borrowed string still allocates first, then drops that allocation") {
 
-        // editing a borrowed string first allocates room for the new text, even when that text is empty.
-        // empty text then selects the common empty-string address; the new one-byte allocation is left behind.
-        char borrowed[] = "a";
-        c_string_slot slot((mash::from_mash_in_place_constructor*)nullptr);
-        slot->m_size        = 1;
-        slot->m_data        = borrowed;
-        slot->m_source_slab = source_slab;
+        // the new characters get allocated before anything checks whether there are any.
+        // empty text then switches to the shared empty string, and the one byte allocation is left behind.
+        char          borrowed[] = "a";
+        c_string_slot value((mash::from_mash_in_place_constructor*)nullptr);
+        borrow(*value, borrowed);
 
-        slot->copy("", 0);
+        value->copy("", 0);
 
         REQUIRE(allocations.size() == 1);
         CHECK(allocations[0].size == 1);
-        CHECK(slot->m_data == empty_storage.data() + 16);
-        CHECK(slot->m_source_slab == source_slab);
+        CHECK(value->m_data == empty_string());
+        CHECK(value->m_source_slab == source_slab);
         CHECK(free_count(tests::heap_allocator) == 0);
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "appending to a borrowed string retains the marker and leaves the image unchanged") {
+                      "appending to a borrowed string keeps the borrowed mark and leaves the image alone") {
 
-        char borrowed[] = "abc";
+        char          borrowed[] = "abc";
         c_string_slot value((mash::from_mash_in_place_constructor*)nullptr);
-        value->m_size        = 3;
-        value->m_data        = borrowed;
-        value->m_source_slab = source_slab;
+        borrow(*value, borrowed);
 
         value->append("de");
 
         CHECK(value->size() == 5);
-        CHECK(doctest::String(value->c_str()) == "abcde");
+        CHECK(*value == "abcde");
         CHECK(doctest::String(borrowed) == "abc");
         CHECK(value->m_source_slab == source_slab);
 
@@ -360,13 +377,11 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "clearing borrowed strings edits their image without allocating") {
+                      "clearing a borrowed string writes into the image instead of allocating") {
 
-        char borrowed[] = "abc";
+        char          borrowed[] = "abc";
         c_string_slot value((mash::from_mash_in_place_constructor*)nullptr);
-        value->m_size        = 3;
-        value->m_data        = borrowed;
-        value->m_source_slab = source_slab;
+        borrow(*value, borrowed);
 
         value->clear();
 
@@ -380,9 +395,11 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "finalize ignores its scope and balances construction exactly once") {
+                      "finalize works the same either way and uncounts the string once") {
 
         for (auto scope : {mash::ALLOCATED, mash::FROM_MASH}) {
+            CAPTURE(scope);
+
             c_string_slot slot("owned");
             mash::string* value = slot.release();
 
@@ -391,7 +408,7 @@ TEST_SUITE("mash") {
             value->finalize(scope);
 
             CHECK(string_count == 0);
-            CHECK(value->m_data == empty_storage.data() + 16);
+            CHECK(value->m_data == empty_string());
             CHECK(value->m_size == 5);
         }
 
@@ -399,10 +416,10 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "append always reallocates except for a zero count") {
+                      "appending always allocates new characters, unless there's nothing to append") {
 
         c_string_slot value("ab");
-        char* original = value->data();
+        char*         original = value->data();
         value->append("ignored", 0);
 
         CHECK(value->data() == original);
@@ -410,11 +427,12 @@ TEST_SUITE("mash") {
 
         value->append("cdef", 2);
 
-        CHECK(doctest::String(value->c_str()) == "abcd");
+        CHECK(*value == "abcd");
         CHECK(value->size() == 4);
         CHECK(allocation_count(tests::heap_allocator) == 2);
         CHECK(free_count(tests::heap_allocator) == 1);
 
+        // a zero character is empty text, so it counts as nothing to append.
         value->append('\0');
 
         CHECK(value->size() == 4);
@@ -422,56 +440,58 @@ TEST_SUITE("mash") {
 
         value->append('!');
 
-        CHECK(doctest::String(value->c_str()) == "abcd!");
+        CHECK(*value == "abcd!");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "append counts the requested bytes even when the source terminates early") {
+                      "appending adds the full count to the length, even when the text ends sooner") {
 
-        // the recorded size uses the requested count, while appending characters stops at the source terminator.
-        // this leaves size larger than the visible text length without reading past the source string.
+        // only "ab" exists to copy, so the text is "xab", but the length still grows by the 4 that were asked for.
         c_string_slot value("x");
         value->append("ab", 4);
 
-        CHECK(doctest::String(value->c_str()) == "xab");
+        CHECK(*value == "xab");
         CHECK(value->size() == 5);
         CHECK(value->data()[5] == '\0');
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "append supports self and interior sources before releasing old bytes") {
+                      "a string can append itself or a piece of itself") {
 
+        // the old characters are only freed after the new ones are built, so the source is still there while it's copied.
         c_string_slot value("abc");
         *value += *value;
 
-        CHECK(doctest::String(value->c_str()) == "abcabc");
+        CHECK(*value == "abcabc");
 
         value->append(value->data() + 3);
 
-        CHECK(doctest::String(value->c_str()) == "abcabcabc");
+        CHECK(*value == "abcabcabc");
         CHECK(value->size() == 9);
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string append overloads use the source terminator rather than its stored size") {
+                      "appending another string stops at its first zero, not its stored length") {
 
         const char bytes[]{'a', '\0', 'b', 'c'};
+
         c_string_slot source;
         source->copy(bytes, 4);
+
         c_string_slot destination("x");
         destination->append(*source);
 
         CHECK(destination->size() == 2);
-        CHECK(doctest::String(destination->c_str()) == "xa");
+        CHECK(*destination == "xa");
 
         *destination += *source;
 
         CHECK(destination->size() == 3);
-        CHECK(doctest::String(destination->c_str()) == "xaa");
+        CHECK(*destination == "xaa");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "all concatenation overloads preserve their inputs") {
+                      "every way of joining strings leaves the originals alone") {
 
         c_string_slot left("ab");
         c_string_slot right("cd");
@@ -479,22 +499,23 @@ TEST_SUITE("mash") {
         CHECK((*left + *right) == "abcd");
         CHECK((*left + "cd") == "abcd");
         CHECK(("ab" + *right) == "abcd");
-        CHECK(doctest::String(left->c_str()) == "ab");
-        CHECK(doctest::String(right->c_str()) == "cd");
+        CHECK(*left == "ab");
+        CHECK(*right == "cd");
         CHECK(&(*left += "e") == &*left);
         CHECK(&(*left += 'f') == &*left);
-        CHECK(doctest::String(left->c_str()) == "abef");
+        CHECK(*left == "abef");
         CHECK(&(*left += *right) == &*left);
-        CHECK(doctest::String(left->c_str()) == "abefcd");
+        CHECK(*left == "abefcd");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "clear and truncate edit storage in place") {
+                      "clear and truncate shorten the string where it is") {
 
         c_string_slot value("abcdef");
-        char* original = value->data();
+        char*         original = value->data();
+
         {
-            // truncate changes the original buffer and also returns a separate string containing the shortened text.
+            // truncate shortens the string itself and also hands back a separate copy of the result.
             mash::string result = value->truncate(3);
 
             CHECK(result == "abc");
@@ -503,6 +524,7 @@ TEST_SUITE("mash") {
             CHECK(result.data() != original);
         }
 
+        // truncate keeps the new length between 0 and the current length.
         CHECK(value->truncate(99) == "abc");
         CHECK(value->truncate(-2) == "");
         CHECK(value->data() == original);
@@ -522,25 +544,26 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "negative clear lengths are preserved and address their negative byte offset") {
+                      "clearing a negative length keeps it, and writes a zero that many bytes before the text") {
 
-        // empty_storage has guard bytes before its empty string, so this backward write stays inside the fixture's array.
+        // the zero goes to m_data[-3]; empty_storage has room before the empty string, so it lands inside the fixture.
         c_string_slot value;
         value->m_size = -3;
         value->clear();
 
         CHECK(value->m_size == -3);
-        CHECK(value->m_data == empty_storage.data() + 16);
-        CHECK(empty_storage[13] == '\0');
-        CHECK(empty_storage[14] == '?');
-        CHECK(empty_storage[15] == '?');
-        CHECK(empty_storage[16] == '\0');
+        CHECK(value->m_data == empty_string());
+        CHECK(empty_string()[-3] == '\0');
+        CHECK(empty_string()[-2] == '?');
+        CHECK(empty_string()[-1] == '?');
+        CHECK(empty_string()[0] == '\0');
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string comparison uses reversed signs and handles prefixes") {
+                      "compare has its signs flipped compared to strcmp, and handles one string being a prefix of the other") {
 
-        // compare returns positive for less and negative for greater; the relational operators follow those signs.
+        // compare gives 1 when this string sorts before the argument and -1 when it sorts after, the opposite of strcmp.
+        // the < and > operators are built on it, and they come out the usual way around.
         struct comparison_t {
             const char* left;
             const char* right;
@@ -555,6 +578,9 @@ TEST_SUITE("mash") {
                                                      {"abc", "abd",  1},
                                                      {"abd", "abc", -1},
                                                      {"abc", "abc",  0} }) {
+
+            CAPTURE(comparison.left);
+            CAPTURE(comparison.right);
 
             c_string_slot left(comparison.left);
             c_string_slot right(comparison.right);
@@ -574,13 +600,14 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string equality compares only the first 65535 bytes") {
+                      "== only looks at the first 65535 characters") {
 
         std::string first(65536, 'a');
         std::string second = first;
 
         first[65535]  = 'x';
         second[65535] = 'y';
+
         c_string_slot left(first.c_str());
         c_string_slot right(second.c_str());
 
@@ -588,27 +615,34 @@ TEST_SUITE("mash") {
         CHECK(*left == *right);
         CHECK_FALSE(*left != *right);
 
-        // equality stops at its fixed comparison limit, but compare still reaches the differing character.
+        // compare has no such limit and does see the difference.
         CHECK(left->compare(second.c_str()) == 1);
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "string search offsets and terminators follow each overload") {
+                      "each search function has its own take on start positions and the terminating zero") {
 
         c_string_slot value("ababa");
 
+        // find with text, and an optional position to start from.
         CHECK(value->find("aba") == 0);
         CHECK(value->find("aba", 1) == 2);
         CHECK(value->find("missing") == mash::string::npos);
         CHECK(value->find("", 5) == 5);
+
+        // find with a character takes its start position first, wrapped in pos_t, and never matches the terminating zero.
         CHECK(value->find(mash::string::pos_t{1}, 'a') == 2);
         CHECK(value->find(mash::string::pos_t{0}, '\0') == mash::string::npos);
         CHECK(value->find(mash::string::pos_t{5}, 'a') == mash::string::npos);
+
+        // rfind with a character searches backwards, from the last character or a given start; the zero is only found if you start on it.
         CHECK(value->rfind('a') == 4);
         CHECK(value->rfind('a', 3) == 2);
         CHECK(value->rfind('x') == mash::string::npos);
         CHECK(value->rfind('\0') == mash::string::npos);
         CHECK(value->rfind('\0', 5) == 5);
+
+        // rfind with text gives the start of the last match.
         CHECK(value->rfind("aba") == 2);
         CHECK(value->rfind("ababa") == 0);
         CHECK(value->rfind("ababab") == mash::string::npos);
@@ -621,11 +655,12 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "case conversion uses the upper table and leaves zero entries unchanged") {
+                      "to_upper goes through the upper case table, skipping bytes it has no entry for") {
 
-        const u8 bytes[]{'a', 'Z', '1', 0xE0, 0xF7, 0xFF, 0};
+        // the fixture's table maps a to z and the accented latin-1 letters, except 0xf7 (the division sign).
+        const u8      bytes[]{'a', 'Z', '1', 0xE0, 0xF7, 0xFF, 0};
         c_string_slot value((const char*)bytes);
-        char* original = value->data();
+        char*         original = value->data();
 
         CHECK(&value->to_upper() == &*value);
         CHECK(value->data() == original);
@@ -637,20 +672,21 @@ TEST_SUITE("mash") {
         CHECK((u8)value->data()[4] == 0xF7);
         CHECK((u8)value->data()[5] == 0xDF);
 
-        // changing the fixture table makes its use observable even for a character that was already uppercase.
+        // swapping a table entry proves the table is what's being used, even for a letter that's already upper case.
         upper_table['A'] = 'Q';
         value->to_upper();
 
         CHECK(value->data()[0] == 'Q');
 
+        // to_lower uses the c library's tolower instead of a table.
         c_string_slot ascii("AbZ09!");
 
         CHECK(&ascii->to_lower() == &*ascii);
-        CHECK(doctest::String(ascii->c_str()) == "abz09!");
+        CHECK(*ascii == "abz09!");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "substring and slice preserve their distinct count conventions") {
+                      "substr takes a count while slice takes an end position") {
 
         c_string_slot value("abcdef");
 
@@ -660,30 +696,30 @@ TEST_SUITE("mash") {
         CHECK(value->substr(6) == "");
         CHECK(value->substr(2, 0) == "");
 
-        // slice takes an exclusive end position rather than a count; negative positions count back from the end.
+        // slice's end isn't included, and negative positions count back from the end of the string.
         CHECK(value->slice(1, 4) == "bcd");
         CHECK(value->slice(-3, -1) == "de");
         CHECK(value->slice(0, -1) == "abcde");
         CHECK(value->slice(0, 6) == "abcdef");
-        CHECK(doctest::String(value->c_str()) == "abcdef");
+        CHECK(*value == "abcdef");
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "trimming uses character sets and handles empty null and fully matching inputs") {
+                      "trimming removes any of the given characters, and copes with empty, null and everything matching") {
 
         c_string_slot value("xxabyy");
 
         CHECK(&value->remove_leading("x") == &*value);
-        CHECK(doctest::String(value->c_str()) == "abyy");
+        CHECK(*value == "abyy");
         CHECK(&value->remove_trailing("y") == &*value);
-        CHECK(doctest::String(value->c_str()) == "ab");
+        CHECK(*value == "ab");
 
         value->remove_leading(nullptr);
         value->remove_trailing(nullptr);
         value->remove_leading("");
         value->remove_trailing("");
 
-        CHECK(doctest::String(value->c_str()) == "ab");
+        CHECK(*value == "ab");
 
         c_string_slot all("aaaa");
         all->remove_leading("a");
@@ -698,7 +734,7 @@ TEST_SUITE("mash") {
         c_string_slot spaces(" \n\t\rtext\r\t\n ");
 
         CHECK(&spaces->remove_surrounding_whitespace() == &*spaces);
-        CHECK(doctest::String(spaces->c_str()) == "text");
+        CHECK(*spaces == "text");
 
         c_string_slot empty;
         empty->remove_surrounding_whitespace();
@@ -707,7 +743,7 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(c_string_fixture,
-                      "numeric parsing accepts prefixes and stops at trailing text") {
+                      "number parsing reads as much as it can and ignores the rest") {
 
         c_string_slot integer("  -42rest");
         c_string_slot number(" +12.5rest");

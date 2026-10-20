@@ -8,16 +8,18 @@
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
 
-// the reader finds byte ranges; class traversal uses those ranges as objects of a particular type.
-// unmash_class first moves past the object's body, then calls its unmash method to follow any further members.
-// unmash_class_in_place visits a member whose body was already included in its parent's bytes.
-// construct_class is a later step; the event lists check that pointer repair finishes before construction starts.
+// reader.cc hands out raw byte ranges; this file turns those ranges into objects.
+// unmash_class(pointer) reads one object's worth of bytes, points the pointer at them and then calls that object's unmash method.
+// that unmash method is where an object reads whatever it points to, so loading spreads out from the first object, the root.
+// unmash_class_in_place does the same for an object that's stored inside another one, so its bytes were already read with its parent.
+// construct_class runs construct_mashed_class afterwards; the traces check that every pointer is fixed before anything gets constructed.
 namespace tests { namespace mash_support {
+    // a record with a sixteen byte alignment requirement, to see the reader honor it.
     struct alignas(16) wide_record_t : record_t {
         u32 tail[2];
     };
 
-    // a tiny parent and child let us see pointer repair finish before either construction hook runs.
+    // a parent with one child pointer, the smallest case of loading spreading from one object to the next.
     struct nested_record_t {
         u32       id;
         trace_t*  trace;
@@ -45,7 +47,7 @@ void tests::mash_support::nested_record_t::construct_mashed_class() {
 }
 
 TEST_SUITE("mash") {
-    TEST_CASE("plain class traversal honors natural alignment and forwards its parent") {
+    TEST_CASE("loading a plain object respects its alignment and passes its parent along") {
         image_t<128> image;
 
         trace_t trace;
@@ -53,6 +55,8 @@ TEST_SUITE("mash") {
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128, false);
         reader.advance_buffer(mash::NORMAL_BUFFER, 17);
+
+        // the cursor is at 17, so the sixteen byte alignment moves the record to 32 and its sixteen bytes end at 48.
         wide_record_t* value = nullptr;
         reader.unmash_class(value, &trace, mash::NORMAL_BUFFER);
 
@@ -69,9 +73,8 @@ TEST_SUITE("mash") {
         CHECK(trace.events[1].kind == event_construct);
     }
 
-    TEST_CASE("in place member traversal reserves no second object body") {
-        // an inline member is stored inside its parent's body, so the reader has already stepped past its bytes.
-        // visiting it can repair its pointers without reserving that same body a second time.
+    TEST_CASE("an object stored inside its parent doesn't read any bytes of its own") {
+        // its parent's read already covered these bytes, so only its unmash method runs.
         image_t<128> image;
 
         trace_t   trace;
@@ -91,18 +94,22 @@ TEST_SUITE("mash") {
         CHECK(trace.events[0].buffer == mash::SHARED_BUFFER);
     }
 
-    TEST_CASE("root traversal performs nested unmash before ownership construction") {
+    TEST_CASE("unmash_in_place unmashes the whole tree of objects before constructing any of them") {
         for (bool headered : {false, true}) {
+            CAPTURE(headered);
+
             image_t<128> image;
             image.header(96);
 
+            // the root goes first in the normal stream, so right after the header or at 0 when there isn't one.
             trace_t   trace;
             const u32 start = headered ? 16 : 0;
-            image.put(start, u32{1});
+            image.put(start,     u32{1});
             image.put(start + 4, &trace);
 
-            // this placeholder is not a usable pointer; unmashing replaces it with the following child's address.
+            // this is the saved child pointer; it's junk until unmashing points it at the child that comes right after the root.
             image.put(start + 8, u32{0x12345678});
+
             record_t* child = put_record(image, start + 12, 2, trace);
             auto*     root  = mash::unmash_in_place<nested_record_t>(image.bytes.data(), 128, headered);
 
@@ -122,31 +129,28 @@ TEST_SUITE("mash") {
         }
     }
 
-    TEST_CASE("polymorphic traversal fixes the vtable and consumes the dynamic tail before unmash") {
+    TEST_CASE("loading a virtual object fixes its vtable first, so it can say how big it really is") {
         c_registry_fixture registry;
-        c_virtual_record prototype(0, nullptr);
+        registry.register_virtual_record();
 
-        // construct a real object to obtain a callable virtual table; the image only holds its numeric type key.
-        registry.set({{0, 0x1001, *(u32*)&prototype}}, 0, 1);
+        // the bytes before the record are 0xa1 filler; a virtual read finds where the object starts by skipping them.
         image_t<128> image;
         image.bytes.fill(0x55);
-        std::fill(image.bytes.begin() + 17, image.bytes.begin() + 32, 0xA1);
+        std::fill(image.bytes.begin() + 17, image.bytes.begin() + 32, mash::alignment_padding);
 
         trace_t trace;
-        image.put(32, u32{0x1001});
-        image.put(36, u32{7});
-        image.put(40, &trace);
+        put_virtual_record(image, 32, 7, trace);
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128, false);
         reader.advance_buffer(mash::NORMAL_BUFFER, 17);
-        mash::mash_virtual_base* value = nullptr;
 
-        // the base pointer's type accounts for four bytes, but this record actually occupies twelve.
-        // restoring its virtual table lets get_mash_sizeof report twelve before the record's unmash method runs.
+        // a mash_virtual_base pointer only knows about four bytes, but the object behind it is a twelve byte c_virtual_record.
+        // once the vtable is in place, get_mash_sizeof can be asked for the real size; the reader skips the other eight bytes before unmash runs.
+        mash::mash_virtual_base* value = nullptr;
         reader.unmash_class(value, &trace, mash::NORMAL_BUFFER);
 
         CHECK(value == image.at<mash::mash_virtual_base>(32));
-        CHECK(*(u32*)value == *(u32*)&prototype);
+        CHECK(first_word(value) == registry.virtual_record_vtable);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 44);
         REQUIRE(trace.events.size() == 1);
         CHECK(trace.events[0].id == 7);
@@ -159,23 +163,20 @@ TEST_SUITE("mash") {
         CHECK(trace.events[1].kind == event_construct);
     }
 
-    TEST_CASE("polymorphic in place members fix their vtables without reserving body bytes") {
+    TEST_CASE("a virtual object stored inside its parent gets its vtable without reading any bytes") {
         c_registry_fixture registry;
-        c_virtual_record prototype(0, nullptr);
-        registry.set({{0, 0x1001, *(u32*)&prototype}}, 0, 1);
+        registry.register_virtual_record();
+
         image_t<128> image;
 
         trace_t trace;
-        image.put(64, u32{0x1001});
-        image.put(68, u32{8});
-        image.put(72, &trace);
+        auto*   value = put_virtual_record(image, 64, 8, trace);
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128, false);
         reader.advance_buffer(mash::NORMAL_BUFFER, 20);
-        auto* value = image.at<c_virtual_record>(64);
         reader.unmash_class_in_place(*value, &trace, mash::SHARED_BUFFER);
 
-        CHECK(*(u32*)value == *(u32*)&prototype);
+        CHECK(first_word(value) == registry.virtual_record_vtable);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 20);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 0);
         REQUIRE(trace.events.size() == 1);
@@ -183,17 +184,16 @@ TEST_SUITE("mash") {
         CHECK(trace.events[0].buffer == mash::SHARED_BUFFER);
     }
 
-    TEST_CASE("the root helper constructs a polymorphic root exactly once") {
+    TEST_CASE("unmash_in_place constructs a virtual root exactly once") {
         c_registry_fixture registry;
-        c_virtual_record prototype(0, nullptr);
-        registry.set({{0, 0x1001, *(u32*)&prototype}}, 0, 1);
+        registry.register_virtual_record();
+
         image_t<128> image;
         image.header(96);
 
         trace_t trace;
-        image.put(16, u32{0x1001});
-        image.put(20, u32{9});
-        image.put(24, &trace);
+        put_virtual_record(image, 16, 9, trace);
+
         auto* root = mash::unmash_in_place<mash::mash_virtual_base>(image.bytes.data(), 128);
 
         CHECK(root == image.at<mash::mash_virtual_base>(16));
@@ -202,34 +202,35 @@ TEST_SUITE("mash") {
         CHECK(trace.events[0].normal_used == 28);
         CHECK(trace.events[1].kind == event_construct);
 
-        // the root helper repairs and constructs objects; the resource handler is what manages this flag.
+        // in_use belongs to resource loading, which graphs.cc covers; unmash_in_place never touches it.
         CHECK(image.at<mash::mash_info_struct::mash_header>(0)->in_use == 0);
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "pointer vectors restore each polymorphic object and preserve the image") {
+                      "a vector of virtual objects fixes every vtable and frees nothing from the image") {
 
+        // containers.cc covers vectors in depth; this only checks that each element goes through the virtual loading path.
         c_registry_fixture registry;
-        c_virtual_record prototype(0, nullptr);
-        registry.set({{0, 0x1001, *(u32*)&prototype}}, 0, 1);
+        registry.register_virtual_record();
+
         image_t<256> image;
         image.header(128);
         image.put(128, u32{2});
 
         trace_t trace;
-        auto* values = ::new (image.at<mash::vector<mash::mash_virtual_base>>(16))
-            mash::vector<mash::mash_virtual_base>;
-        for (u32 index = 0; index < 2; ++index) {
-            image.put(44 + 12 * index, u32{0x1001});
-            image.put(48 + 12 * index, index + 1);
-            image.put(52 + 12 * index, &trace);
-        }
+        auto*   values = image.make<mash::vector<mash::mash_virtual_base>>(16);
+
+        // the vector's body is bytes 16 to 35, its two pointer slots are bytes 36 to 43 and the two records follow.
+        put_virtual_record(image, 44, 1, trace);
+        put_virtual_record(image, 56, 2, trace);
+
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 256);
         reader.advance_buffer(mash::NORMAL_BUFFER, 20);
         values->unmash(&reader, &trace, mash::NORMAL_BUFFER);
 
         CHECK(values->data[0] == image.at<mash::mash_virtual_base>(44));
         CHECK(values->data[1] == image.at<mash::mash_virtual_base>(56));
+        CHECK(first_word(values->data[1]) == registry.virtual_record_vtable);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 68);
 
         values->construct_mashed_class();
@@ -243,19 +244,18 @@ TEST_SUITE("mash") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "fixed arrays restore polymorphic vtables after reserving all elements") {
+                      "a fixed array of virtual objects reads every element before fixing their vtables") {
 
+        // arrays.cc covers fixed arrays in depth; the elements here sit back to back, so their bytes are read in one go.
         c_registry_fixture registry;
-        c_virtual_record prototype(0, nullptr);
-        registry.set({{0, 0x1001, *(u32*)&prototype}}, 0, 1);
+        registry.register_virtual_record();
+
         image_t<128> image;
 
         trace_t trace;
-        for (u32 index = 0; index < 2; ++index) {
-            image.put(16 + 12 * index, u32{0x1001});
-            image.put(20 + 12 * index, index + 1);
-            image.put(24 + 12 * index, &trace);
-        }
+        put_virtual_record(image, 16, 1, trace);
+        put_virtual_record(image, 28, 2, trace);
+
         mash::array_replacement_base<c_virtual_record> values {};
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128, false);
@@ -266,6 +266,7 @@ TEST_SUITE("mash") {
         CHECK(trace.events[0].normal_used == 40);
         CHECK(trace.events[1].normal_used == 40);
         CHECK(trace.events[0].parent == nullptr);
+        CHECK(first_word(&values.array[1]) == registry.virtual_record_vtable);
 
         values.initialize_helper_mash(2);
         values.finalize_helper_mash(2);
