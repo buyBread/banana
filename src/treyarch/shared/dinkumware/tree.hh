@@ -23,6 +23,7 @@ namespace treyarch { namespace dinkumware {
         e_tree_color color;
         bool         is_nil;
 
+        // sub_95D780
         tree_node* next() noexcept { // in-order successor; the end (head) node maps to itself
             if (is_nil)
                 return this;
@@ -47,6 +48,7 @@ namespace treyarch { namespace dinkumware {
             return above;
         }
 
+        // sub_620600
         // sub_A76160
         tree_node* previous() noexcept { // in-order predecessor; the end (head) node maps to the rightmost node
             if (is_nil)
@@ -159,6 +161,7 @@ namespace treyarch { namespace dinkumware {
             return result;
         }
 
+        // sub_63CE50
         node* find(const K &key) const {
             node* position = lower_bound(key);
 
@@ -168,6 +171,8 @@ namespace treyarch { namespace dinkumware {
             return position;
         }
 
+        // sub_759870
+        // sub_759930
         // sub_A1BB00
         std::pair<node*, bool> insert(const T &value) { // unique insert; an equal key already present is returned with `false`
             node* try_node   = head_node->parent;
@@ -193,6 +198,45 @@ namespace treyarch { namespace dinkumware {
                 return { insert_at(add_left, where_node, value), true };
 
             return { where, false };
+        }
+
+        // sub_7618D0
+        // sub_761A40
+        node* insert(node* where, const T &value) { // unique insert next to `where` when it fits there, else a plain insert
+            if (count == 0)
+                return insert_at(true, head_node, value);
+
+            if (where == begin()) {
+                if (compare(key_of_t()(value), key_of_t()(where->value)))
+                    return insert_at(true, where, value);
+            } else if (where == end()) {
+                if (compare(key_of_t()(head_node->right->value), key_of_t()(value)))
+                    return insert_at(false, head_node->right, value);
+            } else {
+                if (compare(key_of_t()(value), key_of_t()(where->value))) {
+                    node* before = where->previous();
+
+                    if (compare(key_of_t()(before->value), key_of_t()(value))) {
+                        if (before->right->is_nil)
+                            return insert_at(false, before, value);
+
+                        return insert_at(true, where, value);
+                    }
+                }
+
+                if (compare(key_of_t()(where->value), key_of_t()(value))) {
+                    node* after = where->next();
+
+                    if (after == end() || compare(key_of_t()(value), key_of_t()(after->value))) {
+                        if (where->right->is_nil)
+                            return insert_at(false, where, value);
+
+                        return insert_at(true, after, value);
+                    }
+                }
+            }
+
+            return insert(value).first;
         }
 
         // sub_8030D0
@@ -416,6 +460,8 @@ namespace treyarch { namespace dinkumware {
             return result;
         }
 
+        // sub_7549C0
+        // sub_754BC0
         // sub_A1B4B0
         node* insert_at(bool add_left, node* where_node, const T &value) {
             if (count >= 0x3FFFFFFE)
