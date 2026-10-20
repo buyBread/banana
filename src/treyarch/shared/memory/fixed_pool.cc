@@ -49,10 +49,10 @@ void fixed_pool::initialize(const char* pool_name,
 
     add_blocks(initial_block_count);
 
-    lock.owner    = 0;
-    lock.state    = 0;
-    lock.depth    = 0;
-    lock.reserved = 0;
+    lock.owner        = 0;
+    lock.state        = 0;
+    lock.depth        = 0;
+    lock.writer_depth = 0;
 }
 
 // sub_5AAE30

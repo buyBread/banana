@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -14,6 +15,9 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<arch_base_vhandle_entry*> arch_base_vhandle_entries { 0x00FFEA24 };
+
+        // allocated by jq::jobqueue_init
+        inline util::memory_reference<engine_recursive_lock*> g_arch_handle_manager_lock { 0x00FFEBC0 };
     } // references
 
     struct arch_base_vhandle {

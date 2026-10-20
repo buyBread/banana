@@ -17,7 +17,14 @@ namespace treyarch {
         volatile u32 owner;
         volatile u32 state;
         volatile u32 depth;
-                 u32 reserved;
+        volatile u32 writer_depth; // only the reader/writer form uses it (sub_48D040, sub_48D120)
+
+        // inlined @ sub_4291C0
+        void reset() {
+            owner = 0;
+            state = 0;
+            depth = 0;
+        }
 
         bool try_acquire(i64 owner_state) {
             return _InterlockedCompareExchange64((volatile i64*)&owner, owner_state, 0) == 0;

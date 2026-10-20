@@ -15,6 +15,7 @@
 #include "treyarch/game/post_process/post_process.hh"
 #include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/camera/references.hh"
+#include "treyarch/jq/jq.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/display.hh"
@@ -133,7 +134,8 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     HWND window = (HWND)retail::sub_9C8A20(instance);
     windows_app::inst()->window = window;
     retail::sub_9CC900((i64*)&references::log_callback_table.get());
-    retail::sub_4291C0();
+    
+    jq::jobqueue_init();
 
     const nfl::init_params nfl_params { references::pack_mode.read() ? 1024 : 128, 64, 64, 3, 1 };
     references::nfl_work_space_size.write(nfl::init(&nfl_params));

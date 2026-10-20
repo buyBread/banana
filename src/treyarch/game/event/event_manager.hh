@@ -3,6 +3,8 @@
 #include "treyarch/game/event/event_callback.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mutex.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
@@ -59,4 +61,8 @@ namespace treyarch {
                                         void*                        parameters,
                                         bool                         one_shot);
     };
+
+    namespace references {
+        inline util::memory_reference<engine_recursive_lock> event_manager_lock { 0x0102C6E0 };
+    } // references
 } // treyarch
