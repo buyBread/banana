@@ -16,11 +16,15 @@ namespace treyarch { namespace memory {
     void  report(const char* format, ...);
     void* allocate(u32 size, u32 alignment, u32 flags);
     void  free(void* allocation);
+    void  initialize_stack_bounds();
 
     namespace references {
         inline util::memory_reference<error_callback>      error_handler      { 0x01115A28 };
         inline util::memory_reference<allocation_callback> allocation_handler { 0x01115A34 };
         inline util::memory_reference<free_callback>       free_handler       { 0x01115A3C };
         inline util::memory_reference<u32>                 allocation_count   { 0x01115A40 };
+
+        inline util::memory_reference<u32> stack_begin { 0x01115B50 };
+        inline util::memory_reference<u32> stack_end   { 0x01115B54 };
     } // references
 }} // treyarch::memory

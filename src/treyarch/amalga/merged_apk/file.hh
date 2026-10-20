@@ -207,6 +207,7 @@ namespace treyarch { namespace amalga { namespace merged_apk {
                                            void*            user_data = nullptr);
 
     void set_resource_resolver(resource_resolver resolver);
+    void* resolve_resource(fixed_string* name, u32 type);
 
     namespace references {
         inline util::memory_reference<file_type_handler*> file_type_handlers { 0x01126B70 };

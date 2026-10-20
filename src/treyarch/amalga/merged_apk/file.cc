@@ -382,3 +382,13 @@ amalga::merged_apk::section_handler* amalga::merged_apk::register_section_type(s
 void amalga::merged_apk::set_resource_resolver(resource_resolver resolver) {
     references::resource_resolver.write(resolver);
 }
+
+// sub_A6AA30
+void* amalga::merged_apk::resolve_resource(fixed_string* name, u32 type) {
+    resource_resolver resolver = references::resource_resolver.read();
+
+    if (!resolver)
+        return nullptr;
+
+    return resolver(name, type);
+}

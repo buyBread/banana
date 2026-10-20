@@ -52,3 +52,9 @@ void treyarch::memory::free(void* allocation) {
     else
         _aligned_free(allocation);
 }
+
+// sub_9CCA90
+void treyarch::memory::initialize_stack_bounds() {
+    references::stack_begin.write(0);
+    references::stack_end  .write(0);
+}

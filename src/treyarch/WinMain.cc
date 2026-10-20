@@ -15,6 +15,7 @@
 #include "treyarch/game/post_process/post_process.hh"
 #include "treyarch/game/shadow/shadow.hh"
 #include "treyarch/game/wds/camera/references.hh"
+#include "treyarch/nal/nal.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/ngl.hh"
@@ -202,7 +203,8 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
             std::bit_cast<f32>(u32 { 0x3F400000 }));
     }
 
-    retail::sub_9D1800();
+    nal::init();
+    
     retail::sub_631D30();
     retail::sub_5B4A70(nullptr);
     app::create_inst();
