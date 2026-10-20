@@ -99,6 +99,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_808510
+        // sub_A6F4B0
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
                 root_node         = nullptr;
@@ -129,6 +130,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_808E20
+        // sub_A6F520
         void custom_unmash(mash_info_struct* mash_info,
                            void*,
                            buffer_type       buffer) {
@@ -239,6 +241,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_807170
+        // sub_A6F0D0
         i32 add_helper(node_type* node, node_type* &top, node_type* parent) {
             if (!top) {
                 node->parent = parent;
@@ -277,6 +280,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_8078B0
+        // sub_A6F250
         void destroy_element(node_type* &node) {
             if (destruct_contents) {
                 T* element = node->element;
@@ -300,6 +304,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_807BC0
+        // sub_A6F3B0
         void dump(node_type* &node) {
             if (!node)
                 return;
