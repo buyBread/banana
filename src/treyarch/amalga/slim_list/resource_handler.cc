@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/amalga/resource_directory.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_types.hh"
 #include "treyarch/amalga/slim_list/resource_handler.hh"
 #include "treyarch/shared/hash/string_hash.hh"
@@ -20,7 +21,7 @@ i32 amalga::slim_list_handler::handle_resource(e_behavior behavior, resource_des
         key.set(name, (u32)e_resource_type::slim_list);
 
         u32 force_include_size;
-        u8* force_include = (u8*)retail::sub_7629D0((u32*)&key, &force_include_size, nullptr);
+        u8* force_include = resource_manager::get_resource(key, &force_include_size, nullptr);
 
         if (force_include != text)
             retail::sub_76D8E0(this, force_include, force_include_size);

@@ -5,6 +5,8 @@
 #include "treyarch/amalga/merged_apk/file.hh"
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -61,8 +63,12 @@ namespace treyarch { namespace amalga {
             return adjusted_payload;
         }
 
-        // inlined @ sub_73A130, sub_75F8D0
+        // sub_72DF90
+        // inlined @ sub_73A130, sub_75F8D0, sub_75E2C0
         u8* calculate_adjusted_payload() const;
+
+        // key is a resource_key*, entry a resource_descriptor**
+        static i32 compare_name_hash(const void* key, const void* entry);
 
         // inlined @ sub_76E390
         void construct_mashed_class() {
@@ -103,6 +109,22 @@ namespace treyarch { namespace amalga {
         void unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer);
 
         void constructor_common(resource_pack_slot* slot);
+
+        resource_descriptor* find_local_resource(const resource_key &key) const;
+        resource_descriptor* find_resource(const resource_key &key, resource_directory** out_dir);
+
+        bool get_resource_descriptor(const resource_key          &key,
+                                           u32*                   size,
+                                           resource_pack_slot**   slot,
+                                           resource_descriptor**  descriptor);
+
+        u8* get_resource(const resource_key &key, u32* size, resource_pack_slot** slot);
+
+        void* find_local_merged_resource(string_hash name, u32 type) const;
+        void* find_merged_resource(string_hash name, u32 type, resource_directory** out_dir);
+
+        void* get_merged_resource(string_hash name, u32 type, resource_pack_slot** slot);
+        void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot); // a missing texture comes back as the white one
     };
 
     // filled at startup, one 0x50-byte record per resource type

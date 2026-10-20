@@ -78,6 +78,8 @@ namespace treyarch { namespace amalga { namespace merged_apk {
         const void* section(u32 slot) const {
             return *(void* const*)((const u8*)this + sizeof(file_entry) + slot * sizeof(void*));
         }
+
+        void* get_section_data(const file* owner, u32 type, u32 section_index, u32 occurrence) const;
     };
 
     struct file_type {
@@ -165,6 +167,7 @@ namespace treyarch { namespace amalga { namespace merged_apk {
         file_type*    file_types;
 
         i32 find_section_index(string_hash name) const;
+        file_entry* find_entry(string_hash name, u32 type) const;
         u32 get_section_span(file_entry* entry, i32 section_index, u32 occurrence) const;
 
         bool relocate_in_place(data_reference* &resource_references,

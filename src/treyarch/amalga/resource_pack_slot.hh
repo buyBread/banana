@@ -64,6 +64,15 @@ namespace treyarch { namespace amalga {
         void clear_slot();
         void frame_advance(f32 dt, limited_timer* time_limit);
         void notify_load_started(resource_amalgatoc_pack_entry* entry, resource_pack_slot_callback callback);
+
+        void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot);
+
+        // inlined @ sub_757570, sub_757490, sub_7574F0
+        bool is_data_ready() const {
+            return slot_state == slot_state_constructing ||
+                   slot_state == slot_state_destructing  ||
+                   slot_state == slot_state_ready;
+        }
     };
 
     namespace references {

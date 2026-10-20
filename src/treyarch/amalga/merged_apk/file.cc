@@ -13,6 +13,69 @@ i32 amalga::merged_apk::file::find_section_index(string_hash section_name) const
     return -1;
 }
 
+// sub_A6ABF0
+amalga::merged_apk::file_entry* amalga::merged_apk::file::find_entry(string_hash name, u32 type) const {
+    if (!file_types)
+        return nullptr;
+
+    for (const file_type* current = file_types; current->type; current = current->next(section_count)) {
+        if (current->type != type)
+            continue;
+
+        file_entry* entries = current->entries;
+
+        // the first entry gets a look before the search
+        if (entries->name.hash == name)
+            return entries;
+
+        i32 low  = 0;
+        i32 high = (i32)current->entry_count - 1;
+
+        while (low <= high) {
+            const i32 middle = (low + high) / 2;
+
+            auto entry = (file_entry*)((u8*)entries + middle * current->entry_stride());
+
+            if (name.source_hash_code > entry->name.hash.source_hash_code)
+                low = middle + 1;
+            else if (name.source_hash_code < entry->name.hash.source_hash_code)
+                high = middle - 1;
+            else
+                return entry;
+        }
+
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+// sub_A6AA40
+void* amalga::merged_apk::file_entry::get_section_data(const file*  owner,
+                                                             u32    type,
+                                                             u32    section_index,
+                                                             u32    occurrence) const {
+
+    (void)occurrence;
+
+    if (!owner->file_types)
+        return nullptr;
+
+    for (const file_type* current = owner->file_types; current->type; current = current->next(owner->section_count)) {
+        if (current->type != type)
+            continue;
+
+        const u8 section_slot = current->mapping(section_index).section_slot();
+
+        if (section_slot == absent_section_slot)
+            return nullptr;
+
+        return (void*)section(section_slot);
+    }
+
+    return nullptr;
+}
+
 // sub_A6AAA0
 u32 amalga::merged_apk::file::get_section_span(file_entry* entry,
                                                i32         section_index,

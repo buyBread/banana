@@ -1,4 +1,5 @@
 #include "treyarch/amalga/resource_amalgatoc.hh"
+#include "treyarch/amalga/resource_directory.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/amalga/resource_partition.hh"
@@ -78,4 +79,12 @@ void amalga::resource_pack_slot::notify_load_started(resource_amalgatoc_pack_ent
 
     if (callback)
         callback(callback_load_started, &my_partition->streamer, this, nullptr);
+}
+
+// sub_75D000
+void* amalga::resource_pack_slot::get_merged_resource_or_default(string_hash          name,
+                                                                 u32                  type,
+                                                                 resource_pack_slot** slot) {
+
+    return pack_directory->get_merged_resource_or_default(name, type, slot);
 }

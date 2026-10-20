@@ -56,6 +56,11 @@ namespace treyarch {
 
             resource_partition* get_partition_pointer(resource_pack_slot* pack_slot);
 
+            resource_pack_slot* get_resource_context();
+
+            u8* get_resource(const resource_key &key, u32* size, resource_pack_slot** slot);
+            void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot);
+
             void* resolve_vrml_section(merged_apk::file*         owner,
                                        merged_apk::file_section* section,
                                        void*                     user_data);
@@ -65,6 +70,7 @@ namespace treyarch {
                 inline util::memory_reference<bool> advancing   { 0x0102FE4D };
 
                 inline util::memory_reference<dinkumware::vector<resource_partition*>*> partitions                   { 0x0102FE50 };
+                inline util::memory_reference<dinkumware::vector<resource_pack_slot*>>  resource_context_stack       { 0x01030A10 };
                 inline util::memory_reference<engine_recursive_lock*>                   resource_context_stack_mutex { 0x0102FE54 };
 
                 // has no name in any build; held around every resource context push and pop

@@ -2,6 +2,7 @@
 
 #include "retail.hh"
 #include "treyarch/amalga/paths.hh"
+#include "treyarch/amalga/resource_directory.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/app/app.hh"
@@ -180,6 +181,36 @@ amalga::resource_partition* amalga::resource_manager::get_partition_pointer(reso
     return nullptr;
 }
 
+// sub_456240
+// inlined @ sub_7629D0, sub_75E130
+amalga::resource_pack_slot* amalga::resource_manager::get_resource_context() {
+    engine_lock_scope lock(references::resource_context_stack_mutex.read());
+
+    dinkumware::vector<resource_pack_slot*> &stack = references::resource_context_stack.get();
+
+    return stack.size() ? stack.back() : nullptr;
+}
+
+// sub_7629D0
+u8* amalga::resource_manager::get_resource(const resource_key         &key,
+                                                 u32*                  size,
+                                                 resource_pack_slot**  slot) {
+
+    engine_lock_scope lock(&references::unk_010300a8.get());
+
+    return get_resource_context()->pack_directory->get_resource(key, size, slot);
+}
+
+// sub_75E130
+void* amalga::resource_manager::get_merged_resource_or_default(string_hash          name,
+                                                               u32                  type,
+                                                               resource_pack_slot** slot) {
+
+    engine_lock_scope lock(&references::unk_010300a8.get());
+
+    return get_resource_context()->get_merged_resource_or_default(name, type, slot);
+}
+
 // sub_456290
 amalga::push_resource_context_stack_object::push_resource_context_stack_object(resource_pack_slot* slot) {
     resource_manager::references::unk_010300a8.get().acquire();
@@ -189,7 +220,7 @@ amalga::push_resource_context_stack_object::push_resource_context_stack_object(r
         m_context = (resource_pack_slot*)retail::sub_767760((i32)slot); // push_resource_context
         m_pushed  = true;
     } else {
-        m_context = (resource_pack_slot*)retail::sub_456240(); // get_resource_context
+        m_context = resource_manager::get_resource_context();
         m_pushed  = false;
     }
 }
