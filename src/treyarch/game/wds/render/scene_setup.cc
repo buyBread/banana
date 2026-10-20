@@ -21,7 +21,7 @@ using namespace treyarch;
 bool wds_render_manager::is_special_case_level() {
     cut_scene_player* player = treyarch::references::cut_scene_player.read();
 
-    const char* level_name = (const char*)retail::sub_97E390((u32*)mission_manager::inst());
+    const char* level_name = mission_manager::inst()->get_running_mission_name();
 
     return level_name && !player->is_playing() &&
            (!std::strncmp(level_name, "act4_h", 6) || !std::strcmp(level_name, "Act3_Vulture_Hive"));

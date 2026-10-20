@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/game/wds/ai/core_ai_resource.hh"
 
 using namespace treyarch;
@@ -11,7 +12,7 @@ void core_ai_resource::construct_mashed_class() {
     my_base_graphs      .construct_mashed_class();
     my_locomotion_graphs.construct_mashed_class();
 
-    resource_context = (amalga::resource_pack_slot*)retail::sub_456240(); // get_resource_context
+    resource_context = amalga::resource_manager::get_resource_context();
 }
 
 // sub_4CD900

@@ -205,12 +205,12 @@ void mission_manager::update_hero_proximity_event() {
         if (hero_nearby) {
             unk_200 = 1;
 
-            retail::sub_601750((u32*)hero, references::unk_0102c2b8.read().source_hash_code);
+            hero->raise_event(references::unk_0102c2b8.read());
         }
     } else if (!hero_nearby) {
         unk_200 = 0;
 
-        retail::sub_601750((u32*)hero, references::unk_0102c75c.read().source_hash_code);
+        hero->raise_event(references::unk_0102c75c.read());
     }
 
     lock.release();

@@ -44,7 +44,7 @@ void mission_manager::play_failed_music() {
             ++current_mission.exec->suspend_count;
     }
 
-    retail::sub_900D60(music.source_hash_code, 0x10000000, 0);
+    retail::sub_900D60(music.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
 }
 
 // sub_981F20

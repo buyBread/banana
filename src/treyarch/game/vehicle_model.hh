@@ -5,6 +5,7 @@
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
@@ -123,4 +124,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(vehicle_model_depot, specs,  0x04);
     ASSERT_OFFSETOF(vehicle_model_depot, models, 0x18);
     ASSERT_OFFSETOF(vehicle_model_depot, groups, 0x2C);
+
+    namespace references {
+        // set by game::load_this_level; cleared by game::unload_current_level
+        inline util::memory_reference<vehicle_model_depot*> vehicle_model_depot { 0x00FC7A90 };
+    } // references
 } // treyarch

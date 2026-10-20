@@ -33,9 +33,9 @@ void speed_tree_wrapper::submit_nodes() {
 
         matrix4x4 basis = axis_basis();
 
-        params.horizon = entry.world_region->horizon;
+        params.prelight = entry.world_region->prelight;
 
-        retail::sub_7BC640((u32*)params.horizon, index, 4, (i32)&params.horizon_projection_u);
+        retail::sub_7BC640((u32*)params.prelight, index, 4, (i32)&params.horizon_projection_u);
 
         params.fades       = nullptr;
         params.translucent = false;

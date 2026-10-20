@@ -15,6 +15,7 @@ namespace treyarch {
     class game_data;
     class localized_string_table; // impl?
     class message_board; // impl?
+    class speedtree_collection;
     class world_dynamics_system;
 
     enum game_state_e : i32; // todo: see if SM3 .ii still holds up
@@ -29,16 +30,11 @@ namespace treyarch {
         // freed and cleared by game::advance_state_legal
         inline util::memory_reference<void*> unk_00fc64ec { 0x00FC64EC };
 
-        // set by game::load_this_level; cleared by game::unload_current_level
-        inline util::memory_reference<void*> unk_00fc7a90 { 0x00FC7A90 };
-
         // game::frame_advance hands it the raw delta every frame
         inline util::memory_reference<void*> raw_delta_consumer { 0x010F9BEC };
 
         // created by game::game through sub_83EF20
         inline util::memory_reference<arch_base*> script_controller { 0x010F7074 };
-
-        inline util::memory_reference<void*> unk_0102ce40 { 0x0102CE40 };
 
         // app::app allocates 8 raw bytes here; game::load_this_level hands it to sub_90FCB0
         inline util::memory_reference<void*> unk_010fa26c { 0x010FA26C };
@@ -135,7 +131,7 @@ namespace treyarch {
         camera_handle                    current_game_camera;
         u8                               unk_078;
         u8                               reserved_079[0x03];
-        u32                              unk_07c;
+        speedtree_collection*            speedtrees;
         message_board*                   mb;
         f32                              level_time;
         dinkumware::vector<game_process> process_stack;
@@ -236,7 +232,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(game, current_view_camera,             0x070);
     ASSERT_OFFSETOF(game, current_game_camera,             0x074);
     ASSERT_OFFSETOF(game, unk_078,                         0x078);
-    ASSERT_OFFSETOF(game, unk_07c,                         0x07C);
+    ASSERT_OFFSETOF(game, speedtrees,                      0x07C);
     ASSERT_OFFSETOF(game, mb,                              0x080);
     ASSERT_OFFSETOF(game, level_time,                      0x084);
     ASSERT_OFFSETOF(game, process_stack,                   0x088);

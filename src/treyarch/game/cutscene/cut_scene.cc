@@ -1,6 +1,8 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/game/cutscene/cut_scene.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
+#include "treyarch/shared/four_cc.hh"
 
 using namespace treyarch;
 
@@ -47,9 +49,7 @@ void cut_scene_segment::construct_mashed_class() {
     regions.construct_mashed_class();
     unk_24 .construct_mashed_class();
 
-    i32 found;
-
-    scene_anim = (void*)*retail::sub_75E130(&found, (i32)name.source_hash_code, 0x4D4E4153, nullptr); // 'SANM'
+    scene_anim = amalga::resource_manager::get_merged_resource_or_default(name, four_cc('S', 'A', 'N', 'M'), nullptr);
 }
 
 // sub_807340
@@ -86,7 +86,7 @@ void cut_scene::construct_mashed_class() {
     unk_48              .construct_mashed_class();
     hero_entry          .construct_mashed_class();
 
-    resource_context = (amalga::resource_pack_slot*)retail::sub_456240(); // get_resource_context
+    resource_context = amalga::resource_manager::get_resource_context();
 }
 
 // sub_80A740

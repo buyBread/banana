@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
@@ -45,7 +46,7 @@ void mission_manager::setup_global_data(const char* level_name, amalga::resource
     key.hash = string_hash();
     key.set(gen_global_exec_name, 9);
 
-    if (!retail::sub_7629D0((u32*)&key, nullptr, nullptr))
+    if (!amalga::resource_manager::get_resource(key, nullptr, nullptr))
         return;
 
     if (chuck::vm::script_manager::inst()->is_loaded(gen_global_exec_name, string_hash()))

@@ -148,7 +148,7 @@ void game::render() {
         retail::sub_7D77A0();
     }
 
-    retail::sub_A6F7B0((i32)retail::sub_A6FBE0());
+    retail::sub_A6F7B0((i32)retail::sub_A6FBE0()); // ise manager
 
     ngl::list_end_scene();
 

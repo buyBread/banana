@@ -115,7 +115,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
 
     f32 dilated_time_inc = dilate_world_time(time_inc);
 
-    retail::sub_A6FCC0((u32*)retail::sub_A6FBE0(), dilated_time_inc);
+    retail::sub_A6FCC0((u32*)retail::sub_A6FBE0(), dilated_time_inc); // ise manager
     retail::sub_5DD1F0();
     retail::sub_7A9810(time_inc);
     retail::sub_646F50(time_inc);

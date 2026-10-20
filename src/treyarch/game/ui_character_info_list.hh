@@ -4,6 +4,7 @@
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
@@ -63,4 +64,9 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (ui_character_info_list,             0x18);
     ASSERT_OFFSETOF(ui_character_info_list, characters, 0x04);
+
+    namespace references {
+        // the level start fills it from global_ui_char_info, keyed by character and variant
+        inline util::memory_reference<void*> ui_character_info_map { 0x0102CE40 };
+    } // references
 } // treyarch

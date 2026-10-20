@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_types.hh"
 #include "treyarch/game/static_colgeom_root.hh"
 #include "treyarch/shared/mash/mash_info.hh"
@@ -49,7 +50,7 @@ void static_colgeom_root::custom_unmash(mash::mash_info_struct* mash_info, void*
     resource_key key;
     key.set(hull_meshes_file, (u32)amalga::e_resource_type::convex_hull_mesh);
 
-    u8* hull_meshes = (u8*)retail::sub_7629D0((u32*)&key, nullptr, nullptr);
+    u8* hull_meshes = amalga::resource_manager::get_resource(key, nullptr, nullptr);
 
     auto* hulls = (static_colgeom_hull*)(data + hulls_offset);
 

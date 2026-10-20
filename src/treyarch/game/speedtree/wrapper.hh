@@ -69,7 +69,7 @@ namespace treyarch {
         bool               translucent;
         u8                 pad_011[3];
         f32*               fades;
-        region_horizon*    horizon;
+        pre_light*         prelight;
         u32                unk_1c;
         vector4            horizon_projection_u;
         vector4            horizon_projection_v;
@@ -271,7 +271,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(speed_tree_render_params, light,                0x0C);
     ASSERT_OFFSETOF(speed_tree_render_params, translucent,          0x10);
     ASSERT_OFFSETOF(speed_tree_render_params, fades,                0x14);
-    ASSERT_OFFSETOF(speed_tree_render_params, horizon,              0x18);
+    ASSERT_OFFSETOF(speed_tree_render_params, prelight,             0x18);
     ASSERT_OFFSETOF(speed_tree_render_params, horizon_projection_u, 0x20);
     ASSERT_OFFSETOF(speed_tree_render_params, horizon_projection_v, 0x30);
 

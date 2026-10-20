@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "retail.hh"
+#include "treyarch/game/pre_light.hh"
 #include "treyarch/game/speedtree/wrapper.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
@@ -412,7 +413,7 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
     ngl::fx::set_texture(parameters.composite_leaf_map, textures[8]);
     ngl::fx::set_vector(parameters.horizon_projection_u, params->horizon_projection_u);
     ngl::fx::set_vector(parameters.horizon_projection_v, params->horizon_projection_v);
-    ngl::fx::set_texture(parameters.horizon_map, params->horizon->texture);
+    ngl::fx::set_texture(parameters.horizon_map, params->prelight->horizon_map.pointer);
     ngl::fx::set_float(parameters.leaf_cards_active, 1.0f);
     ngl::fx::set_vector(parameters.leaf_angle_scalars, vector4(0.4f, 0.4f, 0.0f, 0.0f));
 

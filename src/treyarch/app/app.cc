@@ -92,7 +92,7 @@ app::app() {
     if (!references::pack_mode.read())
         pathfinder::obstacle_manager::create_inst();
 
-    retail::sub_904610();
+    retail::sub_904610(); // sound init
     movie_manager::create_inst();
     retail::sub_8FD3A0();
     retail::sub_5FDFB0(0);

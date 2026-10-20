@@ -51,7 +51,7 @@ void level_load_stuff::destroy_loading_widgets() {
     string_hash unpause_start;
     unpause_start.initialize(mash::ALLOCATED, "UNPAUSE_START");
 
-    retail::sub_900D60(unpause_start.source_hash_code, 0x10000000, 0);
+    retail::sub_900D60(unpause_start.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
 
     load_widgets_created = 0;
 

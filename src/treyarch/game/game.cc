@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "retail.hh"
+#include "treyarch/amalga/resource_directory.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/app/app.hh"
@@ -21,6 +22,8 @@
 #include "treyarch/game/script/chuck_lib_controller.hh"
 #include "treyarch/game/script/chuck_lib_entity.hh"
 #include "treyarch/game/shadow/shadow.hh"
+#include "treyarch/game/ui_character_info_list.hh"
+#include "treyarch/game/vehicle_model.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
@@ -52,7 +55,7 @@ using namespace treyarch;
 game::game() {
     hero_freeze_depth = 0;
     unk_078           = 0;
-    unk_07c           = 0;
+    speedtrees        = nullptr;
 
     unk_1cc = 0;
     unk_1cd = 0;
@@ -165,14 +168,14 @@ void game::one_time_init_stuff() {
     retail::sub_97ABE0();
     retail::sub_97AD30((u32*)this); // game::message_board_init
     retail::sub_953EA0((i32)references::raw_delta_consumer.read());
-    retail::sub_6F76B0((u32*)references::unk_0102ce40.read());
+    retail::sub_6F76B0((u32*)references::ui_character_info_map.read());
     retail::sub_95D520();
 }
 
 // sub_97CEA0
 void game::unload_current_level() {
     if (!level_is_loaded) {
-        retail::sub_900F70();
+        retail::sub_900F70(); // sound shutdown
 
         return;
     }
@@ -193,12 +196,12 @@ void game::unload_current_level() {
     retail::sub_5998A0();
     retail::sub_7C2DF0();
 
-    references::unk_00fc7a90.write(nullptr);
+    references::vehicle_model_depot.write(nullptr);
 
     retail::sub_75F0F0();
     retail::sub_968320((i32)the_world, 1);
 
-    unk_07c = 0;
+    speedtrees = nullptr;
 
     engine_recursive_lock &lock = amalga::resource_manager::references::unk_010300a8.get();
 
@@ -218,7 +221,7 @@ void game::unload_current_level() {
 
     level_is_loaded = 0;
 
-    retail::sub_900F70();
+    retail::sub_900F70(); // sound shutdown
     retail::sub_7F7340((u32*)input_mgr::inst()->unk_004);
 
     while (hero_freeze_depth > 0)
@@ -473,7 +476,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
     {
         resource_key sin_key;
         retail::sub_739B10((u32*)&sin_key, level.name.c_str(), 2);
-        retail::sub_73DDE0(retail::sub_75E2C0((u32*)common_slot->pack_directory, (u32*)&sin_key, nullptr, nullptr));
+        retail::sub_73DDE0((i32)common_slot->pack_directory->get_resource(sin_key, nullptr, nullptr));
     }
 
     const char* level_name = level.descriptor->level_name.c_str();
@@ -486,10 +489,10 @@ void game::load_this_level(bool start_only, bool finish_only) {
         key.hash = string_hash();
         key.set(level_hash, 7);
 
-        unk_07c = (u32)retail::sub_7629D0((u32*)&key, nullptr, nullptr);
+        speedtrees = (speedtree_collection*)amalga::resource_manager::get_resource(key, nullptr, nullptr);
 
-        if (unk_07c)
-            retail::sub_7D9CA0((u32*)unk_07c);
+        if (speedtrees)
+            retail::sub_7D9CA0((u32*)speedtrees);
     }
 
     mission_manager::inst()->setup_global_data(level_name, references::unk_01111754.read());
@@ -508,10 +511,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
         key.hash = string_hash();
         key.set(vehicles_hash, 28);
 
-        references::unk_00fc7a90.write((void*)retail::sub_75E2C0((u32*)references::unk_01111754.read()->pack_directory,
-                                                                (u32*)&key,
-                                                                nullptr,
-                                                                nullptr));
+        references::vehicle_model_depot.write((vehicle_model_depot*)references::unk_01111754.read()->pack_directory->get_resource(key, nullptr, nullptr));
     }
 
     retail::sub_7B7570();

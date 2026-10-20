@@ -60,7 +60,7 @@ script_executable* chuck_callbacks::get_script_executable_resource_callback(cons
     resource_key key;
     key.set(*filename, (u32)amalga::e_resource_type::script);
 
-    return (script_executable*)retail::sub_7629D0((u32*)&key, (u32*)resource_size, nullptr);
+    return (script_executable*)amalga::resource_manager::get_resource(key, (u32*)resource_size, nullptr);
 }
 
 // sub_825930
@@ -72,7 +72,7 @@ script_var_container* chuck_callbacks::get_script_var_container_resource_callbac
     key.set(*filename, (u32)(is_game_var_container ?
         amalga::e_resource_type::script_gv : amalga::e_resource_type::script_sv));
 
-    return (script_var_container*)retail::sub_7629D0((u32*)&key, (u32*)resource_size, nullptr);
+    return (script_var_container*)amalga::resource_manager::get_resource(key, (u32*)resource_size, nullptr);
 }
 
 // sub_71F870
