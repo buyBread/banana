@@ -31,7 +31,9 @@ When the need arises, I'll see to starting a proper community space for this pro
     - Select the build mode with `xmake f -m <MODE>` -- `release` / `devel` / `debug`.
 2. Place the resulting `d3d9.dll` in `image/pc/` and launch the game.
 
-...*log files are stored in* `%LOCALAPPDATA%\banana\logs\`.
+> ...*log files are stored in* `%LOCALAPPDATA%\banana\logs\`.
+
+You may also grab a `d3d9.dll` from the [daily build](https://github.com/buyBread/banana/releases/tag/master). If the build is trailing behind the latest commit, blame GitHub's scheduler ~~or request to manually trigger a daily build through the Discord bot~~ (whenever there's a Discord...).
 
 ## Compatibility
 * **DXVK**: when there is a file in `image/pc/` named `dxvk.dll`.
