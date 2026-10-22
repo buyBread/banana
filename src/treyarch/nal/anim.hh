@@ -14,8 +14,13 @@ namespace treyarch { namespace nal {
         anim_flag_unk_04  = 0x04  // set when the entry loads
     };
 
-    struct transport_data;
     struct transport_list;
+
+    // keyed by transport id: 0 is fk data, 1 is signals
+    struct transport_data {
+        u32             id;
+        transport_data* next;
+    };
 
     struct rescale {
         f32 scale;
@@ -49,7 +54,14 @@ namespace treyarch { namespace nal {
         u32                  constant_mask[13];
 
         void link_transport_list();
+
+        nal::transport_data* get_transport_data(u32 id);
+        bool                 has_transport_data(u32 id);
     };
+
+    ASSERT_SIZEOF  (transport_data,       0x08);
+    ASSERT_OFFSETOF(transport_data, id,   0x00);
+    ASSERT_OFFSETOF(transport_data, next, 0x04);
 
     ASSERT_SIZEOF  (rescale,         0x08);
     ASSERT_OFFSETOF(rescale, scale,  0x00);

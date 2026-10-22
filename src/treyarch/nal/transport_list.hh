@@ -10,7 +10,12 @@ namespace treyarch { namespace nal {
     constexpr u32 transport_list_version = 0x20117;
 
     struct pose_layout;
-    struct transport;
+
+    // nalTransport, only id 0 (fk) ships
+    struct transport {
+        u32        id;
+        transport* next;
+    };
 
     // ASKL
     struct transport_list {
@@ -20,7 +25,13 @@ namespace treyarch { namespace nal {
         u32               unk_10;
         u32               revision;
         u8                pad_18[8];
+
+        nal::transport* get_transport(u32 id);
     };
+
+    ASSERT_SIZEOF  (transport,       0x08);
+    ASSERT_OFFSETOF(transport, id,   0x00);
+    ASSERT_OFFSETOF(transport, next, 0x04);
 
     ASSERT_SIZEOF  (transport_list,              0x20);
     ASSERT_OFFSETOF(transport_list, name,        0x00);
