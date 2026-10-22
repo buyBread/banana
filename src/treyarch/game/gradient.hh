@@ -1,8 +1,8 @@
 #pragma once
 
+#include "treyarch/shared/color.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/math/types/color.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 

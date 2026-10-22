@@ -3,6 +3,7 @@
 #include "treyarch/game/reference.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -16,7 +17,7 @@ namespace treyarch {
         u32                       unk_50[3];
         u32                       unk_5c[3];
         u32                       unk_68[3];
-        f32                       po[12];
+        math::mat43::packed       po;
         reference<light_behavior> behavior;
         reference<ngl::texture>   gobo;
         u32                       unk_b8;

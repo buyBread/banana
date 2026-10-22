@@ -5,8 +5,8 @@
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/math/types/vector2.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra/vector2d.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -14,10 +14,11 @@ namespace treyarch {
     class outdoors_unk_004 {
 
     public:
-        gradient                    unk_00;
-        mash::vector_basic<f32>     unk_10;
-        mash::vector_basic<vector3> unk_20;
-        gradient                    unk_30[4];
+        gradient                      unk_00;
+        mash::vector_basic<f32>       unk_10;
+        mash::vector_basic
+            <math::position3::packed> unk_20;
+        gradient                      unk_30[4];
 
         // inlined @ sub_7DEC30
         void construct_mashed_class() {
@@ -38,13 +39,14 @@ namespace treyarch {
     class celestial_body {
 
     public:
-        gradient                    color;
-        mash::vector_basic<f32>     intensity;
-        reference<ngl::mesh>        mesh;
-        f32                         distance;
-        f32                         scale;
-        mash::vector_basic<f32>     scale_by_time_of_day;
-        mash::vector_basic<vector3> position;
+        gradient                      color;
+        mash::vector_basic<f32>       intensity;
+        reference<ngl::mesh>          mesh;
+        f32                           distance;
+        f32                           scale;
+        mash::vector_basic<f32>       scale_by_time_of_day;
+        mash::vector_basic
+            <math::position3::packed> position;
 
         // inlined @ sub_7DEC30
         void construct_mashed_class() {
@@ -85,14 +87,15 @@ namespace treyarch {
     class sky_prop {
 
     public:
-        reference<ngl::mesh>        mesh;
-        f32                         scale;
-        f32                         duration;
-        f32                         distance;
-        f32                         seconds_to_look_ahead;
-        vector3                     minimum_world_position;
-        vector3                     maximum_world_position;
-        mash::vector_basic<vector3> position;
+        reference<ngl::mesh>          mesh;
+        f32                           scale;
+        f32                           duration;
+        f32                           distance;
+        f32                           seconds_to_look_ahead;
+        math::position3::packed       minimum_world_position;
+        math::position3::packed       maximum_world_position;
+        mash::vector_basic
+            <math::position3::packed> position;
 
         // inlined @ sub_7DE950
         void construct_mashed_class() {
@@ -126,7 +129,7 @@ namespace treyarch {
         gradient streetlight_color;
 
         mash::vector_basic
-            <vector2>              horizon_mad;
+            <vector2d>             horizon_mad;
         mash::vector
             <sky_prop>             skyprops;
 

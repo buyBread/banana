@@ -18,9 +18,9 @@
 using namespace treyarch;
 
 namespace treyarch { namespace ngl { namespace shaders { namespace generated_material {
-    void set_pixel_constant(      i32      register_index,
-                            const vector4* values,
-                                  u32      count = 1) {
+    void set_pixel_constant(      i32            register_index,
+                            const math::vector4* values,
+                                  u32            count = 1) {
 
         if (register_index == -1)
             return;
@@ -37,33 +37,33 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
     }
 
     // the cascade selection retail inlines into each family's render body
-    u32 build_shadow_projection_matrices(      matrix4x4*  output,
-                                         const matrix4x4  &local_to_world,
-                                         const vector4    &local_sphere) {
+    u32 build_shadow_projection_matrices(      math::mat44*    output,
+                                         const math::mat44    &local_to_world,
+                                         const math::vector4  &local_sphere) {
 
-        vector3 world_center(local_sphere.x * local_to_world[0][0] + local_sphere.y * local_to_world[1][0] + local_sphere.z * local_to_world[2][0] + local_to_world[3][0],
-                             local_sphere.x * local_to_world[0][1] + local_sphere.y * local_to_world[1][1] + local_sphere.z * local_to_world[2][1] + local_to_world[3][1],
-                             local_sphere.x * local_to_world[0][2] + local_sphere.y * local_to_world[1][2] + local_sphere.z * local_to_world[2][2] + local_to_world[3][2]);
+        vector3d world_center(local_sphere[0] * local_to_world[0][0] + local_sphere[1] * local_to_world[1][0] + local_sphere[2] * local_to_world[2][0] + local_to_world[3][0],
+                              local_sphere[0] * local_to_world[0][1] + local_sphere[1] * local_to_world[1][1] + local_sphere[2] * local_to_world[2][1] + local_to_world[3][1],
+                              local_sphere[0] * local_to_world[0][2] + local_sphere[1] * local_to_world[1][2] + local_sphere[2] * local_to_world[2][2] + local_to_world[3][2]);
 
-        u32 cascades = shadow::get_cascade_mask(world_center, local_sphere.w);
+        u32 cascades = shadow::get_cascade_mask(world_center, local_sphere.get_w());
 
-        const matrix4x4 &texture = shadow::references::projection_to_texture.get();
+        const math::mat44 &texture = shadow::references::projection_to_texture.get();
 
         if ((cascades & 1) && (cascades & 2)) {
-            output[0] = local_to_world.affine() * shadow::references::matrix_0.get() * texture;
-            output[1] = local_to_world.affine() * shadow::references::matrix_1.get() * texture;
+            output[0] = math::mat44(*(const math::mat43*)&local_to_world) * shadow::references::matrix_0.get() * texture;
+            output[1] = math::mat44(*(const math::mat43*)&local_to_world) * shadow::references::matrix_1.get() * texture;
 
             return 2;
         }
 
         if (cascades & 1) {
-            output[0] = local_to_world.affine() * shadow::references::matrix_0.get() * texture;
+            output[0] = math::mat44(*(const math::mat43*)&local_to_world) * shadow::references::matrix_0.get() * texture;
 
             return 1;
         }
 
         if (cascades & 2) {
-            output[0] = local_to_world.affine() * shadow::references::matrix_1.get() * texture;
+            output[0] = math::mat44(*(const math::mat43*)&local_to_world) * shadow::references::matrix_1.get() * texture;
 
             return 1;
         }
@@ -97,12 +97,12 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
     snapshot->animation_time = references::animation_time.read();
 
     if (node_data->node_info && (node_data->node_info[0] & 2)) {
-        const vector3 &scale = *(const vector3*)(node_data->node_info + 0x10);
+        const math::position3 &scale = *(const math::position3*)(node_data->node_info + 0x10);
 
-        snapshot->base_transform = matrix4x4(scale.x, 0.0f,   0.0f,   0.0f,
-                                             0.0f,   scale.y, 0.0f,   0.0f,
-                                             0.0f,   0.0f,   scale.z, 0.0f,
-                                             0.0f,   0.0f,   0.0f,   1.0f);
+        snapshot->base_transform = math::mat44(math::vector4(scale[0], 0.0f,     0.0f,     0.0f),
+                                               math::vector4(0.0f,     scale[1], 0.0f,     0.0f),
+                                               math::vector4(0.0f,     0.0f,     scale[2], 0.0f),
+                                               math::vector4(0.0f,     0.0f,     0.0f,     1.0f));
     }
 
     u32 seed = (u32)section;
@@ -161,29 +161,29 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
         offset_v = (wrapped - std::floor(wrapped)) * scale_v;
     }
 
-    snapshot->texture_matrix = matrix4x4(scale_u, 0.0f,   0.0f, 0.0f,
-                                         0.0f,   scale_v, 0.0f, 0.0f,
-                                         0.0f,   0.0f,   1.0f, 0.0f,
-                                         offset_u, offset_v, 0.0f, 1.0f);
+    snapshot->texture_matrix = math::mat44(math::vector4(scale_u,  0.0f,     0.0f, 0.0f),
+                                           math::vector4(0.0f,     scale_v,  0.0f, 0.0f),
+                                           math::vector4(0.0f,     0.0f,     1.0f, 0.0f),
+                                           math::vector4(offset_u, offset_v, 0.0f, 1.0f));
 
-    const vector4 &value_0 = material->material_values[0];
-    const vector4 &value_1 = material->material_values[1];
-    const vector4 &value_2 = material->material_values[2];
+    const math::vector4 &value_0 = material->material_values[0];
+    const math::vector4 &value_1 = material->material_values[1];
+    const math::vector4 &value_2 = material->material_values[2];
 
-    snapshot->material_values[0] = vector4(value_0.x, value_2.z, 1.0f, value_1.z);
-    snapshot->material_values[1] = vector4(value_0.y, value_2.w, 0.0f, value_1.w);
-    snapshot->material_values[2] = vector4(value_0.z, value_1.x, value_2.x, 0.0f);
-    snapshot->material_values[3] = vector4(value_0.w, value_1.y, value_2.y, 0.0f);
+    snapshot->material_values[0] = math::vector4(value_0[0], value_2[2], 1.0f,       value_1[2]);
+    snapshot->material_values[1] = math::vector4(value_0[1], value_2[3], 0.0f,       value_1[3]);
+    snapshot->material_values[2] = math::vector4(value_0[2], value_1[0], value_2[0], 0.0f);
+    snapshot->material_values[3] = math::vector4(value_0[3], value_1[1], value_2[1], 0.0f);
 
     if (material->mode != 1) {
-        snapshot->material_values[2].x = 0.0f;
-        snapshot->material_values[3].x = 1.0f;
+        snapshot->material_values[2].set_x(0.0f);
+        snapshot->material_values[3].set_x(1.0f);
     }
 
-    snapshot->material_vector_140 = vector4(-material->animation_scale_u,
-                                            -material->animation_scale_u,
-                                            1.0f - material->animation_scale_v,
-                                            1.0f - material->animation_scale_v);
+    snapshot->material_vector_140 = math::vector4(-material->animation_scale_u,
+                                                  -material->animation_scale_u,
+                                                  1.0f - material->animation_scale_v,
+                                                  1.0f - material->animation_scale_v);
     snapshot->diffuse_texture = material->diffuse_texture;
     snapshot->scene_initializer_data = material->scene_initializer_data;
 
@@ -199,23 +199,23 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
     f32 material_alpha = 1.0f;
 
     if (has_scene_parameter(parameters, fx::references::parameter_id_tint_color.read())) {
-        const vector4 &tint = *(const vector4*)get_scene_parameter(parameters,
-                                                                   fx::references::parameter_id_tint_color.read());
+        const math::vector4 &tint = *(const math::vector4*)get_scene_parameter(parameters,
+                                                                               fx::references::parameter_id_tint_color.read());
 
-        vector4 scale = tint;
+        math::vector4 scale = tint;
 
-        if (tint.x > 100.0f || tint.y > 100.0f || tint.z > 100.0f || tint.w > 100.0f) {
-            scale = vector4(tint.x / 1000.0f,
-                            tint.y / 1000.0f,
-                            tint.z / 1000.0f,
-                            1.0f);
+        if (tint[0] > 100.0f || tint[1] > 100.0f || tint[2] > 100.0f || tint[3] > 100.0f) {
+            scale = math::vector4(tint[0] / 1000.0f,
+                                  tint[1] / 1000.0f,
+                                  tint[2] / 1000.0f,
+                                  1.0f);
         } else
-            material_alpha = tint.w;
+            material_alpha = tint.get_w();
 
-        matrix4x4 tint_matrix(scale.x, 0.0f,    0.0f,    0.0f,
-                              0.0f,    scale.y, 0.0f,    0.0f,
-                              0.0f,    0.0f,    scale.z, 0.0f,
-                              0.0f,    0.0f,    0.0f,    scale.w);
+        math::mat44 tint_matrix(math::vector4(scale[0], 0.0f,     0.0f,     0.0f),
+                                math::vector4(0.0f,     scale[1], 0.0f,     0.0f),
+                                math::vector4(0.0f,     0.0f,     scale[2], 0.0f),
+                                math::vector4(0.0f,     0.0f,     0.0f,     scale[3]));
 
         snapshot->light_matrix = snapshot->light_matrix * tint_matrix;
     }
@@ -232,18 +232,18 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
                             fx::references::parameter_id_material_light_matrix.read())) {
 
         u32 parameter_id = fx::references::parameter_id_material_light_matrix.read();
-        const matrix4x4 &matrix = *(const matrix4x4*)get_scene_parameter(parameters, parameter_id);
+        const math::mat44 &matrix = *(const math::mat44*)get_scene_parameter(parameters, parameter_id);
         snapshot->light_matrix = snapshot->light_matrix * matrix;
     }
 
-    snapshot->material_values[2].x *= material_alpha;
-    snapshot->material_values[3].x *= material_alpha;
+    snapshot->material_values[2][0] *= material_alpha;
+    snapshot->material_values[3][0] *= material_alpha;
 
     if (has_scene_parameter(parameters,
                             fx::references::parameter_id_material_texture_matrix.read())) {
 
         u32 parameter_id = fx::references::parameter_id_material_texture_matrix.read();
-        const matrix4x4 &matrix = *(const matrix4x4*)get_scene_parameter(parameters, parameter_id);
+        const math::mat44 &matrix = *(const math::mat44*)get_scene_parameter(parameters, parameter_id);
         snapshot->texture_matrix = snapshot->texture_matrix * matrix;
     }
 }
@@ -253,7 +253,7 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
                                                                       const scene_snapshot*                  snapshot,
                                                                       const fx::mesh_node_data*              node_data,
                                                                       const mesh_section*                    section,
-                                                                      const matrix4x4                       &local_to_world,
+                                                                      const math::mat44                     &local_to_world,
                                                                             bool                             receive_shadows) {
 
     std::memset(context, 0, sizeof(*context));
@@ -265,7 +265,7 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
                 lighting.ambient_colors_with_primary,
                 sizeof(context->prefix.ambient_color_hi));
 
-    const vector4 gobo_scale(0.5f, 1.0f, 0.5f, 1.0f);
+    const math::vector4 gobo_scale(0.5f, 1.0f, 0.5f, 1.0f);
 
     for (u32 row = 0; row < 4; ++row) {
         for (u32 column = 0; column < 4; ++column) {
@@ -282,7 +282,7 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
 
     context->compressed_to_local = fx::get_compressed_to_local(node_data);
     context->prefix.compressed_to_uv =
-        fx::get_compressed_to_uv() * snapshot->texture_matrix.affine();
+        fx::get_compressed_to_uv() * math::mat44(*(const math::mat43*)&snapshot->texture_matrix);
     context->prefix.compressed_to_screen =
         context->compressed_to_local *
         local_to_world *
@@ -345,8 +345,8 @@ void ngl::shaders::generated_material::restore_regular_pass_states() {
 void ngl::shaders::generated_material::transform_light_matrix(      scene_snapshot*                  snapshot,
                                                               const fx::general_lighting_parameters &lighting) {
 
-    snapshot->light_matrix = snapshot->light_matrix.affine() *
-                             ((const matrix4x4*)(lighting.light_source + 0x100))->affine();
+    snapshot->light_matrix = math::mat44(*(const math::mat43*)&snapshot->light_matrix) *
+                             math::mat44(*(const math::mat43*)(lighting.light_source + 0x100));
 }
 
 void ngl::shaders::generated_material::configure_samplers(const scene_snapshot* snapshot,
@@ -419,14 +419,14 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
                                                               const fx::general_lighting_parameters            &lighting,
                                                               const scene_snapshot*                             snapshot,
                                                               const material_data*                              material,
-                                                              const matrix4x4                                  &local_to_world) {
+                                                              const math::mat44                                &local_to_world) {
 
     i32 light_count = pipeline.bindings[0];
 
-    vector4 ambient_direction(lighting.ambient_direction.x,
-                              lighting.ambient_direction.y,
-                              lighting.ambient_direction.z,
-                              0.0f);
+    math::vector4 ambient_direction(lighting.ambient_direction[0],
+                                    lighting.ambient_direction[1],
+                                    lighting.ambient_direction[2],
+                                    0.0f);
     set_pixel_constant(binding(pipeline, 3), &ambient_direction);
 
     i32 position_register    = binding(pipeline, 4);
@@ -435,14 +435,14 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
     i32 attenuation_register = binding(pipeline, 7);
 
     for (i32 index = 0; index < light_count; ++index) {
-        vector4 position(lighting.light_positions[index].x,
-                         lighting.light_positions[index].y,
-                         lighting.light_positions[index].z,
-                         0.0f);
-        vector4 color(lighting.light_colors[index].x,
-                      lighting.light_colors[index].y,
-                      lighting.light_colors[index].z,
-                      0.0f);
+        math::vector4 position(lighting.light_positions[index][0],
+                               lighting.light_positions[index][1],
+                               lighting.light_positions[index][2],
+                               0.0f);
+        math::vector4 color(lighting.light_colors[index][0],
+                            lighting.light_colors[index][1],
+                            lighting.light_colors[index][2],
+                            0.0f);
 
         set_pixel_constant(position_register == -1 ? -1 : position_register + index,
                            &position);
@@ -456,36 +456,36 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
 
     set_pixel_constant(binding(pipeline, 8), &snapshot->material_vector_150);
 
-    const vector4 &normal_value = material->normal_texture->gpu_texture.format == D3DFMT_DXT5 ?
+    const math::vector4 &normal_value = material->normal_texture->gpu_texture.format == D3DFMT_DXT5 ?
         snapshot->material_vector_160 : references::default_normal_vector.get();
     set_pixel_constant(binding(pipeline, 9), &normal_value);
 
-    vector4 local_x(local_to_world.x.x, local_to_world.x.y, local_to_world.x.z, 0.0f);
-    vector4 local_y(local_to_world.y.x, local_to_world.y.y, local_to_world.y.z, 0.0f);
-    vector4 local_z(local_to_world.z.x, local_to_world.z.y, local_to_world.z.z, 0.0f);
+    math::vector4 local_x(local_to_world[0][0], local_to_world[0][1], local_to_world[0][2], 0.0f);
+    math::vector4 local_y(local_to_world[1][0], local_to_world[1][1], local_to_world[1][2], 0.0f);
+    math::vector4 local_z(local_to_world[2][0], local_to_world[2][1], local_to_world[2][2], 0.0f);
     set_pixel_constant(binding(pipeline, 10), &local_x);
     set_pixel_constant(binding(pipeline, 11), &local_y);
     set_pixel_constant(binding(pipeline, 12), &local_z);
-    set_pixel_constant(binding(pipeline, 13), (const vector4*)&snapshot->light_matrix, 4);
+    set_pixel_constant(binding(pipeline, 13), (const math::vector4*)&snapshot->light_matrix, 4);
 
-    vector4 view_position(lighting.view_position.x,
-                          lighting.view_position.y,
-                          lighting.view_position.z,
-                          0.0f);
+    math::vector4 view_position(lighting.view_position[0],
+                                lighting.view_position[1],
+                                lighting.view_position[2],
+                                0.0f);
     set_pixel_constant(binding(pipeline, 14), &view_position);
 
-    vector4 effects_mul(lighting.reserved_1f0.y,
-                        lighting.reserved_1d0.w,
-                        lighting.reserved_1f0.z,
-                        lighting.reserved_1d0.y);
-    vector4 effects_add(lighting.reserved_200.y,
-                        lighting.reserved_1e0.w,
-                        lighting.reserved_200.z,
-                        lighting.reserved_1e0.y);
-    vector4 opacity_mad(lighting.reserved_1f0.x,
-                        lighting.reserved_200.x,
-                        1.0f,
-                        0.0f);
+    math::vector4 effects_mul(lighting.reserved_1f0[1],
+                              lighting.reserved_1d0[3],
+                              lighting.reserved_1f0[2],
+                              lighting.reserved_1d0[1]);
+    math::vector4 effects_add(lighting.reserved_200[1],
+                              lighting.reserved_1e0[3],
+                              lighting.reserved_200[2],
+                              lighting.reserved_1e0[1]);
+    math::vector4 opacity_mad(lighting.reserved_1f0[0],
+                              lighting.reserved_200[0],
+                              1.0f,
+                              0.0f);
     set_pixel_constant(binding(pipeline, 15), &effects_mul);
     set_pixel_constant(binding(pipeline, 16), &effects_add);
     set_pixel_constant(binding(pipeline, 17), &opacity_mad);
@@ -496,33 +496,33 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
     set_pixel_constant(binding(pipeline, 22), &lighting.fog_control);
 
     f32 source_scalar = *(const f32*)(lighting.light_source + 0x200);
-    vector4 source_value(source_scalar, source_scalar, source_scalar, source_scalar);
+    math::vector4 source_value(source_scalar, source_scalar, source_scalar, source_scalar);
     set_pixel_constant(binding(pipeline, 23), &source_value);
 
-    vector4 horizon_color_scale(lighting.horizon_color_scale.x,
-                                lighting.horizon_color_scale.y,
-                                lighting.horizon_color_scale.z,
+    math::vector4 horizon_color_scale(lighting.horizon_color_scale[0],
+                                      lighting.horizon_color_scale[1],
+                                      lighting.horizon_color_scale[2],
+                                      0.0f);
+    math::vector4 horizon_color(lighting.horizon_color[0],
+                                lighting.horizon_color[1],
+                                lighting.horizon_color[2],
                                 0.0f);
-    vector4 horizon_color(lighting.horizon_color.x,
-                          lighting.horizon_color.y,
-                          lighting.horizon_color.z,
-                          0.0f);
-    vector4 horizon_axis(lighting.horizon_axis.x,
-                         lighting.horizon_axis.y,
-                         lighting.horizon_axis.z,
-                         0.0f);
-    vector4 horizon_direction_scaled(lighting.horizon_direction_scaled.x,
-                                     lighting.horizon_direction_scaled.y,
-                                     lighting.horizon_direction_scaled.z,
-                                     0.0f);
-    vector4 horizon_scalar(lighting.horizon_scalar.x,
-                           lighting.horizon_scalar.x,
-                           lighting.horizon_scalar.x,
-                           lighting.horizon_scalar.x);
-    vector4 horizon_extra(lighting.horizon_extra.x,
-                          lighting.horizon_extra.y,
-                          lighting.horizon_extra.z,
-                          0.0f);
+    math::vector4 horizon_axis(lighting.horizon_axis[0],
+                               lighting.horizon_axis[1],
+                               lighting.horizon_axis[2],
+                               0.0f);
+    math::vector4 horizon_direction_scaled(lighting.horizon_direction_scaled[0],
+                                           lighting.horizon_direction_scaled[1],
+                                           lighting.horizon_direction_scaled[2],
+                                           0.0f);
+    math::vector4 horizon_scalar(lighting.horizon_scalar[0],
+                                 lighting.horizon_scalar[0],
+                                 lighting.horizon_scalar[0],
+                                 lighting.horizon_scalar[0]);
+    math::vector4 horizon_extra(lighting.horizon_extra[0],
+                                lighting.horizon_extra[1],
+                                lighting.horizon_extra[2],
+                                0.0f);
 
     set_pixel_constant(binding(pipeline, 24), &horizon_color_scale);
     set_pixel_constant(binding(pipeline, 25), &lighting.horizon_range);
@@ -548,7 +548,7 @@ void ngl::shaders::generated_material::draw_pixel_pipeline(
     const fx::general_lighting_parameters            &lighting,
     const scene_snapshot*                             snapshot,
     const material_data*                              material,
-    const matrix4x4                                  &local_to_world,
+    const math::mat44                                &local_to_world,
           mesh_section*                               section) {
 
     d3d9::set_pixel_program(*pipeline.pixel_program_output);

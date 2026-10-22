@@ -127,9 +127,9 @@ void game::render() {
     the_world->render_mgr.render();
 
     if (!references::frontend.get().igo->blocks_world_rendering()) {
-        vector3 camera_position = this->get_current_view_camera()->get_abs_position();
+        vector3d camera_position = this->get_current_view_camera()->get_abs_position();
 
-        // IDA typed it as a no-argument void method, but it has to take a vector3
+        // IDA typed it as a no-argument void method, but it has to take a vector3d
         __asm {
             push camera_position.z
             push camera_position.y

@@ -19,20 +19,20 @@ ngl::scene* ngl::set_depth_target(ngl::texture* target) {
 }
 
 // sub_9D7D30
-ngl::scene* ngl::set_camera_matrix(const matrix4x4* camera_to_world) {
+ngl::scene* ngl::set_camera_matrix(const math::rot_tran_mat43 &camera_to_world) {
     ngl::scene* current_scene = ngl::references::current_scene.read();
 
-    current_scene->world_to_view = camera_to_world->inverse_orthonormal();
+    current_scene->world_to_view = math::inv(camera_to_world);
     current_scene->derived_matrices_dirty = 1;
     
     return current_scene;
 }
 
 // sub_9D7D00
-matrix4x4* ngl::set_world_to_view_matrix(const matrix4x4* world_to_view) {
+math::rot_tran_mat43* ngl::set_world_to_view_matrix(const math::rot_tran_mat43 &world_to_view) {
     scene* current_scene = references::current_scene.read();
 
-    current_scene->world_to_view = *world_to_view;
+    current_scene->world_to_view = world_to_view;
     current_scene->derived_matrices_dirty = 1;
 
     return &current_scene->world_to_view;

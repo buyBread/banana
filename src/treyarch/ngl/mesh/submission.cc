@@ -11,19 +11,19 @@
 using namespace treyarch;
 
 // sub_9E6F50
-i32 ngl::cull_mesh_sphere(const vector4 &center, f32 radius, u8 flags) {
+i32 ngl::cull_mesh_sphere(const math::position3 &center, f32 radius, u8 flags) {
     if (flags & 0x40)
         return 0;
 
     scene* current_scene = references::current_scene.read();
 
     for (u32 index = 0; index < 6; ++index) {
-        const vector4 &plane = current_scene->clip_planes[index];
+        const math::vector4 &plane = current_scene->clip_planes[index];
 
-        if (plane.y * center.y +
-            plane.x * center.x +
-            plane.z * center.z - 
-            plane.w + radius < 0.0f)
+        if (plane[1] * center[1] +
+            plane[0] * center[0] +
+            plane[2] * center[2] -
+            plane[3] + radius < 0.0f)
             
             return -1;
     }
@@ -32,28 +32,25 @@ i32 ngl::cull_mesh_sphere(const vector4 &center, f32 radius, u8 flags) {
 }
 
 // sub_9DB830
-ngl::mesh_node* ngl::create_transient_mesh_node(      mesh*      value,
-                                                const matrix4x4* local_to_world) {
+ngl::mesh_node* ngl::create_transient_mesh_node(      mesh*        value,
+                                                const math::mat43* local_to_world) {
 
     if (!value || !value->section_count)
         return nullptr;
 
-    vector4 center {
-        local_to_world->x.x * value->sphere.x +
-        local_to_world->y.x * value->sphere.y +
-        local_to_world->z.x * value->sphere.z + local_to_world->w.x,
-        local_to_world->x.y * value->sphere.x +
-        local_to_world->y.y * value->sphere.y +
-        local_to_world->z.y * value->sphere.z + local_to_world->w.y,
-        local_to_world->x.z * value->sphere.x +
-        local_to_world->y.z * value->sphere.y +
-        local_to_world->z.z * value->sphere.z + local_to_world->w.z,
-        local_to_world->x.w * value->sphere.x +
-        local_to_world->y.w * value->sphere.y +
-        local_to_world->z.w * value->sphere.z + local_to_world->w.w
-    };
+    const math::dir3      &x      = local_to_world->get_x();
+    const math::dir3      &y      = local_to_world->get_y();
+    const math::dir3      &z      = local_to_world->get_z();
+    const math::position3 &w      = local_to_world->get_w();
+    const math::vector4   &sphere = value->sphere;
 
-    if (cull_mesh_sphere(center, value->sphere.w, 0) == -1)
+    // every lane of the rows, the unused fourth one included
+    math::position3 center(math::float4(x[0] * sphere[0] + y[0] * sphere[1] + z[0] * sphere[2] + w[0],
+                                        x[1] * sphere[0] + y[1] * sphere[1] + z[1] * sphere[2] + w[1],
+                                        x[2] * sphere[0] + y[2] * sphere[1] + z[2] * sphere[2] + w[2],
+                                        x[3] * sphere[0] + y[3] * sphere[1] + z[3] * sphere[2] + w[3]));
+
+    if (cull_mesh_sphere(center, sphere.get_w(), 0) == -1)
         return nullptr;
 
     mesh_node* node = (mesh_node*)list::allocate(0xB0, 64);
@@ -61,10 +58,8 @@ ngl::mesh_node* ngl::create_transient_mesh_node(      mesh*      value,
     node->local_to_world = *local_to_world;
 
     scene* current_scene = references::current_scene.read();
-    matrix4x4 local_to_screen = (local_to_world->affine() *
-                                 current_scene->world_to_screen).transpose();
 
-    std::memcpy(node->reserved_040, &local_to_screen, sizeof(local_to_screen));
+    node->local_to_screen = ~(math::mat44(*local_to_world) * current_scene->world_to_screen);
 
     node->scale             = 1.0f;
     node->node_info         = &references::default_node_info.get();
@@ -75,8 +70,8 @@ ngl::mesh_node* ngl::create_transient_mesh_node(      mesh*      value,
 }
 
 // sub_9DC110
-ngl::mesh_node* ngl::list_add_transient_mesh(      mesh*      value,
-                                             const matrix4x4* local_to_world) {
+ngl::mesh_node* ngl::list_add_transient_mesh(      mesh*        value,
+                                             const math::mat43* local_to_world) {
 
     mesh_node* node = create_transient_mesh_node(value, local_to_world);
 

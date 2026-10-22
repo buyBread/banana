@@ -4,7 +4,7 @@
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -17,7 +17,7 @@ namespace treyarch {
     };
 
     struct spawn_point {
-        vector3               position;
+        vector3d              position;
         mash::vector
             <spawn_data_base> data;
         bool                  unk_20;

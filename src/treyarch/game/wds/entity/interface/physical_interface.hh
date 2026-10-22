@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/game/wds/entity/interface/generic_interface.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -21,7 +21,7 @@ namespace treyarch {
         }
 
         void stop_biped_physics(bool on_destroyed = false);
-        void cancel_all_velocity(const vector3 &dir, bool both_dir = true);
+        void cancel_all_velocity(const vector3d &dir, bool both_dir = true);
     };
 
     ASSERT_OFFSETOF(physical_interface, flags, 0x0C);

@@ -14,10 +14,10 @@ ngl::mesh_section* ngl::d3d9::allocate_scratch_mesh_section(D3DPRIMITIVETYPE   p
 
     auto* section = (mesh_section*)ngl::list::allocate(0x60, 16);
 
-    section->sphere.x = 0.0f;
-    section->sphere.y = 0.0f;
-    section->sphere.z = 0.0f;
-    section->sphere.w = std::bit_cast<f32>(0x749DC5AEu);
+    section->sphere.set_x(0.0f);
+    section->sphere.set_y(0.0f);
+    section->sphere.set_z(0.0f);
+    section->sphere.set_w(std::bit_cast<f32>(0x749DC5AEu));
     section->unk_010 = 0x749DC5AE;
     section->unk_014 = 0x749DC5AE;
     section->unk_018 = 0x749DC5AE;

@@ -3,7 +3,7 @@
 #include "treyarch/game/reference.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -12,7 +12,7 @@ namespace treyarch {
         mash::vector
             <reference<ngl::mesh>> mesh;
 
-        vector3 offset;
+        math::dir3::packed offset;
 
         // inlined @ sub_7DE5D0
         void construct_mashed_class() {

@@ -6,7 +6,8 @@
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/shared/math/math.hh"
+#include "treyarch/shared/math/vmath/matrix_rot.hh"
+#include "treyarch/shared/math/vmath/trig.hh"
 
 using namespace treyarch;
 
@@ -19,13 +20,11 @@ void ui_frontend::render_background_effects() {
     ngl::set_scene_name("UIFrontEnd::RenderBackgroundEffects");
     ngl::set_clear_flags(0);
 
-    const vector4 rows[3] { vector4(1.0f, 0.0f, 0.0f, 0.0f),
-                            vector4(0.0f, 1.0f, 0.0f, 0.0f),
-                            vector4(0.0f, 0.0f, 1.0f, 0.0f) };
+    math::mat44 view(math::mat34(math::vector4(1.0f, 0.0f, 0.0f, 0.0f),
+                                 math::vector4(0.0f, 1.0f, 0.0f, 0.0f),
+                                 math::vector4(0.0f, 0.0f, 1.0f, 0.0f)));
 
-    matrix4x4 view;
-    view.assign_rows(rows);
-    ngl::set_world_to_view_matrix(&view);
+    ngl::set_world_to_view_matrix(*(const math::rot_tran_mat43*)&view);
 
     switch (background_effect_mode) {
         case 1:
@@ -96,8 +95,8 @@ void ui_frontend::draw_background_texture(f32 strength) {
     if (camera_widget) {
         matrix4x4 camera = camera_widget->camera_matrix;
 
-        u = (1.5707964f - math::arcsin(float_dot(references::background_texture_u_axis.get(), camera.x_row()))) / 6.2831855f;
-        v = (1.5707964f - math::arcsin(float_dot(references::background_texture_v_axis.get(), camera.y_row()))) / 6.2831855f + 0.5f;
+        u = (1.5707964f - math::asin(references::background_texture_u_axis.get() * camera.xrow())) / 6.2831855f;
+        v = (1.5707964f - math::asin(references::background_texture_v_axis.get() * camera.yrow())) / 6.2831855f + 0.5f;
     }
 
     ngl::set_z_test_enable(false);

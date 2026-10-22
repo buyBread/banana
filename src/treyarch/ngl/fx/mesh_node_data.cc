@@ -3,39 +3,37 @@
 using namespace treyarch;
 
 // sub_884370
-matrix4x4 ngl::fx::get_unscaled_local_to_world(const mesh_node_data* value) {
-    matrix4x4 result = value->local_to_world;
+math::rot_tran_mat43 ngl::fx::get_unscaled_local_to_world(const mesh_node_data* value) {
+    if (!(value->node_info[0] & 2))
+        return *(const math::rot_tran_mat43*)&value->local_to_world;
 
-    if (value->node_info[0] & 2) {
-        const vector3 &scales = *(const vector3*)(value->node_info + 0x10);
+    const math::position3 &scales = *(const math::position3*)(value->node_info + 0x10);
 
-        vector3 reciprocals(1.0f / scales.x,
-                            1.0f / scales.y,
-                            1.0f / scales.z);
+    f32 reciprocal_x = 1.0f / scales.get_x();
+    f32 reciprocal_y = 1.0f / scales.get_y();
+    f32 reciprocal_z = 1.0f / scales.get_z();
 
-        for (u32 column = 0; column < 4; ++column) {
-            result[0][column] *= reciprocals.x;
-            result[1][column] *= reciprocals.y;
-            result[2][column] *= reciprocals.z;
-        }
-    }
+    math::mat43 result(value->local_to_world.get_x() * reciprocal_x,
+                       value->local_to_world.get_y() * reciprocal_y,
+                       value->local_to_world.get_z() * reciprocal_z,
+                       value->local_to_world.get_w());
 
-    return result;
+    return *(const math::rot_tran_mat43*)&result;
 }
 
-matrix4x4 ngl::fx::get_compressed_to_local(const mesh_node_data* value) {
+math::mat44 ngl::fx::get_compressed_to_local(const mesh_node_data* value) {
     const f32* mesh_data = (const f32*)value->mesh_data;
     f32 scale = mesh_data[11] >= 32.0f ? 0.01f : 0.001f;
 
-    return matrix4x4(scale,        0.0f,         0.0f,          0.0f,
-                     0.0f,         scale,        0.0f,          0.0f,
-                     0.0f,         0.0f,         scale,         0.0f,
-                     mesh_data[8], mesh_data[9], mesh_data[10], 1.0f);
+    return math::mat44(math::vector4(scale,        0.0f,         0.0f,          0.0f),
+                       math::vector4(0.0f,         scale,        0.0f,          0.0f),
+                       math::vector4(0.0f,         0.0f,         scale,         0.0f),
+                       math::vector4(mesh_data[8], mesh_data[9], mesh_data[10], 1.0f));
 }
 
-matrix4x4 ngl::fx::get_compressed_to_uv() {
-    return matrix4x4(1.0f / 1024.0f, 0.0f,           0.0f, 0.0f,
-                     0.0f,           1.0f / 1024.0f, 0.0f, 0.0f,
-                     0.0f,           0.0f,           1.0f, 0.0f,
-                     0.0f,           0.0f,           0.0f, 1.0f);
+math::mat44 ngl::fx::get_compressed_to_uv() {
+    return math::mat44(math::vector4(1.0f / 1024.0f, 0.0f,           0.0f, 0.0f),
+                       math::vector4(0.0f,           1.0f / 1024.0f, 0.0f, 0.0f),
+                       math::vector4(0.0f,           0.0f,           1.0f, 0.0f),
+                       math::vector4(0.0f,           0.0f,           0.0f, 1.0f));
 }

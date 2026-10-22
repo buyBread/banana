@@ -27,21 +27,20 @@ void ngl::shaders::smsky::render(render_node* value) {
 
     scene* current_scene = ngl::references::current_scene.read();
 
-    matrix4x4 camera_translation;
-    camera_translation.identity();
-    camera_translation.w = current_scene->view_position;
+    math::mat44 camera_translation = math::identity_mat33();
+    camera_translation.set_w(current_scene->view_position);
 
-    matrix4x4 local_to_screen;
+    math::mat44 local_to_screen;
 
     for (u32 row_index = 0; row_index < 4; ++row_index) {
         for (u32 column = 0; column < 4; ++column) {
-            const vector4 &source = camera_translation[row_index];
-            const matrix4x4 &screen = current_scene->world_to_screen;
+            const math::vector4 &source = camera_translation[row_index];
+            const math::mat44   &screen = current_scene->world_to_screen;
 
-            local_to_screen[row_index][column] = source.x * screen.x[column] +
-                                                 source.y * screen.y[column] +
-                                                 source.z * screen.z[column] +
-                                                 (row_index == 3 ? screen.w[column] : 0.0f);
+            local_to_screen[row_index][column] = source[0] * screen[0][column] +
+                                                 source[1] * screen[1][column] +
+                                                 source[2] * screen[2][column] +
+                                                 (row_index == 3 ? screen[3][column] : 0.0f);
         }
     }
 
@@ -59,8 +58,8 @@ void ngl::shaders::smsky::render(render_node* value) {
 
     d3d9::set_vertex_program(*vertex_slot);
 
-    matrix4x4 vertex_constants[2] { local_to_screen.transpose(),
-                                    camera_translation.transpose() };
+    math::mat44 vertex_constants[2] { ~local_to_screen,
+                                      ~camera_translation };
 
     IDirect3DDevice9* device = d3d9::references::device.get();
 
@@ -90,19 +89,19 @@ void ngl::shaders::smsky::render(render_node* value) {
     f32 vertical_extent   = (f32)std::tan((f64)half_angle) * current_scene->far_plane;
     f32 horizontal_extent = current_scene->aspect_ratio * vertical_extent;
 
-    f32 camera_height = current_scene->view_to_world.w.y;
+    f32 camera_height = current_scene->view_to_world.get_w()[1];
 
-    vector4 pixel_constants[8] { vector4(current_scene->view_to_world.x_row(), 0.0f),
-                                 vector4(current_scene->view_to_world.y_row(), 0.0f),
-                                 vector4(current_scene->view_to_world.z_row(), 0.0f),
-                                 vector4(-horizontal_extent,
-                                         -vertical_extent - camera_height,
-                                         current_scene->far_plane,
-                                         1.0f),
-                                 vector4(horizontal_extent,
-                                         vertical_extent - camera_height,
-                                         current_scene->far_plane,
-                                         1.0f),
+    math::vector4 pixel_constants[8] { current_scene->view_to_world.get_x(),
+                                       current_scene->view_to_world.get_y(),
+                                       current_scene->view_to_world.get_z(),
+                                       math::vector4(-horizontal_extent,
+                                                     -vertical_extent - camera_height,
+                                                     current_scene->far_plane,
+                                                     1.0f),
+                                       math::vector4(horizontal_extent,
+                                                     vertical_extent - camera_height,
+                                                     current_scene->far_plane,
+                                                     1.0f),
                                  light_source->color_2d0,
                                  sky->color_0e0,
                                  sky->color_110 };

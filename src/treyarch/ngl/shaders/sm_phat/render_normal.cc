@@ -13,7 +13,7 @@ namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
 namespace rendering {
     struct vertex_constants {
         generated_material::regular_vertex_prefix prefix;
-        matrix4x4                                 compressed_to_local;
+        math::mat44                               compressed_to_local;
         generated_material::regular_vertex_suffix suffix;
     };
 } // rendering
@@ -29,10 +29,10 @@ void render_normal(render_node* value) {
     d3d9::set_vertex_program(program_exports::sm_phat::programs.get().material_vertex);
 
     generated_material::scene_snapshot* snapshot = value->scene_snapshot;
-    matrix4x4 unscaled_local_to_world =
+    math::rot_tran_mat43 unscaled_local_to_world =
         fx::get_unscaled_local_to_world(value->node_data);
-    matrix4x4 local_to_world =
-        snapshot->base_transform.affine() * unscaled_local_to_world.affine();
+    math::mat44 local_to_world =
+        math::mat44(*(const math::mat43*)&snapshot->base_transform) * math::mat44(unscaled_local_to_world);
 
     fx::general_lighting_parameters lighting;
     fx::build_general_lighting(&lighting, value->node_data, value->section);

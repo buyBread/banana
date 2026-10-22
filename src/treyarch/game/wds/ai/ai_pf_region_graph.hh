@@ -7,8 +7,8 @@
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
-#include "treyarch/shared/math/types/bounding_box.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/bound.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -71,7 +71,7 @@ namespace treyarch {
         u32                              unk_24; // 1234 in the image, 4321 once activated
         mash::vector
             <ai_quad_path_connection>    connection_table;
-        mash::vector_basic<vector3>      vertices;
+        mash::vector_basic<vector3d>     vertices;
         mash::vector<ai_quad_path_cell>  cell_table;
         dinkumware::vector<void*>*       obstacles; // the navmesh obstacle manager's
         u32                              unk_64;

@@ -48,16 +48,14 @@ ngl::scene* ngl::set_default_scene_state() {
     value->near_plane      = 1.0f;
     value->far_plane       = 10000.0f;
 
-    matrix4x4 camera_to_world;
-              camera_to_world.identity();
-    set_camera_matrix(&camera_to_world);
+    set_camera_matrix(math::identity_mat33());
 
-    value->clear_flags   = 6;
-    value->clear_color.x = 0.0f;
-    value->clear_color.y = 0.0f;
-    value->clear_color.z = 0.0f;
-    value->clear_color.w = 0.0f;
-    value->clear_depth   = 1.0f;
+    value->clear_flags = 6;
+    value->clear_color.set_x(0.0f);
+    value->clear_color.set_y(0.0f);
+    value->clear_color.set_z(0.0f);
+    value->clear_color.set_w(0.0f);
+    value->clear_depth = 1.0f;
 
     value->animation_time         = 0.0f;
     value->current_animation_time = 0.0f;

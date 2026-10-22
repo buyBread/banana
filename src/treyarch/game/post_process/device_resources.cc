@@ -107,34 +107,34 @@ void post_process::create_device_resources() {
         const f32 u_negative_24  = (f32)(((f64)u * -3.0) * 8.0);
         const f32 v_negative_24  = (f32)(((f64)v * -3.0) * 8.0);
 
-        references::unk_010311d0.write(vector4((f32)(((f64)u * (f64)-1.2f) * 4.0), 0.0f,
-                                               (f32)(((f64)u * (f64) 1.2f) * 4.0), 0.0f));
-        references::unk_01030b80.write(vector4(0.0f, (f32)(((f64)v * (f64)-1.2f) * 4.0),
-                                               0.0f, (f32)(((f64)v * (f64) 1.2f) * 4.0)));
+        references::unk_010311d0.write(math::vector4((f32)(((f64)u * (f64)-1.2f) * 4.0), 0.0f,
+                                                     (f32)(((f64)u * (f64) 1.2f) * 4.0), 0.0f));
+        references::unk_01030b80.write(math::vector4(0.0f, (f32)(((f64)v * (f64)-1.2f) * 4.0),
+                                                     0.0f, (f32)(((f64)v * (f64) 1.2f) * 4.0)));
 
-        references::unk_01030100.write(vector4(u_negative,   v_negative,   u_negative,   v));
-        references::unk_01030ec0.write(vector4(u,            v_negative,   u,            v));
-        references::unk_01030a20.write(vector4(u_4,          v_negative,   u_4,          v));
-        references::unk_01031e40.write(vector4(u_negative_4, v_negative,   u_negative_4, v));
-        references::unk_01030930.write(vector4(u_6,          v_negative,   u_6,          v));
-        references::unk_010300e0.write(vector4(v_negative_6, v_negative,   u_negative_6, v));
-        references::unk_01030eb0.write(vector4(u_negative_3, v_negative_3, u_negative,   v_negative_3));
-        references::unk_01030a60.write(vector4(u,            v_negative_3, u_3,          v_negative_3));
-        references::unk_01031f70.write(vector4(u_negative_3, v_negative,   u_negative,   v_negative));
-        references::unk_01031ac0.write(vector4(u,            v_negative,   u_3,          v_negative));
-        references::unk_01031e30.write(vector4(u_negative_3, v,            u_negative,   v));
-        references::unk_01030b00.write(vector4(u,            v,            u_3,          v));
-        references::unk_01031f80.write(vector4(u_negative_3, v_3,          u_negative,   v_3));
-        references::unk_01031de0.write(vector4(u,            v_3,          u_3,          v_3));
+        references::unk_01030100.write(math::vector4(u_negative,   v_negative,   u_negative,   v));
+        references::unk_01030ec0.write(math::vector4(u,            v_negative,   u,            v));
+        references::unk_01030a20.write(math::vector4(u_4,          v_negative,   u_4,          v));
+        references::unk_01031e40.write(math::vector4(u_negative_4, v_negative,   u_negative_4, v));
+        references::unk_01030930.write(math::vector4(u_6,          v_negative,   u_6,          v));
+        references::unk_010300e0.write(math::vector4(v_negative_6, v_negative,   u_negative_6, v));
+        references::unk_01030eb0.write(math::vector4(u_negative_3, v_negative_3, u_negative,   v_negative_3));
+        references::unk_01030a60.write(math::vector4(u,            v_negative_3, u_3,          v_negative_3));
+        references::unk_01031f70.write(math::vector4(u_negative_3, v_negative,   u_negative,   v_negative));
+        references::unk_01031ac0.write(math::vector4(u,            v_negative,   u_3,          v_negative));
+        references::unk_01031e30.write(math::vector4(u_negative_3, v,            u_negative,   v));
+        references::unk_01030b00.write(math::vector4(u,            v,            u_3,          v));
+        references::unk_01031f80.write(math::vector4(u_negative_3, v_3,          u_negative,   v_3));
+        references::unk_01031de0.write(math::vector4(u,            v_3,          u_3,          v_3));
 
-        references::unk_01030080.write(vector4(u_negative_24, v_negative_24, u_negative_8, v_negative_24));
-        references::unk_01032010.write(vector4(u_8,           v_negative_24, u_24,         v_negative_24));
-        references::unk_01031dc0.write(vector4(u_negative_24, v_negative_8,  u_negative_8, v_negative_8));
-        references::unk_01031d70.write(vector4(u_8,           v_negative_8,  u_24,         v_negative_8));
-        references::unk_01031d50.write(vector4(u_negative_24, v_8,           u_negative_8, v_8));
-        references::unk_01030b20.write(vector4(u_8,           v_8,           u_24,         v_8));
-        references::unk_01032000.write(vector4(u_negative_24, v_24,          u_negative_8, v_24));
-        references::unk_01031d40.write(vector4(u_8,           v_24,          u_24,         v_24));
+        references::unk_01030080.write(math::vector4(u_negative_24, v_negative_24, u_negative_8, v_negative_24));
+        references::unk_01032010.write(math::vector4(u_8,           v_negative_24, u_24,         v_negative_24));
+        references::unk_01031dc0.write(math::vector4(u_negative_24, v_negative_8,  u_negative_8, v_negative_8));
+        references::unk_01031d70.write(math::vector4(u_8,           v_negative_8,  u_24,         v_negative_8));
+        references::unk_01031d50.write(math::vector4(u_negative_24, v_8,           u_negative_8, v_8));
+        references::unk_01030b20.write(math::vector4(u_8,           v_8,           u_24,         v_8));
+        references::unk_01032000.write(math::vector4(u_negative_24, v_24,          u_negative_8, v_24));
+        references::unk_01031d40.write(math::vector4(u_8,           v_24,          u_24,         v_24));
     }
 
     references::bloom_enabled.write(1);
@@ -190,8 +190,8 @@ void post_process::create_device_resources() {
         blur_taps &vertical   = references::pause_menu_blur_vertical_taps.get();
 
         for (u32 tap = 0; tap < 13; ++tap) {
-            horizontal.taps[tap].x = (f32)((f64)horizontal.taps[tap].x * (f64)tap_scale_u);
-            vertical.taps[tap].y   = (f32)((f64)vertical.taps[tap].y   * (f64)tap_scale_v);
+            horizontal.taps[tap][0] = (f32)((f64)horizontal.taps[tap][0] * (f64)tap_scale_u);
+            vertical.taps[tap][1]   = (f32)((f64)vertical.taps[tap][1]   * (f64)tap_scale_v);
         }
     }
 

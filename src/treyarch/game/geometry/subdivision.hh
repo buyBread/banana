@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -36,19 +36,19 @@ namespace treyarch {
         u16         unk_02;
         u8          unk_04[0x0C];
         string_hash unk_10;
-        vector3     center;
+        vector3d    center;
         u32         unk_20;
         u16         unk_24;
     };
 
     // the axes are unit length; their lengths are the half extents
     struct subdivision_node_large_obb : subdivision_node_obb_base {
-        vector3 x_axis;
-        vector3 y_axis;
-        vector3 z_axis;
-        f32     x_length;
-        f32     y_length;
-        f32     z_length;
+        vector3d x_axis;
+        vector3d y_axis;
+        vector3d z_axis;
+        f32      x_length;
+        f32      y_length;
+        f32      z_length;
     };
 
     ASSERT_SIZEOF  (subdivision_node_obb_base,         0x28);

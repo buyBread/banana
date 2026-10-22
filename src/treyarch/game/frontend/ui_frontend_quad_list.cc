@@ -28,9 +28,8 @@ void ui_frontend::draw_quad_list() {
     ngl::set_scene_name("UIFrontEnd::DrawQuadList");
     ngl::set_clear_flags(0);
 
-    matrix4x4 identity;
-    identity.identity();
-    ngl::set_world_to_view_matrix(&identity);
+    math::rot_tran_mat43 identity = math::identity_mat33();
+    ngl::set_world_to_view_matrix(identity);
 
     ngl::set_z_test_enable(false);
     ngl::set_z_write_enable(false);
@@ -76,7 +75,7 @@ void ui_frontend::draw_quad_list() {
         ngl::d3d9::unlock_scratch_mesh_indices(section);
         ngl::d3d9::unlock_scratch_mesh_vertices(section);
 
-        matrix4x4 transform = quad_transform;
+        math::mat43 transform = quad_transform;
         ngl::list_add_transient_mesh(mesh, &transform);
     }
 

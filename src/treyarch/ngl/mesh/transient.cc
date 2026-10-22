@@ -20,7 +20,7 @@ ngl::mesh* ngl::create_transient_mesh(u32 flags, u32 section_count) {
         value->sections[index].section = nullptr;
     }
 
-    *(u32*)&value->sphere.w = 0x749DC5AE;
+    *(u32*)&value->sphere[3] = 0x749DC5AE;
     value->unk_030          = 0x749DC5AE;
     value->unk_034          = 0x749DC5AE;
     value->unk_038          = 0x749DC5AE;

@@ -31,7 +31,7 @@ void speed_tree_wrapper::submit_nodes() {
         params.region = entry;
         params.light  = (light_source_data*)retail::sub_7D7340(entry.world_region);
 
-        matrix4x4 basis = axis_basis();
+        math::mat43 basis = axis_basis();
 
         params.prelight = entry.world_region->prelight;
 
@@ -52,17 +52,17 @@ void speed_tree_wrapper::submit_nodes() {
             }
         }
 
-        vector3 minimum;
-        vector3 maximum;
+        vector3d minimum;
+        vector3d maximum;
 
         retail::sub_77EAC0((u32*)entry.world_region, (i32)&minimum, (f32*)&maximum);
 
         // the top of every region's bounds is pinned to 20
         maximum.y = 20.0f;
 
-        vector3 center((f32)((f64)(f32)((f64)maximum.x + minimum.x) * 0.5),
-                       (f32)((f64)(f32)((f64)minimum.y + 20.0) * 0.5),
-                       (f32)((f64)(f32)((f64)maximum.z + minimum.z) * 0.5));
+        vector3d center((f32)((f64)(f32)((f64)maximum.x + minimum.x) * 0.5),
+                        (f32)((f64)(f32)((f64)minimum.y + 20.0) * 0.5),
+                        (f32)((f64)(f32)((f64)maximum.z + minimum.z) * 0.5));
 
         f32 extent_x = (f32)((f64)maximum.x - minimum.x);
         f32 extent_y = (f32)(20.0 - (f64)minimum.y);
@@ -90,26 +90,26 @@ void speed_tree_wrapper::submit_nodes() {
                 if (!(guard & 1)) {
                     guard |= 1;
 
-                    references::speed_tree_fade_offset.write(vector4(0.0f, 0.0f, 3.0f, 0.0f));
+                    references::speed_tree_fade_offset.write(math::vector4(0.0f, 0.0f, 3.0f, 0.0f));
                 }
 
-                const vector4 &offset = references::speed_tree_fade_offset.get();
+                const math::vector4 &offset = references::speed_tree_fade_offset.get();
 
-                vector3 position((f32)((f64)instance->position.x + offset.x),
-                                 (f32)((f64)instance->position.y + offset.y),
-                                 (f32)((f64)instance->position.z + offset.z));
+                vector3d position((f32)((f64)instance->position.x + offset[0]),
+                                  (f32)((f64)instance->position.y + offset[1]),
+                                  (f32)((f64)instance->position.z + offset[2]));
 
-                vector3 transformed;
+                vector3d transformed;
 
                 if (!sphere_in_view(basis, position, instance->radius, transformed))
                     continue;
 
-                const matrix4x4 &world_to_view = scene->world_to_view;
+                const math::rot_tran_mat43 &world_to_view = scene->world_to_view;
 
-                f32 depth = (f32)((f64)world_to_view.x.z * transformed.x +
-                                  (f64)world_to_view.y.z * transformed.y +
-                                  (f64)world_to_view.z.z * transformed.z +
-                                  world_to_view.w.z);
+                f32 depth = (f32)((f64)world_to_view.get_x()[2] * transformed.x +
+                                  (f64)world_to_view.get_y()[2] * transformed.y +
+                                  (f64)world_to_view.get_z()[2] * transformed.z +
+                                  world_to_view.get_w()[2]);
 
                 f32 distance = (f32)std::fabs((f64)depth);
 
@@ -216,13 +216,13 @@ void speed_tree_wrapper::submit_billboards_only(bool all_regions) {
         if (!all_regions && retail::sub_77EC90((i32)&world_region))
             continue;
 
-        f32 offset_x = (f32)((f64)world_region.center.x - scene->view_position.x);
+        f32 offset_x = (f32)((f64)world_region.center.x - scene->view_position[0]);
         f32 offset_y = (f32)(0.0 - 0.0);
-        f32 offset_z = (f32)((f64)world_region.center.z - scene->view_position.z);
+        f32 offset_z = (f32)((f64)world_region.center.z - scene->view_position[2]);
 
-        f32 facing = (f32)((f64)scene->view_direction.x * offset_x +
+        f32 facing = (f32)((f64)scene->view_direction[0] * offset_x +
                            (f64)offset_y * 0.0 +
-                           (f64)scene->view_direction.z * offset_z);
+                           (f64)scene->view_direction[2] * offset_z);
 
         // behind the camera only within 200 units
         if (!(facing > 0.0f)) {

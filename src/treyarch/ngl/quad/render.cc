@@ -63,11 +63,11 @@ void ngl::quad_renderer::render(node* value) {
     else if (depth_z > current->far_plane)
         depth_z = current->far_plane;
 
-    f32 numerator = (f32)((f64)current->view_to_screen.z.z * (f64)depth_z);
-        numerator = (f32)((f64)numerator + (f64)current->view_to_screen.w.z);
+    f32 numerator = (f32)((f64)current->view_to_screen[2][2] * (f64)depth_z);
+        numerator = (f32)((f64)numerator + (f64)current->view_to_screen[3][2]);
 
-    f32 denominator = (f32)((f64)current->view_to_screen.z.w * (f64)depth_z);
-        denominator = (f32)((f64)denominator + (f64)current->view_to_screen.w.w);
+    f32 denominator = (f32)((f64)current->view_to_screen[2][3] * (f64)depth_z);
+        denominator = (f32)((f64)denominator + (f64)current->view_to_screen[3][3]);
 
     f32 depth = (f32)((f64)numerator / (f64)denominator);
 
@@ -84,7 +84,7 @@ void ngl::quad_renderer::render(node* value) {
 
     auto* device = d3d9::references::device.get();
 
-    const matrix4x4 &matrix = current->derived_matrix_2d0;
+    const math::mat44 &matrix = current->derived_matrix_2d0;
 
     if (source.texture_data) {
         quad_textured_draw_vertex vertices[4];
@@ -94,11 +94,11 @@ void ngl::quad_renderer::render(node* value) {
 
             quad_textured_draw_vertex &output = vertices[index];
 
-            f32 x = (f32)((f64)input.x * (f64)matrix.x.x);
-            f32 y = (f32)((f64)input.y * (f64)matrix.y.y);
+            f32 x = (f32)((f64)input.x * (f64)matrix[0][0]);
+            f32 y = (f32)((f64)input.y * (f64)matrix[1][1]);
 
-            output.x     = (f32)((f64)x + (f64)matrix.w.x);
-            output.y     = (f32)((f64)y + (f64)matrix.w.y);
+            output.x     = (f32)((f64)x + (f64)matrix[3][0]);
+            output.y     = (f32)((f64)y + (f64)matrix[3][1]);
             output.z     = depth;
             output.color = input.color;
             output.u     = input.u;
@@ -114,11 +114,11 @@ void ngl::quad_renderer::render(node* value) {
             const quad_vertex &input = source.vertices[index];
             quad_color_draw_vertex &output = vertices[index];
 
-            f32 x = (f32)((f64)input.x * (f64)matrix.x.x);
-            f32 y = (f32)((f64)input.y * (f64)matrix.y.y);
+            f32 x = (f32)((f64)input.x * (f64)matrix[0][0]);
+            f32 y = (f32)((f64)input.y * (f64)matrix[1][1]);
 
-            output.x = (f32)((f64)x + (f64)matrix.w.x);
-            output.y = (f32)((f64)y + (f64)matrix.w.y);
+            output.x = (f32)((f64)x + (f64)matrix[3][0]);
+            output.y = (f32)((f64)y + (f64)matrix[3][1]);
             output.z = depth;
             output.color = input.color;
         }

@@ -8,8 +8,8 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
                                                             const generated_material::scene_snapshot*  snapshot,
                                                             const fx::general_lighting_parameters     &lighting) {
 
-    const vector4   &default_value = generated_material::references::default_material_vector.get();
-    const matrix4x4 &matrix        = snapshot->light_matrix;
+    const math::vector4 &default_value = generated_material::references::default_material_vector.get();
+    const math::mat44   &matrix        = snapshot->light_matrix;
 
     bool diffuse = generated_material::texture_is_usable(snapshot->diffuse_texture);
 
@@ -27,21 +27,21 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
         }
     }
 
-    bool opacity           = generated_material::texture_is_usable(material->opacity_texture)           && lighting.reserved_1f0.x != 0.0f;
-    bool specularity       = generated_material::texture_is_usable(material->specularity_texture)       && lighting.reserved_1f0.y != 0.0f;
-    bool specular_exponent = generated_material::texture_is_usable(material->specular_exponent_texture) && lighting.reserved_1d0.w != 0.0f;
-    bool emissiveness      = generated_material::texture_is_usable(material->emissiveness_texture)      && lighting.reserved_1d0.y != 0.0f;
+    bool opacity           = generated_material::texture_is_usable(material->opacity_texture)           && lighting.reserved_1f0.get_x() != 0.0f;
+    bool specularity       = generated_material::texture_is_usable(material->specularity_texture)       && lighting.reserved_1f0.get_y() != 0.0f;
+    bool specular_exponent = generated_material::texture_is_usable(material->specular_exponent_texture) && lighting.reserved_1d0.get_w() != 0.0f;
+    bool emissiveness      = generated_material::texture_is_usable(material->emissiveness_texture)      && lighting.reserved_1d0.get_y() != 0.0f;
 
-    const vector4 &normal_value = material->normal_texture->gpu_texture.format == D3DFMT_DXT5 ?
+    const math::vector4 &normal_value = material->normal_texture->gpu_texture.format == D3DFMT_DXT5 ?
         snapshot->material_vector_160 : generated_material::references::default_normal_vector.get();
 
-    bool normal = generated_material::texture_is_usable(material->normal_texture) && normal_value.x != 0.0f;
+    bool normal = generated_material::texture_is_usable(material->normal_texture) && normal_value.get_x() != 0.0f;
 
     e_environment_mapping environment_mapping = e_environment_mapping::none;
 
-    if (lighting.reserved_1f0.z != 0.0f || lighting.reserved_200.z != 0.0f) {
+    if (lighting.reserved_1f0.get_z() != 0.0f || lighting.reserved_200.get_z() != 0.0f) {
         environment_mapping =
-            generated_material::texture_is_usable(material->environment_texture) && lighting.reserved_1f0.z != 0.0f ?
+            generated_material::texture_is_usable(material->environment_texture) && lighting.reserved_1f0.get_z() != 0.0f ?
                 e_environment_mapping::mapped : e_environment_mapping::uniform;
     }
 

@@ -27,19 +27,20 @@ void ngl::shaders::puv::render(render_node* value) {
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, std::bit_cast<DWORD>(0.001f));
 
-    const matrix4x4 &local  = value->node_data->local_to_world;
-    const matrix4x4 &screen = ngl::references::current_scene.read()->world_to_screen;
+    const math::mat43 &local  = value->node_data->local_to_world;
+    const math::mat44 &screen = ngl::references::current_scene.read()->world_to_screen;
 
-    matrix4x4 local_to_screen;
+    math::mat44 local_to_screen;
 
     for (u32 row_index = 0; row_index < 4; ++row_index) {
         for (u32 column = 0; column < 4; ++column) {
-            const vector4 &source = local[row_index];
+            const math::float4 &source = row_index == 3 ?
+                local.get_w().val34() : local.get_m33()[row_index].val34();
 
-            local_to_screen[row_index][column] = source.x * screen.x[column] +
-                                                 source.y * screen.y[column] +
-                                                 source.z * screen.z[column] +
-                                                 (row_index == 3 ? screen.w[column] : 0.0f);
+            local_to_screen[row_index][column] = source.get_x() * screen[0][column] +
+                                                 source.get_y() * screen[1][column] +
+                                                 source.get_z() * screen[2][column] +
+                                                 (row_index == 3 ? screen[3][column] : 0.0f);
         }
     }
 

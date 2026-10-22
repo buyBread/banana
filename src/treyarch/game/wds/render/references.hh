@@ -6,8 +6,7 @@
 #include "treyarch/game/wds/render/render_data.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -55,7 +54,7 @@ namespace treyarch { namespace references {
 
     inline util::memory_reference<engine_recursive_lock> render_lock { 0x01075978 };
 
-    inline util::memory_reference<vector4> near_plane_reference { 0x011161D0 };
+    inline util::memory_reference<vector4d> near_plane_reference { 0x011161D0 };
 
     inline util::memory_reference<ngl::scene*> shadow_scene_0        { 0x01036E98 };
     inline util::memory_reference<ngl::scene*> shadow_scene_1        { 0x01036E9C };

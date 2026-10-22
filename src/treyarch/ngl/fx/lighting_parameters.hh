@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace ngl {
@@ -9,78 +9,78 @@ namespace treyarch { namespace ngl {
 
 namespace treyarch { namespace ngl { namespace fx {
     struct subset_lighting_parameters {
-        i32      directional_light_count;
-        vector4  directional_light_directions[8];
-        vector4  directional_light_colors[8];
-        vector4  horizon_projection_u;
-        vector4  horizon_projection_v;
-        vector4  ambient_info;
-        vector4  fog_color;
-        vector4  fog_control;
-        texture* horizon_texture;
+        i32           directional_light_count;
+        math::vector4 directional_light_directions[8];
+        math::vector4 directional_light_colors[8];
+        math::vector4 horizon_projection_u;
+        math::vector4 horizon_projection_v;
+        math::vector4 ambient_info;
+        math::vector4 fog_color;
+        math::vector4 fog_control;
+        texture*      horizon_texture;
     };
 
     // temporary lighting data built for a draw
     struct general_lighting_parameters {
-        u8           reserved_000[0x110];
-        i32          directional_light_count;
-        u8           reserved_114[0x0C];
-        vector4      directional_light_direction;
-        vector4      directional_light_color;
-        vector4      horizon_projection_u;
-        vector4      horizon_projection_v;
-        vector4      ambient_info;
-        vector4      fog_color;
-        vector4      fog_control;
-        u8*          light_source;
-        u8           reserved_194[0x0C];
-        i32          light_count;
-        u8           reserved_1a4[0x0C];
-        vector4      view_position;
-        vector4      ambient_direction;
-        vector4      reserved_1d0;
-        vector4      reserved_1e0;
-        vector4      reserved_1f0;
-        vector4      reserved_200;
-        vector4      light_positions[4];
-        vector4      light_directions[4];
-        vector4      light_colors[4];
-        vector4      light_attenuation[4];
-        vector4      horizon_color;
-        vector4      horizon_axis;
-        vector4      reserved_330;
-        vector4      horizon_color_scale;
-        vector4      horizon_direction;
-        vector4      horizon_range;
-        vector4      horizon_direction_scaled;
-        vector4      horizon_bias;
-        vector4      horizon_scalar;
-        vector4      horizon_extra;
-        vector4      ambient_colors[8];
-        vector4      ambient_colors_with_primary[8];
-        vector4      ambient_color;
-        matrix4x4    projector_matrix;
-        vector4      post_view_position;
-        vector4      post_direction;
-        vector4      post_plane_0;
-        vector4      post_plane_1;
-        vector4      post_range;
-        vector4      post_color;
-        texture*     projector_texture;
-        i32          projector_config_0;
-        i32          projector_config_1;
-        i32          projector_index;
-        i32          special_light_index;
-        f32          horizon_scale;
-        u8           reserved_578[8];
-        vector4      ambient_defaults[9];
-        texture*     horizon_texture;
+        u8            reserved_000[0x110];
+        i32           directional_light_count;
+        u8            reserved_114[0x0C];
+        math::vector4 directional_light_direction;
+        math::vector4 directional_light_color;
+        math::vector4 horizon_projection_u;
+        math::vector4 horizon_projection_v;
+        math::vector4 ambient_info;
+        math::vector4 fog_color;
+        math::vector4 fog_control;
+        u8*           light_source;
+        u8            reserved_194[0x0C];
+        i32           light_count;
+        u8            reserved_1a4[0x0C];
+        math::vector4 view_position;
+        math::vector4 ambient_direction;
+        math::vector4 reserved_1d0;
+        math::vector4 reserved_1e0;
+        math::vector4 reserved_1f0;
+        math::vector4 reserved_200;
+        math::vector4 light_positions[4];
+        math::vector4 light_directions[4];
+        math::vector4 light_colors[4];
+        math::vector4 light_attenuation[4];
+        math::vector4 horizon_color;
+        math::vector4 horizon_axis;
+        math::vector4 reserved_330;
+        math::vector4 horizon_color_scale;
+        math::vector4 horizon_direction;
+        math::vector4 horizon_range;
+        math::vector4 horizon_direction_scaled;
+        math::vector4 horizon_bias;
+        math::vector4 horizon_scalar;
+        math::vector4 horizon_extra;
+        math::vector4 ambient_colors[8];
+        math::vector4 ambient_colors_with_primary[8];
+        math::vector4 ambient_color;
+        math::mat44   projector_matrix;
+        math::vector4 post_view_position;
+        math::vector4 post_direction;
+        math::vector4 post_plane_0;
+        math::vector4 post_plane_1;
+        math::vector4 post_range;
+        math::vector4 post_color;
+        texture*      projector_texture;
+        i32           projector_config_0;
+        i32           projector_config_1;
+        i32           projector_index;
+        i32           special_light_index;
+        f32           horizon_scale;
+        u8            reserved_578[8];
+        math::vector4 ambient_defaults[9];
+        texture*      horizon_texture;
     };
 
     void apply_material_values(      general_lighting_parameters* value,
-                               const vector4*                     material_values);
-    void transform_lighting_to_local(      general_lighting_parameters* value,
-                                      const matrix4x4&                  local_to_world);
+                               const math::vector4*               material_values);
+    void transform_lighting_to_local(      general_lighting_parameters*  value,
+                                     const math::mat44                  &local_to_world);
 
     ASSERT_SIZEOF(subset_lighting_parameters, 0x158);
     /*

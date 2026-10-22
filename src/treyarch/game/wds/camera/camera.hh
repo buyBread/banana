@@ -6,7 +6,7 @@ namespace treyarch {
     class camera : public entity {
 
     public:
-        const vector3 &get_abs_position() const {
+        const vector3d &get_abs_position() const {
             return my_abs_po->get_position();
         }
 

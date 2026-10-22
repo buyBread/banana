@@ -5,9 +5,9 @@
 using namespace treyarch;
 
 // sub_9E4E10
-ngl::lighting::light_node* ngl::lighting::add_directional_light(      u32      category,
-                                                                const vector4* direction,
-                                                                const vector4* color) {
+ngl::lighting::light_node* ngl::lighting::add_directional_light(      u32            category,
+                                                                const math::vector4* direction,
+                                                                const math::vector4* color) {
 
     auto* data = (directional_light_data*)list::allocate(sizeof(directional_light_data), 16);
 
@@ -15,10 +15,10 @@ ngl::lighting::light_node* ngl::lighting::add_directional_light(      u32      c
         return nullptr;
 
     data->direction = *direction;
-    data->color.x   = color->x;
-    data->color.y   = color->y;
-    data->color.z   = color->z;
-    data->color.w   = 1.0f;
+    data->color.set_x(color->get_x());
+    data->color.set_y(color->get_y());
+    data->color.set_z(color->get_z());
+    data->color.set_w(1.0f);
 
     auto* node = (light_node*)list::allocate(sizeof(light_node), 16);
 

@@ -1,7 +1,7 @@
 #include "retail.hh"
 #include "treyarch/game/frontend/igo/igo_3d_text_parameters.hh"
 #include "treyarch/shared/mash/mash_info.hh"
-#include "treyarch/shared/math/references.hh"
+#include "treyarch/shared/math/vmath/matrix_diag.hh"
 
 using namespace treyarch;
 
@@ -10,20 +10,7 @@ void igo_3d_text_parameters::parameter_set::construct_mashed_class() {
     unk_00.construct_mashed_class();
     unk_c4.construct_mashed_class();
 
-    const vector4 &origin = math::references::unk_00e735d0.get();
-
-    unk_d0[0]  = 1.0f;
-    unk_d0[1]  = 0.0f;
-    unk_d0[2]  = 0.0f;
-    unk_d0[3]  = 0.0f;
-    unk_d0[4]  = 1.0f;
-    unk_d0[5]  = 0.0f;
-    unk_d0[6]  = 0.0f;
-    unk_d0[7]  = 0.0f;
-    unk_d0[8]  = 1.0f;
-    unk_d0[9]  = origin.x;
-    unk_d0[10] = origin.y;
-    unk_d0[11] = origin.z;
+    unk_d0 = math::identity_mat33();
 
     retail::sub_69F270((i32)this); // builds unk_d0 from the placement
 

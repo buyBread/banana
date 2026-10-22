@@ -9,7 +9,7 @@
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -46,8 +46,8 @@ namespace treyarch {
         u32          unk_10;
         string_hash  variant;
         i32          variant_values[8]; // given to the variant interface unless the first is -1
-        vector3      end_position;
-        vector3      end_rotation;      // in degrees
+        vector3d     end_position;
+        vector3d     end_rotation;      // in degrees
         u32          unk_50;
         mash::string morph_name;        // given to the morph interface
 

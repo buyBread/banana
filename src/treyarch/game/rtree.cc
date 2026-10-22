@@ -1,6 +1,5 @@
-#include "treyarch/shared/math/math.hh"
-#include "treyarch/shared/math/rtree.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/game/rtree.hh"
+#include "treyarch/shared/math/usefulmath.hh"
 #include "treyarch/shared/mutex.hh"
 
 using namespace treyarch;
@@ -11,8 +10,8 @@ struct packed_node {
 };
 
 struct rtree_root {
-    vector4      region_center;
-    vector4      world_to_quantized;
+    vector4d     region_center;
+    vector4d     world_to_quantized;
     u8           reserved_020[0x10];
     packed_node* root_nodes;
     u8*          node_pool;
@@ -50,8 +49,8 @@ f32 quantize_coordinate(f32 value, f32 origin, f32 scale) {
 }
 
 void pack_query_bounds(const rtree_root*  root,
-                       const vector3     &minimum,
-                       const vector3     &maximum,
+                       const vector3d    &minimum,
+                       const vector3d    &maximum,
                              i16*         result) {
 
     for (u32 axis = 0; axis < 3; ++axis) {
@@ -62,8 +61,8 @@ void pack_query_bounds(const rtree_root*  root,
                                          root->region_center[axis],
                                          root->world_to_quantized[axis]);
 
-        math::clamp_value_abs(&first,  32766.0f);
-        math::clamp_value_abs(&second, 32766.0f);
+        clamp_value_abs(&first,  32766.0f);
+        clamp_value_abs(&second, 32766.0f);
 
         f32 query_minimum = second <= first ? second : first;
         f32 query_maximum = first <= second ? second : first;
@@ -83,10 +82,10 @@ bool intersects(const packed_node* node, const i16* query_bounds) {
 }
 
 // sub_7933B0
-void traverse(const vector3        &minimum,
-              const vector3        &maximum,
+void traverse(const vector3d       &minimum,
+              const vector3d       &maximum,
               const rtree_root*     root,
-                    math::visitor*  result_visitor) {
+                    visitor*        result_visitor) {
 
     constexpr u32 traversal_capacity = 800;
     constexpr u32 result_capacity    = 5500;
@@ -134,21 +133,21 @@ void traverse(const vector3        &minimum,
 }
 
 // sub_95C270
-void math::query_sphere(      rtree*    value,
-                        const vector3  &center,
-                              f32       radius,
-                              visitor*  result_visitor) {
+void treyarch::query_sphere(      rtree*    value,
+                            const vector3d &center,
+                                  f32       radius,
+                                  visitor*  result_visitor) {
 
     auto* tree = (rtree_handle*)value;
 
     engine_reference_scope reference(tree->lock);
 
-    vector3 minimum(center.x - radius,
-                    center.y - radius,
-                    center.z - radius);
-    vector3 maximum(center.x + radius,
-                    center.y + radius,
-                    center.z + radius);
+    vector3d minimum(center.x - radius,
+                     center.y - radius,
+                     center.z - radius);
+    vector3d maximum(center.x + radius,
+                     center.y + radius,
+                     center.z + radius);
 
     traverse(minimum, maximum, tree->root, result_visitor);
 }

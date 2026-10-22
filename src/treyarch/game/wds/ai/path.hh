@@ -10,7 +10,7 @@
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -22,7 +22,7 @@ namespace treyarch {
     class path_graph_node {
 
     public:
-        vector3                 pt;
+        vector3d                pt;
         region*                 my_region;
         path_graph*             my_path_graph;
         nugget*                 node_nugget;
@@ -144,7 +144,7 @@ namespace treyarch {
     };
 
     namespace references {
-        inline util::memory_reference<vector3> zerovec { 0x010FC610 }; // SM3's ZEROVEC
+        inline util::memory_reference<vector3d> zerovec { 0x010FC610 }; // SM3's ZEROVEC
     } // references
 
     ASSERT_SIZEOF(path, 0xA8);

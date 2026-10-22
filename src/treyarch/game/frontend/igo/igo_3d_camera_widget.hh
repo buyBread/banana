@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/game/frontend/igo/igo_3d_widget.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 

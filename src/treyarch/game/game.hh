@@ -6,7 +6,7 @@
 #include "treyarch/shared/boolx.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 #include "util/memory_reference.hh"
 
@@ -83,7 +83,7 @@ namespace treyarch {
         level_descriptor* descriptor;
         mash::string      name;
         mash::string      hero_name;
-        vector3           hero_start_position;
+        vector3d          hero_start_position;
         i32               loading_meter_val;
         u8                reserved_02c[0x04];
         hires_clock_t     level_clock;
@@ -136,7 +136,7 @@ namespace treyarch {
         f32                              level_time;
         dinkumware::vector<game_process> process_stack;
         localized_string_table*          string_localizer;
-        vector3                          base_cam_position;
+        vector3d                         base_cam_position;
         u8                               reserved_0a8[0xF0];
         u32                              unk_198;
         u32                              frame_sequence;

@@ -3,7 +3,7 @@
 #include "treyarch/game/reference.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -67,7 +67,7 @@ namespace treyarch {
         sm_decal_param_layer    decal;
         reference<ngl::texture> environment_map;
         u32                     unk_198[4];
-        vector4                 fresnel;
+        math::vector4::packed   fresnel;
 
         void construct_mashed_class();
         void destruct_mashed_class();

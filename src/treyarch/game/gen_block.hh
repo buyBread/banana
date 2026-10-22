@@ -4,7 +4,7 @@
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -132,7 +132,7 @@ namespace treyarch {
         u32                       version;
         u32                       memsize;
         mash::vector_basic
-            <vector3>             vertices;
+            <vector3d>            vertices;
         mash::vector
             <gb_road>             roads;
         mash::vector
@@ -143,7 +143,7 @@ namespace treyarch {
             <gb_junction>         junctions;
         mash::vector
             <gb_road_def>         road_defs;
-        vector3                   last_cam_pos;
+        vector3d                  last_cam_pos;
         resource_key              unk_8c;
 
         void construct_mashed_class();

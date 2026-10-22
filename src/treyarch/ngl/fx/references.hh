@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -35,14 +35,14 @@ namespace treyarch { namespace ngl {
 
         inline util::memory_reference<texture*> environment_texture { 0x010FC58C };
 
-        inline util::memory_reference<vector4> lighting_default_value { 0x01086F30 };
-        inline util::memory_reference<vector4> unk_01086f40           { 0x01086F40 };
-        inline util::memory_reference<vector4> lighting_zero_value    { 0x01086F50 };
-        inline util::memory_reference<vector4> lighting_horizon_axis  { 0x01087690 };
+        inline util::memory_reference<math::vector4> lighting_default_value { 0x01086F30 };
+        inline util::memory_reference<math::vector4> unk_01086f40           { 0x01086F40 };
+        inline util::memory_reference<math::vector4> lighting_zero_value    { 0x01086F50 };
+        inline util::memory_reference<math::vector4> lighting_horizon_axis  { 0x01087690 };
 
         // three rows per bone, written by write_bone_matrices (sub_9DE390)
-        inline util::memory_reference<u32>     bone_constant_count { 0x01117168 };
-        inline util::memory_reference<u8>      global_constants    { 0x01117200 };
-        inline util::memory_reference<vector4> bone_constants      { 0x01117240 };
+        inline util::memory_reference<u32>           bone_constant_count { 0x01117168 };
+        inline util::memory_reference<u8>            global_constants    { 0x01117200 };
+        inline util::memory_reference<math::vector4> bone_constants      { 0x01117240 };
     } // references
 }}} // treyarch::ngl::fx

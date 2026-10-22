@@ -178,7 +178,7 @@ void mission_manager::reset_icon_entity(arch_base_vhandle handle) {
         }
     }
 
-    vector3 far_away(-999.0f);
+    vector3d far_away(-999.0f);
     retail::sub_626CA0((u32*)object, (u32*)&far_away);
 
     ((entity*)object)->set_visible(false, false);

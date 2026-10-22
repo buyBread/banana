@@ -24,7 +24,7 @@ i32 amalga::box_trigger_resource_handler::handle_resource(e_behavior behavior, r
                            (i32)references::unk_01030eac.read().source_hash_code,
                            0,
                            0,
-                           (f32*)&math::references::unk_0102ff40.get(),
+                           (f32*)&treyarch::references::unk_0102ff40.get(),
                            (f32*)&info->x_axis,
                            (f32*)&info->y_axis,
                            (f32*)&info->z_axis);

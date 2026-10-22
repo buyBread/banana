@@ -21,11 +21,13 @@ namespace treyarch { namespace light_render_submission {
     void submit_point_light(light_source* source) {
         ngl::lighting::point_light_data light;
 
-        light.position   = source->my_abs_po->matrix.w;
-        light.position.w = get_light_radius(source);
+        const color &diffuse = source->properties->diffuse_color;
 
-        light.color   = source->properties->diffuse_color;
-        light.color.w = 1.0f;
+        light.position = source->my_abs_po->get_matrix().w;
+        light.position.set_w(get_light_radius(source));
+
+        light.color = math::vector4(diffuse.r, diffuse.g, diffuse.b, diffuse.a);
+        light.color.set_w(1.0f);
 
         auto* result = references::light_manager.read()->add_point(light);
 
@@ -36,18 +38,21 @@ namespace treyarch { namespace light_render_submission {
     void submit_spot_light(light_source* source) {
         ngl::lighting::spot_light_data light;
 
-        light.position = source->my_abs_po->matrix.w;
-        light.position.w = get_light_radius(source);
+        const matrix4x4 &transform = source->my_abs_po->get_matrix();
+        const color     &diffuse   = source->properties->diffuse_color;
 
-        light.direction.x = source->my_abs_po->matrix.z.x;
-        light.direction.y = source->my_abs_po->matrix.z.y;
-        light.direction.z = source->my_abs_po->matrix.z.z;
+        light.position = transform.w;
+        light.position.set_w(get_light_radius(source));
 
-        light.angles.x = (f32)std::cos((f64)source->properties->inner_angle * 0.01745329300562541);
-        light.angles.y = (f32)std::cos((f64)source->properties->outer_angle * 0.01745329300562541);
+        light.direction.set_x(transform.z.x);
+        light.direction.set_y(transform.z.y);
+        light.direction.set_z(transform.z.z);
 
-        light.color = source->properties->diffuse_color;
-        light.color.w = 1.0f;
+        light.angles.set_x((f32)std::cos((f64)source->properties->inner_angle * 0.01745329300562541));
+        light.angles.set_y((f32)std::cos((f64)source->properties->outer_angle * 0.01745329300562541));
+
+        light.color = math::vector4(diffuse.r, diffuse.g, diffuse.b, diffuse.a);
+        light.color.set_w(1.0f);
 
         auto* result = references::light_manager.read()->add_spot(light);
 
@@ -56,14 +61,16 @@ namespace treyarch { namespace light_render_submission {
 
     // inlined into sub_9772D0
     void submit_directional_light(light_source* source) {
-        vector4 direction_source = source->my_abs_po->matrix.y;
-        vector4 direction;
-        vector4 color = source->properties->diffuse_color;
+        const color &diffuse = source->properties->diffuse_color;
 
-        direction_source.w = 0.0f;
+        math::vector4 direction_source = source->my_abs_po->get_matrix().y;
+        math::vector4 direction;
+        math::vector4 color(diffuse.r, diffuse.g, diffuse.b, diffuse.a);
+
+        direction_source.set_w(0.0f);
 
         direction = -direction_source;
-        direction.w = 0.0f;
+        direction.set_w(0.0f);
 
         ngl::lighting::add_directional_light( ngl::lighting::light_category_general,
                                              &direction,

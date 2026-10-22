@@ -34,8 +34,8 @@ void speed_tree_instance_pool::recycle() {
 
 // sub_7B4E10
 void speed_tree_manager::update_camera_and_wind(const matrix4x4* camera) {
-    vector4 position;
-    vector4 direction;
+    math::vector4 position;
+    math::vector4 direction;
 
     if (camera) {
         position  = camera->w;
@@ -43,40 +43,46 @@ void speed_tree_manager::update_camera_and_wind(const matrix4x4* camera) {
     } else {
         ngl::scene* scene = ngl::references::current_scene.read();
 
-        // retail leaves this inverse's fourth column unwritten, so position.w is stack garbage there
-        matrix4x4 to_tree = speed_tree_wrapper::axis_basis().inverse_orthonormal();
+        math::mat43          basis   = speed_tree_wrapper::axis_basis();
+        math::rot_tran_mat43 to_tree = math::inv(*(const math::rot_tran_mat43*)&basis);
 
-        const vector4 &view_position = scene->view_position;
+        const math::unit_dir3 &x = to_tree.get_x();
+        const math::unit_dir3 &y = to_tree.get_y();
+        const math::unit_dir3 &z = to_tree.get_z();
+        const math::position3 &w = to_tree.get_w();
 
-        position = vector4((f32)((f64)to_tree.x.x * view_position.x +
-                                 (f64)to_tree.y.x * view_position.y +
-                                 (f64)to_tree.z.x * view_position.z +
-                                 to_tree.w.x),
-                           (f32)((f64)to_tree.x.y * view_position.x +
-                                 (f64)to_tree.y.y * view_position.y +
-                                 (f64)to_tree.z.y * view_position.z +
-                                 to_tree.w.y),
-                           (f32)((f64)to_tree.x.z * view_position.x +
-                                 (f64)to_tree.y.z * view_position.y +
-                                 (f64)to_tree.z.z * view_position.z +
-                                 to_tree.w.z),
-                           (f32)((f64)to_tree.x.w * view_position.x +
-                                 (f64)to_tree.y.w * view_position.y +
-                                 (f64)to_tree.z.w * view_position.z +
-                                 to_tree.w.w));
+        const math::position3 &view_position = scene->view_position;
 
-        const vector4 &view_direction = scene->view_direction;
+        // the inverse leaves the fourth lanes unwritten, so position.w is stack garbage
+        position = math::vector4((f32)((f64)x[0] * view_position[0] +
+                                       (f64)y[0] * view_position[1] +
+                                       (f64)z[0] * view_position[2] +
+                                       w[0]),
+                                 (f32)((f64)x[1] * view_position[0] +
+                                       (f64)y[1] * view_position[1] +
+                                       (f64)z[1] * view_position[2] +
+                                       w[1]),
+                                 (f32)((f64)x[2] * view_position[0] +
+                                       (f64)y[2] * view_position[1] +
+                                       (f64)z[2] * view_position[2] +
+                                       w[2]),
+                                 (f32)((f64)x[3] * view_position[0] +
+                                       (f64)y[3] * view_position[1] +
+                                       (f64)z[3] * view_position[2] +
+                                       w[3]));
 
-        direction = vector4((f32)((f64)to_tree.x.x * view_direction.x +
-                                  (f64)to_tree.y.x * view_direction.y +
-                                  (f64)to_tree.z.x * view_direction.z),
-                            (f32)((f64)to_tree.x.y * view_direction.x +
-                                  (f64)to_tree.y.y * view_direction.y +
-                                  (f64)to_tree.z.y * view_direction.z),
-                            (f32)((f64)to_tree.x.z * view_direction.x +
-                                  (f64)to_tree.y.z * view_direction.y +
-                                  (f64)to_tree.z.z * view_direction.z),
-                            0.0f);
+        const math::dir3 &view_direction = scene->view_direction;
+
+        direction = math::vector4((f32)((f64)x[0] * view_direction[0] +
+                                        (f64)y[0] * view_direction[1] +
+                                        (f64)z[0] * view_direction[2]),
+                                  (f32)((f64)x[1] * view_direction[0] +
+                                        (f64)y[1] * view_direction[1] +
+                                        (f64)z[1] * view_direction[2]),
+                                  (f32)((f64)x[2] * view_direction[0] +
+                                        (f64)y[2] * view_direction[1] +
+                                        (f64)z[2] * view_direction[2]),
+                                  0.0f);
     }
 
     retail::sub_A40870((f32*)&position, (f32*)&direction);
@@ -99,7 +105,7 @@ void speed_tree_manager::update_camera_and_wind(const matrix4x4* camera) {
 
     auto* wind = (u32*)&references::speed_tree_wind.get();
 
-    const vector3 &unk_00e80cf0 = references::speed_tree_wind_unk_00e80cf0.get();
+    const vector3d &unk_00e80cf0 = references::speed_tree_wind_unk_00e80cf0.get();
 
     retail::sub_A43030(wind,
                        references::speed_tree_wind_unk_01086f18.read(),
@@ -119,7 +125,7 @@ void speed_tree_manager::update() {
 
         world_dynamics_system* world = treyarch::references::g_world_ptr.read();
 
-        vector3 position = world->hero_ptr->my_abs_po->get_position();
+        vector3d position = world->hero_ptr->my_abs_po->get_position();
 
         speed_tree_manager_visitor visitor;
 

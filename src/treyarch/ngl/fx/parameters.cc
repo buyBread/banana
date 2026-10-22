@@ -33,16 +33,16 @@ using namespace treyarch::ngl;
 */
 
 namespace treyarch { namespace ngl { namespace fx { namespace references {
-    util::memory_reference<vector4> temporary_0          { 0x010F7E20 };
-    util::memory_reference<f32>     shared_scalar        { 0x010F7D00 };
-    util::memory_reference<vector4> constant_80          { 0x00F4AB70 };
-    util::memory_reference<vector4> tint_color           { 0x00F4A9E0 };
-    util::memory_reference<vector4> shadow_factor        { 0x010F8A40 };
-    util::memory_reference<vector4> subset_shadow_factor { 0x010F8840 };
+    util::memory_reference<math::vector4> temporary_0          { 0x010F7E20 };
+    util::memory_reference<f32>           shared_scalar        { 0x010F7D00 };
+    util::memory_reference<math::vector4> constant_80          { 0x00F4AB70 };
+    util::memory_reference<math::vector4> tint_color           { 0x00F4A9E0 };
+    util::memory_reference<math::vector4> shadow_factor        { 0x010F8A40 };
+    util::memory_reference<math::vector4> subset_shadow_factor { 0x010F8840 };
 
-    util::memory_reference<vector4> lighting_direction_scale { 0x00E7CCE0 };
-    util::memory_reference<vector4> lighting_horizon_base    { 0x00E7CED0 };
-    util::memory_reference<vector4> lighting_half            { 0x00E7CEB0 };
+    util::memory_reference<math::vector4> lighting_direction_scale { 0x00E7CCE0 };
+    util::memory_reference<math::vector4> lighting_horizon_base    { 0x00E7CED0 };
+    util::memory_reference<math::vector4> lighting_half            { 0x00E7CEB0 };
 }}}} // treyarch::ngl::fx::references
 
 // sub_9DF680
@@ -56,13 +56,13 @@ void ngl::fx::set_int(parameter* entry, i32 value) {
 }
 
 // sub_9DF6B0
-void ngl::fx::set_vector(parameter* entry, const vector4 &value) {
-    *(vector4*)entry->data = value;
+void ngl::fx::set_vector(parameter* entry, const math::vector4 &value) {
+    *(math::vector4*)entry->data = value;
 }
 
 // sub_9DF6D0
-void ngl::fx::set_matrix(parameter* entry, const matrix4x4 &value) {
-    *(matrix4x4*)entry->data = value;
+void ngl::fx::set_matrix(parameter* entry, const math::mat44 &value) {
+    *(math::mat44*)entry->data = value;
 }
 
 // sub_9DF6F0
@@ -101,9 +101,9 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
 void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
     std::memset(value, 0, sizeof(*value));
 
-    const vector4 &zero = fx::references::lighting_zero_value.get();
+    const math::vector4 &zero = fx::references::lighting_zero_value.get();
 
-    vector4 ones { 1.0f, 1.0f, 1.0f, 1.0f };
+    math::vector4 ones(1.0f, 1.0f, 1.0f, 1.0f);
 
     value->reserved_1d0 = ones;
     value->reserved_1e0 = zero;
@@ -116,7 +116,7 @@ void initialize_general_lighting(ngl::fx::general_lighting_parameters* value) {
         value->light_attenuation[index] = zero;
     }
 
-    value->projector_matrix.identity();
+    value->projector_matrix = math::identity_mat33();
 
     value->projector_texture = nullptr;
     value->projector_config_0 = 4;
@@ -154,21 +154,21 @@ void add_general_directional_light(      ngl::fx::general_lighting_parameters* v
     const f32* direction = (const f32*)(source + (primary ? 0x50 : 0x20));
     const f32  sign      = primary ? 1.0f : -1.0f;
 
-    value->light_positions[count] = vector4(
+    value->light_positions[count] = math::vector4(
         sign * direction[0] * 10000.0f,
         sign * direction[1] * 10000.0f,
         sign * direction[2] * 10000.0f,
         0.0f);
 
-    value->light_directions[count] = vector4(
+    value->light_directions[count] = math::vector4(
         primary ? -direction[0] : direction[0],
         primary ? -direction[1] : direction[1],
         primary ? -direction[2] : direction[2],
         primary ? 0.0f : *(const f32*)(source + 0xD4));
 
-    value->light_colors[count] = *(const vector4*)(source + (primary ? 0x40 : 0x90));
+    value->light_colors[count] = *(const math::vector4*)(source + (primary ? 0x40 : 0x90));
 
-    value->light_attenuation[count] = vector4(0.0f, 1.0f, 0.0f, 1.0f);
+    value->light_attenuation[count] = math::vector4(0.0f, 1.0f, 0.0f, 1.0f);
 
     if (!primary && (*(const u32*)source & 4))
         value->special_light_index = count;
@@ -182,8 +182,8 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
                                        i32                                   table_index,
                                        i32                                   table_offset) {
 
-    const vector4 &zero          = fx::references::lighting_zero_value.get();
-    const vector4 &default_value = fx::references::lighting_default_value.get();
+    const math::vector4 &zero          = fx::references::lighting_zero_value.get();
+    const math::vector4 &default_value = fx::references::lighting_default_value.get();
 
     const f32* direction = (const f32*)(source + 0x50);
 
@@ -204,15 +204,15 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
     }
 
     f32 scalar = *(const f32*)(source + 0xC8);
-    const vector4 &axis = fx::references::lighting_horizon_axis.get();
-    f32 projection = direction[0] * axis.x +
-                     direction[1] * axis.y +
-                     direction[2] * axis.z;
+    const math::vector4 &axis = fx::references::lighting_horizon_axis.get();
+    f32 projection = direction[0] * axis.get_x() +
+                     direction[1] * axis.get_y() +
+                     direction[2] * axis.get_z();
     f32 residual = 1.0f - projection;
     f32 positive = scalar + residual;
     f32 negative = residual - scalar;
 
-    value->horizon_range = vector4(negative, positive, 0.0f, 0.0f);
+    value->horizon_range = math::vector4(negative, positive, 0.0f, 0.0f);
 
     f32 horizon_temporary[4] { positive, negative, 0.0f, 0.0f };
 
@@ -221,25 +221,25 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
     for (u32 index = 0; index < 4; ++index)
         value->horizon_bias[index] = horizon_base[index] - horizon_temporary[index];
 
-    value->horizon_direction = vector4(direction[0], direction[1], direction[2], 0.0f);
+    value->horizon_direction = math::vector4(direction[0], direction[1], direction[2], 0.0f);
 
     const f32* direction_scale = (const f32*)&fx::references::lighting_direction_scale.get();
-    value->horizon_direction_scaled = vector4(
+    value->horizon_direction_scaled = math::vector4(
         direction[0] * direction_scale[0],
         direction[1] * direction_scale[1],
         direction[2] * direction_scale[2],
         0.0f);
 
     f32 denominator = scalar + scalar;
-    value->horizon_color_scale = vector4(
+    value->horizon_color_scale = math::vector4(
         *(const f32*)(source + 0x40) / denominator,
         *(const f32*)(source + 0x44) / denominator,
         *(const f32*)(source + 0x48) / denominator,
         1.0f / denominator);
 
-    value->horizon_color = *(const vector4*)(source + 0x80);
-    value->horizon_extra = *(const vector4*)(source + 0xB0);
-    value->horizon_axis = vector4(0.0f, 1.0f, 0.0f, 0.0f);
+    value->horizon_color = *(const math::vector4*)(source + 0x80);
+    value->horizon_extra = *(const math::vector4*)(source + 0xB0);
+    value->horizon_axis = math::vector4(0.0f, 1.0f, 0.0f, 0.0f);
     value->horizon_scale = 1.0f;
 
     if (table_offset == 4) {
@@ -260,7 +260,7 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
         value->horizon_projection_u = fx::references::lighting_zero_value.get();
         value->horizon_projection_v = fx::references::lighting_zero_value.get();
     } else {
-        const vector4* projections = *(const vector4**)(light_table + 0x18);
+        const math::vector4* projections = *(const math::vector4**)(light_table + 0x18);
 
         value->horizon_projection_u = projections[projection_index * 2 + 0];
         value->horizon_projection_v = projections[projection_index * 2 + 1];
@@ -269,23 +269,27 @@ void write_general_primary_block(      ngl::fx::general_lighting_parameters* val
     add_general_directional_light(value, source, true);
 }
 
-void get_world_sphere_center(      vector4                  &destination,
+void get_world_sphere_center(      math::vector4            &destination,
                              const ngl::fx::mesh_node_data*  node_data,
                              const ngl::mesh_section*        section) {
 
-    const matrix4x4 &matrix = node_data->local_to_world;
-    const vector4   &sphere = section->sphere;
+    const math::dir3      &x      = node_data->local_to_world.get_x();
+    const math::dir3      &y      = node_data->local_to_world.get_y();
+    const math::dir3      &z      = node_data->local_to_world.get_z();
+    const math::position3 &w      = node_data->local_to_world.get_w();
+    const math::vector4   &sphere = section->sphere;
 
-    destination.x = matrix.x.x * sphere.x + matrix.y.x * sphere.y + matrix.z.x * sphere.z + matrix.w.x;
-    destination.y = matrix.x.y * sphere.x + matrix.y.y * sphere.y + matrix.z.y * sphere.z + matrix.w.y;
-    destination.z = matrix.x.z * sphere.x + matrix.y.z * sphere.y + matrix.z.z * sphere.z + matrix.w.z;
-    destination.w = matrix.x.w * sphere.x + matrix.y.w * sphere.y + matrix.z.w * sphere.z + matrix.w.w;
+    // every lane of the rows, the unused fourth one included
+    destination.set_x(x[0] * sphere[0] + y[0] * sphere[1] + z[0] * sphere[2] + w[0]);
+    destination.set_y(x[1] * sphere[0] + y[1] * sphere[1] + z[1] * sphere[2] + w[1]);
+    destination.set_z(x[2] * sphere[0] + y[2] * sphere[1] + z[2] * sphere[2] + w[2]);
+    destination.set_w(x[3] * sphere[0] + y[3] * sphere[1] + z[3] * sphere[2] + w[3]);
 }
 
-f32 get_inverse_node_transform(      matrix4x4                &destination,
+f32 get_inverse_node_transform(      math::mat44              &destination,
                                const ngl::fx::mesh_node_data*  node_data) {
 
-    destination = node_data->local_to_world.inverse_orthonormal();
+    destination = math::inv(*(const math::rot_tran_mat43*)&node_data->local_to_world);
 
     if (!(node_data->node_info[0] & 2))
         return 1.0f;
@@ -305,16 +309,16 @@ f32 get_inverse_node_transform(      matrix4x4                &destination,
     return 1.0f / node_data->scale;
 }
 
-bool local_light_intersects_mesh(const vector4                  &position,
+bool local_light_intersects_mesh(const math::vector4            &position,
                                        f32                       outer_radius,
-                                 const vector4                  &world_center,
-                                 const matrix4x4                &inverse_transform,
+                                 const math::vector4            &world_center,
+                                 const math::mat44              &inverse_transform,
                                        f32                       inverse_scale,
                                  const ngl::fx::mesh_node_data*  node_data) {
 
-    f32 delta_x = position.x - world_center.x;
-    f32 delta_y = position.y - world_center.y;
-    f32 delta_z = position.z - world_center.z;
+    f32 delta_x = position[0] - world_center[0];
+    f32 delta_y = position[1] - world_center[1];
+    f32 delta_z = position[2] - world_center[2];
     f32 mesh_radius = node_data->scale * *(f32*)(node_data->mesh_data + 0x2C);
     f32 combined_radius = outer_radius + mesh_radius;
 
@@ -353,9 +357,9 @@ void add_general_generated_light(      ngl::fx::general_lighting_parameters* val
 
     i32 &count = value->light_count;
 
-    value->light_positions[count] = vector4(light->position.x, light->position.y, light->position.z, 1.0f);
+    value->light_positions[count] = math::vector4(light->position[0], light->position[1], light->position[2], 1.0f);
 
-    value->light_directions[count] = vector4(light->direction.x, light->direction.y, light->direction.z, light->direction_w);
+    value->light_directions[count] = math::vector4(light->direction[0], light->direction[1], light->direction[2], light->direction_w);
 
     value->light_colors[count] = light->color;
 
@@ -366,7 +370,7 @@ void add_general_generated_light(      ngl::fx::general_lighting_parameters* val
     f32 radial_scale    = 1.0f / (inner_squared - outer_squared);
     f32 secondary_scale = 1.0f / (light->attenuation_inner - light->attenuation_outer);
 
-    value->light_attenuation[count] = vector4(
+    value->light_attenuation[count] = math::vector4(
         radial_scale,
         -outer_squared * radial_scale,
         secondary_scale,
@@ -391,12 +395,12 @@ void add_general_point_light(      ngl::fx::general_lighting_parameters* value,
 
     i32 &count = value->light_count;
 
-    value->light_positions[count] = vector4(light->position.x, light->position.y, light->position.z, 1.0f);
-    value->light_directions[count] = vector4(0.0f, -1.0f, 0.0f, 0.0f);
+    value->light_positions[count] = math::vector4(light->position[0], light->position[1], light->position[2], 1.0f);
+    value->light_directions[count] = math::vector4(0.0f, -1.0f, 0.0f, 0.0f);
     value->light_colors[count] = light->color;
 
     f32 radius_squared = local_radius * local_radius;
-    value->light_attenuation[count] = vector4(-1.0f / radius_squared, 1.0f, 0.0f, 1.0f);
+    value->light_attenuation[count] = math::vector4(-1.0f / radius_squared, 1.0f, 0.0f, 1.0f);
 
     ++count;
 }
@@ -441,8 +445,8 @@ void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  va
     if (value->light_count >= 4)
         return;
 
-    vector4 world_center;
-    matrix4x4 inverse_transform;
+    math::vector4 world_center;
+    math::mat44 inverse_transform;
     get_world_sphere_center(world_center, node_data, section);
     f32 inverse_scale = get_inverse_node_transform(inverse_transform, node_data);
 
@@ -495,7 +499,7 @@ void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  va
             auto* light = (lighting::point_light_data*)node->node_data;
 
             if (!local_light_intersects_mesh(light->position,
-                                             light->position.w,
+                                             light->position.get_w(),
                                              world_center,
                                              inverse_transform,
                                              inverse_scale,
@@ -508,7 +512,7 @@ void gather_general_local_lights(      ngl::fx::general_lighting_parameters*  va
 
             add_general_point_light(value,
                                     light,
-                                    inverse_scale * light->position.w);
+                                    inverse_scale * light->position.get_w());
         }
 
         if (value->light_count >= 4)
@@ -533,55 +537,55 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
 
     value->light_source = source;
 
-    value->view_position = vector4(current_scene->view_to_world.w.x,
-                                   current_scene->view_to_world.w.y,
-                                   current_scene->view_to_world.w.z,
-                                   1.0f);
+    value->view_position = math::vector4(current_scene->view_to_world.get_w()[0],
+                                         current_scene->view_to_world.get_w()[1],
+                                         current_scene->view_to_world.get_w()[2],
+                                         1.0f);
 
-    value->ambient_direction = vector4(*(f32*)(source + 0x220), *(f32*)(source + 0x224), *(f32*)(source + 0x228), 0.0f);
+    value->ambient_direction = math::vector4(*(f32*)(source + 0x220), *(f32*)(source + 0x224), *(f32*)(source + 0x228), 0.0f);
 
-    value->ambient_color = *(const vector4*)(source + 0x210);
-    value->post_view_position = vector4(current_scene->view_to_world.w.x,
-                                        current_scene->view_to_world.w.y,
-                                        current_scene->view_to_world.w.z,
-                                        0.0f);
+    value->ambient_color = *(const math::vector4*)(source + 0x210);
+    value->post_view_position = math::vector4(current_scene->view_to_world.get_w()[0],
+                                              current_scene->view_to_world.get_w()[1],
+                                              current_scene->view_to_world.get_w()[2],
+                                              0.0f);
 
     const f32* normal = (const f32*)(source + 0x230);
     f32 inverse_length = 1.0f / std::sqrt(normal[0] * normal[0] +
                                           normal[1] * normal[1] +
                                           normal[2] * normal[2]);
 
-    value->post_direction = vector4(normal[0] * inverse_length,
-                                    normal[1] * inverse_length,
-                                    normal[2] * inverse_length,
-                                    0.0f);
+    value->post_direction = math::vector4(normal[0] * inverse_length,
+                                          normal[1] * inverse_length,
+                                          normal[2] * inverse_length,
+                                          0.0f);
 
-    value->post_plane_0 = vector4(*(f32*)(source + 0x240),
-                                  *(f32*)(source + 0x244),
-                                  *(f32*)(source + 0x248),
-                                  1.0f);
+    value->post_plane_0 = math::vector4(*(f32*)(source + 0x240),
+                                        *(f32*)(source + 0x244),
+                                        *(f32*)(source + 0x248),
+                                        1.0f);
 
-    value->post_plane_1 = vector4(*(f32*)(source + 0x250),
-                                  *(f32*)(source + 0x254),
-                                  *(f32*)(source + 0x258),
-                                  1.0f);
+    value->post_plane_1 = math::vector4(*(f32*)(source + 0x250),
+                                        *(f32*)(source + 0x254),
+                                        *(f32*)(source + 0x258),
+                                        1.0f);
 
-    value->post_range = vector4(std::fabs(*(f32*)(source + 0x318)),
-                                *(f32*)(source + 0x31C),
-                                0.0f,
-                                0.0f);
+    value->post_range = math::vector4(std::fabs(*(f32*)(source + 0x318)),
+                                      *(f32*)(source + 0x31C),
+                                      0.0f,
+                                      0.0f);
 
-    value->post_color = vector4(*(f32*)(source + 0x260),
-                                *(f32*)(source + 0x264),
-                                *(f32*)(source + 0x268),
-                                0.0f);
+    value->post_color = math::vector4(*(f32*)(source + 0x260),
+                                      *(f32*)(source + 0x264),
+                                      *(f32*)(source + 0x268),
+                                      0.0f);
 
-    value->ambient_info = vector4(*(f32*)(source + 0x278),
-                                  *(f32*)(source + 0x270),
-                                  *(f32*)(source + 0x274),
-                                  *(f32*)(source + 0x27C));
+    value->ambient_info = math::vector4(*(f32*)(source + 0x278),
+                                        *(f32*)(source + 0x270),
+                                        *(f32*)(source + 0x274),
+                                        *(f32*)(source + 0x27C));
 
-    value->fog_color = *(const vector4*)(source + 0x2D0);
+    value->fog_color = *(const math::vector4*)(source + 0x2D0);
 
     f32 fog_near = *(f32*)(source + 0x2E0);
     f32 fog_far  = *(f32*)(source + 0x2E4);
@@ -595,7 +599,7 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
     f32 fog_magic;
     std::memcpy(&fog_magic, &fog_magic_bits, sizeof(fog_magic));
 
-    value->fog_control = vector4(fog_scale, -fog_near * fog_scale, *(f32*)(source + 0x2E8), fog_magic);
+    value->fog_control = math::vector4(fog_scale, -fog_near * fog_scale, *(f32*)(source + 0x2E8), fog_magic);
 
     u8* table = (u8*)find_scene_parameter(node_data->parameters,
                                           fx::references::parameter_id_light_table.read());
@@ -615,7 +619,7 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
 
     u8* primary = *(u8**)(source + 0x32C);
 
-    vector4 contribution = fx::references::lighting_zero_value.get();
+    math::vector4 contribution = fx::references::lighting_zero_value.get();
 
     if (primary) {
         write_general_primary_block(value,
@@ -691,11 +695,11 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
                                           ngl::fx::references::parameter_id_scene_light_source.read());
     }
 
-    destination->ambient_info.x = *(f32*)(source + 0x278);
-    destination->ambient_info.y = *(f32*)(source + 0x270);
-    destination->ambient_info.z = *(f32*)(source + 0x274);
-    destination->ambient_info.w = *(f32*)(source + 0x27C);
-    destination->fog_color    = *(vector4*)(source + 0x2D0);
+    destination->ambient_info.set_x(*(f32*)(source + 0x278));
+    destination->ambient_info.set_y(*(f32*)(source + 0x270));
+    destination->ambient_info.set_z(*(f32*)(source + 0x274));
+    destination->ambient_info.set_w(*(f32*)(source + 0x27C));
+    destination->fog_color = *(math::vector4*)(source + 0x2D0);
 
     f32 fog_near = *(f32*)(source + 0x2E0);
     f32 fog_far  = *(f32*)(source + 0x2E4);
@@ -703,17 +707,17 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
     if (fog_near == fog_far)
         fog_far += 0.00001525879997643642f;
 
-    destination->fog_control.x = 1.0f / (fog_far - fog_near);
-    destination->fog_control.y = -fog_near * destination->fog_control.x;
-    destination->fog_control.z = *(f32*)(source + 0x2E8);
-    *(u32*)&destination->fog_control.w = 992204554;
+    destination->fog_control.set_x(1.0f / (fog_far - fog_near));
+    destination->fog_control.set_y(-fog_near * destination->fog_control.get_x());
+    destination->fog_control.set_z(*(f32*)(source + 0x2E8));
+    *(u32*)&destination->fog_control[3] = 992204554;
 
     u8* directional_light = *(u8**)(source + 0x32C);
 
     if (directional_light) {
-        destination->directional_light_directions[0] = *(vector4*)(directional_light + 0x50);
-        destination->directional_light_colors[0] = *(vector4*)(directional_light + 0x40);
-        destination->directional_light_colors[0].w = 1.0f;
+        destination->directional_light_directions[0] = *(math::vector4*)(directional_light + 0x50);
+        destination->directional_light_colors[0] = *(math::vector4*)(directional_light + 0x40);
+        destination->directional_light_colors[0].set_w(1.0f);
         destination->directional_light_count = 1;
     }
 
@@ -744,7 +748,7 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
         return;
     }
 
-    vector4* projections = *(vector4**)(table + 0x18);
+    math::vector4* projections = *(math::vector4**)(table + 0x18);
 
     destination->horizon_projection_u = projections[table_index * 2 + 0];
     destination->horizon_projection_v = projections[table_index * 2 + 1];
@@ -755,37 +759,41 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
                                     bool                     subset_effect) {
     using namespace ngl::fx;
 
-    matrix4x4 &destination = *(matrix4x4*)entry->data;
-    matrix4x4 local = node_data->local_to_world.affine();
+    math::mat44 &destination = *(math::mat44*)entry->data;
+    math::mat44  local(node_data->local_to_world);
     scene* current_scene = ngl::references::current_scene.read();
 
     switch (entry->type) {
         case parameter_world:
-            destination = local.transpose();
+            destination = ~local;
             break;
         case parameter_world_inverse:
-            destination = get_unscaled_local_to_world(node_data).inverse_orthonormal().transpose();
+            destination = ~math::mat44(math::inv(get_unscaled_local_to_world(node_data)));
             break;
         case parameter_world_transpose:
             destination = local;
             break;
         case parameter_world_inverse_transpose:
-            destination = get_unscaled_local_to_world(node_data).inverse_orthonormal();
+            destination = math::inv(get_unscaled_local_to_world(node_data));
             break;
         case parameter_world_view:
-            destination = (local * current_scene->world_to_view).affine().transpose();
+            destination = ~(local * current_scene->world_to_view);
             break;
-        case parameter_world_view_inverse:
-            destination = (local * current_scene->world_to_view).inverse_orthonormal().transpose();
+        case parameter_world_view_inverse: {
+            math::mat44 local_to_view = local * current_scene->world_to_view;
+            destination = ~math::mat44(math::inv(*(const math::rot_tran_mat43*)&local_to_view));
             break;
+        }
         case parameter_world_view_transpose:
-            destination = (local * current_scene->world_to_view).affine();
+            destination = local * current_scene->world_to_view;
             break;
-        case parameter_world_view_inverse_transpose:
-            destination = (local * current_scene->world_to_view).inverse_orthonormal();
+        case parameter_world_view_inverse_transpose: {
+            math::mat44 local_to_view = local * current_scene->world_to_view;
+            destination = math::inv(*(const math::rot_tran_mat43*)&local_to_view);
             break;
+        }
         case parameter_world_view_projection:
-            destination = (local * current_scene->world_to_screen).transpose();
+            destination = ~(local * current_scene->world_to_screen);
             break;
         case parameter_world_view_projection_transpose:
             destination = local * current_scene->world_to_screen;
@@ -794,7 +802,7 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
         case parameter_world_view_projection_inverse_transpose:
             // general effects get identity here, but subset effects leave the old value alone
             if (!subset_effect)
-                destination.identity();
+                destination = math::identity_mat33();
             break;
     }
 }
@@ -802,20 +810,20 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
 // sub_9DE390
 void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
-    vector4* destination = &fx::references::bone_constants.get();
+    math::vector4* destination = &fx::references::bone_constants.get();
 
     // shaders only receive three rows per bone,
     // meshes without bones still get two copies of the node transform
     if (!section->bone_count) {
-        matrix4x4 matrix = node_data->local_to_world.affine().transpose();
-        std::memcpy(destination, &matrix, sizeof(vector4) * 3);
-        std::memcpy(destination + 3, &matrix, sizeof(vector4) * 3);
+        math::mat44 matrix = ~math::mat44(node_data->local_to_world);
+        std::memcpy(destination, &matrix, sizeof(math::vector4) * 3);
+        std::memcpy(destination + 3, &matrix, sizeof(math::vector4) * 3);
         fx::references::bone_constant_count.write(2);
         return;
     }
 
     u32 flags = *(u32*)node_data->node_info;
-    const matrix4x4* bone_matrices = *(matrix4x4**)(node_data->node_info + 8);
+    const math::mat43* bone_matrices = *(math::mat43**)(node_data->node_info + 8);
     const u8* bind_matrices = nullptr;
 
     if (flags & (4 | 8))
@@ -823,24 +831,24 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
 
     for (i32 index = 0; index < section->bone_count; ++index) {
         u16 bone_index = section->bone_indices[index];
-        const matrix4x4 &bone = bone_matrices[bone_index];
-        matrix4x4 matrix;
+        const math::mat43 &bone = bone_matrices[bone_index];
+        math::mat44 matrix;
 
         if (flags & (4 | 8)) {
             // each bone's bind data is 0x90 bytes and its matrix starts at +0x40
-            const matrix4x4 &bind = *(const matrix4x4*)(bind_matrices + 0x90 * bone_index + 0x40);
-            matrix = bind.affine() * bone.affine();
+            const math::mat43 &bind = *(const math::mat43*)(bind_matrices + 0x90 * bone_index + 0x40);
+            matrix = math::mat44(bind) * math::mat44(bone);
 
             // flag 4 wins when both flags are set
             if (!(flags & 4))
-                matrix = matrix.affine() * node_data->local_to_world.affine();
+                matrix = matrix * math::mat44(node_data->local_to_world);
         } else if (flags & 0x10)
             matrix = bone;
         else
             matrix = node_data->local_to_world;
 
-        matrix = matrix.affine().transpose();
-        std::memcpy(destination + 3 * index, &matrix, sizeof(vector4) * 3);
+        matrix = ~matrix;
+        std::memcpy(destination + 3 * index, &matrix, sizeof(math::vector4) * 3);
     }
 
     fx::references::bone_constant_count.write(section->bone_count);
@@ -857,10 +865,10 @@ void write_point_light_positions(      f32*                     destination,
         u32 light_index = node_data->point_light_indices[index];
         const lighting::point_light_data &light = lights[light_index];
 
-        *(vector4*)(destination + 4 * index) = vector4(light.position.x,
-                                                       light.position.y,
-                                                       light.position.z,
-                                                       1.0f / light.position.w);
+        *(math::vector4*)(destination + 4 * index) = math::vector4(light.position[0],
+                                                                   light.position[1],
+                                                                   light.position[2],
+                                                                   1.0f / light.position[3]);
     }
 }
 
@@ -876,24 +884,24 @@ void write_point_light_colors(      f32*                     destination,
         u32 light_index = node_data->point_light_indices[index];
         const lighting::point_light_data &light = lights[light_index];
 
-        *(vector4*)(destination + 4 * index) = vector4(light.color.x,
-                                                       light.color.y,
-                                                       light.color.z,
-                                                       0.0f);
+        *(math::vector4*)(destination + 4 * index) = math::vector4(light.color[0],
+                                                                   light.color[1],
+                                                                   light.color[2],
+                                                                   0.0f);
     }
 
     // clear unused colors, but leave unused positions and ranges alone
     for (; index < 8; ++index)
-        *(vector4*)(destination + 4 * index) = vector4(0.0f, 0.0f, 0.0f, 0.0f);
+        *(math::vector4*)(destination + 4 * index) = math::vector4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void write_shadow_size(f32* destination, u32 width, u32 height) {
-    *(vector4*)(destination) = vector4((f32)width, (f32)height, 1.0f / (f32)width, 1.0f / (f32)height);
+    *(math::vector4*)(destination) = math::vector4((f32)width, (f32)height, 1.0f / (f32)width, 1.0f / (f32)height);
 }
 
 void write_default_environment_color(f32* destination) {
     // default color starts at (10, 10, 20) / 255 and is squared below
-    *(vector4*)(destination) = vector4(0.03921569f, 0.03921569f, 0.07843138f, 1.0f);
+    *(math::vector4*)(destination) = math::vector4(0.03921569f, 0.03921569f, 0.07843138f, 1.0f);
 
     for (u32 index = 0; index < 4; ++index)
         destination[index] *= destination[index];
@@ -917,16 +925,16 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
     for (parameter* entry = value->parameter_chains[0]; entry; entry = entry->next) {
         f32* destination = (f32*)entry->data;
-        vector4* vectors = (vector4*)entry->data;
+        math::vector4* vectors = (math::vector4*)entry->data;
 
         switch (entry->type) {
             case parameter_view_position:
-                vectors[0] = vector4(current_scene->view_position.get_xyz(), 1.0f);
+                vectors[0] = math::vector4(current_scene->view_position);
 
                 break;
             case parameter_viewport_pixel_size:
-                vectors[0] = vector4((f32)current_scene->color_target->gpu_texture.width,
-                                     (f32)current_scene->color_target->gpu_texture.height, 0.0f, 0.0f);
+                vectors[0] = math::vector4((f32)current_scene->color_target->gpu_texture.width,
+                                           (f32)current_scene->color_target->gpu_texture.height, 0.0f, 0.0f);
 
                 break;
             case parameter_frame:
@@ -938,53 +946,53 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
                 break;
             case parameter_view: {
-                *(matrix4x4*)destination = current_scene->world_to_view.affine().transpose();
+                *(math::mat44*)destination = ~math::mat44(current_scene->world_to_view);
 
                 break;
             }
             case parameter_view_inverse: {
-                *(matrix4x4*)destination = current_scene->view_to_world.affine().transpose();
+                *(math::mat44*)destination = ~math::mat44(current_scene->view_to_world);
 
                 break;
             }
             case parameter_view_transpose:
-                *(matrix4x4*)destination = current_scene->world_to_view.affine();
+                *(math::mat44*)destination = current_scene->world_to_view;
 
                 break;
             case parameter_view_inverse_transpose:
-                *(matrix4x4*)destination = current_scene->view_to_world.affine();
+                *(math::mat44*)destination = current_scene->view_to_world;
 
                 break;
             case parameter_projection:
-                *(matrix4x4*)destination = current_scene->view_to_screen.transpose();
+                *(math::mat44*)destination = ~current_scene->view_to_screen;
 
                 break;
             case parameter_projection_inverse:
-                ((matrix4x4*)destination)->identity();
+                *(math::mat44*)destination = math::identity_mat33();
 
                 break;
             case parameter_projection_transpose:
-                *(matrix4x4*)(destination) = current_scene->view_to_screen;
+                *(math::mat44*)(destination) = current_scene->view_to_screen;
 
                 break;
             case parameter_projection_inverse_transpose:
-                ((matrix4x4*)destination)->identity();
+                *(math::mat44*)destination = math::identity_mat33();
 
                 break;
             case parameter_view_projection:
-                *(matrix4x4*)destination = current_scene->world_to_screen.transpose();
+                *(math::mat44*)destination = ~current_scene->world_to_screen;
 
                 break;
             case parameter_view_projection_inverse:
-                ((matrix4x4*)destination)->identity();
+                *(math::mat44*)destination = math::identity_mat33();
 
                 break;
             case parameter_view_projection_transpose:
-                *(matrix4x4*)(destination) = current_scene->world_to_screen;
+                *(math::mat44*)(destination) = current_scene->world_to_screen;
 
                 break;
             case parameter_view_projection_inverse_transpose:
-                ((matrix4x4*)destination)->identity();
+                *(math::mat44*)destination = math::identity_mat33();
 
                 break;
         }
@@ -1023,7 +1031,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
     for (parameter* entry = value->parameter_chains[1]; entry; entry = entry->next) {
         f32* destination = (f32*)entry->data;
-        vector4* vectors = (vector4*)entry->data;
+        math::vector4* vectors = (math::vector4*)entry->data;
         e_parameter_type type = entry->type;
 
         if (subset_effect && depth_bias_enabled && !is_depth_bias_parameter(type))
@@ -1049,26 +1057,26 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_horizon_projection_u:
-                vectors[0] = *(const vector4*)(subset_effect ?
+                vectors[0] = *(const math::vector4*)(subset_effect ?
                                 (const void*)&lighting.horizon_projection_u : (const void*)(f32*)&general_lighting.horizon_projection_u);
 
                 break;
             case parameter_horizon_projection_v:
-                vectors[0] = *(const vector4*)(subset_effect ?
+                vectors[0] = *(const math::vector4*)(subset_effect ?
                                 (const void*)&lighting.horizon_projection_v : (const void*)(f32*)&general_lighting.horizon_projection_v);
 
                 break;
             case parameter_lightmap_color: {
                 f64 hour = (f64)mission_manager::inst()->game_time_get_full_time() / 3600.0;
                 f32 night = hour < 3.0 || hour > 23.9 ? 1.0f : 0.0f;
-                vectors[0] = vector4(0.60000002f * night, 0.5f * night, 0.40000001f * night, 1.0f);
+                vectors[0] = math::vector4(0.60000002f * night, 0.5f * night, 0.40000001f * night, 1.0f);
 
                 break;
             }
             case parameter_window_color: {
                 f64 hour = (f64)mission_manager::inst()->game_time_get_full_time() / 3600.0;
                 f32 night = hour < 3.0 || hour > 23.9 ? 1.0f : 0.0f;
-                vectors[0] = vector4(1.3f, 1.2f, 0.8f, night);
+                vectors[0] = math::vector4(1.3f, 1.2f, 0.8f, night);
 
                 break;
             }
@@ -1077,7 +1085,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_fog_control:
-                vectors[0] = *(const vector4*)(subset_effect ?
+                vectors[0] = *(const math::vector4*)(subset_effect ?
                                 (const void*)&lighting.fog_control : (const void*)(f32*)&general_lighting.fog_control);
 
                 break;
@@ -1085,9 +1093,9 @@ void ngl::fx::update_material_parameters(effect*         value,
                 if (!subset_effect) {
                     vectors[0] = general_lighting.ambient_color;
                     vectors[1] = general_lighting.ambient_direction;
-                    std::memcpy(destination + 4 * 2, (f32*)&general_lighting.ambient_colors_with_primary[0], sizeof(vector4) * 8);
-                    std::memcpy(destination + 4 * 10, (f32*)&general_lighting.ambient_colors[0], sizeof(vector4) * 8);
-                    std::memcpy(destination + 4 * 18, (f32*)&general_lighting.ambient_defaults[0], sizeof(vector4) * 9);
+                    std::memcpy(destination + 4 * 2, (f32*)&general_lighting.ambient_colors_with_primary[0], sizeof(math::vector4) * 8);
+                    std::memcpy(destination + 4 * 10, (f32*)&general_lighting.ambient_colors[0], sizeof(math::vector4) * 8);
+                    std::memcpy(destination + 4 * 18, (f32*)&general_lighting.ambient_defaults[0], sizeof(math::vector4) * 9);
                 }
 
                 break;
@@ -1103,7 +1111,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                     vectors[7] = general_lighting.horizon_bias;
 
                     f32 scalar = general_lighting.horizon_scalar[0];
-                    vectors[8] = vector4(scalar, scalar, scalar, scalar);
+                    vectors[8] = math::vector4(scalar, scalar, scalar, scalar);
 
                     std::memcpy(destination + 4 * 9, (f32*)&general_lighting.horizon_extra, sizeof(f32) * 3);
                     destination[4 * 9 + 3] = 0.0f;
@@ -1121,10 +1129,10 @@ void ngl::fx::update_material_parameters(effect*         value,
             }
             case parameter_light_info:
                 if (!subset_effect) {
-                    std::memcpy(destination + 4 * 0, (f32*)&general_lighting.light_positions[0], sizeof(vector4) * 4);
-                    std::memcpy(destination + 4 * 4, (f32*)&general_lighting.light_directions[0], sizeof(vector4) * 4);
-                    std::memcpy(destination + 4 * 8, (f32*)&general_lighting.light_colors[0], sizeof(vector4) * 4);
-                    std::memcpy(destination + 4 * 12, (f32*)&general_lighting.light_attenuation[0], sizeof(vector4) * 4);
+                    std::memcpy(destination + 4 * 0, (f32*)&general_lighting.light_positions[0], sizeof(math::vector4) * 4);
+                    std::memcpy(destination + 4 * 4, (f32*)&general_lighting.light_directions[0], sizeof(math::vector4) * 4);
+                    std::memcpy(destination + 4 * 8, (f32*)&general_lighting.light_colors[0], sizeof(math::vector4) * 4);
+                    std::memcpy(destination + 4 * 12, (f32*)&general_lighting.light_attenuation[0], sizeof(math::vector4) * 4);
                 }
 
                 break;
@@ -1147,11 +1155,11 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_view_projection_shadow:
             case parameter_view_projection_shadow_1:
-                *(matrix4x4*)destination = shadow::references::matrix_0.get().transpose();
+                *(math::mat44*)destination = ~shadow::references::matrix_0.get();
 
                 break;
             case parameter_view_projection_shadow_2:
-                *(matrix4x4*)destination = shadow::references::matrix_1.get().transpose();
+                *(math::mat44*)destination = ~shadow::references::matrix_1.get();
 
                 break;
             case parameter_shadow_texture:
@@ -1171,9 +1179,9 @@ void ngl::fx::update_material_parameters(effect*         value,
                     const f32* first_plane = (f32*)&general_lighting.post_plane_0;
                     const f32* second_plane = (f32*)&general_lighting.post_plane_1;
 
-                    vectors[0] = *(const vector4*)(primary_direction);
+                    vectors[0] = *(const math::vector4*)(primary_direction);
 
-                    vectors[1] = vector4(primary_direction[0] * first_plane[0] +
+                    vectors[1] = math::vector4(primary_direction[0] * first_plane[0] +
                                  primary_direction[1] * first_plane[1] +
                                  primary_direction[2] * first_plane[2], primary_direction[0] * second_plane[0] +
                                  primary_direction[1] * second_plane[1] +
@@ -1189,13 +1197,13 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                     if (light_source) {
                         f32 scalar_value = *(f32*)(light_source + 0x200);
-                        vectors[6] = vector4(scalar_value, scalar_value, scalar_value, scalar_value);
+                        vectors[6] = math::vector4(scalar_value, scalar_value, scalar_value, scalar_value);
                     } else
-                        vectors[6] = vector4(-2.0f, -2.0f, -2.0f, -2.0f);
+                        vectors[6] = math::vector4(-2.0f, -2.0f, -2.0f, -2.0f);
 
                     vectors[7] = general_lighting.post_view_position;
-                    vectors[8] = *(const vector4*)(first_plane);
-                    vectors[9] = *(const vector4*)(second_plane);
+                    vectors[8] = *(const math::vector4*)(first_plane);
+                    vectors[9] = *(const math::vector4*)(second_plane);
                 }
 
                 break;
@@ -1209,11 +1217,11 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_shadow_factor:
-                vectors[0] = *(const vector4*)(subset_effect ? &fx::references::subset_shadow_factor.get() : &fx::references::shadow_factor.get());
+                vectors[0] = *(const math::vector4*)(subset_effect ? &fx::references::subset_shadow_factor.get() : &fx::references::shadow_factor.get());
 
                 break;
             case parameter_shared_scalar:
-                vectors[0] = vector4(
+                vectors[0] = math::vector4(
                     fx::references::shared_scalar.read(),
                     fx::references::shared_scalar.read(),
                     fx::references::shared_scalar.read(),
@@ -1225,7 +1233,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_mesh_map_distance:
-                vectors[0] = vector4(50.0f, 0.0199999996f, 0.0f, 0.0f);
+                vectors[0] = math::vector4(50.0f, 0.0199999996f, 0.0f, 0.0f);
 
                 break;
             case parameter_number_directional_lights:
@@ -1236,17 +1244,17 @@ void ngl::fx::update_material_parameters(effect*         value,
             case parameter_directional_light_directions:
                 if (subset_effect) {
                     for (i32 index = 0; index < lighting.directional_light_count; ++index) {
-                        const vector4 &direction =
+                        const math::vector4 &direction =
                             lighting.directional_light_directions[index];
 
-                        vectors[1 + index] = vector4(direction.x, direction.y, direction.z, 0.0f);
+                        vectors[1 + index] = math::vector4(direction[0], direction[1], direction[2], 0.0f);
                     }
                 } else {
                     for (i32 index = 0; index < general_lighting.directional_light_count; ++index) {
 
                         const f32* direction = ((f32*)&general_lighting.directional_light_direction + 8 * index);
 
-                        vectors[1 + index] = vector4(direction[0], direction[1], direction[2], 0.0f);
+                        vectors[1 + index] = math::vector4(direction[0], direction[1], direction[2], 0.0f);
                     }
                 }
 
@@ -1254,16 +1262,16 @@ void ngl::fx::update_material_parameters(effect*         value,
             case parameter_directional_light_colors:
                 if (subset_effect) {
                     for (i32 index = 0; index < lighting.directional_light_count; ++index) {
-                        const vector4 &color = lighting.directional_light_colors[index];
+                        const math::vector4 &color = lighting.directional_light_colors[index];
 
-                        vectors[1 + index] = vector4(color.x, color.y, color.z, 0.0f);
+                        vectors[1 + index] = math::vector4(color[0], color[1], color[2], 0.0f);
                     }
                 } else {
                     for (i32 index = 0; index < general_lighting.directional_light_count; ++index) {
 
                         const f32* color = ((f32*)&general_lighting.directional_light_color + 8 * index);
 
-                        vectors[1 + index] = vector4(color[0], color[1], color[2], 0.0f);
+                        vectors[1 + index] = math::vector4(color[0], color[1], color[2], 0.0f);
                     }
                 }
 
@@ -1281,7 +1289,7 @@ void ngl::fx::update_material_parameters(effect*         value,
 
                 break;
             case parameter_ibl_parameters:
-                vectors[0] = *(const vector4*)(subset_effect ?
+                vectors[0] = *(const math::vector4*)(subset_effect ?
                                 (const void*)&lighting.ambient_info : (const void*)(f32*)&general_lighting.ambient_info);
 
                 break;
@@ -1290,9 +1298,9 @@ void ngl::fx::update_material_parameters(effect*         value,
                                                    fx::references::parameter_id_character_color.read());
 
                 if (color)
-                    vectors[0] = *(const vector4*)(color);
+                    vectors[0] = *(const math::vector4*)(color);
                 else
-                    vectors[0] = vector4(1.0f, 1.0f, 1.0f, 1.0f);
+                    vectors[0] = math::vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
                 break;
             }
@@ -1322,54 +1330,54 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             }
             case parameter_decal_projection: {
-                matrix4x4* matrix = (matrix4x4*)find_scene_parameter(node_data->parameters,
-                                                                     fx::references::parameter_id_decal_projection.read());
+                math::mat44* matrix = (math::mat44*)find_scene_parameter(node_data->parameters,
+                                                                         fx::references::parameter_id_decal_projection.read());
 
                 if (matrix)
-                    *(matrix4x4*)destination = matrix->transpose();
+                    *(math::mat44*)destination = ~*matrix;
                 else
-                    ((matrix4x4*)destination)->identity();
+                    *(math::mat44*)destination = math::identity_mat33();
 
                 break;
             }
             case parameter_viewport_to_world: {
                 scene* current_scene = ngl::references::current_scene.read();
-                *(matrix4x4*)destination = (node_data->local_to_world.affine() *
-                                           current_scene->derived_matrix_250).transpose();
+                *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) *
+                                               current_scene->derived_matrix_250);
                 break;
             }
             case parameter_world_to_viewport: {
                 scene* current_scene = ngl::references::current_scene.read();
                 // world_to_viewport also includes the viewport matrix,
                 // leaving it out makes projected decals move and resize with the camera
-                *(matrix4x4*)destination = (node_data->local_to_world.affine() *
-                                           current_scene->world_to_view        *
-                                           current_scene->projection           *
-                                           current_scene->view).transpose();
+                *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) *
+                                               current_scene->world_to_view    *
+                                               current_scene->projection       *
+                                               current_scene->view);
                 break;
             }
             case parameter_ui_parameters: {
                 void* parameters = find_scene_parameter(node_data->parameters,
                                                         fx::references::parameter_id_ui_parameters.read());
-                vectors[0] = *(const vector4*)(parameters ? parameters : &shaders::generated_material::references::default_normal_vector.get());
+                vectors[0] = *(const math::vector4*)(parameters ? parameters : &shaders::generated_material::references::default_normal_vector.get());
 
                 break;
             }
             case parameter_tint_color: {
                 void* color = find_scene_parameter(node_data->parameters,
                                                    fx::references::parameter_id_tint_color.read());
-                vectors[0] = *(const vector4*)(color ? color : &fx::references::tint_color.get());
+                vectors[0] = *(const math::vector4*)(color ? color : &fx::references::tint_color.get());
 
                 break;
             }
             case parameter_decal_texture_matrix: {
-                const auto* rows = (const vector4*)find_scene_parameter(node_data->parameters,
-                                                                        fx::references::parameter_id_decal_texture_matrix.read());
+                const auto* rows = (const math::vector4*)find_scene_parameter(node_data->parameters,
+                                                                              fx::references::parameter_id_decal_texture_matrix.read());
                 if (rows)
-                    std::memcpy(vectors + 1, rows, sizeof(vector4) * 2);
+                    std::memcpy(vectors + 1, rows, sizeof(math::vector4) * 2);
                 else {
-                    vectors[1] = vector4(1.0f, 0.0f, 0.0f, 0.0f);
-                    vectors[2] = vector4(0.0f, 1.0f, 0.0f, 0.0f);
+                    vectors[1] = math::vector4(1.0f, 0.0f, 0.0f, 0.0f);
+                    vectors[2] = math::vector4(0.0f, 1.0f, 0.0f, 0.0f);
                 }
 
                 break;
@@ -1388,7 +1396,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 void* data = find_scene_parameter(node_data->parameters,
                                                   fx::references::parameter_id_last.read());
                 if (data)
-                    vectors[0] = *(const vector4*)(data);
+                    vectors[0] = *(const math::vector4*)(data);
 
                 break;
             }

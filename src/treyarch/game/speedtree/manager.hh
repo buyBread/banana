@@ -2,8 +2,7 @@
 
 #include "treyarch/game/speedtree/wrapper.hh"
 #include "treyarch/game/wds/subdivision_visitor.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -27,7 +26,7 @@ namespace treyarch {
     // SpeedTreeManager::visitor_t
     struct speed_tree_manager_visitor {
         subdivision_visitor base;
-        vector3             position;
+        vector3d            position;
     };
 
     class speed_tree_manager {
@@ -54,7 +53,7 @@ namespace treyarch {
 
         // wind object inputs; nothing else reads or writes them
         inline util::memory_reference<f32>     speed_tree_wind_unk_01086f18 { 0x01086F18 };
-        inline util::memory_reference<vector3> speed_tree_wind_unk_00e80cf0 { 0x00E80CF0 };
+        inline util::memory_reference<vector3d> speed_tree_wind_unk_00e80cf0 { 0x00E80CF0 };
 
         inline util::memory_reference<f32> speed_tree_wind_start_time       { 0x01087F24 };
         inline util::memory_reference<u32> speed_tree_wind_start_time_guard { 0x01087F28 };

@@ -4,7 +4,7 @@
 using namespace treyarch;
 
 // sub_97EA50
-void mission_manager::save_player_restart(const vector3 &position, vector3 xz_facing) {
+void mission_manager::save_player_restart(const vector3d &position, vector3d xz_facing) {
     xz_facing.y = 0.0f;
 
     if (xz_facing.length2() > 0.0001f) {
@@ -13,7 +13,7 @@ void mission_manager::save_player_restart(const vector3 &position, vector3 xz_fa
 
         retail::sub_401AA0((u64*)normalized, direction);
 
-        xz_facing = vector3(normalized[0], normalized[1], normalized[2]);
+        xz_facing = vector3d(normalized[0], normalized[1], normalized[2]);
     } else {
         xz_facing.x = 1.0f;
         xz_facing.z = 0.0f;
@@ -22,11 +22,11 @@ void mission_manager::save_player_restart(const vector3 &position, vector3 xz_fa
     using insert_vector3_key = void (__thiscall*)(void*       registry,
                                                   string_hash entity,
                                                   string_hash key,
-                                                  vector3     default_value,
-                                                  vector3*    value,
+                                                  vector3d    default_value,
+                                                  vector3d*   value,
                                                   bool        set_value);
 
-    vector3 value;
+    vector3d value;
 
     // script_registry_insert_vector3d_key
     ((insert_vector3_key)retail::sub_803800)(working_checkpoint_registry,

@@ -37,22 +37,23 @@ void set_pcuv_basic_blend() {
     ngl::d3d9::set_render_state(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 }
 
-matrix4x4 get_pcuv_local_to_screen(const ngl::fx::mesh_node_data* node_data,
-                                   const ngl::scene*              current_scene) {
+math::mat44 get_pcuv_local_to_screen(const ngl::fx::mesh_node_data* node_data,
+                                     const ngl::scene*              current_scene) {
 
-    const matrix4x4 &local  = node_data->local_to_world;
-    const matrix4x4 &screen = current_scene->world_to_screen;
+    const math::mat43 &local  = node_data->local_to_world;
+    const math::mat44 &screen = current_scene->world_to_screen;
 
-    matrix4x4 result;
+    math::mat44 result;
 
     for (u32 row_index = 0; row_index < 4; ++row_index) {
         for (u32 column = 0; column < 4; ++column) {
-            const vector4 &source = local[row_index];
+            const math::float4 &source = row_index == 3 ?
+                local.get_w().val34() : local.get_m33()[row_index].val34();
 
-            result[row_index][column] = source.y * screen.y[column] +
-                                        source.x * screen.x[column] +
-                                        source.z * screen.z[column] +
-                                        (row_index == 3 ? screen.w[column] : 0.0f);
+            result[row_index][column] = source.get_y() * screen[1][column] +
+                                        source.get_x() * screen[0][column] +
+                                        source.get_z() * screen[2][column] +
+                                        (row_index == 3 ? screen[3][column] : 0.0f);
         }
     }
 
@@ -71,8 +72,8 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     IDirect3DDevice9* device = d3d9::references::device.get();
 
-    matrix4x4 local_to_screen = get_pcuv_local_to_screen(value->node_data,
-                                                         current_scene);
+    math::mat44 local_to_screen = get_pcuv_local_to_screen(value->node_data,
+                                                           current_scene);
 
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
 
@@ -129,13 +130,13 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     d3d9::set_vertex_program(program_exports::pcuv::vertex_program.read());
 
-    vector4 tint_color { 1.0f, 1.0f, 1.0f, 1.0f };
+    math::vector4 tint_color(1.0f, 1.0f, 1.0f, 1.0f);
 
     void* tint_parameter = find_scene_parameter(value->node_data->parameters,
                                                 fx::references::parameter_id_tint_color.read());
 
     if (tint_parameter)
-        tint_color = *(const vector4*)tint_parameter;
+        tint_color = *(const math::vector4*)tint_parameter;
 
     device->SetVertexShaderConstantF(4, (const f32*)&tint_color, 1);
     device->SetVertexShaderConstantF(0, (const f32*)&local_to_screen, 4);
@@ -149,7 +150,7 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     d3d9::set_pixel_program(program_exports::pcuv::pixel_program.read());
 
-    vector4 emissive_constant { emissive, 0.0f, 0.0f, 0.0f };
+    math::vector4 emissive_constant(emissive, 0.0f, 0.0f, 0.0f);
     device->SetPixelShaderConstantF(0, (const f32*)&emissive_constant, 1);
 
     texture* texture_data = value->material_data->texture_data;

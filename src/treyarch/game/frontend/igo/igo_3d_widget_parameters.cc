@@ -19,7 +19,7 @@ void igo_3d_widget_parameters::construct_mashed_class() {
     unk_ac.construct_mashed_class();
 
     matrix  = (matrix4x4*)memory::heap::allocate(sizeof(matrix4x4));
-    *matrix = math::references::identity_matrix.get();
+    *matrix = treyarch::references::identity_matrix.get();
 
     retail::sub_69B8F0((i32)this); // builds matrix from the placement
 

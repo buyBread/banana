@@ -158,7 +158,7 @@ void ngl::set_clear_flags(u32 flags) {
 
 // sub_9D3860
 void ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
-    references::current_scene.get()->clear_color = vector4(red, green, blue, alpha);
+    references::current_scene.get()->clear_color = math::vector4(red, green, blue, alpha);
 }
 
 // sub_9D38E0

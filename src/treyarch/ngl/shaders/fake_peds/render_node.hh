@@ -2,18 +2,18 @@
 
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace fake_peds {
     struct pedestrian {
-        vector4 center;
-        vector4 right;
-        vector4 up;
-        vector4 color;
-        i32     atlas_tile;
-        u8      reserved_044[0x0C];
+        math::vector4 center;
+        math::vector4 right;
+        math::vector4 up;
+        math::vector4 color;
+        i32           atlas_tile;
+        u8            reserved_044[0x0C];
     };
 
     struct render_node {

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector3.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -24,7 +23,7 @@ namespace treyarch { namespace shadow {
     };
 
     // bit 0: sphere inside cascade scene 0, bit 1: inside cascade scene 1
-    u32 get_cascade_mask(const vector3 &center, f32 radius);
+    u32 get_cascade_mask(const vector3d &center, f32 radius);
 
     void create_device_resources();
     void release_device_resources();
@@ -34,10 +33,10 @@ namespace treyarch { namespace shadow {
         inline util::memory_reference<u8>                    initialized           { 0x01073DFB };
         inline util::memory_reference<device_resource_state> device_resources      { 0x01075FC0 };
         inline util::memory_reference<target_dimensions>     dimensions            { 0x00E7AFC4 };
-        inline util::memory_reference<vector4>               shadow_distances      { 0x01075F10 };
-        inline util::memory_reference<matrix4x4>             matrix_0              { 0x01075F20 };
-        inline util::memory_reference<matrix4x4>             matrix_1              { 0x01075F70 };
-        inline util::memory_reference<matrix4x4>             projection_to_texture { 0x01075ED0 };
+        inline util::memory_reference<math::vector4>         shadow_distances      { 0x01075F10 };
+        inline util::memory_reference<math::mat44>           matrix_0              { 0x01075F20 };
+        inline util::memory_reference<math::mat44>           matrix_1              { 0x01075F70 };
+        inline util::memory_reference<math::mat44>           projection_to_texture { 0x01075ED0 };
         inline util::memory_reference<ngl::scene*>           scene_0               { 0x01075F60 };
         inline util::memory_reference<ngl::scene*>           scene_1               { 0x01075FB0 };
         inline util::memory_reference<f32>                   distance_0            { 0x01075F64 };

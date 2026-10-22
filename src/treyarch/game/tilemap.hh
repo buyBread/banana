@@ -1,9 +1,9 @@
 #pragma once
 
 #include "treyarch/game/reference.hh"
-#include "treyarch/shared/math/types/color.hh"
-#include "treyarch/shared/math/types/vector2.hh"
+#include "treyarch/shared/color.hh"
 #include "treyarch/shared/mash/types.hh"
+#include "treyarch/shared/math/algebra/vector2d.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -18,8 +18,8 @@ namespace treyarch {
         reference<ngl::texture>      normal;
         reference<ngl::texture>      interior;
         reference<treyarch::meshmap> meshmap;
-        vector2                      tile_texels;
-        vector2                      macro_texels;
+        vector2d                     tile_texels;
+        vector2d                     macro_texels;
         reference<ngl::texture>      diffuse;
         reference<ngl::texture>      shininess;
         reference<ngl::texture>      micronoise;

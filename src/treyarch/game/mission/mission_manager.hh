@@ -6,7 +6,7 @@
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/singleton.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 #include "util/macros/sanity_assert.hh"
@@ -90,7 +90,7 @@ namespace treyarch {
 
     // the script data of a mission header instance
     struct mission_header_instance_base {
-        vector3                     key_position;
+        vector3d                    key_position;
         u8                          reserved_00c[0x10];
         f32                         unk_01c; // index into mission_vars
         u8                          reserved_020[0x08];
@@ -110,7 +110,7 @@ namespace treyarch {
         i32                               mission_index           = 0;
         u32                               icon                    = 0;
         u32                               ped                     = 0;
-        vector3                           key_position;
+        vector3d                          key_position;
         const chuck::vm::script_instance* mission_header_instance = nullptr;
         mash::string                      gen_dis_exec_name;
         chuck::vm::script_executable*     exec                    = nullptr;
@@ -140,8 +140,8 @@ namespace treyarch {
     };
 
     struct mission_poi_location_t {
-        i32     key;
-        vector3 position;
+        i32      key;
+        vector3d position;
     };
 
     // RTTI fixup_mission_header_children_visitor
@@ -170,10 +170,10 @@ namespace treyarch {
 
     // RTTI eligible_mission_visitor, a script_instance_visitor
     struct eligible_mission_visitor {
-        void*   vtable;
-        u32     unk_004;
-        vector3 hero_position;
-        i32     unk_014;
+        void*    vtable;
+        u32      unk_004;
+        vector3d hero_position;
+        i32      unk_014;
     };
 
     class mission_manager : public singleton_instance<mission_manager, 0x01111760> {
@@ -224,9 +224,9 @@ namespace treyarch {
         void*                         working_checkpoint_registry;
         f32                           state_timer;
         f32                           idle_event_cooldown;
-        vector3                       player_restart_position;
-        vector3                       player_restart_xz_facing;
-        vector3                       hero_reference_position;
+        vector3d                      player_restart_position;
+        vector3d                      player_restart_xz_facing;
+        vector3d                      hero_reference_position;
         region*                       hero_region;
         region*                       malor_region;
         u32                           malor_wait_frames;
@@ -274,7 +274,7 @@ namespace treyarch {
         dinkumware::vector
             <mission_poi_location_t>* poi_locations;
         i32                           selected_poi_location_key;
-        vector3                       selected_poi_location_position;
+        vector3d                      selected_poi_location_position;
         u32                           checkpoint;
         string_hash                   saved_mission_hash;
         i32                           saved_checkpoint;
@@ -305,7 +305,7 @@ namespace treyarch {
         bool                          is_maloring() const;
         e_mission_manager_state       get_state() const;
         chuck::vm::script_executable* get_running_mission_exec() const;
-        vector3                       get_mission_key_position() const;
+        vector3d                      get_mission_key_position() const;
         i32                           get_running_script_index() const;
         const char*                   get_running_mission_name() const;
         i32                           get_mission_script_retry_count() const;
@@ -359,7 +359,7 @@ namespace treyarch {
         static void on_zoom_map_poi_selected  (event* raised_event, arch_base_vhandle recipient, void* parameters);
         static void on_zoom_map_poi_unselected(event* raised_event, arch_base_vhandle recipient, void* parameters);
 
-        void save_player_restart(const vector3 &position, vector3 xz_facing);
+        void save_player_restart(const vector3d &position, vector3d xz_facing);
 
         void play_failed_music();
         void quit_failed_mission();
@@ -394,7 +394,7 @@ namespace treyarch {
         inline util::memory_reference<u32> unk_00bb6d68 { 0x00BB6D68 };
 
         // a zero vector; reset target for the hero reference position
-        inline util::memory_reference<vector3> unk_011117a0 { 0x011117A0 };
+        inline util::memory_reference<vector3d> unk_011117a0 { 0x011117A0 };
 
         inline util::memory_reference<string_hash> registry_mission_manager          { 0x011117B8 };
         inline util::memory_reference<string_hash> registry_player_restart_position  { 0x011117F4 };

@@ -3,7 +3,7 @@
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -14,7 +14,7 @@ namespace treyarch {
     public:
         void* self; // the resource handler points this at the collection itself
 
-        mash::vector_basic<vector3> anchor_positions;
+        mash::vector_basic<vector3d> anchor_positions;
         void*                       entity_instances; // the anchor entities, from the entity manager
 
         void construct_mashed_class();

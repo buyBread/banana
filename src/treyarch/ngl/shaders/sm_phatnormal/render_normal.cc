@@ -14,7 +14,7 @@ namespace rendering {
     struct vertex_constants {
         generated_material::regular_vertex_prefix prefix;
         generated_material::regular_vertex_suffix suffix;
-        vector4                                   compressed_to_local;
+        math::vector4                             compressed_to_local;
     };
 } // rendering
 
@@ -34,8 +34,9 @@ void render_normal(render_node* value) {
                                                 value->node_data,
                                                 value->section);
 
-    matrix4x4 unscaled_local_to_world = fx::get_unscaled_local_to_world(value->node_data);
-    matrix4x4 local_to_world = snapshot.base_transform.affine() * unscaled_local_to_world.affine();
+    math::rot_tran_mat43 unscaled_local_to_world = fx::get_unscaled_local_to_world(value->node_data);
+    math::mat44          local_to_world = math::mat44(*(const math::mat43*)&snapshot.base_transform) *
+                                          math::mat44(unscaled_local_to_world);
 
     fx::general_lighting_parameters lighting;
     fx::build_general_lighting(&lighting, value->node_data, value->section);
@@ -55,10 +56,10 @@ void render_normal(render_node* value) {
     rendering::vertex_constants constants;
     constants.prefix = vertex_context.prefix;
     constants.suffix = vertex_context.suffix;
-    constants.compressed_to_local = vector4(vertex_context.compressed_to_local.w.x,
-                                            vertex_context.compressed_to_local.w.y,
-                                            vertex_context.compressed_to_local.w.z,
-                                            vertex_context.compressed_to_local.x.x);
+    constants.compressed_to_local = math::vector4(vertex_context.compressed_to_local[3][0],
+                                                  vertex_context.compressed_to_local[3][1],
+                                                  vertex_context.compressed_to_local[3][2],
+                                                  vertex_context.compressed_to_local[0][0]);
 
     d3d9::references::device.get()
         ->SetVertexShaderConstantF(0, (const f32*)&constants, 45);

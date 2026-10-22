@@ -80,11 +80,11 @@ void speed_tree_wrapper::render_billboards(const speed_tree_render_params* param
     if (scene->color_target)
         upload_lighting(params->light);
 
-    matrix4x4 basis = axis_basis();
+    math::mat43 basis = axis_basis();
 
     upload_transforms(basis);
 
-    ngl::fx::set_vector(parameters.dof, vector4(1.0f, 1.0f, 1.0f, 0.0f));
+    ngl::fx::set_vector(parameters.dof, math::vector4(1.0f, 1.0f, 1.0f, 0.0f));
 
     f32 special_azimuth = upload_billboard_images();
 
@@ -113,14 +113,14 @@ void speed_tree_wrapper::render_billboards(const speed_tree_render_params* param
             upload_color((const u8*)&color);
         }
 
-        const vector3 &position = instance->position;
+        const vector3d &position = instance->position;
 
         f32 scale = instance->scale;
 
-        vector4 vertices[4] { vector4(position.x, (f32)((f64)position.z + scale), (f32)((f64)position.y - scale), 0.0f),
-                              vector4(position.x, (f32)((f64)position.z + 0.0),   (f32)((f64)position.y - scale), 0.0f),
-                              vector4(position.x, (f32)((f64)position.z + 0.0),   (f32)((f64)scale + position.y), 0.0f),
-                              vector4(position.x, (f32)((f64)scale + position.z), (f32)((f64)scale + position.y), 0.0f) };
+        math::vector4 vertices[4] { math::vector4(position.x, (f32)((f64)position.z + scale), (f32)((f64)position.y - scale), 0.0f),
+                                    math::vector4(position.x, (f32)((f64)position.z + 0.0),   (f32)((f64)position.y - scale), 0.0f),
+                                    math::vector4(position.x, (f32)((f64)position.z + 0.0),   (f32)((f64)scale + position.y), 0.0f),
+                                    math::vector4(position.x, (f32)((f64)scale + position.z), (f32)((f64)scale + position.y), 0.0f) };
 
         std::memcpy((u8*)parameters.billboard_vertex_table->data + 16, vertices, sizeof(vertices));
 
@@ -172,11 +172,11 @@ void speed_tree_wrapper::render_branches(const speed_tree_render_params* params)
     if (!depth_only)
         upload_lighting(params->light);
 
-    matrix4x4 basis = axis_basis();
+    math::mat43 basis = axis_basis();
 
     upload_transforms(basis);
 
-    ngl::fx::set_vector(parameters.dof, vector4(1.0f, 1.0f, 1.0f, 0.0f));
+    ngl::fx::set_vector(parameters.dof, math::vector4(1.0f, 1.0f, 1.0f, 0.0f));
 
     if (!depth_only) {
         ngl::fx::set_texture(parameters.self_shadow_map, textures[7]);
@@ -214,7 +214,7 @@ void speed_tree_wrapper::render_branches(const speed_tree_render_params* params)
 
             ngl::fx::set_float(parameters.wind_matrix_offset, (f32)instance->wind_matrix_offset);
             ngl::fx::set_vector(parameters.tree_position,
-                                vector4(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
+                                vector4d(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
             ngl::fx::set_float(parameters.tree_scale, instance->scale);
             ngl::fx::set_float(parameters.tree_alpha_test_value, (f32)((f64)lods.frond_alpha / 255.0));
 
@@ -272,11 +272,11 @@ void speed_tree_wrapper::render_fronds(const speed_tree_render_params* params) {
     if (!depth_only)
         upload_lighting(params->light);
 
-    matrix4x4 basis = axis_basis();
+    math::mat43 basis = axis_basis();
 
     upload_transforms(basis);
 
-    ngl::fx::set_vector(parameters.dof, vector4(1.0f, 1.0f, 1.0f, 0.0f));
+    ngl::fx::set_vector(parameters.dof, math::vector4(1.0f, 1.0f, 1.0f, 0.0f));
     ngl::fx::set_texture(parameters.composite_leaf_map, textures[8]);
 
     if (!depth_only)
@@ -312,7 +312,7 @@ void speed_tree_wrapper::render_fronds(const speed_tree_render_params* params) {
 
             ngl::fx::set_float(parameters.wind_matrix_offset, (f32)instance->wind_matrix_offset);
             ngl::fx::set_vector(parameters.tree_position,
-                                vector4(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
+                                vector4d(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
             ngl::fx::set_float(parameters.tree_scale, instance->scale);
             ngl::fx::set_float(parameters.tree_alpha_test_value, (f32)((f64)lods.frond_alpha / 255.0));
 
@@ -380,54 +380,54 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
 
     ngl::fx::update_scene_parameters(effect);
 
-    matrix4x4 unit_square(vector4(0.0f,  0.5f,  0.5f, 0.0f),
-                          vector4(0.0f, -0.5f,  0.5f, 0.0f),
-                          vector4(0.0f, -0.5f, -0.5f, 0.0f),
-                          vector4(0.0f,  0.5f, -0.5f, 0.0f));
+    math::mat44 unit_square(math::vector4(0.0f,  0.5f,  0.5f, 0.0f),
+                            math::vector4(0.0f, -0.5f,  0.5f, 0.0f),
+                            math::vector4(0.0f, -0.5f, -0.5f, 0.0f),
+                            math::vector4(0.0f,  0.5f, -0.5f, 0.0f));
 
-    ngl::fx::set_matrix(parameters.leaf_unit_square, unit_square.transpose());
-    ngl::fx::set_matrix(parameters.model_view, scene->world_to_view.affine());
-    ngl::fx::set_vector(parameters.dof, vector4(1.0f, 1.0f, 1.0f, 0.0f));
+    ngl::fx::set_matrix(parameters.leaf_unit_square, ~unit_square);
+    ngl::fx::set_matrix(parameters.model_view, math::mat44(scene->world_to_view));
+    ngl::fx::set_vector(parameters.dof, math::vector4(1.0f, 1.0f, 1.0f, 0.0f));
 
     // two sets of ten, in radians
-    auto* angles = (vector4*)((u8*)parameters.leaf_angles->data + 16);
+    auto* angles = (math::vector4*)((u8*)parameters.leaf_angles->data + 16);
 
     const f32* angles_060 = references::speed_tree_wind.get().leaf_angles_060;
     const f32* angles_084 = references::speed_tree_wind.get().leaf_angles_084;
 
     for (u32 index = 0; index < 20; ++index) {
-        angles[index] = vector4((f32)((f64)angles_060[index] / 57.295780181884766),
-                                (f32)((f64)angles_084[index] / 57.295780181884766),
-                                0.0f,
-                                0.0f);
+        angles[index] = math::vector4((f32)((f64)angles_060[index] / 57.295780181884766),
+                                      (f32)((f64)angles_084[index] / 57.295780181884766),
+                                      0.0f,
+                                      0.0f);
     }
 
     if (!depth_only)
         upload_lighting(params->light);
 
-    matrix4x4 basis = axis_basis();
+    math::mat43 basis = axis_basis();
 
-    ngl::fx::set_matrix(parameters.model_view_projection, basis.affine() * scene->world_to_screen);
-    ngl::fx::set_matrix(parameters.local_to_world, basis.affine());
+    ngl::fx::set_matrix(parameters.model_view_projection, math::mat44(basis) * scene->world_to_screen);
+    ngl::fx::set_matrix(parameters.local_to_world, math::mat44(basis));
 
     ngl::fx::set_texture(parameters.composite_leaf_map, textures[8]);
     ngl::fx::set_vector(parameters.horizon_projection_u, params->horizon_projection_u);
     ngl::fx::set_vector(parameters.horizon_projection_v, params->horizon_projection_v);
     ngl::fx::set_texture(parameters.horizon_map, params->prelight->horizon_map.pointer);
     ngl::fx::set_float(parameters.leaf_cards_active, 1.0f);
-    ngl::fx::set_vector(parameters.leaf_angle_scalars, vector4(0.4f, 0.4f, 0.0f, 0.0f));
+    ngl::fx::set_vector(parameters.leaf_angle_scalars, math::vector4(0.4f, 0.4f, 0.0f, 0.0f));
 
-    vector4 &view_direction = references::speed_tree_view_direction.get();
+    math::dir3 &view_direction = references::speed_tree_view_direction.get();
 
     // compared bit for bit
-    if (std::bit_cast<u32>(view_direction.x) != std::bit_cast<u32>(scene->view_direction.x) ||
-        std::bit_cast<u32>(view_direction.y) != std::bit_cast<u32>(scene->view_direction.y) ||
-        std::bit_cast<u32>(view_direction.z) != std::bit_cast<u32>(scene->view_direction.z)) {
+    if (std::bit_cast<u32>(view_direction[0]) != std::bit_cast<u32>(scene->view_direction[0]) ||
+        std::bit_cast<u32>(view_direction[1]) != std::bit_cast<u32>(scene->view_direction[1]) ||
+        std::bit_cast<u32>(view_direction[2]) != std::bit_cast<u32>(scene->view_direction[2])) {
 
         view_direction = scene->view_direction;
 
-        f32 heading = (f32)std::atan2((f64)view_direction.z, (f64)view_direction.x);
-        f32 pitch   = (f32)std::asin((f64)view_direction.y);
+        f32 heading = (f32)std::atan2((f64)view_direction[2], (f64)view_direction[0]);
+        f32 pitch   = (f32)std::asin((f64)view_direction[1]);
 
         references::speed_tree_view_heading.write((f32)(heading * 57.295780181884766));
         references::speed_tree_view_pitch  .write((f32)(-pitch * 57.295780181884766));
@@ -441,10 +441,10 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
         pitch = -45.0f;
 
     ngl::fx::set_vector(parameters.camera_angles,
-                        vector4((f32)((f64)references::speed_tree_view_heading.read() * 3.1415927410125732 / 180.0),
-                                (f32)((f64)pitch * 3.1415927410125732 / 180.0),
-                                0.0f,
-                                0.0f));
+                        math::vector4((f32)((f64)references::speed_tree_view_heading.read() * 3.1415927410125732 / 180.0),
+                                      (f32)((f64)pitch * 3.1415927410125732 / 180.0),
+                                      0.0f,
+                                      0.0f));
 
     if (!params->translucent)
         ngl::fx::set_float(parameters.opacity, 0.0f);
@@ -487,7 +487,7 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
 
         ngl::fx::set_float(parameters.wind_matrix_offset, (f32)instance->wind_matrix_offset);
         ngl::fx::set_vector(parameters.tree_position,
-                            vector4(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
+                            vector4d(instance->position, (f32)((f64)instance->rotation / 57.295780181884766)));
         ngl::fx::set_float(parameters.tree_scale, instance->scale);
 
         for (u32 layer = 0; layer < 2; ++layer) {

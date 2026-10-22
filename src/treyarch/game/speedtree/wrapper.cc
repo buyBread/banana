@@ -34,26 +34,26 @@ void speed_tree_lighting::build(const light_source_data* light) {
 
     f32 scale = references::speed_tree_sky_color_scale.read();
 
-    diffuse = vector4((f32)((f64)sky->color_040.x * scale),
-                      (f32)((f64)sky->color_040.y * scale),
-                      (f32)((f64)sky->color_040.z * scale),
-                      1.0f);
+    diffuse = math::vector4((f32)((f64)sky->color_040.x * scale),
+                            (f32)((f64)sky->color_040.y * scale),
+                            (f32)((f64)sky->color_040.z * scale),
+                            1.0f);
 
-    ambient = vector4((f32)((f64)(f32)((f64)sky->unk_080.x * scale) * 0.5),
-                      (f32)((f64)(f32)((f64)sky->unk_080.y * scale) * 0.5),
-                      (f32)((f64)(f32)((f64)sky->unk_080.z * scale) * 0.5),
-                      (f32)((f64)(f32)((f64)sky->unk_080.w * scale) * 0.5));
+    ambient = math::vector4((f32)((f64)(f32)((f64)sky->unk_080.x * scale) * 0.5),
+                            (f32)((f64)(f32)((f64)sky->unk_080.y * scale) * 0.5),
+                            (f32)((f64)(f32)((f64)sky->unk_080.z * scale) * 0.5),
+                            (f32)((f64)(f32)((f64)sky->unk_080.w * scale) * 0.5));
 
-    unk_30 = vector4((f32)((f64)scale * sky->unk_0b0.x),
-                     (f32)((f64)scale * sky->unk_0b0.y),
-                     (f32)((f64)scale * sky->unk_0b0.z),
-                     (f32)((f64)scale * sky->unk_0b0.w));
+    unk_30 = math::vector4((f32)((f64)scale * sky->unk_0b0.x),
+                           (f32)((f64)scale * sky->unk_0b0.y),
+                           (f32)((f64)scale * sky->unk_0b0.z),
+                           (f32)((f64)scale * sky->unk_0b0.w));
 
-    const vector4 &axis = ngl::fx::references::lighting_horizon_axis.get();
+    const math::vector4 &axis = ngl::fx::references::lighting_horizon_axis.get();
 
-    f32 facing = (f32)((f64)sky->direction_050.x * axis.x +
-                       (f64)sky->direction_050.y * axis.y +
-                       (f64)sky->direction_050.z * axis.z);
+    f32 facing = (f32)((f64)sky->direction_050.x * axis[0] +
+                       (f64)sky->direction_050.y * axis[1] +
+                       (f64)sky->direction_050.z * axis[2]);
 
     f32 away = (f32)(1.0 - facing);
 
@@ -62,10 +62,10 @@ void speed_tree_lighting::build(const light_source_data* light) {
     diffuse_scale   = (f32)(1.0 / ((f64)sky->unk_0c8 * 2.0));
 
     // halved twice
-    ambient = vector4((f32)((f64)ambient.x * 0.5),
-                      (f32)((f64)ambient.y * 0.5),
-                      (f32)((f64)ambient.z * 0.5),
-                      (f32)((f64)ambient.w * 0.5));
+    ambient = math::vector4((f32)((f64)ambient[0] * 0.5),
+                            (f32)((f64)ambient[1] * 0.5),
+                            (f32)((f64)ambient[2] * 0.5),
+                            (f32)((f64)ambient[3] * 0.5));
 
     light_direction = sky->direction_050;
     exposure        = light->exposure;
@@ -79,14 +79,14 @@ void speed_tree_lighting::build(const light_source_data* light) {
 
     f32 fog_scale = (f32)(1.0 / ((f64)fog_end - fog_start));
 
-    depth_fog_control = vector4(fog_scale,
-                                (f32)((f64)-fog_start * fog_scale),
-                                light->unk_2e8,
-                                light->unk_2ec);
+    depth_fog_control = math::vector4(fog_scale,
+                                      (f32)((f64)-fog_start * fog_scale),
+                                      light->unk_2e8,
+                                      light->unk_2ec);
 }
 
 // sub_7C0270
-void speed_tree_lighting::shade(const u8* color, vector4 (&result)[2]) const {
+void speed_tree_lighting::shade(const u8* color, math::vector4 (&result)[2]) const {
     f32 low  = (f32)((f64)color[0] / 255.0);
     f32 high = (f32)(2.0 - (f64)color[1] / 255.0);
 
@@ -107,45 +107,50 @@ void speed_tree_lighting::shade(const u8* color, vector4 (&result)[2]) const {
     f32 range    = (f32)(((f64)maximum - minimum) * diffuse_scale);
     f32 strength = (f32)((f64)color[2] / 255.0);
 
-    result[1] = vector4((f32)((f64)ambient.x * strength),
-                        (f32)((f64)ambient.y * strength),
-                        (f32)((f64)ambient.z * strength),
-                        (f32)((f64)ambient.w * strength));
+    result[1] = math::vector4((f32)((f64)ambient[0] * strength),
+                              (f32)((f64)ambient[1] * strength),
+                              (f32)((f64)ambient[2] * strength),
+                              (f32)((f64)ambient[3] * strength));
 
-    result[0] = vector4((f32)((f64)(f32)((f64)diffuse.x * range) + result[1].x),
-                        (f32)((f64)(f32)((f64)diffuse.y * range) + result[1].y),
-                        (f32)((f64)(f32)((f64)diffuse.z * range) + result[1].z),
-                        (f32)((f64)(f32)((f64)diffuse.w * range) + result[1].w));
+    result[0] = math::vector4((f32)((f64)(f32)((f64)diffuse[0] * range) + result[1][0]),
+                              (f32)((f64)(f32)((f64)diffuse[1] * range) + result[1][1]),
+                              (f32)((f64)(f32)((f64)diffuse[2] * range) + result[1][2]),
+                              (f32)((f64)(f32)((f64)diffuse[3] * range) + result[1][3]));
 }
 
 // inlined @ sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10
-bool speed_tree_instance::in_view(const matrix4x4 &basis) const {
-    vector3 transformed;
+bool speed_tree_instance::in_view(const math::mat43 &basis) const {
+    vector3d transformed;
 
     return speed_tree_wrapper::sphere_in_view(basis, position, radius, transformed);
 }
 
 // inlined @ sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10, sub_7D8390
-bool speed_tree_wrapper::sphere_in_view(const matrix4x4 &basis,
-                                        const vector3   &position,
-                                              f32        radius,
-                                              vector3   &transformed) {
+bool speed_tree_wrapper::sphere_in_view(const math::mat43 &basis,
+                                        const vector3d    &position,
+                                              f32          radius,
+                                              vector3d    &transformed) {
 
-    transformed = vector3((f32)((f64)basis.x.x * position.x + (f64)basis.y.x * position.y + (f64)basis.z.x * position.z + basis.w.x),
-                          (f32)((f64)basis.x.y * position.x + (f64)basis.y.y * position.y + (f64)basis.z.y * position.z + basis.w.y),
-                          (f32)((f64)basis.x.z * position.x + (f64)basis.y.z * position.y + (f64)basis.z.z * position.z + basis.w.z));
+    const math::dir3      &x = basis.get_x();
+    const math::dir3      &y = basis.get_y();
+    const math::dir3      &z = basis.get_z();
+    const math::position3 &w = basis.get_w();
+
+    transformed = vector3d((f32)((f64)x[0] * position.x + (f64)y[0] * position.y + (f64)z[0] * position.z + w[0]),
+                           (f32)((f64)x[1] * position.x + (f64)y[1] * position.y + (f64)z[1] * position.z + w[1]),
+                           (f32)((f64)x[2] * position.x + (f64)y[2] * position.y + (f64)z[2] * position.z + w[2]));
 
     ngl::scene* scene = ngl::references::current_scene.read();
 
     for (u32 index = 0; index < 6; ++index) {
-        const vector4 &plane = scene->clip_planes[index];
+        const math::vector4 &plane = scene->clip_planes[index];
 
-        f32 distance = (f32)((f64)plane.x * transformed.x +
-                             (f64)plane.y * transformed.y +
-                             (f64)plane.z * transformed.z +
-                             (f64)plane.w * 0.0);
+        f32 distance = (f32)((f64)plane[0] * transformed.x +
+                             (f64)plane[1] * transformed.y +
+                             (f64)plane[2] * transformed.z +
+                             (f64)plane[3] * 0.0);
 
-        distance = (f32)((f64)distance - plane.w);
+        distance = (f32)((f64)distance - plane[3]);
 
         if (0.0 > (f64)distance + radius)
             return false;
@@ -155,11 +160,11 @@ bool speed_tree_wrapper::sphere_in_view(const matrix4x4 &basis,
 }
 
 // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10
-matrix4x4 speed_tree_wrapper::axis_basis() {
-    return matrix4x4(math::references::unk_00e7ce30.read(),
-                     math::references::unk_00e7ce50.read(),
-                     math::references::unk_00e7ce40.read(),
-                     ngl::fx::references::unk_01086f40.read());
+math::mat43 speed_tree_wrapper::axis_basis() {
+    return math::mat43(math::dir3(math::references::f4_1000.read()),
+                       math::dir3(math::references::f4_0010.read()),
+                       math::dir3(math::references::f4_0100.read()),
+                       math::position3(ngl::fx::references::unk_01086f40.read()));
 }
 
 // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10
@@ -186,10 +191,10 @@ void speed_tree_wrapper::find_technique(u32                 &guard,
 
 // sub_7BFAD0
 void speed_tree_wrapper::upload_wind_matrices() {
-    matrix4x4 matrices[7];
+    math::mat44 matrices[7];
 
     for (u32 index = 0; index < 7; ++index) {
-        auto* matrix = (matrix4x4*)retail::sub_A43580((u32*)&references::speed_tree_wind.get(), index);
+        auto* matrix = (math::mat44*)retail::sub_A43580((u32*)&references::speed_tree_wind.get(), index);
 
         if (matrix) {
             matrices[index] = *matrix;
@@ -197,11 +202,9 @@ void speed_tree_wrapper::upload_wind_matrices() {
             continue;
         }
 
-        vector4 identity[3] { vector4(1.0f, 0.0f, 0.0f, 0.0f),
-                              vector4(0.0f, 1.0f, 0.0f, 0.0f),
-                              vector4(0.0f, 0.0f, 1.0f, 0.0f) };
-
-        matrices[index].assign_affine_rows(identity);
+        matrices[index] = math::mat44(math::mat33(math::dir3(1.0f, 0.0f, 0.0f),
+                                                  math::dir3(0.0f, 1.0f, 0.0f),
+                                                  math::dir3(0.0f, 0.0f, 1.0f)));
     }
 
     // array parameters keep their values 16 bytes in
@@ -215,35 +218,35 @@ void speed_tree_wrapper::upload_lighting(light_source_data* light) {
     lighting.build(light);
 
     ngl::fx::set_float(parameters.exposure, lighting.exposure);
-    ngl::fx::set_vector(parameters.light_direction, vector4(lighting.light_direction.get_xyz(), 0.0f));
+    ngl::fx::set_vector(parameters.light_direction, math::vector4(math::dir3(lighting.light_direction)));
     ngl::fx::set_vector(parameters.depth_fog_color, lighting.depth_fog_color);
     ngl::fx::set_vector(parameters.depth_fog_control, lighting.depth_fog_control);
 
     ngl::scene* scene = ngl::references::current_scene.read();
 
-    ngl::fx::set_vector(parameters.camera_position, vector4(scene->view_position.get_xyz(), 1.0f));
+    ngl::fx::set_vector(parameters.camera_position, math::vector4(scene->view_position));
 }
 
 // sub_7CB850
 void speed_tree_wrapper::upload_color(const u8* color) {
-    vector4 shaded[2];
+    math::vector4 shaded[2];
 
     lighting.shade(color, shaded);
 
-    f32 diffuse_level = std::max(shaded[0].y, 2.0f);
-    f32 ambient_level = std::max(shaded[1].y, 0.35f);
+    f32 diffuse_level = std::max(shaded[0][1], 2.0f);
+    f32 ambient_level = std::max(shaded[1][1], 0.35f);
 
-    ngl::fx::set_vector(parameters.diffuse, vector4(diffuse_level, diffuse_level, diffuse_level, 1.0f));
-    ngl::fx::set_vector(parameters.ambient, vector4(ambient_level, ambient_level, ambient_level, 0.0f));
+    ngl::fx::set_vector(parameters.diffuse, math::vector4(diffuse_level, diffuse_level, diffuse_level, 1.0f));
+    ngl::fx::set_vector(parameters.ambient, math::vector4(ambient_level, ambient_level, ambient_level, 0.0f));
 }
 
 // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90
-void speed_tree_wrapper::upload_transforms(const matrix4x4 &basis) {
+void speed_tree_wrapper::upload_transforms(const math::mat43 &basis) {
     ngl::scene* scene = ngl::references::current_scene.read();
 
-    ngl::fx::set_matrix(parameters.model_view_projection, basis.affine() * scene->world_to_screen);
-    ngl::fx::set_matrix(parameters.local_to_world, basis.affine());
-    ngl::fx::set_matrix(parameters.model_view, basis.affine_product(scene->world_to_view));
+    ngl::fx::set_matrix(parameters.model_view_projection, math::mat44(basis) * scene->world_to_screen);
+    ngl::fx::set_matrix(parameters.local_to_world, math::mat44(basis));
+    ngl::fx::set_matrix(parameters.model_view, basis * math::mat43(scene->world_to_view));
 }
 
 // inlined @ sub_7CB940, sub_7CC710
@@ -255,10 +258,10 @@ f32 speed_tree_wrapper::upload_billboard_images() { // returns the special azimu
         ngl::fx::set_texture(parameters.billboard_normal_map, textures[18]);
     }
 
-    std::memcpy((u8*)parameters.texcoords_360->data + 16, texcoords_360, image_count_360 * sizeof(matrix4x4));
+    std::memcpy((u8*)parameters.texcoords_360->data + 16, texcoords_360, image_count_360 * sizeof(math::mat44));
 
     ngl::fx::set_int(parameters.image_count_360, image_count_360);
-    ngl::fx::set_vector(parameters.constants_360, vector4((f32)(6.2831854820251465 / (f32)image_count_360), 0.0f, 0.0f, 0.0f));
+    ngl::fx::set_vector(parameters.constants_360, math::vector4((f32)(6.2831854820251465 / (f32)image_count_360), 0.0f, 0.0f, 0.0f));
     ngl::fx::set_float(parameters.billboard_light_adjust, 1.0f);
 
     f32 azimuth = 0.0f;
@@ -268,10 +271,10 @@ f32 speed_tree_wrapper::upload_billboard_images() { // returns the special azimu
         retail::sub_A3C920((u32*)&azimuth, (u32*)&pitch);
 
     ngl::fx::set_vector(parameters.camera_angles,
-                        vector4((f32)((f64)azimuth * 3.1415927410125732 / 180.0),
-                                (f32)((f64)pitch * 3.1415927410125732 / 180.0),
-                                0.0f,
-                                0.0f));
+                        math::vector4((f32)((f64)azimuth * 3.1415927410125732 / 180.0),
+                                      (f32)((f64)pitch * 3.1415927410125732 / 180.0),
+                                      0.0f,
+                                      0.0f));
 
     azimuth = (f32)((f64)azimuth + 180.0);
 

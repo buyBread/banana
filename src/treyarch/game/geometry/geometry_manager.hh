@@ -1,20 +1,19 @@
 #pragma once
 
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
 // the SM3 .ii's geometry_manager singleton, flattened into free methods and globals in retail
 namespace treyarch { namespace geometry_manager {
     void set_look_at(      matrix4x4*  dest,
-                     const vector3    &from,
-                     const vector3    &look_at,
-                     const vector3    &up);
+                     const vector3d   &from,
+                     const vector3d   &look_at,
+                     const vector3d   &up);
 
-    void set_view(const vector3 &from,
-                  const vector3 &look_at,
-                  const vector3 &up);
+    void set_view(const vector3d &from,
+                  const vector3d &look_at,
+                  const vector3d &up);
 
     namespace references {
         inline util::memory_reference<matrix4x4> scene_analyzer         { 0x01110730 };

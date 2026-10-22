@@ -3,8 +3,7 @@
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/types/vector4.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/vmath/matrix_rot.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -51,21 +50,21 @@ namespace treyarch { namespace ngl {
     struct scene {
         u32                      cube_map_face;
         u8                       platform_scene_state_004[0x0C];
-        matrix4x4                projection;
-        matrix4x4                view;
-        matrix4x4                device;
-        matrix4x4                view_to_world;
-        matrix4x4                view_to_screen;
-        matrix4x4                world_to_view;
-        matrix4x4                world_to_screen;
-        matrix4x4                viewport_to_world;
-        matrix4x4                ui_to_device;
-        matrix4x4                derived_matrix_250;
-        matrix4x4                derived_matrix_290;
-        matrix4x4                derived_matrix_2d0;
-        vector4                  view_position;
-        vector4                  view_direction;
-        vector4                  clip_planes[6];
+        math::mat44              projection;
+        math::mat44              view;
+        math::mat44              device;
+        math::rot_tran_mat43     view_to_world;
+        math::mat44              view_to_screen;
+        math::rot_tran_mat43     world_to_view;
+        math::mat44              world_to_screen;
+        math::mat44              viewport_to_world;
+        math::mat44              ui_to_device;
+        math::mat44              derived_matrix_250;
+        math::mat44              derived_matrix_290;
+        math::mat44              derived_matrix_2d0;
+        math::position3          view_position;
+        math::dir3               view_direction;
+        math::vector4            clip_planes[6];
         scene*                   parent;
         scene*                   next_sibling;
         scene*                   first_child;
@@ -118,7 +117,7 @@ namespace treyarch { namespace ngl {
         f32                      clear_depth;
         u32                      clear_stencil;
         u32                      clear_reserved;
-        vector4                  clear_color;
+        math::vector4            clear_color;
         u32                      framebuffer_write_mask;
         u8                       z_write_enabled;
         u8                       z_test_enabled;
@@ -143,8 +142,8 @@ namespace treyarch { namespace ngl {
     scene* set_color_target(texture* target);
     scene* set_depth_target(texture* target);
     u32    set_clear_stencil(u32 stencil);
-    scene* set_camera_matrix(const matrix4x4* camera_to_world);
-    matrix4x4* set_world_to_view_matrix(const matrix4x4* world_to_view);
+    scene* set_camera_matrix(const math::rot_tran_mat43 &camera_to_world);
+    math::rot_tran_mat43* set_world_to_view_matrix(const math::rot_tran_mat43 &world_to_view);
     scene* set_clear_depth(f32 depth);
     scene* set_aspect_ratio(f32 ratio);
     scene* set_perspective_parameters(f32 field_of_view, f32 near_plane, f32 far_plane);

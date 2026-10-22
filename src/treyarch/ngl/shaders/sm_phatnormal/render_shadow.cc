@@ -46,19 +46,19 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
                                                 value->node_data,
                                                 value->section);
 
-    matrix4x4 world_view_projection =
-        value->node_data->local_to_world.affine() *
+    math::mat44 world_view_projection =
+        math::mat44(value->node_data->local_to_world) *
         ngl::references::current_scene.read()->world_to_screen;
-    matrix4x4 compressed_to_local = fx::get_compressed_to_local(value->node_data);
+    math::mat44 compressed_to_local = fx::get_compressed_to_local(value->node_data);
 
-    vector4 uv_scale_offset(snapshot.texture_matrix.x.x,
-                            snapshot.texture_matrix.y.y,
-                            snapshot.texture_matrix.w.x,
-                            snapshot.texture_matrix.w.y);
-    vector4 compressed(compressed_to_local.w.x,
-                       compressed_to_local.w.y,
-                       compressed_to_local.w.z,
-                       compressed_to_local.x.x);
+    math::vector4 uv_scale_offset(snapshot.texture_matrix[0][0],
+                                  snapshot.texture_matrix[1][1],
+                                  snapshot.texture_matrix[3][0],
+                                  snapshot.texture_matrix[3][1]);
+    math::vector4 compressed(compressed_to_local[3][0],
+                             compressed_to_local[3][1],
+                             compressed_to_local[3][2],
+                             compressed_to_local[0][0]);
 
     IDirect3DDevice9* device = d3d9::references::device.get();
     device->SetVertexShaderConstantF(0, (const f32*)&world_view_projection, 4);

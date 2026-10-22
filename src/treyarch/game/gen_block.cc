@@ -77,7 +77,7 @@ void gb_map::construct_mashed_class() {
     road_defs       .construct_mashed_class();
     unk_8c          .construct_mashed_class();
 
-    last_cam_pos = vector3(FLT_MAX, FLT_MAX, FLT_MAX); // @branch: F32_MAX
+    last_cam_pos = vector3d(FLT_MAX, FLT_MAX, FLT_MAX); // @branch: F32_MAX
 }
 
 // sub_7DEB90

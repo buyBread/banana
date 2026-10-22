@@ -4,11 +4,11 @@
 #include "treyarch/game/reference.hh"
 #include "treyarch/game/sm3_light.hh"
 #include "treyarch/shared/boolx.hh"
+#include "treyarch/shared/color.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/math/types/color.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -72,16 +72,18 @@ namespace treyarch {
     class fog {
 
     public:
-        mash::vector_basic<vector3> position0;
-        mash::vector_basic<vector3> position1;
-        mash::vector_basic<f32>     fogs_per_meter;
-        mash::vector_basic<f32>     maximum_fogs;
-        gradient                    color;
-        mash::vector_basic<f32>     depth_start;
-        mash::vector_basic<f32>     depth_end;
-        mash::vector_basic<f32>     depth_power;
-        mash::vector_basic<f32>     depth_opacity;
-        mash::vector_basic<f32>     depth_overide;
+        mash::vector_basic
+            <math::position3::packed> position0;
+        mash::vector_basic
+            <math::position3::packed> position1;
+        mash::vector_basic<f32>       fogs_per_meter;
+        mash::vector_basic<f32>       maximum_fogs;
+        gradient                      color;
+        mash::vector_basic<f32>       depth_start;
+        mash::vector_basic<f32>       depth_end;
+        mash::vector_basic<f32>       depth_power;
+        mash::vector_basic<f32>       depth_opacity;
+        mash::vector_basic<f32>       depth_overide;
 
         void construct_mashed_class();
         void destruct_mashed_class();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/types.hh"
 
 namespace treyarch {
@@ -10,14 +10,14 @@ namespace treyarch {
         struct scene;
     } // ngl
 
-    bool find_shadow_light_direction(vector3* direction,
+    bool find_shadow_light_direction(vector3d* direction,
                                      region*  current_region);
 
-    void build_shadow_frustum_corners(      vector3*  corners,
-                                      const vector3  &center,
-                                      const vector3  &right,
-                                      const vector3  &up,
-                                      const vector3  &forward,
+    void build_shadow_frustum_corners(      vector3d* corners,
+                                      const vector3d &center,
+                                      const vector3d &right,
+                                      const vector3d &up,
+                                      const vector3d &forward,
                                             f32       field_of_view,
                                             f32       aspect_ratio,
                                             f32       distance);

@@ -22,13 +22,13 @@ void ngl::shaders::sm_phat::render_shadow(render_node* value) {
     d3d9::set_pixel_program(program_exports::shared_shadow::depth_pixel_program.read());
     d3d9::set_vertex_program(program_exports::sm_phat::programs.get().utility_vertex);
 
-    matrix4x4 compressed_to_local = fx::get_compressed_to_local(value->node_data);
+    math::mat44 compressed_to_local = fx::get_compressed_to_local(value->node_data);
 
-    matrix4x4 compressed_to_screen =
-        compressed_to_local * value->node_data->local_to_world.affine() *
+    math::mat44 compressed_to_screen =
+        compressed_to_local * math::mat44(value->node_data->local_to_world) *
         ngl::references::current_scene.read()->world_to_screen;
 
-    matrix4x4 constants[2] { fx::get_compressed_to_uv(), compressed_to_screen, };
+    math::mat44 constants[2] { fx::get_compressed_to_uv(), compressed_to_screen, };
 
     d3d9::references::device.get()
         ->SetVertexShaderConstantF(0, (const f32*)constants, 8);

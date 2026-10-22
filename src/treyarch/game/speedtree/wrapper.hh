@@ -8,9 +8,8 @@
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector3.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -43,7 +42,7 @@ namespace treyarch {
 #pragma pack(pop)
 
     struct speed_tree_instance {
-        vector3                  position;
+        vector3d                 position;
         u8                       reserved_00c[0x10];
         f32                      radius;
         f32                      rotation; // degrees
@@ -53,7 +52,7 @@ namespace treyarch {
         speed_tree_color_source* color_source;
         speed_tree_instance*     next;
 
-        bool in_view(const matrix4x4 &basis) const;
+        bool in_view(const math::mat43 &basis) const;
     };
 
     // the node payload; the milestone asserts on Params.region.InstanceCount
@@ -71,8 +70,8 @@ namespace treyarch {
         f32*               fades;
         pre_light*         prelight;
         u32                unk_1c;
-        vector4            horizon_projection_u;
-        vector4            horizon_projection_v;
+        math::vector4      horizon_projection_u;
+        math::vector4      horizon_projection_v;
     };
 
     struct speed_tree_billboards_only_params {
@@ -81,19 +80,19 @@ namespace treyarch {
     };
 
     struct speed_tree_lighting {
-        vector4 light_direction;
-        vector4 diffuse;
-        vector4 ambient;
-        vector4 unk_30;
-        vector4 depth_fog_color;
-        vector4 depth_fog_control;
-        f32     diffuse_minimum;
-        f32     diffuse_maximum;
-        f32     diffuse_scale;
-        f32     exposure;
+        math::vector4 light_direction;
+        math::vector4 diffuse;
+        math::vector4 ambient;
+        math::vector4 unk_30;
+        math::vector4 depth_fog_color;
+        math::vector4 depth_fog_control;
+        f32           diffuse_minimum;
+        f32           diffuse_maximum;
+        f32           diffuse_scale;
+        f32           exposure;
 
         void build(const light_source_data* light);
-        void shade(const u8* color, vector4 (&result)[2]) const;
+        void shade(const u8* color, math::vector4 (&result)[2]) const;
     };
 
     // named after the HLSL globals they resolve
@@ -168,7 +167,7 @@ namespace treyarch {
         i32                      region_vertex_counts[800];
         IDirect3DVertexBuffer9*  billboard_vertex_buffer;
         IDirect3DIndexBuffer9*   billboard_index_buffer;
-        matrix4x4                texcoords_360[4];
+        math::mat44              texcoords_360[4];
         u8                       region_colors[800][4];
         IDirect3DVertexBuffer9*  branch_vertex_buffer;
         IDirect3DIndexBuffer9**  branch_index_buffers;
@@ -180,11 +179,11 @@ namespace treyarch {
         u8                       reserved_2af4[0x0C];
         speed_tree_lighting      lighting;
 
-        static matrix4x4 axis_basis();
-        static bool      sphere_in_view(const matrix4x4 &basis,
-                                        const vector3   &position,
-                                              f32        radius,
-                                              vector3   &transformed);
+        static math::mat43 axis_basis();
+        static bool        sphere_in_view(const math::mat43 &basis,
+                                          const vector3d    &position,
+                                                f32          radius,
+                                                vector3d    &transformed);
 
         void find_technique(u32                 &guard,
                             u32                  bit,
@@ -194,7 +193,7 @@ namespace treyarch {
         void upload_wind_matrices();
         void upload_lighting(light_source_data* light);
         void upload_color(const u8* color);
-        void upload_transforms(const matrix4x4 &basis);
+        void upload_transforms(const math::mat43 &basis);
         f32  upload_billboard_images();
 
         void submit_nodes();
@@ -235,7 +234,7 @@ namespace treyarch {
         inline util::memory_reference<u32> speed_tree_fronds_guard          { 0x01087F6C };
         inline util::memory_reference<u32> speed_tree_leaves_guard          { 0x01087F7C };
 
-        inline util::memory_reference<vector4> speed_tree_view_direction { 0x01087820 };
+        inline util::memory_reference<math::dir3> speed_tree_view_direction { 0x01087820 };
 
         inline util::memory_reference<f32> speed_tree_view_heading { 0x01086E18 };
         inline util::memory_reference<f32> speed_tree_view_pitch   { 0x01086E1C };
@@ -246,7 +245,7 @@ namespace treyarch {
         inline util::memory_reference<region*> speed_tree_fading_regions      { 0x01087D20 };
         inline util::memory_reference<u32>     speed_tree_fading_region_count { 0x01087D5C };
 
-        inline util::memory_reference<vector4> speed_tree_fade_offset       { 0x01087F90 };
+        inline util::memory_reference<math::vector4> speed_tree_fade_offset       { 0x01087F90 };
         inline util::memory_reference<u32>     speed_tree_fade_offset_guard { 0x01087FA0 };
     } // references
 

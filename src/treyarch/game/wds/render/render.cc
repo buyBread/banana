@@ -42,7 +42,7 @@ void wds_render_manager::render() {
 
     ngl::scene* game_scene = ngl::references::current_scene.read();
 
-    ngl::set_world_to_view_matrix(&geometry_manager::references::world_to_view.get());
+    ngl::set_world_to_view_matrix(*(const math::rot_tran_mat43*)&geometry_manager::references::world_to_view.get());
 
     ngl::calculate_matrices(game_scene);
     publish_scene_parameter(game_scene);

@@ -30,8 +30,8 @@
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/math/references.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "treyarch/soap/message_box_manager.hh"
@@ -341,24 +341,24 @@ void game::load_complete() {
     game* the_game = references::game.read();
 
     if (spawn) {
-        transform.w = vector4(*(vector3*)((u8*)spawn + 0xD0), 1.0f);
+        transform.w = vector4d(*(vector3d*)((u8*)spawn + 0xD0), 1.0f);
     } else if (the_game->use_default_hero_start_position) {
         string_hash hero_start;
         hero_start.initialize(mash::ALLOCATED, "HERO_START");
 
-        transform = ((entity*)retail::sub_6414A0((u32*)&hero_start))->my_abs_po->matrix;
+        transform = ((entity*)retail::sub_6414A0((u32*)&hero_start))->my_abs_po->get_matrix();
     } else
-        transform.w = vector4(the_game->level.hero_start_position, 1.0f);
+        transform.w = vector4d(the_game->level.hero_start_position, 1.0f);
 
     // anything not standing upright is rebuilt on the default axes
-    const vector3 &up = math::references::unk_00f4d1ec.get();
+    const vector3d &up = treyarch::references::unk_00f4d1ec.get();
 
     if (transform.y.x != up.x || transform.y.y != up.y || transform.y.z != up.z) {
         matrix4x4 upright;
         retail::sub_5FC820((u64*)&upright,
-                           (i32)&math::references::unk_00f4d1e0.get(),
+                           (i32)&treyarch::references::unk_00f4d1e0.get(),
                            (i32)&up,
-                           (u32*)&math::references::unk_00f4d1f8.get(),
+                           (u32*)&treyarch::references::unk_00f4d1f8.get(),
                            (u32*)&transform.w);
 
         transform = upright;

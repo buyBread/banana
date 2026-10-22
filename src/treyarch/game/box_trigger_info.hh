@@ -3,7 +3,7 @@
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -17,10 +17,10 @@ namespace treyarch {
         void* self; // the resource handler points this at the info itself
 
         mash::string ent_id;
-        vector3      x_axis;
-        vector3      y_axis;
-        vector3      z_axis;
-        vector3      pos;
+        vector3d     x_axis;
+        vector3d     y_axis;
+        vector3d     z_axis;
+        vector3d     pos;
         arch_base*   trig; // the box_trigger the handler creates
 
         void construct_mashed_class();

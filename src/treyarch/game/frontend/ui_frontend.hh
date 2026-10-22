@@ -13,7 +13,8 @@
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/shared/container/legacy_list.hh"
 #include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -51,8 +52,8 @@ namespace treyarch {
         inline util::memory_reference<engine_recursive_lock> script_widget_lock { 0x0102F430 };
 
         // the camera axes draw_background_texture measures, (1, 0, 0) and (0, 1, 0) in retail data
-        inline util::memory_reference<vector3> background_texture_u_axis { 0x00E73660 };
-        inline util::memory_reference<vector3> background_texture_v_axis { 0x00E7366C };
+        inline util::memory_reference<vector3d> background_texture_u_axis { 0x00E73660 };
+        inline util::memory_reference<vector3d> background_texture_v_axis { 0x00E7366C };
 
         // background mode 4 sets it; nothing reads it
         inline util::memory_reference<u32> unk_0102fe9c { 0x0102FE9C };
@@ -135,7 +136,7 @@ namespace treyarch {
         u8                                  quad_list_state_200;
         u8                                  reserved_201[0x03];
         container::legacy_list<ngl::quad*>  quad_list;
-        matrix4x4                           quad_transform;
+        math::mat43                         quad_transform;
         ngl::shaders::pcuv::pcuv_material*  flat_material;
         igo_3d_script_widget_list           script_widgets;         // create_3d_widget, _button_widget, _widget_from_params, _text_widget_from_params
         igo_3d_script_widget_list           mission_text_widgets;   // create_3d_mission_text_widget

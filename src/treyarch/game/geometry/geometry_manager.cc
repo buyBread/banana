@@ -4,51 +4,52 @@
 #include "treyarch/game/wds/camera/references.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/shared/math/references.hh"
+#include "treyarch/shared/math/usefulmath.hh"
 
 using namespace treyarch;
 
 // sub_606650
 // the milestone's geometry_manager::set_look_at; retail PC passes dest as the ECX receiver
 void geometry_manager::set_look_at(      matrix4x4*  dest,
-                                   const vector3    &from,
-                                   const vector3    &look_at,
-                                   const vector3    &up) {
+                                   const vector3d   &from,
+                                   const vector3d   &look_at,
+                                   const vector3d   &up) {
 
-    vector3 z_axis  = look_at;
-            z_axis -= from;
-    f32     length  = z_axis.length();
+    vector3d z_axis  = look_at;
+             z_axis -= from;
+    f32      length  = z_axis.length();
 
     if (length <= 1e-6f) {
-        z_axis = math::references::zvec.get();
+        z_axis = treyarch::references::zvec.get();
         length = 1.0f;
     }
 
     z_axis *= 1.0f / length;
 
-    vector3 z_component  = z_axis;
-            z_component *= dot(up, z_axis);
-    vector3 y_axis       = up;
-            y_axis      -= z_component;
-    f32     y_length     = y_axis.length();
+    vector3d z_component  = z_axis;
+             z_component *= dot(up, z_axis);
+    vector3d y_axis       = up;
+             y_axis      -= z_component;
+    f32      y_length     = y_axis.length();
 
     // up is parallel to the view direction, orthogonalize the world y axis instead, then z
     if (y_length < 1e-6f) {
-        y_axis = vector3(0.0f - z_axis.x * z_axis.y,
-                         1.0f - z_axis.y * z_axis.y,
-                         0.0f - z_axis.z * z_axis.y);
+        y_axis = vector3d(0.0f - z_axis.x * z_axis.y,
+                          1.0f - z_axis.y * z_axis.y,
+                          0.0f - z_axis.z * z_axis.y);
         y_length = y_axis.length();
 
         if (y_length < 1e-6f) {
-            y_axis = vector3(0.0f - z_axis.x * z_axis.z,
-                             0.0f - z_axis.y * z_axis.z,
-                             1.0f - z_axis.z * z_axis.z);
+            y_axis = vector3d(0.0f - z_axis.x * z_axis.z,
+                              0.0f - z_axis.y * z_axis.z,
+                              1.0f - z_axis.z * z_axis.z);
             y_length = y_axis.length();
         }
     }
 
     y_axis *= 1.0f / y_length;
 
-    vector3 x_axis = cross(y_axis, z_axis);
+    vector3d x_axis = cross(y_axis, z_axis);
 
     *dest = matrix4x4( x_axis.x,              y_axis.x,              z_axis.x,             0.0f,
                        x_axis.y,              y_axis.y,              z_axis.y,             0.0f,
@@ -57,9 +58,9 @@ void geometry_manager::set_look_at(      matrix4x4*  dest,
 }
 
 // sub_96AF70
-void geometry_manager::set_view(const vector3 &from,
-                                const vector3 &look_at,
-                                const vector3 &up) {
+void geometry_manager::set_view(const vector3d &from,
+                                const vector3d &look_at,
+                                const vector3d &up) {
 
     f32 field_of_view = treyarch::references::game.read()->get_current_view_camera()->get_fov();
 
@@ -95,13 +96,13 @@ void geometry_manager::set_view(const vector3 &from,
 
     // retail builds the inverse inside the projection's storage and only writes xyz,
     // so the w column keeps the projection's (0, 0, 1, 0), its last lane negated with the translation
-    projection.x_row() = vector3(world_to_view.x.x, world_to_view.y.x, world_to_view.z.x);
-    projection.y_row() = vector3(world_to_view.x.y, world_to_view.y.y, world_to_view.z.y);
-    projection.z_row() = vector3(world_to_view.x.z, world_to_view.y.z, world_to_view.z.z);
-    projection.w       = -vector4(dot(world_to_view.w_row(), world_to_view.x_row()),
-                                  dot(world_to_view.w_row(), world_to_view.y_row()),
-                                  dot(world_to_view.w_row(), world_to_view.z_row()),
-                                  projection.w.w);
+    projection.xrow()  = vector3d(world_to_view.x.x, world_to_view.y.x, world_to_view.z.x);
+    projection.yrow()  = vector3d(world_to_view.x.y, world_to_view.y.y, world_to_view.z.y);
+    projection.zrow()  = vector3d(world_to_view.x.z, world_to_view.y.z, world_to_view.z.z);
+    projection.w       = -math::vector4(dot(world_to_view.wrow(), world_to_view.xrow()),
+                                        dot(world_to_view.wrow(), world_to_view.yrow()),
+                                        dot(world_to_view.wrow(), world_to_view.zrow()),
+                                        projection.w.w);
 
     references::view_to_world.write(projection);
     references::world_to_screen.write(world_to_view * references::view_to_screen.get());

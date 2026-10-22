@@ -18,12 +18,12 @@ namespace treyarch { namespace ngl { namespace morph_geometry {
     void apply_dense_frame(const morph_component &component,
                                  f32              weight,
                                  u32              vertex_count,
-                                 vector4*         vertices);
+                                 math::vector4*   vertices);
 
     void apply_sparse_frame(const morph_component &component,
                                   f32              weight,
                                   u32              vertex_count,
-                                  vector4*         vertices);
+                                  math::vector4*   vertices);
 
     void write_morph_stream(render_node* value,
                             binding*     morph_binding,
@@ -56,25 +56,25 @@ const D3DVERTEXELEMENT9* ngl::morph_geometry::find_vertex_element(const vertex_d
 void ngl::morph_geometry::apply_dense_frame(const morph_component &component,
                                                   f32              weight,
                                                   u32              vertex_count,
-                                                  vector4*         vertices) {
+                                                  math::vector4*   vertices) {
 
     const u8* source = (const u8*)component.data;
 
     for (u32 index = 0; index < vertex_count; ++index) {
-        vector4 delta;
+        math::vector4 delta;
         read_component_value(component.value_type, source, delta);
 
-        vertices[index].x += delta.x * weight;
-        vertices[index].y += delta.y * weight;
-        vertices[index].z += delta.z * weight;
-        vertices[index].w += delta.w * weight;
+        vertices[index][0] += delta[0] * weight;
+        vertices[index][1] += delta[1] * weight;
+        vertices[index][2] += delta[2] * weight;
+        vertices[index][3] += delta[3] * weight;
     }
 }
 
 void ngl::morph_geometry::apply_sparse_frame(const morph_component &component,
                                                    f32              weight,
                                                    u32              vertex_count,
-                                                   vector4*         vertices) {
+                                                   math::vector4*   vertices) {
 
     const u8* source = (const u8*)component.data;
     u32 vertex_index = 0;
@@ -88,15 +88,15 @@ void ngl::morph_geometry::apply_sparse_frame(const morph_component &component,
             break;
 
         for (u32 index = 0; index < run_count; ++index) {
-            vector4 delta;
+            math::vector4 delta;
             read_component_value(component.value_type, source, delta);
 
-            vector4 &vertex = vertices[vertex_index + index];
+            math::vector4 &vertex = vertices[vertex_index + index];
 
-            vertex.x += (delta.x * weight) * 0.001f;
-            vertex.y += (delta.y * weight) * 0.001f;
-            vertex.z += (delta.z * weight) * 0.001f;
-            vertex.w += (delta.w * weight) * 0.001f;
+            vertex[0] += (delta[0] * weight) * 0.001f;
+            vertex[1] += (delta[1] * weight) * 0.001f;
+            vertex[2] += (delta[2] * weight) * 0.001f;
+            vertex[3] += (delta[3] * weight) * 0.001f;
         }
 
         vertex_index += run_count + skip_count;
@@ -128,13 +128,13 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
         if (!element)
             continue;
 
-        auto* vertices = (vector4*)memory::allocate
-            (sizeof(vector4) * section->vertex_count, 16, 0);
+        auto* vertices = (math::vector4*)memory::allocate
+            (sizeof(math::vector4) * section->vertex_count, 16, 0);
 
         if (base_frame.flags & 1)
             decode_base_vertices(section, *element, mesh_data, vertices);
         else
-            std::memset(vertices, 0, sizeof(vector4) * section->vertex_count);
+            std::memset(vertices, 0, sizeof(math::vector4) * section->vertex_count);
 
         for (u32 frame_index = 0; frame_index < morph_binding->frame_count; ++frame_index) {
             u32 selected_index = morph_binding->frame_indices[frame_index];

@@ -4,32 +4,33 @@
 #include "treyarch/game/geometry/geometry_manager.hh"
 #include "treyarch/game/light/light_source_data.hh"
 #include "treyarch/game/shadow/shadow.hh"
+#include "treyarch/game/wds/camera/references.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/game/wds/render/depth_shadows.hh"
 #include "treyarch/game/wds/render/references.hh"
 #include "treyarch/game/wds/render/wds_render_manager.hh"
-#include "treyarch/game/wds/camera/references.hh"
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
-#include "treyarch/shared/math/vmath.hh"
+#include "treyarch/shared/math/vmath/matrix_rot.hh"
+#include "treyarch/shared/math/vmath/trig.hh"
 
 using namespace treyarch;
 
 // sub_968FB0
-bool treyarch::find_shadow_light_direction(vector3* direction,
+bool treyarch::find_shadow_light_direction(vector3d* direction,
                                            region*  current_region) {
 
     if (!current_region)
         return false;
 
     entity* hero     = references::g_world_ptr.read()->get_hero_ptr();
-    vector3 position = hero->my_abs_po->get_position();
+    vector3d position = hero->my_abs_po->get_position();
 
     container::fixed_vector<region*, 40> regions;
 
@@ -70,11 +71,11 @@ bool treyarch::find_shadow_light_direction(vector3* direction,
 }
 
 // sub_969A70
-void treyarch::build_shadow_frustum_corners(      vector3*  corners,
-                                            const vector3  &center,
-                                            const vector3  &right,
-                                            const vector3  &up,
-                                            const vector3  &forward,
+void treyarch::build_shadow_frustum_corners(      vector3d* corners,
+                                            const vector3d &center,
+                                            const vector3d &right,
+                                            const vector3d &up,
+                                            const vector3d &forward,
                                                   f32       field_of_view,
                                                   f32       aspect_ratio,
                                                   f32       distance) {
@@ -82,12 +83,12 @@ void treyarch::build_shadow_frustum_corners(      vector3*  corners,
     f32 half_width  = math::tan(field_of_view * 0.5f) * distance;
     f32 half_height = half_width * aspect_ratio;
 
-    vector3 right_offset    = right;
-            right_offset   *= half_width;
-    vector3 up_offset       = up;
-            up_offset      *= half_height;
-    vector3 forward_offset  = forward;
-            forward_offset *= distance;
+    vector3d right_offset    = right;
+             right_offset   *= half_width;
+    vector3d up_offset       = up;
+             up_offset      *= half_height;
+    vector3d forward_offset  = forward;
+             forward_offset *= distance;
 
     corners[0]  = center;
     corners[0] += right_offset;
@@ -129,10 +130,10 @@ void treyarch::set_shadow_cascades(f32         distance_0,
     f64 range_0 = (f64)distance_0 - (f64)start_0;
     f64 range_1 = (f64)distance_1 - (f64)start_1;
 
-    shadow::references::shadow_distances.write(vector4((f32)(1.0 / range_0),
-                                                       (f32)(1.0 / range_1),
-                                                       (f32)((f64)start_0 / range_0),
-                                                       (f32)((f64)start_1 / range_1)));
+    shadow::references::shadow_distances.write(math::vector4((f32)(1.0 / range_0),
+                                                             (f32)(1.0 / range_1),
+                                                             (f32)((f64)start_0 / range_0),
+                                                             (f32)((f64)start_1 / range_1)));
 }
 
 // sub_95D3F0
@@ -144,7 +145,7 @@ void treyarch::enter_shadow_scene(void* context) {
     // 114.8 is stored one ulp below the nearest float
     set_shadow_cascades(20.0f, 114.799995f, 16.4f, 94.135994f, ngl::references::current_scene.read());
 
-    const matrix4x4 &world_to_screen = *ngl::get_world_to_screen(ngl::references::current_scene.read());
+    const math::mat44 &world_to_screen = *ngl::get_world_to_screen(ngl::references::current_scene.read());
 
     if (index == 0)
         shadow::references::matrix_0.write(world_to_screen);
@@ -159,8 +160,8 @@ void treyarch::leave_shadow_scene(void*) {
 
 // sub_96F950
 void wds_render_manager::render_depth_shadows() {
-    vector3 direction(0.0f, 1.0f, 0.0f);
-    vector3 center = references::camera_position.get().get_xyz();
+    vector3d direction(0.0f, 1.0f, 0.0f);
+    vector3d center = references::camera_position.get().get_xyz();
     const f32 span_caps[2] = { 20.0f, 60.0f };
 
     shadow::device_resource_state &targets    = shadow::references::device_resources.get();
@@ -199,10 +200,10 @@ void wds_render_manager::render_depth_shadows() {
         ngl::set_pixel_viewport(0.0f, 0.0f, viewport_right, viewport_bottom);
         ngl::set_aspect_ratio(1.0f);
 
-        vector3 points[4];
-        vector3 camera_right   = references::camera_right.get().get_xyz();
-        vector3 camera_up      = references::camera_up.get().get_xyz();
-        vector3 camera_forward = references::camera_forward.get().get_xyz();
+        vector3d points[4];
+        vector3d camera_right   = references::camera_right.get().get_xyz();
+        vector3d camera_up      = references::camera_up.get().get_xyz();
+        vector3d camera_forward = references::camera_forward.get().get_xyz();
 
         build_shadow_frustum_corners(points,
                                      center,
@@ -213,7 +214,7 @@ void wds_render_manager::render_depth_shadows() {
                                      references::camera_aspect_ratio.read(),
                                      span_cap);
 
-        vector3 horizontal(direction.z, 0.0f, -direction.x);
+        vector3d horizontal(direction.z, 0.0f, -direction.x);
         f32 horizontal_length_squared = horizontal.length2();
 
         if (horizontal_length_squared <= 0.0f)
@@ -221,9 +222,9 @@ void wds_render_manager::render_depth_shadows() {
         else
             horizontal *= 1.0f / (f32)std::sqrt((f64)horizontal_length_squared);
 
-        vector3 vertical(direction.y * horizontal.z - direction.z * horizontal.y,
-                         direction.z * horizontal.x - direction.x * horizontal.z,
-                         direction.x * horizontal.y - direction.y * horizontal.x);
+        vector3d vertical(direction.y * horizontal.z - direction.z * horizontal.y,
+                          direction.z * horizontal.x - direction.x * horizontal.z,
+                          direction.x * horizontal.y - direction.y * horizontal.x);
 
         f32 horizontal_min = 0.0f;
         f32 horizontal_max = 0.0f;
@@ -231,7 +232,7 @@ void wds_render_manager::render_depth_shadows() {
         f32 vertical_max   = 0.0f;
 
         for (u32 point_index = 0; point_index < 4; ++point_index) {
-            vector3 offset  = points[point_index];
+            vector3d offset  = points[point_index];
                     offset -= center;
 
             f32 horizontal_projection = offset.x * horizontal.x +
@@ -264,7 +265,7 @@ void wds_render_manager::render_depth_shadows() {
                            1.0f / horizontal_span,
                            1.0f / vertical_span);
 
-        vector3 eye = direction;
+        vector3d eye = direction;
         eye *= 400.0f;
         eye += center;
 
@@ -273,7 +274,7 @@ void wds_render_manager::render_depth_shadows() {
         f32 far_plane = 400.0f + span_cap + references::shadow_far_adjustment.read();
 
         ngl::set_ortho_parameters(1.0f, 1.0f, 1.0f, far_plane);
-        ngl::set_world_to_view_matrix(&geometry_manager::references::world_to_view.get());
+        ngl::set_world_to_view_matrix(*(const math::rot_tran_mat43*)&geometry_manager::references::world_to_view.get());
 
         ngl::set_z_write_enable(true);
         ngl::set_z_test_enable(true);
@@ -282,7 +283,7 @@ void wds_render_manager::render_depth_shadows() {
         ngl::list_end_scene();
 
         if (index == 0) {
-            vector3 center_shift = camera_forward;
+            vector3d center_shift = camera_forward;
             center_shift *= 75.0f;
             center += center_shift;
         }

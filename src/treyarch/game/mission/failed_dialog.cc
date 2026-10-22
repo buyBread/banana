@@ -104,12 +104,12 @@ void mission_manager::quit_failed_mission() {
                                                                  current_mission.exec->get_global_script_object()->global_instance,
                                                                  0);
 
-            vector3 position;
+            vector3d position;
 
             if (thread && script::run_thread_with_return(thread, &position)) {
                 player_restart_position = position;
 
-                const vector3 &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->matrix.z_row();
+                const vector3d &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();
 
                 player_restart_xz_facing   = z_axis;
                 player_restart_xz_facing.y = 0.0f;
@@ -134,12 +134,12 @@ void mission_manager::quit_failed_mission() {
              state == mission_manager_state_running_mission_failed_dialog)) {
 
             player_restart_position  = current_mission.key_position;
-            player_restart_xz_facing = vector3(0.0f, 0.0f, 1.0f);
+            player_restart_xz_facing = vector3d(0.0f, 0.0f, 1.0f);
 
             flags |= mission_manager_flag_need_to_malor;
         }
     } else if (!(flags & mission_manager_flag_need_to_malor)) {
-        using restart_from_registry = bool (__thiscall*)(mission_manager*, vector3*, vector3*);
+        using restart_from_registry = bool (__thiscall*)(mission_manager*, vector3d*, vector3d*);
 
         if (((restart_from_registry)retail::sub_980A50)(this, &player_restart_position, &player_restart_xz_facing))
             flags |= mission_manager_flag_need_to_malor;

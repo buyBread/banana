@@ -406,12 +406,12 @@ void post_process::setup_depth_of_field_blur_filter(      treyarch::blitter*    
 
     IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 
-    matrix4x4 transform;
+    math::mat44 transform;
 
     if (value.unk_10)
         transform = value.unk_10->transpose();
     else
-        transform.identity();
+        transform = math::identity_mat33();
 
     device->SetPixelShaderConstantF(4, (const f32*)&transform, 4);
 

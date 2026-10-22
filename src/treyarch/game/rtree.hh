@@ -1,10 +1,10 @@
 #pragma once
 
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace math {
+namespace treyarch {
     struct rtree;
     struct visitor;
 
@@ -21,8 +21,8 @@ namespace treyarch { namespace math {
 
     ASSERT_SIZEOF(visitor, 0x04);
 
-    void query_sphere(      rtree*   tree,
-                      const vector3 &center,
-                            f32      radius,
-                            visitor* result_visitor);
-}} // treyarch::math
+    void query_sphere(      rtree*    tree,
+                      const vector3d &center,
+                            f32       radius,
+                            visitor*  result_visitor);
+} // treyarch

@@ -11,10 +11,10 @@ void shadow::create_device_resources() {
     if (references::initialized.read())
         return;
 
-    references::projection_to_texture.write(matrix4x4(0.5f,  0.0f, 0.0f, 0.0f,
-                                                      0.0f, -0.5f, 0.0f, 0.0f,
-                                                      0.0f,  0.0f, 1.0f, 0.0f,
-                                                      0.5f,  0.5f, 0.0f, 1.0f));
+    references::projection_to_texture.write(math::mat44(math::vector4(0.5f,  0.0f, 0.0f, 0.0f),
+                                                        math::vector4(0.0f, -0.5f, 0.0f, 0.0f),
+                                                        math::vector4(0.0f,  0.0f, 1.0f, 0.0f),
+                                                        math::vector4(0.5f,  0.5f, 0.0f, 1.0f)));
     references::initialized.write(1);
 
     device_resource_state &targets    = references::device_resources.get();
@@ -65,18 +65,18 @@ void shadow::release_device_resources() {
 
 // inlined into sub_771C10
 bool sphere_inside_clip_planes(const ngl::scene* value,
-                               const vector3    &center,
+                               const vector3d   &center,
                                      f32         radius) {
 
     for (u32 index = 0; index < 6; ++index) {
-        const vector4 &plane = value->clip_planes[index];
+        const math::vector4 &plane = value->clip_planes[index];
 
-        f32 dot = (f32)((f64)plane.y * (f64)center.y +
-                        (f64)plane.x * (f64)center.x +
-                        (f64)plane.z * (f64)center.z +
-                        (f64)plane.w * 0.0);
+        f32 dot = (f32)((f64)plane[1] * (f64)center.y +
+                        (f64)plane[0] * (f64)center.x +
+                        (f64)plane[2] * (f64)center.z +
+                        (f64)plane[3] * 0.0);
 
-        f32 distance = (f32)((f64)dot - (f64)plane.w);
+        f32 distance = (f32)((f64)dot - (f64)plane[3]);
 
         if ((f64)distance + (f64)radius < 0.0)
             return false;
@@ -86,7 +86,7 @@ bool sphere_inside_clip_planes(const ngl::scene* value,
 }
 
 // sub_771C10
-u32 shadow::get_cascade_mask(const vector3 &center, f32 radius) {
+u32 shadow::get_cascade_mask(const vector3d &center, f32 radius) {
     ngl::scene* scene_0 = references::scene_0.read();
     ngl::scene* scene_1 = references::scene_1.read();
 

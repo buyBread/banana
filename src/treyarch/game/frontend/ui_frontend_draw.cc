@@ -53,9 +53,8 @@ void ui_frontend::draw_startup() {
     i32 environment_index = select_ui_environment_index();
     current_ui_environment = (void*)retail::sub_7D6D60(ui_environments[environment_index], 0);
 
-    matrix4x4 identity;
-    identity.identity();
-    ngl::set_world_to_view_matrix(&identity);
+    math::rot_tran_mat43 identity = math::identity_mat33();
+    ngl::set_world_to_view_matrix(identity);
 
     ngl::lighting::set_scene_context(context, ngl::references::current_scene.read());
     ngl::set_z_test_enable(true);
@@ -117,12 +116,11 @@ void ui_frontend::draw() {
 
     if (camera_widget) {
         matrix4x4 camera_matrix_copy = camera_widget->camera_matrix;
-        ngl::set_camera_matrix(&camera_matrix_copy);
+        ngl::set_camera_matrix(*(const math::rot_tran_mat43*)&camera_matrix_copy);
         camera_widget->matrix_dirty = 1;
     } else {
-        matrix4x4 identity;
-        identity.identity();
-        ngl::set_world_to_view_matrix(&identity);
+        math::rot_tran_mat43 identity = math::identity_mat33();
+        ngl::set_world_to_view_matrix(identity);
     }
 
     ngl::lighting::set_scene_context(context, pass_1);
@@ -322,9 +320,8 @@ void ui_frontend::draw() {
                               projection.near_plane,
                               projection.far_plane);
 
-    matrix4x4 identity;
-    identity.identity();
-    ngl::set_world_to_view_matrix(&identity);
+    math::rot_tran_mat43 identity = math::identity_mat33();
+    ngl::set_world_to_view_matrix(identity);
     ngl::lighting::set_scene_context(context, pass_1);
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);

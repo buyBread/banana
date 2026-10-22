@@ -4,17 +4,17 @@
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch {
     struct district {
-        mash::string         name;
-        vector3              position;
-        reference<ngl::mesh> txtmesh;
-        bool                 unk_20; // cleared while the region with this name is loaded
-        u8                   unk_21[0x27];
+        mash::string            name;
+        math::position3::packed position;
+        reference<ngl::mesh>    txtmesh;
+        bool                    unk_20; // cleared while the region with this name is loaded
+        u8                      unk_21[0x27];
 
         // inlined @ sub_7DEDF0
         void construct_mashed_class() {

@@ -2,7 +2,7 @@
 
 #include "treyarch/game/light/light_source.hh"
 #include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -35,7 +35,7 @@ namespace treyarch {
         u8                          reserved_08c[0x38];
         static_colgeom_root*        static_colgeom;
         u8                          reserved_0c8[0x14];
-        vector3                     center;
+        vector3d                    center;
         u8                          reserved_0e8[0x04];
         string_hash                 district_id;
         u8                          reserved_0f0[0x08];

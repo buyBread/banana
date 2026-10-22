@@ -106,12 +106,12 @@ void mission_manager::update_mission_icons() {
         auto* header = (mission_header_instance_base*)selected_poi.instance->data.buffer;
 
         if (!(header->flags & mission_header_flag_uses_trigger)) {
-            vector3 position;
+            vector3d position;
             position.x = header->key_position.x;
             position.y = (f32)((f64)header->key_position.y + (f64)1.6f);
             position.z = header->key_position.z;
 
-            ((void (__thiscall*)(mission_manager*, void*, const vector3*))retail::sub_981190)(this, selected_poi_icon, &position);
+            ((void (__thiscall*)(mission_manager*, void*, const vector3d*))retail::sub_981190)(this, selected_poi_icon, &position);
         }
     }
 
@@ -143,10 +143,10 @@ void mission_manager::check_mission_triggers() {
         auto* header = (mission_header_instance_base*)selected_poi.instance->data.buffer;
 
         if (header->flags & mission_header_flag_uses_trigger)
-            ((void (__thiscall*)(mission_manager*, void*, const vector3*))retail::sub_981190)(this, selected_poi_icon, &header->key_position);
+            ((void (__thiscall*)(mission_manager*, void*, const vector3d*))retail::sub_981190)(this, selected_poi_icon, &header->key_position);
     }
 
-    vector3 hero_position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
+    vector3d hero_position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
 
     for (mission_icon_info* trigger = mission_triggers->begin(); trigger != mission_triggers->end(); ++trigger) {
         auto* header = (mission_header_instance_base*)trigger->instance->data.buffer;

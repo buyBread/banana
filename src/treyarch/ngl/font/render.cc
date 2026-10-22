@@ -78,7 +78,7 @@ void ngl::string_renderer::render(node* value) {
 
     d3d9::set_render_state(D3DRS_FOGENABLE, FALSE);
 
-    matrix4x4 matrix = current_scene->derived_matrix_2d0;
+    math::mat44 matrix = current_scene->derived_matrix_2d0;
 
     d3d9::set_render_state(D3DRS_FILLMODE, D3DFILL_SOLID);
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -109,11 +109,11 @@ void ngl::string_renderer::render(node* value) {
     else if (depth_z > current_scene->far_plane)
         depth_z = current_scene->far_plane;
 
-    f32 numerator = (f32)((f64)current_scene->view_to_screen.z.z * (f64)depth_z);
-        numerator = (f32)((f64)numerator + (f64)current_scene->view_to_screen.w.z);
+    f32 numerator = (f32)((f64)current_scene->view_to_screen[2][2] * (f64)depth_z);
+        numerator = (f32)((f64)numerator + (f64)current_scene->view_to_screen[3][2]);
 
-    f32 denominator = (f32)((f64)current_scene->view_to_screen.z.w * (f64)depth_z);
-        denominator = (f32)((f64)denominator + (f64)current_scene->view_to_screen.w.w);
+    f32 denominator = (f32)((f64)current_scene->view_to_screen[2][3] * (f64)depth_z);
+        denominator = (f32)((f64)denominator + (f64)current_scene->view_to_screen[3][3]);
 
     f32 depth = (f32)((f64)numerator / (f64)denominator);
 

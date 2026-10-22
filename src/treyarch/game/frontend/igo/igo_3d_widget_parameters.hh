@@ -3,8 +3,8 @@
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -69,7 +69,7 @@ namespace treyarch {
         void*              self; // the resource handler points this at the parameters themselves
         mash::string       unk_04;
         mash::string       unk_10;
-        vector3            position;
+        math::dir3::packed position;
         f32                tilt_angle;
         f32                rotation_angle;
         f32                spin_angle;

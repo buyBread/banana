@@ -13,7 +13,7 @@
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
 
 using namespace treyarch;
 
@@ -45,7 +45,7 @@ f32 wds_render_manager::calculate_scene_near_plane(world_dynamics_system* world)
     f32 result = 0.25f;
 
     if (!player->is_playing()) {
-        vector4 difference = world->hero_ptr->my_abs_po->matrix.w;
+        vector4d difference = world->hero_ptr->my_abs_po->get_matrix().w;
 
         difference.w = 0.0f;
 

@@ -83,24 +83,24 @@ void ngl::shaders::fake_peds::render(render_node* value) {
 
         fake_pedestrian_vertex* quad = vertices + index * 4;
 
-        quad[0] = { ped.center.x - ped.right.x + ped.up.x,
-                    ped.center.y - ped.right.y + ped.up.y,
-                    ped.center.z - ped.right.z + ped.up.z,
+        quad[0] = { ped.center[0] - ped.right[0] + ped.up[0],
+                    ped.center[1] - ped.right[1] + ped.up[1],
+                    ped.center[2] - ped.right[2] + ped.up[2],
                     color, tile_left, 0.0f };
 
-        quad[1] = { ped.center.x - ped.right.x - ped.up.x,
-                    ped.center.y - ped.right.y - ped.up.y,
-                    ped.center.z - ped.right.z - ped.up.z,
+        quad[1] = { ped.center[0] - ped.right[0] - ped.up[0],
+                    ped.center[1] - ped.right[1] - ped.up[1],
+                    ped.center[2] - ped.right[2] - ped.up[2],
                     color, tile_left, 1.0f };
 
-        quad[2] = { ped.center.x + ped.right.x - ped.up.x,
-                    ped.center.y + ped.right.y - ped.up.y,
-                    ped.center.z + ped.right.z - ped.up.z,
+        quad[2] = { ped.center[0] + ped.right[0] - ped.up[0],
+                    ped.center[1] + ped.right[1] - ped.up[1],
+                    ped.center[2] + ped.right[2] - ped.up[2],
                     color, tile_right, 1.0f };
 
-        quad[3] = { ped.center.x + ped.right.x + ped.up.x,
-                    ped.center.y + ped.right.y + ped.up.y,
-                    ped.center.z + ped.right.z + ped.up.z,
+        quad[3] = { ped.center[0] + ped.right[0] + ped.up[0],
+                    ped.center[1] + ped.right[1] + ped.up[1],
+                    ped.center[2] + ped.right[2] + ped.up[2],
                     color, tile_right, 0.0f };
 
         u16 first_vertex = (u16)(4 * index);

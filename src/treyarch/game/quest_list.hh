@@ -7,7 +7,7 @@
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -90,7 +90,7 @@ namespace treyarch {
         mash::vector
             <quest_giver>                   givers;
         mash::vector_basic
-            <vector3>                       unk_40;
+            <vector3d>                      unk_40;
         mash::vector
             <quest_list_unk_50>             unk_50;
 

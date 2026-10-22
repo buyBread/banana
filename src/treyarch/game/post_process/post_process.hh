@@ -8,8 +8,8 @@
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -106,7 +106,7 @@ namespace treyarch { namespace post_process {
 
     // render_pause_menu_blur's taps, authored in texels from -6 to 6
     struct blur_taps {
-        vector4 taps[13];
+        math::vector4 taps[13];
     };
 
     struct system { // idk the original class name
@@ -299,37 +299,37 @@ namespace treyarch { namespace post_process {
         inline util::memory_reference<blur_taps> pause_menu_blur_scaled_vertical_taps   { 0x010319F0 }; // y
 
         // 13 gaussian weights in x, one per tap
-        inline util::memory_reference<vector4> pause_menu_blur_weights { 0x00E76F98 };
-        inline util::memory_reference<vector4> unk_00e79590            { 0x00E79590 }; // (1, 0, 0, 0)
-        inline util::memory_reference<vector4> zoom_map_effect_color   { 0x01032030 }; // function-local static
+        inline util::memory_reference<math::vector4> pause_menu_blur_weights { 0x00E76F98 };
+        inline util::memory_reference<math::vector4> unk_00e79590            { 0x00E79590 }; // (1, 0, 0, 0)
+        inline util::memory_reference<math::vector4> zoom_map_effect_color   { 0x01032030 }; // function-local static
 
         inline util::memory_reference<u32> zoom_map_effect_color_guard { 0x01032040 };
 
         // offset vectors written by create_device_resources and never read in PC
-        inline util::memory_reference<vector4> unk_010311d0 { 0x010311D0 };
-        inline util::memory_reference<vector4> unk_01030b80 { 0x01030B80 };
-        inline util::memory_reference<vector4> unk_01030100 { 0x01030100 };
-        inline util::memory_reference<vector4> unk_01030ec0 { 0x01030EC0 };
-        inline util::memory_reference<vector4> unk_01030a20 { 0x01030A20 };
-        inline util::memory_reference<vector4> unk_01031e40 { 0x01031E40 };
-        inline util::memory_reference<vector4> unk_01030930 { 0x01030930 };
-        inline util::memory_reference<vector4> unk_010300e0 { 0x010300E0 };
-        inline util::memory_reference<vector4> unk_01030eb0 { 0x01030EB0 };
-        inline util::memory_reference<vector4> unk_01030a60 { 0x01030A60 };
-        inline util::memory_reference<vector4> unk_01031f70 { 0x01031F70 };
-        inline util::memory_reference<vector4> unk_01031ac0 { 0x01031AC0 };
-        inline util::memory_reference<vector4> unk_01031e30 { 0x01031E30 };
-        inline util::memory_reference<vector4> unk_01030b00 { 0x01030B00 };
-        inline util::memory_reference<vector4> unk_01031f80 { 0x01031F80 };
-        inline util::memory_reference<vector4> unk_01031de0 { 0x01031DE0 };
-        inline util::memory_reference<vector4> unk_01030080 { 0x01030080 };
-        inline util::memory_reference<vector4> unk_01032010 { 0x01032010 };
-        inline util::memory_reference<vector4> unk_01031dc0 { 0x01031DC0 };
-        inline util::memory_reference<vector4> unk_01031d70 { 0x01031D70 };
-        inline util::memory_reference<vector4> unk_01031d50 { 0x01031D50 };
-        inline util::memory_reference<vector4> unk_01030b20 { 0x01030B20 };
-        inline util::memory_reference<vector4> unk_01032000 { 0x01032000 };
-        inline util::memory_reference<vector4> unk_01031d40 { 0x01031D40 };
+        inline util::memory_reference<math::vector4> unk_010311d0 { 0x010311D0 };
+        inline util::memory_reference<math::vector4> unk_01030b80 { 0x01030B80 };
+        inline util::memory_reference<math::vector4> unk_01030100 { 0x01030100 };
+        inline util::memory_reference<math::vector4> unk_01030ec0 { 0x01030EC0 };
+        inline util::memory_reference<math::vector4> unk_01030a20 { 0x01030A20 };
+        inline util::memory_reference<math::vector4> unk_01031e40 { 0x01031E40 };
+        inline util::memory_reference<math::vector4> unk_01030930 { 0x01030930 };
+        inline util::memory_reference<math::vector4> unk_010300e0 { 0x010300E0 };
+        inline util::memory_reference<math::vector4> unk_01030eb0 { 0x01030EB0 };
+        inline util::memory_reference<math::vector4> unk_01030a60 { 0x01030A60 };
+        inline util::memory_reference<math::vector4> unk_01031f70 { 0x01031F70 };
+        inline util::memory_reference<math::vector4> unk_01031ac0 { 0x01031AC0 };
+        inline util::memory_reference<math::vector4> unk_01031e30 { 0x01031E30 };
+        inline util::memory_reference<math::vector4> unk_01030b00 { 0x01030B00 };
+        inline util::memory_reference<math::vector4> unk_01031f80 { 0x01031F80 };
+        inline util::memory_reference<math::vector4> unk_01031de0 { 0x01031DE0 };
+        inline util::memory_reference<math::vector4> unk_01030080 { 0x01030080 };
+        inline util::memory_reference<math::vector4> unk_01032010 { 0x01032010 };
+        inline util::memory_reference<math::vector4> unk_01031dc0 { 0x01031DC0 };
+        inline util::memory_reference<math::vector4> unk_01031d70 { 0x01031D70 };
+        inline util::memory_reference<math::vector4> unk_01031d50 { 0x01031D50 };
+        inline util::memory_reference<math::vector4> unk_01030b20 { 0x01030B20 };
+        inline util::memory_reference<math::vector4> unk_01032000 { 0x01032000 };
+        inline util::memory_reference<math::vector4> unk_01031d40 { 0x01031D40 };
     } // references
 
     ASSERT_SIZEOF  (luminosity_parameters,          0x08);

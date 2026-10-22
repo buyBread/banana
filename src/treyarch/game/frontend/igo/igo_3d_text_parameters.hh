@@ -3,7 +3,7 @@
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
-#include "treyarch/shared/math/types/vector3.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -12,15 +12,15 @@ namespace treyarch {
 
     public:
         struct parameter_set {
-            mash::string unk_00;
-            vector3      unk_0c;
-            f32          unk_18;
-            f32          unk_1c;
-            f32          unk_20;
-            u32          unk_24[40];
-            mash::string unk_c4;
-            f32          unk_d0[12];
-            u32          unk_100;
+            mash::string        unk_00;
+            math::dir3::packed  unk_0c;
+            f32                 unk_18;
+            f32                 unk_1c;
+            f32                 unk_20;
+            u32                 unk_24[40];
+            mash::string        unk_c4;
+            math::mat43::packed unk_d0;
+            u32                 unk_100;
 
             void construct_mashed_class();
 

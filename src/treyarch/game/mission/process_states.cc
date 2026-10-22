@@ -28,8 +28,8 @@
 #include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/game/zombie_manager.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/math/references.hh"
-#include "treyarch/shared/math/types/matrix4x4.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/soap/online.hh"
 #include "util/memory_reference.hh"
@@ -366,7 +366,7 @@ void mission_manager::process_state_loading() {
         state  = mission_manager_state_running_mission;
     }
 
-    save_player_restart(hero->my_abs_po->get_position(), hero->my_abs_po->matrix.z_row());
+    save_player_restart(hero->my_abs_po->get_position(), hero->my_abs_po->get_z_facing());
 }
 
 // sub_97EF50
@@ -458,7 +458,7 @@ void mission_manager::process_state_unk_6() {
     if (!hero)
         state = mission_manager_state_start_unloading;
     else {
-        const vector3 &position = hero->my_abs_po->get_position();
+        const vector3d &position = hero->my_abs_po->get_position();
 
         f32 dx = (f32)((f64)position.x - (f64)hero_reference_position.x);
         f32 dy = (f32)((f64)position.y - (f64)hero_reference_position.y);
@@ -662,10 +662,10 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 
     retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)&player_restart_position, 0, 1);
 
-    const vector3 &up     = math::references::unk_00f4d3ac.get();
-    const vector3 &facing = player_restart_xz_facing;
+    const vector3d &up     = treyarch::references::unk_00f4d3ac.get();
+    const vector3d &facing = player_restart_xz_facing;
 
-    vector3 side;
+    vector3d side;
     side.x = (f32)((f64)facing.z * (f64)up.y - (f64)facing.y * (f64)up.z);
     side.y = (f32)((f64)up.z * (f64)facing.x - (f64)facing.z * (f64)up.x);
     side.z = (f32)((f64)facing.y * (f64)up.x - (f64)up.y * (f64)facing.x);
@@ -676,7 +676,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
     retail::sub_5FC820((u64*)&transform, (i32)&side, (i32)&up, (u32*)&facing, (u32*)&hero->my_abs_po->get_position());
     retail::sub_627180((i32)hero, (f32*)&transform);
 
-    vector3 position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
+    vector3d position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
     position.y = (f32)((f64)position.y + 2.0);
 
     camera* view = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read());
@@ -684,14 +684,14 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
     if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
         retail::sub_9C4880((u32*)view, 11);
 
-        const vector3 &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->matrix.z_row();
+        const vector3d &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();
 
-        vector3 behind;
+        vector3d behind;
         behind.x = (f32)((f64)position.x - (f64)(f32)((f64)z_axis.x * 2.0));
         behind.y = (f32)((f64)position.y - (f64)(f32)((f64)z_axis.y * 2.0));
         behind.z = (f32)((f64)position.z - (f64)(f32)((f64)z_axis.z * 2.0));
 
-        ((void (__thiscall*)(camera*, vector3))retail::sub_9C4980)(view, behind);
+        ((void (__thiscall*)(camera*, vector3d))retail::sub_9C4980)(view, behind);
         retail::sub_9C4970((u32*)view, 1);
     }
 
@@ -715,13 +715,13 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
     retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)&player_restart_position, 0, 1);
 
-    vector3 position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
+    vector3d position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
     position.y = (f32)((f64)position.y + 2.0);
 
-    const vector3 &up     = math::references::unk_00f4d3ac.get();
-    const vector3 &facing = player_restart_xz_facing;
+    const vector3d &up     = treyarch::references::unk_00f4d3ac.get();
+    const vector3d &facing = player_restart_xz_facing;
 
-    vector3 side;
+    vector3d side;
     side.x = (f32)((f64)facing.z * (f64)up.y - (f64)facing.y * (f64)up.z);
     side.y = (f32)((f64)up.z * (f64)facing.x - (f64)facing.z * (f64)up.x);
     side.z = (f32)((f64)facing.y * (f64)up.x - (f64)up.y * (f64)facing.x);
@@ -737,14 +737,14 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
     if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
         retail::sub_9C4880((u32*)view, 11);
 
-        const vector3 &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->matrix.z_row();
+        const vector3d &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();
 
-        vector3 behind;
+        vector3d behind;
         behind.x = (f32)((f64)position.x - (f64)(f32)((f64)z_axis.x * 2.0));
         behind.y = (f32)((f64)position.y - (f64)(f32)((f64)z_axis.y * 2.0));
         behind.z = (f32)((f64)position.z - (f64)(f32)((f64)z_axis.z * 2.0));
 
-        ((void (__thiscall*)(camera*, vector3))retail::sub_9C4980)(view, behind);
+        ((void (__thiscall*)(camera*, vector3d))retail::sub_9C4980)(view, behind);
         retail::sub_9C4970((u32*)view, 1);
         retail::sub_9C6500((i32*)view);
     }

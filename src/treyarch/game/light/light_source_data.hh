@@ -1,35 +1,34 @@
 #pragma once
 
-#include "treyarch/shared/math/types/vector3.hh"
-#include "treyarch/shared/math/types/vector4.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch {
     struct sky_data {
-        u8      reserved_000[0x40];
-        vector4 color_040;
-        vector4 direction_050;
-        vector4 unk_060;
-        vector4 direction_070;
-        vector4 unk_080;
-        u8      reserved_090[0x20];
-        vector4 unk_0b0;
-        u8      reserved_0c0[0x08];
-        f32     unk_0c8;
-        u8      reserved_0cc[0x0C];
-        void*   resource_0d8;
-        void*   resource_0dc;
-        vector4 color_0e0;
-        u8      reserved_0f0[0x20];
-        vector4 color_110;
+        u8       reserved_000[0x40];
+        vector4d color_040;
+        vector4d direction_050;
+        vector4d unk_060;
+        vector4d direction_070;
+        vector4d unk_080;
+        u8       reserved_090[0x20];
+        vector4d unk_0b0;
+        u8       reserved_0c0[0x08];
+        f32      unk_0c8;
+        u8       reserved_0cc[0x0C];
+        void*    resource_0d8;
+        void*    resource_0dc;
+        vector4d color_0e0;
+        u8       reserved_0f0[0x20];
+        vector4d color_110;
     };
 
     struct directional_light_data {
-        u32     flags;
-        u8      reserved_004[0x1C];
-        vector3 direction;
-        u8      reserved_02c[0xC4];
+        u32      flags;
+        u8       reserved_004[0x1C];
+        vector3d direction;
+        u8       reserved_02c[0xC4];
     };
 
     // the light-source scene parameter, as resolved for a position by 0x007D75C0
@@ -37,7 +36,7 @@ namespace treyarch {
         u8                      reserved_000[0x200];
         f32                     exposure;
         u8                      reserved_204[0xCC];
-        vector4                 color_2d0;
+        vector4d                color_2d0;
         f32                     depth_fog_start;
         f32                     depth_fog_end;
         f32                     unk_2e8;

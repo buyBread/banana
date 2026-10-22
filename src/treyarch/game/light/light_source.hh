@@ -1,7 +1,7 @@
 #pragma once
 
+#include "treyarch/shared/color.hh"
 #include "treyarch/shared/math/po.hh"
-#include "treyarch/shared/math/types/vector4.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -14,7 +14,7 @@ namespace treyarch {
 
     struct light_properties {
         light_flavor flavor;
-        vector4      diffuse_color;
+        color        diffuse_color;
         u8           reserved_014[0x1C];
         f32          inner_angle;
         f32          outer_angle;

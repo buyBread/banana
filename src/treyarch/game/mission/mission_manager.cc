@@ -233,11 +233,11 @@ bool mission_manager::get_mission_caption_index(u32, i32* index) {
 }
 
 // sub_97E330
-vector3 mission_manager::get_mission_key_position() const {
+vector3d mission_manager::get_mission_key_position() const {
     if (state == mission_manager_state_running_mission)
         return current_mission.key_position;
 
-    return vector3(0.0f, 0.0f, 0.0f);
+    return vector3d(0.0f, 0.0f, 0.0f);
 }
 
 // sub_97E370
