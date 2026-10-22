@@ -58,5 +58,11 @@ namespace treyarch {
         base_type is_one(i32 bit_position) const {
             return data[base_index_for_bit(bit_position)] & bit_mask_for_bit(bit_position);
         }
+
+        base_type is_one_bool(i32 bit_position) const {
+            base_type submask = data[base_index_for_bit(bit_position)];
+
+            return (submask >> (bit_position & (base_type_bits - 1))) & 1;
+        }
     };
 } // treyarch

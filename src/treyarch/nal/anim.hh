@@ -60,8 +60,9 @@ namespace treyarch { namespace nal {
         u32                  initial_bit_offset;
         u16*                 takeout_tracks;
         u16                  takeout_count;
-        u32                  present_mask[13];
-        u32                  constant_mask[13];
+
+        tl_fixed_bitvector<u32, 384> present_mask;
+        tl_fixed_bitvector<u32, 384> constant_mask;
 
         void link_transport_list();
 
