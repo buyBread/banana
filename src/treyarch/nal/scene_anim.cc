@@ -1,3 +1,4 @@
+#include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/scene_anim.hh"
 #include "treyarch/shared/memory/memory.hh"
@@ -22,5 +23,39 @@ void nal::scene_anim::link_transport_lists() {
                            name.get_text());
 
         value->transport_list = list;
+    }
+}
+
+// sub_9D1F80
+nal::scene_anim_instance* nal::scene_anim::create_instance() {
+    scene_anim_instance* instance = new scene_anim_instance;
+
+    instance->unk_08     = 0;
+    instance->unk_0c     = 0;
+    instance->scene_anim = this;
+    instance->instances  = nullptr;
+
+    for (anim* value = first_anim; value; value = value->next) {
+        anim_instance* first = instance->instances;
+
+        // only ever writes null over null
+        if (!value->transport_list)
+            value->transport_list = nullptr;
+
+        instance->instances       = new anim_instance(value, 0, nullptr);
+        instance->instances->next = first;
+    }
+
+    return instance;
+}
+
+// sub_9CFC30
+void nal::scene_anim_instance::destroy() {
+    for (anim_instance* value = instances; value;) {
+        anim_instance* next = value->next;
+
+        delete value;
+
+        value = next;
     }
 }

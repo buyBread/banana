@@ -1,8 +1,51 @@
 #include <cstring>
 
 #include "treyarch/nal/anim_instance.hh"
+#include "treyarch/nal/transport_list.hh"
+#include "treyarch/shared/math/vmath/matrix_diag.hh"
+#include "treyarch/shared/memory/memory.hh"
 
 using namespace treyarch;
+
+// sub_9D1480
+nal::anim_instance::anim_instance(nal::anim* animation, u32 instance_flags, nal::skeleton_map* rig_map) {
+    skeleton_map = rig_map;
+    flags        = instance_flags;
+    anim         = animation;
+    next         = nullptr;
+
+    u32 state_memory_size = (4 * (3 * animation->total_field_values_encoded + animation->transport_list->pose_layout->total_fields) + 0x253) & ~0xF;
+
+    decoder = (nal2_decoder_state*)memory::allocate(state_memory_size, 16, 0);
+    decoder->init(animation, state_memory_size);
+
+    last_trajectory_po             = math::identity_mat33();
+    last_trajectory_po_initialized = false;
+    force_looping                  = false;
+
+    auto end = (instance_observer*)&instance_observers;
+
+    for (auto observer = (instance_observer*)instance_observers.next; observer != end; observer = (instance_observer*)observer->next)
+        observer->on_create(this);
+}
+
+// sub_9CD240
+nal::anim_instance::~anim_instance() {
+    auto end = (instance_observer*)&instance_observers;
+
+    for (auto observer = (instance_observer*)instance_observers.next; observer != end; observer = (instance_observer*)observer->next)
+        observer->on_destroy(this);
+
+    if (!decoder)
+        return;
+
+    for (i32 i = 0; i < 3; i++)
+        memory::free(decoder->cached_pose_data[i]);
+
+    memory::free(decoder);
+
+    decoder = nullptr;
+}
 
 // sub_9CF1C0
 void nal::anim_instance::get_q_pose(u32 t, i32* q_pose) {
