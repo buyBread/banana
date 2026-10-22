@@ -20993,12 +20993,12 @@ namespace retail {
     inline auto const sub_9CD570 = (i32 (__cdecl*)(void*Except))0x009CD570;
     inline auto const sub_9CD590 = (i32 (__cdecl*)(void*Except))0x009CD590;
     inline auto const sub_9CD5B0 = (f32* (__stdcall*)(f32*, i32, u32, i32))0x009CD5B0;
-    inline auto const sub_9CD6A0 = (f32* (__stdcall*)(i32, u32*, i32, u32*, u32*, f32*, i32))0x009CD6A0;
+    inline auto const sub_9CD6A0 = (void (__stdcall*)(u32, u32*, f32, u32*, u32*, f32*, f32*))0x009CD6A0; // manual
     inline auto const sub_9CD780 = (void (__stdcall*)(i32, i32, i32, i32))0x009CD780;
-    inline auto const sub_9CD790 = (f32* (__stdcall*)(i32, u32*, i32, u32*, u32*, f32*, f32*))0x009CD790;
+    inline auto const sub_9CD790 = (void (__stdcall*)(u32, u32*, f32, u32*, u32*, f32*, f32*))0x009CD790; // manual
     inline auto const sub_9CDB30 = (u32 (__stdcall*)(u32*, u32*, u32, i32))0x009CDB30;
-    inline auto const sub_9CDBA0 = (u64* (__stdcall*)(i32, u32*, i32, i32, u32*, i32, f32*))0x009CDBA0;
-    inline auto const sub_9CDC10 = (f32* (__stdcall*)(i32, u32*, i32, u32*, u32*, f32*, i32))0x009CDC10;
+    inline auto const sub_9CDBA0 = (void (__stdcall*)(u32, u32*, f32, u32*, u32*, f32*, f32*))0x009CDBA0; // manual
+    inline auto const sub_9CDC10 = (void (__stdcall*)(u32, u32*, f32, u32*, u32*, f32*, f32*))0x009CDC10; // manual
     inline auto const sub_9CDE70 = (u32 (__stdcall*)(u32*, u32*, u32, i32))0x009CDE70;
     inline auto const sub_9CDEE0 = (u32* (__thiscall*)(u32*self))0x009CDEE0;
     inline auto const sub_9CE3E0 = (i32 (__thiscall*)(u16*self, u32))0x009CE3E0;
@@ -21020,7 +21020,7 @@ namespace retail {
     inline auto const sub_9CFF70 = (i32 (__stdcall*)(i32, u32*, u32*, u32*, i32))0x009CFF70;
     inline auto const sub_9D0060 = (u32* (__cdecl*)(i32, f32, u32*, i32))0x009D0060;
     inline auto const sub_9D0440 = (u32 (__cdecl*)(i32, u32*, u32*, i32))0x009D0440; // __usercall
-    inline auto const sub_9D05F0 = (u32* (__stdcall*)(i32, i32, f32, u32*, i32, i32, i32))0x009D05F0;
+    inline auto const sub_9D05F0 = (void (__stdcall*)(u32, u32*, f32, u32*, u32*, f32*, f32*))0x009D05F0; // manual
     inline auto const sub_9D0620 = (u32 (__stdcall*)(i32, u32*, u32*, i32, i32))0x009D0620;
     inline auto const sub_9D0640 = (i32 (__stdcall*)(i32, u32*, u32*, u32*, i32))0x009D0640;
     inline auto const sub_9D06E0 = (i32 (__stdcall*)(u32*, i32, i32, i32))0x009D06E0;

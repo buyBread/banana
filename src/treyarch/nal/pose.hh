@@ -1,11 +1,31 @@
 #pragma once
 
 #include "treyarch/shared/fixed_string.hh"
+#include "treyarch/shared/math/vmath/matrix_rot.hh"
 #include "treyarch/shared/tl_fixed_bitvector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace nal {
+    using po = math::quat_tran_mat43; // nalPO
+
+    enum e_pose_field : u32 {
+        pose_field_fk_position         = 0,
+        pose_field_fk_quaternion       = 1,
+        pose_field_fk_axis1_rotation   = 2,
+        pose_field_fk_error_correction = 3,
+        pose_field_fk_trajectory       = 4,
+        pose_field_floor_offset        = 5,
+        pose_field_camera_data         = 6,
+        pose_field_morph_sliders       = 7,
+        pose_field_bone_scale          = 8,
+        pose_field_omnilight_data      = 9,
+        pose_field_spotlight_data      = 10
+    };
+
+    // floats per field instance
+    inline const u16 values_per_field[11] = { 4, 4, 1, 4, 8, 1, 6, 1, 4, 4, 9 };
+
     struct pose_layout;
 
     // nalPose
@@ -20,6 +40,8 @@ namespace treyarch { namespace nal {
 
         void init(nal::pose_layout* layout, void* preallocated_memory);
         void copy(const pose &pose);
+
+        f32* get_field_data_ptr(u32 field_type, i32 n);
     };
 
     // nalPoseLayout, inside the transport list

@@ -42,3 +42,17 @@ void nal::pose::copy(const pose &pose) {
 
     present = pose.present;
 }
+
+// inlined @ sub_9CD5B0
+// inlined @ sub_9CDB30
+// inlined @ sub_9CDE70
+// inlined @ sub_9D06E0
+// inlined @ sub_9CFDB0
+// inlined @ sub_9CFF00
+// inlined @ sub_9CFF70
+// inlined @ sub_9D0640
+// inlined @ sub_9D0780
+// inlined @ sub_9D0440
+f32* nal::pose::get_field_data_ptr(u32 field_type, i32 n) {
+    return (f32*)(pose_data + pose_layout->field_offsets[field_type]) + values_per_field[field_type] * n;
+}

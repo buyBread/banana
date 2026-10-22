@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/nal/pose.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "treyarch/shared/four_cc.hh"
 #include "util/macros/sanity_assert.hh"
@@ -20,6 +21,15 @@ namespace treyarch { namespace nal {
     struct transport_data {
         u32             id;
         transport_data* next;
+    };
+
+    // transport id 0
+    struct transport_data_fk : transport_data {
+        u32     ecc_count;
+        u32*    ecc_bones;  // bone index per FK_ERROR_CORRECTION instance
+        nal::po trajectory_po_at_anim_end;
+        u32     scale_count;
+        u32*    scale_bones;  // bone index per BONE_SCALE instance
     };
 
     struct rescale {
@@ -62,6 +72,12 @@ namespace treyarch { namespace nal {
     ASSERT_SIZEOF  (transport_data,       0x08);
     ASSERT_OFFSETOF(transport_data, id,   0x00);
     ASSERT_OFFSETOF(transport_data, next, 0x04);
+
+    ASSERT_OFFSETOF(transport_data_fk, ecc_count,                 0x08);
+    ASSERT_OFFSETOF(transport_data_fk, ecc_bones,                 0x0C);
+    ASSERT_OFFSETOF(transport_data_fk, trajectory_po_at_anim_end, 0x10);
+    ASSERT_OFFSETOF(transport_data_fk, scale_count,               0x30);
+    ASSERT_OFFSETOF(transport_data_fk, scale_bones,               0x34);
 
     ASSERT_SIZEOF  (rescale,         0x08);
     ASSERT_OFFSETOF(rescale, scale,  0x00);
