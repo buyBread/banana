@@ -4,6 +4,7 @@
 #include "retail.hh"
 #include "treyarch/nal/field_interfaces.hh"
 #include "treyarch/shared/math/vmath/quaternion.hh"
+#include "treyarch/shared/math/vmath/trig.hh"
 #include "treyarch/shared/math/vmath/vector.hh"
 
 using namespace treyarch;
@@ -31,7 +32,18 @@ void nal::field_position_interface::blend(u32        field_type,
                                           f32*       weights_a,
                                           f32*       weights_b) {
 
-    retail::sub_9CDC10(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)alpha;
+
+    u32  values  = values_per_field[field_type];
+    f32* value_a = pose_a->get_field_data_ptr(field_type, 0);
+    u32  count   = pose_a->pose_layout->field_repeat_counts[field_type];
+    f32* value_b = pose_b->get_field_data_ptr(field_type, 0);
+    f32* value   = result->get_field_data_ptr(field_type, 0);
+
+    for (u32 i = 0; i < count; i++, value += values, value_a += values, value_b += values) {
+        for (u32 k = 0; k < values; k++)
+            value[k] = (f32)((f64)value_b[k] * weights_b[i] + (f64)value_a[k] * weights_a[i]);
+    }
 }
 
 // sub_9D0780
@@ -95,7 +107,20 @@ void nal::field_quaternion_interface::blend(u32        field_type,
                                             f32*       weights_a,
                                             f32*       weights_b) {
 
-    retail::sub_9CD6A0(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)alpha;
+
+    u32  values  = values_per_field[field_type];
+    f32* value   = result->get_field_data_ptr(field_type, 0);
+    f32* end     = value + values * pose_a->pose_layout->field_repeat_counts[field_type];
+    f32* value_a = pose_a->get_field_data_ptr(field_type, 0);
+    f32* value_b = pose_b->get_field_data_ptr(field_type, 0);
+
+    for (u32 i = 0; value < end; i++, value += values, value_a += values, value_b += values) {
+        math::quaternion blended;
+
+        // quaternion blend
+        *(math::quaternion*)value = *(math::quaternion*)retail::sub_48D240((f32*)&blended, weights_a[i], weights_b[i], value_a, value_b);
+    }
 }
 
 // sub_9D0640
@@ -132,7 +157,23 @@ void nal::field_axis1_angle_interface::blend(u32        field_type,
                                              f32*       weights_a,
                                              f32*       weights_b) {
 
-    retail::sub_9CD790(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)alpha;
+
+    f32* value   = result->get_field_data_ptr(field_type, 0);
+    f32* value_a = pose_a->get_field_data_ptr(field_type, 0);
+    f32* value_b = pose_b->get_field_data_ptr(field_type, 0);
+    f32* end     = value + values_per_field[field_type] * pose_a->pose_layout->field_repeat_counts[field_type];
+
+    // the angle that's more than pi below the other is lifted by 2 pi first
+    for (; value < end; value++, value_a++, value_b++, weights_a++, weights_b++) {
+        const f32 a = *value_a;
+        const f32 b = *value_b;
+
+        const f32 lift_b = (f64)a - b > math::math_pi ? 1.0f : 0.0f;
+        const f32 lift_a = (f64)b - a > math::math_pi ? 1.0f : 0.0f;
+
+        *value = (f32)(((f64)lift_b * 2.0 * math::math_pi + b) * *weights_b + ((f64)lift_a * 2.0 * math::math_pi + a) * *weights_a);
+    }
 }
 
 // sub_9CFF70
@@ -186,7 +227,10 @@ void nal::field_fk_correction_interface::blend(u32        field_type,
                                                f32*       weights_a,
                                                f32*       weights_b) {
 
-    retail::sub_9D05F0(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)weights_a;
+    (void)weights_b;
+
+    blend_sparse(field_type, result, alpha, pose_a, pose_b);
 }
 
 // sub_9D0620
@@ -213,7 +257,15 @@ void nal::field_fk_trajectory_interface::blend(u32        field_type,
                                                f32*       weights_a,
                                                f32*       weights_b) {
 
-    retail::sub_9CDBA0(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)alpha;
+    (void)pose_a;
+    (void)weights_a;
+
+    auto value_b = (po*)pose_b->get_field_data_ptr(field_type, 0);
+    auto value   = (po*)result->get_field_data_ptr(field_type, 0);
+
+    if (*weights_b > 0.0001f)
+        *value = *value_b;
 }
 
 // sub_9CFF00
@@ -242,7 +294,18 @@ void nal::field_default_interface::blend(u32        field_type,
                                          f32*       weights_a,
                                          f32*       weights_b) {
 
-    retail::sub_9CDC10(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)alpha;
+
+    u32  values  = values_per_field[field_type];
+    f32* value_a = pose_a->get_field_data_ptr(field_type, 0);
+    u32  count   = pose_a->pose_layout->field_repeat_counts[field_type];
+    f32* value_b = pose_b->get_field_data_ptr(field_type, 0);
+    f32* value   = result->get_field_data_ptr(field_type, 0);
+
+    for (u32 i = 0; i < count; i++, value += values, value_a += values, value_b += values) {
+        for (u32 k = 0; k < values; k++)
+            value[k] = (f32)((f64)value_b[k] * weights_b[i] + (f64)value_a[k] * weights_a[i]);
+    }
 }
 
 // sub_9CFDB0
@@ -301,7 +364,10 @@ void nal::field_scale_interface::blend(u32        field_type,
                                        f32*       weights_a,
                                        f32*       weights_b) {
 
-    retail::sub_9D05F0(field_type, (u32*)result, alpha, (u32*)pose_a, (u32*)pose_b, weights_a, weights_b);
+    (void)weights_a;
+    (void)weights_b;
+
+    blend_sparse(field_type, result, alpha, pose_a, pose_b);
 }
 
 // sub_9D0620
@@ -395,4 +461,83 @@ void nal::remap_sparse(u32        field_type,
 
         count++;
     }
+}
+
+// sub_9D0060
+void nal::blend_sparse(u32        field_type,
+                       nal::pose* result,
+                       f32        alpha,
+                       nal::pose* pose_a,
+                       nal::pose* pose_b) {
+
+    constexpr u32 max_idx_fields = 1024;
+
+    // pose a's layout places the field in all three poses
+    u16  count  = pose_a->pose_layout->field_repeat_counts[field_type];
+    u16  bit    = pose_a->pose_layout->field_bit_offsets[field_type];
+    u16  offset = pose_a->pose_layout->field_offsets[field_type];
+    auto data_a = (math::vector4*)(pose_a->pose_data + offset);
+    auto data_b = (math::vector4*)(pose_b->pose_data + offset);
+    auto data   = (math::vector4*)(result->pose_data + offset);
+
+    u32 bones_a[max_idx_fields];
+    u32 bones_b[max_idx_fields];
+    u32 bones[max_idx_fields];
+
+    // each list is the present prefix's bones, ended by -1
+    u32* end_a = bones_a;
+
+    for (u32 i = 0; i < count && pose_a->present.is_one(bit + i); i++)
+        *end_a++ = *(u32*)&data_a[i][3];
+
+    u32* end_b = bones_b;
+
+    for (u32 i = 0; i < count && pose_b->present.is_one(bit + i); i++)
+        *end_b++ = *(u32*)&data_b[i][3];
+
+    *end_a = 0xFFFFFFFF;
+    *end_b = 0xFFFFFFFF;
+
+    u32* bone_a  = bones_a;
+    u32* bone_b  = bones_b;
+    u32* bone    = bones;
+    i32  index_a = 0;
+    i32  index_b = 0;
+    i32  index   = 0;
+
+    // merges the two sorted lists, blending the bones they share
+    while ((bone_a != end_a || bone_b != end_b) && index < count) {
+        result->present.set_one(bit + index);
+
+        if (*bone_a == *bone_b) {
+            const f32 one_minus_alpha = 1.0f - alpha;
+
+            *bone       = *bone_a;
+            data[index] = data_a[index_a] * one_minus_alpha + data_b[index_b] * alpha;
+
+            index_a++;
+            bone_a++;
+            index_b++;
+            bone_b++;
+        } else if (*bone_a < *bone_b) {
+            *bone       = *bone_a;
+            data[index] = data_a[index_a];
+
+            index_a++;
+            bone_a++;
+        } else {
+            *bone       = *bone_b;
+            data[index] = data_b[index_b];
+
+            index_b++;
+            bone_b++;
+        }
+
+        bone++;
+        index++;
+    }
+
+    // w holds the bone index
+    for (i32 i = 0; i < index; i++)
+        *(u32*)&data[i][3] = bones[i];
 }

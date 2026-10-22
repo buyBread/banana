@@ -2052,7 +2052,7 @@ namespace retail {
     inline auto const sub_48D120 = (i32 (__thiscall*)(volatile i64*self))0x0048D120;
     inline auto const sub_48D190 = (f64 (__cdecl*)(f32))0x0048D190;
     inline auto const sub_48D1D0 = (f32* (__thiscall*)(f32*self, f32*))0x0048D1D0;
-    inline auto const sub_48D240 = (f32* (__cdecl*)(f32*, i32, f32, f32*, f32*))0x0048D240;
+    inline auto const sub_48D240 = (f32* (__cdecl*)(f32*, f32, f32, f32*, f32*))0x0048D240; // manual
     inline auto const sub_48D800 = (u32* (__thiscall*)(u32*self, f32*))0x0048D800;
     inline auto const sub_48DB30 = (u64* (__cdecl*)(u64*, i32))0x0048DB30;
     inline auto const sub_48DEE0 = (f64 (__cdecl*)(f32))0x0048DEE0;

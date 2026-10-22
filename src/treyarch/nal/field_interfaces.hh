@@ -191,6 +191,12 @@ namespace treyarch { namespace nal {
                       nal::pose* source,
                       i32*       bone_map);
 
+    void blend_sparse(u32        field_type,
+                      nal::pose* result,
+                      f32        alpha,
+                      nal::pose* pose_a,
+                      nal::pose* pose_b);
+
     // one object per pose field, like retail's
     inline constinit field_position_interface      fk_position_interface;
     inline constinit field_quaternion_interface    fk_quaternion_interface;
