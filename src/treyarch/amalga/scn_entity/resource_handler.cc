@@ -59,10 +59,10 @@ i32 amalga::scene_entity_container_resource_handler::handle_resource(e_behavior 
             // scene_entity_container::unmash_entity
             entity* ent = (entity*)retail::sub_639660((u32*)container, (i32)pack_slot, (i32)mash_info, entity_index);
 
-            u32 flags = ent->unk_018;
+            u32 flags = ent->ext_flags;
 
             ent->unk_03a = 0;
-            ent->unk_018 = flags; // stored back unchanged
+            ent->ext_flags = flags; // stored back unchanged
 
             retail::sub_6123B0((u32*)ent, (i32)(flags & 0xF), (i32)0xCBADF00D);
 

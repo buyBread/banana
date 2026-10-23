@@ -547,7 +547,7 @@ void mission_manager::process_state_start_unloading() {
     }
 
     for (; saved_script_hero_invulnerable_count > 0; --saved_script_hero_invulnerable_count)
-        *(u32*)((u8*)hero + 0x18) &= ~0x4000;
+        hero->ext_flags &= ~0x4000;
 
     saved_script_hero_frozen_count       = 0;
     saved_script_hero_ai_disable_count   = 0;
@@ -703,7 +703,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 void mission_manager::process_state_maloring_player_wait_for_district() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (!(hero->unk_014 & 1) && hero->get_primary_region() && retail::sub_77BF80())
+    if (!(hero->flags & 1) && hero->get_primary_region() && retail::sub_77BF80())
         ++malor_wait_frames;
     else
         malor_wait_frames = 0;

@@ -27,7 +27,7 @@ u32 arch_base::add_callback(      string_hash                 event_type_id,
                                   bool                        one_shot) {
 
     if (event_type_id == references::collide_entity.read() && is_an_entity_base())
-        ((entity*)this)->unk_018 |= 0x10000000;
+        ((entity*)this)->ext_flags |= 0x10000000;
 
     return event_manager::add_callback(event_type_id, my_handle, instance, function, parameters, one_shot);
 }

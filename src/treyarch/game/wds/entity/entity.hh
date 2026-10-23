@@ -18,10 +18,11 @@ namespace treyarch {
     class entity : public arch_base {
 
     public:
-        u8                                  reserved_008[0x08];
+        u8                                  reserved_008[0x04];
+        po*                                 my_rel_po;
         po*                                 my_abs_po;
-        u32                                 unk_014;
-        u32                                 unk_018;
+        u32                                 flags;
+        u32                                 ext_flags;
         interface_storage*                  my_ifc_storage;
         u8                                  reserved_020[0x1A];
         u8                                  unk_03a; // cleared as scene entities are loaded
@@ -64,9 +65,10 @@ namespace treyarch {
         region* get_primary_region();
     };
 
+    ASSERT_OFFSETOF(entity, my_rel_po,      0x0C);
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
-    ASSERT_OFFSETOF(entity, unk_014,        0x14);
-    ASSERT_OFFSETOF(entity, unk_018,        0x18);
+    ASSERT_OFFSETOF(entity, flags,          0x14);
+    ASSERT_OFFSETOF(entity, ext_flags,      0x18);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
     ASSERT_OFFSETOF(entity, unk_03a,        0x3A);
     ASSERT_OFFSETOF(entity, regions,        0x50);
