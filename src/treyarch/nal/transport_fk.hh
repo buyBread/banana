@@ -2,12 +2,17 @@
 
 #include "treyarch/nal/transport_list.hh"
 #include "treyarch/shared/fixed_string.hh"
+#include "treyarch/shared/math/vmath/matrix.hh"
 #include "treyarch/shared/math/vmath/quaternion.hh"
 #include "treyarch/shared/math/vmath/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace nal {
+    struct pose;
+
+    constexpr u32 max_bones = 512;
+
     // nalBone
     struct bone {
         math::vector4    axis1;  // what FK_AXIS1_ROTATION turns about
@@ -41,6 +46,7 @@ namespace treyarch { namespace nal {
         i16*  axis1_instances;                 // per bone, -1 for none
 
         bool get_bone_index(fixed_string* name, u32* index);
+        void get_bone_matrices(nal::pose* pose, math::mat43* matrices);
     };
 
     ASSERT_SIZEOF  (bone,                   0x40);

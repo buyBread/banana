@@ -78,6 +78,7 @@ namespace treyarch { namespace math {
     inline const float4::constant axis_angle_to_quaternion_phase = { math_pi, math_pi, math_pi, 0.0f };
     inline const float4::constant axis_angle_to_quaternion_freq  = { 0.07957747f, 0.07957747f, 0.07957747f, 0.07957747f };
 
+    // sub_9CCB20
     inline unit_quaternion axis_angle_to_quaternion(const unit_dir3 &dir, const float1 &angle) {
         const float4 &ns_ns_ns_c = cos(angle + axis_angle_to_quaternion_phase, axis_angle_to_quaternion_freq);
 
