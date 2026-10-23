@@ -11,6 +11,7 @@
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/tl_fixed_string.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -32,8 +33,8 @@ namespace treyarch {
         scene_anim_handle_t handle;
         nal::anim_instance* instance;
         mash::string        name;
-        u32                 status;
-        bool                was_hidden;
+        u32                 unk_24;
+        u32                 status;   // bit 0: the entity was hidden when it was bound
     };
 
     // a light spawned for a participant whose anim carries light data
@@ -61,6 +62,10 @@ namespace treyarch {
 
         ~scene_anim();
 
+        void find_actor_and_create_controller_for_subanim(      i32                 index,
+                                                          const tl_fixed_string    &name,
+                                                                nal::anim_instance* instance);
+
         void finish();
 
         void frame_advance(f32 delta_t);
@@ -79,8 +84,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(scene_anims_info, handle,        0x10);
     ASSERT_OFFSETOF(scene_anims_info, instance,      0x14);
     ASSERT_OFFSETOF(scene_anims_info, name,          0x18);
-    ASSERT_OFFSETOF(scene_anims_info, status,        0x24);
-    ASSERT_OFFSETOF(scene_anims_info, was_hidden,    0x28);
+    ASSERT_OFFSETOF(scene_anims_info, unk_24,        0x24);
+    ASSERT_OFFSETOF(scene_anims_info, status,        0x28);
 
     ASSERT_SIZEOF(scene_anim_light, 0x0C);
 

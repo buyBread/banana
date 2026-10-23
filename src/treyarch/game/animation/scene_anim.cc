@@ -1,9 +1,13 @@
+#include <cmath>
+
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/animation/scene_anim.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/input/input_mgr.hh"
+#include "treyarch/game/light/light_source.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
@@ -44,7 +48,7 @@ scene_anim::~scene_anim() {
             if (ent->has_ifc(entity_ifc_physical)) {
                 ent->physical_ifc()->cancel_all_velocity(references::unk_00fd4370.get());
 
-                ((void (__thiscall*)(entity*, bool, bool))ent->vtable[69])(ent, info.was_hidden, true); // slot 69
+                ((void (__thiscall*)(entity*, bool, bool))ent->vtable[69])(ent, info.status & 1, true); // slot 69
 
                 retail::sub_6299F0((u32*)ent);
             }
@@ -88,6 +92,164 @@ scene_anim::~scene_anim() {
     }
 
     scene_anim_inst = nullptr;
+}
+
+// sub_5F74C0
+void scene_anim::find_actor_and_create_controller_for_subanim(      i32                 index,
+                                                              const tl_fixed_string    &name,
+                                                                    nal::anim_instance* instance) {
+
+    nal::transport_list* skeleton = instance->anim->transport_list;
+
+    auto fk = (nal::transport_fk*)skeleton->get_transport(0);
+
+    nal::pose pose(skeleton->pose_layout, nullptr);
+
+    instance->get_pose(0.0f, 0.0f, &pose, fk);
+
+    if (pose.is_field_present(nal::pose_field_omnilight_data, 0)) {
+        f32* data  = pose.get_field_data_ptr(nal::pose_field_omnilight_data, 0);
+        f64  scale = (f64)(1.0f / 255.0f);
+
+        light_properties properties(light_flavor_point,
+                                    color { (f32)(data[0] * scale), (f32)(data[1] * scale), (f32)(data[2] * scale), 1.0f },
+                                    color { 1.0f, 1.0f, 1.0f, 1.0f },
+                                    0.0f,
+                                    data[3]);
+
+        mash::string light_name(name.text);
+
+        light_name = "SCENE_ANIM_" + light_name;
+
+        string_hash id;
+        id.initialize(mash::ALLOCATED, light_name.c_str());
+
+        light_source* light = new light_source(properties, nullptr, id);
+
+        lights.push_back({ (entity*)light, instance, index });
+    } else if (pose.is_field_present(nal::pose_field_spotlight_data, 0)) {
+        f32* data  = pose.get_field_data_ptr(nal::pose_field_spotlight_data, 0);
+        f64  scale = (f64)(1.0f / 255.0f);
+
+        light_properties properties(light_flavor_spot,
+                                    color { (f32)(data[0] * scale), (f32)(data[1] * scale), (f32)(data[2] * scale), 1.0f },
+                                    color { 1.0f, 1.0f, 1.0f, 1.0f },
+                                    0.0f,
+                                    data[3]);
+
+        properties.inner_angle = data[7];
+        properties.outer_angle = data[8];
+
+        mash::string light_name(name.text);
+
+        light_name = "SCENE_ANIM_" + light_name;
+
+        string_hash id;
+        id.initialize(mash::ALLOCATED, light_name.c_str());
+
+        light_source* light = new light_source(properties, nullptr, id);
+
+        po       light_po  = references::po_identity_matrix.get();
+        vector4d direction(data[4], data[5], data[6], 0.0f);
+
+        retail::sub_44DE20((f32*)&light_po, (f32*)&direction);
+        retail::sub_626BE0((i32)light, (u64*)&light_po); // entity_base::set_rel_po
+
+        lights.push_back({ (entity*)light, instance, index });
+    } else {
+        actor* ent;
+
+        if (name == tl_fixed_string("CAMERA")) {
+            ent = references::g_world_ptr.read()->camera_mgr.marky_camera;
+
+            app::inst()->get_game()->enable_marky_cam(true, true, -1000.0f, 0.0f);
+
+            ent->flags |= 0x400000;
+        } else {
+            string_hash id;
+            id.initialize(mash::ALLOCATED, name.text);
+
+            ent = (actor*)retail::sub_7DF6E0((u32*)&id);
+
+            if (!ent || !ent->is_an_actor())
+                return;
+        }
+
+        if (!ent)
+            return;
+
+        instance->skeleton_map = ent->skeleton_map;
+
+        bool was_hidden = (ent->flags & 0x4000) != 0;
+
+        if (ent->get_ai_core() && !retail::sub_601C50((u32*)ent)) {
+            retail::sub_4C7A40((i32)ent->get_ai_core());
+            retail::sub_4DF470((i32*)ent->get_ai_core(), 0); // ai_core::push_ai_disable
+        }
+
+        if (ent->has_ifc(entity_ifc_physical)) {
+            ent->physical_ifc()->cancel_all_velocity(references::unk_00fd4370.get());
+
+            ((void (__thiscall*)(entity*, bool, bool))ent->vtable[69])(ent, false, true); // slot 69
+        }
+
+        if (ent->has_ifc(entity_ifc_standing))
+            retail::sub_659160((i32)ent->my_ifc_storage->get_ifc(entity_ifc_standing), 0);
+
+        ((void (__thiscall*)(entity*))ent->vtable[157])(ent); // slot 157
+
+        scene_anims_info info;
+
+        info.status = was_hidden;
+
+        bool driven = true;
+
+        if (retail::sub_8054F0(references::cut_scene_player.read())) {
+            driven = false;
+
+            ent->ext_flags &= ~0x40000;
+        } else
+            ent->ext_flags |= 0x40000;
+
+        input_mgr::inst()->unk_80c = driven;
+
+        // an entry whose entity was released is reused
+        scene_anims_info* slot = my_anim_info_list.begin();
+
+        while (slot != my_anim_info_list.end() && !slot->ent.null())
+            ++slot;
+
+        info.ent = ent->my_handle;
+
+        // inlined normalize; a zero vector falls back to a constant
+        const vector3d &up = ent->my_abs_po->get_y_facing();
+
+        f32 length2 = (f32)((f64)up.x * up.x + (f64)up.y * up.y + (f64)up.z * up.z);
+
+        vector4d unit_up;
+
+        if (length2 > 0.0f) {
+            f32 inverse = (f32)(1.0 / (f64)(f32)std::sqrt((f64)length2));
+
+            unit_up = vector4d((f32)((f64)inverse * up.x),
+                               (f32)((f64)inverse * up.y),
+                               (f32)((f64)inverse * up.z),
+                               (f32)((f64)inverse * 0.0));
+        } else
+            unit_up = references::unk_00fd4340.get();
+
+        info.entity_up_vec = vector3d(unit_up.x, unit_up.y, unit_up.z);
+        info.handle        = the_handle;
+        info.name          = name.text;
+        info.instance      = instance;
+
+        ((void (__thiscall*)(entity*, nal::scene_anim_instance*, i32))ent->vtable[140])(ent, scene_anim_inst, index); // bind_to_scene_anim
+
+        if (slot == my_anim_info_list.end())
+            my_anim_info_list.push_back(info);
+        else
+            *slot = info;
+    }
 }
 
 // sub_5E88B0

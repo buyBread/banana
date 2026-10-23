@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/shared/math/algebra.hh"
+#include "treyarch/shared/math/po.hh"
 #include "util/memory_reference.hh"
 
 namespace treyarch { namespace references {
@@ -21,8 +22,14 @@ namespace treyarch { namespace references {
     // (0, 0, 0); read by animation and scene anim code
     inline util::memory_reference<vector3d> unk_00fd4370 { 0x00FD4370 };
 
+    // (0, 0, 0, 0); a zero up vector's normalized stand-in when a scene anim binds an entity
+    inline util::memory_reference<vector4d> unk_00fd4340 { 0x00FD4340 };
+
     // one translation unit's copy of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
+
+    // one translation unit's copy of the SM3 .ii's po_identity_matrix, built by po's constructor (sub_4015B0) at startup
+    inline util::memory_reference<po> po_identity_matrix { 0x00FF99A0 };
 }} // treyarch::references
 
 namespace treyarch { namespace math { namespace references {
