@@ -140,6 +140,8 @@ namespace treyarch { namespace dinkumware {
 
         // sub_41A3A0
         // sub_444540
+        // sub_5F6D70
+        // sub_5F7130
         // sub_685A70
         // sub_983C70
         void push_back(const T &value) {
