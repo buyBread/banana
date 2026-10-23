@@ -5,6 +5,7 @@
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/nal2_decoder_state.hh"
 #include "treyarch/nal/pose.hh"
+#include "treyarch/nal/transport_fk.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -15,6 +16,10 @@ namespace treyarch { namespace nal {
 
     // the most encoded values a q-pose holds
     constexpr u32 max_pose_tracks = 1024;
+
+    enum e_instance_flags : u32 {
+        instance_flag_mirror = 0x01
+    };
 
     struct instance_observer_link {
         instance_observer_link* next;
@@ -29,6 +34,10 @@ namespace treyarch { namespace nal {
 
     // a ring that nothing ever joins
     inline instance_observer_link instance_observers = { &instance_observers, &instance_observers };
+
+    // counted by get_pose at a time, never read
+    inline u32 single_frame_poses;
+    inline u32 blended_poses;
 
 #pragma pack(push, 1)
     // nalAnimInstance
@@ -47,6 +56,7 @@ namespace treyarch { namespace nal {
         ~anim_instance();
 
         void get_pose(i32 frame, nal::pose* pose);
+        void get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk);
         void get_q_pose(u32 t, i32* q_pose);
         void unshuffle_q_pose(i32* q_pose);
         void remap_pose(nal::pose* source, nal::pose* target);
@@ -60,6 +70,8 @@ namespace treyarch { namespace nal {
         }
     };
 #pragma pack(pop)
+
+    void mirror_pose(nal::anim_instance* instance, nal::pose* pose);
 
     ASSERT_SIZEOF  (anim_instance,                                 0x40);
     ASSERT_OFFSETOF(anim_instance, last_trajectory_po,             0x00);

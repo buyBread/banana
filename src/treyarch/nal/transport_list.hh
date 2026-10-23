@@ -26,6 +26,17 @@ namespace treyarch { namespace nal {
         u32               revision;
         u8                pad_18[8];
 
+        // inlined @ sub_9D1860
+        // inlined @ sub_9CECB0
+        bool has_transport(u32 id) {
+            for (nal::transport* value = transports; value; value = value->next) {
+                if (value->id == id)
+                    return true;
+            }
+
+            return false;
+        }
+
         nal::transport* get_transport(u32 id);
     };
 

@@ -9,6 +9,12 @@
 namespace treyarch { namespace nal {
     using po = math::quat_tran_mat43; // nalPO
 
+    // unlike identity_mat33(), its translation w is 0
+    inline const po::constant identity_po = { { { 0.0f, 0.0f, 0.0f, 1.0f } }, { 0.0f, 0.0f, 0.0f, 0.0f } };
+
+    po po_multiply(const po &a, const po &b);
+    po po_inverse(const po &value);
+
     enum e_pose_field : u32 {
         pose_field_fk_position         = 0,
         pose_field_fk_quaternion       = 1,

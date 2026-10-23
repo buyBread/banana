@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "treyarch/nal/anim_instance.hh"
+#include "treyarch/nal/blend.hh"
 #include "treyarch/nal/field_interfaces.hh"
 #include "treyarch/nal/skeleton_map.hh"
 #include "treyarch/nal/transport_list.hh"
@@ -179,6 +180,125 @@ void nal::anim_instance::get_pose(i32 frame, nal::pose* pose) {
         remap_pose(target, pose);
 }
 
+// sub_9D1860
+void nal::anim_instance::get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk) {
+    nal::pose_layout* anim_layout = anim->transport_list->pose_layout;
+    nal::pose_layout* pose_layout = pose->pose_layout;
+    bool              looping     = force_looping || (anim->flags & anim_flag_looping);
+
+    f32 frame;
+    i32 frame_0;
+    i32 frame_1;
+    f32 fraction;
+    i32 wraps;
+
+    time_to_frames(anim, t_prev, t, &frame, &frame_0, &frame_1, &fraction, &wraps, looping);
+
+    u8 stack_memory_a[0x2000];
+    u8 stack_memory_b[0x2000];
+
+    nal::pose pose_a(pose_layout, tl_align(stack_memory_a, 16));
+    nal::pose pose_b(pose_layout, tl_align(stack_memory_b, 16));
+
+    bool first_only  = fraction < 0.01f;
+    bool second_only = fraction > 0.99f;
+
+    if (first_only)
+        get_pose(frame_0, pose);
+    else if (second_only)
+        get_pose(frame_1, pose);
+    else {
+        get_pose(frame_0, &pose_a);
+        get_pose(frame_1, &pose_b);
+    }
+
+    nal::transport_list* transports = anim->transport_list;
+
+    auto skeleton_fk = (nal::transport_fk*)(transports->has_transport(0) ? transports->get_transport(0) : nullptr);
+    auto fk_data     = (nal::transport_data_fk*)(anim->has_transport_data(0) ? anim->get_transport_data(0) : nullptr);
+
+    u32 position_instance   = (u32)-1;
+    u32 quaternion_instance = (u32)-1;
+    i32 trajectory_bone     = -1;
+
+    // the anim has to carry the skeleton's trajectory instances
+    if (skeleton_fk && fk) {
+        trajectory_bone     = fk->trajectory_bone;
+        quaternion_instance = fk->trajectory_quaternion_instance;
+        position_instance   = fk->trajectory_position_instance;
+
+        if (!anim->present_mask.is_one(skeleton_fk->trajectory_position_instance + anim_layout->field_bit_offsets[pose_field_fk_position]) ||
+            !anim->present_mask.is_one(skeleton_fk->trajectory_quaternion_instance + anim_layout->field_bit_offsets[pose_field_fk_quaternion]))
+
+            trajectory_bone = -1;
+    }
+
+    // across the loop seam the later frame's trajectory continues from the anim's end
+    if (frame_1 < frame_0) {
+        nal::pose* later = second_only ? pose : &pose_b;
+
+        if (trajectory_bone != -1) {
+            auto rotation = (math::quaternion*)later->get_field_data_ptr(pose_field_fk_quaternion, quaternion_instance);
+            auto position = (math::vector4*)later->get_field_data_ptr(pose_field_fk_position, position_instance);
+
+            po sample;
+
+            *(math::quaternion*)&sample.get_m33().get_quaternion() = *rotation;
+            *(math::vector4*)&sample.get_w()                       = *position;
+
+            po continued = po_multiply(fk_data->trajectory_po_at_anim_end, sample);
+
+            const math::vector4 &translation = *(const math::vector4*)&continued.get_w();
+
+            *rotation = *(const math::quaternion*)&continued.get_m33().get_quaternion();
+            *position = math::vector4(translation[0], translation[1], translation[2], 1.0f);
+        }
+    }
+
+    if (first_only || second_only)
+        single_frame_poses++;
+    else {
+        blended_poses++;
+
+        nal::blend(pose, fraction, &pose_a, &pose_b);
+    }
+
+    if (trajectory_bone != -1) {
+        auto rotation   = (math::quaternion*)pose->get_field_data_ptr(pose_field_fk_quaternion, quaternion_instance);
+        auto position   = (math::vector4*)pose->get_field_data_ptr(pose_field_fk_position, position_instance);
+        auto trajectory = (po*)pose->get_field_data_ptr(pose_field_fk_trajectory, 0);
+
+        pose->present.set_one(pose_layout->field_bit_offsets[pose_field_fk_trajectory]);
+
+        po current;
+
+        *(math::quaternion*)&current.get_m33().get_quaternion() = *rotation;
+        *(math::vector4*)&current.get_w()                       = *position;
+
+        // the field holds the change since the last sample
+        if (!last_trajectory_po_initialized) {
+            if (t_prev <= 0.0001f)
+                *trajectory = current;
+            else
+                *trajectory = *(const po*)&identity_po;
+        } else if (wraps <= 0)
+            *trajectory = po_multiply(current, po_inverse(last_trajectory_po));
+        else {
+            po to_end = po_multiply(fk_data->trajectory_po_at_anim_end, po_inverse(last_trajectory_po));
+
+            last_trajectory_po = math::identity_mat33();
+
+            *trajectory = po_multiply(current, to_end);
+        }
+
+        last_trajectory_po             = current;
+        last_trajectory_po_initialized = true;
+    }
+
+    if (flags & instance_flag_mirror)
+        mirror_pose(this, pose);
+}
+
 // sub_9CF1C0
 void nal::anim_instance::get_q_pose(u32 t, i32* q_pose) {
     decoder->seek(t);
@@ -247,4 +367,103 @@ void nal::anim_instance::remap_pose(nal::pose* source, nal::pose* target) {
 
     for (u32 field = 0; field < 11; field++)
         field_interfaces[field]->map(field, target, source, entry->field_maps[field], entry->bone_map);
+}
+
+// sub_9CECB0
+void nal::mirror_pose(nal::anim_instance* instance, nal::pose* pose) {
+    nal::anim*           anim       = instance->anim;
+    nal::transport_list* transports = anim->transport_list;
+
+    auto fk      = (nal::transport_fk*)(transports->has_transport(0) ? transports->get_transport(0) : nullptr);
+    auto fk_data = anim->has_transport_data(0) ? anim->get_transport_data(0) : nullptr;
+
+    // looked up and never used
+    (void)fk_data;
+
+    nal::pose_layout* layout       = transports->pose_layout;
+    u16*              mirror_flags = fk->mirror_flags;
+    u16*              mirror_bones = fk->mirror_bones;
+
+    // a pair swaps with x and z negated; a bone mirrored onto itself negates them in place, the root swaps its lanes
+    for (u32 i = 0; i < layout->field_repeat_counts[pose_field_fk_quaternion]; i++) {
+        u16 bone   = fk->quaternion_bones[i];
+        u16 mirror = mirror_bones[bone];
+
+        if (mirror == 0xFFFF)
+            continue;
+
+        i32 other = fk->quaternion_instances[mirror];
+
+        if (other == -1)
+            continue;
+
+        auto rotation = (math::quaternion*)pose->get_field_data_ptr(pose_field_fk_quaternion, i);
+
+        if (mirror != bone) {
+            math::quaternion own     = *rotation;
+            auto             partner = (math::quaternion*)pose->get_field_data_ptr(pose_field_fk_quaternion, other);
+
+            *rotation = math::quaternion(-(*partner)[0], (*partner)[1], -(*partner)[2], (*partner)[3]);
+            *partner  = math::quaternion(-own[0], own[1], -own[2], own[3]);
+        } else if (bone == fk->root_bone)
+            *rotation = math::quaternion((*rotation)[1], (*rotation)[0], (*rotation)[3], (*rotation)[2]);
+        else if (!mirror_flags[bone]) {
+            (*rotation)[0] = -(*rotation)[0];
+            (*rotation)[2] = -(*rotation)[2];
+        }
+    }
+
+    // pairs swap angles, a bone mirrored onto itself negates its own
+    for (u32 i = 0; i < layout->field_repeat_counts[pose_field_fk_axis1_rotation]; i++) {
+        u16 bone   = fk->axis1_bones[i];
+        u16 mirror = mirror_bones[bone];
+
+        if (mirror == 0xFFFF)
+            continue;
+
+        i32 other = fk->axis1_instances[mirror];
+
+        if (other == -1)
+            continue;
+
+        f32* angle = pose->get_field_data_ptr(pose_field_fk_axis1_rotation, i);
+
+        if (mirror == bone)
+            *angle = -*angle;
+        else {
+            f32  own     = *angle;
+            f32* partner = pose->get_field_data_ptr(pose_field_fk_axis1_rotation, other);
+
+            *angle   = *partner;
+            *partner = own;
+        }
+    }
+
+    // a pair swaps with x negated; a bone mirrored onto itself negates x for the root and trajectory bones, y otherwise
+    for (u32 i = 0; i < layout->field_repeat_counts[pose_field_fk_position]; i++) {
+        u16 bone   = fk->position_bones[i];
+        u16 mirror = mirror_bones[bone];
+
+        if (mirror == 0xFFFF)
+            continue;
+
+        i32 other = fk->position_instances[mirror];
+
+        if (other == -1)
+            continue;
+
+        auto position = (math::vector4*)pose->get_field_data_ptr(pose_field_fk_position, i);
+
+        if (mirror != bone) {
+            auto          partner = (math::vector4*)pose->get_field_data_ptr(pose_field_fk_position, other);
+            math::vector4 own     = *position;
+            math::vector4 theirs  = *partner;
+
+            *position = math::vector4(-theirs[0], theirs[1], theirs[2], theirs[3]);
+            *partner  = math::vector4(-own[0], own[1], own[2], own[3]);
+        } else if (bone == fk->root_bone || bone == fk->trajectory_bone)
+            (*position)[0] = -(*position)[0];
+        else
+            (*position)[1] = -(*position)[1];
+    }
 }

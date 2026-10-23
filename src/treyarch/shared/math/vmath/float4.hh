@@ -627,10 +627,10 @@ namespace treyarch { namespace math {
         }
 
         friend float4 mul_quat(const float4 &a, const float4 &b) {
-            return float4( a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x,
-                          -a.x * b.z + a.y * b.w + a.z * b.x + a.w * b.y,
-                           a.x * b.y - a.y * b.x + a.z * b.w + a.w * b.z,
-                          -a.x * b.x - a.y * b.y - a.z * b.z + a.w * b.w);
+            return float4((f32)( (f64)a.x * b.w + (f64)a.y * b.z - (f64)a.z * b.y + (f64)a.w * b.x),
+                          (f32)(-(f64)a.x * b.z + (f64)a.y * b.w + (f64)a.z * b.x + (f64)a.w * b.y),
+                          (f32)( (f64)a.x * b.y - (f64)a.y * b.x + (f64)a.z * b.w + (f64)a.w * b.z),
+                          (f32)(-(f64)a.x * b.x - (f64)a.y * b.y - (f64)a.z * b.z + (f64)a.w * b.w));
         }
 
         friend void   quat_to_matrix(const float4 &q, float4 &r0, float4 &r1, float4 &r2);
