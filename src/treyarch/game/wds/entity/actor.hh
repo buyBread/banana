@@ -10,7 +10,13 @@ namespace treyarch {
         class script_instance;
     }} // chuck::vm
 
+    namespace nal {
+        struct skeleton_map;
+        struct transport_list;
+    } // nal
+
     class ai_core;
+    class animation_controller;
     struct resource_key;
 
     struct base_ai_data {
@@ -29,12 +35,15 @@ namespace treyarch {
     class actor : public entity {
 
     public:
-        u8             reserved_074[0x3C];
-        actor_unk_0b0* unk_0b0;
-        u8             reserved_0b4[0x0C];
-        u32            unk_0c0; // handed to script threads as unk_60
-        u8             reserved_0c4[0x0C];
-        base_ai_data*  my_base_ai_data;
+        u8                    reserved_074[0x30];
+        nal::transport_list*  m_skeleton;
+        nal::skeleton_map*    skeleton_map;
+        animation_controller* anim_ctrl;
+        actor_unk_0b0*        unk_0b0;
+        u8                    reserved_0b4[0x0C];
+        u32                   unk_0c0; // handed to script threads as unk_60
+        u8                    reserved_0c4[0x0C];
+        base_ai_data*         my_base_ai_data;
 
         ai_core* get_ai_core() const;
     };
@@ -44,6 +53,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(actor_unk_0b0, instance, 0x0C);
     ASSERT_OFFSETOF(actor_unk_0b0, unk_018,  0x18);
 
+    ASSERT_OFFSETOF(actor, m_skeleton,      0xA4);
+    ASSERT_OFFSETOF(actor, skeleton_map,    0xA8);
+    ASSERT_OFFSETOF(actor, anim_ctrl,       0xAC);
     ASSERT_OFFSETOF(actor, unk_0b0,         0xB0);
     ASSERT_OFFSETOF(actor, unk_0c0,         0xC0);
     ASSERT_OFFSETOF(actor, my_base_ai_data, 0xD0);

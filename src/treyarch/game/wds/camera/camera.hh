@@ -1,9 +1,9 @@
 #pragma once
 
-#include "treyarch/game/wds/entity/entity.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 
 namespace treyarch {
-    class camera : public entity {
+    class camera : public actor {
 
     public:
         const vector3d &get_abs_position() const {
