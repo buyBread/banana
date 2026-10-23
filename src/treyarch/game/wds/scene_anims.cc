@@ -45,9 +45,9 @@ void world_dynamics_system::update_scene_anims(f32 t) {
             f32 length  = inst->instances->anim->duration;
             f32 target  = std::max(0.0f, std::min(sound_time, length));
 
-            retail::sub_5E00B0((u32*)anim, (f32)((f64)target - (f64)elapsed)); // scene_anim::frame_advance
+            anim->frame_advance((f32)((f64)target - (f64)elapsed));
         } else
-            retail::sub_5E00B0((u32*)anim, t); // scene_anim::frame_advance
+            anim->frame_advance(t);
 
         if (anim->dead)
             scene_anim_dies(anim->the_handle);

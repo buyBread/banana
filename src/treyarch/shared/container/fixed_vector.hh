@@ -19,6 +19,9 @@ namespace treyarch { namespace container {
               T* end()         { return data_ + size_; }
         const T* end()   const { return data_ + size_; }
 
+              T &back()       { return data_[size_ - 1]; }
+        const T &back() const { return data_[size_ - 1]; }
+
         u32  size()  const { return size_; }
         bool empty() const { return size_ == 0; }
     };

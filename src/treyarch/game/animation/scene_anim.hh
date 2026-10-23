@@ -61,6 +61,10 @@ namespace treyarch {
 
         ~scene_anim();
 
+        void finish();
+
+        void frame_advance(f32 delta_t);
+
         void* operator new(std::size_t size) noexcept {
             return memory::heap::allocate(size);
         }

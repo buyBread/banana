@@ -30,7 +30,7 @@ namespace treyarch { namespace nal {
         anim*        first_anim;
         u32          ref_count;
         f32          duration;
-        void*        unk_24;
+        nal::po*     origins;  // one per participant, in world space
 
         void link_transport_lists();
 
@@ -71,5 +71,5 @@ namespace treyarch { namespace nal {
     ASSERT_OFFSETOF(scene_anim, first_anim, 0x18);
     ASSERT_OFFSETOF(scene_anim, ref_count,  0x1C);
     ASSERT_OFFSETOF(scene_anim, duration,   0x20);
-    ASSERT_OFFSETOF(scene_anim, unk_24,     0x24);
+    ASSERT_OFFSETOF(scene_anim, origins,    0x24);
 }} // treyarch::nal
