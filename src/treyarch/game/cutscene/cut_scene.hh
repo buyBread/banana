@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/nal/scene_anim.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/avl_tree.hh"
@@ -90,18 +91,26 @@ namespace treyarch {
             skippable = 0x01
         };
 
-        u32         flags;
-        i32         hour;       // sets the game clock to hour:00 unless negative
-        u32*        unk_08;     // an optional 4-byte block
-        void*       scene_anim; // looked up from name when constructed
-        string_hash name;
+        u32              flags;
+        i32              hour;       // sets the game clock to hour:00 unless negative
+        u32*             unk_08;     // an optional 4-byte block
+        nal::scene_anim* scene_anim; // looked up from name when constructed
+        string_hash      name;
 
         mash::vector_basic
             <string_hash> regions; // brought in while the segment plays
         mash::vector
             <cut_scene_segment_unk_24> unk_24;
 
-        u32 unk_38;
+        string_hash sound;
+
+        // inlined @ sub_805510
+        // inlined @ sub_805CB0
+        // inlined @ sub_805D20
+        // inlined @ sub_805DB0
+        f32 get_duration() const {
+            return scene_anim ? scene_anim->duration : 0.0f;
+        }
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -122,11 +131,11 @@ namespace treyarch {
 
     public:
         enum e_flags : u32 {
-            skippable       = 0x0001,
-            hero_unaffected = 0x0002, // play leaves the hero and the controls alone
-            no_fades        = 0x0008,
-            play_once       = 0x0200, // ignores play_count
-            keep_near_plane = 0x8000  // the renderer keeps its own near plane instead of near_plane
+            skippable            = 0x0001,
+            hero_unaffected      = 0x0002, // play leaves the hero and the controls alone
+            no_fades             = 0x0008,
+            play_once            = 0x0200, // ignores play_count
+            keep_render_distance = 0x8000  // the render distance stays 250 instead of going out to 2500
         };
 
         void* self; // the resource handler points this at the cut scene itself
@@ -162,6 +171,8 @@ namespace treyarch {
         u8                          unk_123;
         f32                         near_plane;
 
+        bool has_sound() const;
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,
@@ -188,7 +199,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(cut_scene_segment, scene_anim, 0x0C);
     ASSERT_OFFSETOF(cut_scene_segment, regions,    0x14);
     ASSERT_OFFSETOF(cut_scene_segment, unk_24,     0x24);
-    ASSERT_OFFSETOF(cut_scene_segment, unk_38,     0x38);
+    ASSERT_OFFSETOF(cut_scene_segment, sound,      0x38);
 
     ASSERT_SIZEOF  (cut_scene_fade,       0x10);
     ASSERT_OFFSETOF(cut_scene_fade, color, 0x0C);

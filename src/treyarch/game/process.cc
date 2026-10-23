@@ -204,7 +204,7 @@ void game::advance_state_running(f32 time_inc) {
         return;
     }
 
-    retail::sub_8095F0((i32)references::cut_scene_player.read(), time_inc); // cut_scene_player::frame_advance
+    references::cut_scene_player.read()->frame_advance(time_inc);
     frame_advance_soap(data);
 
     mission_manager* missions = mission_manager::inst();

@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "retail.hh"
+#include "treyarch/game/cutscene/cut_scene.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/mission/mission_manager.hh"
@@ -63,12 +64,8 @@ f32 wds_render_manager::calculate_scene_near_plane(world_dynamics_system* world)
             adjusted_length = 0.5f;
 
         result = adjusted_length;
-    } else {
-        u8* active_cutscene = *(u8**)player;
-
-        if (active_cutscene)
-            result = *(f32*)(active_cutscene + 0x124);
-    }
+    } else if (player->get_current_cut_scene())
+        result = player->get_current_cut_scene()->near_plane;
 
     return result;
 }

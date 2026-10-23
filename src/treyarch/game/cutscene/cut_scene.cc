@@ -2,7 +2,6 @@
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/game/cutscene/cut_scene.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
-#include "treyarch/shared/four_cc.hh"
 
 using namespace treyarch;
 
@@ -49,7 +48,7 @@ void cut_scene_segment::construct_mashed_class() {
     regions.construct_mashed_class();
     unk_24 .construct_mashed_class();
 
-    scene_anim = amalga::resource_manager::get_merged_resource_or_default(name, four_cc('S', 'A', 'N', 'M'), nullptr);
+    scene_anim = (nal::scene_anim*)amalga::resource_manager::get_merged_resource_or_default(name, nal::scene_anim_type, nullptr);
 }
 
 // sub_807340
@@ -73,6 +72,20 @@ void cut_scene_segment::unmash(mash::mash_info_struct* mash_info, void*, mash::b
         unk_08 = (u32*)mash_info->read_from_buffer(buffer, 4, 4);
     else
         unk_08 = nullptr;
+}
+
+// sub_8054A0
+bool cut_scene::has_sound() const {
+    for (u32 i = 0; i < segments.size; i++) {
+        string_hash no_sound;
+
+        no_sound.initialize(mash::ALLOCATED);
+
+        if (segments[i]->sound != no_sound)
+            return true;
+    }
+
+    return false;
 }
 
 // sub_808EF0

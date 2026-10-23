@@ -255,7 +255,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
 
         bool driven = true;
 
-        if (retail::sub_8054F0(references::cut_scene_player.read())) {
+        if (references::cut_scene_player.read()->hero_unaffected()) {
             driven = false;
 
             ent->ext_flags &= ~0x40000;

@@ -156,10 +156,10 @@ void world_dynamics_system::update_scene_anims(f32 t) {
 
         // a cut scene with sound keeps its scene anim on the sound's clock
         if (retail::sub_8FF160() &&
-            retail::sub_8056E0((u32*)references::cut_scene_player.read()) &&
+            references::cut_scene_player.read()->has_sound() &&
             !references::sound_disabled.read()) {
 
-            f32 sound_time = (f32)retail::sub_805680((i32)references::cut_scene_player.read());
+            f32 sound_time = references::cut_scene_player.read()->get_sound_time();
 
             nal::scene_anim_instance* inst = anim->scene_anim_inst;
 
