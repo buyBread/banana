@@ -10,6 +10,12 @@ namespace treyarch {
         string_hash hash;
         char        text[28];
 
+        tl_fixed_string() : hash(), text() {}
+
+        tl_fixed_string(const char* value);
+
+        bool operator==(const tl_fixed_string &other) const;
+
         void construct_mashed_class() {}
         void destruct_mashed_class() {}
     };
