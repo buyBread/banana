@@ -50,6 +50,7 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_620600
+        // sub_910B40
         // sub_A76160
         tree_node* previous() noexcept { // in-order predecessor; the end (head) node maps to the rightmost node
             if (is_nil)
@@ -168,6 +169,7 @@ namespace treyarch { namespace dinkumware {
 
         // sub_63CE50
         // inlined @ sub_977170
+        // inlined @ sub_979BB0
         node* find(const K &key) const {
             node* position = lower_bound(key);
 
@@ -179,6 +181,8 @@ namespace treyarch { namespace dinkumware {
 
         // sub_759870
         // sub_759930
+        // sub_975FD0
+        // sub_976090
         // sub_A1BB00
         std::pair<node*, bool> insert(const T &value) { // unique insert; an equal key already present is returned with `false`
             node* try_node   = head_node->parent;
@@ -208,6 +212,8 @@ namespace treyarch { namespace dinkumware {
 
         // sub_7618D0
         // sub_761A40
+        // sub_9782F0
+        // sub_9784A0
         node* insert(node* where, const T &value) { // unique insert next to `where` when it fits there, else a plain insert
             if (count == 0)
                 return insert_at(true, head_node, value);
@@ -450,7 +456,9 @@ namespace treyarch { namespace dinkumware {
             }
         }
 
+        // sub_58F9C0
         // sub_79B4D0
+        // sub_9716F0
         node* buy_node(node* left, node* parent, node* right, const T &value, e_tree_color color) {
             node* result = (node*)memory::heap::allocate(sizeof(node));
 
@@ -470,6 +478,8 @@ namespace treyarch { namespace dinkumware {
 
         // sub_7549C0
         // sub_754BC0
+        // sub_973D00
+        // sub_973FC0
         // sub_A1B4B0
         node* insert_at(bool add_left, node* where_node, const T &value) {
             if (count >= 0x3FFFFFFE)

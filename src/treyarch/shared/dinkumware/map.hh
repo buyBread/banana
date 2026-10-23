@@ -20,6 +20,8 @@ namespace treyarch { namespace dinkumware {
     public:
         // sub_764120
         // sub_764190
+        // sub_979870
+        // sub_979900
         V &operator[](const K &key) {
             auto* where = this->lower_bound(key);
 
