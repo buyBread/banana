@@ -60,7 +60,11 @@ namespace treyarch {
         dinkumware::vector
             <scene_anim_light>    lights;
 
+        scene_anim();
         ~scene_anim();
+
+        void load(const mash::string &filename);
+        void play(scene_anim_handle_t handle, u16 flags, f32 offset);
 
         void find_actor_and_create_controller_for_subanim(      i32                 index,
                                                           const tl_fixed_string    &name,

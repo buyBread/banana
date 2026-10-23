@@ -24,7 +24,7 @@ namespace treyarch {
         using scene_anim_map_t    = dinkumware::map<mash::string,        scene_anim*>;
         using sa_handle_obj_map_t = dinkumware::map<scene_anim_handle_t, scene_anim*>;
 
-        u8                          reserved_000[0x04];
+        scene_anim_handle_t         last_snm_handle;
         scene_anim_map_t            scene_anim_map;
         sa_handle_obj_map_t         playing_scene_anims;
         u8                          reserved_01c[0x04];
@@ -55,7 +55,16 @@ namespace treyarch {
         void frame_advance(f32 time_inc);
         void misc_entity_updates(f32 time_inc);
 
-        void remove_scene_anim(const mash::string &filename);
+        void                load_scene_anim(const mash::string &filename);
+        scene_anim_handle_t play_scene_anim(scene_anim* scene_anim_ptr, u16 flags, f32 offset);
+        scene_anim_handle_t play_scene_anim(const mash::string &filename, u16 flags, f32 offset);
+        void                kill_scene_anim(scene_anim_handle_t handle, bool b_reverse, bool finish);
+        void                remove_scene_anim(const mash::string &filename);
+        void                set_scene_anim_paused(scene_anim_handle_t handle, bool paused);
+        bool                is_scene_anim_finished(scene_anim_handle_t handle);
+        f32                 get_scene_anim_time(scene_anim_handle_t handle);
+        f32                 scene_anim_time_remaining(scene_anim_handle_t handle);
+
         void update_scene_anims(f32 t);
         void scene_anim_dies(scene_anim_handle_t handle);
     };
@@ -65,6 +74,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(world_dynamics_system::sa_handle_obj_map_t::node, is_nil, 0x15);
 
     ASSERT_SIZEOF  (world_dynamics_system,                      0x140);
+    ASSERT_OFFSETOF(world_dynamics_system, last_snm_handle,     0x000);
     ASSERT_OFFSETOF(world_dynamics_system, scene_anim_map,      0x004);
     ASSERT_OFFSETOF(world_dynamics_system, playing_scene_anims, 0x010);
     ASSERT_OFFSETOF(world_dynamics_system, gv_busy_teaching,    0x020);

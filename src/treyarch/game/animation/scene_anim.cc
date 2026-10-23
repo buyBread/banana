@@ -1,24 +1,34 @@
 #include <cmath>
+#include <cstdio>
 
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/animation/scene_anim.hh"
-#include "treyarch/game/game.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
+#include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/game/light/light_source.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
+#include "treyarch/nal/nal.hh"
 #include "treyarch/nal/transport_fk.hh"
+#include "treyarch/shared/filespec.hh"
+#include "treyarch/shared/fixed_string.hh"
 #include "treyarch/shared/math/po.hh"
 #include "treyarch/shared/math/references.hh"
 #include "treyarch/shared/math/vmath/matrix_rot.hh"
 #include "treyarch/shared/math/vmath/quaternion.hh"
 
 using namespace treyarch;
+
+// sub_97A6D0
+scene_anim::scene_anim() : scene_anim_inst(nullptr),
+                           finished(false),
+                           dead(false),
+                           paused(false) {}
 
 // sub_5F5F30
 scene_anim::~scene_anim() {
@@ -92,6 +102,47 @@ scene_anim::~scene_anim() {
     }
 
     scene_anim_inst = nullptr;
+}
+
+// sub_5ADB90
+void scene_anim::load(const mash::string &filename) {
+    my_name = filename;
+}
+
+// sub_5F7D80
+void scene_anim::play(scene_anim_handle_t handle, u16 flags, f32 offset) {
+    filespec spec(my_name);
+
+    fixed_string scene_anim_name;
+
+    scene_anim_name.hash = string_hash(hash::djb2(spec.name.c_str()));
+    scene_anim_name.set_text(spec.name.c_str());
+
+    the_scene_anim = nal::get_scene_anim(&scene_anim_name);
+
+    if (scene_anim_name.text)
+        memory::heap::free(scene_anim_name.text);
+
+    // the assert that showed it is gone
+    if (!the_scene_anim) {
+        char message[256];
+
+        std::snprintf(message, 0xFF, "Couldn't find scene animation: %s", spec.name.c_str());
+    }
+
+    my_anim_info_list.clear();
+
+    the_handle      = handle;
+    scene_anim_inst = the_scene_anim->create_instance();
+
+    i32 index = 0;
+
+    for (nal::anim_instance* participant = scene_anim_inst->instances; participant; participant = participant->next, index++)
+        find_actor_and_create_controller_for_subanim(index, tl_fixed_string(participant->anim->name.get_text()), participant);
+
+    my_flags = flags;
+
+    frame_advance(offset);
 }
 
 // sub_5F74C0
