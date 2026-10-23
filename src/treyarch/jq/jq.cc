@@ -4,6 +4,7 @@
 #include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/animation/animation_pose_jq.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/render/references.hh"
@@ -148,7 +149,7 @@ void jq::jobqueue_init() {
     retail::sub_5D3FF0(); // multi_animation_controller_jq
     retail::sub_5D4090(); // animation_signal_jq
     retail::sub_5D4150(); // multi_animation_signal_jq
-    retail::sub_5D41B0(); // animation_pose_jq
+    animation_pose_jq::init();
     retail::sub_5D4700(); // als_jq
     retail::sub_5D4CB0(); // als_mocomp_jq
     retail::sub_5D4D10(); // multi_als_mocomp_jq

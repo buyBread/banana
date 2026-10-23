@@ -110,9 +110,18 @@ void nal::pose::copy(const pose &pose) {
 // inlined @ sub_9D0640
 // inlined @ sub_9D0780
 // inlined @ sub_9D0440
+// inlined @ sub_9D2030
+bool nal::pose::is_field_present(u32 field_type, i32 n) {
+    if (!pose_layout->field_repeat_counts[field_type])
+        return false;
+
+    return present.is_one(pose_layout->field_bit_offsets[field_type] + n) != 0;
+}
+
 // inlined @ sub_9CF290
 // inlined @ sub_9D1860
 // inlined @ sub_9CECB0
+// inlined @ sub_9D2030
 f32* nal::pose::get_field_data_ptr(u32 field_type, i32 n) {
     return (f32*)(pose_data + pose_layout->field_offsets[field_type]) + values_per_field[field_type] * n;
 }

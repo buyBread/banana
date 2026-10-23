@@ -50,6 +50,7 @@ namespace treyarch { namespace nal {
         void init(nal::pose_layout* layout, void* preallocated_memory);
         void copy(const pose &pose);
 
+        bool is_field_present(u32 field_type, i32 n);
         f32* get_field_data_ptr(u32 field_type, i32 n);
     };
 
