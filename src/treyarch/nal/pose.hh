@@ -26,6 +26,9 @@ namespace treyarch { namespace nal {
     // floats per field instance
     inline const u16 values_per_field[11] = { 4, 4, 1, 4, 8, 1, 6, 1, 4, 4, 9 };
 
+    // values per field instance in the bitstream
+    inline const u16 encoded_values_per_field[11] = { 3, 4, 1, 3, 0, 1, 6, 1, 3, 4, 9 };
+
     struct pose_layout;
 
     // nalPose

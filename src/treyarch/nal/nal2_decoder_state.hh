@@ -26,6 +26,10 @@ namespace treyarch { namespace nal {
         i32        cached_frame[3];
         u8*        cached_pose_data[3];
 
+        tl_fixed_bitvector<u32, 384> cached_present[3];
+
+        nal::pose_layout* cached_layout[3];
+
         void init(nal::anim* animation, u32 state_memory_size);
         void reset();
         void seek(u32 t);
@@ -48,4 +52,6 @@ namespace treyarch { namespace nal {
     ASSERT_OFFSETOF(nal2_decoder_state, x1,               0x148);
     ASSERT_OFFSETOF(nal2_decoder_state, cached_frame,     0x14C);
     ASSERT_OFFSETOF(nal2_decoder_state, cached_pose_data, 0x158);
+    ASSERT_OFFSETOF(nal2_decoder_state, cached_present,   0x164);
+    ASSERT_OFFSETOF(nal2_decoder_state, cached_layout,    0x200);
 }} // treyarch::nal

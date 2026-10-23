@@ -13,6 +13,9 @@ namespace treyarch { namespace nal {
     struct anim_instance;
     struct skeleton_map;
 
+    // the most encoded values a q-pose holds
+    constexpr u32 max_pose_tracks = 1024;
+
     struct instance_observer_link {
         instance_observer_link* next;
         instance_observer_link* prev;
@@ -43,8 +46,10 @@ namespace treyarch { namespace nal {
         anim_instance(nal::anim* animation, u32 instance_flags, nal::skeleton_map* rig_map);
         ~anim_instance();
 
+        void get_pose(i32 frame, nal::pose* pose);
         void get_q_pose(u32 t, i32* q_pose);
         void unshuffle_q_pose(i32* q_pose);
+        void remap_pose(nal::pose* source, nal::pose* target);
 
         void* operator new(std::size_t size) noexcept {
             return memory::heap::allocate(size);

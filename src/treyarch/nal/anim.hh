@@ -70,6 +70,24 @@ namespace treyarch { namespace nal {
         bool                 has_transport_data(u32 id);
     };
 
+    // t is normalized: 0 to 1 is one pass through the anim
+    void time_to_frame_pair(nal::anim* anim,
+                            f32        t,
+                            f32*       frame,
+                            i32*       frame_0,
+                            i32*       frame_1,
+                            bool       looping);
+
+    void time_to_frames(nal::anim* anim,
+                        f32        t_prev,
+                        f32        t,
+                        f32*       frame,
+                        i32*       frame_0,
+                        i32*       frame_1,
+                        f32*       fraction,
+                        i32*       wraps,
+                        bool       looping);
+
     ASSERT_SIZEOF  (transport_data,       0x08);
     ASSERT_OFFSETOF(transport_data, id,   0x00);
     ASSERT_OFFSETOF(transport_data, next, 0x04);
