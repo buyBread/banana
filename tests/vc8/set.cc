@@ -1,17 +1,19 @@
-#include "dinkumware/fixtures.hh"
+#include "vc8/fixtures.hh"
 
-namespace dinkumware = treyarch::dinkumware;
-using namespace tests::container_support;
+namespace vc8 = treyarch::vc8;
+using namespace tests::vc8_support;
 
-TEST_SUITE("dinkumware") {
+TEST_SUITE("vc8") {
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "set custom comparison controls ordering and lower bounds") {
+                      "set custom comparison controls the order") {
 
-        dinkumware::set<u32, std::greater<u32>> values;
+        vc8::set<u32, std::greater<u32>> values;
+
         for (u32 key : { 2u, 6u, 4u, 0u, 8u })
             values.insert(key);
 
         check_tree(values, { 8, 6, 4, 2, 0 });
+
         CHECK(values.lower_bound(9)->value == 8);
         CHECK(values.lower_bound(7)->value == 6);
         CHECK(values.lower_bound(4)->value == 4);
@@ -19,17 +21,18 @@ TEST_SUITE("dinkumware") {
         CHECK(values.find(3) == values.end());
 
         values.erase(values.find(4));
+
         check_tree(values, { 8, 6, 2, 0 });
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "set equality follows its comparator rather than integer equality") {
+                      "set equality follows the comparator") {
 
         struct decade_less_t {
             bool operator()(u32 left, u32 right) const { return left / 10 < right / 10; }
         };
 
-        dinkumware::set<u32, decade_less_t> values;
+        vc8::set<u32, decade_less_t> values;
 
         auto first = values.insert(12);
         auto same  = values.insert(19);
@@ -46,10 +49,10 @@ TEST_SUITE("dinkumware") {
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
-                      "set destruction releases the complete tree and its sentinel") {
+                      "set destructor frees every node and the head") {
 
         {
-            dinkumware::set<u32> values;
+            vc8::set<u32> values;
 
             for (u32 key : shuffled_keys(100, 99))
                 values.insert(key);
