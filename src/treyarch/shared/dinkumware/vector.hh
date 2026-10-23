@@ -75,10 +75,7 @@ namespace treyarch { namespace dinkumware {
         bool empty() const noexcept { return first == last; }
 
         void clear() noexcept {
-            while (last != first) {
-                --last;
-                last->~T();
-            }
+            erase(first, last);
         }
 
         void destroy() noexcept {
@@ -166,10 +163,8 @@ namespace treyarch { namespace dinkumware {
         // sub_A18CE0
         // sub_A18D70
         void resize(u32 count, const T &value) {
-            while (size() > count) {
-                --last;
-                last->~T();
-            }
+            if (size() > count)
+                erase(first + count, last);
 
             if (capacity() < count)
                 reserve_for_size(count);
@@ -204,10 +199,11 @@ namespace treyarch { namespace dinkumware {
             for (T* next = range_last; next != last; ++position, ++next)
                 *position = std::move(*next);
 
-            while (last != position) {
-                --last;
-                last->~T();
-            }
+            // front to back, like every vc8 destroy
+            for (T* dead = position; dead != last; ++dead)
+                dead->~T();
+
+            last = position;
 
             return range_first;
         }

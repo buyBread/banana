@@ -23,6 +23,7 @@ namespace treyarch { namespace dinkumware {
         e_tree_color color;
         bool         is_nil;
 
+        // sub_7EB870
         // sub_95D780
         tree_node* next() noexcept { // in-order successor; the end (head) node maps to itself
             if (is_nil)
@@ -77,7 +78,9 @@ namespace treyarch { namespace dinkumware {
             return node;
         }
 
+        // sub_588520
         // sub_781850
+        // sub_910AC0
         static tree_node* minimum(tree_node* node) noexcept {
             while (!node->left->is_nil)
                 node = node->left;
@@ -86,6 +89,8 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_428E70
+        // sub_6970B0
+        // sub_910B20
         static tree_node* maximum(tree_node* node) noexcept {
             while (!node->right->is_nil)
                 node = node->right;
@@ -144,8 +149,8 @@ namespace treyarch { namespace dinkumware {
             erase(begin(), end());
         }
 
-        // first node whose key is not less than `key`
-        node* lower_bound(const K &key) const {
+        // sub_921FD0
+        node* lower_bound(const K &key) const { // first node whose key is not less than `key`
             node* result   = head_node;
             node* position = head_node->parent;
 
@@ -162,6 +167,7 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_63CE50
+        // inlined @ sub_977170
         node* find(const K &key) const {
             node* position = lower_bound(key);
 
@@ -240,6 +246,8 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_8030D0
+        // sub_973A40
+        // sub_975D10
         // sub_A1B180
         // sub_A20950
         node* erase(node* where) { // returns the node after the erased one
@@ -535,6 +543,8 @@ namespace treyarch { namespace dinkumware {
         }
 
         // sub_428E20
+        // sub_6B0CF0
+        // sub_9220F0
         void rotate_left(node* where_node) noexcept {
             node* position = where_node->right;
 
@@ -556,7 +566,9 @@ namespace treyarch { namespace dinkumware {
             where_node->parent = position;
         }
 
+        // sub_743F20
         // sub_781870
+        // sub_7F2A90
         void rotate_right(node* where_node) noexcept {
             node* position = where_node->left;
 
