@@ -41,8 +41,8 @@ namespace treyarch { namespace nal {
     struct scene_anim_instance {
         nal::scene_anim*    scene_anim;
         nal::anim_instance* instances;  // chained through next, last participant first
-        u32                 unk_08;
-        u32                 unk_0c;
+        f32                 t;          // normalized, 1 at the end
+        f32                 t_prev;
 
         scene_anim_instance() : scene_anim(nullptr), instances(nullptr) {}
 
@@ -60,8 +60,8 @@ namespace treyarch { namespace nal {
     ASSERT_SIZEOF  (scene_anim_instance,             0x10);
     ASSERT_OFFSETOF(scene_anim_instance, scene_anim, 0x00);
     ASSERT_OFFSETOF(scene_anim_instance, instances,  0x04);
-    ASSERT_OFFSETOF(scene_anim_instance, unk_08,     0x08);
-    ASSERT_OFFSETOF(scene_anim_instance, unk_0c,     0x0C);
+    ASSERT_OFFSETOF(scene_anim_instance, t,          0x08);
+    ASSERT_OFFSETOF(scene_anim_instance, t_prev,     0x0C);
 
     ASSERT_OFFSETOF(scene_anim, name,       0x00);
     ASSERT_OFFSETOF(scene_anim, unk_08,     0x08);

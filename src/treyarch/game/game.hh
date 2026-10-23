@@ -179,6 +179,8 @@ namespace treyarch {
 
         void freeze_hero(bool freeze);
 
+        void enable_marky_cam(bool enable, bool sync = true, f32 priority = -1000.0f, f32 interp_time = 0.0f);
+
         camera_handle get_current_view_camera();
         
         void handle_frame_locking(f32* time_inc);

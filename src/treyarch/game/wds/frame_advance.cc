@@ -79,7 +79,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     time_interface::frame_advance_all_time_interfaces(time_inc);
 
     if (playing_scene_anims.size())
-        retail::sub_976FB0((i32)this, dilate_world_time(time_inc)); // world_dynamics_system::update_scene_anims
+        update_scene_anims(dilate_world_time(time_inc));
 
     if (references::game.read()->get_current_view_camera())
         retail::sub_975970(1, (u32*)references::game.read()->get_current_view_camera());

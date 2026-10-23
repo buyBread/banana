@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/game/animation/scene_anim.hh"
 #include "treyarch/game/wds/ai/wds_ai_manager.hh"
 #include "treyarch/game/wds/camera/wds_camera_manager.hh"
 #include "treyarch/game/wds/render/wds_render_manager.hh"
@@ -16,9 +17,6 @@ namespace treyarch {
     class entity; // impl
     class animation_controller; // impl?
     class terrain; // impl
-    class scene_anim; // impl?
-
-    using scene_anim_handle_t = u32;
 
     class world_dynamics_system {
 
@@ -56,6 +54,10 @@ namespace treyarch {
 
         void frame_advance(f32 time_inc);
         void misc_entity_updates(f32 time_inc);
+
+        void remove_scene_anim(const mash::string &filename);
+        void update_scene_anims(f32 t);
+        void scene_anim_dies(scene_anim_handle_t handle);
     };
 
     // node strides the retail constructor (sub_97A860) implies through is_nil

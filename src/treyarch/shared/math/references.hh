@@ -18,6 +18,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); read by box triggers and other entity setup
     inline util::memory_reference<vector3d> unk_0102ff40 { 0x0102FF40 };
 
+    // (0, 0, 0); read by animation and scene anim code
+    inline util::memory_reference<vector3d> unk_00fd4370 { 0x00FD4370 };
+
     // one translation unit's copy of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
 }} // treyarch::references

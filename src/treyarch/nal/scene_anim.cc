@@ -30,8 +30,8 @@ void nal::scene_anim::link_transport_lists() {
 nal::scene_anim_instance* nal::scene_anim::create_instance() {
     scene_anim_instance* instance = new scene_anim_instance;
 
-    instance->unk_08     = 0;
-    instance->unk_0c     = 0;
+    instance->t          = 0.0f;
+    instance->t_prev     = 0.0f;
     instance->scene_anim = this;
     instance->instances  = nullptr;
 

@@ -320,6 +320,10 @@ void game::freeze_hero(bool freeze) {
     }
 }
 
+void game::enable_marky_cam(bool enable, bool sync, f32 priority, f32 interp_time) {
+    retail::sub_97AE30((i32)this, enable, sync, priority, interp_time);
+}
+
 // sub_97B1A0
 void game::load_complete() {
     matrix4x4 transform;
