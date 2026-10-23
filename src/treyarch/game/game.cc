@@ -28,7 +28,7 @@
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/math/references.hh"
@@ -133,7 +133,7 @@ void game::one_time_init_stuff() {
         soap::references::enable_online.read()) {
 
         {
-            dinkumware::vector<soap::message_box_definition> boxes;
+            vc8::vector<soap::message_box_definition> boxes;
 
             retail::sub_97D790((i32)&boxes);
             retail::sub_9EE930((i32)&boxes);

@@ -47,10 +47,10 @@ script_manager::script_manager() : flags(0),
     vm_thread::create_locks();
     script_object::create_function_cache_lock();
 
-    void* pending_allocation = memory::heap::allocate(sizeof(dinkumware::list<script_executable*>));
+    void* pending_allocation = memory::heap::allocate(sizeof(vc8::list<script_executable*>));
 
     execs_pending_first_run = pending_allocation ?
-        new (pending_allocation) dinkumware::list<script_executable*>() : nullptr;
+        new (pending_allocation) vc8::list<script_executable*>() : nullptr;
 
     if (!exec_set) {
         void* set_allocation = memory::heap::allocate(sizeof(script_executable_entry_set_t));

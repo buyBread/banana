@@ -2,7 +2,7 @@
 
 #include "treyarch/game/light/deferred_lights.hh"
 #include "treyarch/game/light/references.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/memory/heap.hh"
 
 namespace treyarch { namespace deferred_lights {
@@ -11,10 +11,10 @@ namespace treyarch { namespace deferred_lights {
         auto* queue = references::deferred_point_lights.read();
 
         if (!queue) {
-            queue = (dinkumware::vector<point_light_node*>*)memory::heap::allocate(sizeof(*queue));
+            queue = (vc8::vector<point_light_node*>*)memory::heap::allocate(sizeof(*queue));
 
             if (queue)
-                new (queue) dinkumware::vector<point_light_node*>();
+                new (queue) vc8::vector<point_light_node*>();
 
             references::deferred_point_lights.write(queue);
         }
@@ -28,10 +28,10 @@ namespace treyarch { namespace deferred_lights {
         auto* queue = references::deferred_spot_lights.read();
 
         if (!queue) {
-            queue = (dinkumware::vector<spot_light_node*>*)memory::heap::allocate(sizeof(*queue));
+            queue = (vc8::vector<spot_light_node*>*)memory::heap::allocate(sizeof(*queue));
 
             if (queue)
-                new (queue) dinkumware::vector<spot_light_node*>();
+                new (queue) vc8::vector<spot_light_node*>();
 
             references::deferred_spot_lights.write(queue);
         }

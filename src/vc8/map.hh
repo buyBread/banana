@@ -3,10 +3,10 @@
 #include <functional>
 #include <utility>
 
-#include "treyarch/shared/dinkumware/tree.hh"
+#include "vc8/tree.hh"
 #include "util/macros/sanity_assert.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     template<typename K, typename V>
     struct map_key {
         const K &operator()(const std::pair<const K, V> &value) const noexcept {
@@ -35,4 +35,4 @@ namespace treyarch { namespace dinkumware {
     using map_size_sanity = map<u32, u32>;
 
     ASSERT_SIZEOF(map_size_sanity, 0x0C);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

@@ -9,7 +9,7 @@
 using namespace treyarch;
 
 namespace treyarch { namespace mash { namespace detail {
-    // overlays for the two old Dinkumware hash maps the executable builds during static initialization
+    // overlays for the two old VC8 hash maps the executable builds during static initialization
     struct vtable_registry_node {
         vtable_registry_node* next;
         vtable_registry_node* previous;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -8,7 +8,7 @@
 namespace treyarch { namespace soap {
     class notification_manager;
 
-    using notification_list             = dinkumware::vector<i32>;
+    using notification_list             = vc8::vector<i32>;
     using notification_manager_get_list = notification_list* (__thiscall*)(notification_manager* self);
 
     struct notification_manager_vtable {

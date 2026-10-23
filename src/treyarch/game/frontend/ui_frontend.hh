@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vc8/list.hh"
 #include "treyarch/game/frontend/conversation_menu_system.hh"
 #include "treyarch/game/frontend/igo/igo_3d_boss_meter_system.hh"
 #include "treyarch/game/frontend/igo/igo_3d_enemy_health_manager.hh"
@@ -12,7 +13,6 @@
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/shared/container/legacy_list.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/math/vmath/matrix.hh"
 #include "treyarch/shared/mutex.hh"
@@ -43,7 +43,7 @@ namespace treyarch {
         ui_frontend_method         draw_pass_2;
     };
 
-    using igo_3d_script_widget_list = dinkumware::list<igo_3d_script_widget*>;
+    using igo_3d_script_widget_list = vc8::list<igo_3d_script_widget*>;
 
     namespace references {
         inline util::memory_reference<u8> optional_widget_group_enabled { 0x00BB1EA9 };
@@ -149,7 +149,7 @@ namespace treyarch {
         f32                                 background_effect_strength; // that timer's first float; modes 2, 3, 8, 9
         u8                                  reserved_290[0x44];
         u32                                 widget_suppression_conditions;
-        dinkumware::list<igo_3d_widget*>    widgets; // drawn unless their suppression mask matches
+        vc8::list<igo_3d_widget*>           widgets; // drawn unless their suppression mask matches
 
         void draw();
         void draw_startup();

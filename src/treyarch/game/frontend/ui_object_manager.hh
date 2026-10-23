@@ -1,9 +1,9 @@
 #pragma once
 
+#include "vc8/map.hh"
 #include "treyarch/game/frontend/igo/igo_3d_widget.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/map.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -74,15 +74,15 @@ namespace treyarch {
     class ui_object_manager {
 
     public:
-        dinkumware::map<u32, u32> keys;            // values index `objects`
-        u32                       unk_0c;
-        ui_object_table           objects;
-        u32                       unk_60;
-        i32                       unk_64;
-        u8                        unk_68[0x0C];    // another VC8 tree, head at +0x6C
-        u32                       unk_74;
-        ngl::quad*                quad;
-        bool                      unk_7c;          // when set, only objects with ui_object::unk_4d use display_1c
+        vc8::map<u32, u32> keys;            // values index `objects`
+        u32                unk_0c;
+        ui_object_table    objects;
+        u32                unk_60;
+        i32                unk_64;
+        u8                 unk_68[0x0C];    // another VC8 tree, head at +0x6C
+        u32                unk_74;
+        ngl::quad*         quad;
+        bool               unk_7c;          // when set, only objects with ui_object::unk_4d use display_1c
 
         void draw();
     };

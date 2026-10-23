@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/vector.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
@@ -18,7 +18,7 @@ namespace treyarch { namespace chuck { namespace vm {
     };
 
     // a VM `str` handle points at the first element of one of these
-    using chuck_dynamic_array_t = dinkumware::vector<chuck_dynamic_array_element_t>;
+    using chuck_dynamic_array_t = vc8::vector<chuck_dynamic_array_element_t>;
 
     // retail addition: SM3's pool held bare array pointers
     struct vm_dynamic_array_slot {
@@ -40,10 +40,10 @@ namespace treyarch { namespace chuck { namespace vm {
     class vm_dynamic_array_manager : public singleton_instance<vm_dynamic_array_manager, 0x0112475C> {
 
     public:
-        dinkumware::vector<vm_dynamic_array_slot>* array_pool;
-        dinkumware::vector<u16>*                   slot_buckets;
-        bool                                       unk_08;    // when set, dying arrays aren't unlisted from their owner
-        u8                                         pad_09[3];
+        vc8::vector<vm_dynamic_array_slot>* array_pool;
+        vc8::vector<u16>*                   slot_buckets;
+        bool                                unk_08;    // when set, dying arrays aren't unlisted from their owner
+        u8                                  pad_09[3];
 
         // also creates dynamic_array_lock
         vm_dynamic_array_manager();

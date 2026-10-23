@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -27,7 +27,7 @@ namespace treyarch {
 
     struct game_data_payload {
         u8                        reserved_000[0x04];
-        dinkumware::vector<void*> autosave_triggers;
+        vc8::vector<void*>        autosave_triggers;
         u8*                       buffer;
         u32                       buffer_size;
         u32                       buffer_capacity;

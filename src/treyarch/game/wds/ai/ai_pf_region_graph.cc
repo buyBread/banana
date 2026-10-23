@@ -31,10 +31,10 @@ void ai_quad_path::construct_mashed_class() {
     unk_6c          .construct_mashed_class();
     unk_7c          .construct_mashed_class();
 
-    void* allocation = memory::heap::allocate(sizeof(dinkumware::vector<void*>));
+    void* allocation = memory::heap::allocate(sizeof(vc8::vector<void*>));
 
     obstacles = allocation ?
-        new (allocation) dinkumware::vector<void*>() : nullptr;
+        new (allocation) vc8::vector<void*>() : nullptr;
 }
 
 // sub_443690
@@ -80,11 +80,11 @@ void ai_pf_region_graph::construct_mashed_class() {
     quad_path_table.construct_mashed_class();
     region_points  .construct_mashed_class();
 
-    void* allocation = memory::heap::allocate(sizeof(dinkumware::vector<ai_quad_path_connection*>));
+    void* allocation = memory::heap::allocate(sizeof(vc8::vector<ai_quad_path_connection*>));
 
     unk_18 = 0;
     unk_64 = allocation ?
-        new (allocation) dinkumware::vector<ai_quad_path_connection*>() : nullptr;
+        new (allocation) vc8::vector<ai_quad_path_connection*>() : nullptr;
 }
 
 // sub_447C70

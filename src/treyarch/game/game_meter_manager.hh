@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/map.hh"
+#include "vc8/map.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -12,9 +12,9 @@ namespace treyarch {
     class game_meter_manager {
 
     public:
-        u32                                    unk_00;
-        dinkumware::map<i32, game_meter_base*> game_meters;
-        meter_data_file*                       meter_data;
+        u32                             unk_00;
+        vc8::map<i32, game_meter_base*> game_meters;
+        meter_data_file*                meter_data;
 
         // inlined @ sub_93D010
         void unregister_game_meters() {

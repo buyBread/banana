@@ -1,10 +1,10 @@
 #pragma once
 
+#include "vc8/list.hh"
+#include "vc8/vector.hh"
 #include "treyarch/game/wds/ai/ai_team.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/ai/param_block.hh"
-#include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/resource_key.hh"
@@ -75,8 +75,8 @@ namespace treyarch {
         public:
             bool                               valid;
             u8                                 pad_001[0x03];
-            dinkumware::vector
-                <dinkumware::vector<ai_core*>> teams;
+            vc8::vector
+                <vc8::vector<ai_core*>> teams;
 
             void clear();
             void rebuild();
@@ -90,12 +90,12 @@ namespace treyarch {
         slim::slim_actor_controller*    tactics_controller;
         u32                             record_slot_mask;     // bit n is set while records[n] is in use
         u8                              records[32][0x2C];
-        dinkumware::list<void*>         active_records;       // entries point into records
+        vc8::list<void*>                active_records;       // entries point into records
         u8                              reserved_5bc[0x0C];
         u8                              reserved_5c8[0x0C];
         ai_state_machine*               my_base_machine;
         ai_state_machine*               my_locomotion_machine;
-        dinkumware::list<sm_list_entry> my_machine_list;
+        vc8::list<sm_list_entry>        my_machine_list;
         u8                              reserved_5e8[0x0C];
         e_ai_core_mode                  my_mode;
         resource_key                    new_base_machine;

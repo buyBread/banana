@@ -19,10 +19,10 @@ using namespace treyarch;
 
 // sub_770160
 void amalga::resource_manager::create_inst() {
-    void* partitions_allocation = memory::heap::allocate(sizeof(dinkumware::vector<resource_partition*>));
+    void* partitions_allocation = memory::heap::allocate(sizeof(vc8::vector<resource_partition*>));
 
     auto partitions = partitions_allocation ?
-        new (partitions_allocation) dinkumware::vector<resource_partition*>() : nullptr;
+        new (partitions_allocation) vc8::vector<resource_partition*>() : nullptr;
 
     references::partitions.write(partitions);
     partitions->reserve(8);
@@ -155,7 +155,7 @@ void amalga::resource_manager::frame_advance(f32 dt, f32 max_ms) {
 
     retail::sub_87EF10((u32*)references::unk_010f7760.read(), dt);
 
-    dinkumware::vector<resource_partition*>* partitions = references::partitions.read();
+    vc8::vector<resource_partition*>* partitions = references::partitions.read();
 
     for (u32 index = 0; index < partitions->size(); ++index)
         (*partitions)[index]->streamer.frame_advance(dt, &time_limit);
@@ -165,7 +165,7 @@ void amalga::resource_manager::frame_advance(f32 dt, f32 max_ms) {
 
 // sub_739C50
 amalga::resource_partition* amalga::resource_manager::get_partition_pointer(resource_pack_slot* pack_slot) {
-    dinkumware::vector<resource_partition*>* partitions = references::partitions.read();
+    vc8::vector<resource_partition*>* partitions = references::partitions.read();
 
     for (u32 index = 0; index < partitions->size(); ++index) {
         resource_partition* partition = (*partitions)[index];
@@ -186,7 +186,7 @@ amalga::resource_partition* amalga::resource_manager::get_partition_pointer(reso
 amalga::resource_pack_slot* amalga::resource_manager::get_resource_context() {
     engine_lock_scope lock(references::resource_context_stack_mutex.read());
 
-    dinkumware::vector<resource_pack_slot*> &stack = references::resource_context_stack.get();
+    vc8::vector<resource_pack_slot*> &stack = references::resource_context_stack.get();
 
     return stack.size() ? stack.back() : nullptr;
 }

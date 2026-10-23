@@ -48,7 +48,7 @@ void ui_frontend::draw_script_widgets() {
 
             // children labelled "[...]" get method_008(1);
             // a widget without children is hidden
-            dinkumware::list<igo_3d_script_widget_child*> children(widget->children);
+            vc8::list<igo_3d_script_widget_child*> children(widget->children);
 
             if (children.size()) {
                 for (auto* child = children.begin(); child != children.end(); child = child->next) {

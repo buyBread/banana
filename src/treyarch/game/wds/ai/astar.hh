@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/shared/slot_pool.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -37,7 +37,7 @@ namespace treyarch {
     class astar_priority_queue {
 
     public:
-        dinkumware::vector<astar_node*> heap;
+        vc8::vector<astar_node*> heap;
 
         void clear() {
             heap.clear();
@@ -54,8 +54,8 @@ namespace treyarch {
         bool                                    goal_found;
         u8                                      search_mode;
         u8                                      reserved_023;
-        dinkumware::vector<astar_searchable_t>* path_goal_to_start;
-        dinkumware::vector<astar_searchable_t>* auxiliary_path;
+        vc8::vector<astar_searchable_t>* path_goal_to_start;
+        vc8::vector<astar_searchable_t>* auxiliary_path;
 
         static astar_node_pool default_node_pool;
 
@@ -79,7 +79,7 @@ namespace treyarch {
 
         virtual ~astar_search_record();
 
-        virtual void setup(astar_searchable_t search_start, astar_searchable_t search_goal, dinkumware::vector<astar_searchable_t> *path_goal_to_start, astar_node_pool* pool);
+        virtual void setup(astar_searchable_t search_start, astar_searchable_t search_goal, vc8::vector<astar_searchable_t> *path_goal_to_start, astar_node_pool* pool);
         virtual bool search(unsigned int max_iterations_this_call = 0);
     };
 

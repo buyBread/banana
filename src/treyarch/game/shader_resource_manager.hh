@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "treyarch/shared/dinkumware/map.hh"
+#include "vc8/map.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -10,8 +10,8 @@
 namespace treyarch {
     // name-hash keyed D3D9 program registry; the original class name is not recovered
     struct shader_resource_manager {
-        dinkumware::map<u32, IDirect3DVertexShader9*> vertex_programs;
-        dinkumware::map<u32, IDirect3DPixelShader9*>  pixel_programs;
+        vc8::map<u32, IDirect3DVertexShader9*> vertex_programs;
+        vc8::map<u32, IDirect3DPixelShader9*>  pixel_programs;
 
         IDirect3DVertexShader9** find_vertex_program(const char* name);
         IDirect3DPixelShader9**  find_pixel_program(const char* name);

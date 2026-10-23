@@ -8,7 +8,7 @@
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
-#include "treyarch/shared/dinkumware/list.hh"
+#include "vc8/list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/memory_reference.hh"
@@ -185,7 +185,7 @@ void mission_manager::update_hero_proximity_event() {
     vector3d hero_position = hero->my_abs_po->get_position();
     bool    hero_nearby   = false;
 
-    auto* nearby = *(dinkumware::list<u32*>**)(owner + 0x94);
+    auto* nearby = *(vc8::list<u32*>**)(owner + 0x94);
 
     for (auto* node = nearby->begin(); node != nearby->end(); node = node->next) {
         const vector3d &position = ((entity*)retail::sub_4C3A70(node->value))->my_abs_po->get_position();

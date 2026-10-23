@@ -2,9 +2,9 @@
 
 #include <cstddef>
 
+#include "vc8/list.hh"
 #include "treyarch/game/event/event_callback.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -18,9 +18,9 @@ namespace treyarch {
     class event_recipient_entry {
 
     public:
-        arch_base_vhandle                 recipient_vhandle;
-        dinkumware::list<event_callback*> callbacks;
-        engine_recursive_lock             lock;
+        arch_base_vhandle          recipient_vhandle;
+        vc8::list<event_callback*> callbacks;
+        engine_recursive_lock      lock;
 
         explicit event_recipient_entry(arch_base_vhandle recipient);
         ~event_recipient_entry();
@@ -49,7 +49,7 @@ namespace treyarch {
         
         arch_base_vhandle recipient() const noexcept { return recipient_vhandle; }
 
-        dinkumware::list<event_callback*>* callback_list() noexcept { return &callbacks; }
+        vc8::list<event_callback*>* callback_list() noexcept { return &callbacks; }
     };
 
     ASSERT_SIZEOF  (event_recipient_entry,                    0x20);

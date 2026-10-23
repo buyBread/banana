@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/list.hh"
 #include "treyarch/game/frontend/igo/igo_3d_widget.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -11,7 +11,7 @@ namespace treyarch {
     public:
         void*                  vtable;
         u32                    unk_04;
-        dinkumware::list
+        vc8::list
             <igo_3d_drawable*> meters;
 
         void draw();

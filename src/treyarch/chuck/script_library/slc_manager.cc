@@ -11,10 +11,10 @@ using namespace treyarch::chuck::script_library;
 
 // sub_A20FA0
 slc_manager::slc_manager() : classes(nullptr) {
-    void* allocation = memory::heap::allocate(sizeof(dinkumware::vector<script_library_class*>));
+    void* allocation = memory::heap::allocate(sizeof(vc8::vector<script_library_class*>));
 
     classes = allocation ?
-        new (allocation) dinkumware::vector<script_library_class*>() : nullptr;
+        new (allocation) vc8::vector<script_library_class*>() : nullptr;
 }
 
 // sub_A21450

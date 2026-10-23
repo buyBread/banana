@@ -7,7 +7,7 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     template<typename T>
     class vector_allocator {};
 
@@ -237,4 +237,4 @@ namespace treyarch { namespace dinkumware {
     };
 
     ASSERT_SIZEOF(vector<void*>, 0x10);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

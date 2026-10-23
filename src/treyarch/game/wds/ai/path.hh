@@ -1,10 +1,10 @@
 #pragma once
 
+#include "vc8/vector.hh"
 #include "treyarch/game/wds/ai/astar.hh"
 #include "treyarch/game/wds/ai/nugget.hh"
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/shared/resource_key.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/vector_basic.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mash/mash_info.hh"
@@ -124,7 +124,7 @@ namespace treyarch {
     class path : public astar_search_record {
 
     protected:
-        dinkumware::vector
+        vc8::vector
             <path_graph_node*> path_start_to_goal;
         path_graph*            the_path;
         i32                    waypoint;

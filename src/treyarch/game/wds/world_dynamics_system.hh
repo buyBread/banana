@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vc8/map.hh"
+#include "vc8/vector.hh"
 #include "treyarch/game/animation/scene_anim.hh"
 #include "treyarch/game/wds/ai/wds_ai_manager.hh"
 #include "treyarch/game/wds/camera/wds_camera_manager.hh"
@@ -7,8 +9,6 @@
 #include "treyarch/game/wds/script/wds_script_manager.hh"
 #include "treyarch/game/wds/time/wds_time_manager.hh"
 #include "treyarch/game/wds/entity/wds_entity_manager.hh"
-#include "treyarch/shared/dinkumware/map.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -21,15 +21,15 @@ namespace treyarch {
     class world_dynamics_system {
 
     public:
-        using scene_anim_map_t    = dinkumware::map<mash::string,        scene_anim*>;
-        using sa_handle_obj_map_t = dinkumware::map<scene_anim_handle_t, scene_anim*>;
+        using scene_anim_map_t    = vc8::map<mash::string,        scene_anim*>;
+        using sa_handle_obj_map_t = vc8::map<scene_anim_handle_t, scene_anim*>;
 
         scene_anim_handle_t         last_snm_handle;
         scene_anim_map_t            scene_anim_map;
         sa_handle_obj_map_t         playing_scene_anims;
         u8                          reserved_01c[0x04];
         f32*                        gv_busy_teaching;
-        dinkumware::vector
+        vc8::vector
             <animation_controller*> anim_ctrls;
         u8                          reserved_034[0x08];
         wds_ai_manager              ai_mgr;

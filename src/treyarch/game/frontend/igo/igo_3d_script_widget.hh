@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/list.hh"
 #include "treyarch/game/frontend/igo/igo_3d_widget.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -33,7 +33,7 @@ namespace treyarch {
     class igo_3d_script_widget : public igo_3d_widget {
     public:
         u8                                reserved_150[0x0C];
-        dinkumware::list
+        vc8::list
             <igo_3d_script_widget_child*> children;
         u8                                unk_168;
         u8                                reserved_169[0x14];

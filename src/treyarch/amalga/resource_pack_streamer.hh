@@ -2,11 +2,11 @@
 
 #include "treyarch/amalga/resource_memory_map.hh"
 #include "treyarch/amalga/resource_pack_slot.hh"
-#include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "treyarch/shared/timing/limited_timer.hh"
+#include "vc8/list.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -20,7 +20,7 @@ namespace treyarch { namespace amalga {
         resource_pack_slot_callback callback;
     };
 
-    using resource_pack_queue = dinkumware::list<resource_pack_queue_entry>;
+    using resource_pack_queue = vc8::list<resource_pack_queue_entry>;
 
     struct resource_pack_streamer {
         using flush_callback = void (__cdecl*)();
@@ -28,14 +28,14 @@ namespace treyarch { namespace amalga {
         bool                            active;
         u8                              pad_01[3];
         i32                             currently_streaming;
-        dinkumware::vector
+        vc8::vector
             <resource_pack_slot*>*      pack_slots;
         string_hash                     curr_pack_name;
         resource_pack_slot*             curr_slot;
         i32                             curr_slot_idx;
         resource_amalgatoc_pack_entry*  curr_pack_entry;
         resource_partition*             my_partition;
-        dinkumware::list
+        vc8::list
             <resource_pack_queue_entry> load_queue;
         u8*                             aram_buffer;   // only ever cleared
         resource_pack_slot_callback     load_callback; // handed to every queued load

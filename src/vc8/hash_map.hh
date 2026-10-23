@@ -1,11 +1,11 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/list.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     template<typename K, typename V>
     struct hash_pair {
         K key;
@@ -221,4 +221,4 @@ namespace treyarch { namespace dinkumware {
     using hash_map_size_sanity  = hash_map<u32, void*>;
 
     ASSERT_SIZEOF(hash_map_size_sanity,  0x28);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

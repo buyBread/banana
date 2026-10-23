@@ -106,7 +106,7 @@ amalga::resource_descriptor* amalga::resource_directory::find_resource(const res
 
     // common packs also look in the act pack
     if (partition->partition_enum == resource_partition_common) {
-        dinkumware::vector<resource_partition*>* partitions = resource_manager::references::partitions.read();
+        vc8::vector<resource_partition*>* partitions = resource_manager::references::partitions.read();
 
         if ((*partitions)[resource_partition_act]->pack_slots.size()) {
             resource_manager::references::unk_010300a8.get().acquire();
@@ -227,7 +227,7 @@ void* amalga::resource_directory::find_merged_resource(string_hash          name
 
     // common packs also look in the act pack
     if (partition->partition_enum == resource_partition_common) {
-        dinkumware::vector<resource_partition*>* partitions = resource_manager::references::partitions.read();
+        vc8::vector<resource_partition*>* partitions = resource_manager::references::partitions.read();
 
         if ((*partitions)[resource_partition_act]->pack_slots.size()) {
             resource_manager::references::unk_010300a8.get().acquire();

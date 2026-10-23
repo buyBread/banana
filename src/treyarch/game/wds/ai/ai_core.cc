@@ -53,7 +53,7 @@ void ai_core_list::push_back(ai_core_list_node* node) {
 
 // sub_4CE100
 void ai_core::team_lists::clear() {
-    for (dinkumware::vector<ai_core*> &team : teams)
+    for (vc8::vector<ai_core*> &team : teams)
         team.clear();
 }
 

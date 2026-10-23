@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-#include "treyarch/shared/dinkumware/set.hh"
+#include "vc8/set.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "util/macros/sanity_assert.hh"
@@ -49,7 +49,7 @@ namespace treyarch { namespace chuck { namespace vm {
 
     // the manager's exec_set;
     // walk it under exec_set_lock
-    using script_executable_entry_set_t = dinkumware::set<script_executable_entry*, script_executable_entry_less>;
+    using script_executable_entry_set_t = vc8::set<script_executable_entry*, script_executable_entry_less>;
 
     ASSERT_SIZEOF  (script_executable_entry,             0x14);
     ASSERT_OFFSETOF(script_executable_entry, exec,       0x00);

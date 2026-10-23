@@ -1,14 +1,14 @@
 #pragma once
 
-#include "util/types.hh"
-#include "util/macros/sanity_assert.hh"
+#include "vc8/vector.hh"
 #include "treyarch/game/wds/camera/camera.hh"
 #include "treyarch/shared/boolx.hh"
 #include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/timing/hires_clock.hh"
 #include "util/memory_reference.hh"
+#include "util/types.hh"
+#include "util/macros/sanity_assert.hh"
 
 namespace treyarch {
     struct level_descriptor;
@@ -106,53 +106,53 @@ namespace treyarch {
     class game {
 
     public:
-        level_load_stuff                 level;
-        u8                               disable_interface;
-        u8                               disable_start_menu;
-        u8                               i_quit;
-        u8                               load_new_level;
-        u8                               level_is_loaded;
-        u8                               unk_04d;
-        u8                               debug_single_step;
-        u8                               debug_stop_physics;
-        u32                              unk_050;
-        f32                              unk_054;
-        u8                               game_paused;
-        u8                               unk_059; // set by sub_97CA40 on top of game_paused; scripts keep running while set
-        u8                               use_default_hero_start_position;
-        u8                               level_is_unloading;
-        u8                               wait_for_intro_scene_anim;
-        u8                               reserved_05d[0x03];
-        i32                              hero_freeze_depth;
-        world_dynamics_system*           the_world;
-        u8                               reserved_068[0x04];
-        camera_handle                    base_camera;
-        camera_handle                    current_view_camera;
-        camera_handle                    current_game_camera;
-        u8                               unk_078;
-        u8                               reserved_079[0x03];
-        speedtree_collection*            speedtrees;
-        message_board*                   mb;
-        f32                              level_time;
-        dinkumware::vector<game_process> process_stack;
-        localized_string_table*          string_localizer;
-        vector3d                         base_cam_position;
-        u8                               reserved_0a8[0xF0];
-        u32                              unk_198;
-        u32                              frame_sequence;
-        game_frame_timing                frame_timing;
-        u8                               unk_1ac;
-        u8                               reserved_1ad[0x03];
-        hires_clock_t                    frame_clock;
-        f32                              current_frame_delta;
-        game_data*                       data;
-        f32                              blur;
-        f32                              unk_1c4;
-        f32                              unk_1c8;
-        u8                               unk_1cc;
-        u8                               unk_1cd;
-        u8                               unk_1ce;
-        u8                               reserved_1cf;
+        level_load_stuff          level;
+        u8                        disable_interface;
+        u8                        disable_start_menu;
+        u8                        i_quit;
+        u8                        load_new_level;
+        u8                        level_is_loaded;
+        u8                        unk_04d;
+        u8                        debug_single_step;
+        u8                        debug_stop_physics;
+        u32                       unk_050;
+        f32                       unk_054;
+        u8                        game_paused;
+        u8                        unk_059; // set by sub_97CA40 on top of game_paused; scripts keep running while set
+        u8                        use_default_hero_start_position;
+        u8                        level_is_unloading;
+        u8                        wait_for_intro_scene_anim;
+        u8                        reserved_05d[0x03];
+        i32                       hero_freeze_depth;
+        world_dynamics_system*    the_world;
+        u8                        reserved_068[0x04];
+        camera_handle             base_camera;
+        camera_handle             current_view_camera;
+        camera_handle             current_game_camera;
+        u8                        unk_078;
+        u8                        reserved_079[0x03];
+        speedtree_collection*     speedtrees;
+        message_board*            mb;
+        f32                       level_time;
+        vc8::vector<game_process> process_stack;
+        localized_string_table*   string_localizer;
+        vector3d                  base_cam_position;
+        u8                        reserved_0a8[0xF0];
+        u32                       unk_198;
+        u32                       frame_sequence;
+        game_frame_timing         frame_timing;
+        u8                        unk_1ac;
+        u8                        reserved_1ad[0x03];
+        hires_clock_t             frame_clock;
+        f32                       current_frame_delta;
+        game_data*                data;
+        f32                       blur;
+        f32                       unk_1c4;
+        f32                       unk_1c8;
+        u8                        unk_1cc;
+        u8                        unk_1cd;
+        u8                        unk_1ce;
+        u8                        reserved_1cf;
 
         game();
 

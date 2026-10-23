@@ -8,7 +8,7 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     enum e_tree_color : u8 {
         tree_color_red   = 0,
         tree_color_black = 1
@@ -605,4 +605,4 @@ namespace treyarch { namespace dinkumware {
     ASSERT_OFFSETOF(tree_node<void*>, value,  0x0C);
     ASSERT_OFFSETOF(tree_node<void*>, color,  0x10);
     ASSERT_OFFSETOF(tree_node<void*>, is_nil, 0x11);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

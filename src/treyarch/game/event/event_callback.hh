@@ -2,10 +2,10 @@
 
 #include <cstddef>
 
+#include "vc8/list.hh"
 #include "treyarch/chuck/vm/script_function.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -84,5 +84,5 @@ namespace treyarch {
 
     void dispatch_event_callbacks(event*                             raised_event,
                                   arch_base_vhandle                  recipient,
-                                  dinkumware::list<event_callback*>* callbacks);
+                                  vc8::list<event_callback*>* callbacks);
 } // treyarch

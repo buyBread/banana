@@ -30,7 +30,7 @@ f32 time_interface::calc_time_dilation() {
 
 // sub_636A80
 void time_interface::frame_advance_all_time_interfaces(f32 t) {
-    dinkumware::vector<time_interface*>* interfaces = references::all_time_interfaces.read();
+    vc8::vector<time_interface*>* interfaces = references::all_time_interfaces.read();
 
     if (!interfaces)
         return;

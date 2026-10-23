@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/types.hh"
@@ -19,7 +19,7 @@ namespace treyarch {
 
         mash::vector_basic
             <string_hash>             environment_names; // type-30 environments
-        dinkumware::vector
+        vc8::vector
             <treyarch::environment*>* environments;      // built by activate, one per name
 
         void construct_mashed_class();

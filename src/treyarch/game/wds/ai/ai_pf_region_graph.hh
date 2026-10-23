@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/types.hh"
@@ -73,7 +73,7 @@ namespace treyarch {
             <ai_quad_path_connection>    connection_table;
         mash::vector_basic<vector3d>     vertices;
         mash::vector<ai_quad_path_cell>  cell_table;
-        dinkumware::vector<void*>*       obstacles; // the navmesh obstacle manager's
+        vc8::vector<void*>*       obstacles; // the navmesh obstacle manager's
         u32                              unk_64;
         u32                              unk_68;
         mash::vector_basic<u16>          unk_6c;
@@ -116,7 +116,7 @@ namespace treyarch {
         mash::vector<ai_quad_path>      quad_path_table;
         mash::vector
             <base_region_point>         region_points;
-        dinkumware::vector
+        vc8::vector
             <ai_quad_path_connection*>* unk_64; // filled when the paths are activated
 
         void construct_mashed_class();

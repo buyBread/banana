@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/vector.hh"
 #include "treyarch/game/wds/ai/path.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -17,7 +17,7 @@ namespace treyarch {
     class wds_ai_manager {
 
     private:
-        dinkumware::vector
+        vc8::vector
             <path_graph*> path_graph_list;
         path_graph*       cached_path_graph;
 

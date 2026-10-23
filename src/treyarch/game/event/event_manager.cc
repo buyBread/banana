@@ -6,7 +6,7 @@
 #include "treyarch/game/event/event_pools.hh"
 #include "treyarch/game/event/event_recipient_entry.hh"
 #include "treyarch/game/event/event_type.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/memory_reference.hh"
@@ -16,7 +16,7 @@ namespace treyarch { namespace references {
     util::memory_reference<bool>                            initialized       { 0x0102C234 };
     util::memory_reference<i32>                             garbage_index     { 0x0102C238 };
     util::memory_reference<event_type*>                     cached_event_type { 0x0102C23C };
-    util::memory_reference<dinkumware::vector<event_type*>> event_types       { 0x0102CC94 };
+    util::memory_reference<vc8::vector<event_type*>> event_types       { 0x0102CC94 };
 }} // treyarch::references
 
 namespace treyarch { namespace fn {

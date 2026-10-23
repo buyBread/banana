@@ -62,10 +62,10 @@ void vm_dynamic_array_manager::destroy() {
 // sub_A191A0
 // sub_A19580
 void vm_dynamic_array_manager::setup_array_pool() {
-    void* pool_allocation = memory::heap::allocate(sizeof(dinkumware::vector<vm_dynamic_array_slot>));
+    void* pool_allocation = memory::heap::allocate(sizeof(vc8::vector<vm_dynamic_array_slot>));
 
     array_pool = pool_allocation ?
-        new (pool_allocation) dinkumware::vector<vm_dynamic_array_slot>() : nullptr;
+        new (pool_allocation) vc8::vector<vm_dynamic_array_slot>() : nullptr;
 
     array_pool->resize(0x200, vm_dynamic_array_slot {});
 
@@ -76,10 +76,10 @@ void vm_dynamic_array_manager::setup_array_pool() {
         (*array_pool)[slot].array->reserve(10);
     }
 
-    void* bucket_allocation = memory::heap::allocate(sizeof(dinkumware::vector<u16>));
+    void* bucket_allocation = memory::heap::allocate(sizeof(vc8::vector<u16>));
 
     slot_buckets = bucket_allocation ?
-        new (bucket_allocation) dinkumware::vector<u16>() : nullptr;
+        new (bucket_allocation) vc8::vector<u16>() : nullptr;
 
     slot_buckets->resize(0x20, 0);
 
@@ -103,7 +103,7 @@ void vm_dynamic_array_manager::destroy_array_pool() {
         memory::heap::free(array_pool);
     }
 
-    dinkumware::vector<u16>* buckets = slot_buckets;
+    vc8::vector<u16>* buckets = slot_buckets;
 
     array_pool = nullptr;
 

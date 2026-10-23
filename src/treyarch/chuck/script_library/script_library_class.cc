@@ -20,10 +20,10 @@ script_library_class::script_library_class(const char*,
     if (is_dummy)
         return;
 
-    void* allocation = memory::heap::allocate(sizeof(dinkumware::vector<script_library_function*>));
+    void* allocation = memory::heap::allocate(sizeof(vc8::vector<script_library_function*>));
 
     functions = allocation ?
-        new (allocation) dinkumware::vector<script_library_function*>() : nullptr;
+        new (allocation) vc8::vector<script_library_function*>() : nullptr;
 
     functions->reserve(10);
 

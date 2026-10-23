@@ -1,8 +1,8 @@
 #pragma once
 
+#include "vc8/map.hh"
 #include "treyarch/game/quest_descriptions.hh"
 #include "treyarch/game/reference.hh"
-#include "treyarch/shared/dinkumware/map.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -96,11 +96,11 @@ namespace treyarch {
             <spawn_table_unk_7c>                      unk_7c; // one per act
 
         // the spawn table manager builds these once the interface is loaded
-        dinkumware::map
+        vc8::map
             <mash::string, static_spawn_item*>*       spawn_items_by_name;
-        dinkumware::map
+        vc8::map
             <mash::string, spawn_point_list*>*        spawn_point_lists_by_name;
-        dinkumware::map
+        vc8::map
             <mash::string, flag_collection_base*>*    flag_collections_by_name;
 
         void construct_mashed_class();

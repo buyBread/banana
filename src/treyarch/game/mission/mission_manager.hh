@@ -1,9 +1,9 @@
 #pragma once
 
+#include "vc8/list.hh"
+#include "vc8/vector.hh"
 #include "treyarch/chuck/vm/script_instance_visitor.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/math/algebra.hh"
@@ -209,11 +209,11 @@ namespace treyarch {
         mission_info                  current_mission;
         mission_info                  next_mission;
         u32                           flags;
-        dinkumware::vector
+        vc8::vector
             <mission_icon_info>*      mission_icons;
-        dinkumware::vector
+        vc8::vector
             <mission_icon_info>*      mission_triggers;
-        dinkumware::vector
+        vc8::vector
             <mission_icon_info>*      mission_ped_triggers;
         f32*                          mission_vars;
         f32*                          upgrade_vars;
@@ -232,10 +232,10 @@ namespace treyarch {
         u32                           malor_wait_frames;
         u8                            unk_200;
         u8                            reserved_201[0x03];
-        dinkumware::vector
+        vc8::vector
             <const chuck::vm::
              script_instance*>*       eligible_mission_instances;
-        dinkumware::list
+        vc8::list
             <const chuck::vm::
              script_instance*>*       auto_launch_instances;
         u32                           unk_20c;
@@ -271,7 +271,7 @@ namespace treyarch {
         u8                            unk_295;
         u8                            reserved_296[0x02];
         f32                           leave_radius_squared;
-        dinkumware::vector
+        vc8::vector
             <mission_poi_location_t>* poi_locations;
         i32                           selected_poi_location_key;
         vector3d                      selected_poi_location_position;

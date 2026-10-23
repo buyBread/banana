@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -20,7 +20,7 @@ namespace treyarch {
               base_state*             my_curr_state;
         const mashed_state*           my_prev_state;
               ai_state_machine*       my_parent;
-              dinkumware::vector
+              vc8::vector
                   <ai_state_machine*> my_children;
               ai_state_machine*       my_blocked_machine;
               void*                   my_memory_block;

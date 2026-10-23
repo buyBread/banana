@@ -1,8 +1,8 @@
 #pragma once
 
+#include "vc8/map.hh"
 #include "treyarch/game/progression_change.hh"
 #include "treyarch/game/quest_descriptions.hh"
-#include "treyarch/shared/dinkumware/map.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -91,7 +91,7 @@ namespace treyarch {
             <progression_change>     changes; // switches summons on and off
         mash::vector
             <summon>                 summons;
-        dinkumware::map
+        vc8::map
             <mash::string, summon*>* summons_by_name; // built once the summon manager loads it
 
         void construct_mashed_class();

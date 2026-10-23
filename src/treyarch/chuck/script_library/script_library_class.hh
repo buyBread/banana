@@ -2,8 +2,8 @@
 
 #include <cstddef>
 
+#include "vc8/vector.hh"
 #include "treyarch/chuck/script_library/script_library_function.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
@@ -17,7 +17,7 @@ namespace treyarch { namespace chuck { namespace script_library {
 
     public:
         i32                             size;        // value width: 0 for slc_global, 12 for vector3d, otherwise 4
-        dinkumware::vector
+        vc8::vector
             <script_library_function*>* functions;   // registration order
         const char*                     parent_name; // null for none or ""
 

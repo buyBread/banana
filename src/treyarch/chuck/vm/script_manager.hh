@@ -2,10 +2,10 @@
 
 #include <cassert>
 
+#include "vc8/list.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_executable_entry.hh"
 #include "treyarch/chuck/vm/script_var_container.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mutex.hh"
@@ -66,7 +66,7 @@ namespace treyarch { namespace chuck { namespace vm {
         script_executable*                            master_script;
         script_var_container*                         game_var_container;
         script_var_container*                         shared_var_container;
-        dinkumware::list<script_executable*>*         execs_pending_first_run;
+        vc8::list<script_executable*>*                execs_pending_first_run;
         script_instance_garbage_collection_callback_t garbage_collection_callbacks[15];
         notification_callback_t                       notification_callback;
         get_script_executable_resource_callback_t     get_script_executable_resource_callback;

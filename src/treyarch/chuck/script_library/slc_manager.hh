@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/vector.hh"
 #include "treyarch/chuck/script_library/script_library_class.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/singleton.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -12,7 +12,7 @@ namespace treyarch { namespace chuck { namespace script_library {
     class slc_manager : public singleton_instance<slc_manager, 0x01124C64> {
 
     public:
-        dinkumware::vector<script_library_class*>* classes; // registration order
+        vc8::vector<script_library_class*>* classes; // registration order
 
         slc_manager();
        ~slc_manager();

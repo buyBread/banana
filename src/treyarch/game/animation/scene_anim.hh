@@ -2,10 +2,10 @@
 
 #include <cstddef>
 
+#include "vc8/vector.hh"
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/scene_anim.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
@@ -49,7 +49,7 @@ namespace treyarch {
     public:
         nal::scene_anim*          the_scene_anim;
         nal::scene_anim_instance* scene_anim_inst;
-        dinkumware::vector
+        vc8::vector
             <scene_anims_info>    my_anim_info_list;
         scene_anim_handle_t       the_handle;
         mash::string              my_name;
@@ -57,7 +57,7 @@ namespace treyarch {
         bool                      finished;
         bool                      dead;
         bool                      paused;
-        dinkumware::vector
+        vc8::vector
             <scene_anim_light>    lights;
 
         scene_anim();

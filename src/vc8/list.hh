@@ -6,7 +6,7 @@
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     template<typename T>
     class list_allocator {};
 
@@ -129,4 +129,4 @@ namespace treyarch { namespace dinkumware {
     ASSERT_SIZEOF(list<void*>, 0x0C);
 
     ASSERT_SIZEOF(list_node<void*>, 0x0C);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

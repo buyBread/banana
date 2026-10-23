@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include "treyarch/shared/dinkumware/tree.hh"
+#include "vc8/tree.hh"
 #include "util/macros/sanity_assert.hh"
 
-namespace treyarch { namespace dinkumware {
+namespace treyarch { namespace vc8 {
     template<typename K>
     struct set_key {
         const K &operator()(const K &value) const noexcept {
@@ -19,4 +19,4 @@ namespace treyarch { namespace dinkumware {
     using set_size_sanity = set<void*>;
 
     ASSERT_SIZEOF(set_size_sanity, 0x0C);
-}} // treyarch::dinkumware
+}} // treyarch::vc8

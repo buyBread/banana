@@ -6,7 +6,7 @@
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/amalga/resource_amalgatoc.hh"
 #include "treyarch/amalga/resource_memory_map.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
+#include "vc8/vector.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
@@ -69,9 +69,9 @@ namespace treyarch {
                 inline util::memory_reference<bool> initialized { 0x0102FE4C };
                 inline util::memory_reference<bool> advancing   { 0x0102FE4D };
 
-                inline util::memory_reference<dinkumware::vector<resource_partition*>*> partitions                   { 0x0102FE50 };
-                inline util::memory_reference<dinkumware::vector<resource_pack_slot*>>  resource_context_stack       { 0x01030A10 };
-                inline util::memory_reference<engine_recursive_lock*>                   resource_context_stack_mutex { 0x0102FE54 };
+                inline util::memory_reference<vc8::vector<resource_partition*>*> partitions                   { 0x0102FE50 };
+                inline util::memory_reference<vc8::vector<resource_pack_slot*>>  resource_context_stack       { 0x01030A10 };
+                inline util::memory_reference<engine_recursive_lock*>            resource_context_stack_mutex { 0x0102FE54 };
 
                 // has no name in any build; held around every resource context push and pop
                 inline util::memory_reference<engine_recursive_lock> unk_010300a8 { 0x010300A8 };

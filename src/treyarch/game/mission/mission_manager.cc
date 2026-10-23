@@ -127,23 +127,23 @@ mission_manager::mission_manager() {
     working_checkpoint_registry = allocation ? retail::sub_804D60((u32*)allocation) : nullptr;
 
     allocation = memory::heap::allocate(sizeof(*mission_icons));
-    mission_icons = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
+    mission_icons = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_icons->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*mission_triggers));
-    mission_triggers = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
+    mission_triggers = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_triggers->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*mission_ped_triggers));
-    mission_ped_triggers = allocation ? new (allocation) dinkumware::vector<mission_icon_info>() : nullptr;
+    mission_ped_triggers = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_ped_triggers->reserve(20);
 
     allocation = memory::heap::allocate(sizeof(*eligible_mission_instances));
-    eligible_mission_instances = allocation ? new (allocation) dinkumware::vector<const chuck::vm::script_instance*>() : nullptr;
+    eligible_mission_instances = allocation ? new (allocation) vc8::vector<const chuck::vm::script_instance*>() : nullptr;
     eligible_mission_instances->reserve(40);
 
     allocation = memory::heap::allocate(sizeof(*auto_launch_instances));
-    auto_launch_instances = allocation ? new (allocation) dinkumware::list<const chuck::vm::script_instance*>() : nullptr;
+    auto_launch_instances = allocation ? new (allocation) vc8::list<const chuck::vm::script_instance*>() : nullptr;
 
     unk_0d8[0] = 0;
     unk_0d8[1] = 0;
@@ -155,7 +155,7 @@ mission_manager::mission_manager() {
     icon_entity_pool = allocation ? retail::sub_804870((u32*)allocation) : nullptr;
 
     allocation = memory::heap::allocate(sizeof(*poi_locations));
-    poi_locations = allocation ? new (allocation) dinkumware::vector<mission_poi_location_t>() : nullptr;
+    poi_locations = allocation ? new (allocation) vc8::vector<mission_poi_location_t>() : nullptr;
     selected_poi_location_key = -1;
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/map.hh"
 #include "treyarch/chuck/vm/so_data_block.hh"
-#include "treyarch/shared/dinkumware/map.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -11,7 +11,7 @@
 namespace treyarch { namespace chuck { namespace vm {
     // heap-owned; destroy erases and frees the map, then this
     struct script_var_debug_info {
-        dinkumware::map<mash::string, i32>* var_to_offset;
+        vc8::map<mash::string, i32>* var_to_offset;
     };
 
     struct script_var_address_entry {

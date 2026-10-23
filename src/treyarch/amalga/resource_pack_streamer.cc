@@ -36,12 +36,12 @@ void amalga::resource_pack_streamer::frame_advance(f32 dt, limited_timer* time_l
     if (!pack_slots)
         return;
 
-    dinkumware::vector<resource_pack_slot*> slots(*pack_slots);
+    vc8::vector<resource_pack_slot*> slots(*pack_slots);
 
     if (my_partition->callback)
         my_partition->callback(my_partition, &slots);
 
-    dinkumware::vector<resource_pack_slot*> unloaded_slots;
+    vc8::vector<resource_pack_slot*> unloaded_slots;
 
     for (u32 index = 0; index < slots.size(); ++index) {
         resource_pack_slot* slot = slots[index];

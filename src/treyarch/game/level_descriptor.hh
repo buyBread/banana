@@ -1,7 +1,7 @@
 #pragma once
 
-#include "treyarch/shared/dinkumware/list.hh"
-#include "treyarch/shared/dinkumware/map.hh"
+#include "vc8/list.hh"
+#include "vc8/map.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -19,8 +19,8 @@ namespace treyarch {
         i32          district_count;
         void*        blocks_in_this_level;
         
-        dinkumware::map
-            <resource_key, dinkumware::list<resource_key>>* sounds_by_mission;
+        vc8::map
+            <resource_key, vc8::list<resource_key>>* sounds_by_mission;
 
         ~level_descriptor();
 

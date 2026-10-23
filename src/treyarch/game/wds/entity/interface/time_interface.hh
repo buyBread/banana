@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vc8/vector.hh"
 #include "treyarch/game/wds/entity/interface/generic_interface.hh"
-#include "treyarch/shared/dinkumware/vector.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -58,7 +58,7 @@ namespace treyarch {
     };
 
     namespace references {
-        inline util::memory_reference<dinkumware::vector<time_interface*>*> all_time_interfaces { 0x00FFEABC };
+        inline util::memory_reference<vc8::vector<time_interface*>*> all_time_interfaces { 0x00FFEABC };
     } // references
 
     ASSERT_OFFSETOF(time_interface, time_dilation,          0x0C);

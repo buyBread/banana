@@ -2,10 +2,10 @@
 
 #include <cstddef>
 
+#include "vc8/hash_map.hh"
+#include "vc8/list.hh"
 #include "treyarch/game/event/event_callback.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
-#include "treyarch/shared/dinkumware/hash_map.hh"
-#include "treyarch/shared/dinkumware/list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
@@ -22,15 +22,16 @@ namespace treyarch {
 
     class event_type {
 
-        event_recipient_entry*                          cached_event_recipient_entry;
-        string_hash                                     event_type_id;
-        event*                                          event_to_raise;
-        u32                                             padding_0c;
-        engine_recursive_lock                           lock;
-        dinkumware::hash_map
-            <arch_base_vhandle, event_recipient_entry*> recipients;
-        dinkumware::list<event_callback*>               default_callbacks;
-        u32                                             padding_54;
+        event_recipient_entry*       cached_event_recipient_entry;
+        string_hash                  event_type_id;
+        event*                       event_to_raise;
+        u32                          padding_0c;
+        engine_recursive_lock        lock;
+        vc8::hash_map
+            <arch_base_vhandle,
+             event_recipient_entry*> recipients;
+        vc8::list<event_callback*>   default_callbacks;
+        u32                          padding_54;
 
     public:
         explicit event_type(string_hash event_type_id);

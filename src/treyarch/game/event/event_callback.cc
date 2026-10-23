@@ -138,9 +138,9 @@ void script_event_callback::spawn(event* raised_event, arch_base_vhandle) {
 // sub_6842F0
 void treyarch::dispatch_event_callbacks(event*                             raised_event,
                                         arch_base_vhandle                  recipient,
-                                        dinkumware::list<event_callback*>* callbacks) {
+                                        vc8::list<event_callback*>* callbacks) {
 
-    using callback_list = dinkumware::list<event_callback*>;
+    using callback_list = vc8::list<event_callback*>;
 
     callback_list::node* position = callbacks->begin();
 

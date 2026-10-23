@@ -47,7 +47,7 @@ function() {
 * Utilizing the `util/` drawer for abstractions on generic things is preferable to writing new functions.
 * Typing must utilize `util/types.hh` wherever possible. If something is explicitly some Microsoft type like `UINT` or whatever, use that instead.
 * When implementing methods from the binary, annotate the method with an appropriate `// sub_XXXXXX` comment. If you believe something is inlined, annotate the method with an appropriate `// inlined @ sub_XXXXXX`. Otherwise, try to keep one-off helpers to a minimum.
-* Since the game is compiled using VC8, which relied on Dinkumware STL implementations, we can't always reliably use them due to a difference in behavior. However, this isn't always the case and unless you actually confirm that the VC8 STL behavior is some radically different unicorn, you should use the project's actual STL. Otherwise, implement the actual VC8 STL under `./src/treyarch/shared/dinkumware/`.
+* Since the game is compiled using VC8, which relied on Dinkumware STL implementations, we can't always reliably use them due to a difference in behavior or ABI. However, this isn't always the case and unless you actually confirm that the VC8 STL behavior is some radically different unicorn, you should use the project's actual STL. Otherwise, implement the actual VC8 STL method(s) under `./src/vc8/` or call the retail method(s) if you don't feel like doing that.
 
 The unusual practices here will be lifted and are temporary solutions, not permanent inconveniences. The codebase will eventually undergo a substantial refactoring phase upon reaching near-full parity, i.e. sanitizing unsafe C-casts with proper C++ casting.
 

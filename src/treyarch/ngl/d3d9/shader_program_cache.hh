@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "treyarch/shared/dinkumware/hash_map.hh"
+#include "vc8/hash_map.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -17,13 +17,13 @@ namespace treyarch { namespace ngl { namespace d3d9 { namespace shader_program_c
     };
 
     template<typename T>
-    using program_pair = dinkumware::hash_pair<u32, T*>;
+    using program_pair = vc8::hash_pair<u32, T*>;
 
     template<typename T>
-    using program_node = dinkumware::list_node<program_pair<T>>;
+    using program_node = vc8::list_node<program_pair<T>>;
 
     template<typename T>
-    using program_cache = dinkumware::hash_map<u32, T*, shader_crc_traits>;
+    using program_cache = vc8::hash_map<u32, T*, shader_crc_traits>;
 
     template<typename T>
     struct program_cache_layout {
