@@ -21,6 +21,12 @@ namespace treyarch { namespace mash {
             clear();
         }
 
+              T* begin()       { return data; }
+        const T* begin() const { return data; }
+
+              T* end()       { return data ? data + size : nullptr; }
+        const T* end() const { return data ? data + size : nullptr; }
+
         // sub_4A45B0
         // sub_5CD470
         // sub_620B30
