@@ -1,6 +1,5 @@
 #include <bit>
 
-#include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/game/cutscene/cut_scene.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
@@ -130,8 +129,7 @@ void cut_scene::construct_mashed_class() {
 
 // sub_80A740
 void cut_scene::destruct_mashed_class() {
-    // cut_scene_player::stop; it stops only this one
-    retail::sub_808FA0((i32*)references::cut_scene_player.read(), (i32)this);
+    references::cut_scene_player.read()->stop(this);
 
     entity_class_entries.destruct_mashed_class();
     segments            .destruct_mashed_class();

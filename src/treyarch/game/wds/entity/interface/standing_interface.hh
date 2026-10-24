@@ -1,0 +1,16 @@
+#pragma once
+
+#include "treyarch/game/wds/entity/interface/generic_interface.hh"
+#include "util/macros/sanity_assert.hh"
+#include "util/types.hh"
+
+namespace treyarch {
+    class standing_interface : public generic_interface {
+
+    public:
+        u8  reserved_008[0x3C];
+        u32 unk_044; // the cut scene player clears bit 0 while it has the hero
+    };
+
+    ASSERT_OFFSETOF(standing_interface, unk_044, 0x44);
+} // treyarch

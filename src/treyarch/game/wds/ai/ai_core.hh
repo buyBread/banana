@@ -91,7 +91,8 @@ namespace treyarch {
         u32                             record_slot_mask;     // bit n is set while records[n] is in use
         u8                              records[32][0x2C];
         vc8::list<void*>                active_records;       // entries point into records
-        u8                              reserved_5bc[0x0C];
+        u32                             unk_5bc;              // the cut scene player sets it while it has the hero
+        u8                              reserved_5c0[0x08];
         u8                              reserved_5c8[0x0C];
         ai_state_machine*               my_base_machine;
         ai_state_machine*               my_locomotion_machine;
@@ -146,6 +147,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, record_slot_mask,       0x02C);
     ASSERT_OFFSETOF(ai_core, records,                0x030);
     ASSERT_OFFSETOF(ai_core, active_records,         0x5B0);
+    ASSERT_OFFSETOF(ai_core, unk_5bc,                0x5BC);
     ASSERT_OFFSETOF(ai_core, my_base_machine,        0x5D4);
     ASSERT_OFFSETOF(ai_core, my_machine_list,        0x5DC);
     ASSERT_OFFSETOF(ai_core, my_mode,                0x5F4);

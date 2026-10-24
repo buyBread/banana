@@ -9,15 +9,25 @@
 #include "treyarch/game/event/anim_event.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
+#include "treyarch/game/frontend/ui_frontend.hh"
+#include "treyarch/game/frontend/igo/igo_3d_widget.hh"
+#include "treyarch/game/frontend/igo/igo_3d_zoom_map.hh"
 #include "treyarch/game/game.hh"
+#include "treyarch/game/glass_house_manager.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
+#include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/camera/camera.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
+#include "treyarch/game/wds/entity/interface/morph_interface.hh"
+#include "treyarch/game/wds/entity/interface/standing_interface.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/region.hh"
 #include "treyarch/game/wds/terrain.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/mash/avl_tree.hh"
+#include "treyarch/shared/math/po.hh"
 
 using namespace treyarch;
 
@@ -140,7 +150,7 @@ void cut_scene_player::frame_advance(f32 time_inc) {
 
         play_current_segment();
     } else if (!--loops_left || skip_all)
-        retail::sub_808FA0((i32*)this, 0); // stop
+        stop(nullptr);
     else {
         release_current_segment();
 
@@ -165,7 +175,7 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
         ((void (__thiscall*)(player_interface*, f32))((void**)player->vtable)[540])(player, time - last_time); // slot 540
     }
 
-    if (!retail::sub_8091A0((i32)this, time_inc)) { // the fade step
+    if (!advance_fade(time_inc)) {
         if (state_flags & playing) {
             raise_animation_events(&current_cut_scene->entity_class_entries, time, last_time, false);
             raise_hero_animation_events(time, last_time, false);
@@ -184,7 +194,7 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
     }
 
     if (loading_time >= 60.0)
-        retail::sub_808FA0((i32*)this, 0); // stop
+        stop(nullptr);
 
     if (!districts_loaded(time_inc))
         return false;
@@ -197,6 +207,346 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
     hookup_current_segment();
 
     return true;
+}
+
+// sub_808FA0
+void cut_scene_player::stop(cut_scene* only) {
+    state_flags &= ~(0x20000 | segment_paused);
+
+    if (current_cut_scene && (current_cut_scene->flags & 0x0800))
+        current_cut_scene->flags &= ~0x0800;
+
+    retail::sub_730F10((u32*)references::glass_house_manager.read(), saved_glass_house_level); // set_glass_house_level
+
+    if (only && only != current_cut_scene)
+        return;
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (current_cut_scene) {
+        u32 flags = current_cut_scene->flags;
+
+        if (flags & cut_scene::takes_igo) {
+            if (!(flags & 0x0004) || !(flags & 0x4000) || (flags & cut_scene::no_fades))
+                take_igo(true);
+            else
+                state_flags |= give_back_igo;
+        }
+
+        flags = current_cut_scene->flags;
+
+        if (flags & 0x0004) {
+            if ((flags & 0x4000) && !(flags & cut_scene::no_fades))
+                state_flags |= 0x0800;
+            else if (on_last_segment() && !(state_flags & 0x2000) && !(state_flags & 0x4000))
+                retail::sub_6E7000((u32*)igo, 0.8f, 0.0f); // letterbox
+        }
+    }
+
+    if (state_flags & playing) {
+        if (current_cut_scene && !(current_cut_scene->flags & cut_scene::hero_unaffected)) {
+            app::inst()->get_game()->freeze_hero(false);
+
+            entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+            if (hero->has_ifc(entity_ifc_standing))
+                ((standing_interface*)hero->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 1;
+
+            ((actor*)references::g_world_ptr.read()->get_hero_ptr())->get_ai_core()->unk_5bc = 0;
+
+            player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
+
+            ((void (__thiscall*)(player_interface*, i32))((void**)player->vtable)[187])(player, 0); // slot 187
+        }
+
+        start_end_fade();
+
+        if (!fade_state ||
+            (current_cut_scene->end_fade.fade_out_time <= 0.0f && current_cut_scene->end_fade.fade_in_time <= 0.0f))
+
+            finish();
+    }
+
+    state_flags &= ~(playing | skipping);
+}
+
+// sub_8087F0
+void cut_scene_player::finish() {
+    if (!current_cut_scene)
+        return;
+
+    retail::sub_63CD10(); // empties the morph of every morph interface whose entity has a variant interface
+
+    release_entities();
+
+    entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+    ((void (__thiscall*)(entity*, bool, bool))hero->vtable[69])(hero, (state_flags & hero_was_hidden) != 0, true); // slot 69
+
+    state_flags &= ~hero_was_hidden;
+
+    if (*current_segment && current_segment != current_cut_scene->segments.end())
+        release_current_segment();
+
+    restore_entities();
+
+    if (current_cut_scene->unk_30.m_size) {
+        string_hash name;
+
+        name.initialize(mash::ALLOCATED, current_cut_scene->unk_30.m_data);
+
+        string_hash id = name;
+
+        auto target = (entity*)retail::sub_7DF6E0((u32*)&id);
+
+        // slot 28
+        if (target && ((bool (__thiscall*)(entity*))target->vtable[28])(target)) {
+            auto chase = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+
+            if (((bool (__thiscall*)(camera*))chase->vtable[31])(chase)) // slot 31
+                ((void (__thiscall*)(camera*, entity*))chase->vtable[158])(chase, target); // slot 158
+        }
+    }
+
+    retail::sub_901010(nullptr); // stops the cut scene sound
+
+    current_cut_scene = nullptr;
+}
+
+// sub_805EC0
+bool cut_scene_player::on_last_segment() const {
+    return current_cut_scene && current_segment + 1 == current_cut_scene->segments.end();
+}
+
+// sub_8091A0
+bool cut_scene_player::advance_fade(f32 time_inc) {
+    if (!fade_state)
+        return true;
+
+    if ((state_flags & playing) && !districts_loaded(0.0f) && fade_state != 1)
+        return false;
+
+    fade_timer = (f32)((f64)fade_timer - (f64)time_inc);
+
+    if (fade_timer >= 0.0f)
+        return false;
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (fade_state == 1) {
+        if (state_flags & playing) {
+            play_current_segment();
+
+            if (current_cut_scene && (current_cut_scene->flags & 0x0004) && (current_cut_scene->flags & 0x2000))
+                retail::sub_6E7000((u32*)igo, 0.0f, 60.0f); // letterbox
+        } else {
+            finish();
+
+            if (state_flags & 0x0800) {
+                state_flags &= ~0x0800;
+
+                retail::sub_6E7000((u32*)igo, 0.0f, 0.0f);
+
+                if (state_flags & give_back_igo) {
+                    state_flags &= ~give_back_igo;
+
+                    take_igo(true);
+                }
+            }
+        }
+
+        if (fade_hold_time > 0.0f) {
+            fade_timer = fade_hold_time;
+            fade_state = 2;
+
+            return false;
+        }
+    } else if (fade_state != 2) {
+        if (fade_state != 3)
+            return false;
+
+        u32 black = 0xFF000000;
+
+        retail::sub_698B50((u32*)igo, &black); // the loading screen's color
+
+        fade_state = 0;
+
+        return true;
+    }
+
+    // the hold is over, or there was none
+    if (state_flags & skip_fade_in) {
+        u32 black = 0xFF000000;
+
+        retail::sub_698B50((u32*)igo, &black);
+        retail::sub_6884F0((u32*)igo); // lets go of the hero freezes the loading screen took
+
+        fade_state = 0;
+
+        return true;
+    }
+
+    retail::sub_70A8B0((u32*)igo, false, fade_in_time, true); // hides the loading screen
+
+    fade_timer = fade_in_time;
+    fade_state = 3;
+
+    return (state_flags & playing) != 0;
+}
+
+// sub_8056F0
+void cut_scene_player::start_end_fade() {
+    cut_scene* fading = current_cut_scene;
+
+    if ((fading->flags & cut_scene::no_fades) ||
+        (fading->end_fade.fade_out_time <= 0.0f && fading->end_fade.fade_in_time <= 0.0f)) {
+
+        fade_state = 0;
+
+        return;
+    }
+
+    fade_state     = 1;
+    fade_timer     = fading->end_fade.fade_out_time;
+    fade_hold_time = fading->end_fade.hold_time;
+    fade_in_time   = fading->end_fade.fade_in_time;
+
+    if (!(state_flags & 0x20000) && (fading->flags & cut_scene::end_on_black))
+        state_flags |= skip_fade_in;
+    else
+        state_flags &= ~skip_fade_in;
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    retail::sub_698B50((u32*)igo, &fading->end_fade.color); // the loading screen's color
+    retail::sub_70A8B0((u32*)igo, true, fade_timer, true);  // shows the loading screen
+}
+
+// sub_8057A0
+// inlined @ sub_808FA0
+// inlined @ sub_8091A0
+void cut_scene_player::take_igo(bool give_back) {
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (give_back) {
+        igo->radar_widget->set_visible((state_flags & radar_was_visible) != 0);
+
+        igo->zoom_map->unk_8f95 = false;
+        igo->zoom_map->unk_8f96 = false;
+
+        references::game.read()->disable_interface = false;
+
+        return;
+    }
+
+    if (igo->radar_widget->is_visible())
+        state_flags |= radar_was_visible;
+    else
+        state_flags &= ~radar_was_visible;
+
+    if (state_flags & radar_was_visible)
+        igo->radar_widget->set_visible(false);
+
+    igo->zoom_map->unk_8f95 = true;
+    igo->zoom_map->unk_8f96 = true;
+
+    references::game.read()->disable_interface = true;
+
+    player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
+
+    ((void (__thiscall*)(player_interface*, u32))((void**)player->vtable)[47])(player, 0); // slot 47
+}
+
+// sub_8068A0
+void cut_scene_player::restore_entities() {
+    if (!current_cut_scene)
+        return;
+
+    for (auto it = current_cut_scene->entity_class_entries.begin(); it.node; it.iterate()) {
+        entity_class_entry* entry = it.node->element;
+
+        string_hash id = entry->name;
+
+        auto restored = (entity*)retail::sub_7DF6E0((u32*)&id);
+
+        if (!restored)
+            continue;
+
+        ai_core* ai = ((actor*)restored)->get_ai_core();
+
+        if (ai && !retail::sub_601C50((u32*)restored))
+            retail::sub_4DF4B0((i32*)ai, 0); // ai_core::pop_ai_disable
+
+        if (entry->flags & entity_class_entry::place_at_end) {
+            if (ai) {
+                if (info_node* node = ai->get_info_node((e_info_node_type)23))
+                    retail::sub_450480((u8*)node, true, false);
+            }
+
+            vector4d position(entry->end_position.x, entry->end_position.y, entry->end_position.z, 0.0f);
+            vector4d rotation((f32)((f64)entry->end_rotation.x * 0.01745329238474369),
+                              (f32)((f64)entry->end_rotation.y * 0.01745329238474369),
+                              (f32)((f64)entry->end_rotation.z * 0.01745329238474369),
+                              0.0f);
+
+            po transform;
+
+            retail::sub_606F80((u64*)&transform, (i32)&position, (f32*)&rotation, 1.0f);
+            retail::sub_627180((i32)restored, (f32*)&transform);
+
+            if (restored->is_an_actor() && ((actor*)restored)->get_ai_core()) {
+                auto als = (als_inode*)((actor*)restored)->get_ai_core()->get_info_node(info_node_type_als);
+
+                if (als) {
+                    retail::sub_4029D0((u32**)als, 0x8F, (i32)&restored->my_abs_po->get_z_facing(), 0); // als_inode::set_desired_param
+
+                    if (als->my_als)
+                        ((void (__thiscall*)(void*))(*(void***)als->my_als)[22])(als->my_als); // slot 22
+                }
+            }
+        }
+
+        if (restored->has_ifc(entity_ifc_physical))
+            ((void (__thiscall*)(entity*, bool, bool))restored->vtable[69])(restored, (entry->flags & entity_class_entry::was_hidden) != 0, true); // slot 69
+
+        retail::sub_6299F0((u32*)restored);
+
+        ((void (__thiscall*)(entity*))restored->vtable[157])(restored); // slot 157
+
+        if (restored->has_ifc(entity_ifc_physical))
+            restored->physical_ifc()->cancel_all_velocity(zerovec);
+
+        ((void (__thiscall*)(entity*, terrain*, i32, i32))restored->vtable[89])(restored, references::g_world_ptr.read()->the_terrain, 0, 0); // slot 89
+    }
+}
+
+// sub_807EC0
+void cut_scene_player::release_entities() {
+    using set_morph_method = void (__thiscall*)(morph_interface* self, mash::string morph_name);
+
+    for (arch_base_vhandle* handle = lip_sync_entities.begin(); handle != lip_sync_entities.end(); handle++) {
+        auto morphed = (entity*)handle->resolve();
+
+        if (morphed && morphed->has_ifc(entity_ifc_morph)) {
+            auto morph = (morph_interface*)morphed->my_ifc_storage->get_ifc(entity_ifc_morph);
+
+            ((set_morph_method)retail::sub_61FD20)(morph, mash::string((const char*)nullptr));
+        }
+    }
+
+    remove_entities(&spawned_entities);
+}
+
+// sub_807B60
+void cut_scene_player::remove_entities(vc8::vector<arch_base_vhandle>* entities) {
+    for (arch_base_vhandle* handle = entities->begin(); handle != entities->end(); handle++) {
+        arch_base* removed = handle->resolve();
+
+        if (removed)
+            retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)removed);
+    }
+
+    entities->clear();
 }
 
 // sub_805070
@@ -400,9 +750,7 @@ bool cut_scene_player::start_current_segment() {
         !(state_flags & 0x2000) &&
         !(state_flags & 0x8000)) {
 
-        using igo_method = void (__thiscall*)(ui_frontend* self, f32 unk_1, f32 unk_2);
-
-        ((igo_method)retail::sub_6E7000)(references::frontend.get().igo, 1.5f, 60.0f);
+        retail::sub_6E7000((u32*)references::frontend.get().igo, 1.5f, 60.0f); // letterbox
     }
 
     return true;

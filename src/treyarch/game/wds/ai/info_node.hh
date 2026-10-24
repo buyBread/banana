@@ -65,9 +65,20 @@ namespace treyarch {
         virtual void exit_limbo();
     };
 
+    // SM3's als_inode
+    class als_inode : public info_node {
+
+    public:
+        void* my_als; // als::animation_logic_system_interface
+        u32   unk_034;
+    };
+
     ASSERT_SIZEOF  (info_node,                 0x30);
     ASSERT_OFFSETOF(info_node, unk_004,        0x04);
     ASSERT_OFFSETOF(info_node, my_param_block, 0x08);
     ASSERT_OFFSETOF(info_node, my_type,        0x28);
     ASSERT_OFFSETOF(info_node, my_ai_core,     0x2C);
+
+    ASSERT_SIZEOF  (als_inode,         0x38);
+    ASSERT_OFFSETOF(als_inode, my_als, 0x30);
 } // treyarch

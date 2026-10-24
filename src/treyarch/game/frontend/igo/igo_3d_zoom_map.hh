@@ -14,6 +14,9 @@ namespace treyarch {
         u8 render_block_00d;
         u8 reserved_00e[0x8F82];
         u8 render_block_8f90;
+        u8 reserved_8f91[0x04];
+        u8 unk_8f95; // the cut scene player sets both while it has the igo
+        u8 unk_8f96;
 
         bool blocks_world_rendering() const {
             return render_block_00d || render_block_8f90;
@@ -26,4 +29,6 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(igo_3d_zoom_map, render_block_00d,  0x000D);
     ASSERT_OFFSETOF(igo_3d_zoom_map, render_block_8f90, 0x8F90);
+    ASSERT_OFFSETOF(igo_3d_zoom_map, unk_8f95,          0x8F95);
+    ASSERT_OFFSETOF(igo_3d_zoom_map, unk_8f96,          0x8F96);
 } // treyarch

@@ -7,6 +7,7 @@
 #include "treyarch/game/input/game_button.hh"
 #include "treyarch/nal/scene_anim.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
+#include "treyarch/shared/math/algebra.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -27,11 +28,18 @@ namespace treyarch {
 
     public:
         enum e_state_flags : u32 {
-            hooked_up      = 0x040, // the current segment's scene anim and sound run
-            playing        = 0x080,
-            skipping       = 0x100,
-            segment_paused = 0x200  // play_current_segment paused the new scene anim
+            radar_was_visible = 0x00001, // take_igo hid it
+            hooked_up         = 0x00040, // the current segment's scene anim and sound run
+            playing           = 0x00080,
+            skipping          = 0x00100,
+            segment_paused    = 0x00200, // play_current_segment paused the new scene anim
+            skip_fade_in      = 0x00400, // the end fade stops on black
+            give_back_igo     = 0x01000, // stop left it to the end fade
+            hero_was_hidden   = 0x10000
         };
+
+        // SM3's ZEROVEC; every file kept its own copy
+        inline static const vector3d zerovec = vector3d(0.0f, 0.0f, 0.0f);
 
         cut_scene*              current_cut_scene;
         cut_scene_segment**     current_segment; // into current_cut_scene->segments
@@ -71,6 +79,19 @@ namespace treyarch {
 
         void frame_advance(f32 time_inc);
         bool frame_advance_lite(f32 time_inc);
+
+        void stop(cut_scene* only);
+        void finish();
+        bool on_last_segment() const;
+
+        bool advance_fade(f32 time_inc);
+        void start_end_fade();
+
+        void take_igo(bool give_back);
+
+        void        restore_entities();
+        void        release_entities();
+        static void remove_entities(vc8::vector<arch_base_vhandle>* entities);
 
         void update_focus();
 

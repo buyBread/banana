@@ -146,7 +146,9 @@ namespace treyarch {
             skippable            = 0x0001,
             hero_unaffected      = 0x0002, // play leaves the hero and the controls alone
             no_fades             = 0x0008,
+            takes_igo            = 0x0080, // play hides the radar and disables the interface until the end
             play_once            = 0x0200, // ignores play_count
+            end_on_black         = 0x1000, // the end fade doesn't fade back in
             keep_render_distance = 0x8000  // the render distance stays 250 instead of going out to 2500
         };
 

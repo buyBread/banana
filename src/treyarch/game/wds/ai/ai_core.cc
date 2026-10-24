@@ -78,6 +78,7 @@ void ai_core::team_lists::rebuild() {
     valid = true;
 }
 
+// inlined @ sub_8068A0
 // inlined @ sub_981D50
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;

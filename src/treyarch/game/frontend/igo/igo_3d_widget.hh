@@ -55,6 +55,11 @@ namespace treyarch {
             return vtable->is_visible(this);
         }
 
+        // slot 5
+        void set_visible(bool visible) {
+            ((void (__thiscall*)(igo_3d_drawable*, bool))vtable->method_014)(this, visible);
+        }
+
         u32 suppression_mask() {
             return vtable->suppression_mask(this);
         }
