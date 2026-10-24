@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <bit>
+#include <cstring>
 
 #include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
@@ -14,7 +15,9 @@
 #include "treyarch/game/frontend/igo/igo_3d_zoom_map.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/glass_house_manager.hh"
+#include "treyarch/game/input/input_mgr.hh"
 #include "treyarch/game/mission/mission_manager.hh"
+#include "treyarch/game/vehicle_model.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/camera/camera.hh"
@@ -59,6 +62,11 @@ bool cut_scene_player::is_playing() const {
     return (state_flags & playing)  != 0 ||
            (state_flags & skipping) != 0 ||
            fade_state;
+}
+
+// sub_805050
+bool cut_scene_player::is_skipping() const {
+    return (state_flags & skipping) != 0;
 }
 
 // sub_805060
@@ -207,6 +215,372 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
     hookup_current_segment();
 
     return true;
+}
+
+// sub_809850
+bool cut_scene_player::play(cut_scene* to_play) {
+    using change_suit_method   = void (__thiscall*)(player_interface* self, f32 unk, bool black);
+    using is_black_suit_method = bool (__thiscall*)(player_interface* self);
+
+    if (!to_play || !to_play->play_count || !to_play->segments.size)
+        return false;
+
+    if (!std::strncmp(to_play->get_name().m_data, "igc_ele_shot", 0xFFFF))
+        to_play->flags &= ~cut_scene::skippable;
+
+    world_dynamics_system* world = references::g_world_ptr.read();
+
+    if (world->camera_mgr.marky_camera)
+        retail::sub_640910((u32*)world->camera_mgr.marky_camera); // entity_base::clear_parent
+
+    entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+    if (hero->flags & 0x4000)
+        state_flags |= hero_was_hidden;
+    else
+        state_flags &= ~hero_was_hidden;
+
+    player_interface* player = hero->player_ifc();
+
+    auto change_suit = (change_suit_method)((void**)player->vtable)[572];
+
+    if (to_play->red_suit)
+        change_suit(player, 0.0f, false);
+    else if (to_play->black_suit)
+        change_suit(player, 0.0f, true);
+    else
+        change_suit(player, 0.0f, ((is_black_suit_method)((void**)player->vtable)[305])(player));
+
+    state_flags &= ~skipping;
+
+    saved_glass_house_level = references::glass_house_manager.read()->glass_house_level;
+
+    stop(nullptr);
+
+    retail::sub_730F10((u32*)references::glass_house_manager.read(), -1); // set_glass_house_level
+
+    current_cut_scene = to_play;
+    loops_left        = (to_play->flags & cut_scene::play_once) ? 1 : to_play->play_count;
+    current_segment   = to_play->segments.begin();
+
+    start_entities(&current_cut_scene->entity_class_entries);
+    start_fade();
+
+    if (current_cut_scene->flags & cut_scene::takes_igo)
+        take_igo(false);
+
+    if (!(current_cut_scene->flags & cut_scene::hero_unaffected))
+        app::inst()->get_game()->freeze_hero(true);
+
+    state_flags |= playing;
+
+    clamp_settings();
+
+    if (!(current_cut_scene->flags & cut_scene::hero_unaffected)) {
+        player_interface* hero_player = hero->player_ifc();
+
+        ((void (__thiscall*)(player_interface*, i32, i32))((void**)hero_player->vtable)[369])(hero_player, 0, 1); // slot 369
+
+        if (hero->player_ifc()->get_reflexes())
+            hero->player_ifc()->get_reflexes()->disable(false);
+
+        if (hero->player_ifc()->get_spider_senses())
+            hero->player_ifc()->get_spider_senses()->disable(true, false);
+
+        if (hero->has_ifc(entity_ifc_standing)) {
+            retail::sub_60CF20((u32*)hero->my_ifc_storage->get_ifc(entity_ifc_standing));
+
+            ((standing_interface*)hero->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 &= ~1;
+        }
+
+        i32 unk_object = retail::sub_602F30((u32*)hero);
+
+        if (unk_object) {
+            i32 unk_result = ((i32 (__thiscall*)(i32, i32))(*(void***)unk_object)[1])(unk_object, 0); // slot 1
+
+            if (unk_result)
+                retail::sub_5BBBF0((u32*)unk_result, unk_object, true);
+        }
+
+        if (hero->has_ifc(entity_ifc_ise)) {
+            generic_interface* ise = hero->my_ifc_storage->get_ifc(entity_ifc_ise);
+
+            ((void (__thiscall*)(generic_interface*))((void**)ise->vtable)[21])(ise); // slot 21
+        }
+
+        ((actor*)hero)->get_ai_core()->unk_5bc = 1;
+    }
+
+    auto chase = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+
+    if (((bool (__thiscall*)(camera*))chase->vtable[31])(chase)) // slot 31
+        chase->unk_278 = (current_cut_scene->flags & 0x0010) != 0;
+
+    for (auto it = current_cut_scene->entity_class_entries.begin(); it.node; it.iterate()) {
+        auto shown = (entity*)retail::sub_7DF6E0((u32*)it.node->element);
+
+        if (shown) {
+            shown->ext_flags |= 0xF;
+
+            retail::sub_6123B0((u32*)shown, 0xF, (i32)0xDEADBEEF);
+        }
+    }
+
+    time      = 0.0f;
+    last_time = 0.0f;
+
+    retail::sub_7F7340((u32*)input_mgr::inst()->unk_004);
+
+    reset_interfaces(&to_play->entity_class_entries);
+
+    return true;
+}
+
+// sub_805220
+void cut_scene_player::clamp_settings() {
+    if (!current_cut_scene)
+        return;
+
+    i32 unk_58 = current_cut_scene->unk_58;
+
+    if (unk_58 < -1)
+        unk_58 = -1;
+    else if (unk_58 > 10)
+        unk_58 = 10;
+
+    current_cut_scene->unk_58 = unk_58;
+
+    if (current_cut_scene->unk_5c < -1.0f)
+        current_cut_scene->unk_5c = -1.0f;
+    else if (current_cut_scene->unk_5c > 20.0f)
+        current_cut_scene->unk_5c = 20.0f;
+
+    if (current_cut_scene->unk_60 < -1.0f)
+        current_cut_scene->unk_60 = -1.0f;
+    else if (current_cut_scene->unk_60 > 1.0f)
+        current_cut_scene->unk_60 = 1.0f;
+
+    current_cut_scene->flags  |= 0x0800;
+    current_cut_scene->unk_64  = 1;
+    current_cut_scene->unk_68  = 1.5f;
+}
+
+// sub_808740
+void cut_scene_player::start_fade() {
+    cut_scene* fading = current_cut_scene;
+
+    if ((fading->flags & cut_scene::no_fades) ||
+        (fading->start_fade.fade_out_time <= 0.0f && fading->start_fade.fade_in_time <= 0.0f)) {
+
+        play_current_segment();
+
+        fade_state = 0;
+
+        return;
+    }
+
+    fade_state     = 1;
+    fade_hold_time = fading->start_fade.hold_time;
+
+    state_flags &= ~(skip_fade_in | 0x0800);
+
+    fade_in_time = fading->start_fade.fade_in_time;
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    retail::sub_698B50((u32*)igo, &fading->start_fade.color); // the loading screen's color
+
+    // the loading screen is already up
+    if (retail::sub_6884D0((u32*)igo)) {
+        fade_timer = 0.0f;
+
+        return;
+    }
+
+    fade_timer = fading->start_fade.fade_out_time;
+
+    retail::sub_70A8B0((u32*)igo, true, fade_timer, true); // shows the loading screen
+}
+
+// sub_808DB0
+void cut_scene_player::start_entities(mash::avl_tree<entity_class_entry>* entries) {
+    for (auto it = entries->begin(); it.node; it.iterate())
+        start_entity(it.node->element);
+}
+
+// sub_808900
+void cut_scene_player::start_entity(entity_class_entry* entry) {
+    using set_morph_method = void (__thiscall*)(morph_interface* self, mash::string morph_name);
+
+    entry->entity = arch_base_vhandle();
+
+    auto found = (entity*)retail::sub_7DF6E0((u32*)entry);
+
+    if (found) {
+        vector3d far_away(-999.0f);
+
+        retail::sub_626CA0((u32*)found, (u32*)&far_away);
+
+        found->flags |= 0x1000000;
+
+        if (found->has_ifc(entity_ifc_physical))
+            found->physical_ifc()->cancel_all_velocity(zerovec);
+
+        if (found->is_an_actor()) {
+            if (((actor*)found)->get_ai_core() && !retail::sub_601C50((u32*)found))
+                retail::sub_4DF470((i32*)((actor*)found)->get_ai_core(), 0); // ai_core::push_ai_disable
+
+            if (found->has_ifc(entity_ifc_physical)) {
+                if (found->flags & 0x4000)
+                    entry->flags |= entity_class_entry::was_hidden;
+                else
+                    entry->flags &= ~entity_class_entry::was_hidden;
+            }
+
+            // slot 13
+            if (((bool (__thiscall*)(entity*))found->vtable[13])(found) && entry->variant.valid()) {
+                if (found->has_ifc(entity_ifc_variant)) {
+                    retail::sub_65F730((u32*)found->my_ifc_storage->get_ifc(entity_ifc_variant), (i32)entry->variant.source_hash_code);
+
+                    i32* values = entry->variant_values;
+
+                    if (values[0] <= -1)
+                        retail::sub_610510((u32*)found->my_ifc_storage->get_ifc(entity_ifc_variant));
+                    else
+                        retail::sub_601030((u32*)found->my_ifc_storage->get_ifc(entity_ifc_variant),
+                                           values[0],
+                                           values[1],
+                                           values[2],
+                                           values[3],
+                                           values[4],
+                                           values[5],
+                                           values[6],
+                                           values[7]);
+                }
+            } else if (entry->morph_name.m_size && found->has_ifc(entity_ifc_morph)) {
+                auto morph = (morph_interface*)found->my_ifc_storage->get_ifc(entity_ifc_morph);
+
+                arch_base_vhandle handle = found->my_handle;
+
+                ((set_morph_method)retail::sub_61FD20)(morph, entry->morph_name);
+
+                lip_sync_entities.push_back(handle);
+            }
+        }
+
+        if (entry->unk_78) {
+            if (found->has_ifc(entity_ifc_ise)) {
+                generic_interface* ise = found->my_ifc_storage->get_ifc(entity_ifc_ise);
+
+                ((void (__thiscall*)(generic_interface*))((void**)ise->vtable)[20])(ise); // slot 20
+            }
+
+            if (found->has_ifc(entity_ifc_tentacle))
+                retail::sub_61FC80((u32*)found->my_ifc_storage->get_ifc(entity_ifc_tentacle));
+
+            if (found->is_an_actor() && ((actor*)found)->get_ai_core())
+                retail::sub_4C57B0((i32)((actor*)found)->get_ai_core());
+        }
+
+        entry->entity = found->my_handle;
+
+        return;
+    }
+
+    if (!entry->entity_class.valid())
+        return;
+
+    auto spawned = (entity*)retail::sub_8047E0((u32*)&references::g_world_ptr.read()->ent_mgr,
+                                               (i32)entry->entity_class.source_hash_code,
+                                               (u32*)entry,
+                                               0x2000);
+    if (!spawned)
+        return;
+
+    arch_base_vhandle handle = spawned->my_handle;
+
+    if (((bool (__thiscall*)(entity*))spawned->vtable[41])(spawned)) { // slot 41
+        retail::sub_6048A0((u32*)spawned);
+        retail::sub_63BF20((i32)spawned, false);
+
+        if (entry->variant.valid()) {
+            auto model = (u32*)retail::sub_58EF50((u32*)references::vehicle_model_depot.read(), (i32)entry->variant.source_hash_code);
+
+            if (model)
+                retail::sub_6569F0((i32)spawned, (i32)*model, (i32)*model);
+        }
+    } else if (((bool (__thiscall*)(entity*))spawned->vtable[13])(spawned) && entry->variant.valid()) { // slot 13
+        if (retail::sub_5FCB20((u32*)spawned)) {
+            retail::sub_65F730((u32*)spawned->my_ifc_storage->get_ifc(entity_ifc_variant), (i32)entry->variant.source_hash_code);
+
+            i32* values = entry->variant_values;
+
+            if (values[0] <= -1)
+                retail::sub_610510((u32*)spawned->my_ifc_storage->get_ifc(entity_ifc_variant));
+            else
+                retail::sub_601030((u32*)spawned->my_ifc_storage->get_ifc(entity_ifc_variant),
+                                   values[0],
+                                   values[1],
+                                   values[2],
+                                   values[3],
+                                   values[4],
+                                   values[5],
+                                   values[6],
+                                   values[7]);
+        }
+    } else if (entry->morph_name.m_size && retail::sub_5A7FC0((u32*)spawned)) {
+        auto morph = (morph_interface*)spawned->my_ifc_storage->get_ifc(entity_ifc_morph);
+
+        ((set_morph_method)retail::sub_61FD20)(morph, entry->morph_name);
+
+        lip_sync_entities.push_back(handle);
+    }
+
+    vector3d far_away(-999.0f);
+
+    retail::sub_626CA0((u32*)spawned, (u32*)&far_away);
+
+    spawned->flags |= 0x1000000;
+
+    if (spawned->has_ifc(entity_ifc_physical))
+        spawned->physical_ifc()->cancel_all_velocity(zerovec);
+
+    if (spawned->is_an_actor() && ((actor*)spawned)->get_ai_core() && !retail::sub_601C50((u32*)spawned))
+        retail::sub_4DF470((i32*)((actor*)spawned)->get_ai_core(), 0); // ai_core::push_ai_disable
+
+    if (!(entry->flags & entity_class_entry::keep_spawned))
+        spawned_entities.push_back(handle);
+
+    entry->entity = spawned->my_handle;
+}
+
+// sub_805EF0
+void cut_scene_player::reset_interfaces(mash::avl_tree<entity_class_entry>* entries) {
+    entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+    retail::sub_4C6340((i32)((actor*)hero)->get_ai_core());
+    retail::sub_6566F0((i32)references::g_world_ptr.read()->get_hero_ptr()->my_ifc_storage->get_ifc(entity_ifc_ise));
+    retail::sub_61F7E0((u32*)references::g_world_ptr.read()->get_hero_ptr()->my_ifc_storage->get_ifc(entity_ifc_tentacle));
+
+    for (auto it = entries->begin(); it.node; it.iterate())
+        reset_interfaces(it.node->element);
+}
+
+// sub_805890
+void cut_scene_player::reset_interfaces(entity_class_entry* entry) {
+    auto reset = (entity*)retail::sub_7DF6E0((u32*)entry);
+
+    if (!reset || !reset->is_an_actor())
+        return;
+
+    if (((actor*)reset)->get_ai_core())
+        retail::sub_4C6340((i32)((actor*)reset)->get_ai_core());
+
+    if (reset->has_ifc(entity_ifc_ise))
+        retail::sub_6566F0((i32)reset->my_ifc_storage->get_ifc(entity_ifc_ise));
+
+    if (reset->has_ifc(entity_ifc_tentacle))
+        retail::sub_61F7E0((u32*)reset->my_ifc_storage->get_ifc(entity_ifc_tentacle));
 }
 
 // sub_808FA0

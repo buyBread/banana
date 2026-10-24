@@ -41,6 +41,7 @@ namespace treyarch {
         };
 
         enum e_flags : u32 {
+            keep_spawned = 0x08, // a spawned entity stays after the cut scene
             place_at_end = 0x10, // move the entity to end_position and end_rotation when the cut scene ends
             was_hidden   = 0x20  // the entity's 0x4000 flag before the cut scene, restored after it
         };
@@ -181,9 +182,14 @@ namespace treyarch {
         f32                         focus[3];
         bool                        focus_from_camera;
         bool                        wait_for_regions;  // hold the first segment until the regions are in
-        u8                          unk_122;
-        u8                          unk_123;
+        bool                        black_suit;        // play puts the hero in the black suit
+        bool                        red_suit;          // or the red one; with neither the suit stays
         f32                         near_plane;
+
+        // sub_805000
+        mash::string get_name() const {
+            return name;
+        }
 
         bool has_sound() const;
 
@@ -231,5 +237,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(cut_scene, use_focus,            0x112);
     ASSERT_OFFSETOF(cut_scene, focus,                0x114);
     ASSERT_OFFSETOF(cut_scene, focus_from_camera,    0x120);
+    ASSERT_OFFSETOF(cut_scene, black_suit,           0x122);
+    ASSERT_OFFSETOF(cut_scene, red_suit,             0x123);
     ASSERT_OFFSETOF(cut_scene, near_plane,           0x124);
 } // treyarch

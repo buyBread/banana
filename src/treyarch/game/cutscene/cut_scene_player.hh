@@ -72,6 +72,7 @@ namespace treyarch {
         static void create_inst();
 
         bool       is_playing() const;
+        bool       is_skipping() const;
         cut_scene* get_current_cut_scene() const;
         bool       hero_unaffected() const;
         bool       has_sound() const;
@@ -80,18 +81,26 @@ namespace treyarch {
         void frame_advance(f32 time_inc);
         bool frame_advance_lite(f32 time_inc);
 
+        bool play(cut_scene* to_play);
+        void clamp_settings();
         void stop(cut_scene* only);
         void finish();
         bool on_last_segment() const;
 
         bool advance_fade(f32 time_inc);
+        void start_fade();
         void start_end_fade();
 
         void take_igo(bool give_back);
 
+        void        start_entities(mash::avl_tree<entity_class_entry>* entries);
+        void        start_entity(entity_class_entry* entry);
         void        restore_entities();
         void        release_entities();
         static void remove_entities(vc8::vector<arch_base_vhandle>* entities);
+
+        static void reset_interfaces(mash::avl_tree<entity_class_entry>* entries);
+        static void reset_interfaces(entity_class_entry* entry);
 
         void update_focus();
 
