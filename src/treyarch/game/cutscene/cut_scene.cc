@@ -1,9 +1,35 @@
+#include <bit>
+
 #include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/game/cutscene/cut_scene.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
 
 using namespace treyarch;
+
+// sub_5AF170
+u32 entity_class_entry::cutscene_animation_event::get_param_type() const {
+    return param_type;
+}
+
+// sub_A6FDB0
+f32 entity_class_entry::cutscene_animation_event::get_param_float() const {
+    return std::bit_cast<f32>(param);
+}
+
+// sub_AD5300
+i32 entity_class_entry::cutscene_animation_event::get_param_int() const {
+    return (i32)param;
+}
+
+// sub_5AF180
+string_hash entity_class_entry::cutscene_animation_event::get_param_hash() const {
+    string_hash hash;
+
+    hash.initialize(mash::ALLOCATED, nullptr, param);
+
+    return hash;
+}
 
 // inlined @ sub_808510
 void entity_class_entry::construct_mashed_class() {
@@ -26,35 +52,35 @@ void entity_class_entry::unmash(mash::mash_info_struct* mash_info, void*, mash::
 }
 
 // inlined @ sub_8073F0
-void cut_scene_segment_unk_24::construct_mashed_class() {
-    unk_00.construct_mashed_class();
+void cut_scene_segment_attachment::construct_mashed_class() {
+    name  .construct_mashed_class();
     unk_0c.construct_mashed_class();
 }
 
 // inlined @ sub_806E50
-void cut_scene_segment_unk_24::destruct_mashed_class() {
-    unk_00.destruct_mashed_class();
+void cut_scene_segment_attachment::destruct_mashed_class() {
+    name  .destruct_mashed_class();
     unk_0c.destruct_mashed_class();
 }
 
 // inlined @ sub_807430
-void cut_scene_segment_unk_24::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    unk_00.unmash(mash_info, this, buffer);
+void cut_scene_segment_attachment::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    name  .unmash(mash_info, this, buffer);
     unk_0c.unmash(mash_info, this, buffer);
 }
 
 // inlined @ sub_8085F0
 void cut_scene_segment::construct_mashed_class() {
-    regions.construct_mashed_class();
-    unk_24 .construct_mashed_class();
+    regions    .construct_mashed_class();
+    attachments.construct_mashed_class();
 
     scene_anim = (nal::scene_anim*)amalga::resource_manager::get_merged_resource_or_default(name, nal::scene_anim_type, nullptr);
 }
 
 // sub_807340
 void cut_scene_segment::destruct_mashed_class() {
-    regions.destruct_mashed_class();
-    unk_24 .destruct_mashed_class();
+    regions    .destruct_mashed_class();
+    attachments.destruct_mashed_class();
 
     if (unk_08)
         unk_08 = nullptr;
@@ -62,8 +88,8 @@ void cut_scene_segment::destruct_mashed_class() {
 
 // sub_807940
 void cut_scene_segment::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    regions.unmash(mash_info, this, buffer);
-    unk_24 .unmash(mash_info, this, buffer);
+    regions    .unmash(mash_info, this, buffer);
+    attachments.unmash(mash_info, this, buffer);
 
     u8 class_mashed;
     mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);

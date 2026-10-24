@@ -29,10 +29,15 @@ namespace treyarch {
         public:
             string_hash event;
             f32         frame;         // 30/s
-            u32         param_type;    // 2 a float, 3 a string_hash, anything else none
+            u32         param_type;    // 1 an integer, 2 a float, 3 a string_hash, anything else none
             u32         param;
             bool        when_skipping; // also raised while the cut scene is being skipped
             u8          pad_015[0x03];
+
+            virtual u32         get_param_type() const;
+            virtual f32         get_param_float() const;
+            virtual i32         get_param_int() const;
+            virtual string_hash get_param_hash() const;
         };
 
         enum e_flags : u32 {
@@ -70,8 +75,9 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    struct cut_scene_segment_unk_24 {
-        mash::string unk_00;
+    // an entity hookup_current_segment parents to the hero
+    struct cut_scene_segment_attachment {
+        mash::string name;
         mash::string unk_0c;
         u32          unk_18;
         u8           unk_1c[0x14];
@@ -88,7 +94,8 @@ namespace treyarch {
 
     public:
         enum e_flags : u32 {
-            skippable = 0x01
+            skippable = 0x01,
+            silent    = 0x20  // stops the cut scene sound instead of playing its own
         };
 
         u32              flags;
@@ -100,7 +107,7 @@ namespace treyarch {
         mash::vector_basic
             <string_hash> regions; // brought in while the segment plays
         mash::vector
-            <cut_scene_segment_unk_24> unk_24;
+            <cut_scene_segment_attachment> attachments;
 
         string_hash sound;
 
@@ -110,6 +117,11 @@ namespace treyarch {
         // inlined @ sub_805DB0
         f32 get_duration() const {
             return scene_anim ? scene_anim->duration : 0.0f;
+        }
+
+        // sub_75D8E0
+        string_hash get_sound() const {
+            return sound;
         }
 
         void construct_mashed_class();
@@ -192,14 +204,14 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_class_entry, entity,       0x74);
     ASSERT_OFFSETOF(entity_class_entry, unk_78,       0x78);
 
-    ASSERT_SIZEOF  (cut_scene_segment_unk_24,         0x30);
-    ASSERT_OFFSETOF(cut_scene_segment_unk_24, unk_18, 0x18);
+    ASSERT_SIZEOF  (cut_scene_segment_attachment,         0x30);
+    ASSERT_OFFSETOF(cut_scene_segment_attachment, unk_18, 0x18);
 
-    ASSERT_SIZEOF  (cut_scene_segment,             0x3C);
-    ASSERT_OFFSETOF(cut_scene_segment, scene_anim, 0x0C);
-    ASSERT_OFFSETOF(cut_scene_segment, regions,    0x14);
-    ASSERT_OFFSETOF(cut_scene_segment, unk_24,     0x24);
-    ASSERT_OFFSETOF(cut_scene_segment, sound,      0x38);
+    ASSERT_SIZEOF  (cut_scene_segment,              0x3C);
+    ASSERT_OFFSETOF(cut_scene_segment, scene_anim,  0x0C);
+    ASSERT_OFFSETOF(cut_scene_segment, regions,     0x14);
+    ASSERT_OFFSETOF(cut_scene_segment, attachments, 0x24);
+    ASSERT_OFFSETOF(cut_scene_segment, sound,       0x38);
 
     ASSERT_SIZEOF  (cut_scene_fade,       0x10);
     ASSERT_OFFSETOF(cut_scene_fade, color, 0x0C);

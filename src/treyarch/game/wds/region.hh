@@ -32,7 +32,9 @@ namespace treyarch {
         u8                          reserved_07c[0x08];
         light_source**              lights_begin;
         light_source**              lights_end;
-        u8                          reserved_08c[0x38];
+        u8                          reserved_08c[0x04];
+        u32                         flags;
+        u8                          reserved_094[0x30];
         static_colgeom_root*        static_colgeom;
         u8                          reserved_0c8[0x14];
         vector3d                    center;
@@ -46,6 +48,11 @@ namespace treyarch {
         u8                          reserved_108[0x18];
         pre_light*                  prelight;
         u8                          reserved_124[0x14];
+
+        // sub_42AC80
+        string_hash get_district_id() const {
+            return district_id;
+        }
     };
 
     namespace references {
@@ -60,6 +67,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(region, renderables_end,       0x078);
     ASSERT_OFFSETOF(region, lights_begin,          0x084);
     ASSERT_OFFSETOF(region, lights_end,            0x088);
+    ASSERT_OFFSETOF(region, flags,                 0x090);
     ASSERT_OFFSETOF(region, static_colgeom,        0x0C4);
     ASSERT_OFFSETOF(region, center,                0x0DC);
     ASSERT_OFFSETOF(region, district_id,           0x0EC);

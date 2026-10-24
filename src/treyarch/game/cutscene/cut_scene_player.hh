@@ -15,15 +15,22 @@
 namespace treyarch {
     class cut_scene;
     class cut_scene_segment;
+    class entity_class_entry;
     struct region;
+
+    namespace mash {
+        template<typename T>
+        class avl_tree;
+    } // mash
 
     class cut_scene_player {
 
     public:
         enum e_state_flags : u32 {
-            hooked_up = 0x040, // the current segment's scene anim, sound and lip sync run
-            playing   = 0x080,
-            skipping  = 0x100
+            hooked_up      = 0x040, // the current segment's scene anim and sound run
+            playing        = 0x080,
+            skipping       = 0x100,
+            segment_paused = 0x200  // play_current_segment paused the new scene anim
         };
 
         cut_scene*              current_cut_scene;
@@ -64,6 +71,18 @@ namespace treyarch {
 
         void frame_advance(f32 time_inc);
         bool frame_advance_lite(f32 time_inc);
+
+        void update_focus();
+
+        void play_current_segment();
+        void release_current_segment();
+        bool districts_loaded(f32 time_inc);
+        bool start_current_segment();
+        void hookup_current_segment();
+
+        static void raise_animation_events(mash::avl_tree<entity_class_entry>* entries, f32 t, f32 last_t, bool skipping);
+        static void raise_animation_events(entity_class_entry* entry, f32 t, f32 last_t, bool skipping);
+        void        raise_hero_animation_events(f32 t, f32 last_t, bool skipping);
 
         f32 get_total_time() const;
         f32 get_current_segment_start_time() const;
