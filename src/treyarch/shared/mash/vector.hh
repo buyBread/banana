@@ -65,6 +65,11 @@ namespace treyarch { namespace mash {
         // sub_5E79A0
         // sub_5E7C70
         // sub_5E7D60
+        // sub_5F47B0
+        // sub_5F48C0
+        // sub_5F7220
+        // sub_5F7320
+        // sub_5F73C0
         // sub_63DF50
         // sub_6E6AE0
         // sub_6E6BC0
@@ -142,6 +147,7 @@ namespace treyarch { namespace mash {
         // sub_4421F0
         // sub_4CF0B0
         // sub_597A50
+        // sub_5F71E0
         // sub_6F1D60
         // sub_764A50
         // sub_7DCA80
@@ -194,6 +200,10 @@ namespace treyarch { namespace mash {
         // sub_595FA0
         // sub_59C180
         // sub_5A0A40
+        // sub_5DD5C0
+        // sub_5F5C20
+        // sub_5F5C90
+        // sub_5F5D00
         // sub_642780
         // sub_6CC410
         // sub_6CC4A0
@@ -246,6 +256,9 @@ namespace treyarch { namespace mash {
         }
 
         // sub_4DB230
+        // sub_5F5400
+        // sub_5F5490
+        // sub_5F5520
         // sub_63E130
         // sub_75CCD0
         // sub_7DA450
