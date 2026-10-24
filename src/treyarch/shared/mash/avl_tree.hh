@@ -81,6 +81,7 @@ namespace treyarch { namespace mash {
             finalize(ALLOCATED);
         }
 
+        // sub_805450
         iterator begin() const {
             node_type* node = root_node;
 
