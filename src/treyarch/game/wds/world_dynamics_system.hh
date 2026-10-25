@@ -64,6 +64,11 @@ namespace treyarch {
             return chase_cam_ptr;
         }
 
+        // sub_95C710
+        camera_handle get_current_camera() const {
+            return chase_cam_ptr ? chase_cam_ptr : camera_mgr.marky_camera;
+        }
+
         void frame_advance(f32 time_inc);
         void misc_entity_updates(f32 time_inc);
 

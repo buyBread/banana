@@ -13,6 +13,11 @@ namespace treyarch {
             return my_abs_po->get_position();
         }
 
+        // slot 32; false for most cameras
+        bool unk_032() {
+            return ((bool (__thiscall*)(camera*))vtable[32])(this);
+        }
+
         // virtual; the SM3 .ii's camera::get_fov, returns degrees
         f32 get_fov() {
             using get_fov_method = f32 (__thiscall*)(camera* self);
