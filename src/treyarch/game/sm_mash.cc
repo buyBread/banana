@@ -27,6 +27,10 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::als_meta_anim_swing>();
         mash::mash_virtual_base::register_class<als::als_meta_linear_blend>();
         mash::mash_virtual_base::register_class<als::motion_compensator>();
+        mash::mash_virtual_base::register_class<als::relative_orientation>();
+        mash::mash_virtual_base::register_class<als::relative_strafe_mocomp>();
+        mash::mash_virtual_base::register_class<als::simple_orientation>();
+        mash::mash_virtual_base::register_class<als::strafe_mocomp>();
         mash::mash_virtual_base::register_class<als::use_anim_only>();
         mash::mash_virtual_base::register_class<als::bounded_number_rule>();
         mash::mash_virtual_base::register_class<als::constant_number_compare_rule>();
