@@ -6,7 +6,7 @@ namespace treyarch {
     class camera : public actor {
 
     public:
-        u8   reserved_0d4[0x1A4];
+        u8   reserved_0d8[0x1A0];
         bool unk_278; // play copies the cut scene's 0x10 flag here
 
         const vector3d &get_abs_position() const {

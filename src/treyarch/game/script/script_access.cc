@@ -85,7 +85,7 @@ chuck::vm::vm_thread* script::create_thread(actor* owner, string_hash fullname) 
             return nullptr;
     }
 
-    return create_thread(function_index, inst, owner ? owner->unk_0c0 : 0);
+    return create_thread(function_index, inst, owner ? (u32)owner->unk_0c0 : 0);
 }
 
 // sub_607A60
@@ -171,7 +171,7 @@ chuck::vm::script_instance* script::add_instance(const mash::string             
                                                        actor*                                   owner,
                                                        chuck::vm::e_script_instance_stack_size  stack_size) {
 
-    return add_instance(name, object, constructor_thread, owner ? owner->unk_0c0 : 0, stack_size);
+    return add_instance(name, object, constructor_thread, owner ? (u32)owner->unk_0c0 : 0, stack_size);
 }
 
 // sub_824FB0

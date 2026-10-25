@@ -15,8 +15,13 @@ namespace treyarch {
         struct transport_list;
     } // nal
 
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
     class ai_core;
     class animation_controller;
+    class capsule_alter_sys;
     struct resource_key;
 
     struct base_ai_data {
@@ -35,15 +40,16 @@ namespace treyarch {
     class actor : public entity {
 
     public:
-        u8                    reserved_074[0x30];
-        nal::transport_list*  m_skeleton;
-        nal::skeleton_map*    skeleton_map;
-        animation_controller* anim_ctrl;
-        actor_unk_0b0*        unk_0b0;
-        u8                    reserved_0b4[0x0C];
-        u32                   unk_0c0; // handed to script threads as unk_60
-        u8                    reserved_0c4[0x0C];
-        base_ai_data*         my_base_ai_data;
+        u8                          reserved_074[0x30];
+        nal::transport_list*        m_skeleton;
+        nal::skeleton_map*          skeleton_map;
+        animation_controller*       anim_ctrl;
+        actor_unk_0b0*              unk_0b0;
+        u8                          reserved_0b4[0x0C];
+        amalga::resource_pack_slot* unk_0c0; // the pack slot the actor came from; script threads take it as unk_60
+        u8                          reserved_0c4[0x0C];
+        base_ai_data*               my_base_ai_data;
+        capsule_alter_sys*          capsule_alter;
 
         ai_core* get_ai_core() const;
 
@@ -64,4 +70,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(actor, unk_0b0,         0xB0);
     ASSERT_OFFSETOF(actor, unk_0c0,         0xC0);
     ASSERT_OFFSETOF(actor, my_base_ai_data, 0xD0);
+    ASSERT_OFFSETOF(actor, capsule_alter,   0xD4);
 } // treyarch

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bit>
+
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
@@ -49,6 +51,17 @@ namespace treyarch {
         }
 
         generic_interface* get_ifc(e_entity_ifc index);
+
+        // inlined @ sub_5ED8C0
+        generic_interface* find_ifc(e_entity_ifc index) { // null when the entity doesn't have it
+            ifc_lock.acquire();
+
+            generic_interface* ifc = has_ifc(index) ? interfaces.data[std::popcount(ifc_mask & ((1u << index) - 1))] : nullptr;
+
+            ifc_lock.release();
+
+            return ifc;
+        }
     };
 
     ASSERT_OFFSETOF(interface_storage, interfaces, 0x00);
