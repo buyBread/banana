@@ -50,6 +50,23 @@ string_hash als::wallsprint_mocomp::my_type_key { 0xF1C5C0CE }; // "als::wallspr
 
 string_hash als::move_and_face::my_type_key { 0xE9A7D0EB }; // "als::move_and_face"
 
+string_hash als::move_and_face_no_anim_movement::my_type_key   { 0x3184F095 }; // "als::move_and_face_no_anim_movement"
+string_hash als::action_move_and_face::my_type_key             { 0xEDC86DE8 }; // "als::action_move_and_face"
+string_hash als::action_face_only::my_type_key                 { 0x57E971C1 }; // "als::action_face_only"
+string_hash als::action_move_only::my_type_key                 { 0x297CAF69 }; // "als::action_move_only"
+string_hash als::combat_move_and_face::my_type_key             { 0x7287F900 }; // "als::combat_move_and_face"
+string_hash als::combat_face_only::my_type_key                 { 0xC02F30D9 }; // "als::combat_face_only"
+string_hash als::combat_move_only::my_type_key                 { 0x91C26E81 }; // "als::combat_move_only"
+string_hash als::combat_move_and_face_with_attack::my_type_key { 0xF4B9E872 }; // "als::combat_move_and_face_with_attack"
+string_hash als::combat_face_only_with_attack::my_type_key     { 0xA77AADCB }; // "als::combat_face_only_with_attack"
+string_hash als::signal_move_and_face::my_type_key             { 0x4352D6C8 }; // "als::signal_move_and_face"
+string_hash als::signal_face_only::my_type_key                 { 0xD9E26AA1 }; // "als::signal_face_only"
+string_hash als::signal_move_only::my_type_key                 { 0xAB75A849 }; // "als::signal_move_only"
+string_hash als::constant_move_and_face::my_type_key           { 0x0F0E00B4 }; // "als::constant_move_and_face"
+string_hash als::constant_face_only::my_type_key               { 0xD79D7E8D }; // "als::constant_face_only"
+string_hash als::constant_move_only::my_type_key               { 0xA930BC35 }; // "als::constant_move_only"
+string_hash als::wall_recover_move_and_face::my_type_key       { 0x5010014F }; // "als::wall_recover_move_and_face"
+
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
@@ -186,6 +203,102 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(move_and_face);
 
         return memory_buffer ? new (memory_buffer) move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == move_and_face_no_anim_movement::my_type_key.source_hash_code) {
+        last_created_size = sizeof(move_and_face_no_anim_movement);
+
+        return memory_buffer ? new (memory_buffer) move_and_face_no_anim_movement : nullptr;
+    }
+
+    if (the_class_to_make == action_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(action_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) action_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == action_face_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(action_face_only);
+
+        return memory_buffer ? new (memory_buffer) action_face_only : nullptr;
+    }
+
+    if (the_class_to_make == action_move_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(action_move_only);
+
+        return memory_buffer ? new (memory_buffer) action_move_only : nullptr;
+    }
+
+    if (the_class_to_make == combat_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) combat_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == combat_face_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_face_only);
+
+        return memory_buffer ? new (memory_buffer) combat_face_only : nullptr;
+    }
+
+    if (the_class_to_make == combat_move_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_move_only);
+
+        return memory_buffer ? new (memory_buffer) combat_move_only : nullptr;
+    }
+
+    if (the_class_to_make == combat_move_and_face_with_attack::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_move_and_face_with_attack);
+
+        return memory_buffer ? new (memory_buffer) combat_move_and_face_with_attack : nullptr;
+    }
+
+    if (the_class_to_make == combat_face_only_with_attack::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_face_only_with_attack);
+
+        return memory_buffer ? new (memory_buffer) combat_face_only_with_attack : nullptr;
+    }
+
+    if (the_class_to_make == signal_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(signal_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) signal_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == signal_face_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(signal_face_only);
+
+        return memory_buffer ? new (memory_buffer) signal_face_only : nullptr;
+    }
+
+    if (the_class_to_make == signal_move_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(signal_move_only);
+
+        return memory_buffer ? new (memory_buffer) signal_move_only : nullptr;
+    }
+
+    if (the_class_to_make == constant_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(constant_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) constant_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == constant_face_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(constant_face_only);
+
+        return memory_buffer ? new (memory_buffer) constant_face_only : nullptr;
+    }
+
+    if (the_class_to_make == constant_move_only::my_type_key.source_hash_code) {
+        last_created_size = sizeof(constant_move_only);
+
+        return memory_buffer ? new (memory_buffer) constant_move_only : nullptr;
+    }
+
+    if (the_class_to_make == wall_recover_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(wall_recover_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) wall_recover_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -2588,6 +2701,22 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
 }
 
 // sub_5AE3E0
+// inlined @ sub_5AE420
+// inlined @ sub_5AE460
+// inlined @ sub_5AE4A0
+// inlined @ sub_5AE590
+// inlined @ sub_5AE5D0
+// inlined @ sub_5AE650
+// inlined @ sub_5AE690
+// inlined @ sub_5AE720
+// inlined @ sub_5AE760
+// inlined @ sub_5AE7A0
+// inlined @ sub_5AE820
+// inlined @ sub_5AE860
+// inlined @ sub_5AE8A0
+// inlined @ sub_5AE920
+// inlined @ sub_5AEB30
+// inlined @ sub_5AEBB0
 als::move_and_face::move_and_face() : orientation_end_signal_required(false),
                                       translation_end_signal_required(false),
                                       orientation_start_signal_required(false),
@@ -2596,6 +2725,22 @@ als::move_and_face::move_and_face() : orientation_end_signal_required(false),
                                       desired_facing_valid(false) {}
 
 // sub_719250
+// inlined @ sub_719290
+// inlined @ sub_7192D0
+// inlined @ sub_719310
+// inlined @ sub_719390
+// inlined @ sub_7193D0
+// inlined @ sub_719410
+// inlined @ sub_719450
+// inlined @ sub_719490
+// inlined @ sub_7194D0
+// inlined @ sub_719510
+// inlined @ sub_719550
+// inlined @ sub_719590
+// inlined @ sub_7195D0
+// inlined @ sub_719610
+// inlined @ sub_7196D0
+// inlined @ sub_719710
 als::move_and_face::move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
                                                                                    orientation_end_signal_required(false),
                                                                                    translation_end_signal_required(false),
@@ -3375,4 +3520,716 @@ bool als::move_and_face::has_time_signal(const string_hash** key_signals, i32 ke
     }
 
     return false;
+}
+
+// sub_5AE420
+als::move_and_face_no_anim_movement::move_and_face_no_anim_movement() {}
+
+// sub_719290
+als::move_and_face_no_anim_movement::move_and_face_no_anim_movement(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE450
+mash::virtual_types_key als::move_and_face_no_anim_movement::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::move_and_face_no_anim_movement::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::move_and_face_no_anim_movement::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8E80
+void als::move_and_face_no_anim_movement::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    post_signal_translation_action = mocomp_action_none;
+    post_signal_orientation_action = mocomp_action_none;
+}
+
+// sub_5AE720
+als::action_move_and_face::action_move_and_face() {}
+
+// sub_719490
+als::action_move_and_face::action_move_and_face(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE750
+mash::virtual_types_key als::action_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::action_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::action_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA700
+void als::action_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
+    max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
+}
+
+// sub_5B3100
+void als::action_move_and_face::set_end_key_signals() {
+    static const string_hash* signals[] = { &references::anim_action.get() };
+
+    orientation_end_key_signals       = signals;
+    orientation_end_key_signals_count = 1;
+    orientation_end_signal_required   = true;
+    translation_end_key_signals       = signals;
+    translation_end_key_signals_count = 1;
+    translation_end_signal_required   = true;
+}
+
+// sub_5AE7A0
+als::action_face_only::action_face_only() {}
+
+// sub_719510
+als::action_face_only::action_face_only(mash::generating_vtable_version so_do_nothing) : action_move_and_face(so_do_nothing) {}
+
+// sub_5AE7D0
+mash::virtual_types_key als::action_face_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE7E0
+bool als::action_face_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (action_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (action_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::action_face_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7B0
+void als::action_face_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    action_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the translation
+    pre_signal_translation_action  = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE760
+als::action_move_only::action_move_only() {}
+
+// sub_7194D0
+als::action_move_only::action_move_only(mash::generating_vtable_version so_do_nothing) : action_move_and_face(so_do_nothing) {}
+
+// sub_5AE790
+mash::virtual_types_key als::action_move_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE7E0
+bool als::action_move_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (action_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (action_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::action_move_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7E0
+void als::action_move_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    action_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the orientation
+    pre_signal_orientation_action  = mocomp_action_from_anim;
+    post_signal_orientation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE4A0
+als::combat_move_and_face::combat_move_and_face() {}
+
+// sub_719310
+als::combat_move_and_face::combat_move_and_face(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE4D0
+mash::virtual_types_key als::combat_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::combat_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::combat_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA700
+void als::combat_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
+    max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
+}
+
+// sub_5B2C00
+void als::combat_move_and_face::set_end_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_end.get(), &references::move_end.get(), &references::attack.get(), &references::attack_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_end.get(), &references::move_end.get(), &references::attack.get(), &references::attack_begin.get() };
+
+    orientation_end_key_signals       = orientation_signals;
+    orientation_end_key_signals_count = 4;
+    orientation_end_signal_required   = true;
+    translation_end_key_signals       = translation_signals;
+    translation_end_key_signals_count = 4;
+    translation_end_signal_required   = true;
+}
+
+// sub_5B2BC0
+void als::combat_move_and_face::set_start_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_begin.get(), &references::move_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_begin.get(), &references::move_begin.get() };
+
+    orientation_start_key_signals       = orientation_signals;
+    orientation_start_key_signals_count = 2;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = translation_signals;
+    translation_start_key_signals_count = 2;
+    translation_start_signal_required   = false;
+}
+
+// sub_5AE650
+als::combat_face_only::combat_face_only() {}
+
+// sub_719410
+als::combat_face_only::combat_face_only(mash::generating_vtable_version so_do_nothing) : combat_move_and_face(so_do_nothing) {}
+
+// sub_5AE680
+mash::virtual_types_key als::combat_face_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE610
+bool als::combat_face_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (combat_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (combat_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::combat_face_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7B0
+void als::combat_face_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    combat_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the translation
+    pre_signal_translation_action  = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE590
+als::combat_move_only::combat_move_only() {}
+
+// sub_719390
+als::combat_move_only::combat_move_only(mash::generating_vtable_version so_do_nothing) : combat_move_and_face(so_do_nothing) {}
+
+// sub_5AE5C0
+mash::virtual_types_key als::combat_move_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE610
+bool als::combat_move_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (combat_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (combat_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::combat_move_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7E0
+void als::combat_move_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    combat_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the orientation
+    pre_signal_orientation_action  = mocomp_action_from_anim;
+    post_signal_orientation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE5D0
+als::combat_move_and_face_with_attack::combat_move_and_face_with_attack() {}
+
+// sub_7193D0
+als::combat_move_and_face_with_attack::combat_move_and_face_with_attack(mash::generating_vtable_version so_do_nothing) : combat_move_and_face(so_do_nothing) {}
+
+// sub_5AE600
+mash::virtual_types_key als::combat_move_and_face_with_attack::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE610
+bool als::combat_move_and_face_with_attack::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (combat_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (combat_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::combat_move_and_face_with_attack::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8EA0
+void als::combat_move_and_face_with_attack::activate(animation_logic_system* the_als_core, layer_id layer) {
+    combat_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+}
+
+// sub_5B2C80
+void als::combat_move_and_face_with_attack::set_end_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_end.get(), &references::move_end.get() };
+    static const string_hash* translation_signals[] = { &references::translate_end.get(), &references::move_end.get() };
+
+    orientation_end_key_signals       = orientation_signals;
+    orientation_end_key_signals_count = 2;
+    orientation_end_signal_required   = false;
+    translation_end_key_signals       = translation_signals;
+    translation_end_key_signals_count = 2;
+    translation_end_signal_required   = false;
+}
+
+// sub_5B2C40
+void als::combat_move_and_face_with_attack::set_start_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_begin.get(), &references::move_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_begin.get(), &references::move_begin.get() };
+
+    orientation_start_key_signals       = orientation_signals;
+    orientation_start_key_signals_count = 2;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = translation_signals;
+    translation_start_key_signals_count = 2;
+    translation_start_signal_required   = false;
+}
+
+// sub_5AE690
+als::combat_face_only_with_attack::combat_face_only_with_attack() {}
+
+// sub_719450
+als::combat_face_only_with_attack::combat_face_only_with_attack(mash::generating_vtable_version so_do_nothing) : combat_move_and_face_with_attack(so_do_nothing) {}
+
+// sub_5AE6C0
+mash::virtual_types_key als::combat_face_only_with_attack::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE6D0
+bool als::combat_face_only_with_attack::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (combat_move_and_face_with_attack::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (combat_move_and_face_with_attack::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::combat_face_only_with_attack::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7B0
+void als::combat_face_only_with_attack::activate(animation_logic_system* the_als_core, layer_id layer) {
+    combat_move_and_face_with_attack::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the translation
+    pre_signal_translation_action  = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE820
+als::signal_move_and_face::signal_move_and_face() {}
+
+// sub_719550
+als::signal_move_and_face::signal_move_and_face(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE850
+mash::virtual_types_key als::signal_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::signal_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::signal_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA700
+void als::signal_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
+    max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
+}
+
+// sub_5B3170
+void als::signal_move_and_face::set_end_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_end.get(), &references::move_end.get() };
+    static const string_hash* translation_signals[] = { &references::translate_end.get(), &references::move_end.get() };
+
+    orientation_end_key_signals       = orientation_signals;
+    orientation_end_key_signals_count = 2;
+    orientation_end_signal_required   = false;
+    translation_end_key_signals       = translation_signals;
+    translation_end_key_signals_count = 2;
+    translation_end_signal_required   = false;
+}
+
+// sub_5B3130
+void als::signal_move_and_face::set_start_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_begin.get(), &references::move_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_begin.get(), &references::move_begin.get() };
+
+    orientation_start_key_signals       = orientation_signals;
+    orientation_start_key_signals_count = 2;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = translation_signals;
+    translation_start_key_signals_count = 2;
+    translation_start_signal_required   = false;
+}
+
+// sub_5AE8A0
+als::signal_face_only::signal_face_only() {}
+
+// sub_7195D0
+als::signal_face_only::signal_face_only(mash::generating_vtable_version so_do_nothing) : signal_move_and_face(so_do_nothing) {}
+
+// sub_5AE8D0
+mash::virtual_types_key als::signal_face_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE8E0
+bool als::signal_face_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (signal_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (signal_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::signal_face_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7B0
+void als::signal_face_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    signal_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the translation
+    pre_signal_translation_action  = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE860
+als::signal_move_only::signal_move_only() {}
+
+// sub_719590
+als::signal_move_only::signal_move_only(mash::generating_vtable_version so_do_nothing) : signal_move_and_face(so_do_nothing) {}
+
+// sub_5AE890
+mash::virtual_types_key als::signal_move_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE8E0
+bool als::signal_move_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (signal_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (signal_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::signal_move_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA7E0
+void als::signal_move_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    signal_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the orientation
+    pre_signal_orientation_action  = mocomp_action_from_anim;
+    post_signal_orientation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE920
+als::constant_move_and_face::constant_move_and_face() {}
+
+// sub_719610
+als::constant_move_and_face::constant_move_and_face(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE950
+mash::virtual_types_key als::constant_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::constant_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::constant_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F0C30
+void als::constant_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als_core, layer);
+
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, 5.0f, nullptr);
+
+    f32 default_turn_rate = the_base->has_ext_param_been_set(2) ? the_base->get_external_float(2) : 720.0f;
+
+    max_turn_speed = (f32)(the_base->get_optional_pb_float(turn_rate_id, default_turn_rate, nullptr) * 0.017453293005625408);
+}
+
+// sub_5B41E0
+void als::constant_move_and_face::set_time_left() {
+    orientation_time_left = 0.0002f;
+    translation_time_left = 0.0002f;
+}
+
+// sub_5B41E0
+void als::constant_move_and_face::update_time_left() {
+    orientation_time_left = 0.0002f;
+    translation_time_left = 0.0002f;
+}
+
+// sub_5AEBB0
+als::constant_face_only::constant_face_only() {}
+
+// sub_719710
+als::constant_face_only::constant_face_only(mash::generating_vtable_version so_do_nothing) : constant_move_and_face(so_do_nothing) {}
+
+// sub_5AEBE0
+mash::virtual_types_key als::constant_face_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEB70
+bool als::constant_face_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (constant_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (constant_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::constant_face_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F0D30
+void als::constant_face_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    constant_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the translation
+    pre_signal_translation_action  = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+}
+
+// sub_5AEB30
+als::constant_move_only::constant_move_only() {}
+
+// sub_7196D0
+als::constant_move_only::constant_move_only(mash::generating_vtable_version so_do_nothing) : constant_move_and_face(so_do_nothing) {}
+
+// sub_5AEB60
+mash::virtual_types_key als::constant_move_only::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEB70
+bool als::constant_move_only::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (constant_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (constant_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::constant_move_only::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F0D00
+void als::constant_move_only::activate(animation_logic_system* the_als_core, layer_id layer) {
+    constant_move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    // the anim keeps the orientation
+    pre_signal_orientation_action  = mocomp_action_from_anim;
+    post_signal_orientation_action = mocomp_action_from_anim;
+}
+
+// sub_5AE460
+als::wall_recover_move_and_face::wall_recover_move_and_face() {}
+
+// sub_7192D0
+als::wall_recover_move_and_face::wall_recover_move_and_face(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AE490
+mash::virtual_types_key als::wall_recover_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::wall_recover_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::wall_recover_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8D50
+void als::wall_recover_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als, layer); // the stored als, not the_als_core
+
+    pre_start_translation_action   = mocomp_action_from_anim;
+    pre_start_orientation_action   = mocomp_action_from_anim;
+    pre_signal_translation_action  = mocomp_action_procedural;
+    pre_signal_orientation_action  = mocomp_action_procedural;
+    post_signal_translation_action = mocomp_action_procedural;
+    post_signal_orientation_action = mocomp_action_procedural;
+
+    max_movement_speed      = the_base->get_optional_pb_float(movement_speed_id, 20.0f, nullptr);
+    max_turn_speed          = (f32)(the_base->get_optional_pb_float(turn_rate_id, 1000.0f, nullptr) * 0.017453293005625408);
+    constant_movement_speed = the_base->get_optional_pb_float(force_move_speed_id, -1.0f, nullptr);
+    constant_turn_speed     = (f32)(the_base->get_optional_pb_float(force_turn_rate_id, -1.0f, nullptr) * 0.017453293005625408);
+}
+
+// sub_5B2B80
+void als::wall_recover_move_and_face::set_end_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_end.get() };
+    static const string_hash* translation_signals[] = { &references::translate_end.get(), &references::move_end.get() };
+
+    orientation_end_key_signals       = orientation_signals;
+    orientation_end_key_signals_count = 1;
+    orientation_end_signal_required   = false;
+    translation_end_key_signals       = translation_signals;
+    translation_end_key_signals_count = 2;
+    translation_end_signal_required   = false;
+}
+
+// sub_5B2B40
+void als::wall_recover_move_and_face::set_start_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_begin.get(), &references::move_begin.get() };
+
+    orientation_start_key_signals       = orientation_signals;
+    orientation_start_key_signals_count = 1;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = translation_signals;
+    translation_start_key_signals_count = 2;
+    translation_start_signal_required   = false;
 }

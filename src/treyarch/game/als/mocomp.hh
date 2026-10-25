@@ -53,6 +53,8 @@ namespace als {
     inline const string_hash min_playback_speed_id         = string_hash(hash::djb2("min_playback_speed"));
     inline const string_hash use_ik_crawl_id               = string_hash(hash::djb2("use_ik_crawl"));
     inline const string_hash use_alt_linear_id             = string_hash(hash::djb2("use_alt_linear"));
+    inline const string_hash force_move_speed_id           = string_hash(hash::djb2("force_move_speed"));
+    inline const string_hash force_turn_rate_id            = string_hash(hash::djb2("force_turn_rate"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -61,6 +63,12 @@ namespace als {
         inline util::memory_reference<string_hash> rotate_begin { 0x0102C46C };
         inline util::memory_reference<string_hash> rotate_end   { 0x0102C62C };
 
+        inline util::memory_reference<string_hash> translate_begin { 0x0102CB44 };
+        inline util::memory_reference<string_hash> translate_end   { 0x0102C65C };
+        inline util::memory_reference<string_hash> attack_begin    { 0x0102C44C };
+        inline util::memory_reference<string_hash> attack          { 0x0102CCA8 };
+
+        inline util::memory_reference<string_hash> anim_action       { 0x0102CC70 };
         inline util::memory_reference<string_hash> anim_dest_reached { 0x0102C384 };
 
         // "BIP01 R FOOT" and "BIP01 L FOOT", hashed by the CRT initializers
@@ -765,6 +773,264 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // move_and_face that leaves the anim's own motion alone once the signals pass
+    class move_and_face_no_anim_movement : public move_and_face {
+
+    public:
+        move_and_face_no_anim_movement();
+        explicit move_and_face_no_anim_movement(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // move_and_face timed to the anim's ANIM_ACTION
+    class action_move_and_face : public move_and_face {
+
+    public:
+        action_move_and_face();
+        explicit action_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_end_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
+    class action_face_only : public action_move_and_face {
+
+    public:
+        action_face_only();
+        explicit action_face_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    class action_move_only : public action_move_and_face {
+
+    public:
+        action_move_only();
+        explicit action_move_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // move_and_face between the move and rotate begins and the ends or the attack
+    class combat_move_and_face : public move_and_face {
+
+    public:
+        combat_move_and_face();
+        explicit combat_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_end_key_signals() override;
+        void set_start_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
+    class combat_face_only : public combat_move_and_face {
+
+    public:
+        combat_face_only();
+        explicit combat_face_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    class combat_move_only : public combat_move_and_face {
+
+    public:
+        combat_move_only();
+        explicit combat_move_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // combat_move_and_face that runs through the attack
+    class combat_move_and_face_with_attack : public combat_move_and_face {
+
+    public:
+        combat_move_and_face_with_attack();
+        explicit combat_move_and_face_with_attack(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_end_key_signals() override;
+        void set_start_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
+    class combat_face_only_with_attack : public combat_move_and_face_with_attack {
+
+    public:
+        combat_face_only_with_attack();
+        explicit combat_face_only_with_attack(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // move_and_face between the move and rotate signals
+    class signal_move_and_face : public move_and_face {
+
+    public:
+        signal_move_and_face();
+        explicit signal_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_end_key_signals() override;
+        void set_start_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
+    class signal_face_only : public signal_move_and_face {
+
+    public:
+        signal_face_only();
+        explicit signal_face_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    class signal_move_only : public signal_move_and_face {
+
+    public:
+        signal_move_only();
+        explicit signal_move_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // move_and_face at the state's speeds, every frame a fresh moment
+    class constant_move_and_face : public move_and_face {
+
+    public:
+        constant_move_and_face();
+        explicit constant_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_time_left() override;
+        void update_time_left() override;
+
+        static string_hash my_type_key;
+    };
+
+    class constant_face_only : public constant_move_and_face {
+
+    public:
+        constant_face_only();
+        explicit constant_face_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    class constant_move_only : public constant_move_and_face {
+
+    public:
+        constant_move_only();
+        explicit constant_move_only(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        static string_hash my_type_key;
+    };
+
+    // move_and_face back onto the wall, procedural after the start signals
+    class wall_recover_move_and_face : public move_and_face {
+
+    public:
+        wall_recover_move_and_face();
+        explicit wall_recover_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void set_end_key_signals() override;
+        void set_start_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -840,6 +1106,23 @@ namespace als {
     ASSERT_OFFSETOF(move_and_face, translation_start_key_signals,    0xB0);
     ASSERT_OFFSETOF(move_and_face, translation_start_signal_required, 0xB8);
     ASSERT_OFFSETOF(move_and_face, use_ik_crawl,                     0xBB);
+
+    ASSERT_SIZEOF(move_and_face_no_anim_movement,   0xBC);
+    ASSERT_SIZEOF(action_move_and_face,             0xBC);
+    ASSERT_SIZEOF(action_face_only,                 0xBC);
+    ASSERT_SIZEOF(action_move_only,                 0xBC);
+    ASSERT_SIZEOF(combat_move_and_face,             0xBC);
+    ASSERT_SIZEOF(combat_face_only,                 0xBC);
+    ASSERT_SIZEOF(combat_move_only,                 0xBC);
+    ASSERT_SIZEOF(combat_move_and_face_with_attack, 0xBC);
+    ASSERT_SIZEOF(combat_face_only_with_attack,     0xBC);
+    ASSERT_SIZEOF(signal_move_and_face,             0xBC);
+    ASSERT_SIZEOF(signal_face_only,                 0xBC);
+    ASSERT_SIZEOF(signal_move_only,                 0xBC);
+    ASSERT_SIZEOF(constant_move_and_face,           0xBC);
+    ASSERT_SIZEOF(constant_face_only,               0xBC);
+    ASSERT_SIZEOF(constant_move_only,               0xBC);
+    ASSERT_SIZEOF(wall_recover_move_and_face,       0xBC);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
