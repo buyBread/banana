@@ -52,6 +52,7 @@ namespace als {
     inline const string_hash max_playback_speed_id         = string_hash(hash::djb2("max_playback_speed"));
     inline const string_hash min_playback_speed_id         = string_hash(hash::djb2("min_playback_speed"));
     inline const string_hash use_ik_crawl_id               = string_hash(hash::djb2("use_ik_crawl"));
+    inline const string_hash use_alt_linear_id             = string_hash(hash::djb2("use_alt_linear"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers

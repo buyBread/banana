@@ -2858,20 +2858,173 @@ void als::move_and_face::update_params(f32) {
 
 // sub_5B1DC0
 vector3d als::move_and_face::simple_linear_translation(f32 delta_t, f32 time_percentage, const po &old_po) {
-    using simple_linear_translation_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, f32, const po*);
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
 
-    vector3d result;
-    ((simple_linear_translation_t)retail::sub_5B1DC0)(this, &result, delta_t, time_percentage, &old_po);
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
 
-    return result;
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    if (the_base->get_optional_pb_int(use_alt_linear_id, 0, nullptr)) {
+        // to where the time puts it on the line from the start, no faster than the max
+        f32      total    = (destination_point - start_point).length();
+        vector3d position = old_po.get_position();
+        vector3d dir      = unitized(destination_point - position);
+
+        if (position.x == destination_point.x && position.y == destination_point.y && position.z == destination_point.z)
+            return position;
+
+        f32 remaining = (f32)((1.0 - (f64)time_percentage) * total);
+
+        vector3d target(-dir.x * remaining + destination_point.x, -dir.y * remaining + destination_point.y, -dir.z * remaining + destination_point.z);
+        vector3d move = target - position;
+
+        if (max_movement_speed > 0.0001f && move.length() / delta_t > max_movement_speed) {
+            f32 step = max_movement_speed * delta_t;
+
+            retail::sub_402050((f32*)&move);
+
+            target = vector3d(position.x + move.x * step, position.y + move.y * step, position.z + move.z * step);
+        }
+
+        return target;
+    }
+
+    vector3d position = old_po.get_position();
+    vector3d delta    = destination_point - position;
+
+    if (position.x == destination_point.x && position.y == destination_point.y && position.z == destination_point.z)
+        return position;
+
+    f32      dist = delta.length();
+    vector3d dir  = delta;
+
+    if (dist > 0.0001f)
+        dir = vector3d(delta.x / dist, delta.y / dist, delta.z / dist);
+
+    // the constant speed while the destination is further than a step of it, else the time's share of the way
+    f32 constant_step = constant_movement_speed * delta_t;
+    f32 step;
+
+    if (constant_movement_speed > -1.0f && dist > constant_step)
+        step = constant_step;
+    else
+        step = dist * time_percentage;
+
+    if (max_movement_speed > 0.0001f && step / delta_t > max_movement_speed)
+        step = max_movement_speed * delta_t;
+
+    return vector3d(position.x + dir.x * step, position.y + dir.y * step, position.z + dir.z * step);
 }
 
 // sub_5BF190
 po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentage, const po &old_po) {
-    using simple_linear_orientation_t = po* (__thiscall*)(move_and_face*, po*, f32, f32, const po*);
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    // no faster than the max turn speed, either way round
+    auto capped = [&](f32 step) {
+        if (max_turn_speed > 0.0001f) {
+            f32 rate = step / delta_t;
+
+            if (std::fabs(rate) > max_turn_speed)
+                return (rate < 0.0f ? -max_turn_speed : max_turn_speed) * delta_t;
+        }
+
+        return step;
+    };
 
     po result;
-    ((simple_linear_orientation_t)retail::sub_5BF190)(this, &result, delta_t, time_percentage, &old_po);
+    retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+
+    vector3d up  = unitized(desired_up);
+    vector3d dir = unitized(desired_facing);
+
+    vector3d y_row = result.get_y_facing();
+    vector3d z_row = result.get_z_facing();
+    vector3d back(-result.get_x_facing().x, -result.get_x_facing().y, -result.get_x_facing().z);
+
+    // the up first, about the axis between the two
+    if (up.length2() > 0.0001f) {
+        f32 tilt = math::acos(y_row * up);
+
+        if (tilt > 0.01f || tilt < -0.01f) {
+            f32 constant_step = constant_turn_speed * delta_t;
+            f32 step;
+
+            if (constant_turn_speed > -1.0f && tilt > constant_step)
+                step = constant_step;
+            else
+                step = tilt * time_percentage;
+
+            step = capped(step);
+
+            vector3d axis = unitized(cross(y_row, up));
+
+            if (axis.length2() < 0.01f)
+                axis = z_row;
+
+            po turn;
+            retail::sub_4015B0((u64*)&turn);
+
+            step = -step;
+
+            math::vector4 axis_4(axis.x, axis.y, axis.z, 0.0f);
+            retail::sub_40A750((u64*)&turn, (f32*)&axis_4, &step);
+            retail::sub_44E230((u64*)&result, (f32*)&result, (f32*)&turn);
+
+            z_row = result.get_z_facing();
+            back  = vector3d(-result.get_x_facing().x, -result.get_x_facing().y, -result.get_x_facing().z);
+        }
+    }
+
+    // then the heading, in the plane of the up
+    vector3d flat_dir = dir - up * (f32)(up * dir);
+
+    if (flat_dir.length2() > 0.0001f) {
+        dir = unitized(flat_dir);
+
+        vector3d flat_z = z_row - up * (f32)(up * z_row);
+
+        if (flat_z.length2() > 0.0001f) {
+            retail::sub_402050((f32*)&flat_z);
+
+            vector3d flat_back = back - up * (f32)(up * back);
+            retail::sub_402050((f32*)&flat_back);
+
+            f32 along          = flat_z * dir;
+            f32 across         = flat_back * dir;
+            f32 heading_change = (f32)retail::sub_44D790(across, along);
+
+            if (heading_change > 0.01f || heading_change < -0.01f) {
+                // the state can force the way round
+                i32 turn_direction = the_base->get_optional_pb_int(turn_direction_id, 0, nullptr);
+
+                if (turn_direction == -1) {
+                    if (heading_change < 0.0f)
+                        heading_change += 6.2831855f;
+                } else if (turn_direction == 1 && heading_change > 0.0f)
+                    heading_change -= 6.2831855f;
+
+                f32 step = capped(heading_change * time_percentage);
+
+                po turn;
+                retail::sub_4015B0((u64*)&turn);
+
+                math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+                retail::sub_40A750((u64*)&turn, (f32*)&axis, &step);
+                retail::sub_44E230((u64*)&result, (f32*)&result, (f32*)&turn);
+            }
+        }
+    }
 
     return result;
 }
