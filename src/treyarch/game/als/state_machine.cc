@@ -11,6 +11,7 @@
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/nal/anim.hh"
 #include "treyarch/shared/math/references.hh"
 
 using namespace treyarch;
@@ -501,32 +502,94 @@ void* als::state_machine::unk_048(bool unk, entity* the_entity) const {
 }
 
 // sub_5D5B50
-mash::string als::state_machine::unk_049(string_hash signal_name, bool in_frames) const {
-    using unk_049_t = mash::string* (__thiscall*)(const state_machine*, void*, string_hash, bool);
+mash::string als::state_machine::get_signal_times_string(string_hash signal_name, bool in_frames) const {
+    mash::string result("");
 
-    alignas(mash::string) u8 slot[sizeof(mash::string)];
-    mash::string* built = ((unk_049_t)retail::sub_5D5B50)(this, slot, signal_name, in_frames);
+    // the state's events when it has any, otherwise the anim's signals
+    if ((curr_events && curr_events->size) || (curr_hit_pause_events && curr_hit_pause_events->size)) {
+        bool first = true;
 
-    mash::string result(*built);
-    built->~string();
+        const mash::vector<animation_event>* events;
+
+        if (signal_name == treyarch::references::hit_pause.read()) {
+            if (!curr_hit_pause_events || !curr_hit_pause_events->size)
+                return result;
+
+            events = curr_hit_pause_events;
+        } else {
+            if (!curr_events || !curr_events->size)
+                return result;
+
+            events = curr_events;
+        }
+
+        for (const animation_event* the_event : *events) {
+            if (the_event->name != signal_name)
+                continue;
+
+            f32 time = the_event->time;
+
+            if (!first)
+                result += mash::string(", ");
+
+            if (in_frames)
+                result += mash::string(mash::string::fmt, "%d", (u32)(i64)(time * 30.0 + 0.5));
+            else
+                result += mash::string(mash::string::fmt, "%.2f", time);
+
+            first = false;
+        }
+    } else {
+        nal::anim* anim = the_controller->get_nal_anim(get_layer_id());
+
+        if (!anim || !anim->has_transport_data(1))
+            return result;
+
+        auto signals = (nal::transport_data_signals*)anim->get_transport_data(1);
+
+        if (!signals || !signals->signal_count)
+            return result;
+
+        bool first = true;
+
+        for (u32 index = 0; index < signals->signal_count; ++index) {
+            if (signals->signals[index].id != signal_name.source_hash_code)
+                continue;
+
+            u32 frame = signals->signals[index].frame;
+
+            if (!first)
+                result += mash::string(", ");
+
+            if (in_frames)
+                result += mash::string(mash::string::fmt, "%d", frame);
+            else
+                result += mash::string(mash::string::fmt, "%.2f", frame / 30.0);
+
+            first = false;
+        }
+    }
 
     return result;
 }
 
 // sub_5AFF50
-mash::string als::state_machine::unk_050() const {
-    alignas(mash::string) u8 slot[sizeof(mash::string)];
-    mash::string* built = ((mash::string* (__thiscall*)(const state_machine*, void*))retail::sub_5AFF50)(this, slot);
+mash::string als::state_machine::get_last_transition_string() const {
+    mash::string result("Last Transition\n");
 
-    mash::string result(*built);
-    built->~string();
+    if (prev_state)
+        result += mash::string(mash::string::fmt, "From State: %s\n", prev_state->get_state_id().to_string());
+    else
+        result += mash::string("<N/A>\n");
 
     return result;
 }
 
 // sub_5BB810
-bool als::state_machine::unk_051() const {
-    return ((bool (__thiscall*)(const state_machine*))retail::sub_5BB810)(this);
+bool als::state_machine::did_anim_loop() const {
+    i32 pass = (i32)the_controller->get_anim_normalized_time(get_layer_id());
+
+    return (i32)the_controller->get_anim_prev_normalized_time(get_layer_id()) != pass;
 }
 
 // sub_5BA880
@@ -1465,11 +1528,10 @@ void als::raise_animation_event_signals(state_machine* the_sm) {
     if (layer > 14)
         layer = 0;
 
-    animation_controller_state* state   = the_sm->the_controller->state;
-    animation_records          &records = state->layer_anims[layer];
+    animation_controller_state* state = the_sm->the_controller->state;
 
     f32 time      = the_sm->the_controller->get_anim_normalized_time(layer);
-    f32 prev_time = records.size() ? records.back()->prev_normalized_time : 0.0f;
+    f32 prev_time = the_sm->the_controller->get_anim_prev_normalized_time(layer);
 
     the_sm->raise_animation_signals_for_time_span(time, prev_time, state ? state->unk_0e4 : nullptr, false);
 }

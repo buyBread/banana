@@ -166,9 +166,9 @@ namespace treyarch { namespace als {
         state_unk_44* get_unk_44(u32 index) const override;
         void*         unk_048(bool unk, entity* the_entity) const override;
 
-        virtual mash::string unk_049(string_hash signal_name, bool in_frames) const;
-        virtual mash::string unk_050() const;
-        virtual bool         unk_051() const;
+        virtual mash::string get_signal_times_string(string_hash signal_name, bool in_frames) const; // ", "-separated, frames at 30 a second
+        virtual mash::string get_last_transition_string() const;
+        virtual bool         did_anim_loop() const;
         virtual layer_id     get_layer_id() const = 0;
         virtual bool         determine_if_request_satisfied(animation_logic_system* the_als) const = 0;
         virtual f32          get_playback_speed() const;
