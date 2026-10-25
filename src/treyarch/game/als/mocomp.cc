@@ -5943,11 +5943,117 @@ void als::momentum_sync_move_and_face::update_slide_axes(f32) {
 
 // sub_5C2490
 po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
-    using get_turned_po_t = po* (__thiscall*)(momentum_sync_move_and_face*, po*, f32, actor*);
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
 
-    po turned;
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
 
-    ((get_turned_po_t)retail::sub_5C2490)(this, &turned, delta_t, target);
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    po turned = *(target ? target : the_actor)->my_abs_po;
+
+    vector3d facing  = turned.get_z_facing();
+    vector3d y_row   = turned.get_y_facing();
+    vector3d minus_x = -turned.get_x_facing();
+
+    if (preserve_y_facing)
+        up = y_row;
+
+    // its up onto up first
+    if (up.length2() > 0.0001f) {
+        f32 angle = math::acos(y_row * up);
+
+        if (angle > 0.01f || angle < -0.01f) {
+            vector3d axis = unitized(cross(y_row, up));
+
+            if (axis.length2() < 0.01f)
+                axis = facing;
+
+            retail::sub_4015B0((u64*)&rotation);
+
+            angle = -angle;
+
+            math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+
+            facing  = turned.get_z_facing();
+            minus_x = -turned.get_x_facing();
+        }
+    }
+
+    // then toward slide_dir through the rotate signals, spread over what's left unless constant
+    f32 fraction = 0.0f;
+
+    if (!(anim_time >= rotate_begin_time))
+        return turned;
+
+    if (!(rotate_end_time >= anim_time)) {
+        if ((f64)rotate_end_time > (f64)anim_time - (f64)delta_t)
+            fraction = 1.0f;
+    } else {
+        fraction = 1.0f;
+
+        if (apply_turn && !apply_turn_constant) {
+            f32 remaining = rotate_end_time - anim_time;
+
+            if (delta_t * 2.0f > remaining)
+                fraction = 1.0f;
+            else
+                fraction = delta_t / remaining;
+        }
+    }
+
+    vector3d desired = slide_dir;
+
+    desired = desired - up * (f32)(slide_dir * up);
+
+    if (!(desired.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&desired);
+
+    facing = facing - up * (f32)(up * facing);
+
+    if (!(facing.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&facing);
+
+    minus_x = minus_x - up * (f32)(up * minus_x);
+
+    retail::sub_402050((f32*)&minus_x);
+
+    f32 along  = facing * desired;
+    f32 across = minus_x * desired;
+    f32 angle  = (f32)retail::sub_44D790(across, along);
+
+    // at most turn_rate a second, else the fraction of the way
+    if (turn_rate > 0.0f) {
+        f32 max_turn = turn_rate * delta_t;
+
+        if (-0.01f > angle) {
+            if (-max_turn > angle)
+                angle = -max_turn;
+        } else if (angle > 0.01f) {
+            if (angle > max_turn)
+                angle = max_turn;
+        }
+    } else
+        angle *= fraction;
+
+    if (std::fabs(angle) > 0.01f) {
+        retail::sub_4015B0((u64*)&rotation);
+
+        math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+    }
 
     return turned;
 }
