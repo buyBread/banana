@@ -34,6 +34,21 @@ namespace treyarch { namespace nal {
         u32*    scale_bones;  // bone index per BONE_SCALE instance
     };
 
+    // nalSignal
+    struct signal {
+        u32 id;          // the event's string hash
+        u16 frame;
+        u16 bone;        // fk bone index; its name goes into the event
+        u32 param_type;  // 0 for none
+        u32 param_value;
+    };
+
+    // transport id 1; nal never reads it
+    struct transport_data_signals : transport_data {
+        u32     signal_count;
+        signal* signals;
+    };
+
     struct rescale {
         f32 scale;
         u32 offset;  // bytes into the pose data
@@ -102,6 +117,15 @@ namespace treyarch { namespace nal {
     ASSERT_OFFSETOF(transport_data_fk, trajectory_po_at_anim_end, 0x10);
     ASSERT_OFFSETOF(transport_data_fk, scale_count,               0x30);
     ASSERT_OFFSETOF(transport_data_fk, scale_bones,               0x34);
+
+    ASSERT_SIZEOF  (signal,              0x10);
+    ASSERT_OFFSETOF(signal, frame,       0x04);
+    ASSERT_OFFSETOF(signal, bone,        0x06);
+    ASSERT_OFFSETOF(signal, param_type,  0x08);
+    ASSERT_OFFSETOF(signal, param_value, 0x0C);
+
+    ASSERT_OFFSETOF(transport_data_signals, signal_count, 0x08);
+    ASSERT_OFFSETOF(transport_data_signals, signals,      0x0C);
 
     ASSERT_SIZEOF  (rescale,         0x08);
     ASSERT_OFFSETOF(rescale, scale,  0x00);
