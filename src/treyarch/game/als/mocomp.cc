@@ -77,7 +77,8 @@ string_hash als::attach_hand_to_point::my_type_key        { 0x11A13AEE }; // "al
 string_hash als::constant_move_hand_to_point::my_type_key { 0x3420FEB9 }; // "als::constant_move_hand_to_point"
 string_hash als::combat_pole_swing_attach::my_type_key    { 0xA771F9B4 }; // "als::combat_pole_swing_attach"
 
-string_hash als::sync_move_and_face::my_type_key { 0x8E26B3C7 }; // "als::sync_move_and_face"
+string_hash als::sync_move_and_face::my_type_key          { 0x8E26B3C7 }; // "als::sync_move_and_face"
+string_hash als::momentum_sync_move_and_face::my_type_key { 0xB44DA4B8 }; // "als::momentum_sync_move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -347,6 +348,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(sync_move_and_face);
 
         return memory_buffer ? new (memory_buffer) sync_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == momentum_sync_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(momentum_sync_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) momentum_sync_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -5687,4 +5694,288 @@ void als::sync_move_and_face::sync_actors(actor* actor_a,
 
         sync_entities(delta_t, actor_b, &po_b, &pos_b, actor_a, &po_a, &pos_a, pos_weight, orient_weight, lock_pos_a, lock_orient_a);
     }
+}
+
+// sub_5AE9A0
+als::momentum_sync_move_and_face::momentum_sync_move_and_face() : params_read(false),
+                                                                  has_hit(false),
+                                                                  stick_to_collision(false),
+                                                                  no_reorient_to_vertical(false),
+                                                                  apply_slide(false) {}
+
+// sub_719650
+als::momentum_sync_move_and_face::momentum_sync_move_and_face(mash::generating_vtable_version so_do_nothing) : sync_move_and_face(so_do_nothing),
+                                                                                                               params_read(false),
+                                                                                                               has_hit(false),
+                                                                                                               stick_to_collision(false),
+                                                                                                               no_reorient_to_vertical(false),
+                                                                                                               apply_slide(false) {}
+
+// sub_5AE9E0
+mash::virtual_types_key als::momentum_sync_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE9F0
+bool als::momentum_sync_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (sync_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (sync_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AEAC0
+i32 als::momentum_sync_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA940
+void als::momentum_sync_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    sync_move_and_face::activate(the_als_core, layer);
+
+    read_params(0.033333335f);
+}
+
+// sub_5C2480
+void als::momentum_sync_move_and_face::deactivate() {
+    sync_move_and_face::deactivate();
+}
+
+// sub_5C2CA0
+void als::momentum_sync_move_and_face::pre_anim_action(f32 delta_t) {
+    if (the_als->did_transition_succeed())
+        read_params(delta_t);
+
+    params_read = false;
+}
+
+// sub_5EB9D0
+void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
+    read_hit(delta_t);
+    update_slide_axes(delta_t);
+
+    actor* actor_a = nullptr;
+    actor* actor_b = nullptr;
+
+    if (get_sync_actors(&actor_a, &actor_b)) {
+        anim_time = the_base->get_current_anim_time();
+
+        // turned in place, a for bit 1 and b for bit 2
+        if (apply_turn) {
+            po turned = get_turned_po(delta_t, actor_a);
+
+            if (apply_turn & 1) {
+                const vector3d &position = actor_a->my_abs_po->get_position();
+
+                turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+                retail::sub_627180((i32)actor_a, (f32*)&turned); // entity_base::set_abs_po
+            }
+
+            if (apply_turn & 2) {
+                const vector3d &position = actor_b->my_abs_po->get_position();
+
+                turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+                retail::sub_627180((i32)actor_b, (f32*)&turned);
+            }
+        }
+
+        if (stick_to_collision && has_hit) {
+            po po_a = *actor_a->my_abs_po;
+            po po_b = *actor_b->my_abs_po;
+
+            // a locked side creeps onto the hit point at stick_speed_min
+            if (lock_pos_a) {
+                f32      max_step = stick_speed_min * delta_t;
+                vector3d step     = hit_point - po_a.get_position();
+
+                if ((f32)retail::sub_402020((f32*)&step) > max_step) {
+                    retail::sub_402050((f32*)&step);
+
+                    step *= max_step;
+                }
+
+                vector3d position = po_a.get_position() + step;
+
+                retail::sub_424900((u64*)&po_a, (u32*)&position); // po::set_position
+                retail::sub_627180((i32)actor_a, (f32*)&po_a);
+
+                actor_a->set_frame_delta_trans(step, delta_t);
+            }
+
+            if (lock_pos_b) {
+                f32      max_step = stick_speed_min * delta_t;
+                vector3d step     = hit_point - po_b.get_position();
+
+                if ((f32)retail::sub_402020((f32*)&step) > max_step) {
+                    retail::sub_402050((f32*)&step);
+
+                    step *= max_step;
+                }
+
+                vector3d position = po_b.get_position() + step;
+
+                retail::sub_424900((u64*)&po_b, (u32*)&position);
+                retail::sub_627180((i32)actor_b, (f32*)&po_b);
+
+                actor_b->set_frame_delta_trans(step, delta_t);
+            }
+        } else if (apply_slide) {
+            po po_a = *actor_a->my_abs_po;
+            po po_b = *actor_b->my_abs_po;
+
+            // both slide along the actor's facing
+            up        = the_actor->my_abs_po->get_y_facing();
+            slide_dir = the_actor->my_abs_po->get_z_facing();
+
+            vector3d move = get_slide_move(delta_t);
+
+            vector3d position_a = po_a.get_position() + move;
+            vector3d position_b = po_b.get_position() + move;
+
+            po_a.get_matrix().w = vector4d(position_a.x, position_a.y, position_a.z, 1.0f);
+            po_b.get_matrix().w = vector4d(position_b.x, position_b.y, position_b.z, 1.0f);
+
+            retail::sub_627180((i32)actor_a, (f32*)&po_a);
+            actor_a->set_frame_delta_trans(move, delta_t);
+
+            retail::sub_627180((i32)actor_b, (f32*)&po_b);
+            actor_b->set_frame_delta_trans(move, delta_t);
+        }
+    }
+
+    sync_move_and_face::post_anim_action(delta_t);
+}
+
+// sub_5B3D30
+void als::momentum_sync_move_and_face::read_params(f32) {
+    if (params_read)
+        return;
+
+    params_read = true;
+
+    read_signal_times();
+
+    up        = the_actor->my_abs_po->get_y_facing();
+    slide_dir = the_actor->my_abs_po->get_z_facing();
+
+    stick_speed_min = the_base->get_optional_pb_float(stick_speed_min_id, 20.0f, nullptr);
+    slide_speed_min = the_base->get_optional_pb_float(slide_speed_min_id, 0.0f, nullptr);
+    slide_speed_max = the_base->get_optional_pb_float(slide_speed_max_id, 0.0f, nullptr);
+    turn_rate       = the_base->get_optional_pb_float(turn_rate_id, -1.0f, nullptr);
+
+    if (turn_rate >= 0.0f)
+        turn_rate = (f32)((f64)turn_rate * 0.017453292519943295);
+
+    apply_slide             = the_base->get_optional_pb_int(apply_slide_id, 0, nullptr) != 0;
+    apply_turn              = the_base->get_optional_pb_int(apply_turn_id, 0, nullptr);
+    apply_turn_constant     = the_base->get_optional_pb_int(apply_turn_constant_id, 0, nullptr) != 0;
+    preserve_y_facing       = the_base->get_optional_pb_int(preserve_y_facing_id, 0, nullptr) != 0;
+    no_reorient_to_vertical = the_base->get_optional_pb_int(no_reorient_to_vertical_id, 0, nullptr) != 0;
+    reorient_blend          = the_base->get_optional_pb_float(no_reorient_to_vertical_id, 1.0f, nullptr);
+    stick_to_collision      = the_base->get_optional_pb_int(stick_to_collision_id, 0, nullptr) != 0;
+    hit_height_min          = the_base->get_optional_pb_float(hit_height_min_id, 2.0f, nullptr);
+    hit_norm_offset         = the_base->get_optional_pb_float(hit_norm_offset_id, 0.25f, nullptr);
+
+    slide_speed = slide_speed_max;
+}
+
+// sub_5B3C00
+void als::momentum_sync_move_and_face::read_signal_times() {
+    // a missing begin is the start, a missing end the anim's end
+    move_begin_time = the_base->get_time_to_signal(references::move_begin.read(), nullptr, false, nullptr);
+
+    if (move_begin_time < 0.0f)
+        move_begin_time = 0.0f;
+
+    move_end_time = the_base->get_time_to_signal(references::move_end.read(), nullptr, false, nullptr);
+
+    if (move_end_time < 0.0f)
+        move_end_time = the_base->get_duration();
+
+    rotate_begin_time = the_base->get_time_to_signal(references::rotate_begin.read(), nullptr, false, nullptr);
+
+    if (rotate_begin_time < 0.0f)
+        rotate_begin_time = 0.0f;
+
+    rotate_end_time = the_base->get_time_to_signal(references::rotate_end.read(), nullptr, false, nullptr);
+
+    if (rotate_end_time < 0.0f)
+        rotate_end_time = the_base->get_duration();
+}
+
+// sub_5F0A00
+void als::momentum_sync_move_and_face::read_hit(f32) {
+    // param 120 over 0.0001 reports one: param 143 its normal, 145 its point, raised off the surface
+    if (the_base->has_ext_param_been_set(120) && the_base->get_external_float(120) > 0.0001f) {
+        has_hit    = true;
+        hit_normal = the_base->get_external_vector(143);
+        hit_point  = the_base->get_external_vector(145);
+        hit_point += hit_normal * hit_norm_offset;
+
+        // and up by hit_height_min when internal param 196 is under it
+        if (hit_height_min > the_als->the_cache.get_internal_float(the_als, the_base, 196))
+            hit_point += treyarch::references::unk_00e6808c.get() * hit_height_min;
+    }
+}
+
+// sub_5DA970
+void als::momentum_sync_move_and_face::update_slide_axes(f32) {
+    if (!preserve_y_facing && !no_reorient_to_vertical) {
+        if (reorient_blend > 0.9999f)
+            up = treyarch::references::unk_00e6808c.get();
+        else
+            up = up * (1.0f - reorient_blend) + treyarch::references::unk_00e6808c.get() * reorient_blend;
+    }
+
+    // into the wall when stuck to a hit, else param 143 when set
+    if (stick_to_collision && has_hit)
+        slide_dir = -hit_normal;
+    else if (the_base->has_ext_param_been_set(143))
+        slide_dir = the_base->get_external_vector(143);
+
+    slide_dir = slide_dir - up * (f32)(up * slide_dir);
+}
+
+// sub_5C2490
+po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
+    using get_turned_po_t = po* (__thiscall*)(momentum_sync_move_and_face*, po*, f32, actor*);
+
+    po turned;
+
+    ((get_turned_po_t)retail::sub_5C2490)(this, &turned, delta_t, target);
+
+    return turned;
+}
+
+// sub_5B4060
+vector3d als::momentum_sync_move_and_face::get_slide_move(f32 delta_t) {
+    f32 span     = move_end_time - move_begin_time;
+    f32 progress = 0.0f;
+
+    if (span < 0.0001f) {
+        if (anim_time > move_begin_time)
+            progress = 1.0f;
+    } else {
+        progress = (f32)(((f64)move_end_time - (f64)anim_time) / (f64)span);
+
+        if (0.0f > progress)
+            progress = 0.0f;
+        else if (progress > 1.0f)
+            progress = 1.0f;
+    }
+
+    slide_speed = (f32)(((f64)slide_speed_max - (f64)slide_speed_min) * (f64)progress + (f64)slide_speed_min);
+
+    vector3d velocity = slide_dir * slide_speed;
+
+    // still outside the move signals
+    if (move_begin_time > anim_time || anim_time > move_end_time)
+        velocity = treyarch::references::unk_00fd4370.get();
+
+    return velocity * delta_t;
 }

@@ -82,6 +82,17 @@ namespace als {
     inline const string_hash sync_allow_axis_slide_id      = string_hash(hash::djb2("sync_allow_axis_slide"));
     inline const string_hash sync_rel_slide_min_id         = string_hash(hash::djb2("sync_rel_slide_min"));
     inline const string_hash sync_rel_slide_max_id         = string_hash(hash::djb2("sync_rel_slide_max"));
+    inline const string_hash stick_to_collision_id         = string_hash(hash::djb2("stick_to_collision"));
+    inline const string_hash stick_speed_min_id            = string_hash(hash::djb2("stick_speed_min"));
+    inline const string_hash hit_height_min_id             = string_hash(hash::djb2("hit_height_min"));
+    inline const string_hash hit_norm_offset_id            = string_hash(hash::djb2("hit_norm_offset"));
+    inline const string_hash apply_slide_id                = string_hash(hash::djb2("apply_slide"));
+    inline const string_hash slide_speed_min_id            = string_hash(hash::djb2("slide_speed_min"));
+    inline const string_hash slide_speed_max_id            = string_hash(hash::djb2("slide_speed_max"));
+    inline const string_hash apply_turn_id                 = string_hash(hash::djb2("apply_turn"));
+    inline const string_hash apply_turn_constant_id        = string_hash(hash::djb2("apply_turn_constant"));
+    inline const string_hash preserve_y_facing_id          = string_hash(hash::djb2("preserve_y_facing"));
+    inline const string_hash no_reorient_to_vertical_id    = string_hash(hash::djb2("no_reorient_to_vertical"));
 
     // a pair's candidate sync bones; retail builds the same table at 0x010034C0
     inline const string_hash sync_bone_ids[10] = { string_hash(hash::djb2("SYNC")),
@@ -1222,9 +1233,13 @@ namespace als {
         bool     lock_orient_b;
 
         // inlined @ sub_5C3730
+        // inlined @ sub_5AE9A0
+        // inlined @ sub_5AEA30
         sync_move_and_face() : lock_pos_a(false), lock_pos_b(false), lock_orient_a(false), lock_orient_b(false) {}
 
         // inlined @ sub_723DA0
+        // inlined @ sub_719650
+        // inlined @ sub_719690
         explicit sync_move_and_face(mash::generating_vtable_version so_do_nothing) : use_anim_only(so_do_nothing),
                                                                                       lock_pos_a(false),
                                                                                       lock_pos_b(false),
@@ -1292,6 +1307,63 @@ namespace als {
                                 f32    pos_tween,
                                 f32    orient_tween,
                                 f32    delta_t);
+
+        static string_hash my_type_key;
+    };
+
+    // sync_move_and_face that can also slide the pair, turn it and stick a locked side to a hit
+    class momentum_sync_move_and_face : public sync_move_and_face {
+
+    public:
+        bool     params_read;             // the state's params are read once a frame, on activation and a successful transition
+        u8       pad_045[0x03];
+        vector3d up;
+        vector3d slide_dir;               // kept level with up
+        vector3d unk_060;                 // never read
+        vector3d hit_normal;              // param 143 when param 120 reports a hit
+        vector3d hit_point;               // param 145, off the surface
+        bool     has_hit;
+        u8       pad_085[0x03];
+        f32      hit_height_min;
+        f32      hit_norm_offset;
+        bool     stick_to_collision;
+        bool     no_reorient_to_vertical;
+        bool     apply_slide;
+        u8       pad_093[0x01];
+        i32      apply_turn;              // bit 1 turns a, bit 2 b
+        bool     apply_turn_constant;
+        bool     preserve_y_facing;
+        u8       pad_09a[0x02];
+        f32      reorient_blend;          // no_reorient_to_vertical read again as a float
+        f32      slide_speed;
+        f32      anim_time;
+        f32      move_begin_time;
+        f32      move_end_time;
+        f32      rotate_begin_time;
+        f32      rotate_end_time;
+        f32      slide_speed_min;
+        f32      slide_speed_max;
+        f32      stick_speed_min;
+        f32      turn_rate;               // radians a second; negative for none
+
+        momentum_sync_move_and_face();
+        explicit momentum_sync_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void pre_anim_action(f32 delta_t) override;
+        void post_anim_action(f32 delta_t) override;
+
+        virtual void     read_params(f32 delta_t);
+        virtual void     read_signal_times();
+        virtual void     read_hit(f32 delta_t);
+        virtual void     update_slide_axes(f32 delta_t);
+        virtual po       get_turned_po(f32 delta_t, actor* target); // the target's po turned up to up, and toward slide_dir through the rotate signals
+        virtual vector3d get_slide_move(f32 delta_t);               // from slide_speed_max at MOVE_BEGIN down to slide_speed_min at MOVE_END
 
         static string_hash my_type_key;
     };
@@ -1421,6 +1493,29 @@ namespace als {
     ASSERT_OFFSETOF(sync_move_and_face, rel_slide_b,        0x34);
     ASSERT_OFFSETOF(sync_move_and_face, lock_pos_a,         0x40);
     ASSERT_OFFSETOF(sync_move_and_face, lock_orient_b,      0x43);
+
+    ASSERT_SIZEOF  (momentum_sync_move_and_face,                          0xC8);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, params_read,             0x44);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, up,                      0x48);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, slide_dir,               0x54);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, hit_normal,              0x6C);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, hit_point,               0x78);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, has_hit,                 0x84);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, hit_height_min,          0x88);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, stick_to_collision,      0x90);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, no_reorient_to_vertical, 0x91);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, apply_slide,             0x92);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, apply_turn,              0x94);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, apply_turn_constant,     0x98);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, preserve_y_facing,       0x99);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, reorient_blend,          0x9C);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, slide_speed,             0xA0);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, anim_time,               0xA4);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, move_begin_time,         0xA8);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, rotate_end_time,         0xB4);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, slide_speed_min,         0xB8);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, stick_speed_min,         0xC0);
+    ASSERT_OFFSETOF(momentum_sync_move_and_face, turn_rate,               0xC4);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));

@@ -65,6 +65,7 @@ void als::internal_parameter_cache::invalidate_per_layer() { // the computed val
 // inlined @ sub_5EEF20
 // inlined @ sub_5F4BD0
 // inlined @ sub_5EFE70
+// inlined @ sub_5F0A00
 f32 als::internal_parameter_cache::get_internal_float(animation_logic_system* the_als, state_machine* the_sm, param_id param) {
     u32 index = param - num_external_hash_params;
 
