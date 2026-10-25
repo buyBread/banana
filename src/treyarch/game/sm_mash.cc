@@ -2,6 +2,7 @@
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/meta_anim_swing.hh"
 #include "treyarch/game/als/meta_linear_blend.hh"
+#include "treyarch/game/als/rules.hh"
 #include "treyarch/game/als/script_state.hh"
 #include "treyarch/game/meta_anims.hh"
 #include "treyarch/game/sm_mash.hh"
@@ -24,6 +25,33 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::state_machine_shared>();
         mash::mash_virtual_base::register_class<als::als_meta_anim_swing>();
         mash::mash_virtual_base::register_class<als::als_meta_linear_blend>();
+        mash::mash_virtual_base::register_class<als::bounded_number_rule>();
+        mash::mash_virtual_base::register_class<als::constant_number_compare_rule>();
+        mash::mash_virtual_base::register_class<als::hash_equal_rule>();
+        mash::mash_virtual_base::register_class<als::hash_not_equal_rule>();
+        mash::mash_virtual_base::register_class<als::hash_param_equal_rule>();
+        mash::mash_virtual_base::register_class<als::hash_param_not_equal_rule>();
+        mash::mash_virtual_base::register_class<als::inverse_bounded_number_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_equal_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_greater_than_or_equal_to_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_greater_than_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_less_than_or_equal_to_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_less_than_rule>();
+        mash::mash_virtual_base::register_class<als::number_compare_not_equal_rule>();
+        mash::mash_virtual_base::register_class<als::param_compare_rule>();
+        mash::mash_virtual_base::register_class<als::transition_rule_base>();
+        mash::mash_virtual_base::register_class<als::vector_component_bounded_number_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_constant_number_compare_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_inverse_bounded_number_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_equal_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_greater_than_or_equal_to_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_greater_than_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_less_than_or_equal_to_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_less_than_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_number_compare_not_equal_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_param_compare_rule>();
+        mash::mash_virtual_base::register_class<als::vector_component_vector_param_compare_rule>();
+        mash::mash_virtual_base::register_class<als::vector_param_compare_rule>();
         mash::mash_virtual_base::register_class<als::base_layer_scripted_state>();
         mash::mash_virtual_base::register_class<als::scripted_category>();
         mash::mash_virtual_base::register_class<als::scripted_state>();
