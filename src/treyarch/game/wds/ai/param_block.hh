@@ -56,6 +56,8 @@ namespace treyarch {
         const char*              get_pb_fixedstring   (string_hash parameter) const;
         mash::mash_virtual_base* get_pb_class         (string_hash parameter) const;
 
+        vector3d get_optional_pb_vector3d(string_hash parameter, const vector3d &default_value, bool* exists) const;
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,

@@ -2,6 +2,7 @@
 
 #include "treyarch/game/wds/entity/interface/generic_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_reflexes.hh"
+#include "treyarch/shared/arch_base_vhandle.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -38,6 +39,8 @@ namespace treyarch {
         u8                   reserved_254[0x180];
         player_reflexes      reflexes;
         player_spider_senses spider_senses;
+        u8                   reserved_414[0x9C];
+        arch_base_vhandle    unk_4b0; // an actor the als's target_ai rules read as the hero's target
 
         player_interface_vtable* get_vtable() const {
             return (player_interface_vtable*)vtable;
@@ -79,4 +82,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(player_interface, enabled,       0x253);
     ASSERT_OFFSETOF(player_interface, reflexes,      0x3D4);
     ASSERT_OFFSETOF(player_interface, spider_senses, 0x3FC);
+    ASSERT_OFFSETOF(player_interface, unk_4b0,       0x4B0);
 } // treyarch

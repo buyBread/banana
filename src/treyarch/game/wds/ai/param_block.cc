@@ -113,3 +113,13 @@ const char* param_block::get_pb_fixedstring(string_hash parameter) const {
 mash::mash_virtual_base* param_block::get_pb_class(string_hash parameter) const {
     return ((mash::mash_virtual_base* (__thiscall*)(const param_block*, string_hash))retail::sub_435150)(this, parameter);
 }
+
+// sub_4354C0
+vector3d param_block::get_optional_pb_vector3d(string_hash parameter, const vector3d &default_value, bool* exists) const {
+    using get_optional_pb_vector3d_t = vector3d* (__thiscall*)(const param_block*, vector3d*, string_hash, const vector3d*, bool*);
+
+    vector3d result;
+    ((get_optional_pb_vector3d_t)retail::sub_4354C0)(this, &result, parameter, &default_value, exists);
+
+    return result;
+}
