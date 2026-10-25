@@ -14,7 +14,9 @@ namespace treyarch {
             bool unk_06c; // raise_animation_signals_for_time_span takes it to include the span's start
         };
 
-        u8                        reserved_000[0x2C];
+        u8                        reserved_000[0x21];
+        bool                      is_suspended; // mirrors the als's
+        u8                        reserved_022[0x0A];
         container::fixed_vector
             <unk_02c_entry*, 2>   unk_02c[15];
         u8                        reserved_0e0[0x08];
@@ -33,6 +35,7 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, unk_06c, 0x6C);
 
+    ASSERT_OFFSETOF(animation_controller_state, is_suspended,  0x021);
     ASSERT_OFFSETOF(animation_controller_state, unk_02c,       0x02C);
     ASSERT_OFFSETOF(animation_controller_state, combined_pose, 0x0E8);
     ASSERT_OFFSETOF(animation_controller_state, pose_input,    0x210);
