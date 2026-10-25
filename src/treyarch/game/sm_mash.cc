@@ -64,6 +64,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::strafe_mocomp>();
         mash::mash_virtual_base::register_class<als::strafe_mocomp_on_foot>();
         mash::mash_virtual_base::register_class<als::strict_simple_orientation>();
+        mash::mash_virtual_base::register_class<als::sync_move_and_face>();
         mash::mash_virtual_base::register_class<als::towed_orientation>();
         mash::mash_virtual_base::register_class<als::use_anim_only>();
         mash::mash_virtual_base::register_class<als::velocity_orientation>();
