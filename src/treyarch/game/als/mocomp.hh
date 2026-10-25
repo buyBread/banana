@@ -45,6 +45,11 @@ namespace als {
     inline const string_hash r_foot_id                     = string_hash(hash::djb2("r_foot_id"));
     inline const string_hash l_foot_id                     = string_hash(hash::djb2("l_foot_id"));
     inline const string_hash inverse_velocity_id           = string_hash(hash::djb2("inverse_velocity"));
+    inline const string_hash move_dir_from_anim_id         = string_hash(hash::djb2("move_dir_from_anim"));
+    inline const string_hash facing_input_dir_blend_id     = string_hash(hash::djb2("facing_input_dir_blend"));
+    inline const string_hash allow_speed_override_id       = string_hash(hash::djb2("allow_speed_override"));
+    inline const string_hash max_playback_speed_id         = string_hash(hash::djb2("max_playback_speed"));
+    inline const string_hash min_playback_speed_id         = string_hash(hash::djb2("min_playback_speed"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -61,6 +66,10 @@ namespace als {
     // where the accel/decel mode's turn rate is done ramping up and starts ramping down, through the movement window; nothing writes them
     inline f32 turn_ramp_up_end     = 0.25f;
     inline f32 turn_ramp_down_start = 0.5f;
+
+    // input_orientation's switches for the speed param and for matching the playback speed to it; nothing writes them
+    inline i32  speed_override_enabled = 1;
+    inline bool match_playback_speed   = false;
 
     // moves and turns the actor the way its animation asks; built in the als's own storage
     class motion_compensator : public mash::mash_virtual_base {
@@ -536,6 +545,47 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // moves along the input direction at the anim's own speed, keeping the playback speed in the state's bounds
+    class input_orientation : public relative_orientation {
+
+    public:
+        input_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit input_orientation(mash::generating_vtable_version so_do_nothing) : relative_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void deactivate() override;
+        void post_anim_action(f32 delta_t) override;
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        static string_hash my_type_key;
+    };
+
+    // faces whatever tows the actor and keeps its hitch point on the tow point
+    class towed_orientation : public simple_orientation {
+
+    public:
+        towed_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit towed_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void post_anim_action(f32 delta_t) override;
+
+        // in the world; the actor's own position when nothing tows it
+        vector3d get_tow_point() const;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -589,4 +639,7 @@ namespace als {
     ASSERT_OFFSETOF(direct_mocomp, des_face_dir, 0x50);
     ASSERT_OFFSETOF(direct_mocomp, des_up_dir,   0x5C);
     ASSERT_OFFSETOF(direct_mocomp, des_speed,    0x68);
+
+    ASSERT_SIZEOF(input_orientation, 0x44);
+    ASSERT_SIZEOF(towed_orientation, 0x44);
 }} // treyarch::als

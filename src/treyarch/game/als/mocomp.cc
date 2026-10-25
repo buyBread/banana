@@ -40,6 +40,9 @@ string_hash als::initial3D_velocity_orientation::my_type_key { 0x57D7B16E }; // 
 string_hash als::strict_simple_orientation::my_type_key { 0x17919801 }; // "als::strict_simple_orientation"
 string_hash als::direct_mocomp::my_type_key             { 0xD27304F9 }; // "als::direct_mocomp"
 
+string_hash als::input_orientation::my_type_key { 0x422CBEEF }; // "als::input_orientation"
+string_hash als::towed_orientation::my_type_key { 0x6ABE6902 }; // "als::towed_orientation"
+
 i32 als::motion_compensator::last_created_size = 0;
 
 // sub_5C3730
@@ -138,6 +141,18 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(direct_mocomp);
 
         return memory_buffer ? new (memory_buffer) direct_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == input_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(input_orientation);
+
+        return memory_buffer ? new (memory_buffer) input_orientation : nullptr;
+    }
+
+    if (the_class_to_make == towed_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(towed_orientation);
+
+        return memory_buffer ? new (memory_buffer) towed_orientation : nullptr;
     }
 
     // the classes not in source yet
@@ -1822,4 +1837,229 @@ void als::direct_mocomp::update_params(f32) {
         des_up_dir = the_actor->my_abs_po->get_y_facing();
 
     des_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+}
+
+// sub_5AEED0
+mash::virtual_types_key als::input_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEE70
+bool als::input_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (relative_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (relative_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::input_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C6510
+void als::input_orientation::deactivate() {
+    the_base->set_speed(1.0f);
+
+    relative_orientation::deactivate();
+}
+
+// sub_5C6530
+void als::input_orientation::post_anim_action(f32 delta_t) {
+    relative_orientation::post_anim_action(delta_t);
+
+    f32 speed     = the_base->get_speed();
+    f32 max_speed = the_base->get_optional_pb_float(max_playback_speed_id, 1.0f, nullptr);
+    f32 min_speed = the_base->get_optional_pb_float(min_playback_speed_id, 1.0f, nullptr);
+
+    if (min_speed > speed)
+        the_base->set_speed(min_speed);
+    else if (speed > max_speed)
+        the_base->set_speed(max_speed);
+}
+
+// sub_5F2530
+void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    // the anim only gives the speed
+    vector3d anim_offset = curr_offset->get_position();
+    f32      anim_speed  = anim_offset.length() / delta_t;
+
+    const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+    curr_offset->get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
+
+    // the anim's direction in the world, the move param or the facing
+    vector3d move_dir = the_actor->my_abs_po->get_z_facing();
+
+    if (the_base->get_optional_pb_int(move_dir_from_anim_id, 0, nullptr)) {
+        vector3d dir = unitized(anim_offset);
+
+        const po       &abs_po   = *the_actor->my_abs_po;
+        const vector3d &x_row    = abs_po.get_x_facing();
+        const vector3d &y_row    = abs_po.get_y_facing();
+        const vector3d &z_row    = abs_po.get_z_facing();
+        const vector3d &position = abs_po.get_position();
+
+        move_dir = vector3d((f32)((f64)y_row.x * dir.y + (f64)dir.x * x_row.x + (f64)z_row.x * dir.z + (f64)position.x * 0.0),
+                            (f32)((f64)x_row.y * dir.x + (f64)y_row.y * dir.y + (f64)z_row.y * dir.z + (f64)position.y * 0.0),
+                            (f32)((f64)x_row.z * dir.x + (f64)y_row.z * dir.y + (f64)z_row.z * dir.z + (f64)position.z * 0.0));
+    } else if (the_base->has_ext_param_been_set(144))
+        move_dir = the_base->get_external_vector(144);
+
+    // pulled back toward the facing
+    f32 blend = the_base->get_optional_pb_float(facing_input_dir_blend_id, -1.0f, nullptr);
+
+    if (blend >= 0.0f) {
+        const vector3d &facing = the_actor->my_abs_po->get_z_facing();
+
+        f32 keep = 1.0f - blend;
+
+        move_dir = unitized(vector3d(facing.x * keep + move_dir.x * blend,
+                                     facing.y * keep + move_dir.y * blend,
+                                     facing.z * keep + move_dir.z * blend));
+    }
+
+    f32 speed = anim_speed;
+
+    if (speed_override_enabled > 0 && the_base->get_optional_pb_int(allow_speed_override_id, 0, nullptr) && the_base->has_ext_param_been_set(0))
+        speed = the_base->get_external_float(0);
+
+    // plays the anim as fast as the actor moves
+    if (match_playback_speed) {
+        f32 max_speed = the_base->get_optional_pb_float(max_playback_speed_id, 1.0f, nullptr);
+        f32 min_speed = the_base->get_optional_pb_float(min_playback_speed_id, 1.0f, nullptr);
+        f32 rate      = speed / (anim_speed / the_base->get_speed());
+
+        if (std::fabs(1.0f - rate) < 0.0001f)
+            rate = 1.0f;
+
+        if (min_speed > rate)
+            rate = min_speed;
+        else if (rate > max_speed)
+            rate = max_speed;
+
+        the_base->set_speed(rate);
+    }
+
+    f32 step = speed * delta_t;
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    vector3d        moved(step * move_dir.x + position.x, position.y + move_dir.y * step, position.z + move_dir.z * step);
+
+    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+}
+
+// sub_5AEFE0
+mash::virtual_types_key als::towed_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::towed_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::towed_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C7EF0
+void als::towed_orientation::post_anim_action(f32 delta_t) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    vector3d tow_point = get_tow_point();
+    vector3d position  = the_actor->my_abs_po->get_position();
+
+    // one unit ahead of the actor without a towing interface
+    vector3d hitch_point(0.0f, 0.0f, 1.0f);
+
+    if (the_actor->has_ifc(entity_ifc_towing))
+        hitch_point = the_actor->towing_ifc()->hitch_point;
+
+    vector3d back_from_hitch(-hitch_point.x, -hitch_point.y, -hitch_point.z);
+    vector3d to_tow_point = tow_point - position;
+
+    // straight under or over the tow point there's no way to face
+    if (to_tow_point.xz_length2() > 0.0001f) {
+        vector3d heading = unitized(to_tow_point);
+        vector3d side    = unitized(cross(heading, treyarch::references::unk_00e6808c.get()));
+        vector3d up      = unitized(cross(side, heading));
+
+        vector3d placed(tow_point.x + side.x * back_from_hitch.x + back_from_hitch.y * up.x + back_from_hitch.z * heading.x,
+                        tow_point.y + side.y * back_from_hitch.x + up.y * back_from_hitch.y + heading.y * back_from_hitch.z,
+                        tow_point.z + side.z * back_from_hitch.x + up.z * back_from_hitch.y + heading.z * back_from_hitch.z);
+
+        math::vector4 basis_dir(heading.x, heading.y, heading.z, 0.0f);
+        math::vector4 basis_up(up.x, up.y, up.z, 0.0f);
+        math::vector4 basis_origin(placed.x, placed.y, placed.z, 0.0f);
+
+        po towed;
+        retail::sub_402260((u64*)&towed, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        vector3d prev_position = the_actor->my_abs_po->get_position();
+
+        retail::sub_627180((i32)the_actor, (f32*)&towed); // entity_base::set_abs_po
+
+        const vector3d &moved = the_actor->my_abs_po->get_position();
+
+        vector3d delta(moved.x - prev_position.x, moved.y - prev_position.y, moved.z - prev_position.z);
+        vector3d settled(delta.x + prev_position.x, delta.y + prev_position.y, delta.z + prev_position.z);
+
+        retail::sub_6271F0((u32*)the_actor, (i32)&settled); // entity_base::set_abs_position
+
+        the_actor->set_frame_delta_trans(delta, delta_t);
+    }
+}
+
+// sub_5C7C70
+vector3d als::towed_orientation::get_tow_point() const {
+    if (the_actor->has_ifc(entity_ifc_towing)) {
+        towing_interface* towing = the_actor->towing_ifc();
+
+        if (towing && towing->tower.resolve()) {
+            entity* tower = (entity*)towing->tower.resolve();
+
+            if (tower && tower->has_ifc(entity_ifc_towing)) {
+                vector3d local = tower->towing_ifc()->tow_point;
+
+                const po       &tower_po = *tower->my_abs_po;
+                const vector3d &x_row    = tower_po.get_x_facing();
+                const vector3d &y_row    = tower_po.get_y_facing();
+                const vector3d &z_row    = tower_po.get_z_facing();
+                const vector3d &position = tower_po.get_position();
+
+                return vector3d(x_row.x * local.x + position.x + y_row.x * local.y + z_row.x * local.z,
+                                x_row.y * local.x + position.y + y_row.y * local.y + z_row.y * local.z,
+                                x_row.z * local.x + position.z + y_row.z * local.y + z_row.z * local.z);
+            }
+        }
+    }
+
+    return the_actor->my_abs_po->get_position();
 }
