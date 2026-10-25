@@ -38,6 +38,12 @@ namespace als {
     inline const string_hash turn_direction_id             = string_hash(hash::djb2("turn_direction"));
     inline const string_hash reorient_to_vertical_speed_id = string_hash(hash::djb2("reorient_to_vertical_speed"));
     inline const string_hash movement_speed_id             = string_hash(hash::djb2("movement_speed"));
+    inline const string_hash use_fake_foot_ik_id           = string_hash(hash::djb2("use_fake_foot_ik"));
+    inline const string_hash use_fake_leg_ik_id            = string_hash(hash::djb2("use_fake_leg_ik"));
+    inline const string_hash return_rot_speed_id           = string_hash(hash::djb2("return_rot_speed"));
+    inline const string_hash lock_foot_id                  = string_hash(hash::djb2("lock_foot"));
+    inline const string_hash r_foot_id                     = string_hash(hash::djb2("r_foot_id"));
+    inline const string_hash l_foot_id                     = string_hash(hash::djb2("l_foot_id"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -45,6 +51,10 @@ namespace als {
         inline util::memory_reference<string_hash> move_end     { 0x0102C72C };
         inline util::memory_reference<string_hash> rotate_begin { 0x0102C46C };
         inline util::memory_reference<string_hash> rotate_end   { 0x0102C62C };
+
+        // "BIP01 R FOOT" and "BIP01 L FOOT", hashed by the CRT initializers
+        inline util::memory_reference<string_hash> bip01_r_foot { 0x00FFECFC };
+        inline util::memory_reference<string_hash> bip01_l_foot { 0x00FFED34 };
     } // references
 
     // where the accel/decel mode's turn rate is done ramping up and starts ramping down, through the movement window; nothing writes them
@@ -126,6 +136,10 @@ namespace als {
         simple_orientation();
 
         // inlined @ sub_723DA0
+        // inlined @ sub_7191C0
+        // inlined @ sub_7191F0
+        // inlined @ sub_7197D0
+        // inlined @ sub_719220
         explicit simple_orientation(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
                                                                                      currently_rotating(false),
                                                                                      use_movement_window(false),
@@ -237,6 +251,115 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // pivots the turn about the lower foot (or the state's lock_foot) when the conglomerate has both
+    class simple_orientation_on_foot : public simple_orientation {
+
+    public:
+        i16      foot_index[2];        // right and left; -2 without one
+        vector3d foot_world_facing[2];
+        vector3d foot_world_pos[2];
+        f32      return_rot_speed;
+        i32      lock_foot;            // -1 lets the lower foot be the pivot
+        i32      rot_foot;             // the last pivot
+        bool     use_fake_foot_ik;
+        bool     use_fake_leg_ik;
+        u8       pad_086[0x02];
+
+        simple_orientation_on_foot();
+        explicit simple_orientation_on_foot(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void transition() override;
+        void post_anim_action(f32 delta_t) override;
+
+        void apply_rotation(      po*       curr_offset,
+                                  f32       delta_t,
+                                  f32       heading_change,
+                            const vector3d &curr_up,
+                            const vector3d &curr_dir,
+                            const vector3d &desired_up,
+                            const vector3d &desired_dir) override;
+
+        // false when there's no pivot or the feet are level and none is locked
+        static bool rotate_about_foot(      po*       curr_offset,
+                                            actor*    target,
+                                            f32       delta_t,
+                                            f32       heading_change,
+                                      const vector3d &curr_up,
+                                      const vector3d &curr_dir,
+                                      const vector3d &desired_up,
+                                      const vector3d &desired_dir,
+                                            i16       left_foot,
+                                            i16       right_foot,
+                                            i32       lock,
+                                            i32*      pivot_foot);
+
+        static void rotate_about_point(      po*       curr_offset,
+                                             actor*    target,
+                                       const vector3d &up,
+                                       const vector3d &dir,
+                                       const vector3d &pivot,
+                                       const vector3d &axis,
+                                             f32       angle);
+
+        static string_hash my_type_key;
+    };
+
+    class strafe_mocomp_on_foot : public simple_orientation_on_foot {
+
+    public:
+        strafe_mocomp_on_foot() = default;
+        explicit strafe_mocomp_on_foot(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        static string_hash my_type_key;
+    };
+
+    class relative_orientation_on_foot : public simple_orientation_on_foot {
+
+    public:
+        relative_orientation_on_foot() = default;
+        explicit relative_orientation_on_foot(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
+    class relative_strafe_mocomp_on_foot : public strafe_mocomp_on_foot {
+
+    public:
+        relative_strafe_mocomp_on_foot() = default;
+        explicit relative_strafe_mocomp_on_foot(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -257,4 +380,17 @@ namespace als {
     ASSERT_SIZEOF(strafe_mocomp,          0x44);
     ASSERT_SIZEOF(relative_orientation,   0x44);
     ASSERT_SIZEOF(relative_strafe_mocomp, 0x44);
+
+    ASSERT_SIZEOF  (simple_orientation_on_foot,                    0x88);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, foot_index,        0x44);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, foot_world_facing, 0x48);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, foot_world_pos,    0x60);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, return_rot_speed,  0x78);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, lock_foot,         0x7C);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, rot_foot,          0x80);
+    ASSERT_OFFSETOF(simple_orientation_on_foot, use_fake_foot_ik,  0x84);
+
+    ASSERT_SIZEOF(strafe_mocomp_on_foot,          0x88);
+    ASSERT_SIZEOF(relative_orientation_on_foot,   0x88);
+    ASSERT_SIZEOF(relative_strafe_mocomp_on_foot, 0x88);
 }} // treyarch::als

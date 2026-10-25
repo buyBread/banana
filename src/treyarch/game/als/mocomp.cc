@@ -23,6 +23,11 @@ string_hash als::strafe_mocomp::my_type_key          { 0x08E92C03 }; // "als::st
 string_hash als::relative_orientation::my_type_key   { 0x9E35853B }; // "als::relative_orientation"
 string_hash als::relative_strafe_mocomp::my_type_key { 0x1B85359E }; // "als::relative_strafe_mocomp"
 
+string_hash als::simple_orientation_on_foot::my_type_key     { 0xBCDF51FC }; // "als::simple_orientation_on_foot"
+string_hash als::strafe_mocomp_on_foot::my_type_key          { 0xB74138D6 }; // "als::strafe_mocomp_on_foot"
+string_hash als::relative_orientation_on_foot::my_type_key   { 0x970F4A0E }; // "als::relative_orientation_on_foot"
+string_hash als::relative_strafe_mocomp_on_foot::my_type_key { 0x8D2EAD71 }; // "als::relative_strafe_mocomp_on_foot"
+
 i32 als::motion_compensator::last_created_size = 0;
 
 // sub_5C3730
@@ -55,6 +60,30 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(relative_strafe_mocomp);
 
         return memory_buffer ? new (memory_buffer) relative_strafe_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == simple_orientation_on_foot::my_type_key.source_hash_code) {
+        last_created_size = sizeof(simple_orientation_on_foot);
+
+        return memory_buffer ? new (memory_buffer) simple_orientation_on_foot : nullptr;
+    }
+
+    if (the_class_to_make == strafe_mocomp_on_foot::my_type_key.source_hash_code) {
+        last_created_size = sizeof(strafe_mocomp_on_foot);
+
+        return memory_buffer ? new (memory_buffer) strafe_mocomp_on_foot : nullptr;
+    }
+
+    if (the_class_to_make == relative_orientation_on_foot::my_type_key.source_hash_code) {
+        last_created_size = sizeof(relative_orientation_on_foot);
+
+        return memory_buffer ? new (memory_buffer) relative_orientation_on_foot : nullptr;
+    }
+
+    if (the_class_to_make == relative_strafe_mocomp_on_foot::my_type_key.source_hash_code) {
+        last_created_size = sizeof(relative_strafe_mocomp_on_foot);
+
+        return memory_buffer ? new (memory_buffer) relative_strafe_mocomp_on_foot : nullptr;
     }
 
     // the classes not in source yet
@@ -807,6 +836,368 @@ i32 als::relative_strafe_mocomp::get_mash_sizeof() const {
 
 // sub_5DC240
 void als::relative_strafe_mocomp::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    const po* abs_po = the_actor->my_abs_po;
+
+    if (base->has_ext_param_been_set(143))
+        *desired_dir = base->get_external_vector(143);
+    else
+        *desired_dir = abs_po->get_z_facing();
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else
+        *desired_up = abs_po->get_y_facing();
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
+}
+
+// sub_5AE130
+als::simple_orientation_on_foot::simple_orientation_on_foot() : use_fake_foot_ik(false),
+                                                                use_fake_leg_ik(false) {}
+
+// sub_7191C0
+als::simple_orientation_on_foot::simple_orientation_on_foot(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing),
+                                                                                                             use_fake_foot_ik(false),
+                                                                                                             use_fake_leg_ik(false) {}
+
+// sub_5AE150
+mash::virtual_types_key als::simple_orientation_on_foot::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::simple_orientation_on_foot::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE250
+i32 als::simple_orientation_on_foot::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C59A0
+void als::simple_orientation_on_foot::activate(animation_logic_system* the_als_core, layer_id layer) {
+    simple_orientation::activate(the_als_core, layer);
+
+    string_hash right_foot = the_base->get_optional_pb_hash(r_foot_id, references::bip01_r_foot.read(), nullptr);
+    string_hash left_foot  = the_base->get_optional_pb_hash(l_foot_id, references::bip01_l_foot.read(), nullptr);
+
+    foot_index[0] = the_actor->is_a_conglomerate() ? retail::sub_62F880((u32*)the_actor, (u32*)&right_foot) : -2; // conglomerate::get_member_index
+    foot_index[1] = the_actor->is_a_conglomerate() ? retail::sub_62F880((u32*)the_actor, (u32*)&left_foot)  : -2;
+
+    po foot;
+    retail::sub_4015B0((u64*)&foot);
+
+    for (u32 index = 0; index < 2; ++index) {
+        if (foot_index[index] == -2)
+            continue;
+
+        retail::sub_62FC10((i32)the_actor, foot_index[index], (u64*)&foot, 0); // conglomerate::get_member_abs_po
+
+        foot_world_facing[index] = foot.get_z_facing();
+        foot_world_pos[index]    = foot.get_position();
+    }
+}
+
+// sub_5B4C30
+void als::simple_orientation_on_foot::transition() {
+    simple_orientation::transition();
+
+    use_fake_foot_ik = the_actor->is_a_conglomerate() && the_base->get_optional_pb_int(use_fake_foot_ik_id, 0, nullptr) > 0;
+    use_fake_leg_ik  = the_actor->is_a_conglomerate() && the_base->get_optional_pb_int(use_fake_leg_ik_id, 0, nullptr) > 0;
+    return_rot_speed = the_base->get_optional_pb_float(return_rot_speed_id, 90.0f, nullptr) * 0.017453293f;
+    lock_foot        = the_base->get_optional_pb_int(lock_foot_id, -1, nullptr);
+    rot_foot         = -1;
+}
+
+// sub_5C5BC0
+void als::simple_orientation_on_foot::post_anim_action(f32 delta_t) {
+    simple_orientation::post_anim_action(delta_t);
+}
+
+// sub_5C5B20
+void als::simple_orientation_on_foot::apply_rotation(      po*       curr_offset,
+                                                           f32       delta_t,
+                                                           f32       heading_change,
+                                                     const vector3d &curr_up,
+                                                     const vector3d &curr_dir,
+                                                     const vector3d &desired_up,
+                                                     const vector3d &desired_dir) {
+
+    if (foot_index[1] == -2 || foot_index[0] == -2 ||
+        !rotate_about_foot(curr_offset, the_actor, delta_t, heading_change, curr_up, curr_dir, desired_up, desired_dir, foot_index[1], foot_index[0], lock_foot, &rot_foot)) {
+
+        rot_foot = -1;
+
+        simple_orientation::apply_rotation(curr_offset, delta_t, heading_change, curr_up, curr_dir, desired_up, desired_dir);
+    }
+}
+
+// sub_5C4580
+bool als::simple_orientation_on_foot::rotate_about_foot(      po*       curr_offset,
+                                                              actor*    target,
+                                                              f32       delta_t,
+                                                              f32       heading_change,
+                                                        const vector3d &,
+                                                        const vector3d &curr_dir,
+                                                        const vector3d &desired_up,
+                                                        const vector3d &,
+                                                              i16       left_foot,
+                                                              i16       right_foot,
+                                                              i32       lock,
+                                                              i32*      pivot_foot) {
+
+    vector3d foot_positions[2];
+
+    if (!target->is_a_conglomerate() ||
+        !retail::sub_62FA60((i32)target, right_foot, (f32*)&foot_positions[0], 0) || // conglomerate::get_member_abs_position
+        !retail::sub_62FA60((i32)target, left_foot,  (f32*)&foot_positions[1], 0))
+        return false;
+
+    po inverse;
+    retail::sub_48E2C0((f32*)target->my_abs_po, (u64*)&inverse);
+
+    const matrix4x4 &m        = inverse.get_matrix();
+    const vector3d  &position = target->my_abs_po->get_position();
+
+    // each foot's height in the actor's frame, as a world height
+    vector3d right_offset(foot_positions[0].x - position.x, foot_positions[0].y - position.y, foot_positions[0].z - position.z);
+    f32      right_local  = (f32)((f64)m.x.y * right_offset.x + (f64)m.y.y * right_offset.y + (f64)m.z.y * right_offset.z + (f64)m.w.y * 0.0);
+    f32      right_height = right_local + position.y;
+
+    vector3d left_offset(foot_positions[1].x - position.x, foot_positions[1].y - position.y, foot_positions[1].z - position.z);
+    f32      left_local  = (f32)((f64)m.x.y * left_offset.x + (f64)m.y.y * left_offset.y + (f64)m.z.y * left_offset.z + (f64)m.w.y * 0.0);
+    f32      left_height = left_local + position.y;
+
+    // with no lock, level feet give no pivot
+    if ((u32)lock > 1 && !(std::fabs(right_height - left_height) > 0.025f))
+        return false;
+
+    if (pivot_foot)
+        *pivot_foot = (u32)lock > 1 ? left_height <= right_height : lock;
+
+    const vector3d &pivot = (u32)lock > 1 ? (left_height > right_height ? foot_positions[0] : foot_positions[1]) : foot_positions[lock];
+
+    vector3d prev_position = position;
+
+    rotate_about_point(curr_offset, target, desired_up, curr_dir, pivot, desired_up, heading_change);
+
+    const vector3d &moved = target->my_abs_po->get_position();
+
+    target->set_frame_delta_trans(vector3d(moved.x - prev_position.x, moved.y - prev_position.y, moved.z - prev_position.z), delta_t);
+
+    return true;
+}
+
+// sub_5C4320
+void als::simple_orientation_on_foot::rotate_about_point(      po*,
+                                                               actor*    target,
+                                                         const vector3d &up,
+                                                         const vector3d &dir,
+                                                         const vector3d &pivot,
+                                                         const vector3d &axis,
+                                                               f32       angle) {
+
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+    retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+
+    const vector3d &position = target->my_abs_po->get_position();
+
+    // the actor's frame about the pivot, turned
+    math::vector4 basis_dir(dir.x, dir.y, dir.z, 0.0f);
+    math::vector4 basis_up(up.x, up.y, up.z, 0.0f);
+    math::vector4 basis_origin(position.x - pivot.x, position.y - pivot.y, position.z - pivot.z, 0.0f);
+
+    po turned;
+    retail::sub_402260((u64*)&turned, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+    retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+
+    const vector4d &rotated = turned.get_matrix().w;
+    vector3d        moved(rotated.x + pivot.x, rotated.y + pivot.y, rotated.z + pivot.z);
+
+    const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+    turned.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
+    retail::sub_9595B0((i32)&turned);
+
+    turned.get_matrix().w = vector4d(moved.x, moved.y, moved.z, 1.0f);
+    retail::sub_627180((i32)target, (f32*)&turned); // entity_base::set_abs_po
+}
+
+// sub_7191F0
+als::strafe_mocomp_on_foot::strafe_mocomp_on_foot(mash::generating_vtable_version so_do_nothing) : simple_orientation_on_foot(so_do_nothing) {}
+
+// sub_5AE240
+mash::virtual_types_key als::strafe_mocomp_on_foot::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEF70
+bool als::strafe_mocomp_on_foot::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation_on_foot::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation_on_foot::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE250
+i32 als::strafe_mocomp_on_foot::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F2B70
+void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) {
+    vector3d direction = the_actor->my_abs_po->get_z_facing();
+
+    if (the_base->has_ext_param_been_set(144))
+        direction = the_base->get_external_vector(144);
+
+    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+
+    // as fast as the anim moves along the ground, or the state's speed when it doesn't
+    vector3d offset = curr_offset->get_position();
+    f32      speed  = std::sqrt(offset.x * offset.x + offset.z * offset.z);
+
+    if (speed < 0.0001f) {
+        f32 default_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+
+        speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
+        speed = speed * delta_t;
+    }
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    vector3d        moved(unit[0] * speed + position.x, unit[1] * speed + position.y, position.z + unit[2] * speed);
+
+    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+
+    // only the height is left for the offset
+    curr_offset->get_matrix().w = vector4d(0.0f, offset.y, 0.0f, 1.0f);
+}
+
+// sub_7197D0
+als::relative_orientation_on_foot::relative_orientation_on_foot(mash::generating_vtable_version so_do_nothing) : simple_orientation_on_foot(so_do_nothing) {}
+
+// sub_5AEF60
+mash::virtual_types_key als::relative_orientation_on_foot::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEF70
+bool als::relative_orientation_on_foot::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation_on_foot::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation_on_foot::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE250
+i32 als::relative_orientation_on_foot::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DC240
+void als::relative_orientation_on_foot::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    const po* abs_po = the_actor->my_abs_po;
+
+    if (base->has_ext_param_been_set(143))
+        *desired_dir = base->get_external_vector(143);
+    else
+        *desired_dir = abs_po->get_z_facing();
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else
+        *desired_up = abs_po->get_y_facing();
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
+}
+
+// sub_719220
+als::relative_strafe_mocomp_on_foot::relative_strafe_mocomp_on_foot(mash::generating_vtable_version so_do_nothing) : strafe_mocomp_on_foot(so_do_nothing) {}
+
+// sub_5AE320
+mash::virtual_types_key als::relative_strafe_mocomp_on_foot::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE330
+bool als::relative_strafe_mocomp_on_foot::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (strafe_mocomp_on_foot::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (strafe_mocomp_on_foot::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE250
+i32 als::relative_strafe_mocomp_on_foot::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DC240
+void als::relative_strafe_mocomp_on_foot::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
     bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
     bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
 
