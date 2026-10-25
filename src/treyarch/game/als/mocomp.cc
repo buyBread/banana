@@ -13,6 +13,8 @@
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/standing_interface.hh"
+#include "treyarch/game/wds/references.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/math/algebra/functions.hh"
 #include "treyarch/shared/math/references.hh"
 #include "treyarch/shared/math/vmath/trig.hh"
@@ -5023,8 +5025,6 @@ void als::sync_move_and_face::deactivate() {
 
 // sub_5EAE80
 void als::sync_move_and_face::post_anim_action(f32 delta_t) {
-    using sync_entities_t = void (__cdecl*)(f32, actor*, po*, vector3d*, actor*, po*, vector3d*, f32, f32, bool, bool);
-
     use_anim_only::post_anim_action(delta_t);
 
     // the player syncs with the actor behind its unk_467 too, sync anim flag or not
@@ -5252,14 +5252,14 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
         f32 pos_weight    = lock_pos_b    ? 0.0f : (lock_pos_a    ? tween_pos    : tween_pos * 0.5f);
         f32 orient_weight = lock_orient_b ? 0.0f : (lock_orient_a ? tween_orient : tween_orient * 0.5f);
 
-        ((sync_entities_t)retail::sub_5C1AE0)(delta_t, actor_a, &po_a, &pos_a, actor_b, &po_b, &pos_b, pos_weight, orient_weight, lock_pos_b, lock_orient_b);
+        sync_entities(delta_t, actor_a, &po_a, &pos_a, actor_b, &po_b, &pos_b, pos_weight, orient_weight, lock_pos_b, lock_orient_b);
     }
 
     if (!lock_pos_a || !lock_orient_a) {
         f32 pos_weight    = lock_pos_a    ? 0.0f : (lock_pos_b    ? tween_pos    : tween_pos * 0.5f);
         f32 orient_weight = lock_orient_a ? 0.0f : (lock_orient_b ? tween_orient : tween_orient * 0.5f);
 
-        ((sync_entities_t)retail::sub_5C1AE0)(delta_t, actor_b, &po_b, &pos_b, actor_a, &po_a, &pos_a, pos_weight, orient_weight, lock_pos_a, lock_orient_a);
+        sync_entities(delta_t, actor_b, &po_b, &pos_b, actor_a, &po_a, &pos_a, pos_weight, orient_weight, lock_pos_a, lock_orient_a);
     }
 }
 
@@ -5343,7 +5343,7 @@ void als::sync_move_and_face::get_sync_bone_po(actor* actor_a, po* po_a, actor* 
             sync_index_actor_a = actor_a;
             sync_index_actor_b = actor_b;
 
-            retail::sub_5B38C0((u32*)actor_a, (u32*)actor_b, &sync_index_a, &sync_index_b); // compute_best_sync_bones
+            compute_best_sync_bones(actor_a, actor_b, &sync_index_a, &sync_index_b);
         }
     }
 
@@ -5479,5 +5479,212 @@ void als::sync_move_and_face::apply_axis_slides(actor*                   actor_a
         *pos_b += po_b->get_x_facing() * clamped(rel_slide_b.x, slide_min.x, slide_max.x);
         *pos_b += po_b->get_y_facing() * clamped(rel_slide_b.y, slide_min.y, slide_max.y);
         *pos_b += po_b->get_z_facing() * clamped(rel_slide_b.z, slide_min.z, slide_max.z);
+    }
+}
+
+// sub_5B38C0
+void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* actor_b, i16* index_a, i16* index_b) {
+    i16 best_index_a = -2;
+    i16 best_index_b = -2;
+    f32 best_dist2   = 3.4028235e38f;
+
+    for (i32 a = 0; a < 10; ++a) {
+        vector3d pos_a;
+        i16      bone_a = get_sync_bone_index_and_pos(sync_bone_ids[a], actor_a, &pos_a);
+
+        if (a > 0 && bone_a == -1)
+            break;
+
+        for (i32 b = 0; b < 10; ++b) {
+            if (best_index_b == -1)
+                break;
+
+            vector3d pos_b;
+            i16      bone_b = get_sync_bone_index_and_pos(sync_bone_ids[b], actor_b, &pos_b);
+
+            if (b > 0 && bone_b == -1)
+                break;
+
+            f32 dist2 = (pos_b - pos_a).length2();
+
+            if (best_dist2 > dist2) {
+                best_index_a = bone_a;
+                best_index_b = bone_b;
+                best_dist2   = dist2;
+            }
+
+            if (bone_b == -1)
+                break;
+        }
+
+        if (bone_a == -1)
+            break;
+    }
+
+    *index_a = best_index_a;
+    *index_b = best_index_b;
+}
+
+// inlined @ sub_5B38C0
+i16 als::sync_move_and_face::get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos) {
+    if (the_actor->is_a_conglomerate()) {
+        i16 index = retail::sub_62F880((u32*)the_actor, (u32*)&bone); // conglomerate::get_member_index
+
+        if (index >= 0) {
+            retail::sub_62FA60((i32)the_actor, index, (f32*)pos, 0); // conglomerate::get_member_abs_position
+
+            return index;
+        }
+    }
+
+    *pos = the_actor->my_abs_po->get_position();
+
+    return -1;
+}
+
+// sub_5C1AE0
+void als::sync_move_and_face::sync_entities(f32       delta_t,
+                                            actor*    actor_a,
+                                            po*       po_a,
+                                            vector3d* pos_a,
+                                            actor*    actor_b,
+                                            po*       po_b,
+                                            vector3d* pos_b,
+                                            f32       pos_weight,
+                                            f32       orient_weight,
+                                            bool      lock_pos,
+                                            bool      lock_orient) {
+
+    vector3d position_b = *pos_b;
+
+    if (!lock_pos && pos_weight > 0.0001f) {
+        vector3d move     = (*pos_a - position_b) * pos_weight;
+        vector3d moved_to = actor_b->my_abs_po->get_position() + move;
+
+        retail::sub_6271F0((u32*)actor_b, (i32)&moved_to); // entity_base::set_abs_position
+
+        actor_b->set_frame_delta_trans(move, delta_t);
+
+        position_b += move;
+    }
+
+    if (!lock_orient && orient_weight > 0.0001f) {
+        po target = *po_a;
+
+        // the bones' rotations blended, a's whole from a weight of 1
+        if (orient_weight < 0.0001f)
+            target = *po_b;
+        else if (orient_weight < 1.0f) {
+            math::vector4 rotation;
+
+            retail::sub_5AABF0((i32)&target, (u64*)&rotation); // po: its rotation, x first
+            quaternion to(rotation[3], rotation[0], rotation[1], rotation[2]);
+
+            retail::sub_5AABF0((i32)po_b, (u64*)&rotation);
+            quaternion from(rotation[3], rotation[0], rotation[1], rotation[2]);
+
+            quaternion blended;
+            retail::sub_48E070((f32*)&blended, (f32*)&from, (f32*)&to, orient_weight); // slerp
+
+            target.get_matrix().x.w = 0.0f;
+            target.get_matrix().y.w = 0.0f;
+            target.get_matrix().z.w = 0.0f;
+            target.get_matrix().w.w = 1.0f;
+
+            retail::sub_48DFC0((f32*)&blended, (u64*)&target); // quaternion::to_matrix
+            retail::sub_9595B0((i32)&target);
+        }
+
+        po relative;
+        retail::sub_4015B0((u64*)&relative);
+
+        po inverse;
+        retail::sub_48E2C0((f32*)po_b, (u64*)&inverse); // po inverse
+        retail::sub_44E230((u64*)&relative, (f32*)&inverse, (f32*)&target);
+
+        // b's po about its bone, turned with it
+        po       moved        = *actor_b->my_abs_po;
+        vector3d old_position = moved.get_position();
+        vector3d about_bone   = old_position - position_b;
+
+        moved.get_matrix().w = vector4d(about_bone.x, about_bone.y, about_bone.z, 1.0f);
+
+        retail::sub_44E230((u64*)&moved, (f32*)&moved, (f32*)&relative);
+
+        if (lock_pos)
+            moved.get_matrix().w = vector4d(old_position.x, old_position.y, old_position.z, 1.0f);
+        else {
+            vector3d position = moved.get_position() + position_b;
+
+            moved.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+            actor_b->set_frame_delta_trans(position - actor_b->my_abs_po->get_position(), delta_t);
+        }
+
+        retail::sub_627180((i32)actor_b, (f32*)&moved); // entity_base::set_abs_po
+    }
+
+    if (actor_b->has_ifc(entity_ifc_physical) && !(actor_b->physical_ifc()->flags & 0x800))
+        actor_b->physical_ifc()->cancel_all_velocity(treyarch::references::unk_00fd4370.get(), true);
+}
+
+// sub_5C2120
+void als::sync_move_and_face::sync_actors(actor* actor_a,
+                                          bool   lock_orient_a,
+                                          bool   lock_pos_a,
+                                          actor* actor_b,
+                                          bool   lock_orient_b,
+                                          bool   lock_pos_b,
+                                          f32    pos_tween,
+                                          f32    orient_tween,
+                                          f32    delta_t) {
+
+    if (delta_t < 0.0f)
+        delta_t = treyarch::references::g_world_ptr.read()->time_mgr.time_inc;
+
+    po po_a;
+    po po_b;
+    retail::sub_4015B0((u64*)&po_a);
+    retail::sub_4015B0((u64*)&po_b);
+
+    i16 index_a;
+    i16 index_b;
+    compute_best_sync_bones(actor_a, actor_b, &index_a, &index_b);
+
+    if (index_a >= 0)
+        retail::sub_62FC10((i32)actor_a, index_a, (u64*)&po_a, 0); // conglomerate::get_member_abs_po
+    else
+        po_a = *actor_a->my_abs_po;
+
+    if (index_b >= 0)
+        retail::sub_62FC10((i32)actor_b, index_b, (u64*)&po_b, 0);
+    else
+        po_b = *actor_b->my_abs_po;
+
+    // the bones' positions, apart from their orientations
+    const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+    vector3d pos_a = po_a.get_position();
+
+    po_a.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
+    retail::sub_9595B0((i32)&po_a);
+
+    vector3d pos_b = po_b.get_position();
+
+    po_b.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
+    retail::sub_9595B0((i32)&po_b);
+
+    if (!lock_pos_b || !lock_orient_b) {
+        f32 pos_weight    = lock_pos_b    ? 0.0f : (lock_pos_a    ? pos_tween    : pos_tween * 0.5f);
+        f32 orient_weight = lock_orient_b ? 0.0f : (lock_orient_a ? orient_tween : orient_tween * 0.5f);
+
+        sync_entities(delta_t, actor_a, &po_a, &pos_a, actor_b, &po_b, &pos_b, pos_weight, orient_weight, lock_pos_b, lock_orient_b);
+    }
+
+    if (!lock_pos_a || !lock_orient_a) {
+        f32 pos_weight    = lock_pos_a    ? 0.0f : (lock_pos_b    ? pos_tween    : pos_tween * 0.5f);
+        f32 orient_weight = lock_orient_a ? 0.0f : (lock_orient_b ? orient_tween : orient_tween * 0.5f);
+
+        sync_entities(delta_t, actor_b, &po_b, &pos_b, actor_a, &po_a, &pos_a, pos_weight, orient_weight, lock_pos_a, lock_orient_a);
     }
 }

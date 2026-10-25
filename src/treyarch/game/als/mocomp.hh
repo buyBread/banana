@@ -83,6 +83,18 @@ namespace als {
     inline const string_hash sync_rel_slide_min_id         = string_hash(hash::djb2("sync_rel_slide_min"));
     inline const string_hash sync_rel_slide_max_id         = string_hash(hash::djb2("sync_rel_slide_max"));
 
+    // a pair's candidate sync bones; retail builds the same table at 0x010034C0
+    inline const string_hash sync_bone_ids[10] = { string_hash(hash::djb2("SYNC")),
+                                                   string_hash(hash::djb2("SYNC1")),
+                                                   string_hash(hash::djb2("SYNC2")),
+                                                   string_hash(hash::djb2("SYNC3")),
+                                                   string_hash(hash::djb2("SYNC4")),
+                                                   string_hash(hash::djb2("SYNC5")),
+                                                   string_hash(hash::djb2("SYNC6")),
+                                                   string_hash(hash::djb2("SYNC7")),
+                                                   string_hash(hash::djb2("SYNC8")),
+                                                   string_hash(hash::djb2("SYNC9")) };
+
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
         inline util::memory_reference<string_hash> move_begin   { 0x0102C614 };
@@ -1250,6 +1262,36 @@ namespace als {
                                state_machine_interface* layer_b,
                                vector3d*                pos_b,
                                po*                      po_b);
+
+        // the closest pair of the two actors' sync bones; an actor without them stands in as -1 at its own position
+        static void compute_best_sync_bones(actor* actor_a, actor* actor_b, i16* index_a, i16* index_b);
+
+        // the bone's member index and world position, else -1 and the actor's own
+        static i16 get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos);
+
+        // b's actor moves and turns its bone part of the way onto a's, unless locked; its physics stop unless allowed
+        static void sync_entities(f32       delta_t,
+                                  actor*    actor_a,
+                                  po*       po_a,
+                                  vector3d* pos_a,
+                                  actor*    actor_b,
+                                  po*       po_b,
+                                  vector3d* pos_b,
+                                  f32       pos_weight,
+                                  f32       orient_weight,
+                                  bool      lock_pos,
+                                  bool      lock_orient);
+
+        // a pair synced both ways outside the mocomp; a negative delta_t takes the world's step
+        static void sync_actors(actor* actor_a,
+                                bool   lock_orient_a,
+                                bool   lock_pos_a,
+                                actor* actor_b,
+                                bool   lock_orient_b,
+                                bool   lock_pos_b,
+                                f32    pos_tween,
+                                f32    orient_tween,
+                                f32    delta_t);
 
         static string_hash my_type_key;
     };
