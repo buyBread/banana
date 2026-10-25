@@ -25,7 +25,9 @@ namespace treyarch {
         player_interface_advance_method frame_advance;          // sub_9978B0
         player_interface_advance_method frame_advance_disabled; // sub_992120; clears input/swing state, ignores delta_t
         player_interface_advance_method unk_094;                // nullsub in player_interface; spiderman_rvb_player_interface overrides it
-        void*                           reserved_slots_095[292];
+        void*                           reserved_slots_095[282];
+        bool                            (__thiscall* unk_377)(player_interface* self, vector3d* point); // rvb: the anchor of whichever of its two hands (+0x638) holds one; false in player_interface
+        void*                           reserved_slots_378[9];
         void*                           (__thiscall* unk_387)(player_interface* self); // rvb: the pole it swings on (+0x8CC); null in player_interface
         bool                            (__thiscall* unk_388)(player_interface* self); // rvb: that pole leans more than 45 degrees off vertical
         void*                           reserved_slots_389[78];
@@ -75,6 +77,10 @@ namespace treyarch {
 
         void unk_094(f32 delta_t) {
             get_vtable()->unk_094(this, delta_t);
+        }
+
+        bool unk_377(vector3d* point) {
+            return get_vtable()->unk_377(this, point);
         }
 
         void* unk_387() {
