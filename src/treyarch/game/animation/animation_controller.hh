@@ -73,6 +73,18 @@ namespace treyarch {
 
             f32 get_inverse_duration() const;
 
+            // inlined @ sub_5B9F60
+            // inlined @ sub_5BA140
+            bool is_looping() const {
+                if (nal_inst)
+                    return nal_inst->force_looping || (nal_inst->anim->flags & nal::anim_flag_looping);
+
+                if (als_inst)
+                    return als_inst->is_looping();
+
+                return false;
+            }
+
             // the alpha follows the time through the blend
             void set_normalized_time(f32 time);
 
@@ -172,7 +184,11 @@ namespace treyarch {
         // the layer's newest anim; 1 without one
         f32  get_anim_duration(u32 layer);
         f32  get_anim_time(u32 layer);
+        bool is_anim_looping(u32 layer);
         void set_anim_normalized_time(u32 layer, f32 time);
+
+        // where advance will take the layer's newest anim this frame
+        f32 get_next_anim_normalized_time(u32 layer);
     };
 
     namespace references {

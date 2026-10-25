@@ -299,6 +299,30 @@ f32 animation_controller::get_anim_time(u32 layer) {
     return anim->get_duration() * anim->normalized_time;
 }
 
+// sub_5BA140
+bool animation_controller::is_anim_looping(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return false;
+
+    return state->layer_anims[layer].back()->is_looping();
+}
+
+// sub_5D3840
+f32 animation_controller::get_next_anim_normalized_time(u32 layer) {
+    animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();
+
+    f32 delta_t = state->job.delta_t;
+    f32 time    = anim->normalized_time;
+
+    if (state->master && state->sync_to_master && layer == state->synced_layer && state->should_follow_master()) {
+        f32 master_time = state->master->get_anim_time(layer);
+
+        return anim->get_inverse_duration() * master_time;
+    }
+
+    return anim->get_inverse_duration() * (anim->speed * delta_t * anim->secondary_speed) + time;
+}
+
 // sub_5BA1A0
 void animation_controller::set_anim_normalized_time(u32 layer, f32 time) {
     if (state && !state->master && state->layer_anims[layer].size())
@@ -407,15 +431,9 @@ void animation_controller_state::layer_anim::set_normalized_time(f32 time) {
 
 // sub_5B9F60
 void animation_controller_state::layer_anim::raise_animation_signals(f32 time, f32 prev_time, entity* the_entity) {
-    nal::anim* anim    = nal_inst ? nal_inst->anim : als_inst->get_anim();
-    bool       looping = false;
+    nal::anim* anim = nal_inst ? nal_inst->anim : als_inst->get_anim();
 
-    if (nal_inst)
-        looping = nal_inst->force_looping || (nal_inst->anim->flags & nal::anim_flag_looping);
-    else if (als_inst)
-        looping = als_inst->is_looping();
-
-    raise_animation_signals_for_time_span(anim, time, prev_time, the_entity, just_started, looping);
+    raise_animation_signals_for_time_span(anim, time, prev_time, the_entity, just_started, is_looping());
 }
 
 // sub_5B9BF0
