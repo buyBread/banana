@@ -36,6 +36,14 @@ namespace treyarch { namespace jq {
         // every queue's batches carry it
         inline util::memory_reference<u8> unk_01088069 { 0x01088069 };
 
+        // the milestone's InMultiThreadedCode(); full queues raise it while they run threaded
+        inline util::memory_reference<i32> in_multi_threaded_code { 0x01126CF0 };
+
+        // which thread waits on a profiled queue
+        inline util::memory_reference<bool> tracking_active    { 0x01126CF4 };
+        inline util::memory_reference<u32>  tracking_thread_id { 0x01126CF8 };
+        inline util::memory_reference<u32>  unk_01126cfc       { 0x01126CFC };
+
         // a lite queue with no name of its own, set up at the end of jobqueue_init
         inline util::memory_reference<u8> unnamed_queue_active   { 0x00FD42C2 };
         inline util::memory_reference<u8> unnamed_queue_finished { 0x00FD42C3 };
