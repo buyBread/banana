@@ -6,6 +6,7 @@
 #include "treyarch/app/app.hh"
 #include "treyarch/game/als/als.hh"
 #include "treyarch/game/als/als_jq.hh"
+#include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_pose_jq.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
@@ -143,18 +144,18 @@ void jq::jobqueue_init() {
     references::entity_id_manager_allocation_lock.write(entity_id_manager_allocation_lock);
     entity_id_manager_allocation_lock->reset();
 
-    retail::sub_5E0DF0(); // animation_event_signal_jq
-    retail::sub_5E0E80(); // multi_animation_event_signal_jq
-    retail::sub_5E0F80(); // pre_animation_event_signal_jq
-    retail::sub_5E1010(); // multi_pre_animation_event_signal_jq
-    retail::sub_5D3F50(); // animation_controller_jq
-    retail::sub_5D3FF0(); // multi_animation_controller_jq
-    retail::sub_5D4090(); // animation_signal_jq
-    retail::sub_5D4150(); // multi_animation_signal_jq
+    als::animation_event_signal_jq::init();
+    als::multi_animation_event_signal_jq::init();
+    als::pre_animation_event_signal_jq::init();
+    als::multi_pre_animation_event_signal_jq::init();
+    animation_controller_jq::init();
+    multi_animation_controller_jq::init();
+    animation_signal_jq::init();
+    multi_animation_signal_jq::init();
     animation_pose_jq::init();
     als::als_jq::init();
-    retail::sub_5D4CB0(); // als_mocomp_jq
-    retail::sub_5D4D10(); // multi_als_mocomp_jq
+    als::als_mocomp_jq::init();
+    als::multi_als_mocomp_jq::init();
     retail::sub_4CE360(); // ai_inode_determiner_jq
     retail::sub_4CACB0(); // ai_inode_jq
     retail::sub_4CADE0(); // post_ai_inode_jq
