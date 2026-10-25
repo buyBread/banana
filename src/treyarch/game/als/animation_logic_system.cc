@@ -455,15 +455,14 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         anim_times[num_active] = machine->get_current_anim_time();
 
         // a state script that asked to be run every frame
-        if (machine->unk_7a0[1] != -1) {
-            if (i32 instance = retail::sub_825670(machine->unk_79c)) {
-                auto thread = (chuck::vm::vm_thread*)retail::sub_842C80(machine->unk_7a0[1], instance, (i32)get_actor());
+        if (machine->frame_advance_func != -1) {
+            if (chuck::vm::script_instance* inst = script::get_instance(machine->als_state_script_inst)) {
+                chuck::vm::vm_thread* thread = script::create_thread(machine->frame_advance_func, inst, get_actor());
 
-                ((void (__cdecl*)(chuck::vm::vm_thread*, f32))retail::sub_842D00)(thread, delta_t);
-
+                script::push_value(thread, delta_t);
                 script::run_thread(thread);
             } else
-                machine->unk_7a0[1] = -1;
+                machine->frame_advance_func = -1;
         }
 
         ++num_active;

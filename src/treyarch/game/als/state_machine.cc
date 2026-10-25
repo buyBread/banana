@@ -3,8 +3,11 @@
 #include <cstring>
 
 #include "retail.hh"
+#include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
 #include "treyarch/game/als/state_machine.hh"
+#include "treyarch/game/script/script_access.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 
 using namespace treyarch;
 
@@ -17,8 +20,8 @@ als::state_machine::state_machine() : shared_portion(nullptr),
                                       curr_events(nullptr),
                                       curr_hit_pause_events(nullptr),
                                       curr_blends(nullptr),
-                                      unk_794(),
-                                      unk_79c(0),
+                                      als_state_script_exec_prefix(),
+                                      als_state_script_inst(),
                                       search_cache_state(nullptr),
                                       search_cache_category(nullptr),
                                       the_controller(nullptr) {
@@ -49,11 +52,11 @@ als::state_machine::state_machine() : shared_portion(nullptr),
 
     pending_requests.pending_cat.initialize(mash::ALLOCATED);
 
-    unk_7a0[0] = -1;
-    unk_7a0[1] = -1;
-    unk_7a0[2] = -1;
-    unk_7a0[3] = -1;
-    unk_7bc    = false;
+    activate_func      = -1;
+    frame_advance_func = -1;
+    deactivate_func    = -1;
+    change_state_func  = -1;
+    unk_7bc            = false;
 }
 
 // sub_5B0030
@@ -650,15 +653,121 @@ const als::category* als::state_machine::find_category(category_id the_id, bool)
 }
 
 // sub_5D5F70
-void als::state_machine::start_als_script(animation_logic_system* the_als, const char* script_name, string_hash function_name, bool maintain) {
-    using start_als_script_t = void (__thiscall*)(state_machine*, animation_logic_system*, const char*, string_hash, bool);
+void als::state_machine::start_als_script(animation_logic_system* the_als, const char* script_name, string_hash script_obj, bool maintain) {
+    chuck::vm::script_instance* v_als_state_script_inst = script::get_instance(als_state_script_inst);
+    bool                        using_same_script_exe   = false;
 
-    ((start_als_script_t)retail::sub_5D5F70)(this, the_als, script_name, function_name, maintain);
+    if (v_als_state_script_inst && script_name && *script_name) {
+        string_hash prev_exe;
+        prev_exe.initialize(mash::ALLOCATED, v_als_state_script_inst->parent->parent->name.c_str());
+
+        string_hash exe;
+        exe.initialize(mash::ALLOCATED, script_name);
+
+        using_same_script_exe = exe == prev_exe;
+    }
+
+    // the same object keeps running and only hears about the change
+    if (maintain && using_same_script_exe && v_als_state_script_inst->parent->name == script_obj) {
+        if (change_state_func != -1)
+            script::run_thread(script::create_thread(change_state_func, v_als_state_script_inst, the_als->get_actor()));
+
+        return;
+    }
+
+    kill_als_state_script(the_als, !using_same_script_exe);
+
+    if (!script_name || !*script_name)
+        return;
+
+    if (!using_same_script_exe && !script::load_script_exec(script_name, &als_state_script_exec_prefix, the_als->get_actor()))
+        return;
+
+    if (!als_state_script_exec_prefix.is_set())
+        return;
+
+    chuck::vm::script_object* so    = script::find_object(script_obj, mash::string(script_name), &als_state_script_exec_prefix);
+    actor*                    owner = the_als->get_actor();
+
+    if (!so) {
+        script::unload_script_exec(script_name, owner);
+        return;
+    }
+
+    mash::string inst_name(mash::string::fmt, "ALS_STATE_0x%08x_%s_0x%08x", owner->id.source_hash_code, script_name, script_obj.source_hash_code);
+
+    string_hash inst_hash;
+    inst_hash.initialize(mash::ALLOCATED, inst_name.c_str());
+
+    chuck::vm::vm_thread*       constructor_thread = nullptr;
+    chuck::vm::script_instance* inst               = script::find_instance(inst_hash, so);
+
+    if (inst)
+        script::reconstruct_instance(inst, &constructor_thread);
+    else
+        inst = script::add_instance(mash::string(inst_name.c_str()), so, &constructor_thread, the_als->get_actor(), chuck::vm::script_instance_stack_size_large);
+
+    if (!constructor_thread) {
+        script::destroy_instance(inst, false);
+
+        als_state_script_inst = arch_base_vhandle();
+        activate_func         = -1;
+        frame_advance_func    = -1;
+
+        return;
+    }
+
+    als_state_script_inst = script::get_instance_handle(inst);
+
+    script::push_value(constructor_thread, the_als->get_actor()->my_handle);
+    script::run_thread(constructor_thread);
+
+    string_hash activate_name;
+    activate_name.initialize(mash::ALLOCATED, "activate()");
+
+    activate_func = script::find_function(activate_name, so);
+
+    if (activate_func != -1)
+        script::run_thread(script::create_thread(activate_func, inst, the_als->get_actor()));
+
+    string_hash frame_advance_name;
+    frame_advance_name.initialize(mash::ALLOCATED, "frame_advance(num)");
+
+    frame_advance_func = script::find_function(frame_advance_name, so);
+
+    string_hash deactivate_name;
+    deactivate_name.initialize(mash::ALLOCATED, "deactivate()");
+
+    deactivate_func = script::find_function(deactivate_name, so);
+
+    string_hash change_state_name;
+    change_state_name.initialize(mash::ALLOCATED, "change_state()");
+
+    change_state_func = script::find_function(change_state_name, so);
 }
 
 // sub_5BBBF0
-void als::state_machine::kill_als_state_script(animation_logic_system* the_als, bool unk) {
-    ((void (__thiscall*)(state_machine*, animation_logic_system*, bool))retail::sub_5BBBF0)(this, the_als, unk);
+void als::state_machine::kill_als_state_script(animation_logic_system* the_als, bool unload_exec) {
+    if (chuck::vm::script_instance* inst = script::get_instance(als_state_script_inst)) {
+        if (deactivate_func != -1)
+            script::run_thread(script::create_thread(deactivate_func, inst, the_als->get_actor()));
+
+        chuck::vm::script_object* so = inst->parent;
+
+        script::destroy_instance(inst, true);
+
+        if (unload_exec) {
+            script::unload_script_exec(so, the_als->get_actor());
+
+            als_state_script_exec_prefix = resource_key();
+        }
+    }
+
+    als_state_script_inst = arch_base_vhandle();
+    activate_func         = -1;
+    frame_advance_func    = -1;
+    deactivate_func       = -1;
+    change_state_func     = -1;
 }
 
 // sub_5E2450

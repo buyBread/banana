@@ -5,6 +5,7 @@
 #include "treyarch/game/als/animation_event.hh"
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/param.hh"
+#include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
@@ -67,9 +68,12 @@ namespace treyarch { namespace als {
         const mash::vector
             <animation_event>*         curr_hit_pause_events;
         animation_blends_list*         curr_blends;
-        resource_key                   unk_794;
-        u32                            unk_79c;
-        i32                            unk_7a0[4];
+        resource_key                   als_state_script_exec_prefix;
+        arch_base_vhandle              als_state_script_inst;
+        i32                            activate_func; // the state script's functions; -1 when missing
+        i32                            frame_advance_func;
+        i32                            deactivate_func;
+        i32                            change_state_func;
         mutable const state*           search_cache_state;
         mutable const category*        search_cache_category;
         animation_controller*          the_controller;
@@ -183,8 +187,8 @@ namespace treyarch { namespace als {
         const state*    find_state(state_id the_id, bool error_on_not_found) const;
         const category* find_category(category_id the_id, bool error_on_not_found) const;
 
-        void start_als_script(animation_logic_system* the_als, const char* script_name, string_hash function_name, bool maintain);
-        void kill_als_state_script(animation_logic_system* the_als, bool unk);
+        void start_als_script     (animation_logic_system* the_als, const char* script_name, string_hash script_obj, bool maintain);
+        void kill_als_state_script(animation_logic_system* the_als, bool        unload_exec);
 
     protected:
         void reset(state_machine_shared* shared_machine);
@@ -223,27 +227,30 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(state_machine::smi_return_vars, prev_cat, 0x08);
     ASSERT_OFFSETOF(state_machine::smi_return_vars, unk_20,   0x0C);
 
-    ASSERT_SIZEOF  (state_machine,                        0x7C0);
-    ASSERT_OFFSETOF(state_machine, shared_portion,        0x004);
-    ASSERT_OFFSETOF(state_machine, our_smi,               0x008);
-    ASSERT_OFFSETOF(state_machine, our_ret,               0x014);
-    ASSERT_OFFSETOF(state_machine, curr_req_data,         0x024);
-    ASSERT_OFFSETOF(state_machine, curr_state,            0x030);
-    ASSERT_OFFSETOF(state_machine, curr_category,         0x034);
-    ASSERT_OFFSETOF(state_machine, pending_requests,      0x038);
-    ASSERT_OFFSETOF(state_machine, parameter_buffers,     0x040);
-    ASSERT_OFFSETOF(state_machine, prev_state,            0x780);
-    ASSERT_OFFSETOF(state_machine, prev_category,         0x784);
-    ASSERT_OFFSETOF(state_machine, curr_events,           0x788);
-    ASSERT_OFFSETOF(state_machine, curr_hit_pause_events, 0x78C);
-    ASSERT_OFFSETOF(state_machine, curr_blends,           0x790);
-    ASSERT_OFFSETOF(state_machine, unk_794,               0x794);
-    ASSERT_OFFSETOF(state_machine, unk_79c,               0x79C);
-    ASSERT_OFFSETOF(state_machine, unk_7a0,               0x7A0);
-    ASSERT_OFFSETOF(state_machine, search_cache_state,    0x7B0);
-    ASSERT_OFFSETOF(state_machine, search_cache_category, 0x7B4);
-    ASSERT_OFFSETOF(state_machine, the_controller,        0x7B8);
-    ASSERT_OFFSETOF(state_machine, unk_7bc,               0x7BC);
+    ASSERT_SIZEOF  (state_machine,                               0x7C0);
+    ASSERT_OFFSETOF(state_machine, shared_portion,               0x004);
+    ASSERT_OFFSETOF(state_machine, our_smi,                      0x008);
+    ASSERT_OFFSETOF(state_machine, our_ret,                      0x014);
+    ASSERT_OFFSETOF(state_machine, curr_req_data,                0x024);
+    ASSERT_OFFSETOF(state_machine, curr_state,                   0x030);
+    ASSERT_OFFSETOF(state_machine, curr_category,                0x034);
+    ASSERT_OFFSETOF(state_machine, pending_requests,             0x038);
+    ASSERT_OFFSETOF(state_machine, parameter_buffers,            0x040);
+    ASSERT_OFFSETOF(state_machine, prev_state,                   0x780);
+    ASSERT_OFFSETOF(state_machine, prev_category,                0x784);
+    ASSERT_OFFSETOF(state_machine, curr_events,                  0x788);
+    ASSERT_OFFSETOF(state_machine, curr_hit_pause_events,        0x78C);
+    ASSERT_OFFSETOF(state_machine, curr_blends,                  0x790);
+    ASSERT_OFFSETOF(state_machine, als_state_script_exec_prefix, 0x794);
+    ASSERT_OFFSETOF(state_machine, als_state_script_inst,        0x79C);
+    ASSERT_OFFSETOF(state_machine, activate_func,                0x7A0);
+    ASSERT_OFFSETOF(state_machine, frame_advance_func,           0x7A4);
+    ASSERT_OFFSETOF(state_machine, deactivate_func,              0x7A8);
+    ASSERT_OFFSETOF(state_machine, change_state_func,            0x7AC);
+    ASSERT_OFFSETOF(state_machine, search_cache_state,           0x7B0);
+    ASSERT_OFFSETOF(state_machine, search_cache_category,        0x7B4);
+    ASSERT_OFFSETOF(state_machine, the_controller,               0x7B8);
+    ASSERT_OFFSETOF(state_machine, unk_7bc,                      0x7BC);
 
     ASSERT_SIZEOF(base_state_machine,  0x7C0);
     ASSERT_SIZEOF(layer_state_machine, 0x7C0);
