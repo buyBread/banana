@@ -422,6 +422,20 @@ nal::anim* animation_controller::get_anim_ptr(u32 layer) {
     return nullptr;
 }
 
+// sub_5BA710
+po animation_controller::get_trajectory_po() const {
+    nal::po trajectory = state->trajectory;
+
+    // retail's po builder takes the quaternion w first
+    const auto &rotation = trajectory.get_m33().get_quaternion();
+    quaternion  w_first(rotation.get_w(), rotation.get_x(), rotation.get_y(), rotation.get_z());
+
+    po result;
+    retail::sub_5B74E0((i32)&result, (u32*)&trajectory.get_w(), (i32)&w_first, 1.0f);
+
+    return result;
+}
+
 // sub_5D3840
 f32 animation_controller::get_next_anim_normalized_time(u32 layer) {
     animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();

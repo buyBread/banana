@@ -5,6 +5,7 @@
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
+#include "treyarch/shared/math/po.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
@@ -246,6 +247,9 @@ namespace treyarch {
 
         // the layer's newest anim's nal anim, through its als instance if it has one
         nal::anim* get_anim_ptr(u32 layer);
+
+        // the pose job's trajectory
+        po get_trajectory_po() const;
 
         // where advance will take the layer's newest anim this frame
         f32 get_next_anim_normalized_time(u32 layer);
