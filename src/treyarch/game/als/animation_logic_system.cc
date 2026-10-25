@@ -1,8 +1,18 @@
+#include <cstring>
+
 #include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
+#include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
 #include "treyarch/game/animation/animation_controller.hh"
+#include "treyarch/game/script/script_access.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/game/wds/entity/capsule_alter_sys.hh"
+#include "treyarch/game/wds/entity/interface/physical_interface.hh"
+#include "treyarch/game/wds/entity/interface/standing_interface.hh"
+#include "treyarch/jq/native_locks.hh"
+#include "treyarch/shared/math/references.hh"
 
 using namespace treyarch;
 
@@ -338,9 +348,519 @@ void als::animation_logic_system::frame_advance_flush_queue(bool unk) {
     ((void (__cdecl*)(bool))retail::sub_5E1070)(unk);
 }
 
+// sub_5BB180
+f32 als::get_default_blend_time(u32 flags, f32 duration) {
+    if (flags & (state::cloned_anim | state::no_blend))
+        return 0.0f;
+
+    if (flags & state::quick_blend)
+        return 0.13333f;
+
+    if (flags & state::medium_blend)
+        return 0.26666f;
+
+    if (!(flags & state::long_blend))
+        return 0.0f;
+
+    f32 blend_time = (f32)((f64)duration * (f64)0.2f);
+
+    if (!(0.5f > blend_time))
+        blend_time = 0.5f;
+
+    return (f64)blend_time > (f64)0.26666f ? 0.26666f : blend_time;
+}
+
+// sub_5AFAC0
+const als::als_meta_anim_table_shared* als::animation_logic_system::get_meta_anim_table() const {
+    return als_shared ? als_shared->meta_anim_table : nullptr;
+}
+
+// sub_5E1EC0
+void als::animation_logic_system::enter_biped_physics(state_machine** machines, i32 num_machines, bool unk) {
+    using enter_biped_physics_t = void (__thiscall*)(animation_logic_system*, state_machine**, i32, bool);
+
+    ((enter_biped_physics_t)retail::sub_5E1EC0)(this, machines, num_machines, unk);
+}
+
+// sub_5BB200
+void als::animation_logic_system::exit_biped_physics() {
+    engine_lock_scope lock(&jq::references::unk_01003428.get());
+
+    the_actor->physical_ifc()->stop_biped_physics();
+}
+
+// sub_5AF9A0
+void als::animation_logic_system::update_seated_in_car(state_machine* the_sm) {
+    if (!the_actor->get_ai_core() || the_sm->get_layer_id() != base_layer)
+        return;
+
+    i32 not_seated = 0;
+    i32 seated     = the_sm->get_optional_pb_int(seated_in_car_id, not_seated, nullptr);
+
+    if (seated)
+        the_actor->get_ai_core()->flags |= ai_core_flag_seated_in_car;
+    else
+        the_actor->get_ai_core()->flags &= ~ai_core_flag_seated_in_car;
+}
+
 // sub_5ED8C0
 void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
-    ((void (__thiscall*)(animation_logic_system*, f32, bool))retail::sub_5ED8C0)(this, delta_t, force);
+    if (is_suspended)
+        return;
+
+    if ((the_actor->ext_flags & 0x40000) && !force && !unk_a72)
+        return;
+
+    // without a region the actor only animates while its ai runs
+    if ((the_actor->flags & 1) || !the_actor->get_primary_region()) {
+        if (!the_actor->get_ai_core())
+            return;
+
+        if (retail::sub_4C53F0((u32*)the_actor->get_ai_core()))
+            return;
+    }
+
+    unk_a72       = false;
+    force_updated = false;
+
+    std::memset(&the_cache, 0, sizeof(the_cache));
+
+    state_machine* machines[16]   = { &the_base_sm };
+    state_machine* active[16]     = {};
+    f32            anim_times[16] = {};
+
+    i32 num_active   = 0;
+    i32 num_machines = 1;
+
+    for (u32 index = 0; index < the_layers.size(); ++index) {
+        if (the_layers[index])
+            machines[num_machines++] = the_layers[index];
+    }
+
+    machines[0]->process_requests(this);
+
+    for (i32 index = 1; index < num_machines; ++index) {
+        the_cache.invalidate_per_layer();
+
+        machines[index]->process_requests(this);
+    }
+
+    for (i32 index = 0; index < num_machines; ++index) {
+        state_machine* machine = machines[index];
+
+        if (!machine->is_active())
+            continue;
+
+        active[num_active]     = machine;
+        anim_times[num_active] = machine->get_current_anim_time();
+
+        // a state script that asked to be run every frame
+        if (machine->unk_7a0[1] != -1) {
+            if (i32 instance = retail::sub_825670(machine->unk_79c)) {
+                auto thread = (chuck::vm::vm_thread*)retail::sub_842C80(machine->unk_7a0[1], instance, (i32)get_actor());
+
+                ((void (__cdecl*)(chuck::vm::vm_thread*, f32))retail::sub_842D00)(thread, delta_t);
+
+                script::run_thread(thread);
+            } else
+                machine->unk_7a0[1] = -1;
+        }
+
+        ++num_active;
+    }
+
+    if (the_base_sm.our_ret.did_do_trans) {
+        interface_storage* ifc_storage = the_actor->my_ifc_storage;
+
+        if (ifc_storage && ifc_storage->has_ifc(entity_ifc_physical)) {
+            const state* base_state = the_base_sm.curr_state;
+
+            if ((!base_state || !(base_state->flags & state::biped_physics_state)) &&
+                the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+                exit_biped_physics();
+            else if (the_base_sm.curr_state &&
+                     (the_base_sm.curr_state->flags & state::biped_physics_state) &&
+                     !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+                enter_biped_physics(active, num_active, false);
+
+            capsule_alter_sys* capsule = the_actor->capsule_alter;
+
+            if (capsule && (capsule->mode == 2 || capsule->mode == 4)) {
+                bool     exists = false;
+                vector3d custom_base;
+                vector3d custom_end;
+                f32      custom_radius = 0.0f;
+
+                custom_base = the_base_sm.get_optional_pb_vector3d(capsule_base_id, treyarch::references::unk_00fd4370.get(), &exists);
+
+                if (exists)
+                    custom_end = the_base_sm.get_optional_pb_vector3d(capsule_end_id, treyarch::references::unk_00fd4370.get(), &exists);
+
+                if (exists)
+                    custom_radius = the_base_sm.get_optional_pb_float(capsule_radius_id, custom_radius, &exists);
+
+                // the base state can reshape the capsule; leaving such a state puts the previous shape back
+                if (exists) {
+                    capsule->set_custom_capsule(custom_base, custom_end, custom_radius);
+
+                    if (capsule->mode != 2)
+                        capsule->set_mode(2);
+                    else
+                        capsule->update(true);
+                } else if (capsule->mode == 2)
+                    capsule->set_mode(capsule->prev_mode);
+            }
+
+            if (the_base_sm.curr_state && (the_base_sm.curr_state->flags & state::cancel_all_velocity))
+                the_actor->physical_ifc()->cancel_all_velocity(treyarch::references::unk_00fd4370.get(), true);
+        }
+    }
+
+    bool pokes_standing = false;
+
+    for (i32 index = 0; index < num_active; ++index) {
+        state_machine*     machine = active[index];
+        animation_records &records = the_controller->state->unk_02c[machine->get_layer_id()];
+
+        if (records.size())
+            records.back()->unk_06c = false;
+
+        // nothing new to play: a wrapped loop takes the speed again
+        if (!machine->our_ret.did_do_trans && (index != 0 || machine->unk_7bc) && !needs_reinit_anim) {
+            animation_records &playing = the_controller->state->unk_02c[machine->get_layer_id()];
+
+            i32 loops      = (i32)(playing.size() ? playing.back()->normalized_time : 0.0f);
+            i32 prev_loops = (i32)(playing.size() ? playing.back()->prev_normalized_time : 0.0f);
+
+            if (prev_loops != loops) {
+                f32 speed = machine->get_playback_speed();
+
+                animation_records &speed_records = the_controller->state->unk_02c[machine->get_layer_id()];
+
+                if (speed_records.size()) {
+                    speed_records.back()->speed = speed;
+
+                    if (0.0f > speed)
+                        speed_records.back()->speed = 0.0f;
+                }
+            }
+
+            continue;
+        }
+
+        const state* new_state  = machine->curr_state;
+        const state* prev_state = machine->prev_state;
+
+        machine->unk_7bc = true;
+
+        the_actor->raise_event(als_state_change);
+
+        update_seated_in_car(machine);
+
+        if (!(new_state->flags & state::unk_08000000)) {
+            if ((new_state->flags & state::non_animated) || !the_actor->unk_0c0 || !the_actor->unk_0c0->is_data_ready()) {
+                // nothing to play; the controller rests unless something else needs it
+                if (index == 0 && the_controller && !the_controller->state->unk_12c.size() && the_controller->state)
+                    the_controller->state->is_suspended = true;
+
+                needs_reinit_anim = false;
+
+                continue;
+            }
+
+            if (the_controller && the_controller->state)
+                the_controller->state->is_suspended = false;
+
+            nal_anim_id anim_name = new_state->get_nal_anim_name();
+
+            bool differs = true;
+
+            if ((new_state->flags & state::use_prev_anim_start_time) && prev_state)
+                differs = !(prev_state->get_nal_anim_name() == anim_name);
+
+            if (differs) {
+                u32 blend_flags = new_state->flags;
+
+                // the previous state's blend out decides how this one blends in
+                if (prev_state) {
+                    u32 blend_in = 0;
+
+                    switch (prev_state->flags & (state::no_blend_out | state::quick_blend_out | state::medium_blend_out | state::long_blend_out)) {
+                        case state::no_blend_out:     blend_in = state::no_blend;     break;
+                        case state::quick_blend_out:  blend_in = state::quick_blend;  break;
+                        case state::medium_blend_out: blend_in = state::medium_blend; break;
+                        case state::long_blend_out:   blend_in = state::long_blend;   break;
+                    }
+
+                    if (blend_in)
+                        blend_flags = (blend_flags & ~(state::no_blend | state::quick_blend | state::medium_blend | state::long_blend)) | blend_in;
+                }
+
+                {
+                    engine_lock_scope                          starting(&references::anim_start_lock.get());
+                    amalga::push_resource_context_stack_object context(the_actor->unk_0c0);
+
+                    bool                found;
+                    nal_als_anim_bridge bridge = get_anim_bridge(get_meta_anim_table(),
+                                                                 anim_name,
+                                                                 the_controller->state ? (actor*)the_controller->state->unk_0e4 : nullptr,
+                                                                 &found);
+
+                    if (!bridge.nal_anim && !bridge.als_anim) {
+                        if (the_controller && the_controller->state)
+                            the_controller->state->is_suspended = true;
+                    } else {
+                        animation_blends_list* blends = machine->curr_blends;
+                        animation_blend*       blend  = nullptr;
+
+                        if (blends && prev_state)
+                            blend = blends->find_blend(prev_state->get_nal_anim_name());
+
+                        auto duration = (f32)retail::sub_5BA290((i32*)the_controller, machine->get_layer_id()); // animation_controller
+
+                        f32 blend_time = 0.0f;
+
+                        if (!machine->our_ret.unk_19) {
+                            if (machine->find_param_block_with_param(blend_time_override_id, 0))
+                                blend_time = machine->get_pb_float(blend_time_override_id);
+                            else if (blend && blend->unk_28 >= 0.0f)
+                                blend_time = blend->unk_28;
+                            else if (blends && blends->unk_04 >= 0.0f)
+                                blend_time = blends->unk_04;
+                            else
+                                blend_time = machine->get_optional_pb_float(custom_blend_time_id, get_default_blend_time(blend_flags, duration), nullptr);
+                        }
+
+                        if ((f64)blend_time > (f64)duration)
+                            blend_time = (f32)((f64)duration - (f64)0.03334f);
+
+                        f32 start_time;
+
+                        if (new_state->flags & state::use_prev_anim_start_time)
+                            start_time = anim_times[index];
+                        else {
+                            f32 base_start_time = machine->get_start_time();
+                            f32 offset;
+
+                            if (blend)
+                                offset = machine->get_optional_pb_float(start_time_offset_override_id, blend->unk_2c, nullptr);
+                            else if (blends)
+                                offset = machine->get_optional_pb_float(start_time_offset_override_id, blends->unk_08, nullptr);
+                            else
+                                offset = machine->get_optional_pb_float(start_time_offset_override_id, 0.0f, nullptr);
+
+                            start_time = offset + base_start_time;
+
+                            // the blend mustn't outlast the animation's own blend in
+                            bool exists        = false;
+                            f32  blend_in_time = machine->get_time_to_state_event(blend_in_complete_time, start_time, &exists, nullptr);
+
+                            if (exists && blend_in_time >= 0.0f && (f64)blend_time > (f64)blend_in_time)
+                                start_time = (f32)((f64)start_time - ((f64)blend_time - (f64)blend_in_time));
+                        }
+
+                        i32  not_mirrored = 0;
+                        bool mirrored     = machine->get_optional_pb_int(mirrored_animation_id, not_mirrored, nullptr) != 0;
+                        bool looping      = machine->is_looping();
+                        auto layer        = index ? machine->get_layer_id() : base_layer;
+
+                        using play_t = void (__thiscall*)(animation_controller*,
+                                                          nal_als_anim_bridge*,
+                                                          f32,
+                                                          f32,
+                                                          bool,
+                                                          bool,
+                                                          layer_id,
+                                                          animation_logic_system*,
+                                                          state_machine*,
+                                                          bool);
+
+                        ((play_t)retail::sub_5DFE20)(the_controller, &bridge, start_time, blend_time, mirrored, true, layer, this, machine, looping); // animation_controller
+                    }
+                }
+
+                if (new_state->flags & state::unk_04000000)
+                    pokes_standing = true;
+            }
+        }
+
+        f32 speed = machine->get_playback_speed();
+
+        animation_records &speed_records = the_controller->state->unk_02c[machine->get_layer_id()];
+
+        if (speed_records.size()) {
+            speed_records.back()->speed = speed;
+
+            if (0.0f > speed)
+                speed_records.back()->speed = 0.0f;
+        }
+
+        needs_reinit_anim = false;
+    }
+
+    for (i32 index = 0; index < num_active; ++index)
+        active[index]->process_post_requests(this);
+
+    bool all_suspended = true;
+
+    for (i32 index = 0; index < num_active; ++index) {
+        state_machine* machine       = active[index];
+        const state*   machine_state = machine->curr_state;
+
+        if (!machine_state)
+            continue;
+
+        if (!(machine_state->flags & state::suspended))
+            all_suspended = false;
+
+        if (!(machine_state->flags & state::non_animated)) {
+            f32 duration  = machine->get_duration();
+            f32 anim_time = machine->get_current_anim_time();
+
+            machine->set_secondary_speed(machine_state->get_secondary_playback_speed(anim_time, duration));
+        }
+
+        if (index != 0)
+            continue;
+
+        if (machine_state->my_param_block) {
+            using get_class_t = void* (__thiscall*)(param_block*, string_hash, i32, bool*);
+
+            // param_block
+            if (void* expression = ((get_class_t)retail::sub_435730)(machine_state->my_param_block, expression_animation_data_id, 0, nullptr)) {
+                f32 duration  = machine->get_duration();
+                f32 anim_time = machine->get_current_anim_time();
+
+                using apply_t = void (__thiscall*)(void*, animation_logic_system*, actor*, f32, f32);
+
+                ((apply_t)retail::sub_5D4B40)(expression, this, the_actor, anim_time, duration);
+
+                continue;
+            }
+        }
+
+        unk_025(nullptr);
+    }
+
+    // the topmost machine that asks for its own mocomp gets it; the base one by default
+    for (i32 index = num_active - 1; index >= 0; --index) {
+        state_machine* machine       = active[index];
+        const state*   machine_state = machine->curr_state;
+
+        if (!machine_state)
+            continue;
+
+        bool takes_mocomp = machine->our_ret.did_do_trans ?
+            index == 0 || (machine_state->flags & state::use_this_layers_mocomp) :
+            index == 0 && mocomp_layer_index != 0;
+
+        if (takes_mocomp) {
+            the_cache.invalidate_per_layer();
+
+            mocomp_layer_index = index;
+
+            if (curr_mocomp && !curr_mocomp->unk_016() &&
+                curr_mocomp->get_virtual_type_key() == machine_state->get_mocomp_type() &&
+                !(machine_state->flags & state::force_mo_comp_init))
+
+                curr_mocomp->transition();
+            else
+                change_mocomp(machine_state, active[index]->get_layer_id());
+
+            if (index != 0) {
+                interface_storage* ifc_storage = the_actor->my_ifc_storage;
+
+                if (ifc_storage && ifc_storage->has_ifc(entity_ifc_physical) &&
+                    the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+                    exit_biped_physics();
+
+                break;
+            }
+
+            // what's left of a stripped assert
+            curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp_key.source_hash_code);
+
+            const state* base_state = the_base_sm.curr_state;
+
+            if (base_state && (base_state->flags & state::biped_physics_state) &&
+                curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp_key.source_hash_code)) {
+
+                interface_storage* ifc_storage = the_actor->my_ifc_storage;
+
+                if (ifc_storage && ifc_storage->has_ifc(entity_ifc_physical) &&
+                    !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+                    enter_biped_physics(active, num_active, true);
+            }
+
+            break;
+        }
+
+        // the layer whose mocomp is in use keeps it
+        if (mocomp_layer_index && mocomp_layer_index == index && (machine_state->flags & state::use_this_layers_mocomp))
+            break;
+    }
+
+    if (pokes_standing) {
+        if (interface_storage* ifc_storage = the_actor->my_ifc_storage) {
+            auto standing = (standing_interface*)ifc_storage->find_ifc(entity_ifc_standing);
+
+            if (standing && (standing->unk_044 & 1))
+                ((void (__thiscall*)(standing_interface*, f32, bool, f32))retail::sub_676ED0)(standing, 0.01f, true, 0.5f); // standing_interface
+        }
+    }
+
+    the_cache.invalidate_per_layer();
+
+    if (all_suspended) {
+        suspend_logic_system(true);
+
+        return;
+    }
+
+    const state* base_state = the_base_sm.curr_state;
+
+    if (base_state && (base_state->flags & state::biped_physics_state) && !(base_state->flags & state::biped_physics_blend_anim)) {
+        retail::sub_5D3370((i32*)the_controller, delta_t); // animation_controller, biped physics
+
+        return;
+    }
+
+    curr_mocomp->pre_anim_action(delta_t);
+
+    engine_lock_scope queuing(&references::queue_lock.get());
+
+    references::queued_controllers  .get()[references::num_queued_controllers  .get()++] = the_controller;
+    references::queued_mocomps      .get()[references::num_queued_mocomps      .get()++] = curr_mocomp;
+    references::queued_mocomp_deltas.get()[references::num_queued_mocomp_deltas.get()++] = delta_t;
+
+    for (i32 index = 0; index < num_active; ++index) {
+        state_machine* machine = active[index];
+
+        if ((machine->curr_events           && machine->curr_events->size) ||
+            (machine->curr_hit_pause_events && machine->curr_hit_pause_events->size)) {
+
+            if (machine->curr_events && machine->curr_events->size)
+                references::queued_event_machines.get()[references::num_queued_event_machines.get()++] = machine;
+
+            if (machine->curr_hit_pause_events && machine->curr_hit_pause_events->size) {
+                references::queued_pre_event_machines.get()[references::num_queued_pre_event_machines.get()++] = machine;
+                references::queued_pre_event_deltas  .get()[references::num_queued_pre_event_deltas  .get()++] = delta_t;
+            }
+        } else if (the_controller->state->unk_02c[machine->get_layer_id()].size()) {
+            animation_controller_state* controller_state = the_controller->state;
+            layer_id                    layer            = machine->get_layer_id();
+
+            animation_records* signal_records = controller_state && controller_state->unk_02c[layer].size() ?
+                &controller_state->unk_02c[layer] :
+                nullptr;
+
+            references::queued_signal_records.get()[references::num_queued_signal_records.get()++] = signal_records;
+        }
+    }
 }
 
 // sub_5D4F80

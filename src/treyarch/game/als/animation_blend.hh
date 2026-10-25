@@ -45,6 +45,8 @@ namespace treyarch { namespace als {
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
         i32                     get_mash_sizeof() const override;
 
+        animation_blend* find_blend(const nal_anim_id &anim_name) const;
+
         static string_hash my_type_key;
     };
 

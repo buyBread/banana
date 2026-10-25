@@ -1,4 +1,8 @@
 #include "retail.hh"
+#include "treyarch/amalga/resource_manager.hh"
+#include "treyarch/amalga/resource_memory_map.hh"
+#include "treyarch/amalga/resource_pack_slot.hh"
+#include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/game/als/meta_anim.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/shared/fixed_string.hh"
@@ -321,4 +325,102 @@ void als::als_meta_anim_table_shared::finalize() {
     delete[] my_nal_meta_anims;
 
     my_nal_meta_anims = nullptr;
+}
+
+// sub_5BB460
+als::als_nal_meta_anim* als::als_meta_anim_table_shared::get_nal_meta_anim(const nal_anim_id &the_anim_name, actor* the_actor) const {
+    for (u32 index = 0; index < my_meta_anim.size; ++index) {
+        als_nal_meta_anim* meta_anim = &my_nal_meta_anims[index];
+
+        if (the_anim_name == meta_anim->my_name) {
+            if (meta_anim->is_delay_create())
+                meta_anim->delay_create(the_actor);
+
+            return meta_anim;
+        }
+    }
+
+    return nullptr;
+}
+
+// sub_5BB0B0
+nal::anim* als::find_anim_in_pack(amalga::resource_pack_slot* slot, bool* found, const nal_anim_id &the_anim_name) {
+    if (!slot || !slot->is_data_ready()) {
+        if (found)
+            *found = false;
+
+        return nullptr;
+    }
+
+    amalga::push_resource_context_stack_object context(slot);
+
+    fixed_string name;
+
+    name.hash = string_hash(hash::djb2(the_anim_name.text));
+    name.set_text(the_anim_name.text);
+
+    nal::anim* anim = nal::get_anim(&name);
+
+    if (name.text)
+        memory::heap::free(name.text);
+
+    return anim;
+}
+
+// sub_5E0B50
+nal::anim* als::find_anim_in_partition(amalga::e_resource_partition partition_enum,
+                                       const nal_anim_id           &the_anim_name,
+                                       bool                         every_slot,
+                                       bool*                        found) {
+
+    auto partition = (amalga::resource_partition*)retail::sub_739C40(partition_enum);
+
+    if (!partition || !partition->pack_slots.size())
+        return nullptr;
+
+    if (!every_slot)
+        return find_anim_in_pack((amalga::resource_pack_slot*)retail::sub_74D900(partition_enum), found, the_anim_name); // get_best_context
+
+    for (amalga::resource_pack_slot* slot : partition->pack_slots) {
+        if (nal::anim* anim = find_anim_in_pack(slot, found, the_anim_name))
+            return anim;
+    }
+
+    return nullptr;
+}
+
+// sub_5E0BE0
+als::nal_als_anim_bridge als::get_anim_bridge(const als_meta_anim_table_shared* table,
+                                              const nal_anim_id                &the_anim_name,
+                                              actor*                            the_actor,
+                                              bool*                             found) {
+
+    if (found)
+        *found = true;
+
+    if (table) {
+        if (als_nal_meta_anim* meta_anim = table->get_nal_meta_anim(the_anim_name, the_actor))
+            return { nullptr, meta_anim };
+    }
+
+    fixed_string name;
+
+    name.hash = string_hash(hash::djb2(the_anim_name.text));
+    name.set_text(the_anim_name.text);
+
+    nal::anim* anim = nal::get_anim(&name);
+
+    if (name.text)
+        memory::heap::free(name.text);
+
+    // a plain animation from the current context, then the packs that may hold it
+    if (anim ||
+        (anim = find_anim_in_partition(amalga::resource_partition_mission,  the_anim_name, false, found)) ||
+        (anim = find_anim_in_partition(amalga::resource_partition_guest,    the_anim_name, false, found)) ||
+        (anim = find_anim_in_partition(amalga::resource_partition_common,   the_anim_name, false, found)) ||
+        (anim = find_anim_in_partition(amalga::resource_partition_district, the_anim_name, true,  found)))
+
+        return { anim, nullptr };
+
+    return { nullptr, nullptr };
 }

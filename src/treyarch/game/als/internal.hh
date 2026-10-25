@@ -104,6 +104,7 @@ namespace treyarch { namespace als {
             use_prev_anim_start_time = 0x00800000,
             non_animated             = 0x01000000,
             suspended                = 0x02000000,
+            unk_04000000             = 0x04000000, // starting its animation pokes the actor's standing interface
             unk_08000000             = 0x08000000  // change_state keeps the previous state's events and blends
         };
 

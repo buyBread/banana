@@ -170,6 +170,11 @@ namespace treyarch { namespace als {
         virtual f32          get_playback_speed() const;
         virtual f32          get_start_time() const;
 
+        bool is_looping() const;
+
+        const param_block* find_param_block_with_param(string_hash the_param, u32 the_type) const;
+        f32                get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, u32* unk) const;
+
         void process_requests(animation_logic_system* the_als);
         void process_post_requests(animation_logic_system* the_als);
         void end_layer();

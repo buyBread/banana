@@ -1,15 +1,20 @@
 #pragma once
 
+#include <array>
+
 #include "treyarch/game/als/als.hh"
+#include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/mocomp.hh"
 #include "treyarch/game/als/param.hh"
 #include "treyarch/game/als/state_machine.hh"
+#include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/math/algebra/vector3d.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 #include "vc8/vector.hh"
 
@@ -87,11 +92,59 @@ namespace treyarch { namespace als {
 
         static void frame_advance_flush_queue(bool unk);
 
+        const als_meta_anim_table_shared* get_meta_anim_table() const;
+
         state_machine* get_als_layer_internal(layer_id the_layer);
         bool           has_als_layer_internal(layer_id the_layer) const;
         bool           is_als_interruptable() const;
         void           end_layer(layer_id the_layer);
+
+    protected:
+        void enter_biped_physics(state_machine** machines, i32 num_machines, bool unk);
+        void exit_biped_physics();
+        void update_seated_in_car(state_machine* the_sm);
     };
+
+    // a controller layer's playing records
+    using animation_records = container::fixed_vector<animation_controller_state::unk_02c_entry*, 2>;
+
+    namespace references {
+        // what frame_advance leaves for the flush; parallel arrays share an index
+        inline util::memory_reference<std::array<animation_controller*, 500>> queued_controllers        { 0x00FD43D0 };
+        inline util::memory_reference<std::array<motion_compensator*, 500>>   queued_mocomps            { 0x00FFBE58 };
+        inline util::memory_reference<std::array<f32, 500>>                   queued_mocomp_deltas      { 0x00FD74A0 };
+        inline util::memory_reference<std::array<animation_records*, 500>>    queued_signal_records     { 0x00FD6C40 };
+        inline util::memory_reference<std::array<state_machine*, 500>>        queued_event_machines     { 0x00FFC670 };
+        inline util::memory_reference<std::array<state_machine*, 500>>        queued_pre_event_machines { 0x00FD7C78 };
+        inline util::memory_reference<std::array<f32, 500>>                   queued_pre_event_deltas   { 0x00FF8498 };
+
+        inline util::memory_reference<i32> num_queued_controllers        { 0x00FD4BA0 };
+        inline util::memory_reference<i32> num_queued_mocomps            { 0x00FFC628 };
+        inline util::memory_reference<i32> num_queued_mocomp_deltas      { 0x00FD7C70 };
+        inline util::memory_reference<i32> num_queued_signal_records     { 0x00FD7410 };
+        inline util::memory_reference<i32> num_queued_event_machines     { 0x00FFCE40 };
+        inline util::memory_reference<i32> num_queued_pre_event_machines { 0x00FD8448 };
+        inline util::memory_reference<i32> num_queued_pre_event_deltas   { 0x00FF8C68 };
+
+        inline util::memory_reference<engine_recursive_lock> anim_start_lock { 0x00FD8458 }; // finding and starting a state's animation
+        inline util::memory_reference<engine_recursive_lock> queue_lock      { 0x00FD8478 };
+    } // references
+
+    // what a state's param block can say about how its animation starts
+    inline const string_hash capsule_base_id               = string_hash(hash::djb2("capsule_base"));
+    inline const string_hash capsule_end_id                = string_hash(hash::djb2("capsule_end"));
+    inline const string_hash capsule_radius_id             = string_hash(hash::djb2("capsule_radius"));
+    inline const string_hash blend_time_override_id        = string_hash(hash::djb2("blend_time_override"));
+    inline const string_hash custom_blend_time_id          = string_hash(hash::djb2("custom_blend_time"));
+    inline const string_hash start_time_offset_override_id = string_hash(hash::djb2("start_time_offset_override"));
+    inline const string_hash mirrored_animation_id         = string_hash(hash::djb2("mirrored_animation"));
+    inline const string_hash expression_animation_data_id  = string_hash(hash::djb2("expression_animation_data"));
+    inline const string_hash seated_in_car_id              = string_hash(hash::djb2("seated_in_car"));
+
+    inline const string_hash als_state_change       = string_hash(hash::djb2("ALS_STATE_CHANGE"));
+    inline const string_hash blend_in_complete_time = string_hash(hash::djb2("BLEND_IN_COMPLETE_TIME"));
+
+    f32 get_default_blend_time(u32 flags, f32 duration);
 
     // what an entity's resource asks for; post-load setup turns it into the actor's als
     struct als_res_data {

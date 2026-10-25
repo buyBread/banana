@@ -37,6 +37,8 @@ namespace treyarch { namespace als {
         u8          pad_26a[0x02];
 
         internal_parameter_cache();
+
+        void invalidate_per_layer();
     };
 
     ASSERT_SIZEOF  (parameter_list,               0x3A0);

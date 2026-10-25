@@ -463,6 +463,27 @@ f32 als::state_machine::get_start_time() const {
     return get_optional_pb_float(start_time_id, 0.0f, &exists);
 }
 
+// sub_5BC430
+bool als::state_machine::is_looping() const {
+    static const string_hash force_looping_id = string_hash(hash::djb2("force_looping"));
+
+    i32 not_looping = 0;
+
+    return get_optional_pb_int(force_looping_id, not_looping, nullptr) != 0;
+}
+
+// sub_5E23B0
+const param_block* als::state_machine::find_param_block_with_param(string_hash the_param, u32 the_type) const {
+    return ((const param_block* (__thiscall*)(const state_machine*, string_hash, u32))retail::sub_5E23B0)(this, the_param, the_type);
+}
+
+// sub_5D5310
+f32 als::state_machine::get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, u32* unk) const {
+    using get_time_to_state_event_t = f32 (__thiscall*)(const state_machine*, string_hash, f32, bool*, u32*);
+
+    return ((get_time_to_state_event_t)retail::sub_5D5310)(this, event_name, anim_time, exists, unk);
+}
+
 // sub_5E8FE0
 void als::state_machine::process_requests(animation_logic_system* the_als) {
     curr_req_data.is_trans_to_category = false;

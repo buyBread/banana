@@ -2,6 +2,7 @@
 
 #include <cstddef>
 
+#include "treyarch/amalga/resource_memory_map.hh"
 #include "treyarch/game/als/als.hh"
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
@@ -19,14 +20,26 @@
 namespace treyarch {
     class actor;
 
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
     namespace als {
         class animation_logic_system;
         class state_machine;
+
+        class als_nal_meta_anim;
 
         // the side that's set samples the pose
         struct nal_als_instance_bridge {
             nal::anim_instance* nal_inst;
             void*               als_inst;
+        };
+
+        // the side that's set is the animation to play
+        struct nal_als_anim_bridge {
+            nal::anim*         nal_anim;
+            als_nal_meta_anim* als_anim;
         };
 
         struct alignas(8) meta_key_anim {
@@ -187,9 +200,23 @@ namespace treyarch {
 
             void initialize();
             void finalize();
+
+            als_nal_meta_anim* get_nal_meta_anim(const nal_anim_id &the_anim_name, actor* the_actor) const;
         };
 
+        nal::anim* find_anim_in_pack(amalga::resource_pack_slot* slot, bool* found, const nal_anim_id &the_anim_name);
+        nal::anim* find_anim_in_partition(amalga::e_resource_partition partition_enum,
+                                          const nal_anim_id           &the_anim_name,
+                                          bool                         every_slot,
+                                          bool*                        found);
+
+        nal_als_anim_bridge get_anim_bridge(const als_meta_anim_table_shared* table,
+                                            const nal_anim_id                &the_anim_name,
+                                            actor*                            the_actor,
+                                            bool*                             found);
+
         ASSERT_SIZEOF  (nal_als_instance_bridge, 0x08);
+        ASSERT_SIZEOF  (nal_als_anim_bridge,     0x08);
 
         ASSERT_SIZEOF  (meta_key_anim,               0x28);
         ASSERT_OFFSETOF(meta_key_anim, the_anim_ptr, 0x20);
