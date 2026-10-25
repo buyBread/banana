@@ -297,6 +297,24 @@ bool animation_controller::is_anim_looping(u32 layer) {
     return state->layer_anims[layer].back()->is_looping();
 }
 
+// sub_5BA0F0
+// inlined @ sub_5BBE30
+// inlined @ sub_5BC130
+nal::anim* animation_controller::get_nal_anim(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return nullptr;
+
+    animation_controller_state::layer_anim* newest = state->layer_anims[layer].back();
+
+    if (newest->nal_inst)
+        return newest->nal_inst->anim;
+
+    if (newest->als_inst)
+        return newest->als_inst->get_anim();
+
+    return nullptr;
+}
+
 // sub_5D3840
 f32 animation_controller::get_next_anim_normalized_time(u32 layer) {
     animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();
@@ -434,16 +452,7 @@ f32 treyarch::get_time_to_animation_signal(animation_controller* controller,
                                            bool*                 exists,
                                            anim_event_param*     param) {
 
-    nal::anim* anim = nullptr;
-
-    if (controller->state->layer_anims[layer].size()) {
-        animation_controller_state::layer_anim* newest = controller->state->layer_anims[layer].back();
-
-        if (newest->nal_inst)
-            anim = newest->nal_inst->anim;
-        else if (newest->als_inst)
-            anim = newest->als_inst->get_anim();
-    }
+    nal::anim* anim = controller->get_nal_anim(layer);
 
     if (exists)
         *exists = false;
@@ -531,16 +540,7 @@ f32 treyarch::get_time_since_animation_signal(animation_controller* controller,
                                               bool*                 exists,
                                               anim_event_param*     param) {
 
-    nal::anim* anim = nullptr;
-
-    if (controller->state->layer_anims[layer].size()) {
-        animation_controller_state::layer_anim* newest = controller->state->layer_anims[layer].back();
-
-        if (newest->nal_inst)
-            anim = newest->nal_inst->anim;
-        else if (newest->als_inst)
-            anim = newest->als_inst->get_anim();
-    }
+    nal::anim* anim = controller->get_nal_anim(layer);
 
     if (exists)
         *exists = false;

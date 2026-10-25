@@ -229,6 +229,12 @@ namespace treyarch {
             return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->normalized_time : 0.0f;
         }
 
+        // inlined @ sub_5BB810
+        // inlined @ sub_5E0D20
+        f32 get_anim_prev_normalized_time(u32 layer) const {
+            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->prev_normalized_time : 0.0f;
+        }
+
         // inlined @ sub_5BB660
         // inlined @ sub_5D5190
         // inlined @ sub_5D57F0
@@ -249,6 +255,9 @@ namespace treyarch {
 
         f32  get_anim_time(u32 layer);
         bool is_anim_looping(u32 layer);
+
+        // the layer's newest anim's nal anim, through its als instance if it has one
+        nal::anim* get_nal_anim(u32 layer);
         void set_anim_normalized_time(u32 layer, f32 time);
 
         // where advance will take the layer's newest anim this frame
