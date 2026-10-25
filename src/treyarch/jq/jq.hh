@@ -15,8 +15,9 @@ namespace treyarch { namespace jq {
     };
 
     struct batch {
-        void*                 payload[3];
-        u32                   unk_0c[3];
+        void*                 payload[3]; // the multi queues hand an array of count items in the first
+        i32                   count;
+        u32                   unk_10[2];
         void*                 tag;
         const jq::descriptor* descriptor;
         i32                   group;
@@ -26,6 +27,7 @@ namespace treyarch { namespace jq {
     ASSERT_SIZEOF  (descriptor, 0x08);
 
     ASSERT_SIZEOF  (batch,             0x28);
+    ASSERT_OFFSETOF(batch, count,      0x0C);
     ASSERT_OFFSETOF(batch, tag,        0x18);
     ASSERT_OFFSETOF(batch, descriptor, 0x1C);
     ASSERT_OFFSETOF(batch, group,      0x20);

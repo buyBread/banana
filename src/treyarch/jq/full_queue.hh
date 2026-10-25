@@ -35,8 +35,8 @@ namespace treyarch { namespace jq {
         }
 
         // inlined; the queue writes its payload between this and lock_batch_pool
-        static void start() {
-            bool multi_threading = references::in_multi_threaded_code.read() <= 0 && treyarch::references::master_clock_is_up.read();
+        static void start(bool threaded = true) {
+            bool multi_threading = threaded && references::in_multi_threaded_code.read() <= 0 && treyarch::references::master_clock_is_up.read();
 
             if (multi_threading)
                 references::in_multi_threaded_code.write(references::in_multi_threaded_code.read() + 1);
