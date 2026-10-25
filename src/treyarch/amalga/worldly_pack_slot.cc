@@ -1,6 +1,7 @@
 #include "treyarch/amalga/ADJUSTMENTLAYERSLIBRARY/resource_handler.hh"
 #include "treyarch/amalga/ai_state_graph/resource_handler.hh"
 #include "treyarch/amalga/ALLBUILDINGS/resource_handler.hh"
+#include "treyarch/amalga/als_file/resource_handler.hh"
 #include "treyarch/amalga/anchor_coll/resource_handler.hh"
 #include "treyarch/amalga/base_ai/resource_handler.hh"
 #include "treyarch/amalga/box_trigger_info/resource_handler.hh"
@@ -45,7 +46,6 @@
 #include "treyarch/amalga/merged_apk/resource_handler.hh"
 #include "treyarch/amalga/merged_singular_apk_resource_handler.hh"
 #include "treyarch/amalga/MESHMAP/resource_handler.hh"
-#include "treyarch/amalga/native_resource_handlers.hh"
 #include "treyarch/amalga/NIGHTSKYCOLOR/resource_handler.hh"
 #include "treyarch/amalga/OUTDOORS/resource_handler.hh"
 #include "treyarch/amalga/path/resource_handler.hh"
@@ -184,7 +184,7 @@ amalga::worldly_pack_slot::worldly_pack_slot() {
     create_resource_handler<stall_resource_handler>(e_resource_type::stall);
     create_resource_handler<empty_resource_handler>(e_resource_type::slim);
     create_resource_handler<slim_list_handler>(e_resource_type::slim_list);
-    create_resource_handler<mashable_resource_handler<als::animation_logic_system_shared>>(e_resource_type::als_file);
+    create_resource_handler<als_resource_handler>(e_resource_type::als_file);
     create_resource_handler<ai_state_graph_resource_handler>(e_resource_type::ai_state_graph);
     create_resource_handler<base_ai_resource_handler>(e_resource_type::base_ai);
     create_resource_handler<audio_box_set_resource_handler>(e_resource_type::scn_audio_box);
