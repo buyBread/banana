@@ -189,6 +189,9 @@ namespace als {
         virtual f32  get_dir_tolerance() const; // dots past these count as facing already
         virtual f32  get_up_tolerance() const;
 
+        // one step toward the desired direction and up from the actor's own (unit) axes
+        void turn_toward_desired(po &curr_offset, f32 delta_t, vector3d curr_dir, vector3d curr_up);
+
         static string_hash my_type_key;
     };
 
@@ -475,6 +478,64 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // turns only inside the rotate signals, and moves (along the strafe direction) only inside the move ones
+    class strict_simple_orientation : public simple_orientation {
+
+    public:
+        bool inside_rotate_window;
+        u8   pad_045[0x03];
+
+        strict_simple_orientation();
+
+        // inlined @ sub_723DA0
+        explicit strict_simple_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing),
+                                                                                            inside_rotate_window(false) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void post_anim_action(f32 delta_t) override;
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        static string_hash my_type_key;
+    };
+
+    // moves and faces as the params say, every frame
+    class direct_mocomp : public simple_orientation {
+
+    public:
+        vector3d des_move_dir;
+        vector3d des_face_dir;
+        vector3d des_up_dir;
+        f32      des_speed;
+
+        direct_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit direct_mocomp(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void post_anim_action(f32 delta_t) override;
+        bool force_reactivate() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        virtual void update_params(f32 delta_t);
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -519,4 +580,13 @@ namespace als {
     ASSERT_SIZEOF  (initial3D_velocity_orientation,              0x5C);
     ASSERT_OFFSETOF(initial3D_velocity_orientation, initial_dir, 0x44);
     ASSERT_OFFSETOF(initial3D_velocity_orientation, initial_up,  0x50);
+
+    ASSERT_SIZEOF  (strict_simple_orientation,                       0x48);
+    ASSERT_OFFSETOF(strict_simple_orientation, inside_rotate_window, 0x44);
+
+    ASSERT_SIZEOF  (direct_mocomp,               0x6C);
+    ASSERT_OFFSETOF(direct_mocomp, des_move_dir, 0x44);
+    ASSERT_OFFSETOF(direct_mocomp, des_face_dir, 0x50);
+    ASSERT_OFFSETOF(direct_mocomp, des_up_dir,   0x5C);
+    ASSERT_OFFSETOF(direct_mocomp, des_speed,    0x68);
 }} // treyarch::als

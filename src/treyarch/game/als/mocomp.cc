@@ -37,6 +37,9 @@ string_hash als::momentum_grapple_unsynched::my_type_key { 0x938D8220 }; // "als
 string_hash als::initial_velocity_orientation::my_type_key   { 0x00CD0297 }; // "als::initial_velocity_orientation"
 string_hash als::initial3D_velocity_orientation::my_type_key { 0x57D7B16E }; // "als::initial3D_velocity_orientation"
 
+string_hash als::strict_simple_orientation::my_type_key { 0x17919801 }; // "als::strict_simple_orientation"
+string_hash als::direct_mocomp::my_type_key             { 0xD27304F9 }; // "als::direct_mocomp"
+
 i32 als::motion_compensator::last_created_size = 0;
 
 // sub_5C3730
@@ -123,6 +126,18 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(initial3D_velocity_orientation);
 
         return memory_buffer ? new (memory_buffer) initial3D_velocity_orientation : nullptr;
+    }
+
+    if (the_class_to_make == strict_simple_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(strict_simple_orientation);
+
+        return memory_buffer ? new (memory_buffer) strict_simple_orientation : nullptr;
+    }
+
+    if (the_class_to_make == direct_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(direct_mocomp);
+
+        return memory_buffer ? new (memory_buffer) direct_mocomp : nullptr;
     }
 
     // the classes not in source yet
@@ -430,98 +445,7 @@ void als::simple_orientation::post_anim_action(f32 delta_t) {
         vector3d curr_dir = unitized(the_actor->my_abs_po->get_z_facing());
         vector3d curr_up  = unitized(the_actor->my_abs_po->get_y_facing());
 
-        vector3d desired_dir;
-        vector3d desired_up;
-
-        get_directions(the_als, the_base, &desired_dir, &desired_up);
-
-        if (desired_up.length2() < 0.0001f)
-            desired_up = curr_up;
-        else
-            retail::sub_402050((f32*)&desired_up);
-
-        if (desired_dir.length2() < 0.0001f)
-            desired_dir = curr_dir;
-        else
-            retail::sub_402050((f32*)&desired_dir);
-
-        // the up only goes part of the way per frame
-        f32 reorient_speed = the_base->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, nullptr);
-
-        if (reorient_speed > 0.0f && reorient_speed < 1.0f)
-            desired_up = (desired_up - curr_up) * reorient_speed + curr_up;
-        else if (reorient_speed == 0.0f)
-            desired_up = curr_up;
-
-        // both directions in the plane of the desired up
-        desired_dir = desired_dir - desired_up * (f32)(desired_dir * desired_up);
-
-        if (desired_dir.length2() >= 0.0001f) {
-            retail::sub_402050((f32*)&desired_dir);
-
-            curr_dir = curr_dir - desired_up * (f32)(curr_dir * desired_up);
-
-            if (curr_dir.length2() < 0.0001f)
-                curr_dir = desired_dir;
-            else
-                retail::sub_402050((f32*)&curr_dir);
-
-            f32 heading_dot = curr_dir * desired_dir;
-            f32 up_dot      = curr_up * desired_up;
-
-            if (!currently_rotating && get_dir_tolerance() < heading_dot && get_up_tolerance() < up_dot)
-                turn_rate = 0.0f;
-            else {
-                const vector3d &zero = treyarch::references::unk_00fd4370.get();
-
-                math::vector4 basis_dir(curr_dir.x, curr_dir.y, curr_dir.z, 0.0f);
-                math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
-                math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
-
-                po basis;
-                retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
-
-                currently_rotating = true;
-
-                if (heading_dot < -0.999999f)
-                    heading_dot = -0.999999f;
-                else if (heading_dot > 0.999999f)
-                    heading_dot = 0.999999f;
-
-                f32 heading_change = math::acos(heading_dot);
-
-                if (desired_dir * basis.get_x_facing() > 0.0f)
-                    heading_change *= -1.0f;
-
-                // the state can force the way round
-                i32 turn_direction = the_base->get_optional_pb_int(turn_direction_id, 0, nullptr);
-
-                if (turn_direction == -1) {
-                    if (heading_change < 0.0f)
-                        heading_change += 6.2831855f;
-                } else if (turn_direction == 1 && heading_change > 0.0f)
-                    heading_change -= 6.2831855f;
-
-                turn_rate = get_turn_rate(delta_t, the_als, the_base);
-
-                f32  step = turn_rate * delta_t;
-                bool overshoots;
-
-                if (heading_change < 0.0f) {
-                    step *= -1.0f;
-
-                    overshoots = heading_change > step;
-                } else
-                    overshoots = step > heading_change;
-
-                if (overshoots) {
-                    currently_rotating = false;
-                    step               = heading_change;
-                }
-
-                apply_rotation(&curr_offset, delta_t, step, curr_up, curr_dir, desired_up, desired_dir);
-            }
-        }
+        turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
     }
 
     vector3d prev_position = the_actor->my_abs_po->get_position();
@@ -534,6 +458,103 @@ void als::simple_orientation::post_anim_action(f32 delta_t) {
     const vector3d &position = the_actor->my_abs_po->get_position();
 
     the_actor->set_frame_delta_trans(vector3d(position.x - prev_position.x, position.y - prev_position.y, position.z - prev_position.z), delta_t);
+}
+
+// inlined @ sub_5C4B30
+// inlined @ sub_5C5BE0
+void als::simple_orientation::turn_toward_desired(po &curr_offset, f32 delta_t, vector3d curr_dir, vector3d curr_up) {
+    vector3d desired_dir;
+    vector3d desired_up;
+
+    get_directions(the_als, the_base, &desired_dir, &desired_up);
+
+    if (desired_up.length2() < 0.0001f)
+        desired_up = curr_up;
+    else
+        retail::sub_402050((f32*)&desired_up);
+
+    if (desired_dir.length2() < 0.0001f)
+        desired_dir = curr_dir;
+    else
+        retail::sub_402050((f32*)&desired_dir);
+
+    // the up only goes part of the way per frame
+    f32 reorient_speed = the_base->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, nullptr);
+
+    if (reorient_speed > 0.0f && reorient_speed < 1.0f)
+        desired_up = (desired_up - curr_up) * reorient_speed + curr_up;
+    else if (reorient_speed == 0.0f)
+        desired_up = curr_up;
+
+    // both directions in the plane of the desired up
+    desired_dir = desired_dir - desired_up * (f32)(desired_dir * desired_up);
+
+    if (desired_dir.length2() >= 0.0001f) {
+        retail::sub_402050((f32*)&desired_dir);
+
+        curr_dir = curr_dir - desired_up * (f32)(curr_dir * desired_up);
+
+        if (curr_dir.length2() < 0.0001f)
+            curr_dir = desired_dir;
+        else
+            retail::sub_402050((f32*)&curr_dir);
+
+        f32 heading_dot = curr_dir * desired_dir;
+        f32 up_dot      = curr_up * desired_up;
+
+        if (!currently_rotating && get_dir_tolerance() < heading_dot && get_up_tolerance() < up_dot)
+            turn_rate = 0.0f;
+        else {
+            const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+            math::vector4 basis_dir(curr_dir.x, curr_dir.y, curr_dir.z, 0.0f);
+            math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+            math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+            po basis;
+            retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+            currently_rotating = true;
+
+            if (heading_dot < -0.999999f)
+                heading_dot = -0.999999f;
+            else if (heading_dot > 0.999999f)
+                heading_dot = 0.999999f;
+
+            f32 heading_change = math::acos(heading_dot);
+
+            if (desired_dir * basis.get_x_facing() > 0.0f)
+                heading_change *= -1.0f;
+
+            // the state can force the way round
+            i32 turn_direction = the_base->get_optional_pb_int(turn_direction_id, 0, nullptr);
+
+            if (turn_direction == -1) {
+                if (heading_change < 0.0f)
+                    heading_change += 6.2831855f;
+            } else if (turn_direction == 1 && heading_change > 0.0f)
+                heading_change -= 6.2831855f;
+
+            turn_rate = get_turn_rate(delta_t, the_als, the_base);
+
+            f32  step = turn_rate * delta_t;
+            bool overshoots;
+
+            if (heading_change < 0.0f) {
+                step *= -1.0f;
+
+                overshoots = heading_change > step;
+            } else
+                overshoots = step > heading_change;
+
+            if (overshoots) {
+                currently_rotating = false;
+                step               = heading_change;
+            }
+
+            apply_rotation(&curr_offset, delta_t, step, curr_up, curr_dir, desired_up, desired_dir);
+        }
+    }
 }
 
 // sub_5DBE40
@@ -1608,4 +1629,197 @@ bool als::initial3D_velocity_orientation::force_reactivate() const {
 void als::initial3D_velocity_orientation::get_directions(animation_logic_system*, state_machine*, vector3d* desired_dir, vector3d* desired_up) const {
     *desired_dir = initial_dir;
     *desired_up  = initial_up;
+}
+
+// sub_5AE190
+als::strict_simple_orientation::strict_simple_orientation() : inside_rotate_window(false) {}
+
+// sub_5AE1B0
+mash::virtual_types_key als::strict_simple_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::strict_simple_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4BF700
+i32 als::strict_simple_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C5BD0
+void als::strict_simple_orientation::activate(animation_logic_system* the_als_core, layer_id layer) {
+    simple_orientation::activate(the_als_core, layer);
+}
+
+// sub_5C5BE0
+void als::strict_simple_orientation::post_anim_action(f32 delta_t) {
+    if (move_begin_callback.times_raised)
+        inside_movement_window = true;
+
+    if (move_end_callback.times_raised)
+        inside_movement_window = false;
+
+    // the rotate window runs to its end signal, else the anim's end
+    if (rotate_begin_callback.times_raised) {
+        inside_rotate_window   = true;
+        move_begin_signal_time = the_base->get_current_anim_time();
+
+        f32 time_to_end = the_base->get_time_to_signal(references::rotate_end.read(), nullptr, true, nullptr);
+        move_end_signal_time = time_to_end;
+
+        if (time_to_end >= 0.0f)
+            move_end_signal_time = time_to_end + move_begin_signal_time;
+        else
+            move_end_signal_time = the_base->get_duration();
+    }
+
+    if (rotate_end_callback.times_raised)
+        inside_rotate_window = false;
+
+    move_begin_callback.times_raised   = 0;
+    move_end_callback.times_raised     = 0;
+    rotate_begin_callback.times_raised = 0;
+    rotate_end_callback.times_raised   = 0;
+
+    po curr_offset;
+    retail::sub_4015B0((u64*)&curr_offset);
+
+    get_po_curr_offset(curr_offset);
+
+    if (!inside_rotate_window) {
+        turn_rate          = 0.0f;
+        currently_rotating = false;
+    } else if (use_instant_facing)
+        face_desired_direction();
+    else {
+        vector3d curr_dir = the_actor->my_abs_po->get_z_facing();
+        vector3d curr_up  = the_actor->my_abs_po->get_y_facing();
+
+        retail::sub_402050((f32*)&curr_dir);
+        retail::sub_402050((f32*)&curr_up);
+
+        turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
+    }
+
+    vector3d prev_position = the_actor->my_abs_po->get_position();
+
+    if (inside_movement_window)
+        other_po_changes(delta_t, &curr_offset);
+
+    if (!retail::sub_5AA570((f32*)&curr_offset, (f32*)&treyarch::references::po_identity_matrix.get()))
+        set_po_curr_offset(the_actor, curr_offset);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(position.x - prev_position.x, position.y - prev_position.y, position.z - prev_position.z), delta_t);
+}
+
+// sub_5F23B0
+void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
+    vector3d direction = the_actor->my_abs_po->get_z_facing();
+
+    if (the_base->has_ext_param_been_set(144))
+        direction = the_base->get_external_vector(144);
+
+    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+
+    f32 speed = 1.0f;
+
+    if (the_base->has_ext_param_been_set(0))
+        speed = the_base->get_external_float(0);
+
+    f32 step = speed * delta_t;
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    vector3d        moved(step * unit[0] + position.x, unit[1] * step + position.y, position.z + unit[2] * step);
+
+    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+}
+
+// sub_5AE390
+mash::virtual_types_key als::direct_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::direct_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE3A0
+i32 als::direct_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F4FF0
+void als::direct_mocomp::activate(animation_logic_system* the_als_core, layer_id layer) {
+    simple_orientation::activate(the_als_core, layer);
+
+    direct_mocomp::update_params(0.0001f);
+}
+
+// sub_5CD0E0
+void als::direct_mocomp::post_anim_action(f32 delta_t) {
+    update_params(delta_t);
+
+    simple_orientation::post_anim_action(delta_t);
+}
+
+// sub_667F80
+bool als::direct_mocomp::force_reactivate() const {
+    return true;
+}
+
+// sub_5B6BB0
+void als::direct_mocomp::get_directions(animation_logic_system*, state_machine*, vector3d* desired_dir, vector3d* desired_up) const {
+    *desired_dir = des_face_dir;
+    *desired_up  = des_up_dir;
+}
+
+// sub_5B6BE0
+void als::direct_mocomp::other_po_changes(f32 delta_t, po*) {
+    f32 step = des_speed * delta_t;
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    vector3d        moved(des_move_dir.x * step + position.x, des_move_dir.y * step + position.y, position.z + des_move_dir.z * step);
+
+    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+}
+
+// sub_5F3EC0
+void als::direct_mocomp::update_params(f32) {
+    if (the_base->has_ext_param_been_set(144))
+        des_move_dir = the_base->get_external_vector(144);
+    else
+        des_move_dir = the_actor->my_abs_po->get_z_facing();
+
+    if (the_base->has_ext_param_been_set(143))
+        des_face_dir = the_base->get_external_vector(143);
+    else
+        des_face_dir = des_move_dir;
+
+    if (the_base->has_ext_param_been_set(142))
+        des_up_dir = the_base->get_external_vector(142);
+    else
+        des_up_dir = the_actor->my_abs_po->get_y_facing();
+
+    des_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
 }
