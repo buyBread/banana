@@ -141,7 +141,7 @@ void als::animation_logic_system::update_matrix_publishing(bool visible, bool ke
     animation_controller_state* the_state = get_controller()->state;
 
     if ((the_state && the_state->unk_128) ||
-        get_controller()->state->unk_12c.size() ||
+        get_controller()->state->slaves.size() ||
         keep_publishing ||
         treyarch::references::g_world_ptr.read()->get_current_camera()->unk_032()) {
 
@@ -299,7 +299,7 @@ bool als::animation_logic_system::is_high_priority() const {
     if (!the_controller)
         return false;
 
-    if (the_controller->state->unk_12c.size())
+    if (the_controller->state->slaves.size())
         return true;
 
     if (is_coordinator())
@@ -879,7 +879,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         if (!(new_state->flags & state::unk_08000000)) {
             if ((new_state->flags & state::non_animated) || !the_actor->unk_0c0 || !the_actor->unk_0c0->is_data_ready()) {
                 // nothing to play; the controller rests unless something else needs it
-                if (index == 0 && the_controller && !the_controller->state->unk_12c.size() && the_controller->state)
+                if (index == 0 && the_controller && !the_controller->state->slaves.size() && the_controller->state)
                     the_controller->state->is_suspended = true;
 
                 needs_reinit_anim = false;

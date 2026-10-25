@@ -223,13 +223,20 @@ void animation_controller::frame_advance(f32 delta_t) {
 }
 
 // sub_5AD280
+// inlined @ sub_5E31A0
 bool animation_controller::has_master() const {
     return state && state->master;
 }
 
 // sub_5AD2A0
+// inlined @ sub_5E31A0
 animation_controller* animation_controller::get_master() const {
     return state ? state->master : nullptr;
+}
+
+// sub_5BA300
+bool animation_controller::has_slaves() const {
+    return state->slaves.size() != 0;
 }
 
 // sub_5AD2C0
@@ -238,6 +245,7 @@ bool animation_controller::is_synced_to_master() const {
 }
 
 // sub_5AD2F0
+// inlined @ sub_5E31A0
 actor* animation_controller::get_actor() const {
     return state ? state->the_actor : nullptr;
 }

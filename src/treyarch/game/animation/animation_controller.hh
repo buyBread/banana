@@ -147,7 +147,8 @@ namespace treyarch {
         actor*                    the_actor;
         nal::pose                 combined_pose;
         animation_controller*     unk_128;    // set with unk_144 (sub_5ADB20); the jobs skip a controller that has it
-        vc8::vector<void*>        unk_12c;    // an als with something in here advances with the high priority ones
+        vc8::vector
+            <animation_controller*> slaves;     // the controllers following this one; an als with any advances with the high priority ones
         nal::transport_list*      skeleton;     // the actor's m_skeleton
         nal::skeleton_map*        skeleton_map;
         u32                       unk_144;
@@ -209,6 +210,7 @@ namespace treyarch {
 
         bool                  has_master() const;
         animation_controller* get_master() const;
+        bool                  has_slaves() const;
         bool                  is_synced_to_master() const;
         actor*                get_actor() const;
 
@@ -293,7 +295,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state, the_actor,     0x0E4);
     ASSERT_OFFSETOF(animation_controller_state, combined_pose, 0x0E8);
     ASSERT_OFFSETOF(animation_controller_state, unk_128,       0x128);
-    ASSERT_OFFSETOF(animation_controller_state, unk_12c,       0x12C);
+    ASSERT_OFFSETOF(animation_controller_state, slaves,        0x12C);
     ASSERT_OFFSETOF(animation_controller_state, skeleton,      0x13C);
     ASSERT_OFFSETOF(animation_controller_state, skeleton_map,  0x140);
     ASSERT_OFFSETOF(animation_controller_state, unk_144,       0x144);
