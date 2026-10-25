@@ -58,7 +58,7 @@ namespace treyarch { namespace als {
         smi_return_vars                our_ret;
         request_data                   curr_req_data;
         const state*                   curr_state;
-        const category*                curr_category;
+        mutable const category*        curr_category;
         pend_req                       pending_requests;
         parameter_list                 parameter_buffers[2]; // the request and pending pointers swap between these
         const state*                   prev_state;
@@ -176,14 +176,28 @@ namespace treyarch { namespace als {
 
         bool is_looping() const;
 
-        const param_block* find_param_block_with_param(string_hash the_param, u32 the_type) const;
+        // what the game set, from the request when the machine can take it, else from the pending one
+        f32         get_external_float           (param_id param) const;
+        vector3d    get_external_vector          (param_id param) const;
+        f32         get_external_vector_component(param_id param, e_vector_component component) const;
+        string_hash get_external_hash            (param_id param) const;
+        bool        has_ext_param_been_set       (param_id param) const;
+
+        // external or computed by the als, by id
+        f32         get_float_param (animation_logic_system* the_als, param_id param);
+        vector3d    get_vector_param(animation_logic_system* the_als, param_id param);
+        string_hash get_hash_param  (animation_logic_system* the_als, param_id param);
+
+        // the current state's block, then its category's
+        const param_block* find_param_block_with_param(string_hash the_param)                        const;
+        const param_block* find_param_block_with_param(string_hash the_param, e_param_type the_type) const;
         f32                get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, u32* unk) const;
 
         void process_requests(animation_logic_system* the_als);
         void process_post_requests(animation_logic_system* the_als);
         void end_layer();
 
-        const category* get_curr_category();
+        const category* get_curr_category() const;
         const state*    find_state(state_id the_id, bool error_on_not_found) const;
         const category* find_category(category_id the_id, bool error_on_not_found) const;
 

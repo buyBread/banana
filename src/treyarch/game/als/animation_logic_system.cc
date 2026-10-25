@@ -126,6 +126,11 @@ bool als::animation_logic_system::is_als_interruptable() const {
     return true;
 }
 
+// sub_5D45E0
+string_hash als::animation_logic_system::get_internal_hash(state_machine* the_sm, param_id param) {
+    return the_cache.get_internal_hash(this, the_sm, param);
+}
+
 // sub_5E2300
 // inlined @ sub_5E8FE0
 void als::animation_logic_system::end_layer(layer_id the_layer) {
@@ -622,7 +627,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
                         f32 blend_time = 0.0f;
 
                         if (!machine->our_ret.unk_19) {
-                            if (machine->find_param_block_with_param(blend_time_override_id, 0))
+                            if (machine->find_param_block_with_param(blend_time_override_id, param_type_float))
                                 blend_time = machine->get_pb_float(blend_time_override_id);
                             else if (blend && blend->unk_28 >= 0.0f)
                                 blend_time = blend->unk_28;

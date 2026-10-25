@@ -8,6 +8,7 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/shared/math/references.hh"
 
 using namespace treyarch;
 
@@ -186,53 +187,42 @@ bool als::state_machine::does_category_exist(category_id the_cat_id) const {
 
 // sub_5E8B80
 f32 als::state_machine::get_pb_float(string_hash parameter) const {
-    return ((f32 (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8B80)(this, parameter);
+    return find_param_block_with_param(parameter, param_type_float)->get_pb_float(parameter);
 }
 
 // sub_5E8BC0
 i32 als::state_machine::get_pb_int(string_hash parameter) const {
-    return ((i32 (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8BC0)(this, parameter);
+    return find_param_block_with_param(parameter, param_type_int)->get_pb_int(parameter);
 }
 
 // sub_5E8BF0
 string_hash als::state_machine::get_pb_hash(string_hash parameter) const {
-    string_hash result;
-    ((string_hash* (__thiscall*)(const state_machine*, string_hash*, string_hash))retail::sub_5E8BF0)(this, &result, parameter);
-
-    return result;
+    return find_param_block_with_param(parameter, param_type_hash)->get_pb_hash(parameter);
 }
 
 // sub_5E8CB0
 const char* als::state_machine::get_pb_fixedstring(string_hash parameter) const {
-    return ((const char* (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8CB0)(this, parameter);
+    return find_param_block_with_param(parameter, param_type_string)->get_pb_fixedstring(parameter);
 }
 
 // sub_5E8C30
 vector3d als::state_machine::get_pb_vector3d(string_hash parameter) const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const state_machine*, vector3d*, string_hash))retail::sub_5E8C30)(this, &result, parameter);
-
-    return result;
+    return find_param_block_with_param(parameter, param_type_vector3d)->get_pb_vector3d(parameter);
 }
 
 // sub_5E8C70
 variance_variable<f32> als::state_machine::get_pb_float_variance(string_hash parameter) const {
-    using get_pb_float_variance_t = variance_variable<f32>* (__thiscall*)(const state_machine*, variance_variable<f32>*, string_hash);
-
-    variance_variable<f32> result;
-    ((get_pb_float_variance_t)retail::sub_5E8C70)(this, &result, parameter);
-
-    return result;
+    return find_param_block_with_param(parameter, param_type_float_variance)->get_pb_float_variance(parameter);
 }
 
 // sub_5E8CB0
 const char* als::state_machine::get_pb_mstring(string_hash parameter) const {
-    return ((const char* (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8CB0)(this, parameter);
+    return find_param_block_with_param(parameter, param_type_string)->get_pb_fixedstring(parameter);
 }
 
 // sub_5E8CE0
 mash::mash_virtual_base* als::state_machine::get_pb_class(string_hash parameter) const {
-    return ((mash::mash_virtual_base* (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8CE0)(this, parameter);
+    return find_param_block_with_param(parameter, param_type_class)->get_pb_class(parameter);
 }
 
 // sub_5E8D10
@@ -240,9 +230,15 @@ f32 als::state_machine::get_optional_pb_float(      string_hash  parameter,
                                               const f32         &default_value,
                                                     bool*        exists) const {
 
-    using get_optional_pb_float_t = f32 (__thiscall*)(const state_machine*, string_hash, const f32*, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_float);
 
-    return ((get_optional_pb_float_t)retail::sub_5E8D10)(this, parameter, &default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
+
+    if (!block)
+        return default_value;
+
+    return block->get_pb_float(parameter);
 }
 
 // sub_5E8D70
@@ -250,26 +246,41 @@ i32 als::state_machine::get_optional_pb_int(      string_hash  parameter,
                                             const i32         &default_value,
                                                   bool*        exists) const {
 
-    using get_optional_pb_int_t = i32 (__thiscall*)(const state_machine*, string_hash, const i32*, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_int);
 
-    return ((get_optional_pb_int_t)retail::sub_5E8D70)(this, parameter, &default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
+
+    if (!block)
+        return default_value;
+
+    return block->get_pb_int(parameter);
 }
 
 // sub_5E8DC0
 string_hash als::state_machine::get_optional_pb_hash(string_hash parameter, string_hash default_value, bool* exists) const {
-    using get_optional_pb_hash_t = string_hash* (__thiscall*)(const state_machine*, string_hash*, string_hash, string_hash, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_hash);
 
-    string_hash result;
-    ((get_optional_pb_hash_t)retail::sub_5E8DC0)(this, &result, parameter, default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
 
-    return result;
+    if (!block)
+        return default_value;
+
+    return block->get_pb_hash(parameter);
 }
 
 // sub_5E8E20
 const char* als::state_machine::get_optional_pb_fixedstring(string_hash parameter, const char* default_value, bool* exists) const {
-    using get_optional_pb_string_t = const char* (__thiscall*)(const state_machine*, string_hash, const char*, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_string);
 
-    return ((get_optional_pb_string_t)retail::sub_5E8E20)(this, parameter, default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
+
+    if (!block)
+        return default_value;
+
+    return block->get_pb_fixedstring(parameter);
 }
 
 // sub_5E8E70
@@ -277,12 +288,15 @@ vector3d als::state_machine::get_optional_pb_vector3d(      string_hash  paramet
                                                       const vector3d    &default_value,
                                                             bool*        exists) const {
 
-    using get_optional_pb_vector3d_t = vector3d* (__thiscall*)(const state_machine*, vector3d*, string_hash, const vector3d*, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_vector3d);
 
-    vector3d result;
-    ((get_optional_pb_vector3d_t)retail::sub_5E8E70)(this, &result, parameter, &default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
 
-    return result;
+    if (!block)
+        return default_value;
+
+    return block->get_pb_vector3d(parameter);
 }
 
 // sub_5E8ED0
@@ -290,23 +304,28 @@ variance_variable<f32> als::state_machine::get_optional_pb_float_variance(      
                                                                           const variance_variable<f32> &default_value,
                                                                                 bool*                   exists) const {
 
-    using get_optional_pb_float_variance_t = variance_variable<f32>* (__thiscall*)(const state_machine*,
-                                                                                   variance_variable<f32>*,
-                                                                                   string_hash,
-                                                                                   const variance_variable<f32>*,
-                                                                                   bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_float_variance);
 
-    variance_variable<f32> result;
-    ((get_optional_pb_float_variance_t)retail::sub_5E8ED0)(this, &result, parameter, &default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
 
-    return result;
+    if (!block)
+        return default_value;
+
+    return block->get_pb_float_variance(parameter);
 }
 
 // sub_5E8E20
 const char* als::state_machine::get_optional_pb_mstring(string_hash parameter, const char* default_value, bool* exists) const {
-    using get_optional_pb_string_t = const char* (__thiscall*)(const state_machine*, string_hash, const char*, bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_string);
 
-    return ((get_optional_pb_string_t)retail::sub_5E8E20)(this, parameter, default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
+
+    if (!block)
+        return default_value;
+
+    return block->get_pb_fixedstring(parameter);
 }
 
 // sub_5E8F30
@@ -314,22 +333,31 @@ mash::mash_virtual_base* als::state_machine::get_optional_pb_class(string_hash  
                                                                    mash::mash_virtual_base*  default_value,
                                                                    bool*                     exists) const {
 
-    using get_optional_pb_class_t = mash::mash_virtual_base* (__thiscall*)(const state_machine*,
-                                                                           string_hash,
-                                                                           mash::mash_virtual_base*,
-                                                                           bool*);
+    const param_block* block = find_param_block_with_param(parameter, param_type_class);
 
-    return ((get_optional_pb_class_t)retail::sub_5E8F30)(this, parameter, default_value, exists);
+    if (exists)
+        *exists = block != nullptr;
+
+    if (!block)
+        return default_value;
+
+    return block->get_pb_class(parameter);
 }
 
 // sub_5E8F80
 bool als::state_machine::does_parameter_exist(string_hash parameter) const {
-    return ((bool (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8F80)(this, parameter);
+    return find_param_block_with_param(parameter) != nullptr;
 }
 
 // sub_5E8FA0
 u32 als::state_machine::get_parameter_data_type(string_hash parameter) const {
-    return ((u32 (__thiscall*)(const state_machine*, string_hash))retail::sub_5E8FA0)(this, parameter);
+    const param_block* block = find_param_block_with_param(parameter);
+
+    // past every param type
+    if (!block)
+        return 13;
+
+    return block->get_parameter_data_type(parameter);
 }
 
 // sub_5D5190
@@ -475,9 +503,125 @@ bool als::state_machine::is_looping() const {
     return get_optional_pb_int(force_looping_id, not_looping, nullptr) != 0;
 }
 
+// sub_5ADBC0
+f32 als::state_machine::get_external_float(param_id param) const {
+    if (our_smi.requested_params->float_set[param] && is_interruptable())
+        return our_smi.requested_params->float_params[param];
+
+    if (pending_requests.pending_params->float_set[param])
+        return pending_requests.pending_params->float_params[param];
+
+    return 0.0f;
+}
+
+// sub_5ADC10
+vector3d als::state_machine::get_external_vector(param_id param) const {
+    u32 index = param - num_external_float_params;
+
+    if (our_smi.requested_params->vector_set[index] && is_interruptable())
+        return our_smi.requested_params->vector_params[index];
+
+    if (pending_requests.pending_params->vector_set[index])
+        return pending_requests.pending_params->vector_params[index];
+
+    return treyarch::references::unk_00fd4370.get();
+}
+
+// sub_5ADCB0
+f32 als::state_machine::get_external_vector_component(param_id param, e_vector_component component) const {
+    u32 index = param - num_external_float_params;
+
+    if (our_smi.requested_params->vector_set[index] && is_interruptable())
+        return get_vector_component(our_smi.requested_params->vector_params[index], component);
+
+    if (pending_requests.pending_params->vector_set[index])
+        return get_vector_component(pending_requests.pending_params->vector_params[index], component);
+
+    return 0.0f;
+}
+
+// sub_5ADD30
+string_hash als::state_machine::get_external_hash(param_id param) const {
+    u32 index = param - num_external_vector_params;
+
+    if (our_smi.requested_params->hash_set[index] && is_interruptable())
+        return our_smi.requested_params->get_hash(param);
+
+    if (pending_requests.pending_params->hash_set[index])
+        return pending_requests.pending_params->get_hash(param);
+
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    return none;
+}
+
+// sub_5BBB90
+bool als::state_machine::has_ext_param_been_set(param_id param) const {
+    if (our_smi.requested_params->has_param_been_set(param))
+        return true;
+
+    return pending_requests.pending_params->has_param_been_set(param);
+}
+
+// sub_5EEF20
+f32 als::state_machine::get_float_param(animation_logic_system* the_als, param_id param) {
+    if (param < num_external_hash_params)
+        return get_external_float(param);
+
+    return the_als->the_cache.get_internal_float(the_als, this, param);
+}
+
+// sub_5D5F00
+vector3d als::state_machine::get_vector_param(animation_logic_system* the_als, param_id param) {
+    if (param < num_external_hash_params)
+        return get_external_vector(param);
+
+    return the_als->the_cache.get_internal_vector(the_als, this, param);
+}
+
+// sub_5D5F40
+string_hash als::state_machine::get_hash_param(animation_logic_system* the_als, param_id param) {
+    if (param < num_external_hash_params)
+        return get_external_hash(param);
+
+    return the_als->get_internal_hash(this, param);
+}
+
+// sub_5E2340
+const param_block* als::state_machine::find_param_block_with_param(string_hash the_param) const {
+    if (!is_active())
+        return nullptr;
+
+    const param_block* block = curr_state->my_param_block;
+
+    if (block && block->does_parameter_exist(the_param))
+        return block;
+
+    block = get_curr_category()->my_param_block;
+
+    if (block && block->does_parameter_exist(the_param))
+        return block;
+
+    return nullptr;
+}
+
 // sub_5E23B0
-const param_block* als::state_machine::find_param_block_with_param(string_hash the_param, u32 the_type) const {
-    return ((const param_block* (__thiscall*)(const state_machine*, string_hash, u32))retail::sub_5E23B0)(this, the_param, the_type);
+const param_block* als::state_machine::find_param_block_with_param(string_hash the_param, e_param_type the_type) const {
+    if (!is_active())
+        return nullptr;
+
+    const param_block* block = curr_state->my_param_block;
+
+    if (block && block->does_parameter_exist(the_param) && block->get_parameter_data_type(the_param) == the_type)
+        return block;
+
+    block = get_curr_category()->my_param_block;
+
+    if (block && block->does_parameter_exist(the_param) && block->get_parameter_data_type(the_param) == the_type)
+        return block;
+
+    return nullptr;
 }
 
 // sub_5D5310
@@ -582,7 +726,7 @@ void als::state_machine::end_layer() {
 }
 
 // sub_5D5E90
-const als::category* als::state_machine::get_curr_category() {
+const als::category* als::state_machine::get_curr_category() const {
     if (!curr_category || !curr_state)
         return curr_category;
 

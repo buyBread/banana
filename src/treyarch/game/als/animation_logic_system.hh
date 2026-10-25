@@ -94,6 +94,8 @@ namespace treyarch { namespace als {
 
         const als_meta_anim_table_shared* get_meta_anim_table() const;
 
+        string_hash get_internal_hash(state_machine* the_sm, param_id param);
+
         state_machine* get_als_layer_internal(layer_id the_layer);
         bool           has_als_layer_internal(layer_id the_layer) const;
         bool           is_als_interruptable() const;
