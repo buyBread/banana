@@ -1,4 +1,5 @@
 #include "treyarch/nal/anim.hh"
+#include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/shared/memory/memory.hh"
 
@@ -112,4 +113,12 @@ void nal::time_to_frames(nal::anim* anim,
     time_to_frame_pair(anim, t, frame, frame_0, frame_1, looping);
 
     *fraction = *frame - (f32)*frame_0;
+}
+
+// sub_5AB1C0
+nal::anim_instance* nal::anim::create_instance(u32 instance_flags, nal::skeleton_map* skel_map, nal::transport_list* transports) {
+    if (!transport_list)
+        transport_list = transports;
+
+    return new nal::anim_instance(this, instance_flags, skel_map);
 }

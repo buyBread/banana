@@ -15,6 +15,8 @@ namespace treyarch { namespace nal {
         anim_flag_unk_04  = 0x04  // set when the entry loads
     };
 
+    struct anim_instance;
+    struct skeleton_map;
     struct transport_list;
 
     // keyed by transport id: 0 is fk data, 1 is signals
@@ -67,6 +69,9 @@ namespace treyarch { namespace nal {
         void link_transport_list();
 
         nal::transport_data* get_transport_data(u32 id);
+
+        // a fresh instance from the game heap; the transport list is taken when the anim has none
+        nal::anim_instance* create_instance(u32 instance_flags, nal::skeleton_map* skel_map, nal::transport_list* transports);
         bool                 has_transport_data(u32 id);
     };
 
