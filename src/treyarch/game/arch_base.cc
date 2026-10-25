@@ -19,6 +19,19 @@ void arch_base::raise_event(event* raised_event) {
     event_manager::raise_event(raised_event, my_handle);
 }
 
+// sub_601790
+u32 arch_base::add_callback(string_hash event_type_id, code_event_callback_function function, void* parameters, bool one_shot) {
+    if (event_type_id == references::collide_entity.read() && is_an_entity_base())
+        ((entity*)this)->ext_flags |= 0x10000000;
+
+    return event_manager::add_callback(event_type_id, my_handle, function, parameters, one_shot);
+}
+
+// sub_601850
+void arch_base::remove_callback(u32 callback_id, string_hash event_type_id) {
+    event_manager::remove_callback(callback_id, event_type_id, my_handle);
+}
+
 // sub_6017E0
 u32 arch_base::add_callback(      string_hash                 event_type_id,
                                   chuck::vm::script_instance* instance,

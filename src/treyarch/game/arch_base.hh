@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/game/event/event_callback.hh"
 #include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "util/macros/sanity_assert.hh"
@@ -37,6 +38,12 @@ namespace treyarch {
                                chuck::vm::script_function* function,
                          const void*                       parameters,
                                bool                        one_shot);
+        u32 add_callback(string_hash                  event_type_id,
+                         code_event_callback_function function,
+                         void*                        parameters,
+                         bool                         one_shot);
+
+        void remove_callback(u32 callback_id, string_hash event_type_id);
 
         void clear_script_callbacks(chuck::vm::script_executable* script_exe);
         void clear_script_callback(string_hash function_name);
