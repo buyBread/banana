@@ -22,3 +22,11 @@ region* entity::get_primary_region() {
 
     return nullptr;
 }
+
+// sub_6267E0
+generic_interface* entity::find_ifc_by_name(string_hash name) {
+    if (!my_ifc_storage)
+        return nullptr;
+
+    return my_ifc_storage->find_ifc_by_name(name);
+}

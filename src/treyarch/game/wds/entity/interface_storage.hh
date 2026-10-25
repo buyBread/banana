@@ -2,6 +2,7 @@
 
 #include <bit>
 
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/vector.hh"
 #include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
@@ -51,6 +52,9 @@ namespace treyarch {
         }
 
         generic_interface* get_ifc(e_entity_ifc index);
+
+        // the first interface with that name
+        generic_interface* find_ifc_by_name(string_hash name);
 
         // inlined @ sub_5ED8C0
         generic_interface* find_ifc(e_entity_ifc index) { // null when the entity doesn't have it

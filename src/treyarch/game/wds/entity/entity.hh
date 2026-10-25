@@ -63,6 +63,8 @@ namespace treyarch {
 
         void invoke_render_phase();
 
+        generic_interface* find_ifc_by_name(string_hash name);
+
         region* get_primary_region();
     };
 

@@ -78,6 +78,7 @@ void ai_core::team_lists::rebuild() {
     valid = true;
 }
 
+// sub_402D50
 // inlined @ sub_8068A0
 // inlined @ sub_981D50
 info_node* ai_core::get_info_node(e_info_node_type type) const {
