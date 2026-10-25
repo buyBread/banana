@@ -387,7 +387,7 @@ bool als::motion_compensator::is_request_fulfilled() {
 }
 
 // sub_71F870
-bool als::motion_compensator::unk_015() const {
+bool als::motion_compensator::is_synced() const {
     return false;
 }
 
