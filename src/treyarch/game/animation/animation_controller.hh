@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/game/als/meta_anim.hh"
+#include "treyarch/game/als/meta_anim_instance.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
@@ -35,7 +36,7 @@ namespace treyarch {
         // an animation playing on a layer; one of a nal instance or an als meta instance samples it
         struct layer_anim {
             nal::anim_instance*         nal_inst;
-            void*                       als_inst;
+            als::als_anim_instance*     als_inst;
             f32                         normalized_time;
             f32                         prev_normalized_time;
             nal::pose                   pose;
@@ -64,9 +65,8 @@ namespace treyarch {
                 if (nal_inst)
                     return nal_inst->anim->duration;
 
-                // slot 1
                 if (als_inst)
-                    return ((f32 (__thiscall*)(void*))(*(void***)als_inst)[1])(als_inst);
+                    return als_inst->get_duration();
 
                 return 0.0f;
             }

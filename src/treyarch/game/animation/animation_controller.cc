@@ -21,8 +21,6 @@ void animation_controller::get_matrix_data_from_pose(bool unk) {
 
 // sub_5D4290
 bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediate) {
-    using get_pose_t = void (__thiscall*)(void*, f32, f32, nal::pose*, nal::transport_fk*);
-
     animation_controller_state* the_state = state;
 
     // nothing to pose isn't a failure
@@ -67,8 +65,7 @@ bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediat
         } else {
             input.instances[index] = nullptr;
 
-            // slot 2
-            ((get_pose_t)(*(void***)anim->als_inst)[2])(anim->als_inst, record.time, record.prev_time, &anim->pose, fk);
+            anim->als_inst->get_pose(record.time, record.prev_time, &anim->pose, fk);
         }
 
         if (index)
@@ -219,11 +216,10 @@ void animation_controller::play(const als::nal_als_anim_bridge     &anim,
     if (added->normalized_time < 0.0f) {
         bool loops = false;
 
-        // slot 3
         if (instance.nal_inst)
             loops = instance.nal_inst->force_looping || (instance.nal_inst->anim->flags & nal::anim_flag_looping);
         else if (instance.als_inst)
-            loops = ((bool (__thiscall*)(void*))(*(void***)instance.als_inst)[3])(instance.als_inst);
+            loops = instance.als_inst->is_looping();
 
         if (loops)
             added->normalized_time += 1.0f;
@@ -240,9 +236,8 @@ void animation_controller::play(const als::nal_als_anim_bridge     &anim,
         newest->alpha_start = 1.0f;
         newest->alpha_end   = 0.0f;
 
-        // slot 5
         if (newest->als_inst)
-            ((void (__thiscall*)(void*))(*(void***)newest->als_inst)[5])(newest->als_inst);
+            newest->als_inst->on_blend_out();
 
         f32 fade_in = added->get_inverse_duration() * blend_time;
 
@@ -338,7 +333,7 @@ animation_controller_state::layer_anim::~layer_anim() {
     if (nal_inst)
         delete nal_inst;
     else if (als_inst)
-        ((void (__thiscall*)(void*, u32))(*(void***)als_inst)[0])(als_inst, 1); // the deleting destructor
+        delete als_inst;
 }
 
 // sub_5DFBD0
@@ -373,9 +368,8 @@ f32 animation_controller_state::layer_anim::get_inverse_duration() const {
     if (nal_inst)
         return 1.0f / nal_inst->anim->duration;
 
-    // slot 1
     if (als_inst)
-        return 1.0f / ((f32 (__thiscall*)(void*))(*(void***)als_inst)[1])(als_inst);
+        return 1.0f / als_inst->get_duration();
 
     // retail divides by zero here
     return std::numeric_limits<f32>::infinity();
