@@ -22,6 +22,7 @@ namespace treyarch {
 
     class animation_controller;
     class entity;
+    struct anim_event_param;
 
     // a bump allocator over a scratch buffer
     struct scratch_arena {
@@ -72,6 +73,24 @@ namespace treyarch {
             }
 
             f32 get_inverse_duration() const;
+
+            // inlined @ sub_5BB5A0
+            // inlined @ sub_5D3950
+            void set_speed(f32 new_speed) {
+                speed = new_speed;
+
+                if (new_speed < 0.0f)
+                    speed = 0.0f;
+            }
+
+            // inlined @ sub_5BB600
+            // inlined @ sub_5D3950
+            void set_secondary_speed(f32 new_speed) {
+                secondary_speed = new_speed;
+
+                if (new_speed < 0.0f)
+                    secondary_speed = 0.0f;
+            }
 
             // inlined @ sub_5B9F60
             // inlined @ sub_5BA140
@@ -143,6 +162,21 @@ namespace treyarch {
     // the transport signals the newest record crossed this frame
     void raise_newest_animation_signals(animation_records* records);
 
+    /* seconds from anim_time to the nearest of the layer's newest anim's signals with the name, or back to it since;
+       -1 without one. the first match tells the param, a nearer one replaces it */
+    f32 get_time_to_animation_signal   (animation_controller* controller,
+                                        u32                   layer,
+                                        string_hash           signal_name,
+                                        f32                   anim_time,
+                                        bool*                 exists,
+                                        anim_event_param*     param);
+    f32 get_time_since_animation_signal(animation_controller* controller,
+                                        u32                   layer,
+                                        string_hash           signal_name,
+                                        f32                   anim_time,
+                                        bool*                 exists,
+                                        anim_event_param*     param);
+
     // raises the anim's signals between the two normalized times on the entity
     void raise_animation_signals_for_time_span(nal::anim* the_anim,
                                                f32        t,
@@ -183,6 +217,36 @@ namespace treyarch {
 
         // the layer's newest anim; 1 without one
         f32  get_anim_duration(u32 layer);
+
+        // the layer's newest anim's; 0 and 1 without one
+        // inlined @ sub_5BB740
+        // inlined @ sub_5BB790
+        // inlined @ sub_5D5190
+        // inlined @ sub_5E0D20
+        // inlined @ sub_5E0EE0
+        // inlined @ sub_5D3950
+        f32 get_anim_normalized_time(u32 layer) const {
+            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->normalized_time : 0.0f;
+        }
+
+        // inlined @ sub_5BB660
+        // inlined @ sub_5D5190
+        // inlined @ sub_5D57F0
+        // inlined @ sub_5D59A0
+        // inlined @ sub_5D3950
+        f32 get_anim_speed(u32 layer) const {
+            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->speed : 1.0f;
+        }
+
+        // inlined @ sub_5BB6C0
+        // inlined @ sub_5D5190
+        // inlined @ sub_5D57F0
+        // inlined @ sub_5D59A0
+        // inlined @ sub_5D3950
+        f32 get_anim_secondary_speed(u32 layer) const {
+            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->secondary_speed : 1.0f;
+        }
+
         f32  get_anim_time(u32 layer);
         bool is_anim_looping(u32 layer);
         void set_anim_normalized_time(u32 layer, f32 time);

@@ -104,7 +104,7 @@ void animation_controller::advance(animation_controller* controller) {
     engine_lock_scope lock(&the_state->lock);
 
     if (the_state->unk_2f4 > 0.0f) {
-        f32 base_time = the_state->layer_anims[0].size() ? the_state->layer_anims[0].back()->normalized_time : 0.0f;
+        f32 base_time = controller->get_anim_normalized_time(0);
 
         if (the_state->unk_2f8 / controller->get_anim_duration(0) <= base_time + 0.000001f) {
             if (delta_t > the_state->unk_2f4) {
@@ -136,25 +136,15 @@ void animation_controller::advance(animation_controller* controller) {
                 if (the_state->should_follow_master()) {
                     time = anim->get_inverse_duration() * the_state->master->get_anim_time(layer);
 
-                    animation_records &master_anims = the_state->master->state->layer_anims[layer];
+                    f32 speed = the_state->master->get_anim_speed(layer);
 
-                    f32 speed = master_anims.size() ? master_anims.back()->speed : 1.0f;
+                    if (anims.size())
+                        anims.back()->set_speed(speed);
 
-                    if (anims.size()) {
-                        anims.back()->speed = speed;
+                    f32 secondary_speed = the_state->master->get_anim_secondary_speed(layer);
 
-                        if (speed < 0.0f)
-                            anims.back()->speed = 0.0f;
-                    }
-
-                    f32 secondary_speed = master_anims.size() ? master_anims.back()->secondary_speed : 1.0f;
-
-                    if (anims.size()) {
-                        anims.back()->secondary_speed = secondary_speed;
-
-                        if (secondary_speed < 0.0f)
-                            anims.back()->secondary_speed = 0.0f;
-                    }
+                    if (anims.size())
+                        anims.back()->set_secondary_speed(secondary_speed);
                 } else {
                     time = anim->get_inverse_duration() * (anim->speed * delta_t * anim->secondary_speed) + prev;
                 }
@@ -434,6 +424,200 @@ void animation_controller_state::layer_anim::raise_animation_signals(f32 time, f
     nal::anim* anim = nal_inst ? nal_inst->anim : als_inst->get_anim();
 
     raise_animation_signals_for_time_span(anim, time, prev_time, the_entity, just_started, is_looping());
+}
+
+// sub_5BBE30
+f32 treyarch::get_time_to_animation_signal(animation_controller* controller,
+                                           u32                   layer,
+                                           string_hash           signal_name,
+                                           f32                   anim_time,
+                                           bool*                 exists,
+                                           anim_event_param*     param) {
+
+    nal::anim* anim = nullptr;
+
+    if (controller->state->layer_anims[layer].size()) {
+        animation_controller_state::layer_anim* newest = controller->state->layer_anims[layer].back();
+
+        if (newest->nal_inst)
+            anim = newest->nal_inst->anim;
+        else if (newest->als_inst)
+            anim = newest->als_inst->get_anim();
+    }
+
+    if (exists)
+        *exists = false;
+
+    if (param)
+        param->type = 0;
+
+    if (!anim || !anim->has_transport_data(1))
+        return -1.0f;
+
+    auto signals = (nal::transport_data_signals*)anim->get_transport_data(1);
+
+    if (!signals || !signals->signal_count)
+        return -1.0f;
+
+    // the signal's param as an anim event takes it
+    auto get_param = [param](const nal::signal &signal) {
+        switch (signal.param_type) {
+            case 1:
+                param->type  = 4;
+                param->value = signal.param_value;
+                break;
+
+            case 2:
+                param->type  = 2;
+                param->value = signal.param_value;
+                break;
+
+            case 3:
+                param->type  = 1;
+                param->value = signal.param_value;
+                break;
+        }
+    };
+
+    u32 matches[100];
+    u32 num_matches = 0;
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        if (signals->signals[index].id != signal_name.source_hash_code)
+            continue;
+
+        matches[num_matches++] = index;
+
+        if (exists && !*exists) {
+            *exists = true;
+
+            if (param)
+                get_param(signals->signals[index]);
+        }
+    }
+
+    if (anim_time < 0.0f)
+        anim_time = 0.0f;
+
+    f32 duration   = anim->duration;
+    f32 frame_time = duration / (f32)(i32)anim->frame_count;
+    f32 nearest    = -1.0f;
+
+    for (u32 index = 0; index < num_matches; ++index) {
+        const nal::signal &signal = signals->signals[matches[index]];
+
+        f32 time = signal.frame * frame_time - anim_time;
+
+        if (time < 0.0f && controller->is_anim_looping(layer))
+            time += duration;
+
+        if (time < 0.0f || (nearest <= time && nearest >= 0.0f))
+            continue;
+
+        nearest = time;
+
+        if (param)
+            get_param(signal);
+    }
+
+    return nearest;
+}
+
+// sub_5BC130
+f32 treyarch::get_time_since_animation_signal(animation_controller* controller,
+                                              u32                   layer,
+                                              string_hash           signal_name,
+                                              f32                   anim_time,
+                                              bool*                 exists,
+                                              anim_event_param*     param) {
+
+    nal::anim* anim = nullptr;
+
+    if (controller->state->layer_anims[layer].size()) {
+        animation_controller_state::layer_anim* newest = controller->state->layer_anims[layer].back();
+
+        if (newest->nal_inst)
+            anim = newest->nal_inst->anim;
+        else if (newest->als_inst)
+            anim = newest->als_inst->get_anim();
+    }
+
+    if (exists)
+        *exists = false;
+
+    if (param)
+        param->type = 0;
+
+    if (!anim || !anim->has_transport_data(1))
+        return -1.0f;
+
+    auto signals = (nal::transport_data_signals*)anim->get_transport_data(1);
+
+    if (!signals || !signals->signal_count)
+        return -1.0f;
+
+    // the signal's param as an anim event takes it
+    auto get_param = [param](const nal::signal &signal) {
+        switch (signal.param_type) {
+            case 1:
+                param->type  = 4;
+                param->value = signal.param_value;
+                break;
+
+            case 2:
+                param->type  = 2;
+                param->value = signal.param_value;
+                break;
+
+            case 3:
+                param->type  = 1;
+                param->value = signal.param_value;
+                break;
+        }
+    };
+
+    u32 matches[100];
+    u32 num_matches = 0;
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        if (signals->signals[index].id != signal_name.source_hash_code)
+            continue;
+
+        matches[num_matches++] = index;
+
+        if (exists && !*exists) {
+            *exists = true;
+
+            if (param)
+                get_param(signals->signals[index]);
+        }
+    }
+
+    if (anim_time < 0.0f)
+        anim_time = 0.0f;
+
+    f32 duration   = anim->duration;
+    f32 frame_time = duration / (f32)(i32)anim->frame_count;
+    f32 nearest    = -1.0f;
+
+    for (u32 index = 0; index < num_matches; ++index) {
+        const nal::signal &signal = signals->signals[matches[index]];
+
+        f32 time = anim_time - signal.frame * frame_time;
+
+        if (time < 0.0f && controller->is_anim_looping(layer))
+            time += duration;
+
+        if (time < 0.0f || (nearest <= time && nearest >= 0.0f))
+            continue;
+
+        nearest = time;
+
+        if (param)
+            get_param(signal);
+    }
+
+    return nearest;
 }
 
 // sub_5B9BF0
