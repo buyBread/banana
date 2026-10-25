@@ -1209,3 +1209,13 @@ void als::layer_state_machine::init(animation_logic_system* the_als, layer_state
 
     the_controller = the_als->get_controller();
 }
+
+// sub_5E0D20
+void als::raise_animation_event_signals(state_machine* the_sm) {
+    ((void (__cdecl*)(state_machine*))retail::sub_5E0D20)(the_sm);
+}
+
+// sub_5E0EE0
+void als::raise_pre_animation_event_signals(state_machine* the_sm) {
+    ((void (__cdecl*)(state_machine*))retail::sub_5E0EE0)(the_sm);
+}

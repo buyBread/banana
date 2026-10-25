@@ -90,7 +90,9 @@ namespace treyarch { namespace als {
         virtual void unk_025(void* unk);
         virtual void change_mocomp(const state* curr_state, layer_id layer);
 
-        static void frame_advance_flush_queue(bool unk);
+        // runs what the frame queued, stage by stage; threaded lets the stages use the workers
+        static void frame_advance_flush_queue(bool threaded);
+        static void process_nal_queue(bool threaded);
 
         const als_meta_anim_table_shared* get_meta_anim_table() const;
 
@@ -102,19 +104,20 @@ namespace treyarch { namespace als {
         void           end_layer(layer_id the_layer);
 
     protected:
+        // the flush's per-item setup; false leaves the controller out of the job
+        static bool prepare_controller_job(animation_controller* controller, f32 delta_t);
+        static void prepare_pre_event_job (state_machine* machine, f32 delta_t);
+
         void enter_biped_physics(state_machine** machines, i32 num_machines, bool unk);
         void exit_biped_physics();
         void update_seated_in_car(state_machine* the_sm);
     };
 
-    // a controller layer's playing records
-    using animation_records = container::fixed_vector<animation_controller_state::unk_02c_entry*, 2>;
-
     namespace references {
         // what frame_advance leaves for the flush; parallel arrays share an index
         inline util::memory_reference<std::array<animation_controller*, 500>> queued_controllers        { 0x00FD43D0 };
         inline util::memory_reference<std::array<motion_compensator*, 500>>   queued_mocomps            { 0x00FFBE58 };
-        inline util::memory_reference<std::array<f32, 500>>                   queued_mocomp_deltas      { 0x00FD74A0 };
+        inline util::memory_reference<std::array<f32, 500>>                   queued_deltas             { 0x00FD74A0 };
         inline util::memory_reference<std::array<animation_records*, 500>>    queued_signal_records     { 0x00FD6C40 };
         inline util::memory_reference<std::array<state_machine*, 500>>        queued_event_machines     { 0x00FFC670 };
         inline util::memory_reference<std::array<state_machine*, 500>>        queued_pre_event_machines { 0x00FD7C78 };
@@ -122,7 +125,7 @@ namespace treyarch { namespace als {
 
         inline util::memory_reference<i32> num_queued_controllers        { 0x00FD4BA0 };
         inline util::memory_reference<i32> num_queued_mocomps            { 0x00FFC628 };
-        inline util::memory_reference<i32> num_queued_mocomp_deltas      { 0x00FD7C70 };
+        inline util::memory_reference<i32> num_queued_deltas             { 0x00FD7C70 };
         inline util::memory_reference<i32> num_queued_signal_records     { 0x00FD7410 };
         inline util::memory_reference<i32> num_queued_event_machines     { 0x00FFCE40 };
         inline util::memory_reference<i32> num_queued_pre_event_machines { 0x00FD8448 };

@@ -234,6 +234,10 @@ namespace treyarch { namespace als {
         void init(animation_logic_system* the_als, layer_state_machine_shared* shared_machine);
     };
 
+    // the state events the machine's newest record crossed this frame, after and before the animation advances
+    void raise_animation_event_signals    (state_machine* the_sm);
+    void raise_pre_animation_event_signals(state_machine* the_sm);
+
     ASSERT_SIZEOF  (state_machine::smi_variables,                   0x0C);
     ASSERT_OFFSETOF(state_machine::smi_variables, request_id,       0x04);
     ASSERT_OFFSETOF(state_machine::smi_variables, requested_params, 0x08);

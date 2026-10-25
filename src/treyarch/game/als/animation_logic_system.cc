@@ -3,7 +3,9 @@
 #include "retail.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/amalga/resource_pack_slot.hh"
+#include "treyarch/game/als/als_jq.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
+#include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
@@ -348,9 +350,247 @@ animation_controller* als::animation_logic_system::get_controller() const {
     return the_controller;
 }
 
+// inlined @ sub_5E1070
+bool als::animation_logic_system::prepare_controller_job(animation_controller* controller, f32 delta_t) {
+    animation_controller_state* state = controller->state;
+
+    if (!state || state->unk_128 || state->is_suspended) {
+        state->job.controller = nullptr;
+        return false;
+    }
+
+    state->job.controller       = controller;
+    state->job.unk_a8           = state->job.unk_b0;
+    state->job.delta_t          = delta_t;
+    state->job.num_pose_records = 0;
+
+    return true;
+}
+
+// inlined @ sub_5E1070
+void als::animation_logic_system::prepare_pre_event_job(state_machine* machine, f32 delta_t) {
+    animation_controller_state* state = machine->the_controller->state;
+
+    if (state && !state->unk_128 && !state->is_suspended)
+        state->job.delta_t = delta_t;
+    else
+        state->job.controller = nullptr;
+}
+
 // sub_5E1070
-void als::animation_logic_system::frame_advance_flush_queue(bool unk) {
-    ((void (__cdecl*)(bool))retail::sub_5E1070)(unk);
+void als::animation_logic_system::frame_advance_flush_queue(bool threaded) {
+    auto &controllers        = references::queued_controllers.get();
+    auto &deltas             = references::queued_deltas.get();
+    auto &signal_records     = references::queued_signal_records.get();
+    auto &event_machines     = references::queued_event_machines.get();
+    auto &pre_event_machines = references::queued_pre_event_machines.get();
+    auto &pre_event_deltas   = references::queued_pre_event_deltas.get();
+
+    // the state events before the animation advances
+    u32 num_pre_events = references::num_queued_pre_event_machines.read();
+
+    if (threaded && num_pre_events > 20) {
+        multi_pre_animation_event_signal_jq::start();
+        multi_pre_animation_event_signal_jq::lock_batch_pool();
+
+        for (u32 index = 0; index < num_pre_events; ++index)
+            prepare_pre_event_job(pre_event_machines[index], pre_event_deltas[index]);
+
+        // retail hands the event machines here, not the pre-event ones
+        jq::batch &batch     = multi_pre_animation_event_signal_jq::static_batch.get();
+        u32        first     = 0;
+        u32        remaining = num_pre_events;
+
+        for (; remaining > 10; first += 10, remaining -= 10) {
+            batch.payload[0] = &event_machines[first];
+            batch.count      = 10;
+
+            multi_pre_animation_event_signal_jq::add_batch(1);
+        }
+
+        if (remaining) {
+            batch.payload[0] = &event_machines[first];
+            batch.count      = remaining;
+
+            multi_pre_animation_event_signal_jq::add_batch(1);
+        }
+
+        multi_pre_animation_event_signal_jq::unlock_batch_pool();
+        multi_pre_animation_event_signal_jq::finish(false);
+    } else {
+        pre_animation_event_signal_jq::start(threaded);
+        pre_animation_event_signal_jq::lock_batch_pool();
+
+        for (u32 index = 0; index < num_pre_events; ++index) {
+            prepare_pre_event_job(pre_event_machines[index], pre_event_deltas[index]);
+
+            pre_animation_event_signal_jq::static_batch.get().payload[0] = pre_event_machines[index];
+            pre_animation_event_signal_jq::add_batch(1);
+        }
+
+        pre_animation_event_signal_jq::unlock_batch_pool();
+        pre_animation_event_signal_jq::finish(false);
+    }
+
+    // controller playback
+    u32 num_controllers = references::num_queued_controllers.read();
+
+    if (threaded && num_controllers > 20) {
+        multi_animation_controller_jq::start();
+        multi_animation_controller_jq::lock_batch_pool();
+
+        jq::batch &batch    = multi_animation_controller_jq::static_batch.get();
+        u32        first    = 0;
+        u32        in_batch = 0;
+
+        for (u32 index = 0; index < num_controllers; ++index) {
+            if (in_batch >= 10) {
+                batch.payload[0] = &controllers[first];
+                batch.count      = in_batch;
+
+                multi_animation_controller_jq::add_batch(1);
+
+                first    = index;
+                in_batch = 0;
+            }
+
+            prepare_controller_job(controllers[index], deltas[index]);
+
+            ++in_batch;
+        }
+
+        if (in_batch) {
+            batch.payload[0] = &controllers[first];
+            batch.count      = in_batch;
+
+            multi_animation_controller_jq::add_batch(1);
+        }
+
+        multi_animation_controller_jq::unlock_batch_pool();
+        multi_animation_controller_jq::finish(false);
+    } else {
+        animation_controller_jq::start(threaded);
+        animation_controller_jq::lock_batch_pool();
+
+        for (u32 index = 0; index < num_controllers; ++index) {
+            if (prepare_controller_job(controllers[index], deltas[index])) {
+                animation_controller_jq::static_batch.get().payload[0] = &controllers[index]->state->job;
+                animation_controller_jq::add_batch(1);
+            }
+        }
+
+        animation_controller_jq::unlock_batch_pool();
+        animation_controller_jq::finish(false);
+    }
+
+    // transport signals
+    u32 num_signals = references::num_queued_signal_records.read();
+
+    if (threaded && num_signals > 20) {
+        multi_animation_signal_jq::start();
+        multi_animation_signal_jq::lock_batch_pool();
+
+        jq::batch &batch     = multi_animation_signal_jq::static_batch.get();
+        u32        first     = 0;
+        u32        remaining = num_signals;
+
+        for (; remaining > 10; first += 10, remaining -= 10) {
+            batch.payload[0] = &signal_records[first];
+            batch.count      = 10;
+
+            multi_animation_signal_jq::add_batch(1);
+        }
+
+        if (remaining) {
+            batch.payload[0] = &signal_records[first];
+            batch.count      = remaining;
+
+            multi_animation_signal_jq::add_batch(1);
+        }
+
+        multi_animation_signal_jq::unlock_batch_pool();
+        multi_animation_signal_jq::finish(false);
+    } else {
+        animation_signal_jq::start(threaded);
+        animation_signal_jq::lock_batch_pool();
+
+        for (u32 index = 0; index < num_signals; ++index) {
+            animation_signal_jq::static_batch.get().payload[0] = signal_records[index];
+            animation_signal_jq::add_batch(1);
+        }
+
+        animation_signal_jq::unlock_batch_pool();
+        animation_signal_jq::finish(false);
+    }
+
+    // the state events after it
+    u32 num_events = references::num_queued_event_machines.read();
+
+    if (threaded && num_events > 20) {
+        multi_animation_event_signal_jq::start();
+        multi_animation_event_signal_jq::lock_batch_pool();
+
+        jq::batch &batch     = multi_animation_event_signal_jq::static_batch.get();
+        u32        first     = 0;
+        u32        remaining = num_events;
+
+        for (; remaining > 10; first += 10, remaining -= 10) {
+            batch.payload[0] = &event_machines[first];
+            batch.count      = 10;
+
+            multi_animation_event_signal_jq::add_batch(1);
+        }
+
+        if (remaining) {
+            batch.payload[0] = &event_machines[first];
+            batch.count      = remaining;
+
+            multi_animation_event_signal_jq::add_batch(1);
+        }
+
+        multi_animation_event_signal_jq::unlock_batch_pool();
+        multi_animation_event_signal_jq::finish(false);
+    } else {
+        animation_event_signal_jq::start(threaded);
+        animation_event_signal_jq::lock_batch_pool();
+
+        for (u32 index = 0; index < num_events; ++index) {
+            animation_event_signal_jq::static_batch.get().payload[0] = event_machines[index];
+            animation_event_signal_jq::add_batch(1);
+        }
+
+        animation_event_signal_jq::unlock_batch_pool();
+        animation_event_signal_jq::finish(false);
+    }
+
+    process_nal_queue(threaded);
+
+    // the mocomps' post-animation actions, by queue index
+    als_mocomp_jq::start(threaded);
+    als_mocomp_jq::lock_batch_pool();
+
+    for (u32 index = 0, num_mocomps = references::num_queued_mocomps.read(); index < num_mocomps; ++index) {
+        als_mocomp_jq::static_batch.get().payload[0] = (void*)index;
+        als_mocomp_jq::add_batch(1);
+    }
+
+    als_mocomp_jq::unlock_batch_pool();
+    als_mocomp_jq::finish(false);
+
+    retail::sub_5DD170(); // the unnamed lite queue
+
+    references::num_queued_controllers       .write(0);
+    references::num_queued_mocomps           .write(0);
+    references::num_queued_deltas            .write(0);
+    references::num_queued_signal_records    .write(0);
+    references::num_queued_event_machines    .write(0);
+    references::num_queued_pre_event_machines.write(0);
+    references::num_queued_pre_event_deltas  .write(0);
+}
+
+// sub_5D4D70
+void als::animation_logic_system::process_nal_queue(bool threaded) {
+    ((void (__cdecl*)(bool))retail::sub_5D4D70)(threaded);
 }
 
 // sub_5BB180
@@ -839,7 +1079,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 
     references::queued_controllers  .get()[references::num_queued_controllers  .get()++] = the_controller;
     references::queued_mocomps      .get()[references::num_queued_mocomps      .get()++] = curr_mocomp;
-    references::queued_mocomp_deltas.get()[references::num_queued_mocomp_deltas.get()++] = delta_t;
+    references::queued_deltas.get()[references::num_queued_deltas.get()++] = delta_t;
 
     for (i32 index = 0; index < num_active; ++index) {
         state_machine* machine = active[index];

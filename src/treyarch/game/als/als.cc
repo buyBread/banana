@@ -2,6 +2,8 @@
 #include "treyarch/game/als/als.hh"
 #include "treyarch/game/als/als_jq.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
+#include "treyarch/game/als/mocomp.hh"
+#include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
@@ -212,4 +214,40 @@ void als::als_jq_callback(jq::batch* batch) {
         dilation = ((time_interface*)ifc_storage->get_ifc(entity_ifc_time))->calc_time_dilation();
 
     the_als->frame_advance((f32)((f64)dilation * (f64)als_jq::delta_t.read()), false);
+}
+
+// sub_5D4C90
+void als::als_mocomp_jq_callback(jq::batch* batch) {
+    auto index = (u32)batch->payload[0];
+
+    references::queued_mocomps.get()[index]->post_anim_action(references::queued_deltas.get()[index]);
+}
+
+// sub_5B4A70
+void als::multi_als_mocomp_jq_callback(jq::batch*) {}
+
+// sub_5E0DE0
+void als::animation_event_signal_jq_callback(jq::batch* batch) {
+    raise_animation_event_signals((state_machine*)batch->payload[0]);
+}
+
+// sub_5E0E50
+void als::multi_animation_event_signal_jq_callback(jq::batch* batch) {
+    auto machines = (state_machine**)batch->payload[0];
+
+    for (i32 index = 0; index < batch->count; ++index)
+        raise_animation_event_signals(machines[index]);
+}
+
+// sub_5E0F70
+void als::pre_animation_event_signal_jq_callback(jq::batch* batch) {
+    raise_pre_animation_event_signals((state_machine*)batch->payload[0]);
+}
+
+// sub_5E0FE0
+void als::multi_pre_animation_event_signal_jq_callback(jq::batch* batch) {
+    auto machines = (state_machine**)batch->payload[0];
+
+    for (i32 index = 0; index < batch->count; ++index)
+        raise_pre_animation_event_signals(machines[index]);
 }
