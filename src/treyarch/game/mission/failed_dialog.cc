@@ -31,7 +31,7 @@ void mission_manager::play_failed_music() {
 
         chuck::vm::vm_thread* thread = script::create_thread(function_index,
                                                              current_mission.exec->get_global_script_object()->global_instance,
-                                                             0);
+                                                             0u);
 
         if (thread) {
             string_hash result;
@@ -102,7 +102,7 @@ void mission_manager::quit_failed_mission() {
         if (function_index != -1) {
             chuck::vm::vm_thread* thread = script::create_thread(function_index,
                                                                  current_mission.exec->get_global_script_object()->global_instance,
-                                                                 0);
+                                                                 0u);
 
             vector3d position;
 

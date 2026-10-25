@@ -342,7 +342,7 @@ bool mission_manager::setup_mission_instance_parameters(chuck::vm::script_instan
 
     chuck::vm::vm_thread* thread = script::create_thread(script::find_instance_function(function_name, global_instance),
                                                          global_instance,
-                                                         0);
+                                                         0u);
 
     script::push_uint(thread, (u32)parameters);
     script::run_thread_until_finished(thread);

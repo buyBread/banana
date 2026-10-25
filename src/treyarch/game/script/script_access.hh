@@ -4,8 +4,10 @@
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/game/script/script_instance_shadow.hh"
+#include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
+#include "treyarch/shared/resource_key.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -34,6 +36,22 @@ namespace treyarch {
     public:
         static void update_script_instance_shadow(chuck::vm::script_instance* inst);
 
+        // the handle is the instance shadow's; no instance once it's gone
+        static chuck::vm::script_instance* get_instance       (arch_base_vhandle           handle);
+        static arch_base_vhandle           get_instance_handle(chuck::vm::script_instance* inst);
+
+        // the exec is a script resource in the owner's pack slot
+        static bool load_script_exec  (const char*                filename, resource_key* key, actor* owner);
+        static bool unload_script_exec(const char*                filename,                    actor* owner);
+        static bool unload_script_exec(chuck::vm::script_object*  object,                      actor* owner);
+
+        // nothing for a null object
+        static chuck::vm::script_object*   find_object  (string_hash obj_name,  const mash::string        &filename, const resource_key* key);
+        static chuck::vm::script_instance* find_instance(string_hash inst_name,       chuck::vm::script_object* object);
+
+        static void reconstruct_instance(chuck::vm::script_instance* inst, chuck::vm::vm_thread** constructor_thread);
+        static void destroy_instance    (chuck::vm::script_instance* inst, bool                   auto_destruct);
+
         // inlined @ sub_825A30
         static script_instance_shadow* get_script_instance_shadow(chuck::vm::script_instance* inst) {
             return (script_instance_shadow*)inst->client_space;
@@ -46,6 +64,7 @@ namespace treyarch {
         // a thread on inst, ready to be run; the instance goes on its stack first unless it's the master global instance
         static chuck::vm::vm_thread* create_thread(i32         function_index, chuck::vm::script_instance* inst, u32 unk_60);
         static chuck::vm::vm_thread* create_thread(string_hash fullname,       chuck::vm::script_instance* inst, u32 unk_60);
+        static chuck::vm::vm_thread* create_thread(i32         function_index, chuck::vm::script_instance* inst, actor* owner);
 
         // looks on the owner's "__enx" instance, then its executable's global instance, then the master global instance
         static chuck::vm::vm_thread* create_thread(actor* owner, string_hash fullname);
@@ -67,6 +86,15 @@ namespace treyarch {
 
         // false only for a null thread
         static bool push_uint(chuck::vm::vm_thread* thread, u32 value);
+
+        // sub_842D00
+        template<typename T>
+        static bool push_value(chuck::vm::vm_thread* thread, T value) {
+            if (thread)
+                thread->dstack.push(&value, sizeof(value));
+
+            return thread != nullptr;
+        }
 
         // nothing for a null object or one without an executable
         static chuck::vm::script_instance* add_instance(const mash::string                            &name,

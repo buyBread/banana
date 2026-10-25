@@ -1,4 +1,7 @@
+#include "retail.hh"
+#include "treyarch/amalga/resource_types.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
+#include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
@@ -14,6 +17,22 @@ void script::update_script_instance_shadow(chuck::vm::script_instance* inst) {
     inst_shadow->set_instance(inst);
 
     inst->client_space = inst_shadow;
+}
+
+// sub_825670
+chuck::vm::script_instance* script::get_instance(arch_base_vhandle handle) {
+    script_instance_shadow* inst_shadow = (script_instance_shadow*)handle.resolve();
+
+    return inst_shadow ? inst_shadow->get_volatile_instance() : nullptr;
+}
+
+// sub_842DA0
+arch_base_vhandle script::get_instance_handle(chuck::vm::script_instance* inst) {
+    update_script_instance_shadow(inst);
+
+    script_instance_shadow* inst_shadow = get_script_instance_shadow(inst);
+
+    return inst_shadow ? inst_shadow->my_handle : arch_base_vhandle();
 }
 
 // sub_824F20
@@ -59,6 +78,11 @@ chuck::vm::vm_thread* script::create_thread(string_hash fullname, chuck::vm::scr
         return nullptr;
 
     return create_thread(function_index, inst, unk_60);
+}
+
+// sub_842C80
+chuck::vm::vm_thread* script::create_thread(i32 function_index, chuck::vm::script_instance* inst, actor* owner) {
+    return create_thread(function_index, inst, owner ? (u32)owner->unk_0c0 : 0);
 }
 
 // sub_842E10
@@ -172,6 +196,79 @@ chuck::vm::script_instance* script::add_instance(const mash::string             
                                                        chuck::vm::e_script_instance_stack_size  stack_size) {
 
     return add_instance(name, object, constructor_thread, owner ? (u32)owner->unk_0c0 : 0, stack_size);
+}
+
+// sub_842880
+bool script::load_script_exec(const char* filename, resource_key* key, actor* owner) {
+    using load_script_exec_t = bool (__cdecl*)(const resource_key*, resource_key*, amalga::resource_pack_slot*);
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, filename);
+
+    resource_key exec_key;
+    exec_key.set(name, (u32)amalga::e_resource_type::script);
+
+    return ((load_script_exec_t)retail::sub_842650)(&exec_key, key, owner ? owner->unk_0c0 : nullptr);
+}
+
+// sub_842B20
+bool script::unload_script_exec(const char* filename, actor* owner) {
+    using unload_script_exec_t = bool (__cdecl*)(const resource_key*, amalga::resource_pack_slot*);
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, filename);
+
+    resource_key exec_key;
+    exec_key.set(name, (u32)amalga::e_resource_type::script);
+
+    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->unk_0c0 : nullptr);
+}
+
+// sub_842B90
+bool script::unload_script_exec(chuck::vm::script_object* object, actor* owner) {
+    using unload_script_exec_t = bool (__cdecl*)(const resource_key*, amalga::resource_pack_slot*);
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, object->parent->name.c_str());
+
+    resource_key exec_key;
+    exec_key.set(name, (u32)amalga::e_resource_type::script);
+
+    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->unk_0c0 : nullptr);
+}
+
+// sub_8253E0
+chuck::vm::script_object* script::find_object(string_hash obj_name, const mash::string &filename, const resource_key* key) {
+    string_hash exec_name;
+    exec_name.initialize(mash::ALLOCATED, filename.c_str());
+
+    return chuck::vm::script_manager::inst()->find_object(exec_name, obj_name, key->hash);
+}
+
+// sub_825460
+chuck::vm::script_instance* script::find_instance(string_hash inst_name, chuck::vm::script_object* object) {
+    if (!object)
+        return nullptr;
+
+    return object->find_instance(inst_name);
+}
+
+// sub_825550
+void script::reconstruct_instance(chuck::vm::script_instance* inst, chuck::vm::vm_thread** constructor_thread) {
+    *constructor_thread = nullptr;
+
+    inst->parent->reconstruct_instance(inst, nullptr, constructor_thread);
+}
+
+// sub_8255A0
+void script::destroy_instance(chuck::vm::script_instance* inst, bool auto_destruct) {
+    if (auto_destruct) {
+        inst->enable_auto_destruct();
+        return;
+    }
+
+    if (inst->parent)
+        inst->parent->remove_instance(inst, true);
 }
 
 // sub_824FB0

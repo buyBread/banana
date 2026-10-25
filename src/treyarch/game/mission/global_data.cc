@@ -87,7 +87,7 @@ void mission_manager::setup_global_data(const char* level_name, amalga::resource
 
         i32 function_index = script::find_function(init_all_data_hash, gen_global_exec->get_global_script_object());
 
-        script::create_thread(function_index, gen_global_exec->get_global_script_object()->global_instance, 0);
+        script::create_thread(function_index, gen_global_exec->get_global_script_object()->global_instance, 0u);
 
         for (; passes > 0; --passes)
             chuck::vm::script_manager::inst()->run_single_exec(gen_global_exec_name, string_hash(), 0.0f, false);
