@@ -3,9 +3,12 @@
 #include "treyarch/game/als/param.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/math/algebra/vector3d.hh"
+#include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/tl_fixed_string.hh"
 #include "treyarch/shared/variance_variable.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
+#include "vc8/list.hh"
 #include "vc8/vector.hh"
 
 namespace treyarch {
@@ -126,6 +129,11 @@ namespace treyarch {
         class animation_logic_system_interface {
 
         public:
+            using als_list = vc8::list<animation_logic_system_interface*>;
+
+            bool force_updated; // set by force_update, cleared by the next frame
+            u8   pad_005[0x03];
+
             virtual ~animation_logic_system_interface() {}
 
             virtual state_machine_interface* get_als_layer(layer_id the_layer) = 0;
@@ -138,7 +146,7 @@ namespace treyarch {
             virtual void create_instance_data(animation_logic_system_shared* shared_portion) = 0;
             virtual void delete_instance_data() = 0;
             virtual void   reset_animation_player() = 0;
-            virtual void*  get_unk_a68() const = 0;
+            virtual engine_recursive_lock* get_access_lock() const = 0;
             virtual bool   is_high_priority() const = 0;
             virtual actor* get_actor() const = 0;
             virtual void   cache_actor_position() = 0;
@@ -157,10 +165,25 @@ namespace treyarch {
             virtual animation_controller* get_controller() const = 0;
             virtual void                  frame_advance(f32 delta_t, bool force) = 0;
 
+            bool force_update(f32 delta_t, bool unk);
+
+            static void frame_advance_all_alses(f32 delta_t);
+            static void frame_advance_als_list(als_list** the_list, als_list** the_advance_list, f32 delta_t);
             static void add_to_als_list(animation_logic_system_interface* the_als);
             static void remove_from_als_list(animation_logic_system_interface* the_als);
             static void set_high_priority(animation_logic_system_interface* the_als);
             static void set_low_priority(animation_logic_system_interface* the_als);
         };
+
+        namespace references {
+            // the high pair advances first; an als moves between a list and its advance list every frame
+            inline util::memory_reference<animation_logic_system_interface::als_list*> the_high_priority_als_list         { 0x00FD4310 };
+            inline util::memory_reference<animation_logic_system_interface::als_list*> the_high_priority_als_advance_list { 0x00FD4314 };
+            inline util::memory_reference<animation_logic_system_interface::als_list*> the_low_priority_als_list          { 0x00FD4308 };
+            inline util::memory_reference<animation_logic_system_interface::als_list*> the_low_priority_als_advance_list  { 0x00FD430C };
+
+            inline util::memory_reference<engine_recursive_lock> als_list_lock     { 0x00FD6C20 };
+            inline util::memory_reference<engine_recursive_lock> force_update_lock { 0x00FD43C0 };
+        } // references
     } // als
 } // treyarch

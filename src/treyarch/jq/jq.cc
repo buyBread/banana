@@ -4,6 +4,8 @@
 #include "treyarch/WinMain.hh"
 #include "treyarch/amalga/resource_manager.hh"
 #include "treyarch/app/app.hh"
+#include "treyarch/game/als/als.hh"
+#include "treyarch/game/als/als_jq.hh"
 #include "treyarch/game/animation/animation_pose_jq.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
@@ -31,14 +33,14 @@ void jq::jobqueue_init() {
 
     references::unk_01075fd0.get().reset();
     references::unk_00fd8478.get().reset();
-    references::unk_00fd43c0.get().reset();
+    als::references::force_update_lock.get().reset();
     references::unk_00fd8458.get().reset();
     references::unk_010f8b78.get().reset();
     references::unk_011106e0.get().reset();
     references::unk_010f66d0.get().reset();
     references::unk_010f76f0.get().reset();
     references::unk_01075e00.get().reset();
-    references::unk_00fd6c20.get().reset();
+    als::references::als_list_lock.get().reset();
     references::unk_01076aa8.get().reset();
     references::unk_00fc46d8.get().reset();
 
@@ -150,7 +152,7 @@ void jq::jobqueue_init() {
     retail::sub_5D4090(); // animation_signal_jq
     retail::sub_5D4150(); // multi_animation_signal_jq
     animation_pose_jq::init();
-    retail::sub_5D4700(); // als_jq
+    als::als_jq::init();
     retail::sub_5D4CB0(); // als_mocomp_jq
     retail::sub_5D4D10(); // multi_als_mocomp_jq
     retail::sub_4CE360(); // ai_inode_determiner_jq

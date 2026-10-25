@@ -7,37 +7,17 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/shared/math/algebra/vector3d.hh"
 #include "treyarch/shared/memory/heap.hh"
+#include "treyarch/shared/mutex.hh"
 #include "treyarch/shared/resource_key.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 #include "vc8/vector.hh"
 
 namespace treyarch { namespace als {
-    struct animation_logic_system_unk_a68 {
-        u32 unk_00;
-        u32 unk_04;
-        u32 unk_08;
-        u32 unk_0c;
-
-        animation_logic_system_unk_a68() : unk_00(0),
-                                           unk_04(0),
-                                           unk_08(0) {}
-
-        void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
-        }
-
-        void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
-        }
-    };
-
     // an actor's animation logic: its base machine, its layers and the mocomp moving it
     class animation_logic_system : public animation_logic_system_interface {
 
     public:
-        bool                               force_updated; // set by force_update, cleared by the next frame
-        u8                                 pad_005[0x03];
         internal_parameter_cache           the_cache;
         animation_logic_system_shared*     als_shared;
         vc8::vector<layer_state_machine*>  the_layers;
@@ -48,7 +28,7 @@ namespace treyarch { namespace als {
         i32                                mocomp_layer_index;
         motion_compensator*                curr_mocomp;
         motion_compensator*                the_mocomp_data; // 256 bytes the mocomps are built in
-        animation_logic_system_unk_a68*    unk_a68;
+        engine_recursive_lock*             access_lock;
         void*                              unk_a6c;
         bool                               is_suspended;
         bool                               needs_reinit_anim;
@@ -83,7 +63,7 @@ namespace treyarch { namespace als {
         void   create_instance_data(animation_logic_system_shared* shared_portion) override;
         void   delete_instance_data() override;
         void   reset_animation_player() override;
-        void*  get_unk_a68() const override;
+        engine_recursive_lock* get_access_lock() const override;
         bool   is_high_priority() const override;
         actor* get_actor() const override;
         void   cache_actor_position() override;
@@ -105,6 +85,8 @@ namespace treyarch { namespace als {
         virtual void unk_025(void* unk);
         virtual void change_mocomp(const state* curr_state, layer_id layer);
 
+        static void frame_advance_flush_queue(bool unk);
+
         state_machine* get_als_layer_internal(layer_id the_layer);
         bool           has_als_layer_internal(layer_id the_layer) const;
         bool           is_als_interruptable() const;
@@ -119,10 +101,7 @@ namespace treyarch { namespace als {
         void post_unmash_fixup(actor* owner, u32 unk);
     };
 
-    ASSERT_SIZEOF  (animation_logic_system_unk_a68, 0x10);
-
     ASSERT_SIZEOF  (animation_logic_system,                     0xA90);
-    ASSERT_OFFSETOF(animation_logic_system, force_updated,      0x004);
     ASSERT_OFFSETOF(animation_logic_system, the_cache,          0x008);
     ASSERT_OFFSETOF(animation_logic_system, als_shared,         0x274);
     ASSERT_OFFSETOF(animation_logic_system, the_layers,         0x278);
@@ -133,7 +112,7 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(animation_logic_system, mocomp_layer_index, 0xA5C);
     ASSERT_OFFSETOF(animation_logic_system, curr_mocomp,        0xA60);
     ASSERT_OFFSETOF(animation_logic_system, the_mocomp_data,    0xA64);
-    ASSERT_OFFSETOF(animation_logic_system, unk_a68,            0xA68);
+    ASSERT_OFFSETOF(animation_logic_system, access_lock,        0xA68);
     ASSERT_OFFSETOF(animation_logic_system, unk_a6c,            0xA6C);
     ASSERT_OFFSETOF(animation_logic_system, is_suspended,       0xA70);
     ASSERT_OFFSETOF(animation_logic_system, needs_reinit_anim,  0xA71);

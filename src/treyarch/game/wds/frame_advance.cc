@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
+#include "treyarch/game/als/als.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/game_meter_manager.hh"
 #include "treyarch/game/input/input_mgr.hh"
@@ -72,7 +73,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
         retail::sub_76C610((i32)zombies, time_inc);
 
     references::unk_010fc550.write(0);
-    retail::sub_5ECB60(time_inc); // als registry
+    als::animation_logic_system_interface::frame_advance_all_alses(time_inc);
     references::unk_010fc53e.write(1);
     retail::sub_5E7840(time_inc); // aim_mech_inode registry
     time_interface::frame_advance_all_time_interfaces(time_inc);

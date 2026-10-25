@@ -33,8 +33,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_00fc60e0 { 0x00FC60E0 }; // ai cover markers
 
     // als
-    inline util::memory_reference<engine_recursive_lock> unk_00fd43c0 { 0x00FD43C0 }; // force_update (sub_5E88D0)
-    inline util::memory_reference<engine_recursive_lock> unk_00fd6c20 { 0x00FD6C20 }; // frame_advance_all_alses and the als registry
     inline util::memory_reference<engine_recursive_lock> unk_00fd8458 { 0x00FD8458 }; // animation_logic_system, vtable slot 24
     inline util::memory_reference<engine_recursive_lock> unk_00fd8478 { 0x00FD8478 }; // animation_logic_system, vtable slot 24
 

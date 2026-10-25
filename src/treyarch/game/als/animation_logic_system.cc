@@ -6,29 +6,8 @@
 
 using namespace treyarch;
 
-// sub_5ECBF0
-void als::animation_logic_system_interface::add_to_als_list(animation_logic_system_interface* the_als) {
-    ((void (__cdecl*)(animation_logic_system_interface*))retail::sub_5ECBF0)(the_als);
-}
-
-// sub_5ECDA0
-void als::animation_logic_system_interface::remove_from_als_list(animation_logic_system_interface* the_als) {
-    ((void (__cdecl*)(animation_logic_system_interface*))retail::sub_5ECDA0)(the_als);
-}
-
-// sub_5ECEE0
-void als::animation_logic_system_interface::set_high_priority(animation_logic_system_interface* the_als) {
-    ((void (__cdecl*)(animation_logic_system_interface*))retail::sub_5ECEE0)(the_als);
-}
-
-// sub_5ECF50
-void als::animation_logic_system_interface::set_low_priority(animation_logic_system_interface* the_als) {
-    ((void (__cdecl*)(animation_logic_system_interface*))retail::sub_5ECF50)(the_als);
-}
-
 // sub_5ED580
-als::animation_logic_system::animation_logic_system(actor* _the_actor) : force_updated(false),
-                                                                         als_shared(nullptr),
+als::animation_logic_system::animation_logic_system(actor* _the_actor) : als_shared(nullptr),
                                                                          the_actor(_the_actor),
                                                                          the_controller(nullptr),
                                                                          mocomp_layer_index(0),
@@ -43,11 +22,14 @@ als::animation_logic_system::animation_logic_system(actor* _the_actor) : force_u
                                                                          coordinator(nullptr),
                                                                          coordinator_unk(0) {
 
-    unk_a68 = new animation_logic_system_unk_a68();
+    force_updated = false;
 
-    unk_a68->unk_00 = 0;
-    unk_a68->unk_04 = 0;
-    unk_a68->unk_08 = 0;
+    access_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+
+    if (access_lock)
+        access_lock->reset();
+
+    access_lock->reset();
 
     the_mocomp_data = (motion_compensator*)memory::heap::allocate(0x100);
     actor_position  = the_actor->my_abs_po->get_position();
@@ -81,8 +63,8 @@ als::animation_logic_system::~animation_logic_system() {
 
     unk_a6c = nullptr;
 
-    if (unk_a68)
-        delete unk_a68;
+    if (access_lock)
+        memory::heap::free(access_lock);
 }
 
 // sub_5D4C70
@@ -245,13 +227,22 @@ void als::animation_logic_system::reset_animation_player() {
 }
 
 // sub_5ED720
-void* als::animation_logic_system::get_unk_a68() const {
-    return unk_a68;
+engine_recursive_lock* als::animation_logic_system::get_access_lock() const {
+    return access_lock;
 }
 
 // sub_5BB420
 bool als::animation_logic_system::is_high_priority() const {
-    return ((bool (__thiscall*)(const animation_logic_system*))retail::sub_5BB420)(this);
+    if (!the_controller)
+        return false;
+
+    if (the_controller->state->unk_12c.size())
+        return true;
+
+    if (is_coordinator())
+        return true;
+
+    return false;
 }
 
 // sub_5ED710
@@ -340,6 +331,11 @@ void als::animation_logic_system::set_unk_a75() {
 // sub_5ED740
 animation_controller* als::animation_logic_system::get_controller() const {
     return the_controller;
+}
+
+// sub_5E1070
+void als::animation_logic_system::frame_advance_flush_queue(bool unk) {
+    ((void (__cdecl*)(bool))retail::sub_5E1070)(unk);
 }
 
 // sub_5ED8C0
