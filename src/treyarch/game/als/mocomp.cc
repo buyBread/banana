@@ -47,6 +47,8 @@ string_hash als::towed_orientation::my_type_key { 0x6ABE6902 }; // "als::towed_o
 string_hash als::ikcrawl_mocomp::my_type_key    { 0xEA76894B }; // "als::ikcrawl_mocomp"
 string_hash als::wallsprint_mocomp::my_type_key { 0xF1C5C0CE }; // "als::wallsprint_mocomp"
 
+string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
+
 i32 als::motion_compensator::last_created_size = 0;
 
 // sub_5C3730
@@ -169,6 +171,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(wallsprint_mocomp);
 
         return memory_buffer ? new (memory_buffer) wallsprint_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == flight_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(flight_mocomp);
+
+        return memory_buffer ? new (memory_buffer) flight_mocomp : nullptr;
     }
 
     // the classes not in source yet
@@ -2375,4 +2383,193 @@ void als::wallsprint_mocomp::face_desired_direction() {
     using set_wall_po_t = void (__thiscall*)(wall_sprint_inode*, vector3d, vector3d);
 
     ((set_wall_po_t)retail::sub_54A880)(wall, facing.get_z_facing(), facing.get_y_facing()); // wall_sprint_inode: wall_po from a facing and up
+}
+
+// sub_453B40
+void flight_mocomp::construct_mashed_class() {
+    simple_orientation::construct_mashed_class();
+}
+
+// sub_453B50
+void flight_mocomp::destruct_mashed_class() {
+    simple_orientation::destruct_mashed_class();
+}
+
+// sub_453B60
+void flight_mocomp::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    simple_orientation::unmash(mash_info, containing_class_ptr, buffer);
+}
+
+// sub_5AFC40
+mash::virtual_types_key flight_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool flight_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4BF700
+i32 flight_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_46C170
+void flight_mocomp::activate(als::animation_logic_system* the_als_core, als::layer_id layer) {
+    simple_orientation::activate(the_als_core, layer);
+
+    flight_inode = nullptr;
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        retail::sub_5FFD60((u32*)the_actor->physical_ifc(), false); // physical_interface: flags bit 2
+}
+
+// sub_47D5B0
+void flight_mocomp::post_anim_action(f32 delta_t) {
+    simple_orientation::post_anim_action(delta_t);
+
+    // the actor's loco inode, once it's a flight layer
+    if (!flight_inode) {
+        ai_core* core = the_actor->get_ai_core();
+
+        if (core && core->my_loco_inode) {
+            loco_inode* loco = core->my_loco_inode;
+
+            if (loco->get_virtual_type_key() == flight_layer_inode_key.source_hash_code || loco->get_virtual_type_key() == swift_flight_layer_inode_key.source_hash_code)
+                flight_inode = (flight_layer_inode*)loco;
+        }
+    }
+
+    if (!flight_inode)
+        return;
+
+    if (flight_inode->my_param_block.get_optional_pb_int(shaba_simple_helicopter_id, 0, nullptr)) {
+        retail::sub_47C510((i32)flight_inode, delta_t); // flight_layer_inode: the helicopter flies itself
+
+        return;
+    }
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        retail::sub_5FFD60((u32*)the_actor->physical_ifc(), false);
+
+    vector3d move;
+
+    if (flight_inode->unk_115) {
+        const vector3d &velocity = flight_inode->unk_0b4;
+
+        move = vector3d(velocity.x * delta_t, velocity.y * delta_t, velocity.z * delta_t);
+    } else {
+        move = flight_inode->unk_0f4;
+
+        f32 dist = move.length();
+
+        if (dist > 0.0001f) {
+            // the speed for how far it's going, within the inode's limits
+            f32 ratio = (f32)retail::sub_4505C0((i32)flight_inode);
+
+            bool slow = ratio <= 0.55f;
+            bool mid  = ratio > 0.55f && ratio <= 1.0f;
+            bool fast = ratio > 1.0f && ratio <= 2.0f;
+
+            f32 tier;
+
+            if (slow)
+                tier = (f32)retail::sub_453D60((u32*)flight_inode);
+            else if (mid)
+                tier = (f32)retail::sub_453D90((u32*)flight_inode);
+            else if (fast)
+                tier = (f32)retail::sub_453DC0((u32*)flight_inode);
+            else
+                tier = (f32)retail::sub_453DF0((u32*)flight_inode);
+
+            f32 speed = (f32)retail::sub_453E20((u32*)flight_inode) * tier;
+
+            if (speed < 0.0001f)
+                speed = 0.0001f;
+            else if (speed > (f32)retail::sub_453D00((u32*)flight_inode))
+                speed = (f32)retail::sub_453D00((u32*)flight_inode);
+
+            f32 step = speed * delta_t;
+
+            if (step > dist)
+                step = dist;
+
+            // slower through tight turns
+            f32 turn_scale = 1.0f;
+
+            if (retail::sub_453B70((u32*)flight_inode)) { // flight_layer_inode: allow_speed_alteration_during_turns
+                f32 turn_angle = 0.0f;
+
+                if (move.xz_length2() > 0.01f) {
+                    vector3d facing = the_actor->my_abs_po->get_z_facing();
+                    facing.y = 0.0f;
+
+                    retail::sub_402050((f32*)&facing);
+
+                    vector3d heading(move.x, 0.0f, move.z);
+                    retail::sub_402050((f32*)&heading);
+
+                    f32 along  = (f32)((f64)heading.z * facing.z + (f64)-heading.x * -facing.x);
+                    f32 across = (f32)((f64)-heading.x * facing.z - (f64)heading.z * -facing.x);
+
+                    turn_angle = std::fabs((f32)retail::sub_44D790(across, along));
+                }
+
+                auto slowed = [](f64 over) {
+                    f32 scale = (f32)(1.0 - over);
+
+                    return scale < 0.0f ? 0.0f : scale;
+                };
+
+                f64 range = slow ? 2.617993950843811 : 1.0471975803375244;
+
+                if (dist <= 15.0 && turn_angle > 0.1745329300562541)
+                    turn_scale = slowed(((f64)turn_angle - 0.1745329300562541) / 0.7853981852531433);
+                else if (dist > 30.0 && turn_angle > 0.52359879f)
+                    turn_scale = slowed(((f64)turn_angle - 0.5235987901687622) / range);
+                else if (dist > 10.0f && turn_angle > 0.2617994f)
+                    turn_scale = slowed(((f64)turn_angle - 0.2617993950843811) / range);
+            }
+
+            if (flight_inode->unk_08c) {
+                f32 scale = step / dist;
+
+                move = vector3d(scale * move.x, scale * move.y, move.z * scale);
+            } else {
+                f32 scale = (f32)((f64)step / dist * turn_scale);
+
+                move = vector3d(scale * move.x, scale * move.y, move.z * scale);
+
+                // the run goes along the facing, the climb stays
+                vector3d facing = the_actor->my_abs_po->get_z_facing();
+                facing.y = 0.0f;
+
+                retail::sub_402050((f32*)&facing);
+
+                f32 climb = move.y;
+                move.y    = 0.0f;
+
+                f32 run = (f32)retail::sub_402020((f32*)&move);
+
+                move = vector3d(facing.x * run, climb, facing.z * run);
+            }
+        }
+    }
+
+    if (flight_inode->my_param_block.get_optional_pb_int(reverse_mode_id, 0, nullptr)) {
+        move.x = move.x * -1.0f;
+        move.y = move.y * -1.0f;
+        move.z = move.z * -1.0f;
+    }
+
+    using fly_t = void (__thiscall*)(flight_layer_inode*, vector3d*, f32);
+
+    ((fly_t)retail::sub_47CD90)(flight_inode, &move, delta_t); // flight_layer_inode: flies the move
 }

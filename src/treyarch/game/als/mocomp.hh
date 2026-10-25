@@ -12,6 +12,7 @@
 
 namespace treyarch {
     class actor;
+    class flight_layer_inode;
 
 namespace als {
     class animation_logic_system;
@@ -706,4 +707,38 @@ namespace als {
 
     ASSERT_SIZEOF(ikcrawl_mocomp,    0x44);
     ASSERT_SIZEOF(wallsprint_mocomp, 0x44);
-}} // treyarch::als
+} // als
+
+    inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
+    inline const string_hash reverse_mode_id            = string_hash(hash::djb2("reverse_mode"));
+
+    // flies the actor through its flight layer inode; outside the als in retail
+    class flight_mocomp : public als::simple_orientation {
+
+    public:
+        flight_layer_inode* flight_inode; // found by the first post-action
+
+        flight_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit flight_mocomp(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(als::animation_logic_system* the_als_core, als::layer_id layer) override;
+        void post_anim_action(f32 delta_t) override;
+
+        static string_hash my_type_key;
+    };
+
+    ASSERT_SIZEOF  (flight_mocomp,               0x48);
+    ASSERT_OFFSETOF(flight_mocomp, flight_inode, 0x44);
+} // treyarch
