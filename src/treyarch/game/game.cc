@@ -167,7 +167,7 @@ void game::one_time_init_stuff() {
 
     retail::sub_97ABE0();
     retail::sub_97AD30((u32*)this); // game::message_board_init
-    retail::sub_953EA0((i32)references::raw_delta_consumer.read());
+    retail::sub_953EA0((i32)references::upgrade_manager.read());
     retail::sub_6F76B0((u32*)references::ui_character_info_map.read());
     retail::sub_95D520();
 }

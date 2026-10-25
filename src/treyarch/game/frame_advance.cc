@@ -60,7 +60,7 @@ void game::frame_advance(f32 time_inc) {
     this->frame_advance_level(averaged_delta);
 
     if (!block_external_updates)
-        retail::sub_939B00(references::raw_delta_consumer.read(), time_inc);
+        retail::sub_939B00(references::upgrade_manager.read(), time_inc);
 
     if (this->level_is_loaded)
         this->level_time = (f32)((f64)this->level_time + (f64)time_inc);

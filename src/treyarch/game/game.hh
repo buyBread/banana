@@ -30,8 +30,8 @@ namespace treyarch {
         // freed and cleared by game::advance_state_legal
         inline util::memory_reference<void*> unk_00fc64ec { 0x00FC64EC };
 
-        // game::frame_advance hands it the raw delta every frame
-        inline util::memory_reference<void*> raw_delta_consumer { 0x010F9BEC };
+        // the rpg upgrade manager; game::frame_advance hands it the raw delta every frame
+        inline util::memory_reference<void*> upgrade_manager { 0x010F9BEC };
 
         // created by game::game through sub_83EF20
         inline util::memory_reference<arch_base*> script_controller { 0x010F7074 };
