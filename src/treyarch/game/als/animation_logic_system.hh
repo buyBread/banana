@@ -131,6 +131,9 @@ namespace treyarch { namespace als {
         inline util::memory_reference<i32> num_queued_pre_event_machines { 0x00FD8448 };
         inline util::memory_reference<i32> num_queued_pre_event_deltas   { 0x00FF8C68 };
 
+        // the pose job's result matrices come out of this, 16-aligned
+        inline util::memory_reference<u8> pose_scratch { 0x00FD8490 };
+
         inline util::memory_reference<engine_recursive_lock> anim_start_lock { 0x00FD8458 }; // finding and starting a state's animation
         inline util::memory_reference<engine_recursive_lock> queue_lock      { 0x00FD8478 };
     } // references

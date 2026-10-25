@@ -5,8 +5,9 @@
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/game/als/als_jq.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
-#include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_controller.hh"
+#include "treyarch/game/animation/animation_controller_jq.hh"
+#include "treyarch/game/animation/animation_pose_jq.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
@@ -590,7 +591,34 @@ void als::animation_logic_system::frame_advance_flush_queue(bool threaded) {
 
 // sub_5D4D70
 void als::animation_logic_system::process_nal_queue(bool threaded) {
-    ((void (__cdecl*)(bool))retail::sub_5D4D70)(threaded);
+    auto &controllers = references::queued_controllers.get();
+
+    scratch_arena arena;
+    arena.base      = &references::pose_scratch.get();
+    arena.size      = 0x20000;
+    arena.alignment = 16;
+
+    u32 next            = 0;
+    u32 num_controllers = references::num_queued_controllers.read();
+
+    // as many controllers per round as the scratch holds the matrices of
+    do {
+        animation_pose_jq::start(threaded);
+        animation_pose_jq::lock_batch_pool();
+
+        arena.cursor = arena.base;
+
+        u32 first = next;
+
+        while (next < num_controllers && controllers[next]->add_pose_jq_batch(&arena, false))
+            ++next;
+
+        animation_pose_jq::unlock_batch_pool();
+        animation_pose_jq::finish(false);
+
+        for (; first < next; ++first)
+            controllers[first]->get_matrix_data_from_pose(false);
+    } while (next < num_controllers);
 }
 
 // sub_5BB180
