@@ -20,6 +20,7 @@ namespace treyarch {
     class actor;
     class animation_controller;
     class entity;
+    struct anim_event_param;
 
     using nal_anim_id = tl_fixed_string;
 
@@ -110,9 +111,9 @@ namespace treyarch {
             virtual bool does_parameter_exist(string_hash parameter) const = 0;
             virtual u32  get_parameter_data_type(string_hash parameter) const = 0;
 
-            virtual f32 get_time_to_end_of_anim(bool allow_looping, bool unk) const = 0;
-            virtual f32 get_time_to_signal(string_hash signal_name, bool* signal_exists, bool unk, u32* unk2) const = 0;
-            virtual f32 unk_039(string_hash signal_name, bool* signal_exists, bool unk, u32* unk2) const = 0;
+            virtual f32 get_time_to_end_of_anim(bool allow_looping, bool scale_by_speed) const = 0;
+            virtual f32 get_time_to_signal   (string_hash signal_name, bool* signal_exists, bool scale_by_speed, anim_event_param* param) const = 0;
+            virtual f32 get_time_since_signal(string_hash signal_name, bool* signal_exists, bool scale_by_speed, anim_event_param* param) const = 0;
             virtual f32 get_duration() const = 0;
             virtual f32 get_current_normalized_time() const = 0;
             virtual f32 get_current_anim_time() const = 0;

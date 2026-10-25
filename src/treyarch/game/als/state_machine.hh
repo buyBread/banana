@@ -151,9 +151,9 @@ namespace treyarch { namespace als {
         bool does_parameter_exist(string_hash parameter) const override;
         u32  get_parameter_data_type(string_hash parameter) const override;
 
-        f32 get_time_to_end_of_anim(bool allow_looping, bool unk) const override;
-        f32 get_time_to_signal(string_hash signal_name, bool* signal_exists, bool unk, u32* unk2) const override;
-        f32 unk_039(string_hash signal_name, bool* signal_exists, bool unk, u32* unk2) const override;
+        f32 get_time_to_end_of_anim(bool allow_looping, bool scale_by_speed) const override;
+        f32 get_time_to_signal   (string_hash signal_name, bool* signal_exists, bool scale_by_speed, anim_event_param* param) const override;
+        f32 get_time_since_signal(string_hash signal_name, bool* signal_exists, bool scale_by_speed, anim_event_param* param) const override;
         f32 get_duration() const override;
         f32 get_current_normalized_time() const override;
         f32 get_current_anim_time() const override;
@@ -192,7 +192,8 @@ namespace treyarch { namespace als {
         // the current state's block, then its category's
         const param_block* find_param_block_with_param(string_hash the_param)                        const;
         const param_block* find_param_block_with_param(string_hash the_param, e_param_type the_type) const;
-        f32                get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, anim_event_param* param) const;
+        f32                get_time_to_state_event   (string_hash event_name, f32 anim_time, bool* exists, anim_event_param* param) const;
+        f32                get_time_since_state_event(string_hash event_name, f32 anim_time, bool* exists, anim_event_param* param) const;
 
         // the state events between the two normalized times, raised on the entity; pre_animation takes the hit pause list
         void raise_animation_signals_for_time_span(f32 t, f32 t_prev, entity* the_entity, bool pre_animation);
