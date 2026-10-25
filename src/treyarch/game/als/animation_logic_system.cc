@@ -1087,12 +1087,12 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
             }
 
             // what's left of a stripped assert
-            curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp_key.source_hash_code);
+            curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp::my_type_key.source_hash_code);
 
             const state* base_state = the_base_sm.curr_state;
 
             if (base_state && (base_state->flags & state::biped_physics_state) &&
-                curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp_key.source_hash_code)) {
+                curr_mocomp->is_or_is_subclass_of(biped_physics_mocomp::my_type_key.source_hash_code)) {
 
                 interface_storage* ifc_storage = the_actor->my_ifc_storage;
 

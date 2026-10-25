@@ -6,6 +6,7 @@
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
 #include "treyarch/shared/math/po.hh"
+#include "treyarch/shared/timing/simple_timer.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -95,6 +96,32 @@ namespace als {
     inline const string_hash preserve_y_facing_id          = string_hash(hash::djb2("preserve_y_facing"));
     inline const string_hash no_reorient_to_vertical_id    = string_hash(hash::djb2("no_reorient_to_vertical"));
 
+    // and about pushing a biped
+    inline const string_hash capture_time_id              = string_hash(hash::djb2("capture_time"));
+    inline const string_hash pose_blend_weight_id         = string_hash(hash::djb2("pose_blend_weight"));
+    inline const string_hash include_trajectory_id        = string_hash(hash::djb2("include_trajectory"));
+    inline const string_hash use_internal_force_params_id = string_hash(hash::djb2("use_internal_force_params"));
+    inline const string_hash force_scale_id               = string_hash(hash::djb2("force_scale"));
+    inline const string_hash force_y_id                   = string_hash(hash::djb2("force_y"));
+    inline const string_hash force_dir_id                 = string_hash(hash::djb2("force_dir"));
+    inline const string_hash force_scale_xz_only_id       = string_hash(hash::djb2("force_scale_xz_only"));
+    inline const string_hash force_bone_id                = string_hash(hash::djb2("force_bone"));
+    inline const string_hash force_torque_mul_id          = string_hash(hash::djb2("force_torque_mul"));
+    inline const string_hash force_spin_only_id           = string_hash(hash::djb2("force_spin_only"));
+    inline const string_hash force_point_id               = string_hash(hash::djb2("force_point"));
+
+    // the biped's rigid bodies; retail builds the same table at 0x010F6720
+    inline const string_hash rb_bone_ids[10] = { string_hash(hash::djb2("rb_torso")),
+                                                 string_hash(hash::djb2("rb_head")),
+                                                 string_hash(hash::djb2("rb_left_up_arm")),
+                                                 string_hash(hash::djb2("rb_left_low_arm")),
+                                                 string_hash(hash::djb2("rb_right_up_arm")),
+                                                 string_hash(hash::djb2("rb_right_low_arm")),
+                                                 string_hash(hash::djb2("rb_left_thigh")),
+                                                 string_hash(hash::djb2("rb_left_calf")),
+                                                 string_hash(hash::djb2("rb_right_thigh")),
+                                                 string_hash(hash::djb2("rb_right_calf")) };
+
     // and about circling
     inline const string_hash closest_distance_allowed_id = string_hash(hash::djb2("closest_distance_allowed"));
     inline const string_hash max_rotation_angle_id       = string_hash(hash::djb2("max_rotation_angle"));
@@ -125,6 +152,7 @@ namespace als {
 
         inline util::memory_reference<string_hash> anim_action       { 0x0102CC70 };
         inline util::memory_reference<string_hash> anim_dest_reached { 0x0102C384 };
+        inline util::memory_reference<string_hash> capture_frame     { 0x0102C730 };
 
         // "BIP01 R FOOT" and "BIP01 L FOOT", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_r_foot { 0x00FFECFC };
@@ -1432,7 +1460,42 @@ namespace als {
         static string_hash my_type_key;
     };
 
-    inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
+    // hands the actor to its biped physics with the state's push, holding its pose and po for the physics until each capture
+    class biped_physics_mocomp : public motion_compensator {
+
+    public:
+        po                     saved_po;                  // the abs po pre_anim_action takes and post_anim_action puts back
+        po                     unk_050;                   // the rel po on activation; never read
+        po*                    saved_matrices;            // a conglomerate's member pos, held the same way
+        generic_event_callback capture_callback;          // counts CAPTURE_FRAME
+        f32                    capture_time;              // between captures; negative leaves them to CAPTURE_FRAME
+        simple_timer           capture_timer;
+        f32                    pose_blend_weight;
+        f32                    capture_elapsed;           // since the last capture; negative until the first
+        bool                   include_trajectory;
+        bool                   use_internal_force_params;
+        u8                     pad_0ae[0x02];
+
+        biped_physics_mocomp();
+        explicit biped_physics_mocomp(mash::generating_vtable_version so_do_nothing);
+        ~biped_physics_mocomp() override;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info, void* parent, mash::buffer_type buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void pre_anim_action(f32 delta_t) override;
+        void post_anim_action(f32 delta_t) override;
+        bool force_reactivate() const override;
+
+        static string_hash my_type_key;
+    };
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
     ASSERT_OFFSETOF(motion_compensator, the_als,   0x04);
@@ -1594,6 +1657,18 @@ namespace als {
     ASSERT_OFFSETOF(combat_radial_move_and_face, path_built,               0x2C);
     ASSERT_OFFSETOF(combat_radial_move_and_face, unk_030,                  0x30);
     ASSERT_OFFSETOF(combat_radial_move_and_face, progress,                 0x34);
+
+    ASSERT_SIZEOF  (biped_physics_mocomp,                            0xB0);
+    ASSERT_OFFSETOF(biped_physics_mocomp, saved_po,                  0x10);
+    ASSERT_OFFSETOF(biped_physics_mocomp, unk_050,                   0x50);
+    ASSERT_OFFSETOF(biped_physics_mocomp, saved_matrices,            0x90);
+    ASSERT_OFFSETOF(biped_physics_mocomp, capture_callback,          0x94);
+    ASSERT_OFFSETOF(biped_physics_mocomp, capture_time,              0x9C);
+    ASSERT_OFFSETOF(biped_physics_mocomp, capture_timer,             0xA0);
+    ASSERT_OFFSETOF(biped_physics_mocomp, pose_blend_weight,         0xA4);
+    ASSERT_OFFSETOF(biped_physics_mocomp, capture_elapsed,           0xA8);
+    ASSERT_OFFSETOF(biped_physics_mocomp, include_trajectory,        0xAC);
+    ASSERT_OFFSETOF(biped_physics_mocomp, use_internal_force_params, 0xAD);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));

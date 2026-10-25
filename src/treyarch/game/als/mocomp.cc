@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstring>
 #include <new>
 
 #include "retail.hh"
@@ -10,12 +11,14 @@
 #include "treyarch/game/spline.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
+#include "treyarch/game/wds/entity/conglomerate.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/standing_interface.hh"
 #include "treyarch/game/wds/references.hh"
 #include "treyarch/game/wds/world_dynamics_system.hh"
+#include "treyarch/jq/native_locks.hh"
 #include "treyarch/shared/math/algebra/functions.hh"
 #include "treyarch/shared/math/references.hh"
 #include "treyarch/shared/math/vmath/trig.hh"
@@ -83,6 +86,8 @@ string_hash als::momentum_sync_move_and_face::my_type_key { 0xB44DA4B8 }; // "al
 string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "als::sturn_sync_move_and_face"
 
 string_hash als::combat_radial_move_and_face::my_type_key { 0xBF5E446C }; // "als::combat_radial_move_and_face"
+
+string_hash als::biped_physics_mocomp::my_type_key { 0x91DC0B04 }; // "als::biped_physics_mocomp"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -372,6 +377,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         return memory_buffer ? new (memory_buffer) combat_radial_move_and_face : nullptr;
     }
 
+    if (the_class_to_make == biped_physics_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(biped_physics_mocomp);
+
+        return memory_buffer ? new (memory_buffer) biped_physics_mocomp : nullptr;
+    }
+
     // the classes not in source yet
     using create_subclass_in_place_t = motion_compensator* (__cdecl*)(mash::virtual_types_key, void*);
 
@@ -397,6 +408,7 @@ i32 als::motion_compensator::get_mash_sizeof() const {
 // inlined @ sub_5C49E0
 // inlined @ sub_5D89D0
 // inlined @ sub_5DA810
+// inlined @ sub_5F2DD0
 void als::motion_compensator::activate(animation_logic_system* the_als_core, layer_id layer) {
     the_als   = the_als_core;
     the_base  = the_als_core->get_als_layer_internal(layer);
@@ -6522,4 +6534,285 @@ vector3d als::combat_radial_move_and_face::get_path_position(f32) {
     retail::sub_97A3B0(path, (f32*)&position, t, 0); // spline: the point at t
 
     return position;
+}
+
+// sub_5BAC20
+als::biped_physics_mocomp::biped_physics_mocomp() : include_trajectory(false), use_internal_force_params(false) {
+    retail::sub_4015B0((u64*)&saved_po);
+    retail::sub_4015B0((u64*)&unk_050);
+}
+
+// sub_71BBA0
+als::biped_physics_mocomp::biped_physics_mocomp(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
+                                                                                                 capture_callback(so_do_nothing),
+                                                                                                 capture_timer(so_do_nothing),
+                                                                                                 include_trajectory(false),
+                                                                                                 use_internal_force_params(false) {
+
+    retail::sub_4015B0((u64*)&saved_po);
+    retail::sub_4015B0((u64*)&unk_050);
+}
+
+// sub_5BACA0
+als::biped_physics_mocomp::~biped_physics_mocomp() {}
+
+// sub_5B4A80
+void als::biped_physics_mocomp::construct_mashed_class() {
+    // the pos' mash slots are empty
+    capture_callback.construct_mashed_class();
+    capture_timer.construct_mashed_class();
+}
+
+// sub_5B4AB0
+void als::biped_physics_mocomp::destruct_mashed_class() {
+    capture_callback.destruct_mashed_class();
+    capture_timer.destruct_mashed_class();
+}
+
+// sub_5E3370
+void als::biped_physics_mocomp::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    capture_callback.unmash(mash_info, this, buffer);
+    capture_timer.unmash(mash_info, this, buffer);
+}
+
+// sub_5BACF0
+mash::virtual_types_key als::biped_physics_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::biped_physics_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4868D0
+i32 als::biped_physics_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F2DD0
+void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, layer_id layer) {
+    using push_t = i32 (__thiscall*)(u32*, i32, vector3d*, vector3d*, f32);
+
+    // the state's push: params 100 to 103, 149 and 150 unless use_internal_force_params, else the state's own
+    auto push = [this](u32* biped) {
+        bool scale_from_params = false;
+        bool dir_from_params   = false;
+        f32  force_scale;
+        f32  force_y           = 0.0f;
+
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(100)) {
+            force_scale       = the_base->get_float_param(the_als, 100);
+            scale_from_params = true;
+        } else {
+            force_scale = the_base->get_optional_pb_float(force_scale_id, 0.0f, nullptr);
+            force_y     = the_base->get_optional_pb_float(force_y_id, 0.0f, nullptr);
+        }
+
+        if (!(std::fabs(force_scale) > 0.0001f) && !(std::fabs(force_y) > 0.0001f))
+            return;
+
+        vector3d force_dir = treyarch::references::unk_00fd4370.get();
+
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(149)) {
+            force_dir       = the_base->get_vector_param(the_als, 149);
+            dir_from_params = true;
+        } else {
+            // the state's is in the actor's frame
+            vector3d         local = the_base->get_optional_pb_vector3d(force_dir_id, vector3d(0.0f, 0.0f, -1.0f), nullptr);
+            const matrix4x4 &m     = the_actor->my_abs_po->get_matrix();
+
+            force_dir = vector3d((f32)((f64)m.y.x * local.y + (f64)m.x.x * local.x + (f64)m.z.x * local.z + (f64)m.w.x * 0.0),
+                                 (f32)((f64)m.y.y * local.y + (f64)m.x.y * local.x + (f64)m.z.y * local.z + (f64)m.w.y * 0.0),
+                                 (f32)((f64)m.y.z * local.y + (f64)m.x.z * local.x + (f64)m.z.z * local.z + (f64)m.w.z * 0.0));
+        }
+
+        if (!scale_from_params || !dir_from_params) {
+            if (the_base->get_optional_pb_int(force_scale_xz_only_id, 0, nullptr) > 0)
+                force_dir.y = 0.0f;
+        }
+
+        retail::sub_402050((f32*)&force_dir);
+
+        force_dir.x = force_dir.x * force_scale;
+        force_dir.y = force_dir.y * force_scale + force_y;
+        force_dir.z = force_dir.z * force_scale;
+
+        // param 101's index, else force_bone's name
+        i32 bone = 0;
+
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(101)) {
+            i32 index = (i32)(i64)the_base->get_float_param(the_als, 101);
+
+            if ((u32)index < 10)
+                bone = index;
+        } else {
+            bool        exists = false;
+            string_hash name   = the_base->get_optional_pb_hash(force_bone_id, rb_bone_ids[0], &exists);
+
+            if (exists) {
+                for (i32 index = 0; index < 10; ++index) {
+                    if (name.source_hash_code == rb_bone_ids[index].source_hash_code) {
+                        bone = index;
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        f32 torque_mul;
+
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(102))
+            torque_mul = the_base->get_float_param(the_als, 102);
+        else
+            torque_mul = the_base->get_optional_pb_float(force_torque_mul_id, 1.0f, nullptr);
+
+        bool spin_only;
+
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(103))
+            spin_only = the_base->get_float_param(the_als, 103) > 0.01f;
+        else
+            spin_only = the_base->get_optional_pb_int(force_spin_only_id, 0, nullptr) != 0;
+
+        // at param 150, else at the state's point in the actor's frame, else on the bone itself
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(150)) {
+            vector3d point = the_base->get_vector_param(the_als, 150);
+
+            if (spin_only)
+                ((push_t)retail::sub_424F00)(biped, bone, &point, &force_dir, torque_mul); // biped physics: spins the bone
+            else
+                ((push_t)retail::sub_5BAD20)(biped, bone, &point, &force_dir, torque_mul); // biped physics: pushes the bone at the point
+
+            return;
+        }
+
+        bool             exists = false;
+        vector3d         local  = the_base->get_optional_pb_vector3d(force_point_id, treyarch::references::unk_00fd4370.get(), &exists);
+        const matrix4x4 &m      = the_actor->my_abs_po->get_matrix();
+
+        vector3d point((f32)((f64)m.y.x * local.y + (f64)m.x.x * local.x + (f64)m.z.x * local.z + (f64)m.w.x),
+                       (f32)((f64)m.y.y * local.y + (f64)m.x.y * local.x + (f64)m.z.y * local.z + (f64)m.w.y),
+                       (f32)((f64)m.y.z * local.y + (f64)m.x.z * local.x + (f64)m.z.z * local.z + (f64)m.w.z));
+
+        if (exists) {
+            if (spin_only)
+                ((push_t)retail::sub_424F00)(biped, bone, &point, &force_dir, torque_mul);
+            else
+                ((push_t)retail::sub_5BAD20)(biped, bone, &point, &force_dir, torque_mul);
+        } else
+            retail::sub_42E9C0(biped, bone, (f32*)&force_dir); // biped physics: pushes the bone
+    };
+
+    engine_lock_scope lock(&jq::references::unk_01003428.get());
+
+    motion_compensator::activate(the_als_core, layer);
+
+    capture_callback.add(the_actor->my_handle, references::capture_frame.read(), generic_event_callback::count_raise, nullptr);
+
+    capture_time              = the_base->get_optional_pb_float(capture_time_id, -1.0f, nullptr);
+    capture_timer.time        = 0.0f;
+    capture_elapsed           = -1.0f;
+    pose_blend_weight         = the_base->get_optional_pb_float(pose_blend_weight_id, 30.0f, nullptr);
+    include_trajectory        = the_base->get_optional_pb_int(include_trajectory_id, 0, nullptr) != 0;
+    use_internal_force_params = the_base->get_optional_pb_int(use_internal_force_params_id, 0, nullptr) != 0;
+
+    if (the_actor->has_ifc(entity_ifc_physical) && the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running)) {
+        auto* biped = (u32*)retail::sub_600680((u32*)the_actor->physical_ifc()); // physical_interface: its biped physics
+
+        if (biped && !include_trajectory)
+            push(biped);
+    }
+
+    // a conglomerate's member pos, held like its po
+    saved_matrices = nullptr;
+
+    if (the_actor->is_a_conglomerate()) {
+        auto* body  = (conglomerate*)the_actor;
+        u32   count = body->unk_128;
+
+        saved_matrices = (po*)memory::heap::allocate(count >> 26 ? 0xFFFFFFFF : count << 6);
+
+        if (saved_matrices) {
+            for (u32 index = 0; index < count; ++index)
+                retail::sub_4015B0((u64*)&saved_matrices[index]);
+        }
+
+        std::memcpy(saved_matrices, body->unk_12c, body->unk_128 << 6);
+    }
+
+    saved_po = *the_actor->my_rel_po;
+    unk_050  = *the_actor->my_rel_po;
+}
+
+// sub_5C6600
+void als::biped_physics_mocomp::deactivate() {
+    engine_lock_scope lock(&jq::references::unk_01003428.get());
+
+    capture_callback.remove(the_actor->my_handle, references::capture_frame.read());
+
+    if (the_actor->has_ifc(entity_ifc_physical) && the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        retail::sub_80ECA0((u8*)retail::sub_600680((u32*)the_actor->physical_ifc())); // biped physics: lets the actor go
+
+    if (saved_matrices)
+        memory::heap::free(saved_matrices);
+
+    saved_matrices = nullptr;
+}
+
+// sub_5C66E0
+void als::biped_physics_mocomp::pre_anim_action(f32) {
+    auto* body = (conglomerate*)the_actor;
+
+    if (saved_matrices)
+        std::memcpy(saved_matrices, body->unk_12c, body->unk_128 << 6);
+
+    retail::sub_583280((u64*)&saved_po, (u64*)the_actor->my_abs_po); // po copy
+}
+
+// sub_5C6720
+void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
+    using capture_pose_t = void (__thiscall*)(u32*, f32, f32);
+
+    engine_lock_scope lock(&jq::references::unk_01003428.get());
+
+    capture_timer.time = capture_timer.time - delta_t;
+
+    if (0.0f > capture_timer.time)
+        capture_timer.time = 0.0f;
+
+    if (capture_elapsed >= 0.0f)
+        capture_elapsed = capture_elapsed + delta_t;
+
+    // on CAPTURE_FRAME, or every capture_time, the biped takes the pose
+    if (capture_callback.times_raised > 0 || (capture_time >= 0.0f && 0.0f >= capture_timer.time)) {
+        if (the_actor->has_ifc(entity_ifc_physical)) {
+            if (the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running)) {
+                f32 step = capture_elapsed > 0.0f ? capture_elapsed : delta_t;
+
+                ((capture_pose_t)retail::sub_817330)((u32*)retail::sub_600680((u32*)the_actor->physical_ifc()), pose_blend_weight, step);
+            }
+        }
+
+        capture_callback.times_raised = 0;
+        capture_timer.time            = capture_time;
+        capture_elapsed               = 0.0f;
+    }
+
+    // the anim leaves it where it was
+    if (saved_matrices)
+        std::memcpy(((conglomerate*)the_actor)->unk_12c, saved_matrices, ((conglomerate*)the_actor)->unk_128 << 6);
+
+    retail::sub_583280((u64*)the_actor->my_abs_po, (u64*)&saved_po);
+}
+
+// sub_667F80
+bool als::biped_physics_mocomp::force_reactivate() const {
+    return true;
 }
