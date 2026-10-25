@@ -25,6 +25,10 @@ namespace treyarch { namespace container {
               T &operator[](u32 index)       { return data_[index]; }
         const T &operator[](u32 index) const { return data_[index]; }
 
+        void clear() {
+            size_ = 0;
+        }
+
         // keeps the order
         void erase(u32 index) {
             --size_;
