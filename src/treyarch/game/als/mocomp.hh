@@ -55,6 +55,14 @@ namespace als {
     inline const string_hash use_alt_linear_id             = string_hash(hash::djb2("use_alt_linear"));
     inline const string_hash force_move_speed_id           = string_hash(hash::djb2("force_move_speed"));
     inline const string_hash force_turn_rate_id            = string_hash(hash::djb2("force_turn_rate"));
+    inline const string_hash wall_offset_id                = string_hash(hash::djb2("wall_offset"));
+    inline const string_hash vert_wall_offset_id           = string_hash(hash::djb2("vert_wall_offset"));
+    inline const string_hash wall_normal_is_up_id          = string_hash(hash::djb2("wall_normal_is_up"));
+    inline const string_hash use_desired_normal_id         = string_hash(hash::djb2("use_desired_normal"));
+    inline const string_hash use_anim_translation_id       = string_hash(hash::djb2("use_anim_translation"));
+    inline const string_hash use_anim_orientation_id       = string_hash(hash::djb2("use_anim_orientation"));
+    inline const string_hash dest_point_up_offset_id       = string_hash(hash::djb2("dest_point_up_offset"));
+    inline const string_hash use_fakeroot_position_id      = string_hash(hash::djb2("use_fakeroot_position"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -1031,6 +1039,58 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // move_and_face onto a crawl surface, the destination set off the wall by the state's offsets
+    class crawl_transition : public move_and_face {
+
+    public:
+        vector3d start_position;
+        vector3d transition_destination;
+        f32      wall_offset;
+        u8       reserved_0d8[0x04];
+
+        crawl_transition();
+        explicit crawl_transition(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void post_anim_action(f32 delta_t) override;
+
+        void set_destination_point() override;
+        void set_desired_facing() override;
+        void set_desired_up() override;
+        void set_end_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
+    // the red-and-black crawl transition: the params' normal, facing and destination, with the anim's motion by default
+    class rvb_crawl_transition : public move_and_face {
+
+    public:
+        rvb_crawl_transition();
+        explicit rvb_crawl_transition(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void post_anim_action(f32 delta_t) override;
+
+        void set_destination_point() override;
+        void set_desired_facing() override;
+        void set_desired_up() override;
+        void set_end_key_signals() override;
+        void set_start_key_signals() override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1123,6 +1183,13 @@ namespace als {
     ASSERT_SIZEOF(constant_face_only,               0xBC);
     ASSERT_SIZEOF(constant_move_only,               0xBC);
     ASSERT_SIZEOF(wall_recover_move_and_face,       0xBC);
+
+    ASSERT_SIZEOF  (crawl_transition,                         0xDC);
+    ASSERT_OFFSETOF(crawl_transition, start_position,         0xBC);
+    ASSERT_OFFSETOF(crawl_transition, transition_destination, 0xC8);
+    ASSERT_OFFSETOF(crawl_transition, wall_offset,            0xD4);
+
+    ASSERT_SIZEOF(rvb_crawl_transition, 0xBC);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));

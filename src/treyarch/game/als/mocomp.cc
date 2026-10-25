@@ -67,6 +67,9 @@ string_hash als::constant_face_only::my_type_key               { 0xD79D7E8D }; /
 string_hash als::constant_move_only::my_type_key               { 0xA930BC35 }; // "als::constant_move_only"
 string_hash als::wall_recover_move_and_face::my_type_key       { 0x5010014F }; // "als::wall_recover_move_and_face"
 
+string_hash als::crawl_transition::my_type_key     { 0xCA7C59D7 }; // "als::crawl_transition"
+string_hash als::rvb_crawl_transition::my_type_key { 0x24C44C00 }; // "als::rvb_crawl_transition"
+
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
@@ -299,6 +302,18 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(wall_recover_move_and_face);
 
         return memory_buffer ? new (memory_buffer) wall_recover_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == crawl_transition::my_type_key.source_hash_code) {
+        last_created_size = sizeof(crawl_transition);
+
+        return memory_buffer ? new (memory_buffer) crawl_transition : nullptr;
+    }
+
+    if (the_class_to_make == rvb_crawl_transition::my_type_key.source_hash_code) {
+        last_created_size = sizeof(rvb_crawl_transition);
+
+        return memory_buffer ? new (memory_buffer) rvb_crawl_transition : nullptr;
     }
 
     // the classes not in source yet
@@ -2717,6 +2732,8 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
 // inlined @ sub_5AE920
 // inlined @ sub_5AEB30
 // inlined @ sub_5AEBB0
+// inlined @ sub_5AED50
+// inlined @ sub_5AED90
 als::move_and_face::move_and_face() : orientation_end_signal_required(false),
                                       translation_end_signal_required(false),
                                       orientation_start_signal_required(false),
@@ -2741,6 +2758,8 @@ als::move_and_face::move_and_face() : orientation_end_signal_required(false),
 // inlined @ sub_719610
 // inlined @ sub_7196D0
 // inlined @ sub_719710
+// inlined @ sub_719750
+// inlined @ sub_719790
 als::move_and_face::move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
                                                                                    orientation_end_signal_required(false),
                                                                                    translation_end_signal_required(false),
@@ -4228,6 +4247,320 @@ void als::wall_recover_move_and_face::set_start_key_signals() {
 
     orientation_start_key_signals       = orientation_signals;
     orientation_start_key_signals_count = 1;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = translation_signals;
+    translation_start_key_signals_count = 2;
+    translation_start_signal_required   = false;
+}
+
+// sub_5AED90
+als::crawl_transition::crawl_transition() {}
+
+// sub_719790
+als::crawl_transition::crawl_transition(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AEDC0
+mash::virtual_types_key als::crawl_transition::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::crawl_transition::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AEE00
+i32 als::crawl_transition::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F0D60
+void als::crawl_transition::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als_core, layer);
+
+    vector3d first_up = the_actor->my_abs_po->get_y_facing();
+
+    desired_up     = first_up;
+    desired_facing = the_actor->my_abs_po->get_z_facing();
+
+    bool     on_top = false;
+    vector3d normal = desired_up;
+
+    wall_offset = the_base->get_optional_pb_float(wall_offset_id, 0.4f, nullptr);
+
+    f32  vert_wall_offset   = the_base->get_optional_pb_float(vert_wall_offset_id, 0.0f, nullptr);
+    bool wall_normal_is_up  = the_base->get_optional_pb_int(wall_normal_is_up_id, 0, nullptr) != 0;
+    bool use_instant_facing = the_base->get_optional_pb_int(use_instant_facing_id, 0, nullptr) != 0;
+    bool facing_from_normal = the_base->has_ext_param_been_set(7) && the_base->get_external_float(7) == 1.0f;
+
+    // retail reads every external vector through this one temporary, and the climb onto a top uses whichever came last
+    vector3d param;
+
+    if (the_base->has_ext_param_been_set(141)) {
+        param  = the_base->get_external_vector(141);
+        normal = param;
+
+        if (wall_normal_is_up)
+            desired_up = param;
+
+        on_top = desired_facing.y >= 0.7f && desired_up.y >= 0.7f;
+    }
+
+    if (the_base->has_ext_param_been_set(143)) {
+        param          = the_base->get_external_vector(143);
+        desired_facing = param;
+    } else if (facing_from_normal)
+        desired_facing = normal;
+    else
+        desired_facing = the_actor->my_abs_po->get_z_facing();
+
+    destination_point = the_actor->my_abs_po->get_position();
+
+    if (the_base->has_ext_param_been_set(146)) {
+        param             = the_base->get_external_vector(146);
+        destination_point = param;
+    } else if (the_actor->has_ifc(entity_ifc_player))
+        destination_point = the_actor->player_ifc()->unk_2a0;
+    else if (the_actor->has_ifc(entity_ifc_standing)) {
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 1;
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 8;
+    }
+
+    if (on_top) {
+        // over the edge: along the surface to the destination, then out past param 146 against the facing
+        const vector3d &position = the_actor->my_abs_po->get_position();
+        const vector3d &facing   = the_actor->my_abs_po->get_z_facing();
+        const vector3d &zero     = treyarch::references::unk_00fd4370.get();
+
+        vector3d to_destination = destination_point - position;
+
+        math::vector4 basis_dir(-facing.x, -facing.y, -facing.z, -0.0f);
+        math::vector4 basis_up(param.x, param.y, param.z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        vector3d start = the_actor->my_abs_po->get_position();
+
+        param = the_base->get_external_vector(146);
+
+        const vector3d &basis_y = basis.get_y_facing();
+        const vector3d &basis_z = basis.get_z_facing();
+
+        vector3d reach(param.x + basis_z.x * 1.1f - start.x, param.y + basis_z.y * 1.1f - start.y, param.z + basis_z.z * 1.1f - start.z);
+        f32      rise = basis_y * reach;
+
+        reach = reach - basis_y * rise;
+
+        vector3d from = the_actor->my_abs_po->get_position();
+        f32      out  = basis_z * to_destination;
+
+        vector3d across = to_destination - basis_z * out;
+
+        destination_point = vector3d(across.x + from.x + reach.x, across.y + from.y + reach.y, across.z + from.z + reach.z);
+    } else
+        destination_point = vector3d(normal.x * wall_offset + destination_point.x + first_up.x * vert_wall_offset,
+                                     normal.y * wall_offset + destination_point.y + first_up.y * vert_wall_offset,
+                                     normal.z * wall_offset + destination_point.z + first_up.z * vert_wall_offset);
+
+    if (use_instant_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        vector3d side = cross(desired_facing, desired_up);
+
+        if (!((side - zero).length2() <= 0.00000001f)) {
+            const vector3d &position = the_actor->my_abs_po->get_position();
+
+            math::vector4 basis_dir(desired_facing.x, desired_facing.y, desired_facing.z, 0.0f);
+            math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+            math::vector4 origin(position.x, position.y, position.z, 0.0f);
+
+            po facing;
+            retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+            retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+        }
+    }
+
+    destination_point_valid = true;
+    desired_facing_valid    = true;
+
+    transition_destination = destination_point;
+    start_position         = the_actor->my_abs_po->get_position();
+}
+
+// sub_5DB1A0
+void als::crawl_transition::deactivate() {
+    move_and_face::deactivate();
+}
+
+// sub_5B42D0
+void als::crawl_transition::post_anim_action(f32 delta_t) {
+    move_and_face::post_anim_action(delta_t);
+}
+
+// sub_5B4200
+void als::crawl_transition::set_destination_point() {
+    destination_point_valid = true;
+}
+
+// sub_5B42E0
+void als::crawl_transition::set_desired_facing() {
+    desired_facing_valid = true;
+}
+
+// sub_5B4A70
+void als::crawl_transition::set_desired_up() {}
+
+// sub_5B4290
+void als::crawl_transition::set_end_key_signals() {
+    static const string_hash* signals[] = { &references::move_end.get() };
+
+    orientation_end_key_signals_count = 1;
+    translation_end_key_signals_count = 1;
+    orientation_end_key_signals       = signals;
+    translation_end_key_signals       = signals;
+    orientation_end_signal_required   = false;
+    translation_end_signal_required   = false;
+}
+
+// sub_5AED50
+als::rvb_crawl_transition::rvb_crawl_transition() {}
+
+// sub_719750
+als::rvb_crawl_transition::rvb_crawl_transition(mash::generating_vtable_version so_do_nothing) : move_and_face(so_do_nothing) {}
+
+// sub_5AED80
+mash::virtual_types_key als::rvb_crawl_transition::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEDD0
+bool als::rvb_crawl_transition::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::rvb_crawl_transition::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DACB0
+void als::rvb_crawl_transition::activate(animation_logic_system* the_als_core, layer_id layer) {
+    move_and_face::activate(the_als_core, layer);
+
+    bool use_desired_normal    = the_base->get_optional_pb_int(use_desired_normal_id, 1, nullptr) != 0;
+    bool use_instant_facing    = the_base->get_optional_pb_int(use_instant_facing_id, 1, nullptr) != 0;
+    bool use_anim_translation  = the_base->get_optional_pb_int(use_anim_translation_id, 1, nullptr) != 0;
+    bool use_anim_orientation  = the_base->get_optional_pb_int(use_anim_orientation_id, 1, nullptr) != 0;
+    f32  dest_point_up_offset  = the_base->get_optional_pb_float(dest_point_up_offset_id, 0.0f, nullptr);
+    bool use_fakeroot_position = the_base->get_optional_pb_int(use_fakeroot_position_id, 1, nullptr) != 0;
+
+    desired_up        = the_actor->my_abs_po->get_y_facing();
+    desired_facing    = the_actor->my_abs_po->get_z_facing();
+    destination_point = the_actor->my_abs_po->get_position();
+
+    if (use_desired_normal && the_base->has_ext_param_been_set(141))
+        desired_up = the_base->get_external_vector(141);
+
+    if (the_base->has_ext_param_been_set(143))
+        desired_facing = the_base->get_external_vector(143);
+
+    // the destination param, raised along the up
+    if (!use_fakeroot_position && the_base->has_ext_param_been_set(146)) {
+        destination_point = the_base->get_external_vector(146);
+        destination_point = vector3d(destination_point.x + desired_up.x * dest_point_up_offset,
+                                     destination_point.y + desired_up.y * dest_point_up_offset,
+                                     destination_point.z + desired_up.z * dest_point_up_offset);
+    }
+
+    if (use_instant_facing) {
+        const vector3d &position = the_actor->my_abs_po->get_position();
+
+        math::vector4 basis_dir(desired_facing.x, desired_facing.y, desired_facing.z, 0.0f);
+        math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+        math::vector4 origin(position.x, position.y, position.z, 0.0f);
+
+        po facing;
+        retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        vector3d side = cross(desired_facing, desired_up);
+
+        if (!((side - zero).length2() <= 0.00000001f))
+            retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    }
+
+    if (use_anim_translation) {
+        pre_signal_translation_action  = mocomp_action_from_anim;
+        post_signal_translation_action = mocomp_action_from_anim;
+    }
+
+    if (use_anim_orientation || use_instant_facing) {
+        pre_signal_orientation_action  = mocomp_action_from_anim;
+        post_signal_orientation_action = mocomp_action_from_anim;
+    }
+
+    desired_facing_valid    = true;
+    destination_point_valid = true;
+}
+
+// sub_5DB1A0
+void als::rvb_crawl_transition::deactivate() {
+    move_and_face::deactivate();
+}
+
+// sub_5B42D0
+void als::rvb_crawl_transition::post_anim_action(f32 delta_t) {
+    move_and_face::post_anim_action(delta_t);
+}
+
+// sub_5B4200
+void als::rvb_crawl_transition::set_destination_point() {
+    destination_point_valid = true;
+}
+
+// sub_5B42E0
+void als::rvb_crawl_transition::set_desired_facing() {
+    desired_facing_valid = true;
+}
+
+// sub_5B4A70
+void als::rvb_crawl_transition::set_desired_up() {}
+
+// sub_5B4250
+void als::rvb_crawl_transition::set_end_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_end.get(), &references::move_end.get() };
+    static const string_hash* translation_signals[] = { &references::translate_end.get(), &references::move_begin.get() }; // MOVE_BEGIN, as retail has it
+
+    orientation_end_key_signals       = orientation_signals;
+    orientation_end_key_signals_count = 2;
+    orientation_end_signal_required   = false;
+    translation_end_key_signals       = translation_signals;
+    translation_end_key_signals_count = 2;
+    translation_end_signal_required   = false;
+}
+
+// sub_5B4210
+void als::rvb_crawl_transition::set_start_key_signals() {
+    static const string_hash* orientation_signals[] = { &references::rotate_begin.get(), &references::move_begin.get() };
+    static const string_hash* translation_signals[] = { &references::translate_begin.get(), &references::move_begin.get() };
+
+    orientation_start_key_signals       = orientation_signals;
+    orientation_start_key_signals_count = 2;
     orientation_start_signal_required   = false;
     translation_start_key_signals       = translation_signals;
     translation_start_key_signals_count = 2;
