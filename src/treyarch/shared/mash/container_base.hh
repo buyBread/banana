@@ -14,6 +14,8 @@ namespace treyarch { namespace mash {
         container_base() : mash_image_offset(0),
                            size(0) {}
 
+        explicit container_base(generating_vtable_version) {}
+
         ~container_base() {
             clear();
         }

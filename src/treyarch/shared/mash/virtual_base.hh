@@ -1,5 +1,7 @@
 #pragma once
 
+#include <new>
+
 #include "treyarch/shared/mash/types.hh"
 #include "util/macros/sanity_assert.hh"
 
@@ -37,6 +39,16 @@ namespace treyarch { namespace mash {
 
         static bool register_vtable_entry(const vtable_key_t   &key,
                                           const vtable_value_t &value);
+
+        // what the generated registration list does per class: build a generating-version one in scratch memory (never destroyed) and register its vtable
+        template<typename T>
+        static bool register_class() {
+            alignas(T) u8 scratch[sizeof(T)];
+
+            T* object = new (scratch) T(GENERATING_VTABLES_VERSION);
+
+            return register_vtable_entry(T::my_type_key.source_hash_code, *(vtable_value_t*)object);
+        }
 
         static vtable_value_t lookup_vtable_entry(const vtable_key_t &key);
     };

@@ -24,6 +24,8 @@ namespace treyarch { namespace mash {
                    destroy_elements(true),
                    pad{} {}
 
+        explicit vector(generating_vtable_version so_do_nothing) : container_base(so_do_nothing) {}
+
         // sub_A1BAE0
         // sub_A1BAF0
         // sub_A1C120
@@ -67,6 +69,7 @@ namespace treyarch { namespace mash {
         // sub_5E7B80
         // sub_5E7C70
         // sub_5E7D60
+        // sub_5E7E50
         // sub_5EC280
         // sub_5EC350
         // sub_5EC420

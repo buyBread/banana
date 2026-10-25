@@ -16,6 +16,9 @@ namespace treyarch { namespace mash {
         T*  data;
         u32 capacity;
 
+                 vector_basic() = default;
+        explicit vector_basic(generating_vtable_version so_do_nothing) : container_base(so_do_nothing) {}
+
         // sub_971580
         ~vector_basic() {
             clear();

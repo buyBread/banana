@@ -39,6 +39,8 @@ namespace treyarch { namespace mash {
             ++live_count();
         }
 
+        explicit string(generating_vtable_version) noexcept {}
+
         string(const string &other);
         string(const string &other, i32 start, i32 count);
         string(const char* value);

@@ -19,8 +19,9 @@ namespace treyarch {
     struct string_hash {
         u32 source_hash_code;
 
-                 constexpr string_hash()         noexcept : source_hash_code(0)    {}
-        explicit constexpr string_hash(u32 hash) noexcept : source_hash_code(hash) {}
+                 constexpr string_hash()                                noexcept : source_hash_code(0)    {}
+        explicit constexpr string_hash(u32 hash)                        noexcept : source_hash_code(hash) {}
+        explicit constexpr string_hash(mash::generating_vtable_version) noexcept {}
 
         // sub_A6C7E0
         void initialize(      mash::allocation_scope scope,
