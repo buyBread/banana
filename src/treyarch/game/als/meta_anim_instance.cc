@@ -97,7 +97,7 @@ void als::als_meta_linear_blend_instance::get_pose(f32 t, f32 t_prev, nal::pose*
     f32 blend_speed = the_layer->get_optional_pb_float(meta_linear_param_blend_speed_id, 1.0f, nullptr);
     clamp_value(&blend_speed, 0.0f, 1.0f);
 
-    meta_anim->current_blend -= (meta_anim->current_blend - desired) * blend_speed;
+    meta_anim->current_blend = (f32)(meta_anim->current_blend - (f64)(meta_anim->current_blend - desired) * blend_speed);
 
     // between which two key anims, and how far
     f32 position = (f32)(meta_anim->key_anims.size - 1) * meta_anim->current_blend;
@@ -299,7 +299,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
         upper_key   = 1;
     }
 
-    f32 weight = 1.0f - (upper_angle - angle) * (1.0f / 45.0f);
+    f32 weight = (f32)(1.0 - ((f64)upper_angle - angle) * (1.0f / 45.0f));
 
     nal::pose blended(pose->pose_layout, nullptr);
 
@@ -362,12 +362,12 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
         target_time = 1.0f;
 
     if (time > target_time) {
-        time -= swing_time_fall_rate * dt;
+        time = (f32)(time - (f64)swing_time_fall_rate * dt);
 
         if (target_time > time)
             time = target_time;
     } else {
-        time += swing_time_rise_rate * dt;
+        time = (f32)((f64)swing_time_rise_rate * dt + time);
 
         if (time > target_time)
             time = target_time;
