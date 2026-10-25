@@ -1147,6 +1147,32 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // signal_move_and_face that brings the right prop hand onto the hero's pole, or an ai's teleport target
+    class combat_pole_swing_attach : public signal_move_and_face {
+
+    public:
+        vector3d pole_point;
+        vector3d facing;
+        vector3d side;
+        bool     face_target; // faces param 145 rather than along the pole's side
+        u8       pad_0e1[0x03];
+
+        combat_pole_swing_attach();
+        explicit combat_pole_swing_attach(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        void set_destination_point() override;
+        void set_desired_facing() override;
+        void set_desired_up() override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1254,6 +1280,12 @@ namespace als {
     ASSERT_SIZEOF  (constant_move_hand_to_point,              0xD0);
     ASSERT_OFFSETOF(constant_move_hand_to_point, arrived,     0xCC);
     ASSERT_OFFSETOF(constant_move_hand_to_point, first_frame, 0xCD);
+
+    ASSERT_SIZEOF  (combat_pole_swing_attach,              0xE4);
+    ASSERT_OFFSETOF(combat_pole_swing_attach, pole_point,  0xBC);
+    ASSERT_OFFSETOF(combat_pole_swing_attach, facing,      0xC8);
+    ASSERT_OFFSETOF(combat_pole_swing_attach, side,        0xD4);
+    ASSERT_OFFSETOF(combat_pole_swing_attach, face_target, 0xE0);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));

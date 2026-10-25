@@ -8,6 +8,7 @@
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
+#include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
@@ -72,6 +73,7 @@ string_hash als::rvb_crawl_transition::my_type_key { 0x24C44C00 }; // "als::rvb_
 
 string_hash als::attach_hand_to_point::my_type_key        { 0x11A13AEE }; // "als::attach_hand_to_point"
 string_hash als::constant_move_hand_to_point::my_type_key { 0x3420FEB9 }; // "als::constant_move_hand_to_point"
+string_hash als::combat_pole_swing_attach::my_type_key    { 0xA771F9B4 }; // "als::combat_pole_swing_attach"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -329,6 +331,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(constant_move_hand_to_point);
 
         return memory_buffer ? new (memory_buffer) constant_move_hand_to_point : nullptr;
+    }
+
+    if (the_class_to_make == combat_pole_swing_attach::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_pole_swing_attach);
+
+        return memory_buffer ? new (memory_buffer) combat_pole_swing_attach : nullptr;
     }
 
     // the classes not in source yet
@@ -2749,6 +2757,7 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
 // inlined @ sub_5AEBB0
 // inlined @ sub_5AED50
 // inlined @ sub_5AED90
+// inlined @ sub_5AF020
 // inlined @ sub_5AF070
 // inlined @ sub_5AF0C0
 als::move_and_face::move_and_face() : orientation_end_signal_required(false),
@@ -2777,6 +2786,7 @@ als::move_and_face::move_and_face() : orientation_end_signal_required(false),
 // inlined @ sub_719710
 // inlined @ sub_719750
 // inlined @ sub_719790
+// inlined @ sub_719800
 // inlined @ sub_719840
 // inlined @ sub_719880
 als::move_and_face::move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
@@ -4810,4 +4820,132 @@ void als::constant_move_hand_to_point::face_and_arrive_by(f32 delta_t) {
     }
 
     first_frame = false;
+}
+
+// sub_5AF020
+als::combat_pole_swing_attach::combat_pole_swing_attach() {}
+
+// sub_719800
+als::combat_pole_swing_attach::combat_pole_swing_attach(mash::generating_vtable_version so_do_nothing) : signal_move_and_face(so_do_nothing) {}
+
+// sub_5AF050
+mash::virtual_types_key als::combat_pole_swing_attach::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE8E0
+bool als::combat_pole_swing_attach::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (signal_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (signal_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AF060
+i32 als::combat_pole_swing_attach::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DB360
+void als::combat_pole_swing_attach::activate(animation_logic_system* the_als_core, layer_id layer) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    signal_move_and_face::activate(the_als_core, layer);
+
+    pole_point         = the_actor->my_abs_po->get_position();
+    facing             = the_actor->my_abs_po->get_z_facing();
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, 500.0f, nullptr);
+
+    if (the_actor->has_ifc(entity_ifc_player)) {
+        void* pole  = the_actor->player_ifc()->unk_387();
+        face_target = the_actor->player_ifc()->unk_388();
+
+        // the pole's middle, and its side
+        vector3d pole_end;
+        vector3d pole_start;
+        retail::sub_91BC00((i32*)pole, (f32*)&pole_end);
+        retail::sub_91BA80((i32*)pole, (f32*)&pole_start);
+
+        pole_point = (pole_start + pole_end) * 0.5f;
+
+        retail::sub_91BA80((i32*)pole, (f32*)&pole_start);
+        retail::sub_91BC00((i32*)pole, (f32*)&pole_end);
+
+        vector3d along = unitized(pole_end - pole_start);
+
+        side = unitized(cross(along, treyarch::references::unk_00e6808c.get()));
+    } else if (retail::sub_602850((u32*)the_actor)) {
+        auto* teleport = (teleporting_layer_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_teleporting_layer);
+
+        if (teleport) {
+            if (entity* target = (entity*)teleport->unk_0b8.resolve()) {
+                face_target = true;
+                pole_point  = target->my_abs_po->get_position();
+            }
+        }
+    }
+}
+
+// sub_5C3570
+void als::combat_pole_swing_attach::set_destination_point() {
+    destination_point = the_actor->my_abs_po->get_position();
+
+    // the player's right prop hand onto the pole, the body following
+    if (the_actor->has_ifc(entity_ifc_player)) {
+        actor* body = the_actor->player_ifc()->my_actor;
+
+        vector3d hand_position;
+        retail::sub_62FA60((i32)body, retail::sub_62F880((u32*)body, (u32*)&references::bip01_prop_r_hand.get()), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+
+        destination_point = vector3d(destination_point.x + (pole_point.x - hand_position.x),
+                                     destination_point.y + (pole_point.y - hand_position.y),
+                                     destination_point.z + (pole_point.z - hand_position.z));
+
+        destination_point_valid = true;
+    }
+}
+
+// sub_5DB1B0
+void als::combat_pole_swing_attach::set_desired_facing() {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    // level, from the pole toward param 145
+    if (the_base->has_ext_param_been_set(145)) {
+        facing   = the_base->get_external_vector(145) - pole_point;
+        facing.y = 0.0f;
+        facing   = unitized(facing);
+    }
+
+    // or along the pole's side, on the target's half
+    if (!face_target) {
+        if (side * facing < 0.0f)
+            side = -side;
+
+        facing = side;
+    }
+
+    desired_facing       = facing;
+    desired_facing_valid = true;
+}
+
+// sub_5B42F0
+void als::combat_pole_swing_attach::set_desired_up() {
+    desired_up = treyarch::references::unk_00e6808c.get();
 }
