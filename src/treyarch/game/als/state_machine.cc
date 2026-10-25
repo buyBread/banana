@@ -6,6 +6,9 @@
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
 #include "treyarch/game/als/state_machine.hh"
+#include "treyarch/game/cutscene/cut_scene_player.hh"
+#include "treyarch/game/event/default_callbacks.hh"
+#include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/script/script_access.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/shared/math/references.hh"
@@ -667,10 +670,140 @@ const param_block* als::state_machine::find_param_block_with_param(string_hash t
 }
 
 // sub_5D5310
-f32 als::state_machine::get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, u32* unk) const {
-    using get_time_to_state_event_t = f32 (__thiscall*)(const state_machine*, string_hash, f32, bool*, u32*);
+f32 als::state_machine::get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, anim_event_param* param) const {
+    if (exists)
+        *exists = false;
 
-    return ((get_time_to_state_event_t)retail::sub_5D5310)(this, event_name, anim_time, exists, unk);
+    if (param)
+        param->type = 0;
+
+    if ((!curr_events || !curr_events->size) && (!curr_hit_pause_events || !curr_hit_pause_events->size))
+        return -1.0f;
+
+    if (anim_time < 0.0f)
+        anim_time = 0.0f;
+
+    f32 time_to_event = -1.0f;
+    f32 duration      = get_duration();
+
+    const mash::vector<animation_event>* events = event_name == treyarch::references::hit_pause.read() ? curr_hit_pause_events : curr_events;
+
+    for (const animation_event* the_event : *events) {
+        if (the_event->name != event_name)
+            continue;
+
+        // the first match tells the param, a nearer one replaces it
+        if (exists && !*exists) {
+            *exists = true;
+
+            if (param)
+                the_event->get_param(param);
+        }
+
+        f32 time = the_event->time - anim_time;
+
+        if (time < 0.0f && the_controller->is_anim_looping(get_layer_id()))
+            time += duration;
+
+        if (time >= 0.0f && (time_to_event > time || time_to_event < 0.0f)) {
+            time_to_event = time;
+
+            if (param)
+                the_event->get_param(param);
+        }
+    }
+
+    return time_to_event;
+}
+
+// sub_5D6610
+void als::state_machine::raise_animation_signals_for_time_span(f32 t, f32 t_prev, entity* the_entity, bool pre_animation) {
+    if (treyarch::references::cut_scene_player.read()->is_playing())
+        return;
+
+    const mash::vector<animation_event>* events = pre_animation ? curr_hit_pause_events : curr_events;
+
+    if (!events || !events->size)
+        return;
+
+    f32  duration = the_controller->get_anim_duration(get_layer_id());
+    bool looping  = the_controller->is_anim_looping(get_layer_id());
+
+    animation_records &records = the_controller->state->layer_anims[get_layer_id()];
+
+    bool include_start = records.size() ? records.back()->just_started : false;
+    f32  start         = t_prev;
+    f32  end           = t;
+
+    // a loop only looks at where it is in its pass
+    if (looping) {
+        start = t_prev - (f32)(i32)t_prev;
+        end   = t - (f32)(i32)t;
+    }
+
+    for (const animation_event* the_event : *events) {
+        i32 step       = (i32)(the_event->time / duration * 100000.0);
+        i32 start_step = (i32)(start * 100000.0);
+        i32 end_step   = (i32)(end * 100000.0);
+
+        bool after_start = include_start ? step >= start_step : step > start_step;
+
+        // a wrapped span takes both ends of the pass
+        if ((!after_start || step > end_step) && (!looping || end_step >= start_step || (!after_start && step > end_step)))
+            continue;
+
+        anim_event_param param = {};
+        the_event->get_param(&param);
+
+        string_hash name = the_event->name;
+
+        // these can't go without their parameter, and nothing after them is raised either
+        if ((name == treyarch::references::play_sound.read() || name == treyarch::references::set_vulnerable.read()) && !param.type)
+            return;
+
+        if (name == treyarch::references::hit_pause.read() && param.type != 2) {
+            param.type          = 2;
+            *(f32*)&param.value = 0.15f;
+        }
+
+        if (name == references::time_dilation_start.read()) {
+            string_hash bone;
+            bone.initialize(mash::ALLOCATED, nullptr, hash::djb2(""));
+
+            anim_event start_event(name, bone, param.type != 0, the_event->time);
+
+            if (param.type)
+                start_event.params[0] = param;
+
+            event_manager::raise_event((event*)&start_event, the_entity->my_handle);
+
+            // the end goes out with it, at the next end event's time
+            bool             end_exists = false;
+            anim_event_param end_param  = {};
+
+            f32 time_to_end = get_time_to_state_event(references::time_dilation_end.read(), the_event->time, &end_exists, &end_param);
+
+            string_hash end_bone;
+            end_bone.initialize(mash::ALLOCATED, nullptr, hash::djb2(""));
+
+            anim_event end_event(references::time_dilation_end.read(), end_bone, end_param.type != 0, the_event->time + time_to_end);
+
+            if (end_param.type)
+                end_event.params[0] = end_param;
+
+            event_manager::raise_event((event*)&end_event, the_entity->my_handle);
+        } else if (name != references::time_dilation_end.read()) {
+            string_hash bone;
+            bone.initialize(mash::ALLOCATED, nullptr, hash::djb2(""));
+
+            anim_event raised(name, bone, param.type != 0, the_event->time);
+
+            if (param.type)
+                raised.params[0] = param;
+
+            event_manager::raise_event((event*)&raised, the_entity->my_handle);
+        }
+    }
 }
 
 // sub_5E8FE0
@@ -1215,10 +1348,36 @@ void als::layer_state_machine::init(animation_logic_system* the_als, layer_state
 
 // sub_5E0D20
 void als::raise_animation_event_signals(state_machine* the_sm) {
-    ((void (__cdecl*)(state_machine*))retail::sub_5E0D20)(the_sm);
+    if (!the_sm || !the_sm->the_controller)
+        return;
+
+    u32 layer = the_sm->get_layer_id();
+
+    if (layer > 14)
+        layer = 0;
+
+    animation_controller_state* state   = the_sm->the_controller->state;
+    animation_records          &records = state->layer_anims[layer];
+
+    f32 time      = records.size() ? records.back()->normalized_time      : 0.0f;
+    f32 prev_time = records.size() ? records.back()->prev_normalized_time : 0.0f;
+
+    the_sm->raise_animation_signals_for_time_span(time, prev_time, state ? state->unk_0e4 : nullptr, false);
 }
 
 // sub_5E0EE0
 void als::raise_pre_animation_event_signals(state_machine* the_sm) {
-    ((void (__cdecl*)(state_machine*))retail::sub_5E0EE0)(the_sm);
+    animation_controller* controller = the_sm->the_controller;
+
+    if (!controller)
+        return;
+
+    entity* the_entity = controller->state ? controller->state->unk_0e4 : nullptr;
+
+    animation_records &records = controller->state->layer_anims[the_sm->get_layer_id()];
+
+    // from where the newest record is to where the advance will take it
+    f32 time = records.size() ? records.back()->normalized_time : 0.0f;
+
+    the_sm->raise_animation_signals_for_time_span(controller->get_next_anim_normalized_time(the_sm->get_layer_id()), time, the_entity, true);
 }

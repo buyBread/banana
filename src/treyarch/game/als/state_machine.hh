@@ -192,7 +192,10 @@ namespace treyarch { namespace als {
         // the current state's block, then its category's
         const param_block* find_param_block_with_param(string_hash the_param)                        const;
         const param_block* find_param_block_with_param(string_hash the_param, e_param_type the_type) const;
-        f32                get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, u32* unk) const;
+        f32                get_time_to_state_event(string_hash event_name, f32 anim_time, bool* exists, anim_event_param* param) const;
+
+        // the state events between the two normalized times, raised on the entity; pre_animation takes the hit pause list
+        void raise_animation_signals_for_time_span(f32 t, f32 t_prev, entity* the_entity, bool pre_animation);
 
         void process_requests(animation_logic_system* the_als);
         void process_post_requests(animation_logic_system* the_als);
