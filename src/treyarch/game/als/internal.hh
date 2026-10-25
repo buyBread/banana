@@ -143,6 +143,88 @@ namespace treyarch { namespace als {
         static string_hash my_type_key;
     };
 
+    class category : public mash::mash_virtual_base {
+
+    public:
+        category_id  name;
+        param_block* my_param_block;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+
+        virtual request_data do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const = 0;
+        virtual request_data do_explicit_trans(animation_logic_system* the_als,
+                                               state_machine*          the_sm,
+                                               category_id             desired_category) const = 0;
+        virtual request_data do_incoming_trans(animation_logic_system* the_als,
+                                               state_machine*          the_sm,
+                                               bool                    unk) const = 0;
+
+        static string_hash my_type_key;
+    };
+
+    class transition_group_base : public mash::mash_virtual_base {
+
+    public:
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+
+        virtual void placeholder_function() = 0;
+
+        static string_hash my_type_key;
+    };
+
+    class state_machine_shared : public mash::mash_virtual_base {
+
+    public:
+        mash::vector
+            <state>                 state_list;
+        mash::vector
+            <category>              category_list;
+        mash::vector
+            <transition_group_base> trans_group_list;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        virtual layer_id get_layer_id() const;
+
+        static string_hash my_type_key;
+    };
+
+    class layer_state_machine_shared : public state_machine_shared {
+
+    public:
+        u32      bitmask; // layer domains
+        layer_id the_layer_id;
+
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        layer_id     get_layer_id() const override;
+        virtual void set_layer_id(layer_id new_id);
+
+        static string_hash my_type_key;
+    };
+
     ASSERT_SIZEOF  (request_data,                       0x0C);
     ASSERT_OFFSETOF(request_data, is_trans_to_category, 0x01);
     ASSERT_OFFSETOF(request_data, ignore_no_transition, 0x02);
@@ -163,4 +245,19 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(state, unk_44,           0x44);
     ASSERT_OFFSETOF(state, unk_58,           0x58);
     ASSERT_OFFSETOF(state, unk_6c,           0x6C);
+
+    ASSERT_SIZEOF  (category,                 0x0C);
+    ASSERT_OFFSETOF(category, name,           0x04);
+    ASSERT_OFFSETOF(category, my_param_block, 0x08);
+
+    ASSERT_SIZEOF(transition_group_base, 0x04);
+
+    ASSERT_SIZEOF  (state_machine_shared,                   0x40);
+    ASSERT_OFFSETOF(state_machine_shared, state_list,       0x04);
+    ASSERT_OFFSETOF(state_machine_shared, category_list,    0x18);
+    ASSERT_OFFSETOF(state_machine_shared, trans_group_list, 0x2C);
+
+    ASSERT_SIZEOF  (layer_state_machine_shared,               0x48);
+    ASSERT_OFFSETOF(layer_state_machine_shared, bitmask,      0x40);
+    ASSERT_OFFSETOF(layer_state_machine_shared, the_layer_id, 0x44);
 }} // treyarch::als

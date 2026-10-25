@@ -6,6 +6,8 @@ using namespace treyarch;
 
 string_hash als::scripted_state::my_type_key            { 0xB7E96372 }; // "als::scripted_state"
 string_hash als::base_layer_scripted_state::my_type_key { 0x0082A908 }; // "als::base_layer_scripted_state"
+string_hash als::scripted_category::my_type_key         { 0x0266CA4F }; // "als::scripted_category"
+string_hash als::scripted_trans_group::my_type_key      { 0x5E24F3C5 }; // "als::scripted_trans_group"
 
 // sub_5B0220
 als::basic_rule_list::~basic_rule_list() {
@@ -474,3 +476,138 @@ i32 als::base_layer_scripted_state::get_mash_sizeof() const {
 mash::virtual_types_key als::base_layer_scripted_state::get_mocomp_type() const {
     return mocomp_type;
 }
+
+// sub_5F8120
+void als::scripted_category::construct_mashed_class() {
+    category::construct_mashed_class();
+
+    trans_group_ref_list.construct_mashed_class();
+    implicit_trans_list .construct_mashed_class();
+    explicit_trans_list .construct_mashed_class();
+    incoming_trans_list .construct_mashed_class();
+}
+
+// sub_5F70C0
+void als::scripted_category::destruct_mashed_class() {
+    trans_group_ref_list.destruct_mashed_class();
+    implicit_trans_list .destruct_mashed_class();
+    explicit_trans_list .destruct_mashed_class();
+    incoming_trans_list .destruct_mashed_class();
+
+    category::destruct_mashed_class();
+}
+
+// sub_5F82D0
+void als::scripted_category::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    category::unmash(mash_info, containing_class_ptr, buffer);
+
+    trans_group_ref_list.unmash(mash_info, this, buffer);
+    implicit_trans_list .unmash(mash_info, this, buffer);
+    explicit_trans_list .unmash(mash_info, this, buffer);
+    incoming_trans_list .unmash(mash_info, this, buffer);
+}
+
+// sub_723C40
+mash::virtual_types_key als::scripted_category::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_723C50
+bool als::scripted_category::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (category::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (category::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AED10
+i32 als::scripted_category::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D75D0
+als::request_data als::scripted_category::do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const {
+    using do_implicit_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*);
+
+    request_data result;
+    ((do_implicit_trans_t)retail::sub_5D75D0)(this, &result, the_als, the_sm);
+
+    return result;
+}
+
+// sub_5D7780
+als::request_data als::scripted_category::do_explicit_trans(animation_logic_system* the_als,
+                                                            state_machine*          the_sm,
+                                                            category_id             desired_category) const {
+
+    using do_explicit_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*, category_id);
+
+    request_data result;
+    ((do_explicit_trans_t)retail::sub_5D7780)(this, &result, the_als, the_sm, desired_category);
+
+    return result;
+}
+
+// sub_5BD200
+als::request_data als::scripted_category::do_incoming_trans(animation_logic_system* the_als,
+                                                            state_machine*          the_sm,
+                                                            bool                    unk) const {
+
+    using do_incoming_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*, bool);
+
+    request_data result;
+    ((do_incoming_trans_t)retail::sub_5BD200)(this, &result, the_als, the_sm, unk);
+
+    return result;
+}
+
+// sub_5F7F30
+void als::scripted_trans_group::construct_mashed_class() {
+    trans_group_ref_list.construct_mashed_class();
+    implicit_trans_list .construct_mashed_class();
+    explicit_trans_list .construct_mashed_class();
+    name                .construct_mashed_class();
+}
+
+// sub_5F6FD0
+void als::scripted_trans_group::destruct_mashed_class() {
+    trans_group_ref_list.destruct_mashed_class();
+    implicit_trans_list .destruct_mashed_class();
+    explicit_trans_list .destruct_mashed_class();
+    name                .destruct_mashed_class();
+}
+
+// sub_5F81B0
+void als::scripted_trans_group::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    trans_group_ref_list.unmash(mash_info, this, buffer);
+    implicit_trans_list .unmash(mash_info, this, buffer);
+    explicit_trans_list .unmash(mash_info, this, buffer);
+    name                .unmash(mash_info, this, buffer);
+}
+
+// sub_723A70
+mash::virtual_types_key als::scripted_trans_group::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_723A80
+bool als::scripted_trans_group::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (transition_group_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (transition_group_base::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::scripted_trans_group::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B4A70
+void als::scripted_trans_group::placeholder_function() {}
