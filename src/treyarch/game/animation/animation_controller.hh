@@ -20,6 +20,7 @@ namespace treyarch {
         struct transport_list;
     }
 
+    class actor;
     class animation_controller;
     class entity;
     struct anim_event_param;
@@ -139,7 +140,7 @@ namespace treyarch {
         container::fixed_vector
             <layer_anim*, 2>      layer_anims[15]; // the newest last
         u8                        reserved_0e0[0x04];
-        entity*                   unk_0e4; // the entity the controller animates
+        actor*                    the_actor;
         nal::pose                 combined_pose;
         animation_controller*     unk_128;    // set with unk_144 (sub_5ADB20); the jobs skip a controller that has it
         vc8::vector<void*>        unk_12c;    // an als with something in here advances with the high priority ones
@@ -215,19 +216,14 @@ namespace treyarch {
         // every layer's newest anim back to unit speeds
         void reset_speeds();
 
-        // the layer's newest anim; 1 without one
-        f32  get_anim_duration(u32 layer);
-
-        // the layer's newest anim's; 0 and 1 without one
-        // inlined @ sub_5BB740
-        // inlined @ sub_5BB790
-        // inlined @ sub_5D5190
-        // inlined @ sub_5E0D20
-        // inlined @ sub_5E0EE0
-        // inlined @ sub_5D3950
-        f32 get_anim_normalized_time(u32 layer) const {
-            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->normalized_time : 0.0f;
-        }
+        // the layer's newest anim's; times 0 and the rest 1 without one
+        f32  get_anim_duration       (u32 layer);
+        f32  get_anim_normalized_time(u32 layer) const;
+        f32  get_anim_speed          (u32 layer) const;
+        f32  get_secondary_anim_speed(u32 layer) const;
+        f32  get_anim_time           (u32 layer);
+        bool is_anim_looping         (u32 layer);
+        void set_anim_normalized_time(u32 layer, f32 time);
 
         // inlined @ sub_5BB810
         // inlined @ sub_5E0D20
@@ -235,30 +231,8 @@ namespace treyarch {
             return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->prev_normalized_time : 0.0f;
         }
 
-        // inlined @ sub_5BB660
-        // inlined @ sub_5D5190
-        // inlined @ sub_5D57F0
-        // inlined @ sub_5D59A0
-        // inlined @ sub_5D3950
-        f32 get_anim_speed(u32 layer) const {
-            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->speed : 1.0f;
-        }
-
-        // inlined @ sub_5BB6C0
-        // inlined @ sub_5D5190
-        // inlined @ sub_5D57F0
-        // inlined @ sub_5D59A0
-        // inlined @ sub_5D3950
-        f32 get_anim_secondary_speed(u32 layer) const {
-            return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->secondary_speed : 1.0f;
-        }
-
-        f32  get_anim_time(u32 layer);
-        bool is_anim_looping(u32 layer);
-
         // the layer's newest anim's nal anim, through its als instance if it has one
-        nal::anim* get_nal_anim(u32 layer);
-        void set_anim_normalized_time(u32 layer, f32 time);
+        nal::anim* get_anim_ptr(u32 layer);
 
         // where advance will take the layer's newest anim this frame
         f32 get_next_anim_normalized_time(u32 layer);
@@ -299,7 +273,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state, master,         0x024);
     ASSERT_OFFSETOF(animation_controller_state, synced_layer,   0x028);
     ASSERT_OFFSETOF(animation_controller_state, layer_anims,    0x02C);
-    ASSERT_OFFSETOF(animation_controller_state, unk_0e4,       0x0E4);
+    ASSERT_OFFSETOF(animation_controller_state, the_actor,     0x0E4);
     ASSERT_OFFSETOF(animation_controller_state, combined_pose, 0x0E8);
     ASSERT_OFFSETOF(animation_controller_state, unk_128,       0x128);
     ASSERT_OFFSETOF(animation_controller_state, unk_12c,       0x12C);

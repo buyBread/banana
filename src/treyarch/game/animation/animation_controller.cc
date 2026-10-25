@@ -42,7 +42,7 @@ bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediat
     input.trajectory     = &the_state->trajectory;
 
     // slot 13
-    ((void (__thiscall*)(entity*))the_state->unk_0e4->vtable[13])(the_state->unk_0e4);
+    ((void (__thiscall*)(entity*))the_state->the_actor->vtable[13])(the_state->the_actor);
 
     auto fk = (nal::transport_fk*)the_state->skeleton->get_transport(0);
 
@@ -141,7 +141,7 @@ void animation_controller::advance(animation_controller* controller) {
                     if (anims.size())
                         anims.back()->set_speed(speed);
 
-                    f32 secondary_speed = the_state->master->get_anim_secondary_speed(layer);
+                    f32 secondary_speed = the_state->master->get_secondary_anim_speed(layer);
 
                     if (anims.size())
                         anims.back()->set_secondary_speed(secondary_speed);
@@ -289,6 +289,37 @@ f32 animation_controller::get_anim_time(u32 layer) {
     return anim->get_duration() * anim->normalized_time;
 }
 
+// sub_5BA4E0
+// inlined @ sub_5BB740
+// inlined @ sub_5BB790
+// inlined @ sub_5D5190
+// inlined @ sub_5E0D20
+// inlined @ sub_5E0EE0
+// inlined @ sub_5D3950
+f32 animation_controller::get_anim_normalized_time(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->normalized_time : 0.0f;
+}
+
+// sub_5BA4B0
+// inlined @ sub_5BB660
+// inlined @ sub_5D5190
+// inlined @ sub_5D57F0
+// inlined @ sub_5D59A0
+// inlined @ sub_5D3950
+f32 animation_controller::get_anim_speed(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->speed : 1.0f;
+}
+
+// sub_5BA480
+// inlined @ sub_5BB6C0
+// inlined @ sub_5D5190
+// inlined @ sub_5D57F0
+// inlined @ sub_5D59A0
+// inlined @ sub_5D3950
+f32 animation_controller::get_secondary_anim_speed(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->secondary_speed : 1.0f;
+}
+
 // sub_5BA140
 bool animation_controller::is_anim_looping(u32 layer) {
     if (!state->layer_anims[layer].size())
@@ -300,7 +331,7 @@ bool animation_controller::is_anim_looping(u32 layer) {
 // sub_5BA0F0
 // inlined @ sub_5BBE30
 // inlined @ sub_5BC130
-nal::anim* animation_controller::get_nal_anim(u32 layer) {
+nal::anim* animation_controller::get_anim_ptr(u32 layer) {
     if (!state->layer_anims[layer].size())
         return nullptr;
 
@@ -342,12 +373,12 @@ bool animation_controller_state::should_follow_master() const {
     if (!master)
         return false;
 
-    actor* master_actor = master->state ? (actor*)master->state->unk_0e4 : nullptr;
+    actor* master_actor = master->state ? master->state->the_actor : nullptr;
 
     if (master_actor->get_als() && !master_actor->get_als()->did_transition_succeed())
         return true;
 
-    actor* own_actor = (actor*)unk_0e4;
+    actor* own_actor = the_actor;
 
     return own_actor->get_als() && own_actor->get_als()->did_transition_succeed();
 }
@@ -452,7 +483,7 @@ f32 treyarch::get_time_to_animation_signal(animation_controller* controller,
                                            bool*                 exists,
                                            anim_event_param*     param) {
 
-    nal::anim* anim = controller->get_nal_anim(layer);
+    nal::anim* anim = controller->get_anim_ptr(layer);
 
     if (exists)
         *exists = false;
@@ -540,7 +571,7 @@ f32 treyarch::get_time_since_animation_signal(animation_controller* controller,
                                               bool*                 exists,
                                               anim_event_param*     param) {
 
-    nal::anim* anim = controller->get_nal_anim(layer);
+    nal::anim* anim = controller->get_anim_ptr(layer);
 
     if (exists)
         *exists = false;
@@ -722,7 +753,7 @@ void treyarch::raise_newest_animation_signals(animation_records* records) {
         return;
 
     if (animation_controller_state::layer_anim* newest = records->back())
-        newest->raise_animation_signals(newest->normalized_time, newest->prev_normalized_time, newest->owner->unk_0e4);
+        newest->raise_animation_signals(newest->normalized_time, newest->prev_normalized_time, newest->owner->the_actor);
 }
 
 // sub_5D4050

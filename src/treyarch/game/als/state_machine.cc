@@ -188,7 +188,7 @@ f32 als::state_machine::get_speed() const {
 
 // sub_5BB6C0
 f32 als::state_machine::get_secondary_speed() const {
-    return the_controller->get_anim_secondary_speed(get_layer_id());
+    return the_controller->get_secondary_anim_speed(get_layer_id());
 }
 
 // sub_5AFF00
@@ -388,7 +388,7 @@ f32 als::state_machine::get_time_to_end_of_anim(bool allow_looping, bool scale_b
 
     if (scale_by_speed) {
         f32 speed           = the_controller->get_anim_speed(get_layer_id());
-        f32 secondary_speed = the_controller->get_anim_secondary_speed(get_layer_id());
+        f32 secondary_speed = the_controller->get_secondary_anim_speed(get_layer_id());
 
         return the_controller->get_anim_duration(get_layer_id()) * (1.0f - time) / (secondary_speed * speed);
     }
@@ -413,7 +413,7 @@ f32 als::state_machine::get_time_to_signal(string_hash signal_name, bool* signal
         return time;
 
     f32 speed           = the_controller->get_anim_speed(get_layer_id());
-    f32 secondary_speed = the_controller->get_anim_secondary_speed(get_layer_id());
+    f32 secondary_speed = the_controller->get_secondary_anim_speed(get_layer_id());
     f32 inverse_speed   = 1.0f / (secondary_speed * speed);
 
     return inverse_speed * time;
@@ -436,7 +436,7 @@ f32 als::state_machine::get_time_since_signal(string_hash signal_name, bool* sig
         return time;
 
     f32 speed           = the_controller->get_anim_speed(get_layer_id());
-    f32 secondary_speed = the_controller->get_anim_secondary_speed(get_layer_id());
+    f32 secondary_speed = the_controller->get_secondary_anim_speed(get_layer_id());
     f32 inverse_speed   = 1.0f / (secondary_speed * speed);
 
     return inverse_speed * time;
@@ -540,7 +540,7 @@ mash::string als::state_machine::get_signal_times_string(string_hash signal_name
             first = false;
         }
     } else {
-        nal::anim* anim = the_controller->get_nal_anim(get_layer_id());
+        nal::anim* anim = the_controller->get_anim_ptr(get_layer_id());
 
         if (!anim || !anim->has_transport_data(1))
             return result;
@@ -1533,7 +1533,7 @@ void als::raise_animation_event_signals(state_machine* the_sm) {
     f32 time      = the_sm->the_controller->get_anim_normalized_time(layer);
     f32 prev_time = the_sm->the_controller->get_anim_prev_normalized_time(layer);
 
-    the_sm->raise_animation_signals_for_time_span(time, prev_time, state ? state->unk_0e4 : nullptr, false);
+    the_sm->raise_animation_signals_for_time_span(time, prev_time, state ? state->the_actor : nullptr, false);
 }
 
 // sub_5E0EE0
@@ -1543,7 +1543,7 @@ void als::raise_pre_animation_event_signals(state_machine* the_sm) {
     if (!controller)
         return;
 
-    entity* the_entity = controller->state ? controller->state->unk_0e4 : nullptr;
+    entity* the_entity = controller->state ? controller->state->the_actor : nullptr;
 
     // from where the newest record is to where the advance will take it
     f32 time = controller->get_anim_normalized_time(the_sm->get_layer_id());

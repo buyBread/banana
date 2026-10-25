@@ -922,7 +922,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
                     bool                found;
                     nal_als_anim_bridge bridge = get_anim_bridge(get_meta_anim_table(),
                                                                  anim_name,
-                                                                 the_controller->state ? (actor*)the_controller->state->unk_0e4 : nullptr,
+                                                                 the_controller->state ? the_controller->state->the_actor : nullptr,
                                                                  &found);
 
                     if (!bridge.nal_anim && !bridge.als_anim) {
