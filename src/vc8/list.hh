@@ -75,6 +75,7 @@ namespace treyarch { namespace vc8 {
             return position;
         }
 
+        // sub_5CD230
         // sub_A1AB20
         void increment_size(u32 added) {
             if (0x3FFFFFFF - count < added)
@@ -99,6 +100,7 @@ namespace treyarch { namespace vc8 {
             return next;
         }
 
+        // sub_4ECF90
         void clear() noexcept {
             node* position = sentinel->next;
 
