@@ -201,7 +201,10 @@ namespace als {
         virtual f32  get_dir_tolerance() const; // dots past these count as facing already
         virtual f32  get_up_tolerance() const;
 
-        // one step toward the desired direction and up from the actor's own (unit) axes
+        // opens and closes the movement window on the move and rotate signals
+        void update_movement_window();
+
+        // one step toward the desired direction and up from the current (unit) axes
         void turn_toward_desired(po &curr_offset, f32 delta_t, vector3d curr_dir, vector3d curr_up);
 
         static string_hash my_type_key;
@@ -615,6 +618,35 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // turns within the wall sprint inode's wall_po and keeps the actor on it, the anim's offset following the wall
+    class wallsprint_mocomp : public relative_orientation {
+
+    public:
+        wallsprint_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit wallsprint_mocomp(mash::generating_vtable_version so_do_nothing) : relative_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void post_anim_action(f32 delta_t) override;
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        void apply_rotation(      po*       curr_offset,
+                                  f32       delta_t,
+                                  f32       heading_change,
+                            const vector3d &curr_up,
+                            const vector3d &curr_dir,
+                            const vector3d &desired_up,
+                            const vector3d &desired_dir) override;
+
+        void face_desired_direction() override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -672,5 +704,6 @@ namespace als {
     ASSERT_SIZEOF(input_orientation, 0x44);
     ASSERT_SIZEOF(towed_orientation, 0x44);
 
-    ASSERT_SIZEOF(ikcrawl_mocomp, 0x44);
+    ASSERT_SIZEOF(ikcrawl_mocomp,    0x44);
+    ASSERT_SIZEOF(wallsprint_mocomp, 0x44);
 }} // treyarch::als

@@ -6,6 +6,7 @@
 #include "treyarch/game/als/mocomp.hh"
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
@@ -43,7 +44,8 @@ string_hash als::direct_mocomp::my_type_key             { 0xD27304F9 }; // "als:
 string_hash als::input_orientation::my_type_key { 0x422CBEEF }; // "als::input_orientation"
 string_hash als::towed_orientation::my_type_key { 0x6ABE6902 }; // "als::towed_orientation"
 
-string_hash als::ikcrawl_mocomp::my_type_key { 0xEA76894B }; // "als::ikcrawl_mocomp"
+string_hash als::ikcrawl_mocomp::my_type_key    { 0xEA76894B }; // "als::ikcrawl_mocomp"
+string_hash als::wallsprint_mocomp::my_type_key { 0xF1C5C0CE }; // "als::wallsprint_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
 
@@ -161,6 +163,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(ikcrawl_mocomp);
 
         return memory_buffer ? new (memory_buffer) ikcrawl_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == wallsprint_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(wallsprint_mocomp);
+
+        return memory_buffer ? new (memory_buffer) wallsprint_mocomp : nullptr;
     }
 
     // the classes not in source yet
@@ -410,39 +418,7 @@ void als::simple_orientation::transition() {
 
 // sub_5C4B30
 void als::simple_orientation::post_anim_action(f32 delta_t) {
-    if (use_movement_window) {
-        if (move_begin_callback.times_raised || rotate_begin_callback.times_raised) {
-            inside_movement_window = true;
-            move_begin_signal_time = the_base->get_current_anim_time();
-
-            // the window runs to the matching end signal, else the other one, else the anim's end
-            string_hash end_signal = move_begin_callback.times_raised ? references::move_end.read() : references::rotate_end.read();
-
-            f32 time_to_end = the_base->get_time_to_signal(end_signal, nullptr, true, nullptr);
-            move_end_signal_time = time_to_end;
-
-            if (time_to_end < 0.0f) {
-                string_hash other_end_signal = move_begin_callback.times_raised ? references::rotate_end.read() : references::move_end.read();
-
-                time_to_end = the_base->get_time_to_signal(other_end_signal, nullptr, true, nullptr);
-                move_end_signal_time = time_to_end;
-            }
-
-            if (time_to_end < 0.0f)
-                move_end_signal_time = the_base->get_duration();
-            else
-                move_end_signal_time = time_to_end + move_begin_signal_time;
-        }
-
-        if (move_end_callback.times_raised || rotate_end_callback.times_raised)
-            inside_movement_window = false;
-    } else
-        inside_movement_window = false;
-
-    move_begin_callback.times_raised   = 0;
-    move_end_callback.times_raised     = 0;
-    rotate_begin_callback.times_raised = 0;
-    rotate_end_callback.times_raised   = 0;
+    update_movement_window();
 
     po curr_offset;
     retail::sub_4015B0((u64*)&curr_offset);
@@ -484,7 +460,46 @@ void als::simple_orientation::post_anim_action(f32 delta_t) {
 }
 
 // inlined @ sub_5C4B30
+// inlined @ sub_5C68C0
+void als::simple_orientation::update_movement_window() {
+    if (use_movement_window) {
+        if (move_begin_callback.times_raised || rotate_begin_callback.times_raised) {
+            inside_movement_window = true;
+            move_begin_signal_time = the_base->get_current_anim_time();
+
+            // the window runs to the matching end signal, else the other one, else the anim's end
+            string_hash end_signal = move_begin_callback.times_raised ? references::move_end.read() : references::rotate_end.read();
+
+            f32 time_to_end = the_base->get_time_to_signal(end_signal, nullptr, true, nullptr);
+            move_end_signal_time = time_to_end;
+
+            if (time_to_end < 0.0f) {
+                string_hash other_end_signal = move_begin_callback.times_raised ? references::rotate_end.read() : references::move_end.read();
+
+                time_to_end = the_base->get_time_to_signal(other_end_signal, nullptr, true, nullptr);
+                move_end_signal_time = time_to_end;
+            }
+
+            if (time_to_end < 0.0f)
+                move_end_signal_time = the_base->get_duration();
+            else
+                move_end_signal_time = time_to_end + move_begin_signal_time;
+        }
+
+        if (move_end_callback.times_raised || rotate_end_callback.times_raised)
+            inside_movement_window = false;
+    } else
+        inside_movement_window = false;
+
+    move_begin_callback.times_raised   = 0;
+    move_end_callback.times_raised     = 0;
+    rotate_begin_callback.times_raised = 0;
+    rotate_end_callback.times_raised   = 0;
+}
+
+// inlined @ sub_5C4B30
 // inlined @ sub_5C5BE0
+// inlined @ sub_5C68C0
 void als::simple_orientation::turn_toward_desired(po &curr_offset, f32 delta_t, vector3d curr_dir, vector3d curr_up) {
     vector3d desired_dir;
     vector3d desired_up;
@@ -2148,4 +2163,216 @@ void als::ikcrawl_mocomp::post_anim_action(f32 delta_t) {
 void als::ikcrawl_mocomp::get_directions(animation_logic_system* als_core, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
     if (!ikcrawl_enabled)
         relative_orientation::get_directions(als_core, base, desired_dir, desired_up);
+}
+
+// sub_5AEFD0
+mash::virtual_types_key als::wallsprint_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEE70
+bool als::wallsprint_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (relative_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (relative_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::wallsprint_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C68C0
+void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
+
+    update_movement_window();
+
+    po curr_offset;
+    retail::sub_4015B0((u64*)&curr_offset);
+
+    get_po_curr_offset(curr_offset);
+
+    if (use_movement_window && !inside_movement_window) {
+        turn_rate          = 0.0f;
+        currently_rotating = false;
+    } else if (use_instant_facing)
+        face_desired_direction();
+    else {
+        // the wall's axes, unit length
+        vector3d wall_dir = wall->get_wall_po()->get_z_facing();
+        vector3d wall_up  = wall->get_wall_po()->get_y_facing();
+
+        vector3d curr_dir = unitized(wall_dir);
+        vector3d curr_up  = unitized(wall_up);
+
+        turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
+    }
+
+    // the actor takes the wall's axes, a step at a time while the inode asks for more than one
+    po placed;
+
+    if (wall->unk_058 > 1) {
+        const po &abs_po   = *the_actor->my_abs_po;
+        vector3d  position = abs_po.get_position();
+        vector4d  y_row    = abs_po.get_matrix().y;
+        vector4d  z_row    = abs_po.get_matrix().z;
+
+        const matrix4x4 &wall_m = wall->get_wall_po()->get_matrix();
+
+        f32 step = 1.0f / (f32)wall->unk_058;
+
+        vector3d dir(z_row.x + (wall_m.z.x - z_row.x) * step, z_row.y + (wall_m.z.y - z_row.y) * step, (wall_m.z.z - z_row.z) * step + z_row.z);
+        vector3d up(y_row.x + (wall_m.y.x - y_row.x) * step, (wall_m.y.y - y_row.y) * step + y_row.y, (wall_m.y.z - y_row.z) * step + y_row.z);
+        vector3d side = cross(up, dir);
+
+        vector3d unit_dir  = unitized(dir);
+        vector3d unit_up   = unitized(up);
+        vector3d unit_side = unitized(side);
+
+        retail::sub_4015B0((u64*)&placed);
+
+        placed.get_matrix().x = vector4d(unit_side.x, unit_side.y, unit_side.z, 0.0f);
+        placed.get_matrix().y = vector4d(unit_up.x, unit_up.y, unit_up.z, 0.0f);
+        placed.get_matrix().z = vector4d(unit_dir.x, unit_dir.y, unit_dir.z, 0.0f);
+        placed.get_matrix().w = vector4d(position.x, position.y, position.z, 0.0f);
+    } else {
+        vector3d position = the_actor->my_abs_po->get_position();
+
+        const matrix4x4 &wall_m = wall->get_wall_po()->get_matrix();
+
+        placed.get_matrix().x = wall_m.x;
+        placed.get_matrix().y = wall_m.y;
+        placed.get_matrix().z = wall_m.z;
+        placed.get_matrix().w = vector4d(position.x, position.y, position.z, 0.0f);
+    }
+
+    retail::sub_627180((i32)the_actor, (f32*)&placed); // entity_base::set_abs_po
+
+    vector3d prev_position = the_actor->my_abs_po->get_position();
+
+    other_po_changes(delta_t, &curr_offset);
+
+    if (!retail::sub_5AA570((f32*)&curr_offset, (f32*)&treyarch::references::po_identity_matrix.get()))
+        set_po_curr_offset(the_actor, curr_offset);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(position.x - prev_position.x, position.y - prev_position.y, position.z - prev_position.z), delta_t);
+}
+
+// sub_5F3990
+void als::wallsprint_mocomp::other_po_changes(f32, po* curr_offset) {
+    if (retail::sub_5AA570((f32*)curr_offset, (f32*)&treyarch::references::po_identity_matrix.get()))
+        return;
+
+    wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
+
+    // the actor's turn undone, about the origin
+    const po       &abs_po = *the_actor->my_abs_po;
+    const vector3d &x_row  = abs_po.get_x_facing();
+    const vector3d &y_row  = abs_po.get_y_facing();
+    const vector3d &z_row  = abs_po.get_z_facing();
+    const vector3d &zero   = treyarch::references::unk_00fd4370.get();
+
+    po unturn;
+    retail::sub_4015B0((u64*)&unturn);
+
+    matrix4x4 transposed;
+    transposed.x = vector4d(x_row.x, y_row.x, z_row.x, 0.0f);
+    transposed.y = vector4d(x_row.y, y_row.y, z_row.y, 0.0f);
+    transposed.z = vector4d(x_row.z, y_row.z, z_row.z, 0.0f);
+    transposed.w = vector4d(-(f32)((f64)x_row.x * zero.x + (f64)x_row.y * zero.y + (f64)x_row.z * zero.z),
+                            -(f32)((f64)y_row.y * zero.y + (f64)y_row.x * zero.x + (f64)y_row.z * zero.z),
+                            -(f32)((f64)z_row.y * zero.y + (f64)z_row.x * zero.x + (f64)z_row.z * zero.z),
+                            0.0f);
+
+    retail::sub_44DA50((u64*)&unturn, (i32)&transposed); // po from the matrix's 3x4
+
+    po wall_po = *wall->get_wall_po();
+
+    // the anim's offset, from the actor's frame into the wall's
+    vector4d        &offset = curr_offset->get_matrix().w;
+    const matrix4x4 &u      = unturn.get_matrix();
+
+    offset = vector4d((f32)((f64)u.x.x * offset.x + (f64)u.y.x * offset.y + (f64)u.z.x * offset.z + (f64)u.w.x * 0.0),
+                      (f32)((f64)u.y.y * offset.y + (f64)u.x.y * offset.x + (f64)u.z.y * offset.z + (f64)u.w.y * 0.0),
+                      (f32)((f64)u.y.z * offset.y + (f64)u.x.z * offset.x + (f64)u.z.z * offset.z + (f64)u.w.z * 0.0),
+                      0.0f);
+
+    const matrix4x4 &w = wall_po.get_matrix();
+
+    offset = vector4d((f32)((f64)w.x.x * offset.x + (f64)w.y.x * offset.y + (f64)w.z.x * offset.z + (f64)w.w.x * 0.0),
+                      (f32)((f64)w.y.y * offset.y + (f64)w.x.y * offset.x + (f64)w.z.y * offset.z + (f64)w.w.y * 0.0),
+                      (f32)((f64)w.y.z * offset.y + (f64)w.x.z * offset.x + (f64)w.z.z * offset.z + (f64)w.w.z * 0.0),
+                      0.0f);
+}
+
+// sub_5C78B0
+void als::wallsprint_mocomp::apply_rotation(po*, f32, f32 heading_change, const vector3d &, const vector3d &curr_dir, const vector3d &desired_up, const vector3d &) {
+    // turns the facing about the desired up
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &heading_change);
+
+    const matrix4x4 &m = rotation.get_matrix();
+
+    math::vector4 turned((f32)((f64)m.y.x * curr_dir.y + (f64)m.x.x * curr_dir.x + (f64)m.z.x * curr_dir.z + (f64)m.w.x * 0.0),
+                         (f32)((f64)m.y.y * curr_dir.y + (f64)m.x.y * curr_dir.x + (f64)m.z.y * curr_dir.z + (f64)m.w.y * 0.0),
+                         (f32)((f64)m.y.z * curr_dir.y + (f64)m.x.z * curr_dir.x + (f64)m.z.z * curr_dir.z + (f64)m.w.z * 0.0),
+                         0.0f);
+
+    math::vector4 up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    math::vector4   origin(position.x, position.y, position.z, 0.0f);
+
+    po facing;
+    retail::sub_402260((u64*)&facing, (f32*)&turned, (f32*)&up, (i64*)&origin);
+
+    // the wall turns, the post-action brings the actor along
+    wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
+
+    using set_wall_po_t = void (__thiscall*)(wall_sprint_inode*, vector3d, vector3d);
+
+    ((set_wall_po_t)retail::sub_54A880)(wall, facing.get_z_facing(), facing.get_y_facing()); // wall_sprint_inode: wall_po from a facing and up
+}
+
+// sub_5C7B20
+void als::wallsprint_mocomp::face_desired_direction() {
+    vector3d desired_dir;
+    vector3d desired_up;
+
+    get_directions(the_als, the_base, &desired_dir, &desired_up);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+
+    math::vector4 basis_dir(desired_dir.x, desired_dir.y, desired_dir.z, 0.0f);
+    math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+    math::vector4 origin(position.x, position.y, position.z, 0.0f);
+
+    po facing;
+    retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+    wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
+
+    using set_wall_po_t = void (__thiscall*)(wall_sprint_inode*, vector3d, vector3d);
+
+    ((set_wall_po_t)retail::sub_54A880)(wall, facing.get_z_facing(), facing.get_y_facing()); // wall_sprint_inode: wall_po from a facing and up
 }
