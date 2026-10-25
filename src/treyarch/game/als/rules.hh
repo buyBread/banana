@@ -2,7 +2,9 @@
 
 #include "treyarch/game/als/param.hh"
 #include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
+#include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -24,6 +26,9 @@ namespace treyarch { namespace als {
         greater_than_or_equal_to,
         less_than_or_equal_to
     };
+
+    // anything else fails
+    bool compare_numbers(e_comparison comparison, f32 lhs, f32 rhs);
 
     // what a mashed basic_rule_list slot holds until its rule is unmashed
     enum class e_rule_class : u32 {
@@ -106,14 +111,29 @@ namespace treyarch { namespace als {
         ifc_number_param_vector_component_compare
     };
 
-    // rules only do something when they're evaluated, so mashed ones get their retail vtables from the type registry
     class transition_rule_base : public mash::mash_virtual_base {
 
     public:
         param_id param;
 
+        transition_rule_base() = default;
+
+        // inlined @ sub_723DA0
+        explicit transition_rule_base(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
         // retail passes this on the stack, so every override keeps the convention
         virtual bool __stdcall evaluate(const rule_context &context) const;
+
+        // inlined into the deleting destructors
+        void operator delete(void* allocation) noexcept {
+            memory::heap::free(allocation);
+        }
+
+        static string_hash my_type_key;
     };
 
     // ==== constant compares ==== //
@@ -122,26 +142,263 @@ namespace treyarch { namespace als {
 
     public:
         f32 value;
+
+        constant_number_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit constant_number_compare_rule(mash::generating_vtable_version so_do_nothing) : transition_rule_base(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        static string_hash my_type_key;
     };
 
     class vector_component_constant_number_compare_rule : public constant_number_compare_rule {
 
     public:
-        u32 component; // 0-2 x/y/z, then values derived from the whole vector
+        e_vector_component component;
+
+        vector_component_constant_number_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_constant_number_compare_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        static string_hash my_type_key;
     };
 
-    class number_compare_equal_rule                                     : public constant_number_compare_rule {};
-    class number_compare_not_equal_rule                                 : public constant_number_compare_rule {};
-    class number_compare_greater_than_rule                              : public constant_number_compare_rule {};
-    class number_compare_less_than_rule                                 : public constant_number_compare_rule {};
-    class number_compare_greater_than_or_equal_to_rule                  : public constant_number_compare_rule {};
-    class number_compare_less_than_or_equal_to_rule                     : public constant_number_compare_rule {};
-    class vector_component_number_compare_equal_rule                    : public vector_component_constant_number_compare_rule {};
-    class vector_component_number_compare_not_equal_rule                : public vector_component_constant_number_compare_rule {};
-    class vector_component_number_compare_greater_than_rule             : public vector_component_constant_number_compare_rule {};
-    class vector_component_number_compare_less_than_rule                : public vector_component_constant_number_compare_rule {};
-    class vector_component_number_compare_greater_than_or_equal_to_rule : public vector_component_constant_number_compare_rule {};
-    class vector_component_number_compare_less_than_or_equal_to_rule    : public vector_component_constant_number_compare_rule {};
+    class number_compare_equal_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_equal_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class number_compare_not_equal_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_not_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_not_equal_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class number_compare_greater_than_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_greater_than_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_greater_than_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class number_compare_less_than_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_less_than_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_less_than_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class number_compare_greater_than_or_equal_to_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_greater_than_or_equal_to_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_greater_than_or_equal_to_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class number_compare_less_than_or_equal_to_rule : public constant_number_compare_rule {
+
+    public:
+        number_compare_less_than_or_equal_to_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit number_compare_less_than_or_equal_to_rule(mash::generating_vtable_version so_do_nothing) : constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_equal_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_equal_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_not_equal_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_not_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_not_equal_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_greater_than_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_greater_than_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_greater_than_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_less_than_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_less_than_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_less_than_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_greater_than_or_equal_to_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_greater_than_or_equal_to_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_greater_than_or_equal_to_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
+
+    class vector_component_number_compare_less_than_or_equal_to_rule : public vector_component_constant_number_compare_rule {
+
+    public:
+        vector_component_number_compare_less_than_or_equal_to_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_number_compare_less_than_or_equal_to_rule(mash::generating_vtable_version so_do_nothing) : vector_component_constant_number_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
 
     // ==== parameter compares ==== //
 
@@ -150,24 +407,76 @@ namespace treyarch { namespace als {
     public:
         param_id     other_param;
         e_comparison comparison;
+
+        param_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit param_compare_rule(mash::generating_vtable_version so_do_nothing) : transition_rule_base(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
     class vector_component_param_compare_rule : public param_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
+
+        vector_component_param_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_param_compare_rule(mash::generating_vtable_version so_do_nothing) : param_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
     class vector_param_compare_rule : public param_compare_rule {
 
     public:
-        u32 other_component;
+        e_vector_component other_component;
+
+        vector_param_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_param_compare_rule(mash::generating_vtable_version so_do_nothing) : param_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
     class vector_component_vector_param_compare_rule : public vector_param_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
+
+        vector_component_vector_param_compare_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_vector_param_compare_rule(mash::generating_vtable_version so_do_nothing) : vector_param_compare_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
     // ==== hashes ==== //
@@ -176,17 +485,84 @@ namespace treyarch { namespace als {
 
     public:
         string_hash value;
+
+        hash_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit hash_equal_rule(mash::generating_vtable_version so_do_nothing) : transition_rule_base(so_do_nothing),
+                                                                                  value(so_do_nothing) {}
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
-    class hash_not_equal_rule : public hash_equal_rule {};
+    class hash_not_equal_rule : public hash_equal_rule {
+
+    public:
+        hash_not_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit hash_not_equal_rule(mash::generating_vtable_version so_do_nothing) : hash_equal_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
 
     class hash_param_equal_rule : public transition_rule_base {
 
     public:
         param_id other_param;
+
+        hash_param_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit hash_param_equal_rule(mash::generating_vtable_version so_do_nothing) : transition_rule_base(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
-    class hash_param_not_equal_rule : public hash_param_equal_rule {};
+    class hash_param_not_equal_rule : public hash_param_equal_rule {
+
+    public:
+        hash_param_not_equal_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit hash_param_not_equal_rule(mash::generating_vtable_version so_do_nothing) : hash_param_equal_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        virtual mash::string get_operator_string() const;
+
+        static string_hash my_type_key;
+    };
 
     // ==== bounds ==== //
 
@@ -195,17 +571,73 @@ namespace treyarch { namespace als {
     public:
         f32 lower_bound;
         f32 upper_bound;
+
+        bounded_number_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit bounded_number_rule(mash::generating_vtable_version so_do_nothing) : transition_rule_base(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
-    class inverse_bounded_number_rule : public bounded_number_rule {};
+    class inverse_bounded_number_rule : public bounded_number_rule {
+
+    public:
+        inverse_bounded_number_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit inverse_bounded_number_rule(mash::generating_vtable_version so_do_nothing) : bounded_number_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
+    };
 
     class vector_component_bounded_number_rule : public bounded_number_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
+
+        vector_component_bounded_number_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_bounded_number_rule(mash::generating_vtable_version so_do_nothing) : bounded_number_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
     };
 
-    class vector_component_inverse_bounded_number_rule : public vector_component_bounded_number_rule {};
+    class vector_component_inverse_bounded_number_rule : public vector_component_bounded_number_rule {
+
+    public:
+        vector_component_inverse_bounded_number_rule() = default;
+
+        // inlined @ sub_723DA0
+        explicit vector_component_inverse_bounded_number_rule(mash::generating_vtable_version so_do_nothing) : vector_component_bounded_number_rule(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool __stdcall evaluate(const rule_context &context) const override;
+
+        static string_hash my_type_key;
+    };
 
     // ==== upgrades, other state machines, the ai and its target ==== //
 
@@ -228,7 +660,7 @@ namespace treyarch { namespace als {
     class als_state_vector_component_number_compare_rule : public als_state_number_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
     };
 
     class als_state_hash_equal_rule                              : public hash_equal_rule {};
@@ -249,7 +681,7 @@ namespace treyarch { namespace als {
     class ai_vector_component_number_compare_rule : public ai_number_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
     };
 
     class ai_hash_equal_rule                              : public hash_equal_rule {};
@@ -270,7 +702,7 @@ namespace treyarch { namespace als {
     class target_ai_vector_component_number_compare_rule : public target_ai_number_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
     };
 
     class target_ai_hash_equal_rule                              : public hash_equal_rule {};
@@ -296,7 +728,7 @@ namespace treyarch { namespace als {
     class class_vector_component_constant_number_compare_rule : public class_constant_number_compare_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
     };
 
     class class_hash_compare_rule : public transition_rule_base {
@@ -317,7 +749,7 @@ namespace treyarch { namespace als {
     class class_vector_component_bounded_number_rule : public class_bounded_number_rule {
 
     public:
-        u32 component;
+        e_vector_component component;
     };
 
     class class_param_compare_rule : public transition_rule_base {
@@ -331,7 +763,7 @@ namespace treyarch { namespace als {
     class class_vector_component_param_compare_rule : public class_param_compare_rule {
 
     public:
-        u32 other_component;
+        e_vector_component other_component;
     };
 
     class ai_inode_number_compare_rule                              : public class_constant_number_compare_rule {};

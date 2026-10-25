@@ -565,6 +565,17 @@ bool als::state_machine::has_ext_param_been_set(param_id param) const {
 }
 
 // sub_5EEF20
+// inlined @ sub_5EF050
+// inlined @ sub_5EF0E0
+// inlined @ sub_5EF170
+// inlined @ sub_5EF1F0
+// inlined @ sub_5EF270
+// inlined @ sub_5EF2F0
+// inlined @ sub_5EF370
+// inlined @ sub_5EF450
+// inlined @ sub_5EF500
+// inlined @ sub_5EF5B0
+// inlined @ sub_5EF640
 f32 als::state_machine::get_float_param(animation_logic_system* the_als, param_id param) {
     if (param < num_external_hash_params)
         return get_external_float(param);
@@ -586,6 +597,24 @@ string_hash als::state_machine::get_hash_param(animation_logic_system* the_als, 
         return get_external_hash(param);
 
     return the_als->get_internal_hash(this, param);
+}
+
+// inlined @ sub_5D7B40
+// inlined @ sub_5D7BA0
+// inlined @ sub_5D7C00
+// inlined @ sub_5D7C60
+// inlined @ sub_5D7CC0
+// inlined @ sub_5D7D20
+// inlined @ sub_5D7D80
+// inlined @ sub_5D7F10
+// inlined @ sub_5D7F80
+// inlined @ sub_5EF450
+// inlined @ sub_5EF500
+f32 als::state_machine::get_vector_component_param(animation_logic_system* the_als, param_id param, e_vector_component component) {
+    if (param < num_external_hash_params)
+        return get_external_vector_component(param, component);
+
+    return the_als->the_cache.get_internal_vector_component(the_als, this, param, component);
 }
 
 // sub_5E2340

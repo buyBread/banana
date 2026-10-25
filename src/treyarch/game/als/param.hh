@@ -19,19 +19,19 @@ namespace treyarch { namespace als {
     enum internal_vector_parameter_types : u32 { num_internal_vector_params = 261 };
     enum internal_hash_parameter_types   : u32 { num_internal_hash_params   = 275 };
 
-    // what a vector parameter is reduced to when a single number is wanted
+    // what a vector parameter is reduced to when a single number is wanted; retail's debug names
     enum e_vector_component : u32 {
         component_x = 0,
         component_y,
         component_z,
-        component_unit_x,
-        component_unit_y,
-        component_unit_z,
+        component_norm_x,
+        component_norm_y,
+        component_norm_z,
         component_length,
-        component_length2,
+        component_length_sq,
         component_xz_length,
-        component_xz_length2,
-        component_abs_y
+        component_xz_length_sq,
+        component_y_length
     };
 
     f32 get_vector_component(const vector3d &vec, e_vector_component component);

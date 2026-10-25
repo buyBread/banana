@@ -153,34 +153,34 @@ f32 als::get_vector_component(const vector3d &vec, e_vector_component component)
         case component_z:
             return vec.z;
 
-        case component_unit_x: {
-            vector3d unit = vec;
-            return unit.normalize().x;
+        case component_norm_x: {
+            vector3d norm = vec;
+            return norm.normalize().x;
         }
 
-        case component_unit_y: {
-            vector3d unit = vec;
-            return unit.normalize().y;
+        case component_norm_y: {
+            vector3d norm = vec;
+            return norm.normalize().y;
         }
 
-        case component_unit_z: {
-            vector3d unit = vec;
-            return unit.normalize().z;
+        case component_norm_z: {
+            vector3d norm = vec;
+            return norm.normalize().z;
         }
 
         case component_length:
             return vec.length();
 
-        case component_length2:
+        case component_length_sq:
             return vec.length2();
 
         case component_xz_length:
             return vec.xz_length();
 
-        case component_xz_length2:
+        case component_xz_length_sq:
             return vec.xz_length2();
 
-        case component_abs_y:
+        case component_y_length:
             return std::fabs(vec.y);
 
         default:

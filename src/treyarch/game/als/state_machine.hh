@@ -187,6 +187,7 @@ namespace treyarch { namespace als {
         f32         get_float_param (animation_logic_system* the_als, param_id param);
         vector3d    get_vector_param(animation_logic_system* the_als, param_id param);
         string_hash get_hash_param  (animation_logic_system* the_als, param_id param);
+        f32         get_vector_component_param(animation_logic_system* the_als, param_id param, e_vector_component component);
 
         // the current state's block, then its category's
         const param_block* find_param_block_with_param(string_hash the_param)                        const;
