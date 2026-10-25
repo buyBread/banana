@@ -259,3 +259,51 @@ als::layer_id als::layer_state_machine_shared::get_layer_id() const {
 void als::layer_state_machine_shared::set_layer_id(layer_id new_id) {
     the_layer_id = new_id;
 }
+
+// sub_5F6220
+void als::animation_logic_system_shared::construct_mashed_class() {
+    self = nullptr;
+
+    the_layers_shared.construct_mashed_class();
+
+    if (the_base_sm_shared)
+        mash::mash_info_struct::construct_class(the_base_sm_shared);
+
+    if (meta_anim_table)
+        meta_anim_table->construct_mashed_class();
+}
+
+// sub_5E8B00
+void als::animation_logic_system_shared::destruct_mashed_class() {
+    the_layers_shared.destruct_mashed_class();
+
+    if (the_base_sm_shared) {
+        the_base_sm_shared->destruct_mashed_class();
+        the_base_sm_shared = nullptr;
+    }
+
+    if (meta_anim_table) {
+        meta_anim_table->destruct_mashed_class();
+        meta_anim_table = nullptr;
+    }
+}
+
+// sub_5F56D0
+void als::animation_logic_system_shared::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    the_layers_shared.unmash(mash_info, this, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(the_base_sm_shared, this, buffer);
+    else
+        the_base_sm_shared = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(meta_anim_table, this, buffer);
+    else
+        meta_anim_table = nullptr;
+}

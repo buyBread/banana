@@ -3,6 +3,7 @@
 #include "treyarch/game/als/als.hh"
 #include "treyarch/game/als/animation_blend.hh"
 #include "treyarch/game/als/animation_event.hh"
+#include "treyarch/game/als/meta_anim.hh"
 #include "treyarch/game/wds/ai/param_block.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/mash_info.hh"
@@ -120,6 +121,19 @@ namespace treyarch { namespace als {
         mash::vector
             <state_unk_58>     unk_6c;
 
+        state() = default;
+
+        // inlined @ sub_723B40
+        // inlined @ sub_723B80
+        explicit state(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing),
+                                                                        name(so_do_nothing),
+                                                                        cat_name(so_do_nothing),
+                                                                        events(so_do_nothing),
+                                                                        hit_pause_events(so_do_nothing),
+                                                                        unk_44(so_do_nothing),
+                                                                        unk_58(so_do_nothing),
+                                                                        unk_6c(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -149,6 +163,12 @@ namespace treyarch { namespace als {
         category_id  name;
         param_block* my_param_block;
 
+        category() = default;
+
+        // inlined @ sub_723DA0
+        explicit category(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing),
+                                                                           name(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -172,6 +192,11 @@ namespace treyarch { namespace als {
     class transition_group_base : public mash::mash_virtual_base {
 
     public:
+        transition_group_base() = default;
+
+        // inlined @ sub_723DA0
+        explicit transition_group_base(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing) {}
+
         mash::virtual_types_key get_virtual_type_key() const override;
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
 
@@ -189,6 +214,14 @@ namespace treyarch { namespace als {
             <category>              category_list;
         mash::vector
             <transition_group_base> trans_group_list;
+
+        state_machine_shared() = default;
+
+        // inlined @ sub_723DA0
+        explicit state_machine_shared(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing),
+                                                                                       state_list(so_do_nothing),
+                                                                                       category_list(so_do_nothing),
+                                                                                       trans_group_list(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
@@ -211,6 +244,11 @@ namespace treyarch { namespace als {
         u32      bitmask; // layer domains
         layer_id the_layer_id;
 
+        layer_state_machine_shared() = default;
+
+        // inlined @ sub_723DA0
+        explicit layer_state_machine_shared(mash::generating_vtable_version so_do_nothing) : state_machine_shared(so_do_nothing) {}
+
         void unmash(mash::mash_info_struct* mash_info,
                     void*                   containing_class_ptr,
                     mash::buffer_type       buffer) override;
@@ -223,6 +261,24 @@ namespace treyarch { namespace als {
         virtual void set_layer_id(layer_id new_id);
 
         static string_hash my_type_key;
+    };
+
+    // a type-84 resource: the machines and meta anims every actor playing it shares
+    class animation_logic_system_shared {
+
+    public:
+        void* self; // the resource handler points this at the root itself
+
+        mash::vector
+            <layer_state_machine_shared> the_layers_shared;
+        state_machine_shared*            the_base_sm_shared;
+        als_meta_anim_table_shared*      meta_anim_table;
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
     };
 
     ASSERT_SIZEOF  (request_data,                       0x0C);
@@ -260,4 +316,9 @@ namespace treyarch { namespace als {
     ASSERT_SIZEOF  (layer_state_machine_shared,               0x48);
     ASSERT_OFFSETOF(layer_state_machine_shared, bitmask,      0x40);
     ASSERT_OFFSETOF(layer_state_machine_shared, the_layer_id, 0x44);
+
+    ASSERT_SIZEOF  (animation_logic_system_shared,                     0x20);
+    ASSERT_OFFSETOF(animation_logic_system_shared, the_layers_shared,  0x04);
+    ASSERT_OFFSETOF(animation_logic_system_shared, the_base_sm_shared, 0x18);
+    ASSERT_OFFSETOF(animation_logic_system_shared, meta_anim_table,    0x1C);
 }} // treyarch::als

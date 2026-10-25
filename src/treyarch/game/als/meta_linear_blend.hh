@@ -18,6 +18,12 @@ namespace treyarch { namespace als {
         mash::vector
             <meta_key_anim> key_anims;
 
+        als_meta_linear_blend() = default;
+
+        // sub_720760
+        explicit als_meta_linear_blend(mash::generating_vtable_version so_do_nothing) : als_meta_anim_base(so_do_nothing),
+                                                                                        key_anims(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,

@@ -29,6 +29,12 @@ namespace treyarch { namespace als {
         mash::vector
             <animation_blend> blends;
 
+        animation_blends_list() = default;
+
+        // inlined @ sub_723DA0
+        explicit animation_blends_list(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing),
+                                                                                        blends(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,

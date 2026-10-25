@@ -131,6 +131,16 @@ namespace treyarch { namespace als {
         f32                       attack_end;
         u8                        pad_0f4[0x04];
 
+        scripted_state() = default;
+
+        // sub_723B40
+        // inlined @ sub_723B80
+        explicit scripted_state(mash::generating_vtable_version so_do_nothing) : state(so_do_nothing),
+                                                                                 trans_group_ref_list(so_do_nothing),
+                                                                                 implicit_trans_list(so_do_nothing),
+                                                                                 explicit_trans_list(so_do_nothing),
+                                                                                 speed_range_list(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -158,6 +168,11 @@ namespace treyarch { namespace als {
         mash::virtual_types_key mocomp_type;
         u8                      pad_0fc[0x04];
 
+        base_layer_scripted_state() = default;
+
+        // sub_723B80
+        explicit base_layer_scripted_state(mash::generating_vtable_version so_do_nothing) : scripted_state(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -184,6 +199,15 @@ namespace treyarch { namespace als {
             <explicit_trans>  explicit_trans_list;
         mash::vector
             <incoming_trans>  incoming_trans_list;
+
+        scripted_category() = default;
+
+        // inlined @ sub_723DA0
+        explicit scripted_category(mash::generating_vtable_version so_do_nothing) : category(so_do_nothing),
+                                                                                    trans_group_ref_list(so_do_nothing),
+                                                                                    implicit_trans_list(so_do_nothing),
+                                                                                    explicit_trans_list(so_do_nothing),
+                                                                                    incoming_trans_list(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
@@ -216,6 +240,15 @@ namespace treyarch { namespace als {
         mash::vector
             <explicit_trans>  explicit_trans_list;
         string_hash           name;
+
+        scripted_trans_group() = default;
+
+        // inlined @ sub_723DA0
+        explicit scripted_trans_group(mash::generating_vtable_version so_do_nothing) : transition_group_base(so_do_nothing),
+                                                                                       trans_group_ref_list(so_do_nothing),
+                                                                                       implicit_trans_list(so_do_nothing),
+                                                                                       explicit_trans_list(so_do_nothing),
+                                                                                       name(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;

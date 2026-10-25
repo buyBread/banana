@@ -15,6 +15,11 @@ namespace treyarch {
     class generic_anim_by_filename : public als::als_meta_anim_by_filename {
 
     public:
+        generic_anim_by_filename() = default;
+
+        // sub_71C670
+        explicit generic_anim_by_filename(mash::generating_vtable_version so_do_nothing) : als_meta_anim_by_filename(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -33,6 +38,11 @@ namespace treyarch {
     class ai_puppet_anim_by_filename : public als::als_meta_anim_by_filename {
 
     public:
+        ai_puppet_anim_by_filename() = default;
+
+        // sub_71B9C0
+        explicit ai_puppet_anim_by_filename(mash::generating_vtable_version so_do_nothing) : als_meta_anim_by_filename(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -55,6 +65,12 @@ namespace treyarch {
             <als::meta_key_anim> key_anims;
         u32                      unk_4c;
 
+        combat_dodge_meta_anim() = default;
+
+        // sub_7204D0
+        explicit combat_dodge_meta_anim(mash::generating_vtable_version so_do_nothing) : als_meta_anim_by_filename(so_do_nothing),
+                                                                                         key_anims(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -76,6 +92,12 @@ namespace treyarch {
         mash::vector
             <als::meta_key_anim> key_anims;
         u32                      unk_4c;
+
+        combat_block_meta_anim() = default;
+
+        // sub_7205D0
+        explicit combat_block_meta_anim(mash::generating_vtable_version so_do_nothing) : als_meta_anim_by_filename(so_do_nothing),
+                                                                                         key_anims(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;

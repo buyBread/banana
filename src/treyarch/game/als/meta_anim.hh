@@ -49,6 +49,16 @@ namespace treyarch {
             u8          pad_004[0x04];
             nal_anim_id my_name;
 
+            als_meta_anim_base() = default;
+
+            // inlined @ sub_71B9C0
+            // inlined @ sub_71C670
+            // inlined @ sub_71EB70
+            // inlined @ sub_7204D0
+            // inlined @ sub_7205D0
+            // inlined @ sub_720760
+            explicit als_meta_anim_base(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing) {}
+
             void construct_mashed_class() override;
             void destruct_mashed_class() override;
             void unmash(mash::mash_info_struct* mash_info,
@@ -125,6 +135,15 @@ namespace treyarch {
         public:
             nal::anim*   the_anim_ptr;
             mash::string m_anim_prefix;
+
+            als_meta_anim_by_filename() = default;
+
+            // inlined @ sub_71B9C0
+            // inlined @ sub_71C670
+            // inlined @ sub_7204D0
+            // inlined @ sub_7205D0
+            explicit als_meta_anim_by_filename(mash::generating_vtable_version so_do_nothing) : als_meta_anim_base(so_do_nothing),
+                                                                                                m_anim_prefix(so_do_nothing) {}
 
             void construct_mashed_class() override;
             void destruct_mashed_class() override;

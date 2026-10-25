@@ -16,6 +16,11 @@ namespace treyarch { namespace als {
             <meta_key_anim, 8> keys;
         u32                    unk_2c;
 
+        als_meta_anim_swing() = default;
+
+        // sub_71EB70
+        explicit als_meta_anim_swing(mash::generating_vtable_version so_do_nothing) : als_meta_anim_base(so_do_nothing) {}
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
