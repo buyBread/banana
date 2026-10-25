@@ -36,7 +36,9 @@ namespace treyarch {
         /* cleared by game::freeze_hero on the first freeze and set again on the last unfreeze and by unload_current_level;
            world_dynamics_system::frame_advance runs frame_advance while set and frame_advance_disabled otherwise */
         bool                 enabled;
-        u8                   reserved_254[0x180];
+        u8                   reserved_254[0x4C];
+        vector3d             unk_2a0;        // als::crawl_transition's destination without param 146
+        u8                   reserved_2ac[0x128];
         player_reflexes      reflexes;
         player_spider_senses spider_senses;
         u8                   reserved_414[0x9C];
@@ -80,6 +82,7 @@ namespace treyarch {
     };
 
     ASSERT_OFFSETOF(player_interface, enabled,       0x253);
+    ASSERT_OFFSETOF(player_interface, unk_2a0,       0x2A0);
     ASSERT_OFFSETOF(player_interface, reflexes,      0x3D4);
     ASSERT_OFFSETOF(player_interface, spider_senses, 0x3FC);
     ASSERT_OFFSETOF(player_interface, unk_4b0,       0x4B0);
