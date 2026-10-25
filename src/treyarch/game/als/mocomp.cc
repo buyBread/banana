@@ -182,6 +182,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         return memory_buffer ? new (memory_buffer) flight_mocomp : nullptr;
     }
 
+    if (the_class_to_make == move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(move_and_face);
+
+        return memory_buffer ? new (memory_buffer) move_and_face : nullptr;
+    }
+
     // the classes not in source yet
     using create_subclass_in_place_t = motion_compensator* (__cdecl*)(mash::virtual_types_key, void*);
 
@@ -2152,8 +2158,10 @@ void als::ikcrawl_mocomp::post_anim_action(f32 delta_t) {
         return;
     }
 
+    using ikcrawl_gather_t = bool (__cdecl*)(actor*, state_machine*, f32);
+
     // ikcrawl: gathers the geometry around the actor
-    if (!retail::sub_5E63D0((i32)the_actor, (i32)the_base))
+    if (!((ikcrawl_gather_t)retail::sub_5E63D0)(the_actor, the_base, delta_t))
         return;
 
     vector3d prev_position = the_actor->my_abs_po->get_position();
@@ -3030,13 +3038,32 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
 }
 
 // sub_5B2430
-vector3d als::move_and_face::compute_translation(f32 delta_t, const po &old_po, const po &anim_po) {
-    using compute_translation_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, const po*, const po*);
+vector3d als::move_and_face::compute_translation(f32 delta_t, const po &old_po, const po &) {
+    // the anim's step, at its playback speeds
+    f32 duration  = the_base->get_duration();
+    f32 time      = the_base->get_current_anim_time();
+    f32 secondary = the_base->curr_state->get_secondary_playback_speed(time, duration);
+    f32 step_time = the_base->get_playback_speed() * secondary * delta_t;
 
-    vector3d result;
-    ((compute_translation_t)retail::sub_5B2430)(this, &result, delta_t, &old_po, &anim_po);
+    f32 time_percentage;
 
-    return result;
+    if (translation_time_left <= 0.0f)
+        time_percentage = 1.0f;
+    else {
+        f32 time_left = translation_time_left > translation_total_time ? translation_total_time : translation_time_left;
+
+        time_percentage = (f32)(1.0 - ((f64)time_left - step_time) / translation_total_time);
+
+        if (time_percentage < 0.0f)
+            time_percentage = 0.0f;
+        else if (time_percentage > 1.0f)
+            time_percentage = 1.0f;
+    }
+
+    if (translation_algorithm != mocomp_algorithm_simple_linear)
+        return old_po.get_position();
+
+    return simple_linear_translation(step_time, time_percentage, old_po);
 }
 
 // sub_5B2590
@@ -3046,22 +3073,80 @@ vector3d als::move_and_face::hybrid_translation(f32 delta_t, const po &, const p
 
 // sub_5F03D0
 vector3d als::move_and_face::translation_action(f32 delta_t, const po &old_po, const po &anim_po) {
-    using translation_action_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, const po*, const po*);
+    mocomp_action_enum action = pre_start_translation_action;
 
-    vector3d result;
-    ((translation_action_t)retail::sub_5F03D0)(this, &result, delta_t, &old_po, &anim_po);
+    if (translation_start_time <= 0.0f)
+        action = pre_signal_translation_action;
 
-    return result;
+    if (translation_time_left <= 0.0f)
+        action = post_signal_translation_action;
+
+    // with no destination, or when param 104 asks, the anim moves it
+    if (action != mocomp_action_none && !destination_point_valid)
+        action = mocomp_action_from_anim;
+    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(104) && the_base->get_external_float(104) > 0.0001f)
+        action = mocomp_action_from_anim;
+
+    vector3d position;
+
+    switch (action) {
+        case mocomp_action_none:
+            position = old_po.get_position();
+            break;
+
+        case mocomp_action_procedural:
+            position = compute_translation(delta_t, old_po, anim_po);
+            break;
+
+        case mocomp_action_from_anim:
+            return anim_po.get_position();
+
+        case mocomp_action_hybrid:
+            position = hybrid_translation(delta_t, old_po, anim_po);
+            break;
+
+        default:
+            return position;
+    }
+
+    // the mocomp moves it, not the physics
+    if (the_actor->has_ifc(entity_ifc_physical))
+        the_actor->physical_ifc()->cancel_all_velocity(treyarch::references::unk_00fd4370.get(), true);
+
+    return position;
 }
 
 // sub_5B25C0
-po als::move_and_face::compute_orientation(f32 delta_t, const po &old_po, const po &anim_po) {
-    using compute_orientation_t = po* (__thiscall*)(move_and_face*, po*, f32, const po*, const po*);
+po als::move_and_face::compute_orientation(f32 delta_t, const po &old_po, const po &) {
+    // the anim's step, at its playback speeds
+    f32 duration  = the_base->get_duration();
+    f32 time      = the_base->get_current_anim_time();
+    f32 secondary = the_base->curr_state->get_secondary_playback_speed(time, duration);
+    f32 step_time = the_base->get_playback_speed() * secondary * delta_t;
 
-    po result;
-    ((compute_orientation_t)retail::sub_5B25C0)(this, &result, delta_t, &old_po, &anim_po);
+    f32 time_percentage;
 
-    return result;
+    if (orientation_time_left <= 0.0f)
+        time_percentage = 1.0f;
+    else {
+        f32 time_left = orientation_time_left > orientation_total_time ? orientation_total_time : orientation_time_left;
+
+        time_percentage = (f32)(1.0 - ((f64)time_left - step_time) / orientation_total_time);
+
+        if (time_percentage < 0.0f)
+            time_percentage = 0.0f;
+        else if (time_percentage > 1.0f)
+            time_percentage = 1.0f;
+    }
+
+    if (orientation_algorithm != mocomp_algorithm_simple_linear) {
+        po result;
+        retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+
+        return result;
+    }
+
+    return simple_linear_orientation(step_time, time_percentage, old_po);
 }
 
 // sub_5B2720
@@ -3071,10 +3156,47 @@ po als::move_and_face::hybrid_orientation(f32 delta_t, const po &, const po &ani
 
 // sub_5F0560
 po als::move_and_face::orientation_action(f32 delta_t, const po &old_po, const po &anim_po) {
-    using orientation_action_t = po* (__thiscall*)(move_and_face*, po*, f32, const po*, const po*);
+    mocomp_action_enum action = pre_start_orientation_action;
+
+    if (orientation_start_time <= 0.0f)
+        action = pre_signal_orientation_action;
+
+    if (orientation_time_left <= 0.0f)
+        action = post_signal_orientation_action;
+
+    // with no facing, or when param 105 asks, the anim turns it
+    if (action != mocomp_action_none && !desired_facing_valid)
+        action = mocomp_action_from_anim;
+    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(105) && the_base->get_external_float(105) > 0.0001f)
+        action = mocomp_action_from_anim;
 
     po result;
-    ((orientation_action_t)retail::sub_5F0560)(this, &result, delta_t, &old_po, &anim_po);
+    retail::sub_4015B0((u64*)&result);
+
+    switch (action) {
+        case mocomp_action_none:
+            retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+            break;
+
+        case mocomp_action_procedural: {
+            po computed = compute_orientation(delta_t, old_po, anim_po);
+            retail::sub_583280((u64*)&result, (u64*)&computed);
+            break;
+        }
+
+        case mocomp_action_from_anim:
+            retail::sub_583280((u64*)&result, (u64*)&anim_po);
+            break;
+
+        case mocomp_action_hybrid: {
+            po hybrid = hybrid_orientation(delta_t, old_po, anim_po);
+            retail::sub_583280((u64*)&result, (u64*)&hybrid);
+            break;
+        }
+
+        default:
+            break;
+    }
 
     return result;
 }
@@ -3172,7 +3294,53 @@ void als::move_and_face::decrement_time_left(f32 delta_t, f32* time_left) {
 
 // sub_5F0670
 void als::move_and_face::face_and_arrive_by(f32 delta_t) {
-    ((void (__thiscall*)(move_and_face*, f32))retail::sub_5F0670)(this, delta_t);
+    using ikcrawl_gather_t = bool (__cdecl*)(actor*, state_machine*, f32);
+
+    bool crawling = false;
+
+    if (use_ik_crawl)
+        crawling = ((ikcrawl_gather_t)retail::sub_5E63D0)(the_actor, the_base, delta_t); // ikcrawl: gathers the geometry around the actor
+
+    po old_po  = *the_actor->my_abs_po;
+    po anim_po = calculate_anim_motion();
+    po facing  = orientation_action(delta_t, old_po, anim_po);
+
+    // once the up is near param 152, the facing turns to the rest of it
+    if (the_base->has_ext_param_been_set(60) && the_base->get_external_float(60) > 0.5f && the_base->has_ext_param_been_set(152)) {
+        vector3d target = the_base->get_external_vector(152);
+        f32      dot    = facing.get_y_facing() * target;
+
+        if (dot > 0.9f) {
+            target = target - facing.get_y_facing() * dot;
+
+            retail::sub_402050((f32*)&target);
+            retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
+        }
+    }
+
+    vector3d position = translation_action(delta_t, old_po, anim_po);
+
+    facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    if (use_ik_crawl && crawling) {
+        po moved;
+        retail::sub_4015B0((u64*)&moved);
+
+        po inverse;
+        retail::sub_48E2C0((f32*)&old_po, (u64*)&inverse);
+        retail::sub_44E230((u64*)&moved, (f32*)&facing, (f32*)&inverse);
+
+        retail::sub_5E6760((u32*)the_actor, delta_t, (f32*)&old_po.get_position(), (i32)&moved, (f32*)&facing); // ikcrawl: crawls on it
+
+        return;
+    }
+
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+    const vector3d &moved_to   = the_actor->my_abs_po->get_position();
+    const vector3d &moved_from = old_po.get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(moved_to.x - moved_from.x, moved_to.y - moved_from.y, moved_to.z - moved_from.z), delta_t);
 }
 
 // sub_5B1A30
