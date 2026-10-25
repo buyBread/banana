@@ -157,12 +157,12 @@ bool als::motion_compensator::is_request_fulfilled() {
 }
 
 // sub_71F870
-bool als::motion_compensator::force_reactivate() const {
+bool als::motion_compensator::unk_015() const {
     return false;
 }
 
 // sub_71F870
-bool als::motion_compensator::unk_016() const {
+bool als::motion_compensator::force_reactivate() const {
     return false;
 }
 

@@ -1067,7 +1067,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 
             mocomp_layer_index = index;
 
-            if (curr_mocomp && !curr_mocomp->unk_016() &&
+            if (curr_mocomp && !curr_mocomp->force_reactivate() &&
                 curr_mocomp->get_virtual_type_key() == machine_state->get_mocomp_type() &&
                 !(machine_state->flags & state::force_mo_comp_init))
 

@@ -84,8 +84,8 @@ namespace als {
         virtual void     pre_anim_action(f32 delta_t);
         virtual void     post_anim_action(f32 delta_t);
         virtual bool     is_request_fulfilled();
-        virtual bool     force_reactivate() const;
-        virtual bool     unk_016() const;
+        virtual bool     unk_015() const;
+        virtual bool     force_reactivate() const; // a new state of the same type builds it again
         virtual layer_id get_layer_id() const;
         virtual void     get_po_curr_offset(po &curr_offset); // the anim's trajectory this frame, scaled as the state allows
         virtual void     set_po_curr_offset(actor* target, po &curr_offset);
