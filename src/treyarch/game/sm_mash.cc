@@ -39,6 +39,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::constant_face_only>();
         mash::mash_virtual_base::register_class<als::constant_move_and_face>();
         mash::mash_virtual_base::register_class<als::constant_move_only>();
+        mash::mash_virtual_base::register_class<als::crawl_transition>();
         mash::mash_virtual_base::register_class<als::direct_mocomp>();
         mash::mash_virtual_base::register_class<als::ikcrawl_mocomp>();
         mash::mash_virtual_base::register_class<als::initial3D_velocity_orientation>();
@@ -51,6 +52,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::relative_orientation_on_foot>();
         mash::mash_virtual_base::register_class<als::relative_strafe_mocomp>();
         mash::mash_virtual_base::register_class<als::relative_strafe_mocomp_on_foot>();
+        mash::mash_virtual_base::register_class<als::rvb_crawl_transition>();
         mash::mash_virtual_base::register_class<als::signal_face_only>();
         mash::mash_virtual_base::register_class<als::signal_move_and_face>();
         mash::mash_virtual_base::register_class<als::signal_move_only>();
