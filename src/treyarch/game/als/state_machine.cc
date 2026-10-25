@@ -581,6 +581,7 @@ bool als::state_machine::has_ext_param_been_set(param_id param) const {
 // inlined @ sub_5EF870
 // inlined @ sub_5EF960
 // inlined @ sub_5EFA50
+// inlined @ sub_5F4BD0
 f32 als::state_machine::get_float_param(animation_logic_system* the_als, param_id param) {
     if (param < num_external_hash_params)
         return get_external_float(param);

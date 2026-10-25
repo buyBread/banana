@@ -13,7 +13,7 @@ namespace treyarch { namespace als {
     class als_meta_linear_blend : public als_meta_anim_base {
 
     public:
-        f32 unk_28; // the instances move it toward the desired blend
+        f32 current_blend; // the instances ease it toward the blend amount param
 
         mash::vector
             <meta_key_anim> key_anims;
@@ -47,7 +47,7 @@ namespace treyarch { namespace als {
         static string_hash my_type_key;
     };
 
-    ASSERT_SIZEOF  (als_meta_linear_blend,            0x40);
-    ASSERT_OFFSETOF(als_meta_linear_blend, unk_28,    0x28);
-    ASSERT_OFFSETOF(als_meta_linear_blend, key_anims, 0x2C);
+    ASSERT_SIZEOF  (als_meta_linear_blend,                0x40);
+    ASSERT_OFFSETOF(als_meta_linear_blend, current_blend, 0x28);
+    ASSERT_OFFSETOF(als_meta_linear_blend, key_anims,     0x2C);
 }} // treyarch::als

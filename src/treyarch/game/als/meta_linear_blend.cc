@@ -14,7 +14,7 @@ void als::als_meta_linear_blend::construct_mashed_class() {
 
     load_key_anims();
 
-    unk_28 = 0.5f;
+    current_blend = 0.5f;
 }
 
 // sub_5EAE60

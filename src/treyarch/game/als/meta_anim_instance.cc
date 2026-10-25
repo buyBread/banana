@@ -1,9 +1,14 @@
+#include <cmath>
+
 #include "retail.hh"
+#include "treyarch/game/als/animation_logic_system.hh"
 #include "treyarch/game/als/meta_anim_instance.hh"
 #include "treyarch/game/als/meta_anim_swing.hh"
 #include "treyarch/game/als/meta_linear_blend.hh"
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/nal/anim.hh"
+#include "treyarch/nal/blend.hh"
+#include "treyarch/shared/math/usefulmath.hh"
 
 using namespace treyarch;
 
@@ -38,8 +43,8 @@ als::als_meta_linear_blend_instance::als_meta_linear_blend_instance(als_meta_lin
                                                                                                      the_layer(layer),
                                                                                                      meta_anim(the_meta_anim) {
 
-    instances    = (nal::anim_instance**)memory::heap::allocate(meta_anim->key_anims.size * sizeof(nal::anim_instance*));
-    first_sample = true;
+    instances     = (nal::anim_instance**)memory::heap::allocate(meta_anim->key_anims.size * sizeof(nal::anim_instance*));
+    follows_param = true;
 
     for (u32 index = 0; index < meta_anim->key_anims.size; ++index) {
         if (nal::anim* key_anim = meta_anim->key_anims[index]->the_anim_ptr) {
@@ -80,9 +85,31 @@ f32 als::als_meta_linear_blend_instance::get_duration() {
 
 // sub_5F4BD0
 void als::als_meta_linear_blend_instance::get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk) {
-    using get_pose_t = void (__thiscall*)(als_meta_linear_blend_instance*, f32, f32, nal::pose*, nal::transport_fk*);
+    param_id param   = get_blend_amount_param(the_layer->get_optional_pb_int(meta_linear_param_index_id, 0, nullptr));
+    f32      desired = the_layer->get_float_param(the_als, param);
 
-    ((get_pose_t)retail::sub_5F4BD0)(this, t, t_prev, pose, fk);
+    if (!follows_param || !the_layer->has_ext_param_been_set(param))
+        desired = meta_anim->current_blend;
+
+    clamp_value(&desired, 0.0f, 1.0f);
+
+    f32 blend_speed = the_layer->get_optional_pb_float(meta_linear_param_blend_speed_id, 1.0f, nullptr);
+    clamp_value(&blend_speed, 0.0f, 1.0f);
+
+    meta_anim->current_blend -= (meta_anim->current_blend - desired) * blend_speed;
+
+    // between which two key anims, and how far
+    f32 position = (f32)(meta_anim->key_anims.size - 1) * meta_anim->current_blend;
+    f32 lower    = std::floor(position);
+    f32 upper    = std::ceil(position);
+
+    f32 blend_amount = position - lower;
+    clamp_value(&blend_amount, 0.0f, 1.0f);
+
+    nal::pose blended(pose->pose_layout, nullptr);
+    blend_two_anims(t, t_prev, &blended, blend_amount, instances[(i32)lower], instances[(i32)upper], fk);
+
+    pose->copy(blended);
 }
 
 // sub_5B1760
@@ -97,7 +124,7 @@ nal::anim* als::als_meta_linear_blend_instance::get_anim() {
 
 // sub_5B1740
 void als::als_meta_linear_blend_instance::on_blend_out() {
-    first_sample = false;
+    follows_param = false;
 }
 
 // sub_5EFB50
@@ -109,16 +136,62 @@ void als::als_meta_linear_blend_instance::blend_two_anims(f32                 t,
                                                           nal::anim_instance* second,
                                                           nal::transport_fk*  fk) {
 
-    using blend_two_anims_t = void (__thiscall*)(als_meta_linear_blend_instance*,
-                                                 f32,
-                                                 f32,
-                                                 nal::pose*,
-                                                 f32,
-                                                 nal::anim_instance*,
-                                                 nal::anim_instance*,
-                                                 nal::transport_fk*);
+    // each instance is primed just before t_prev, so its trajectory delta starts there
+    if (first == second) {
+        first->get_pose(t_prev, t_prev - 0.0001f, pose, fk);
+        first->get_pose(t,      t_prev,           pose, fk);
 
-    ((blend_two_anims_t)retail::sub_5EFB50)(this, t, t_prev, pose, weight, first, second, fk);
+        return;
+    }
+
+    nal::pose first_pose (pose->pose_layout, nullptr);
+    nal::pose second_pose(pose->pose_layout, nullptr);
+
+    f32 primed = t_prev - 0.0001f;
+
+    first->get_pose (t_prev, primed, &first_pose,  fk);
+    first->get_pose (t,      t_prev, &first_pose,  fk);
+    second->get_pose(t_prev, primed, &second_pose, fk);
+    second->get_pose(t,      t_prev, &second_pose, fk);
+
+    nal::blend(pose, weight, &first_pose, &second_pose);
+
+    // the trajectory goes by the param itself, not the eased blend
+    param_id param      = get_blend_amount_param(the_layer->get_optional_pb_int(meta_linear_param_index_id, 0, nullptr));
+    f32      trajectory = the_layer->get_float_param(the_als, param);
+
+    if (the_layer->has_ext_param_been_set(param))
+        clamp_value(&trajectory, 0.0f, 1.0f);
+    else
+        trajectory = 0.5f;
+
+    trajectory *= (f32)(meta_anim->key_anims.size - 1);
+    trajectory -= std::floor(trajectory);
+
+    clamp_value(&trajectory, 0.0f, 1.0f);
+
+    nal::blend_trajectory(pose, trajectory, &first_pose, &second_pose);
+}
+
+// sub_5B1650
+// inlined @ sub_5F4BD0
+als::param_id als::als_meta_linear_blend_instance::get_blend_amount_param(i32 index) {
+    switch (index) {
+        case 1:
+            return 107;
+
+        case 2:
+            return 108;
+
+        case 3:
+            return 109;
+
+        case 4:
+            return 110;
+
+        default:
+            return 106;
+    }
 }
 
 // sub_5BF050

@@ -1,9 +1,12 @@
 #pragma once
 
 #include "treyarch/game/als/meta_anim.hh"
+#include "treyarch/game/als/param.hh"
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/nal/transport_fk.hh"
+#include "treyarch/shared/hash/algo.hh"
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/memory/fixed_pool.hh"
 #include "treyarch/shared/memory/heap.hh"
 #include "util/macros/sanity_assert.hh"
@@ -18,6 +21,10 @@ namespace treyarch { namespace als {
         inline util::memory_reference<memory::fixed_pool> linear_blend_instance_pool { 0x00E684C0 };
         inline util::memory_reference<memory::fixed_pool> swing_instance_pool        { 0x00E68508 };
     } // references
+
+    // what a linear blend's layer can say about it
+    inline const string_hash meta_linear_param_index_id       = string_hash(hash::djb2("meta_linear_param_index"));
+    inline const string_hash meta_linear_param_blend_speed_id = string_hash(hash::djb2("meta_linear_param_blend_speed"));
 
     // alsAnimInstance: what an als meta anim plays as
     class als_anim_instance {
@@ -45,7 +52,7 @@ namespace treyarch { namespace als {
         animation_logic_system* the_als;
         state_machine*          the_layer;
         als_meta_linear_blend*  meta_anim;
-        bool                    first_sample; // the desired blend is only followed until the fade out
+        bool                    follows_param; // the blend amount param is only followed until the fade out
         u8                      pad_015[0x03];
 
         als_meta_linear_blend_instance(als_meta_linear_blend*  the_meta_anim,
@@ -74,6 +81,9 @@ namespace treyarch { namespace als {
                              nal::anim_instance* first,
                              nal::anim_instance* second,
                              nal::transport_fk*  fk);
+
+        // which of the five blend amount params the layer's index picks
+        static param_id get_blend_amount_param(i32 index);
     };
 
     // alsMetaAnimSwingInstance
@@ -106,10 +116,10 @@ namespace treyarch { namespace als {
 
     ASSERT_SIZEOF  (als_anim_instance, 0x04);
 
-    ASSERT_SIZEOF  (als_meta_linear_blend_instance,               0x18);
-    ASSERT_OFFSETOF(als_meta_linear_blend_instance, instances,    0x04);
-    ASSERT_OFFSETOF(als_meta_linear_blend_instance, meta_anim,    0x10);
-    ASSERT_OFFSETOF(als_meta_linear_blend_instance, first_sample, 0x14);
+    ASSERT_SIZEOF  (als_meta_linear_blend_instance,                0x18);
+    ASSERT_OFFSETOF(als_meta_linear_blend_instance, instances,     0x04);
+    ASSERT_OFFSETOF(als_meta_linear_blend_instance, meta_anim,     0x10);
+    ASSERT_OFFSETOF(als_meta_linear_blend_instance, follows_param, 0x14);
 
     ASSERT_SIZEOF  (als_meta_anim_swing_instance,            0x5C);
     ASSERT_OFFSETOF(als_meta_anim_swing_instance, keys,      0x04);
