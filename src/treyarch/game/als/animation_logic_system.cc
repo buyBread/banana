@@ -360,7 +360,7 @@ bool als::animation_logic_system::prepare_controller_job(animation_controller* c
     }
 
     state->job.controller       = controller;
-    state->job.unk_a8           = state->job.unk_b0;
+    state->job.skip_matrices    = state->job.unk_b0;
     state->job.delta_t          = delta_t;
     state->job.num_pose_records = 0;
 
