@@ -5006,8 +5006,8 @@ void als::sync_move_and_face::activate(animation_logic_system* the_als_core, lay
 
     ((void (__thiscall*)(entity*, bool, bool))the_actor->vtable[69])(the_actor, disable_collision == 0, true); // slot 69
 
-    unk_028 = treyarch::references::unk_00fd4370.get();
-    unk_034 = treyarch::references::unk_00fd4370.get();
+    rel_slide_a = treyarch::references::unk_00fd4370.get();
+    rel_slide_b = treyarch::references::unk_00fd4370.get();
 }
 
 // sub_5C1220
@@ -5023,17 +5023,7 @@ void als::sync_move_and_face::deactivate() {
 
 // sub_5EAE80
 void als::sync_move_and_face::post_anim_action(f32 delta_t) {
-    using reorient_to_vertical_t = void (__thiscall*)(sync_move_and_face*, actor*, state_machine_interface*, actor*, state_machine_interface*);
-    using axis_slide_t           = void (__thiscall*)(sync_move_and_face*,
-                                                      actor*,
-                                                      state_machine_interface*,
-                                                      vector3d*,
-                                                      po*,
-                                                      actor*,
-                                                      state_machine_interface*,
-                                                      vector3d*,
-                                                      po*);
-    using sync_entities_t        = void (__cdecl*)(f32, actor*, po*, vector3d*, actor*, po*, vector3d*, f32, f32, bool, bool);
+    using sync_entities_t = void (__cdecl*)(f32, actor*, po*, vector3d*, actor*, po*, vector3d*, f32, f32, bool, bool);
 
     use_anim_only::post_anim_action(delta_t);
 
@@ -5233,7 +5223,7 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
     if (!keep_syncing)
         return;
 
-    ((reorient_to_vertical_t)retail::sub_5C1350)(this, actor_a, layer_a, actor_b, layer_b);
+    reorient_to_vertical(actor_a, layer_a, actor_b, layer_b);
 
     po po_a;
     po po_b;
@@ -5255,7 +5245,7 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
 
     apply_sync_rotate_angles(layer_a, &po_a, layer_b, &po_b);
 
-    ((axis_slide_t)retail::sub_5B31B0)(this, actor_a, layer_a, &pos_a, &po_a, actor_b, layer_b, &pos_b, &po_b);
+    apply_axis_slides(actor_a, layer_a, &pos_a, &po_a, actor_b, layer_b, &pos_b, &po_b);
 
     // each side eases the other over, the whole tween when it's locked itself and half otherwise
     if (!lock_pos_b || !lock_orient_b) {
@@ -5378,5 +5368,116 @@ void als::sync_move_and_face::apply_sync_rotate_angles(state_machine_interface* 
     if (layer_a) {
         if (i32 angle = layer_a->get_optional_pb_int(sync_rotate_angle_id, 0, nullptr))
             retail::sub_5B7400((f32*)po_b, (i32)&po_b->get_y_facing(), (f32)((f32)angle * 0.017453292519943295));
+    }
+}
+
+// sub_5C1350
+void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine_interface* layer_a, actor* actor_b, state_machine_interface* layer_b) {
+    // turns the po about the axis from its up to the blended one, keeping its position
+    auto reorient = [](actor* target, f32 speed) {
+        po       abs_po   = *target->my_abs_po;
+        vector3d position = abs_po.get_position();
+        vector3d up       = abs_po.get_y_facing();
+        vector3d blended  = up * (1.0f - speed) + treyarch::references::unk_00e6808c.get() * speed;
+
+        retail::sub_402050((f32*)&blended);
+
+        if (blended.length2() > 0.0001f) {
+            f32 angle = math::acos(up * blended);
+
+            if (angle > 0.01f || angle < -0.01f) {
+                vector3d axis = cross(abs_po.get_y_facing(), blended);
+
+                retail::sub_402050((f32*)&axis);
+
+                // without an axis between them, about the facing
+                if (axis.length2() < 0.01f)
+                    axis = abs_po.get_z_facing();
+
+                po rotation;
+                retail::sub_4015B0((u64*)&rotation);
+
+                angle = -angle;
+
+                math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+                retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+                retail::sub_44E230((u64*)&abs_po, (f32*)&abs_po, (f32*)&rotation);
+            }
+        }
+
+        retail::sub_424900((u64*)&abs_po, (u32*)&position); // po::set_position
+        retail::sub_627180((i32)target, (f32*)&abs_po);     // entity_base::set_abs_po
+    };
+
+    // a's speed comes from b's layer, as retail has it
+    if (actor_a && layer_a) {
+        bool exists = false;
+        f32  speed  = layer_b->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, &exists);
+
+        if (exists && speed < 0.9999f)
+            reorient(actor_a, speed);
+    }
+
+    if (actor_b && layer_b) {
+        bool exists = false;
+        f32  speed  = layer_b->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, &exists);
+
+        if (exists && speed < 0.9999f)
+            reorient(actor_b, speed);
+    }
+}
+
+// sub_5B31B0
+void als::sync_move_and_face::apply_axis_slides(actor*                   actor_a,
+                                                state_machine_interface* layer_a,
+                                                vector3d*                pos_a,
+                                                po*                      po_a,
+                                                actor*                   actor_b,
+                                                state_machine_interface* layer_b,
+                                                vector3d*                pos_b,
+                                                po*                      po_b) {
+
+    auto clamped = [](f32 value, f32 low, f32 high) {
+        if (low > value)
+            return low;
+
+        if (value > high)
+            return high;
+
+        return value;
+    };
+
+    if (layer_b->get_optional_pb_int(sync_allow_axis_slide_id, 0, nullptr)) {
+        if (rel_slide_a == treyarch::references::unk_00fd4370.get()) {
+            vector3d offset = actor_b->my_abs_po->get_position() - actor_a->my_abs_po->get_position();
+
+            rel_slide_a.x = po_a->get_x_facing() * offset;
+            rel_slide_a.y = po_a->get_y_facing() * offset;
+            rel_slide_a.z = po_a->get_z_facing() * offset;
+        }
+
+        vector3d slide_max = layer_b->get_optional_pb_vector3d(sync_rel_slide_max_id, treyarch::references::unk_00fd4370.get(), nullptr);
+        vector3d slide_min = layer_b->get_optional_pb_vector3d(sync_rel_slide_min_id, treyarch::references::unk_00fd4370.get(), nullptr);
+
+        *pos_a += po_a->get_x_facing() * clamped(rel_slide_a.x, slide_min.x, slide_max.x);
+        *pos_a += po_a->get_y_facing() * clamped(rel_slide_a.y, slide_min.y, slide_max.y);
+        *pos_a += po_a->get_z_facing() * clamped(rel_slide_a.z, slide_min.z, slide_max.z);
+    }
+
+    if (layer_a->get_optional_pb_int(sync_allow_axis_slide_id, 0, nullptr)) {
+        if (rel_slide_b == treyarch::references::unk_00fd4370.get()) {
+            vector3d offset = actor_a->my_abs_po->get_position() - actor_b->my_abs_po->get_position();
+
+            rel_slide_b.x = po_b->get_x_facing() * offset;
+            rel_slide_b.y = po_b->get_y_facing() * offset;
+            rel_slide_b.z = po_b->get_z_facing() * offset;
+        }
+
+        vector3d slide_max = layer_a->get_optional_pb_vector3d(sync_rel_slide_max_id, treyarch::references::unk_00fd4370.get(), nullptr);
+        vector3d slide_min = layer_a->get_optional_pb_vector3d(sync_rel_slide_min_id, treyarch::references::unk_00fd4370.get(), nullptr);
+
+        *pos_b += po_b->get_x_facing() * clamped(rel_slide_b.x, slide_min.x, slide_max.x);
+        *pos_b += po_b->get_y_facing() * clamped(rel_slide_b.y, slide_min.y, slide_max.y);
+        *pos_b += po_b->get_z_facing() * clamped(rel_slide_b.z, slide_min.z, slide_max.z);
     }
 }

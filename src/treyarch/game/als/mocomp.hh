@@ -79,6 +79,9 @@ namespace als {
     inline const string_hash sync_allow_physics_id         = string_hash(hash::djb2("sync_allow_physics"));
     inline const string_hash obey_move_and_face_signals_id = string_hash(hash::djb2("obey_move_and_face_signals"));
     inline const string_hash sync_rotate_angle_id          = string_hash(hash::djb2("sync_rotate_angle"));
+    inline const string_hash sync_allow_axis_slide_id      = string_hash(hash::djb2("sync_allow_axis_slide"));
+    inline const string_hash sync_rel_slide_min_id         = string_hash(hash::djb2("sync_rel_slide_min"));
+    inline const string_hash sync_rel_slide_max_id         = string_hash(hash::djb2("sync_rel_slide_max"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -1199,8 +1202,8 @@ namespace als {
         actor*   sync_index_actor_b;
         i16      sync_index_b;
         u8       pad_026[0x02];
-        vector3d unk_028;            // sub_5B31B0's axis slides, per side
-        vector3d unk_034;
+        vector3d rel_slide_a;        // where b first sat in a's bone, along its axes; zero until an axis slide sets it
+        vector3d rel_slide_b;
         bool     lock_pos_a;
         bool     lock_pos_b;
         bool     lock_orient_a;
@@ -1234,6 +1237,19 @@ namespace als {
 
         // each side's sync_rotate_angle turns the other's bone about its up
         void apply_sync_rotate_angles(state_machine_interface* layer_a, po* po_a, state_machine_interface* layer_b, po* po_b);
+
+        // each actor's up eases toward the world's at its reorient_to_vertical_speed
+        void reorient_to_vertical(actor* actor_a, state_machine_interface* layer_a, actor* actor_b, state_machine_interface* layer_b);
+
+        // each side's sync_allow_axis_slide lets the other's bone keep its partner where it first sat, within the side's limits
+        void apply_axis_slides(actor*                   actor_a,
+                               state_machine_interface* layer_a,
+                               vector3d*                pos_a,
+                               po*                      po_a,
+                               actor*                   actor_b,
+                               state_machine_interface* layer_b,
+                               vector3d*                pos_b,
+                               po*                      po_b);
 
         static string_hash my_type_key;
     };
@@ -1359,8 +1375,8 @@ namespace als {
     ASSERT_OFFSETOF(sync_move_and_face, sync_index_a,       0x1C);
     ASSERT_OFFSETOF(sync_move_and_face, sync_index_actor_b, 0x20);
     ASSERT_OFFSETOF(sync_move_and_face, sync_index_b,       0x24);
-    ASSERT_OFFSETOF(sync_move_and_face, unk_028,            0x28);
-    ASSERT_OFFSETOF(sync_move_and_face, unk_034,            0x34);
+    ASSERT_OFFSETOF(sync_move_and_face, rel_slide_a,        0x28);
+    ASSERT_OFFSETOF(sync_move_and_face, rel_slide_b,        0x34);
     ASSERT_OFFSETOF(sync_move_and_face, lock_pos_a,         0x40);
     ASSERT_OFFSETOF(sync_move_and_face, lock_orient_b,      0x43);
 } // als
