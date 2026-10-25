@@ -7,6 +7,7 @@
 #include "treyarch/amalga/worldly_pack_slot.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/game/als/animation_logic_system.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/game.hh"
 #include "treyarch/game/input/input_mgr.hh"
@@ -271,6 +272,11 @@ namespace treyarch {
         if (!util::redirect_rel32(0x0073BD01, { 0xE8, 0xCA, 0xE7, 0xFF, 0xFF }, &amalga::resource_handler_base::handle) ||
             !util::redirect_rel32(0x0076BDBB, { 0xE8, 0x10, 0xE7, 0xFC, 0xFF }, &amalga::resource_handler_base::handle))
 
+            FATAL_BREAKPOINT();
+
+        banana::log.msg("redirecting als_res_data::post_unmash_fixup (actor post-load setup)");
+
+        if (!util::redirect_rel32(0x00629854, { 0xE8, 0x17, 0x57, 0xFC, 0xFF }, &als::als_res_data::post_unmash_fixup))
             FATAL_BREAKPOINT();
 
         banana::log.msg("redirecting script_instance::run_single_thread_until_finished");

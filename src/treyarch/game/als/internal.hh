@@ -144,6 +144,16 @@ namespace treyarch { namespace als {
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
         i32                     get_mash_sizeof() const override;
 
+        // sub_5FD110
+        state_id get_state_id() const {
+            return name;
+        }
+
+        // sub_905E30
+        category_id get_cat_id() const {
+            return cat_name;
+        }
+
         virtual mash::virtual_types_key get_mocomp_type() const = 0;
         virtual request_data            do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const = 0;
         virtual request_data            do_explicit_trans(animation_logic_system* the_als,
