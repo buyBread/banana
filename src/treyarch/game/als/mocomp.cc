@@ -79,6 +79,7 @@ string_hash als::combat_pole_swing_attach::my_type_key    { 0xA771F9B4 }; // "al
 
 string_hash als::sync_move_and_face::my_type_key          { 0x8E26B3C7 }; // "als::sync_move_and_face"
 string_hash als::momentum_sync_move_and_face::my_type_key { 0xB44DA4B8 }; // "als::momentum_sync_move_and_face"
+string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "als::sturn_sync_move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -354,6 +355,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(momentum_sync_move_and_face);
 
         return memory_buffer ? new (memory_buffer) momentum_sync_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == sturn_sync_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(sturn_sync_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) sturn_sync_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -5697,6 +5704,7 @@ void als::sync_move_and_face::sync_actors(actor* actor_a,
 }
 
 // sub_5AE9A0
+// inlined @ sub_5AEA30
 als::momentum_sync_move_and_face::momentum_sync_move_and_face() : params_read(false),
                                                                   has_hit(false),
                                                                   stick_to_collision(false),
@@ -5704,6 +5712,7 @@ als::momentum_sync_move_and_face::momentum_sync_move_and_face() : params_read(fa
                                                                   apply_slide(false) {}
 
 // sub_719650
+// inlined @ sub_719690
 als::momentum_sync_move_and_face::momentum_sync_move_and_face(mash::generating_vtable_version so_do_nothing) : sync_move_and_face(so_do_nothing),
                                                                                                                params_read(false),
                                                                                                                has_hit(false),
@@ -6084,4 +6093,154 @@ vector3d als::momentum_sync_move_and_face::get_slide_move(f32 delta_t) {
         velocity = treyarch::references::unk_00fd4370.get();
 
     return velocity * delta_t;
+}
+
+// sub_5AEA30
+als::sturn_sync_move_and_face::sturn_sync_move_and_face() {}
+
+// sub_719690
+als::sturn_sync_move_and_face::sturn_sync_move_and_face(mash::generating_vtable_version so_do_nothing) : momentum_sync_move_and_face(so_do_nothing) {}
+
+// sub_5AEA70
+mash::virtual_types_key als::sturn_sync_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEA80
+bool als::sturn_sync_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (momentum_sync_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (momentum_sync_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AEAC0
+i32 als::sturn_sync_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C2CD0
+po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    po turned = *(target ? target : the_actor)->my_abs_po;
+
+    vector3d facing  = turned.get_z_facing();
+    vector3d y_row   = turned.get_y_facing();
+    vector3d minus_x = -turned.get_x_facing();
+
+    if (preserve_y_facing)
+        up = y_row;
+    else if (!no_reorient_to_vertical)
+        up = treyarch::references::unk_00e6808c.get();
+
+    if (up.length2() > 0.0001f) {
+        f32 angle = math::acos(y_row * up);
+
+        if (angle > 0.01f || angle < -0.01f) {
+            vector3d axis = unitized(cross(y_row, up));
+
+            if (axis.length2() < 0.01f)
+                axis = facing;
+
+            retail::sub_4015B0((u64*)&rotation);
+
+            angle = -angle;
+
+            math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+
+            facing  = turned.get_z_facing();
+            minus_x = -turned.get_x_facing();
+        }
+    }
+
+    if (!(anim_time >= rotate_begin_time))
+        return turned;
+
+    // this frame's share of the rotate signals, trimmed on the frames that cross them
+    f32 span     = rotate_end_time - rotate_begin_time;
+    f32 fraction = 1.0f;
+
+    if (apply_turn && !apply_turn_constant) {
+        if (!(rotate_end_time >= anim_time)) {
+            if ((f64)rotate_end_time > (f64)anim_time - (f64)delta_t) {
+                f32 over = (f32)(((f64)anim_time - (f64)rotate_end_time) / (f64)delta_t);
+
+                fraction = (f32)((1.0 - (f64)over) * ((f64)delta_t / (f64)span));
+            }
+        } else {
+            fraction = delta_t / span;
+
+            // retail measures the entering frame from the end, not the begin
+            if (rotate_begin_time > 0.0001f && (f64)rotate_begin_time > (f64)anim_time - (f64)delta_t) {
+                f32 into = (f32)(((f64)anim_time - (f64)rotate_end_time) / (f64)delta_t);
+
+                fraction = into * fraction;
+            }
+        }
+    }
+
+    f32 turn = fraction * 3.14159f;
+
+    vector3d desired = slide_dir;
+
+    desired = desired - up * (f32)(slide_dir * up);
+
+    if (!(desired.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&desired);
+
+    facing = facing - up * (f32)(up * facing);
+
+    if (!(facing.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&facing);
+
+    minus_x = minus_x - up * (f32)(up * minus_x);
+
+    retail::sub_402050((f32*)&minus_x);
+
+    f32 along  = facing * desired;
+    f32 across = minus_x * desired;
+    f32 angle  = (f32)retail::sub_44D790(across, along);
+
+    if (turn_rate > 0.0f) {
+        f32 max_turn = turn_rate * delta_t;
+
+        if (-0.01f > angle) {
+            if (-max_turn > angle)
+                angle = -max_turn;
+        } else if (angle > 0.01f) {
+            if (angle > max_turn)
+                angle = max_turn;
+        }
+    } else
+        angle *= turn;
+
+    if (std::fabs(angle) > 0.01f) {
+        retail::sub_4015B0((u64*)&rotation);
+
+        math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+    }
+
+    return turned;
 }

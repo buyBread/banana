@@ -1368,6 +1368,22 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // momentum_sync_move_and_face that stands up to the world's up and scales its turn by pi over the rotate signals
+    class sturn_sync_move_and_face : public momentum_sync_move_and_face {
+
+    public:
+        sturn_sync_move_and_face();
+        explicit sturn_sync_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        po get_turned_po(f32 delta_t, actor* target) override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1516,6 +1532,8 @@ namespace als {
     ASSERT_OFFSETOF(momentum_sync_move_and_face, slide_speed_min,         0xB8);
     ASSERT_OFFSETOF(momentum_sync_move_and_face, stick_speed_min,         0xC0);
     ASSERT_OFFSETOF(momentum_sync_move_and_face, turn_rate,               0xC4);
+
+    ASSERT_SIZEOF(sturn_sync_move_and_face, 0xC8);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
