@@ -46,6 +46,11 @@ namespace treyarch {
         base_ai_data*         my_base_ai_data;
 
         ai_core* get_ai_core() const;
+
+        // slot 137
+        void allocate_anim_controller() {
+            ((void (__thiscall*)(actor*))vtable[137])(this);
+        }
     };
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
