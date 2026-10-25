@@ -32,6 +32,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::action_move_and_face>();
         mash::mash_virtual_base::register_class<als::action_move_only>();
         mash::mash_virtual_base::register_class<als::attach_hand_to_point>();
+        mash::mash_virtual_base::register_class<als::biped_physics_mocomp>();
         mash::mash_virtual_base::register_class<als::combat_face_only>();
         mash::mash_virtual_base::register_class<als::combat_face_only_with_attack>();
         mash::mash_virtual_base::register_class<als::combat_move_and_face>();
