@@ -6,6 +6,10 @@
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_pose_jq.hh"
+#include "treyarch/game/event/anim_event.hh"
+#include "treyarch/game/event/default_callbacks.hh"
+#include "treyarch/game/event/event_manager.hh"
+#include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/entity.hh"
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
@@ -303,7 +307,17 @@ void animation_controller::set_anim_normalized_time(u32 layer, f32 time) {
 
 // sub_5BA030
 bool animation_controller_state::should_follow_master() const {
-    return ((bool (__thiscall*)(const animation_controller_state*))retail::sub_5BA030)(this);
+    if (!master)
+        return false;
+
+    actor* master_actor = master->state ? (actor*)master->state->unk_0e4 : nullptr;
+
+    if (master_actor->get_als() && !master_actor->get_als()->did_transition_succeed())
+        return true;
+
+    actor* own_actor = (actor*)unk_0e4;
+
+    return own_actor->get_als() && own_actor->get_als()->did_transition_succeed();
 }
 
 // sub_5D2950
@@ -321,7 +335,7 @@ animation_controller_state::layer_anim::layer_anim(animation_controller_state*  
                                                                                                  alpha_end(1.0f),
                                                                                                  speed(1.0f),
                                                                                                  secondary_speed(1.0f),
-                                                                                                 unk_06c(true),
+                                                                                                 just_started(true),
                                                                                                  owner(the_owner) {
 
     nal_inst = instance.nal_inst;
@@ -393,7 +407,92 @@ void animation_controller_state::layer_anim::set_normalized_time(f32 time) {
 
 // sub_5B9F60
 void animation_controller_state::layer_anim::raise_animation_signals(f32 time, f32 prev_time, entity* the_entity) {
-    ((void (__thiscall*)(layer_anim*, f32, f32, entity*))retail::sub_5B9F60)(this, time, prev_time, the_entity);
+    nal::anim* anim    = nal_inst ? nal_inst->anim : als_inst->get_anim();
+    bool       looping = false;
+
+    if (nal_inst)
+        looping = nal_inst->force_looping || (nal_inst->anim->flags & nal::anim_flag_looping);
+    else if (als_inst)
+        looping = als_inst->is_looping();
+
+    raise_animation_signals_for_time_span(anim, time, prev_time, the_entity, just_started, looping);
+}
+
+// sub_5B9BF0
+void treyarch::raise_animation_signals_for_time_span(nal::anim* the_anim,
+                                                    f32        t,
+                                                    f32        t_prev,
+                                                    entity*    the_entity,
+                                                    bool       include_start,
+                                                    bool       looping) {
+
+    if (!the_anim || !the_anim->has_transport_data(1))
+        return;
+
+    auto signals = (nal::transport_data_signals*)the_anim->get_transport_data(1);
+
+    if (!signals)
+        return;
+
+    f32 duration = the_anim->duration;
+    f32 start    = t_prev;
+    f32 end      = t;
+
+    // a loop only looks at where it is in its pass
+    if (looping) {
+        start = t_prev - (f32)(i32)t_prev;
+        end   = t - (f32)(i32)t;
+    }
+
+    f32 frame_time = duration / (f32)(i32)the_anim->frame_count;
+
+    // compared in steps of 1e-5
+    i32 start_step = (i32)(start * 100000.0);
+    i32 end_step   = (i32)(end * 100000.0);
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        nal::signal &signal = signals->signals[index];
+
+        f32 time = (f32)((f64)signal.frame * frame_time / duration);
+        i32 step = (i32)(time * 100000.0);
+
+        bool after_start = include_start ? step >= start_step : step > start_step;
+
+        // a wrapped span takes both ends of the pass
+        if (!after_start || step > end_step) {
+            if (!looping || end_step >= start_step || (!after_start && step > end_step))
+                continue;
+        }
+
+        auto fk = (nal::transport_fk*)the_anim->transport_list->get_transport(0);
+
+        string_hash event_type_id;
+        event_type_id.initialize(mash::ALLOCATED, nullptr, signal.id);
+
+        // these can't go without their parameter, and nothing after them is raised either
+        if ((event_type_id == references::play_sound.read() || event_type_id == references::set_vulnerable.read()) && !signal.param_type)
+            return;
+
+        u32 num_params = (event_type_id == references::play_sound.read()) + (signal.param_type != 0);
+
+        string_hash bone;
+        bone.initialize(mash::ALLOCATED, nullptr, hash::djb2(fk->bones[signal.bone].name.get_text()));
+
+        anim_event raised(event_type_id, bone, num_params, time);
+
+        if (signal.param_type) {
+            raised.params[0].type  = signal.param_type;
+            raised.params[0].value = signal.param_value;
+        }
+
+        // the sound is looked up by the anim's name
+        if (event_type_id == references::play_sound.read()) {
+            raised.params[1].type  = 1;
+            raised.params[1].value = the_anim->name.hash.source_hash_code;
+        }
+
+        event_manager::raise_event((event*)&raised, the_entity->my_handle);
+    }
 }
 
 // sub_5D3F30

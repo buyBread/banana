@@ -842,7 +842,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         animation_records &records = the_controller->state->layer_anims[machine->get_layer_id()];
 
         if (records.size())
-            records.back()->unk_06c = false;
+            records.back()->just_started = false;
 
         // nothing new to play: a wrapped loop takes the speed again
         if (!machine->our_ret.did_do_trans && (index != 0 || machine->unk_7bc) && !needs_reinit_anim) {

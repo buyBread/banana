@@ -47,7 +47,7 @@ namespace treyarch {
             f32                         alpha_end;
             f32                         speed;
             f32                         secondary_speed;
-            bool                        unk_06c;              // raise_animation_signals_for_time_span takes it to include the span's start
+            bool                        just_started;         // until the frame after it starts; its signals then include the span's start
             u8                          pad_06d[0x03];
             animation_controller_state* owner;
 
@@ -131,6 +131,14 @@ namespace treyarch {
     // the transport signals the newest record crossed this frame
     void raise_newest_animation_signals(animation_records* records);
 
+    // raises the anim's signals between the two normalized times on the entity
+    void raise_animation_signals_for_time_span(nal::anim* the_anim,
+                                               f32        t,
+                                               f32        t_prev,
+                                               entity*    the_entity,
+                                               bool       include_start,
+                                               bool       looping);
+
     class animation_controller {
 
     public:
@@ -183,7 +191,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, alpha_end,            0x60);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, speed,                0x64);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, secondary_speed,      0x68);
-    ASSERT_OFFSETOF(animation_controller_state::layer_anim, unk_06c,              0x6C);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, just_started,         0x6C);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, owner,                0x70);
 
     ASSERT_SIZEOF  (animation_controller_state::advance_job::pose_record,  0x10);

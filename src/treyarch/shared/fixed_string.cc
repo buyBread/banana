@@ -26,6 +26,7 @@ void fixed_string::set_text(const char* value) {
 }
 
 // sub_4FABD0
+// inlined @ sub_5B9BF0
 const char* fixed_string::get_text() const {
     if (text)
         return text;
