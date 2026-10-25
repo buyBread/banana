@@ -6,6 +6,7 @@
 #include "treyarch/game/als/mocomp.hh"
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
+#include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
@@ -46,6 +47,8 @@ string_hash als::towed_orientation::my_type_key { 0x6ABE6902 }; // "als::towed_o
 
 string_hash als::ikcrawl_mocomp::my_type_key    { 0xEA76894B }; // "als::ikcrawl_mocomp"
 string_hash als::wallsprint_mocomp::my_type_key { 0xF1C5C0CE }; // "als::wallsprint_mocomp"
+
+string_hash als::move_and_face::my_type_key { 0xE9A7D0EB }; // "als::move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -202,6 +205,7 @@ i32 als::motion_compensator::get_mash_sizeof() const {
 
 // sub_5C48A0
 // inlined @ sub_5C49E0
+// inlined @ sub_5D89D0
 void als::motion_compensator::activate(animation_logic_system* the_als_core, layer_id layer) {
     the_als   = the_als_core;
     the_base  = the_als_core->get_als_layer_internal(layer);
@@ -287,6 +291,7 @@ void als::motion_compensator::get_po_curr_offset(po &curr_offset) {
 }
 
 // sub_5B4B10
+// inlined @ sub_5BFAE0
 // inlined @ sub_5C48D0
 void als::motion_compensator::set_po_curr_offset(actor* target, po &curr_offset) {
     retail::sub_44E230((u64*)&curr_offset, (f32*)&curr_offset, (f32*)target->my_rel_po);
@@ -2572,4 +2577,481 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
     using fly_t = void (__thiscall*)(flight_layer_inode*, vector3d*, f32);
 
     ((fly_t)retail::sub_47CD90)(flight_inode, &move, delta_t); // flight_layer_inode: flies the move
+}
+
+// sub_5AE3E0
+als::move_and_face::move_and_face() : orientation_end_signal_required(false),
+                                      translation_end_signal_required(false),
+                                      orientation_start_signal_required(false),
+                                      translation_start_signal_required(false),
+                                      destination_point_valid(false),
+                                      desired_facing_valid(false) {}
+
+// sub_719250
+als::move_and_face::move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
+                                                                                   orientation_end_signal_required(false),
+                                                                                   translation_end_signal_required(false),
+                                                                                   orientation_start_signal_required(false),
+                                                                                   translation_start_signal_required(false),
+                                                                                   destination_point_valid(false),
+                                                                                   desired_facing_valid(false) {}
+
+// sub_5AE410
+mash::virtual_types_key als::move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE710
+i32 als::move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D89D0
+void als::move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    motion_compensator::activate(the_als_core, layer);
+
+    pre_signal_translation_action  = mocomp_action_procedural;
+    pre_signal_orientation_action  = mocomp_action_procedural;
+    max_movement_speed             = 0.0f;
+    max_turn_speed                 = 0.0f;
+    constant_movement_speed        = -1.0f;
+    constant_turn_speed            = -1.0f;
+    pre_start_translation_action   = mocomp_action_from_anim;
+    pre_start_orientation_action   = mocomp_action_from_anim;
+    post_signal_translation_action = mocomp_action_from_anim;
+    post_signal_orientation_action = mocomp_action_from_anim;
+    translation_algorithm          = mocomp_algorithm_simple_linear;
+    orientation_algorithm          = mocomp_algorithm_simple_linear;
+    orientation_time_left          = 0.0f;
+    translation_time_left          = 0.0f;
+    orientation_start_time         = 0.0f;
+    translation_start_time         = 0.0f;
+    orientation_total_time         = 0.0f;
+    translation_total_time         = 0.0f;
+
+    last_anim_time = the_base->get_current_anim_time();
+    start_point    = the_actor->my_abs_po->get_position();
+
+    set_start_key_signals();
+    set_end_key_signals();
+    set_start_time();
+    set_time_left();
+
+    // the time left runs from the start
+    orientation_time_left = orientation_time_left - orientation_start_time;
+
+    if (orientation_time_left < 0.0001f)
+        orientation_time_left = 0.0001f;
+
+    translation_time_left = translation_time_left - translation_start_time;
+
+    if (translation_time_left < 0.0001f)
+        translation_time_left = 0.0001f;
+
+    orientation_total_time = orientation_time_left;
+    translation_total_time = translation_time_left;
+
+    // where the actor is, unless the params say otherwise
+    destination_point = the_actor->my_abs_po->get_position();
+    desired_facing    = the_actor->my_abs_po->get_z_facing();
+    desired_up        = the_actor->my_abs_po->get_y_facing();
+
+    destination_point_valid = false;
+    desired_facing_valid    = false;
+
+    set_destination_point();
+    set_desired_facing();
+    set_desired_up();
+
+    use_ik_crawl = the_base->get_optional_pb_int(use_ik_crawl_id, 0, nullptr) != 0;
+
+    if (use_ik_crawl) {
+        using ikcrawl_begin_t = void (__cdecl*)(actor*, animation_logic_system*, layer_id);
+
+        ((ikcrawl_begin_t)retail::sub_5CCF00)(the_actor, the_als_core, layer); // ikcrawl begin
+    }
+}
+
+// sub_5D8BF0
+void als::move_and_face::deactivate() {
+    // the destination, facing and up params only outlast a requested transition
+    if (!the_base->did_transition_succeed_from_request()) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        auto clear = [&](param_id param) {
+            u32 index = param - num_external_float_params;
+
+            the_base->our_smi.requested_params->vector_params[index] = zero;
+            the_base->our_smi.requested_params->vector_set[index]    = false;
+
+            the_base->pending_requests.pending_params->vector_params[index] = zero;
+            the_base->pending_requests.pending_params->vector_set[index]    = false;
+        };
+
+        clear(143);
+        clear(142);
+        clear(145);
+    }
+
+    if (use_ik_crawl)
+        retail::sub_5CCFE0((i32)the_actor); // ikcrawl end
+}
+
+// sub_5B29C0
+void als::move_and_face::post_anim_action(f32) {
+    // the anim's own time drives it, not the frame's
+    f32 normalized_time = the_base->get_current_normalized_time();
+    f32 anim_time       = the_base->get_duration() * normalized_time;
+    f32 anim_delta      = anim_time - last_anim_time;
+
+    if (anim_delta > 0.0001f) {
+        update_params(anim_delta);
+
+        f32 time_left = orientation_time_left;
+        orientation_time_left = time_left - decrement_start_time(anim_delta, &orientation_start_time);
+
+        time_left = translation_time_left;
+        translation_time_left = time_left - decrement_start_time(anim_delta, &translation_start_time);
+
+        clamp_time_left(anim_delta);
+        face_and_arrive_by(anim_delta);
+
+        if (orientation_start_time < 0.0001f)
+            decrement_time_left(anim_delta, &orientation_time_left);
+
+        if (translation_start_time < 0.0001f)
+            decrement_time_left(anim_delta, &translation_time_left);
+
+        reached_dest_signal(anim_delta);
+        restart_time_signals();
+
+        last_anim_time = anim_time;
+    }
+}
+
+// sub_667F80
+bool als::move_and_face::force_reactivate() const {
+    return true;
+}
+
+// sub_5B1B70
+void als::move_and_face::set_start_time() {
+    set_orientation_start_time();
+    set_translation_start_time();
+}
+
+// sub_5B1B90
+void als::move_and_face::set_time_left() {
+    set_orientation_time_left();
+    set_translation_time_left();
+}
+
+// sub_5B1C50
+void als::move_and_face::set_translation_start_time() {
+    if (translation_start_key_signals_count <= 0 || !set_time_signal(&translation_start_time, translation_start_key_signals, translation_start_key_signals_count, translation_start_signal_required))
+        translation_start_time = 0.0f;
+}
+
+// sub_5B1CA0
+void als::move_and_face::set_translation_time_left() {
+    set_time_signal(&translation_time_left, translation_end_key_signals, translation_end_key_signals_count, translation_end_signal_required);
+
+    if (translation_time_left < 0.0001f)
+        translation_time_left = 0.0001f;
+}
+
+// sub_5B1BB0
+void als::move_and_face::set_orientation_start_time() {
+    if (orientation_start_key_signals_count <= 0 || !set_time_signal(&orientation_start_time, orientation_start_key_signals, orientation_start_key_signals_count, orientation_start_signal_required))
+        orientation_start_time = 0.0f;
+}
+
+// sub_5B1C00
+void als::move_and_face::set_orientation_time_left() {
+    set_time_signal(&orientation_time_left, orientation_end_key_signals, orientation_end_key_signals_count, orientation_end_signal_required);
+
+    if (orientation_time_left < 0.0001f)
+        orientation_time_left = 0.0001f;
+}
+
+// sub_5D88B0
+void als::move_and_face::set_destination_point() {
+    if (the_base->has_ext_param_been_set(145)) {
+        destination_point       = the_base->get_external_vector(145);
+        destination_point_valid = true;
+    }
+}
+
+// sub_5D8910
+void als::move_and_face::set_desired_facing() {
+    if (the_base->has_ext_param_been_set(143)) {
+        desired_facing       = the_base->get_external_vector(143);
+        desired_facing_valid = true;
+    }
+}
+
+// sub_5D8970
+void als::move_and_face::set_desired_up() {
+    if (the_base->has_ext_param_been_set(142))
+        desired_up = the_base->get_external_vector(142);
+}
+
+// sub_5B1CF0
+void als::move_and_face::set_end_key_signals() {
+    orientation_end_key_signals       = nullptr;
+    orientation_end_key_signals_count = 0;
+    orientation_end_signal_required   = false;
+    translation_end_key_signals       = nullptr;
+    translation_end_key_signals_count = 0;
+    translation_end_signal_required   = false;
+}
+
+// sub_5B1D20
+void als::move_and_face::set_start_key_signals() {
+    orientation_start_key_signals       = nullptr;
+    orientation_start_key_signals_count = 0;
+    orientation_start_signal_required   = false;
+    translation_start_key_signals       = nullptr;
+    translation_start_key_signals_count = 0;
+    translation_start_signal_required   = false;
+}
+
+// sub_5B4A70
+void als::move_and_face::update_start_time() {}
+
+// sub_5B4A70
+void als::move_and_face::update_time_left() {}
+
+// sub_5B1D50
+void als::move_and_face::update_destination_point() {
+    set_destination_point();
+}
+
+// sub_5B1D60
+void als::move_and_face::update_desired_facing() {
+    set_desired_facing();
+}
+
+// sub_5B1D70
+void als::move_and_face::update_desired_up() {
+    set_desired_up();
+}
+
+// sub_5B1D80
+void als::move_and_face::update_params(f32) {
+    update_time_left();
+    update_destination_point();
+    update_desired_facing();
+    update_desired_up();
+}
+
+// sub_5B1DC0
+vector3d als::move_and_face::simple_linear_translation(f32 delta_t, f32 time_percentage, const po &old_po) {
+    using simple_linear_translation_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, f32, const po*);
+
+    vector3d result;
+    ((simple_linear_translation_t)retail::sub_5B1DC0)(this, &result, delta_t, time_percentage, &old_po);
+
+    return result;
+}
+
+// sub_5BF190
+po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentage, const po &old_po) {
+    using simple_linear_orientation_t = po* (__thiscall*)(move_and_face*, po*, f32, f32, const po*);
+
+    po result;
+    ((simple_linear_orientation_t)retail::sub_5BF190)(this, &result, delta_t, time_percentage, &old_po);
+
+    return result;
+}
+
+// sub_5B2430
+vector3d als::move_and_face::compute_translation(f32 delta_t, const po &old_po, const po &anim_po) {
+    using compute_translation_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, const po*, const po*);
+
+    vector3d result;
+    ((compute_translation_t)retail::sub_5B2430)(this, &result, delta_t, &old_po, &anim_po);
+
+    return result;
+}
+
+// sub_5B2590
+vector3d als::move_and_face::hybrid_translation(f32 delta_t, const po &, const po &anim_po) {
+    return compute_translation(delta_t, anim_po, anim_po);
+}
+
+// sub_5F03D0
+vector3d als::move_and_face::translation_action(f32 delta_t, const po &old_po, const po &anim_po) {
+    using translation_action_t = vector3d* (__thiscall*)(move_and_face*, vector3d*, f32, const po*, const po*);
+
+    vector3d result;
+    ((translation_action_t)retail::sub_5F03D0)(this, &result, delta_t, &old_po, &anim_po);
+
+    return result;
+}
+
+// sub_5B25C0
+po als::move_and_face::compute_orientation(f32 delta_t, const po &old_po, const po &anim_po) {
+    using compute_orientation_t = po* (__thiscall*)(move_and_face*, po*, f32, const po*, const po*);
+
+    po result;
+    ((compute_orientation_t)retail::sub_5B25C0)(this, &result, delta_t, &old_po, &anim_po);
+
+    return result;
+}
+
+// sub_5B2720
+po als::move_and_face::hybrid_orientation(f32 delta_t, const po &, const po &anim_po) {
+    return compute_orientation(delta_t, anim_po, anim_po);
+}
+
+// sub_5F0560
+po als::move_and_face::orientation_action(f32 delta_t, const po &old_po, const po &anim_po) {
+    using orientation_action_t = po* (__thiscall*)(move_and_face*, po*, f32, const po*, const po*);
+
+    po result;
+    ((orientation_action_t)retail::sub_5F0560)(this, &result, delta_t, &old_po, &anim_po);
+
+    return result;
+}
+
+// sub_5BFAE0
+po als::move_and_face::calculate_anim_motion() {
+    po curr_offset;
+    retail::sub_4015B0((u64*)&curr_offset);
+
+    get_po_curr_offset(curr_offset);
+
+    motion_compensator::set_po_curr_offset(the_actor, curr_offset);
+
+    po moved;
+    retail::sub_583280((u64*)&moved, (u64*)the_actor->my_abs_po); // po copy
+
+    return moved;
+}
+
+// sub_5BFB50
+void als::move_and_face::reached_dest_signal(f32) {
+    if (std::fabs(orientation_time_left - 0.0f) < 0.0001f && std::fabs(translation_time_left - 0.0f) < 0.0001f)
+        event_manager::raise_event(references::anim_dest_reached.read(), the_actor->my_handle);
+}
+
+// sub_5B2750
+void als::move_and_face::restart_time_signals() {
+    if (0.0f > orientation_time_left && has_time_signal(orientation_start_key_signals, orientation_start_key_signals_count)) {
+        orientation_start_signal_required = false;
+        orientation_end_signal_required   = false;
+
+        set_orientation_start_time();
+        set_orientation_time_left();
+
+        orientation_time_left = orientation_time_left - orientation_start_time;
+
+        if (orientation_time_left < 0.0001f)
+            orientation_time_left = 0.0001f;
+
+        orientation_total_time = orientation_time_left;
+    }
+
+    if (0.0f > translation_time_left && has_time_signal(translation_start_key_signals, translation_start_key_signals_count)) {
+        translation_start_signal_required = false;
+        translation_end_signal_required   = false;
+
+        set_translation_start_time();
+        set_translation_time_left();
+
+        translation_time_left = translation_time_left - translation_start_time;
+
+        if (translation_time_left < 0.0001f)
+            translation_time_left = 0.0001f;
+
+        translation_total_time = translation_time_left;
+    }
+}
+
+// sub_5B2870
+f32 als::move_and_face::decrement_start_time(f32 delta_t, f32* start_time) {
+    f32 past_start = 0.0f;
+
+    if (*start_time > 0.0f) {
+        *start_time = *start_time - delta_t;
+
+        if (0.0f > *start_time) {
+            past_start  = std::fabs(*start_time);
+            *start_time = 0.0f;
+        }
+    }
+
+    return past_start;
+}
+
+// sub_5B28D0
+void als::move_and_face::clamp_time_left(f32 delta_t) {
+    // a started stretch lasts at least the step
+    if (orientation_start_time < 0.0001f && orientation_time_left > 0.0f && delta_t > orientation_time_left)
+        orientation_time_left = delta_t;
+
+    if (translation_start_time < 0.0001f && translation_time_left > 0.0f && delta_t > translation_time_left)
+        translation_time_left = delta_t;
+
+    if (orientation_total_time > 0.0f && orientation_time_left > orientation_total_time)
+        orientation_total_time = orientation_time_left;
+
+    if (translation_total_time > 0.0f && translation_time_left > translation_total_time)
+        translation_total_time = translation_time_left;
+}
+
+// sub_5B2990
+void als::move_and_face::decrement_time_left(f32 delta_t, f32* time_left) {
+    *time_left = *time_left - delta_t;
+}
+
+// sub_5F0670
+void als::move_and_face::face_and_arrive_by(f32 delta_t) {
+    ((void (__thiscall*)(move_and_face*, f32))retail::sub_5F0670)(this, delta_t);
+}
+
+// sub_5B1A30
+bool als::move_and_face::set_time_signal(f32* time, const string_hash** key_signals, i32 key_signals_count, bool) {
+    bool found = false;
+
+    if (!time)
+        return found;
+
+    for (i32 index = 0; index < key_signals_count; ++index) {
+        f32 time_to_signal = the_base->get_time_to_signal(*key_signals[index], nullptr, false, nullptr);
+
+        if (time_to_signal >= 0.0f && (!found || *time > time_to_signal)) {
+            *time = time_to_signal;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        *time = the_base->get_duration();
+        *time -= the_base->get_current_anim_time();
+    }
+
+    return found;
+}
+
+// sub_5B1B00
+bool als::move_and_face::has_time_signal(const string_hash** key_signals, i32 key_signals_count) {
+    for (i32 index = 0; index < key_signals_count; ++index) {
+        if (the_base->get_time_to_signal(*key_signals[index], nullptr, false, nullptr) >= 0.0f)
+            return true;
+    }
+
+    return false;
 }

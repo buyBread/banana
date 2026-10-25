@@ -51,6 +51,7 @@ namespace als {
     inline const string_hash allow_speed_override_id       = string_hash(hash::djb2("allow_speed_override"));
     inline const string_hash max_playback_speed_id         = string_hash(hash::djb2("max_playback_speed"));
     inline const string_hash min_playback_speed_id         = string_hash(hash::djb2("min_playback_speed"));
+    inline const string_hash use_ik_crawl_id               = string_hash(hash::djb2("use_ik_crawl"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -58,6 +59,8 @@ namespace als {
         inline util::memory_reference<string_hash> move_end     { 0x0102C72C };
         inline util::memory_reference<string_hash> rotate_begin { 0x0102C46C };
         inline util::memory_reference<string_hash> rotate_end   { 0x0102C62C };
+
+        inline util::memory_reference<string_hash> anim_dest_reached { 0x0102C384 };
 
         // "BIP01 R FOOT" and "BIP01 L FOOT", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_r_foot { 0x00FFECFC };
@@ -648,6 +651,119 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // SM3's: moves and turns the actor to a destination and facing over a stretch of the anim the signals mark; WoS times the turn and the move apart
+    class move_and_face : public motion_compensator {
+
+    public:
+        enum mocomp_action_enum : i32 {
+            mocomp_action_none,
+            mocomp_action_procedural,
+            mocomp_action_from_anim,
+            mocomp_action_hybrid
+        };
+
+        enum mocomp_algorithm_enum : i32 {
+            mocomp_algorithm_simple_linear,
+            mocomp_algorithm_facing_linear,
+            mocomp_algorithm_movement_facing_linear
+        };
+
+        vector3d              start_point;
+        vector3d              destination_point;
+        vector3d              desired_facing;
+        vector3d              desired_up;
+        f32                   max_movement_speed;
+        f32                   max_turn_speed;
+        f32                   constant_movement_speed;          // -1 for none
+        f32                   constant_turn_speed;
+        mocomp_action_enum    pre_start_translation_action;
+        mocomp_action_enum    pre_start_orientation_action;
+        mocomp_action_enum    pre_signal_translation_action;
+        mocomp_action_enum    pre_signal_orientation_action;
+        mocomp_action_enum    post_signal_translation_action;
+        mocomp_action_enum    post_signal_orientation_action;
+        mocomp_algorithm_enum translation_algorithm;
+        mocomp_algorithm_enum orientation_algorithm;
+        f32                   orientation_start_time;
+        f32                   translation_start_time;
+        f32                   orientation_time_left;
+        f32                   translation_time_left;
+        f32                   orientation_total_time;
+        f32                   translation_total_time;
+        f32                   last_anim_time;
+        const string_hash**   orientation_end_key_signals;
+        i32                   orientation_end_key_signals_count;
+        bool                  orientation_end_signal_required;
+        u8                    pad_095[0x03];
+        const string_hash**   translation_end_key_signals;
+        i32                   translation_end_key_signals_count;
+        bool                  translation_end_signal_required;
+        u8                    pad_0a1[0x03];
+        const string_hash**   orientation_start_key_signals;
+        i32                   orientation_start_key_signals_count;
+        bool                  orientation_start_signal_required;
+        u8                    pad_0ad[0x03];
+        const string_hash**   translation_start_key_signals;
+        i32                   translation_start_key_signals_count;
+        bool                  translation_start_signal_required;
+        bool                  destination_point_valid;
+        bool                  desired_facing_valid;
+        bool                  use_ik_crawl;
+
+        move_and_face();
+        explicit move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void post_anim_action(f32 delta_t) override;
+        bool force_reactivate() const override;
+
+        virtual void set_start_time();
+        virtual void set_time_left();
+        virtual void set_translation_start_time();
+        virtual void set_translation_time_left();
+        virtual void set_orientation_start_time();
+        virtual void set_orientation_time_left();
+        virtual void set_destination_point();
+        virtual void set_desired_facing();
+        virtual void set_desired_up();
+        virtual void set_end_key_signals();
+        virtual void set_start_key_signals();
+        virtual void update_start_time();
+        virtual void update_time_left();
+        virtual void update_destination_point();
+        virtual void update_desired_facing();
+        virtual void update_desired_up();
+        virtual void update_params(f32 delta_t);
+
+        virtual vector3d simple_linear_translation(f32 delta_t, f32 time_percentage, const po &old_po);
+        virtual po       simple_linear_orientation(f32 delta_t, f32 time_percentage, const po &old_po);
+        virtual vector3d compute_translation      (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual vector3d hybrid_translation       (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual vector3d translation_action       (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual po       compute_orientation      (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual po       hybrid_orientation       (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual po       orientation_action       (f32 delta_t, const po &old_po, const po &anim_po);
+        virtual po       calculate_anim_motion();
+
+        virtual void reached_dest_signal(f32 delta_t);
+        virtual void restart_time_signals();                           // when a time ran out and its start signals come round again
+        virtual f32  decrement_start_time(f32 delta_t, f32* start_time); // what's left of delta_t past the start
+        virtual void clamp_time_left(f32 delta_t);
+        virtual void decrement_time_left(f32 delta_t, f32* time_left);
+        virtual void face_and_arrive_by(f32 delta_t);
+
+        // the nearest of the signals, else the anim's end; false when none of them is ahead
+        bool set_time_signal(f32* time, const string_hash** key_signals, i32 key_signals_count, bool signal_required);
+        bool has_time_signal(const string_hash** key_signals, i32 key_signals_count);
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -707,6 +823,22 @@ namespace als {
 
     ASSERT_SIZEOF(ikcrawl_mocomp,    0x44);
     ASSERT_SIZEOF(wallsprint_mocomp, 0x44);
+
+    ASSERT_SIZEOF  (move_and_face,                                   0xBC);
+    ASSERT_OFFSETOF(move_and_face, start_point,                      0x10);
+    ASSERT_OFFSETOF(move_and_face, max_movement_speed,               0x40);
+    ASSERT_OFFSETOF(move_and_face, constant_movement_speed,          0x48);
+    ASSERT_OFFSETOF(move_and_face, pre_start_translation_action,     0x50);
+    ASSERT_OFFSETOF(move_and_face, orientation_algorithm,            0x6C);
+    ASSERT_OFFSETOF(move_and_face, orientation_start_time,           0x70);
+    ASSERT_OFFSETOF(move_and_face, translation_total_time,           0x84);
+    ASSERT_OFFSETOF(move_and_face, last_anim_time,                   0x88);
+    ASSERT_OFFSETOF(move_and_face, orientation_end_key_signals,      0x8C);
+    ASSERT_OFFSETOF(move_and_face, translation_end_key_signals,      0x98);
+    ASSERT_OFFSETOF(move_and_face, orientation_start_key_signals,    0xA4);
+    ASSERT_OFFSETOF(move_and_face, translation_start_key_signals,    0xB0);
+    ASSERT_OFFSETOF(move_and_face, translation_start_signal_required, 0xB8);
+    ASSERT_OFFSETOF(move_and_face, use_ik_crawl,                     0xBB);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
