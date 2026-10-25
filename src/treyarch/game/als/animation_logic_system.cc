@@ -14,6 +14,8 @@
 #include "treyarch/game/wds/entity/capsule_alter_sys.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/standing_interface.hh"
+#include "treyarch/game/wds/references.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/jq/native_locks.hh"
 #include "treyarch/shared/math/references.hh"
 
@@ -29,9 +31,9 @@ als::animation_logic_system::animation_logic_system(actor* _the_actor) : als_sha
                                                                          is_suspended(false),
                                                                          needs_reinit_anim(false),
                                                                          unk_a72(true),
-                                                                         unk_a73(false),
-                                                                         unk_a74(false),
-                                                                         unk_a75(true),
+                                                                         publishing_matrices(false),
+                                                                         saved_skip_matrices(false),
+                                                                         force_matrices(true),
                                                                          coordinator(nullptr),
                                                                          coordinator_unk(0) {
 
@@ -134,6 +136,49 @@ string_hash als::animation_logic_system::get_internal_hash(state_machine* the_sm
     return the_cache.get_internal_hash(this, the_sm, param);
 }
 
+// sub_5BAE40
+void als::animation_logic_system::update_matrix_publishing(bool visible, bool keep_publishing) {
+    animation_controller_state* the_state = get_controller()->state;
+
+    if ((the_state && the_state->unk_128) ||
+        get_controller()->state->unk_12c.size() ||
+        keep_publishing ||
+        treyarch::references::g_world_ptr.read()->get_current_camera()->unk_032()) {
+
+        if (animation_controller_state* state_now = get_controller()->state)
+            state_now->job.wants_skip_matrices = false;
+
+        publishing_matrices = true;
+    } else if (force_matrices) {
+        if (animation_controller_state* state_now = get_controller()->state)
+            state_now->job.wants_skip_matrices = false;
+
+        force_matrices      = false;
+        publishing_matrices = true;
+    } else if (visible != publishing_matrices) {
+        if (!get_controller())
+            return;
+
+        if (visible) {
+            if (animation_controller_state* state_now = get_controller()->state)
+                state_now->job.wants_skip_matrices = saved_skip_matrices;
+
+            publishing_matrices = visible;
+        } else {
+            animation_controller_state* state_now = get_controller()->state;
+
+            saved_skip_matrices = state_now ? state_now->job.wants_skip_matrices : false;
+
+            state_now = get_controller()->state;
+
+            if (state_now)
+                state_now->job.wants_skip_matrices = true;
+
+            publishing_matrices = false;
+        }
+    }
+}
+
 // sub_5E2300
 // inlined @ sub_5E8FE0
 void als::animation_logic_system::end_layer(layer_id the_layer) {
@@ -142,7 +187,7 @@ void als::animation_logic_system::end_layer(layer_id the_layer) {
     if (machine && machine->is_active()) {
         machine->end_layer();
 
-        retail::sub_5BA3B0((i32*)the_controller, the_layer); // animation_controller::kill_layer_anims
+        the_controller->kill_layer_anims(the_layer);
     }
 }
 
@@ -241,7 +286,7 @@ void als::animation_logic_system::delete_instance_data() {
 
 // sub_5D5020
 void als::animation_logic_system::reset_animation_player() {
-    ((void (__thiscall*)(animation_controller*))retail::sub_5D44E0)(the_controller);
+    the_controller->reset_speeds();
 }
 
 // sub_5ED720
@@ -342,8 +387,8 @@ void als::animation_logic_system::remove_coordinated(animation_logic_system_inte
 }
 
 // sub_5ED730
-void als::animation_logic_system::set_unk_a75() {
-    unk_a75 = true;
+void als::animation_logic_system::force_matrix_update() {
+    force_matrices = true;
 }
 
 // sub_5ED740
@@ -890,7 +935,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
                         if (blends && prev_state)
                             blend = blends->find_blend(prev_state->get_nal_anim_name());
 
-                        auto duration = (f32)retail::sub_5BA290((i32*)the_controller, machine->get_layer_id()); // animation_controller
+                        f32 duration = the_controller->get_anim_duration(machine->get_layer_id());
 
                         f32 blend_time = 0.0f;
 
@@ -938,18 +983,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
                         bool looping      = machine->is_looping();
                         auto layer        = index ? machine->get_layer_id() : base_layer;
 
-                        using play_t = void (__thiscall*)(animation_controller*,
-                                                          nal_als_anim_bridge*,
-                                                          f32,
-                                                          f32,
-                                                          bool,
-                                                          bool,
-                                                          layer_id,
-                                                          animation_logic_system*,
-                                                          state_machine*,
-                                                          bool);
-
-                        ((play_t)retail::sub_5DFE20)(the_controller, &bridge, start_time, blend_time, mirrored, true, layer, this, machine, looping); // animation_controller
+                        the_controller->play(bridge, start_time, blend_time, mirrored, true, layer, this, machine, looping);
                     }
                 }
 

@@ -161,7 +161,7 @@ namespace treyarch {
             virtual void                              add_coordinated(animation_logic_system_interface* the_als) = 0;
             virtual void                              remove_coordinated(animation_logic_system_interface* the_als) = 0;
 
-            virtual void                  set_unk_a75() = 0;
+            virtual void                  force_matrix_update() = 0;
             virtual animation_controller* get_controller() const = 0;
             virtual void                  frame_advance(f32 delta_t, bool force) = 0;
 

@@ -38,9 +38,9 @@ namespace treyarch { namespace als {
         bool                               is_suspended;
         bool                               needs_reinit_anim;
         bool                               unk_a72;
-        bool                               unk_a73;
-        bool                               unk_a74;
-        bool                               unk_a75;
+        bool                               publishing_matrices; // the controller's matrices aren't skipped
+        bool                               saved_skip_matrices; // its request from before they were
+        bool                               force_matrices;      // publish next frame whatever the visibility
         u8                                 pad_a76[0x02];
         animation_logic_system_interface*  coordinator;
         i32                                coordinator_unk;
@@ -83,7 +83,7 @@ namespace treyarch { namespace als {
         void                              add_coordinated(animation_logic_system_interface* the_als) override;
         void                              remove_coordinated(animation_logic_system_interface* the_als) override;
 
-        void                  set_unk_a75() override;
+        void                  force_matrix_update() override;
         animation_controller* get_controller() const override;
         void                  frame_advance(f32 delta_t, bool force) override;
 
@@ -95,6 +95,9 @@ namespace treyarch { namespace als {
         static void process_nal_queue(bool threaded);
 
         const als_meta_anim_table_shared* get_meta_anim_table() const;
+
+        // the controller may skip its matrices while the actor isn't visible, unless it's tied to others or the camera wants them
+        void update_matrix_publishing(bool visible, bool keep_publishing);
 
         string_hash get_internal_hash(state_machine* the_sm, param_id param);
 
@@ -178,7 +181,8 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(animation_logic_system, is_suspended,       0xA70);
     ASSERT_OFFSETOF(animation_logic_system, needs_reinit_anim,  0xA71);
     ASSERT_OFFSETOF(animation_logic_system, unk_a72,            0xA72);
-    ASSERT_OFFSETOF(animation_logic_system, unk_a75,            0xA75);
+    ASSERT_OFFSETOF(animation_logic_system, publishing_matrices, 0xA73);
+    ASSERT_OFFSETOF(animation_logic_system, force_matrices,      0xA75);
     ASSERT_OFFSETOF(animation_logic_system, coordinator,        0xA78);
     ASSERT_OFFSETOF(animation_logic_system, coordinator_unk,    0xA7C);
     ASSERT_OFFSETOF(animation_logic_system, coordinated,        0xA80);

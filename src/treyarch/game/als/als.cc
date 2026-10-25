@@ -82,7 +82,7 @@ void als::animation_logic_system_interface::frame_advance_als_list(als_list** th
                     // slot 75
                     bool unk_075 = ((bool (__thiscall*)(actor*))the_actor->vtable[75])(the_actor);
 
-                    retail::sub_5BAE40((u8*)the_als, !unk_075, ext_flag); // animation_logic_system
+                    ((animation_logic_system*)the_als)->update_matrix_publishing(!unk_075, ext_flag);
                 }
 
                 the_als->cache_actor_position();
