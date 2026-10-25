@@ -64,6 +64,7 @@ namespace treyarch { namespace mash {
         // sub_59C210
         // sub_5E79A0
         // sub_5E7A90
+        // sub_5E7B80
         // sub_5E7C70
         // sub_5E7D60
         // sub_5EC280
