@@ -1176,7 +1176,14 @@ void als::animation_logic_system::unk_025(void* unk) {
 
 // sub_5D4F10
 void als::animation_logic_system::change_mocomp(const state* curr_state, layer_id layer) {
-    ((void (__thiscall*)(animation_logic_system*, const state*, layer_id))retail::sub_5D4F10)(this, curr_state, layer);
+    if (curr_mocomp) {
+        curr_mocomp->deactivate();
+        curr_mocomp->~motion_compensator();
+    }
+
+    curr_mocomp = motion_compensator::create_subclass_in_place(curr_state->get_mocomp_type(), the_mocomp_data);
+    curr_mocomp->activate(this, layer);
+    curr_mocomp->transition();
 }
 
 // sub_5EEF70
