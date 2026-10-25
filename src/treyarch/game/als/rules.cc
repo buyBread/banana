@@ -6,6 +6,7 @@
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/game/wds/entity/interface/generic_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/shared/math/references.hh"
 
@@ -71,6 +72,33 @@ string_hash als::target_ai_vector_component_bounded_number_rule::my_type_key    
 string_hash als::target_ai_vector_component_inverse_bounded_number_rule::my_type_key { 0x3BEFF502 }; // "als::target_ai_vector_component_inverse_bounded_number_rule"
 string_hash als::target_ai_number_param_compare_rule::my_type_key                    { 0x41E29599 }; // "als::target_ai_number_param_compare_rule"
 string_hash als::target_ai_number_param_vector_component_compare_rule::my_type_key   { 0x4187AB3D }; // "als::target_ai_number_param_vector_component_compare_rule"
+string_hash als::class_constant_number_compare_rule::my_type_key                    { 0xC4825958 }; // "als::class_constant_number_compare_rule"
+string_hash als::class_vector_component_constant_number_compare_rule::my_type_key   { 0x9C1960BC }; // "als::class_vector_component_constant_number_compare_rule"
+string_hash als::class_hash_compare_rule::my_type_key                               { 0x1BBEB44A }; // "als::class_hash_compare_rule"
+string_hash als::class_bounded_number_rule::my_type_key                             { 0xED014909 }; // "als::class_bounded_number_rule"
+string_hash als::class_vector_component_bounded_number_rule::my_type_key            { 0xB7E84FED }; // "als::class_vector_component_bounded_number_rule"
+string_hash als::class_param_compare_rule::my_type_key                              { 0x4C9BB657 }; // "als::class_param_compare_rule"
+string_hash als::class_vector_component_param_compare_rule::my_type_key             { 0x798B70BB }; // "als::class_vector_component_param_compare_rule"
+string_hash als::ai_inode_number_compare_rule::my_type_key                          { 0xD5130131 }; // "als::ai_inode_number_compare_rule"
+string_hash als::ai_inode_vector_component_number_compare_rule::my_type_key         { 0xCA870C55 }; // "als::ai_inode_vector_component_number_compare_rule"
+string_hash als::ai_inode_hash_equal_rule::my_type_key                              { 0xD0F24FBD }; // "als::ai_inode_hash_equal_rule"
+string_hash als::ai_inode_hash_not_equal_rule::my_type_key                          { 0xAD37BBED }; // "als::ai_inode_hash_not_equal_rule"
+string_hash als::ai_inode_bounded_number_rule::my_type_key                          { 0xA283EF0B }; // "als::ai_inode_bounded_number_rule"
+string_hash als::ai_inode_inverse_bounded_number_rule::my_type_key                  { 0x802A9846 }; // "als::ai_inode_inverse_bounded_number_rule"
+string_hash als::ai_inode_vector_component_bounded_number_rule::my_type_key         { 0x97F7FA2F }; // "als::ai_inode_vector_component_bounded_number_rule"
+string_hash als::ai_inode_vector_component_inverse_bounded_number_rule::my_type_key { 0x63F9876A }; // "als::ai_inode_vector_component_inverse_bounded_number_rule"
+string_hash als::ai_inode_number_param_compare_rule::my_type_key                    { 0xB92D3101 }; // "als::ai_inode_number_param_compare_rule"
+string_hash als::ai_inode_number_param_vector_component_compare_rule::my_type_key   { 0x95B983A5 }; // "als::ai_inode_number_param_vector_component_compare_rule"
+string_hash als::ifc_number_compare_rule::my_type_key                               { 0x1AB4C1AB }; // "als::ifc_number_compare_rule"
+string_hash als::ifc_vector_component_number_compare_rule::my_type_key              { 0x366D100F }; // "als::ifc_vector_component_number_compare_rule"
+string_hash als::ifc_hash_equal_rule::my_type_key                                   { 0xB1E2E337 }; // "als::ifc_hash_equal_rule"
+string_hash als::ifc_hash_not_equal_rule::my_type_key                               { 0xF2D97C67 }; // "als::ifc_hash_not_equal_rule"
+string_hash als::ifc_bounded_number_rule::my_type_key                               { 0xE825AF85 }; // "als::ifc_bounded_number_rule"
+string_hash als::ifc_inverse_bounded_number_rule::my_type_key                       { 0xAEDA32C0 }; // "als::ifc_inverse_bounded_number_rule"
+string_hash als::ifc_vector_component_bounded_number_rule::my_type_key              { 0x03DDFDE9 }; // "als::ifc_vector_component_bounded_number_rule"
+string_hash als::ifc_vector_component_inverse_bounded_number_rule::my_type_key      { 0x6D9CA524 }; // "als::ifc_vector_component_inverse_bounded_number_rule"
+string_hash als::ifc_number_param_compare_rule::my_type_key                         { 0x505FE4FB }; // "als::ifc_number_param_compare_rule"
+string_hash als::ifc_number_param_vector_component_compare_rule::my_type_key        { 0xB2A5EADF }; // "als::ifc_number_param_vector_component_compare_rule"
 
 // sub_5B03A0
 bool als::compare_numbers(e_comparison comparison, f32 lhs, f32 rhs) {
@@ -209,6 +237,128 @@ string_hash als::get_ai_hash_param(ai_core* core, string_hash name) {
         else if (type == param_type_string)
             result.initialize(mash::ALLOCATED, block.get_pb_fixedstring(name));
     }
+
+    return result;
+}
+
+// sub_5BDA00
+f32 als::get_ai_inode_float_param(ai_core* core, e_info_node_type type, string_hash name) {
+    if (!core)
+        return 0.0f;
+
+    info_node* node = core->get_info_node(type);
+
+    if (!node)
+        return 0.0f;
+
+    param_block &block = node->my_param_block;
+
+    if (!block.does_parameter_exist(name))
+        return 0.0f;
+
+    switch (block.get_parameter_data_type(name)) {
+        case param_type_float:
+            return block.get_pb_float(name);
+
+        case param_type_int:
+            return (f32)block.get_pb_int(name);
+
+        case param_type_float_variance:
+            return block.get_pb_float_variance(name).get_random_value();
+
+        default:
+            return 0.0f;
+    }
+}
+
+// sub_5BDAE0
+f32 als::get_ai_inode_vector_component_param(ai_core* core, e_info_node_type type, string_hash name, e_vector_component component) {
+    if (!core)
+        return 0.0f;
+
+    info_node* node = core->get_info_node(type);
+
+    if (!node)
+        return 0.0f;
+
+    return get_vector_component(node->my_param_block.get_optional_pb_vector3d(name, treyarch::references::unk_00fd4370.get(), nullptr), component);
+}
+
+// sub_5BDB40
+string_hash als::get_ai_inode_hash_param(ai_core* core, e_info_node_type type, string_hash name) {
+    string_hash result;
+    result.initialize(mash::ALLOCATED);
+
+    if (!core)
+        return result;
+
+    info_node* node = core->get_info_node(type);
+
+    if (node && node->my_param_block.does_parameter_exist(name)) {
+        param_block  &block     = node->my_param_block;
+        e_param_type  data_type = block.get_parameter_data_type(name);
+
+        if (data_type == param_type_hash)
+            result = block.get_pb_hash(name);
+        else if (data_type == param_type_string)
+            result.initialize(mash::ALLOCATED, block.get_pb_fixedstring(name));
+    }
+
+    return result;
+}
+
+// sub_5B0620
+f32 als::get_ifc_float_param(entity* owner, string_hash ifc, string_hash name) {
+    if (!owner)
+        return 0.0f;
+
+    generic_interface* found = owner->find_ifc_by_name(ifc);
+
+    if (!found)
+        return 0.0f;
+
+    f32 value = 0.0f;
+
+    if (!found->get_ifc_num(name, &value, 0))
+        return 0.0f;
+
+    return value;
+}
+
+// sub_5B0680
+f32 als::get_ifc_vector_component_param(entity* owner, string_hash ifc, string_hash name, e_vector_component component) {
+    if (!owner)
+        return 0.0f;
+
+    generic_interface* found = owner->find_ifc_by_name(ifc);
+
+    if (!found)
+        return 0.0f;
+
+    vector3d value(0.0f, 0.0f, 0.0f);
+
+    if (!found->get_ifc_vec(name, &value, 0))
+        return 0.0f;
+
+    return get_vector_component(value, component);
+}
+
+// sub_5B0700
+string_hash als::get_ifc_hash_param(entity* owner, string_hash ifc, string_hash name) {
+    string_hash result;
+
+    if (owner) {
+        if (generic_interface* found = owner->find_ifc_by_name(ifc)) {
+            const char* value = "";
+
+            if (found->get_ifc_str(name, &value, 0)) {
+                result.initialize(mash::ALLOCATED, value);
+                return result;
+            }
+        }
+    }
+
+    result.initialize(mash::ALLOCATED);
 
     return result;
 }
@@ -2414,4 +2564,877 @@ mash::string als::target_ai_number_param_vector_component_compare_rule::get_para
 // sub_5BD770
 mash::string als::target_ai_number_param_vector_component_compare_rule::get_prefix_string() const {
     return mash::string("target_ai::");
+}
+
+// sub_5B04C0
+void als::class_constant_number_compare_rule::construct_mashed_class() {
+    class_id.construct_mashed_class();
+}
+
+// sub_5B04C0
+void als::class_constant_number_compare_rule::destruct_mashed_class() {
+    class_id.destruct_mashed_class();
+}
+
+// sub_5E2F30
+void als::class_constant_number_compare_rule::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    class_id.unmash(mash_info, this, buffer);
+}
+
+// sub_5D6AE0
+mash::virtual_types_key als::class_constant_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5BD2F0
+bool als::class_constant_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (transition_rule_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (transition_rule_base::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::class_constant_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6DA0
+mash::virtual_types_key als::class_vector_component_constant_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8330
+bool als::class_vector_component_constant_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_constant_number_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_constant_number_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::class_vector_component_constant_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6DF0
+mash::string als::class_vector_component_constant_number_compare_rule::get_component_string() const {
+    return get_vector_component_string(component);
+}
+
+// sub_5B0490
+void als::class_hash_compare_rule::construct_mashed_class() {
+    class_id.construct_mashed_class();
+    value.construct_mashed_class();
+}
+
+// sub_5B0490
+void als::class_hash_compare_rule::destruct_mashed_class() {
+    class_id.destruct_mashed_class();
+    value.destruct_mashed_class();
+}
+
+// sub_5E2F40
+void als::class_hash_compare_rule::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    class_id.unmash(mash_info, this, buffer);
+    value.unmash(mash_info, this, buffer);
+}
+
+// sub_5D6DB0
+mash::virtual_types_key als::class_hash_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5BD2F0
+bool als::class_hash_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (transition_rule_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (transition_rule_base::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4C6780
+i32 als::class_hash_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B04B0
+void als::class_bounded_number_rule::construct_mashed_class() {
+    class_id.construct_mashed_class();
+}
+
+// sub_5B04B0
+void als::class_bounded_number_rule::destruct_mashed_class() {
+    class_id.destruct_mashed_class();
+}
+
+// sub_5E2F70
+void als::class_bounded_number_rule::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    class_id.unmash(mash_info, this, buffer);
+}
+
+// sub_5D6DC0
+mash::virtual_types_key als::class_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5BD2F0
+bool als::class_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (transition_rule_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (transition_rule_base::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::class_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6DD0
+mash::virtual_types_key als::class_vector_component_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8200
+bool als::class_vector_component_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::class_vector_component_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6DF0
+mash::string als::class_vector_component_bounded_number_rule::get_component_string() const {
+    return get_vector_component_string(component);
+}
+
+// sub_5B04C0
+void als::class_param_compare_rule::construct_mashed_class() {
+    class_id.construct_mashed_class();
+}
+
+// sub_5B04C0
+void als::class_param_compare_rule::destruct_mashed_class() {
+    class_id.destruct_mashed_class();
+}
+
+// sub_5E2F30
+void als::class_param_compare_rule::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    class_id.unmash(mash_info, this, buffer);
+}
+
+// sub_5D6DE0
+mash::virtual_types_key als::class_param_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5BD2F0
+bool als::class_param_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (transition_rule_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (transition_rule_base::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::class_param_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6E20
+mash::virtual_types_key als::class_vector_component_param_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D82A0
+bool als::class_vector_component_param_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_param_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_param_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::class_vector_component_param_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D6DF0
+mash::string als::class_vector_component_param_compare_rule::get_component_string() const {
+    return get_vector_component_string(other_component);
+}
+
+// sub_5D8150
+mash::virtual_types_key als::ai_inode_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8330
+bool als::ai_inode_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_constant_number_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_constant_number_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ai_inode_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE620
+bool als::ai_inode_number_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    return compare_numbers(comparison, get_ai_inode_float_param(core, (e_info_node_type)class_id.source_hash_code, name), value);
+}
+
+// sub_5D8170
+mash::virtual_types_key als::ai_inode_vector_component_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8180
+bool als::ai_inode_vector_component_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_constant_number_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_constant_number_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ai_inode_vector_component_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE6B0
+bool als::ai_inode_vector_component_number_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    return compare_numbers(comparison, get_ai_inode_vector_component_param(core, (e_info_node_type)class_id.source_hash_code, name, component), value);
+}
+
+// sub_5D81C0
+mash::virtual_types_key als::ai_inode_hash_equal_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8380
+bool als::ai_inode_hash_equal_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_hash_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_hash_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4C6780
+i32 als::ai_inode_hash_equal_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE750
+bool als::ai_inode_hash_equal_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    return get_ai_inode_hash_param(core, (e_info_node_type)class_id.source_hash_code, name) == value;
+}
+
+// sub_5D81D0
+mash::virtual_types_key als::ai_inode_hash_not_equal_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8380
+bool als::ai_inode_hash_not_equal_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_hash_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_hash_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4C6780
+i32 als::ai_inode_hash_not_equal_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE7E0
+bool als::ai_inode_hash_not_equal_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    return get_ai_inode_hash_param(core, (e_info_node_type)class_id.source_hash_code, name) != value;
+}
+
+// sub_5D81E0
+mash::virtual_types_key als::ai_inode_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8200
+bool als::ai_inode_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ai_inode_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE870
+bool als::ai_inode_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 number = get_ai_inode_float_param(core, (e_info_node_type)class_id.source_hash_code, name);
+
+    return number >= lower_bound && upper_bound >= number;
+}
+
+// sub_5D81F0
+mash::virtual_types_key als::ai_inode_inverse_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8200
+bool als::ai_inode_inverse_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ai_inode_inverse_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE930
+bool als::ai_inode_inverse_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 number = get_ai_inode_float_param(core, (e_info_node_type)class_id.source_hash_code, name);
+
+    return lower_bound >= number || number >= upper_bound;
+}
+
+// sub_5D8230
+mash::virtual_types_key als::ai_inode_vector_component_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8240
+bool als::ai_inode_vector_component_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ai_inode_vector_component_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BE9F0
+bool als::ai_inode_vector_component_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 number = get_ai_inode_vector_component_param(core, (e_info_node_type)class_id.source_hash_code, name, component);
+
+    return number >= lower_bound && upper_bound >= number;
+}
+
+// sub_5D8280
+mash::virtual_types_key als::ai_inode_vector_component_inverse_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8240
+bool als::ai_inode_vector_component_inverse_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ai_inode_vector_component_inverse_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5BEAB0
+bool als::ai_inode_vector_component_inverse_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 number = get_ai_inode_vector_component_param(core, (e_info_node_type)class_id.source_hash_code, name, component);
+
+    return lower_bound >= number || number >= upper_bound;
+}
+
+// sub_5D8290
+mash::virtual_types_key als::ai_inode_number_param_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D82A0
+bool als::ai_inode_number_param_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_param_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_param_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ai_inode_number_param_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5EF960
+bool als::ai_inode_number_param_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 lhs = get_ai_inode_float_param(core, (e_info_node_type)class_id.source_hash_code, name);
+    f32 rhs = context.the_sm->get_float_param(context.the_als, other_param);
+
+    return compare_numbers(comparison, lhs, rhs);
+}
+
+// sub_5D82D0
+mash::virtual_types_key als::ai_inode_number_param_vector_component_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D82E0
+bool als::ai_inode_number_param_vector_component_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_param_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_param_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ai_inode_number_param_vector_component_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8620
+bool als::ai_inode_number_param_vector_component_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    ai_core* core = context.the_als->get_actor()->get_ai_core();
+
+    f32 lhs = get_ai_inode_float_param(core, (e_info_node_type)class_id.source_hash_code, name);
+    f32 rhs = context.the_sm->get_vector_component_param(context.the_als, other_param, other_component);
+
+    return compare_numbers(comparison, lhs, rhs);
+}
+
+// sub_5D8320
+mash::virtual_types_key als::ifc_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8330
+bool als::ifc_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_constant_number_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_constant_number_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ifc_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B0EF0
+bool als::ifc_number_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    return compare_numbers(comparison, get_ifc_float_param(owner, class_id, name), value);
+}
+
+// sub_5D8360
+mash::virtual_types_key als::ifc_vector_component_number_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8180
+bool als::ifc_vector_component_number_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_constant_number_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_constant_number_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ifc_vector_component_number_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B0F90
+bool als::ifc_vector_component_number_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    return compare_numbers(comparison, get_ifc_vector_component_param(owner, class_id, name, component), value);
+}
+
+// sub_5D8370
+mash::virtual_types_key als::ifc_hash_equal_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8380
+bool als::ifc_hash_equal_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_hash_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_hash_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4C6780
+i32 als::ifc_hash_equal_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B1040
+bool als::ifc_hash_equal_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    return get_ifc_hash_param(owner, class_id, name) == value;
+}
+
+// sub_5D83B0
+mash::virtual_types_key als::ifc_hash_not_equal_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8380
+bool als::ifc_hash_not_equal_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_hash_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_hash_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4C6780
+i32 als::ifc_hash_not_equal_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B10E0
+bool als::ifc_hash_not_equal_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    return get_ifc_hash_param(owner, class_id, name) != value;
+}
+
+// sub_5D83C0
+mash::virtual_types_key als::ifc_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8200
+bool als::ifc_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ifc_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B1180
+bool als::ifc_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 number = get_ifc_float_param(owner, class_id, name);
+
+    return number >= lower_bound && upper_bound >= number;
+}
+
+// sub_5D83D0
+mash::virtual_types_key als::ifc_inverse_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8200
+bool als::ifc_inverse_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ifc_inverse_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B1250
+bool als::ifc_inverse_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 number = get_ifc_float_param(owner, class_id, name);
+
+    return lower_bound >= number || number >= upper_bound;
+}
+
+// sub_5D83E0
+mash::virtual_types_key als::ifc_vector_component_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8240
+bool als::ifc_vector_component_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ifc_vector_component_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B1320
+bool als::ifc_vector_component_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 number = get_ifc_vector_component_param(owner, class_id, name, component);
+
+    return number >= lower_bound && upper_bound >= number;
+}
+
+// sub_5D83F0
+mash::virtual_types_key als::ifc_vector_component_inverse_bounded_number_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D8240
+bool als::ifc_vector_component_inverse_bounded_number_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_bounded_number_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_bounded_number_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ifc_vector_component_inverse_bounded_number_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B13F0
+bool als::ifc_vector_component_inverse_bounded_number_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 number = get_ifc_vector_component_param(owner, class_id, name, component);
+
+    return lower_bound >= number || number >= upper_bound;
+}
+
+// sub_5D8400
+mash::virtual_types_key als::ifc_number_param_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D82A0
+bool als::ifc_number_param_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_param_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_param_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5D8160
+i32 als::ifc_number_param_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5EFA50
+bool als::ifc_number_param_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 lhs = get_ifc_float_param(owner, class_id, name);
+    f32 rhs = context.the_sm->get_float_param(context.the_als, other_param);
+
+    return compare_numbers(comparison, lhs, rhs);
+}
+
+// sub_5D8410
+mash::virtual_types_key als::ifc_number_param_vector_component_compare_rule::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5D82E0
+bool als::ifc_number_param_vector_component_compare_rule::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (class_vector_component_param_compare_rule::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (class_vector_component_param_compare_rule::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71D790
+i32 als::ifc_number_param_vector_component_compare_rule::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D86E0
+bool als::ifc_number_param_vector_component_compare_rule::evaluate(const rule_context &context) const {
+    string_hash name;
+    name.initialize(mash::ALLOCATED, nullptr, param);
+
+    actor* owner = context.the_als->get_actor();
+
+    f32 lhs = get_ifc_float_param(owner, class_id, name);
+    f32 rhs = context.the_sm->get_vector_component_param(context.the_als, other_param, other_component);
+
+    return compare_numbers(comparison, lhs, rhs);
 }
