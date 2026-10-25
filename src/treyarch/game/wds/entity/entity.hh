@@ -8,6 +8,7 @@
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
 #include "treyarch/game/wds/entity/interface_storage.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/math/po.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -18,7 +19,7 @@ namespace treyarch {
     class entity : public arch_base {
 
     public:
-        u8                                  reserved_008[0x04];
+        string_hash                         id;
         po*                                 my_rel_po;
         po*                                 my_abs_po;
         u32                                 flags;
@@ -65,6 +66,7 @@ namespace treyarch {
         region* get_primary_region();
     };
 
+    ASSERT_OFFSETOF(entity, id,             0x08);
     ASSERT_OFFSETOF(entity, my_rel_po,      0x0C);
     ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
     ASSERT_OFFSETOF(entity, flags,          0x14);
