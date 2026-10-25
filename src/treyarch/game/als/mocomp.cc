@@ -6438,14 +6438,58 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 }
 
 // sub_5DB9A0
-po als::combat_radial_move_and_face::get_facing_po(f32 delta_t) {
-    using get_facing_po_t = po* (__thiscall*)(combat_radial_move_and_face*, po*, f32);
+po als::combat_radial_move_and_face::get_facing_po(f32) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
 
-    po facing;
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
 
-    ((get_facing_po_t)retail::sub_5DB9A0)(this, &facing, delta_t);
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
 
-    return facing;
+    po turned = *the_actor->my_abs_po;
+
+    vector3d up      = turned.get_y_facing();
+    vector3d facing  = turned.get_z_facing();
+    vector3d minus_x = -turned.get_x_facing();
+
+    // level, toward param 152 when it's set
+    vector3d desired = facing;
+
+    if (the_base->has_ext_param_been_set(152))
+        desired = the_base->get_external_vector(152);
+
+    desired = desired - up * (f32)(up * desired);
+
+    if (desired.length2() > 0.0001f) {
+        desired = unitized(desired);
+
+        facing = facing - up * (f32)(up * facing);
+
+        if (facing.length2() > 0.0001f) {
+            retail::sub_402050((f32*)&facing);
+
+            minus_x = minus_x - up * (f32)(up * minus_x);
+
+            retail::sub_402050((f32*)&minus_x);
+
+            f32 along  = facing * desired;
+            f32 across = minus_x * desired;
+            f32 angle  = (f32)retail::sub_44D790(across, along);
+
+            if (angle > 0.01f || angle < -0.01f) {
+                po rotation;
+                retail::sub_4015B0((u64*)&rotation);
+
+                math::vector4 axis(up.x, up.y, up.z, 0.0f);
+                retail::sub_40A750((u64*)&rotation, (f32*)&axis, &angle);
+                retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+            }
+        }
+    }
+
+    return turned;
 }
 
 // sub_5B47F0
