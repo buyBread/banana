@@ -19,6 +19,9 @@ namespace treyarch {
 
         generic_event_callback();
 
+        // inlined @ sub_723DA0
+        explicit generic_event_callback(mash::generating_vtable_version) {}
+
         void construct_mashed_class();
         void destruct_mashed_class() {}
         void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
