@@ -63,6 +63,8 @@ namespace als {
     inline const string_hash use_anim_orientation_id       = string_hash(hash::djb2("use_anim_orientation"));
     inline const string_hash dest_point_up_offset_id       = string_hash(hash::djb2("dest_point_up_offset"));
     inline const string_hash use_fakeroot_position_id      = string_hash(hash::djb2("use_fakeroot_position"));
+    inline const string_hash destination_lock_id           = string_hash(hash::djb2("destination_lock"));
+    inline const string_hash anchor_hand_id                = string_hash(hash::djb2("anchor_hand"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -82,6 +84,10 @@ namespace als {
         // "BIP01 R FOOT" and "BIP01 L FOOT", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_r_foot { 0x00FFECFC };
         inline util::memory_reference<string_hash> bip01_l_foot { 0x00FFED34 };
+
+        // "BIP01 PROP R HAND" and "BIP01 PROP L HAND", hashed by the CRT initializers
+        inline util::memory_reference<string_hash> bip01_prop_r_hand { 0x00FFEDD0 };
+        inline util::memory_reference<string_hash> bip01_prop_l_hand { 0x0100398C };
     } // references
 
     // where the accel/decel mode's turn rate is done ramping up and starts ramping down, through the movement window; nothing writes them
@@ -1091,6 +1097,56 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // signal_move_and_face that brings the hand onto the destination point, timed from where the actor started
+    class attach_hand_to_point : public signal_move_and_face {
+
+    public:
+        bool     dest_reached;
+        u8       pad_0bd[0x03];
+        vector3d start_position;
+
+        attach_hand_to_point();
+        explicit attach_hand_to_point(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void post_anim_action(f32 delta_t) override;
+
+        void set_destination_point() override;
+        void reached_dest_signal(f32 delta_t) override;
+        void face_and_arrive_by(f32 delta_t) override;
+
+        static string_hash my_type_key;
+    };
+
+    // attach_hand_to_point at a steady speed, arriving once it reaches or passes the point
+    class constant_move_hand_to_point : public attach_hand_to_point {
+
+    public:
+        bool arrived;
+        bool first_frame;
+        u8   pad_0ce[0x02];
+
+        constant_move_hand_to_point();
+        explicit constant_move_hand_to_point(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+
+        vector3d compute_translation(f32 delta_t, const po &old_po, const po &anim_po) override;
+
+        void reached_dest_signal(f32 delta_t) override;
+        void face_and_arrive_by(f32 delta_t) override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1190,6 +1246,14 @@ namespace als {
     ASSERT_OFFSETOF(crawl_transition, wall_offset,            0xD4);
 
     ASSERT_SIZEOF(rvb_crawl_transition, 0xBC);
+
+    ASSERT_SIZEOF  (attach_hand_to_point,                 0xCC);
+    ASSERT_OFFSETOF(attach_hand_to_point, dest_reached,   0xBC);
+    ASSERT_OFFSETOF(attach_hand_to_point, start_position, 0xC0);
+
+    ASSERT_SIZEOF  (constant_move_hand_to_point,              0xD0);
+    ASSERT_OFFSETOF(constant_move_hand_to_point, arrived,     0xCC);
+    ASSERT_OFFSETOF(constant_move_hand_to_point, first_frame, 0xCD);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));

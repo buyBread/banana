@@ -70,6 +70,9 @@ string_hash als::wall_recover_move_and_face::my_type_key       { 0x5010014F }; /
 string_hash als::crawl_transition::my_type_key     { 0xCA7C59D7 }; // "als::crawl_transition"
 string_hash als::rvb_crawl_transition::my_type_key { 0x24C44C00 }; // "als::rvb_crawl_transition"
 
+string_hash als::attach_hand_to_point::my_type_key        { 0x11A13AEE }; // "als::attach_hand_to_point"
+string_hash als::constant_move_hand_to_point::my_type_key { 0x3420FEB9 }; // "als::constant_move_hand_to_point"
+
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
@@ -314,6 +317,18 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(rvb_crawl_transition);
 
         return memory_buffer ? new (memory_buffer) rvb_crawl_transition : nullptr;
+    }
+
+    if (the_class_to_make == attach_hand_to_point::my_type_key.source_hash_code) {
+        last_created_size = sizeof(attach_hand_to_point);
+
+        return memory_buffer ? new (memory_buffer) attach_hand_to_point : nullptr;
+    }
+
+    if (the_class_to_make == constant_move_hand_to_point::my_type_key.source_hash_code) {
+        last_created_size = sizeof(constant_move_hand_to_point);
+
+        return memory_buffer ? new (memory_buffer) constant_move_hand_to_point : nullptr;
     }
 
     // the classes not in source yet
@@ -2734,6 +2749,8 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
 // inlined @ sub_5AEBB0
 // inlined @ sub_5AED50
 // inlined @ sub_5AED90
+// inlined @ sub_5AF070
+// inlined @ sub_5AF0C0
 als::move_and_face::move_and_face() : orientation_end_signal_required(false),
                                       translation_end_signal_required(false),
                                       orientation_start_signal_required(false),
@@ -2760,6 +2777,8 @@ als::move_and_face::move_and_face() : orientation_end_signal_required(false),
 // inlined @ sub_719710
 // inlined @ sub_719750
 // inlined @ sub_719790
+// inlined @ sub_719840
+// inlined @ sub_719880
 als::move_and_face::move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
                                                                                    orientation_end_signal_required(false),
                                                                                    translation_end_signal_required(false),
@@ -4565,4 +4584,230 @@ void als::rvb_crawl_transition::set_start_key_signals() {
     translation_start_key_signals       = translation_signals;
     translation_start_key_signals_count = 2;
     translation_start_signal_required   = false;
+}
+
+// sub_5AF070
+als::attach_hand_to_point::attach_hand_to_point() {}
+
+// sub_719840
+als::attach_hand_to_point::attach_hand_to_point(mash::generating_vtable_version so_do_nothing) : signal_move_and_face(so_do_nothing) {}
+
+// sub_5AF0A0
+mash::virtual_types_key als::attach_hand_to_point::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE8E0
+bool als::attach_hand_to_point::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (signal_move_and_face::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (signal_move_and_face::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AF0B0
+i32 als::attach_hand_to_point::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DB8F0
+void als::attach_hand_to_point::activate(animation_logic_system* the_als_core, layer_id layer) {
+    signal_move_and_face::activate(the_als_core, layer);
+
+    max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, 500.0f, nullptr);
+    start_position     = the_actor->my_abs_po->get_position();
+    dest_reached       = false;
+}
+
+// sub_5B4320
+void als::attach_hand_to_point::post_anim_action(f32 delta_t) {
+    signal_move_and_face::post_anim_action(delta_t);
+
+    // there, it stays on the point while the state locks it
+    i32 destination_lock = the_base->get_optional_pb_int(destination_lock_id, 0, nullptr);
+
+    if (dest_reached && destination_lock) {
+        set_destination_point();
+
+        retail::sub_6271F0((u32*)the_actor, (i32)&destination_point); // entity_base::set_abs_position
+    }
+}
+
+// sub_5DB760
+void als::attach_hand_to_point::set_destination_point() {
+    if (!the_base->has_ext_param_been_set(145))
+        return;
+
+    vector3d point       = the_base->get_external_vector(145);
+    i32      anchor_hand = the_base->get_optional_pb_int(anchor_hand_id, 1, nullptr);
+
+    destination_point = the_actor->my_abs_po->get_position();
+
+    // the player's prop hand onto the point, the body following
+    if (the_actor->has_ifc(entity_ifc_player)) {
+        arch_base*   body = the_actor->my_handle.resolve();
+        string_hash* hand = anchor_hand ? &references::bip01_prop_r_hand.get() : &references::bip01_prop_l_hand.get();
+
+        vector3d hand_position;
+        retail::sub_62FA60((i32)body, retail::sub_62F880((u32*)body, (u32*)hand), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+
+        destination_point = vector3d(point.x + (destination_point.x - hand_position.x),
+                                     point.y + (destination_point.y - hand_position.y),
+                                     point.z + (destination_point.z - hand_position.z));
+
+        destination_point_valid = true;
+    }
+}
+
+// sub_5C3690
+void als::attach_hand_to_point::reached_dest_signal(f32) {
+    if (orientation_time_left <= 0.0001f && translation_time_left <= 0.0001f && !dest_reached) {
+        event_manager::raise_event(references::anim_dest_reached.read(), the_actor->my_handle);
+
+        dest_reached = true;
+    }
+}
+
+// sub_5F1820
+void als::attach_hand_to_point::face_and_arrive_by(f32 delta_t) {
+    // turned and moved from where it started, not from where the actor is
+    const matrix4x4 &abs_m = the_actor->my_abs_po->get_matrix();
+
+    po old_po;
+    old_po.get_matrix().x = abs_m.x;
+    old_po.get_matrix().y = abs_m.y;
+    old_po.get_matrix().z = abs_m.z;
+    old_po.get_matrix().w = vector4d(start_position.x, start_position.y, start_position.z, 1.0f);
+
+    po anim_po = calculate_anim_motion();
+    po facing  = orientation_action(delta_t, old_po, anim_po);
+
+    // a near-vertical param 152 faces it along the ground
+    if (the_base->has_ext_param_been_set(60) && the_base->get_external_float(60) > 0.5f && the_base->has_ext_param_been_set(152)) {
+        vector3d target = the_base->get_external_vector(152);
+
+        if (target.y > 0.9f) {
+            target.y = 0.0f;
+
+            retail::sub_402050((f32*)&target);
+            retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
+        }
+    }
+
+    vector3d position = translation_action(delta_t, old_po, anim_po);
+
+    facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+    const vector3d &moved_to   = the_actor->my_abs_po->get_position();
+    const vector3d &moved_from = old_po.get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(moved_to.x - moved_from.x, moved_to.y - moved_from.y, moved_to.z - moved_from.z), delta_t);
+}
+
+// sub_5AF0C0
+als::constant_move_hand_to_point::constant_move_hand_to_point() {}
+
+// sub_719880
+als::constant_move_hand_to_point::constant_move_hand_to_point(mash::generating_vtable_version so_do_nothing) : attach_hand_to_point(so_do_nothing) {}
+
+// sub_5AF0F0
+mash::virtual_types_key als::constant_move_hand_to_point::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AF100
+bool als::constant_move_hand_to_point::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (attach_hand_to_point::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (attach_hand_to_point::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_A70E20
+i32 als::constant_move_hand_to_point::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DB970
+void als::constant_move_hand_to_point::activate(animation_logic_system* the_als_core, layer_id layer) {
+    attach_hand_to_point::activate(the_als_core, layer);
+
+    arrived     = false;
+    first_frame = true;
+}
+
+// sub_5F1A90
+vector3d als::constant_move_hand_to_point::compute_translation(f32 delta_t, const po &old_po, const po &) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    // straight at the point, at param 0's speed
+    vector3d position = old_po.get_position();
+    vector3d dir      = unitized(destination_point - position);
+
+    f32 speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+    f32 step  = speed * delta_t;
+
+    if (position.x == destination_point.x && position.y == destination_point.y && position.z == destination_point.z)
+        return position;
+
+    return vector3d(position.x + dir.x * step, position.y + dir.y * step, position.z + dir.z * step);
+}
+
+// sub_5C36F0
+void als::constant_move_hand_to_point::reached_dest_signal(f32) {
+    if (arrived && !dest_reached) {
+        event_manager::raise_event(references::anim_dest_reached.read(), the_actor->my_handle);
+
+        dest_reached = true;
+    }
+}
+
+// sub_5B4390
+void als::constant_move_hand_to_point::face_and_arrive_by(f32 delta_t) {
+    po       old_po       = *the_actor->my_abs_po;
+    vector3d old_position = old_po.get_position();
+
+    po anim_po = calculate_anim_motion();
+    po facing  = orientation_action(delta_t, old_po, anim_po);
+
+    vector3d to_destination = destination_point - old_position;
+
+    // the first frame holds still unless it's there already
+    if (!first_frame || to_destination.length() == 0.0f) {
+        vector3d position = translation_action(delta_t, old_po, anim_po);
+
+        facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+        retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+        const vector3d &moved_to   = the_actor->my_abs_po->get_position();
+        const vector3d &moved_from = old_po.get_position();
+
+        the_actor->set_frame_delta_trans(vector3d(moved_to.x - moved_from.x, moved_to.y - moved_from.y, moved_to.z - moved_from.z), delta_t);
+
+        // arrived once the point is behind it or reached
+        if (!dest_reached) {
+            vector3d remaining = destination_point - position;
+
+            if (to_destination * remaining < 0.0f || remaining.length() < 0.0001f)
+                arrived = true;
+        }
+    }
+
+    first_frame = false;
 }
