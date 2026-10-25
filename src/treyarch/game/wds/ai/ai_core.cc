@@ -79,6 +79,10 @@ void ai_core::team_lists::rebuild() {
 }
 
 // sub_402D50
+// inlined @ sub_5C68C0
+// inlined @ sub_5C78B0
+// inlined @ sub_5C7B20
+// inlined @ sub_5F3990
 // inlined @ sub_8068A0
 // inlined @ sub_981D50
 info_node* ai_core::get_info_node(e_info_node_type type) const {

@@ -2,6 +2,7 @@
 
 #include "treyarch/game/wds/ai/param_block.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
+#include "treyarch/shared/math/po.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -73,6 +74,20 @@ namespace treyarch {
         u32   unk_034;
     };
 
+    // the hero's; wall_po is the wall's facing (z) and up (y) that wallsprint_mocomp runs along
+    class wall_sprint_inode : public info_node {
+
+    public:
+        u8  reserved_030[0x28];
+        i32 unk_058;            // above 1, wallsprint_mocomp moves the actor 1/n of the way onto wall_po per frame
+        u8  reserved_05c[0x14];
+        po  wall_po;
+        u8  reserved_0b0[0xB0];
+
+        // sub_54AE00
+        po* get_wall_po() { return &wall_po; }
+    };
+
     ASSERT_SIZEOF  (info_node,                 0x30);
     ASSERT_OFFSETOF(info_node, unk_004,        0x04);
     ASSERT_OFFSETOF(info_node, my_param_block, 0x08);
@@ -81,4 +96,8 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (als_inode,         0x38);
     ASSERT_OFFSETOF(als_inode, my_als, 0x30);
+
+    ASSERT_SIZEOF  (wall_sprint_inode,          0x160);
+    ASSERT_OFFSETOF(wall_sprint_inode, unk_058, 0x58);
+    ASSERT_OFFSETOF(wall_sprint_inode, wall_po, 0x70);
 } // treyarch
