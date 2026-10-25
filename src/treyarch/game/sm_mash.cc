@@ -21,6 +21,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<ai_puppet_anim_by_filename>();
         mash::mash_virtual_base::register_class<combat_block_meta_anim>();
         mash::mash_virtual_base::register_class<combat_dodge_meta_anim>();
+        mash::mash_virtual_base::register_class<flight_mocomp>();
         mash::mash_virtual_base::register_class<als::animation_blends_list>();
         mash::mash_virtual_base::register_class<als::layer_state_machine_shared>();
         mash::mash_virtual_base::register_class<als::state_machine_shared>();
