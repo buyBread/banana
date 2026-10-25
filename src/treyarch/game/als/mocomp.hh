@@ -71,6 +71,9 @@ namespace als {
     inline i32  speed_override_enabled = 1;
     inline bool match_playback_speed   = false;
 
+    // the crawl ik's switch; ikcrawl_mocomp is a relative_orientation without it. nothing writes it
+    inline bool ikcrawl_enabled = true;
+
     // moves and turns the actor the way its animation asks; built in the als's own storage
     class motion_compensator : public mash::mash_virtual_base {
 
@@ -586,6 +589,32 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // hands the actor to the crawl ik, which places it on the geometry around it
+    class ikcrawl_mocomp : public relative_orientation {
+
+    public:
+        ikcrawl_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit ikcrawl_mocomp(mash::generating_vtable_version so_do_nothing) : relative_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void transition() override;
+        void post_anim_action(f32 delta_t) override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -642,4 +671,6 @@ namespace als {
 
     ASSERT_SIZEOF(input_orientation, 0x44);
     ASSERT_SIZEOF(towed_orientation, 0x44);
+
+    ASSERT_SIZEOF(ikcrawl_mocomp, 0x44);
 }} // treyarch::als

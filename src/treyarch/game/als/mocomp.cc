@@ -43,6 +43,8 @@ string_hash als::direct_mocomp::my_type_key             { 0xD27304F9 }; // "als:
 string_hash als::input_orientation::my_type_key { 0x422CBEEF }; // "als::input_orientation"
 string_hash als::towed_orientation::my_type_key { 0x6ABE6902 }; // "als::towed_orientation"
 
+string_hash als::ikcrawl_mocomp::my_type_key { 0xEA76894B }; // "als::ikcrawl_mocomp"
+
 i32 als::motion_compensator::last_created_size = 0;
 
 // sub_5C3730
@@ -153,6 +155,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(towed_orientation);
 
         return memory_buffer ? new (memory_buffer) towed_orientation : nullptr;
+    }
+
+    if (the_class_to_make == ikcrawl_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(ikcrawl_mocomp);
+
+        return memory_buffer ? new (memory_buffer) ikcrawl_mocomp : nullptr;
     }
 
     // the classes not in source yet
@@ -2062,4 +2070,82 @@ vector3d als::towed_orientation::get_tow_point() const {
     }
 
     return the_actor->my_abs_po->get_position();
+}
+
+// sub_5AEF30
+mash::virtual_types_key als::ikcrawl_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEE70
+bool als::ikcrawl_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (relative_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (relative_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::ikcrawl_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5CD090
+void als::ikcrawl_mocomp::activate(animation_logic_system* the_als_core, layer_id layer) {
+    using ikcrawl_begin_t = void (__cdecl*)(actor*, animation_logic_system*, layer_id);
+
+    // the_actor is still the last activation's here
+    ((ikcrawl_begin_t)retail::sub_5CCF00)(the_actor, the_als_core, layer); // ikcrawl begin
+
+    relative_orientation::activate(the_als_core, layer);
+}
+
+// sub_5CD0C0
+void als::ikcrawl_mocomp::deactivate() {
+    retail::sub_5CCFE0((i32)the_actor); // ikcrawl end
+
+    relative_orientation::deactivate();
+}
+
+// sub_5B6BA0
+void als::ikcrawl_mocomp::transition() {
+    if (!ikcrawl_enabled)
+        relative_orientation::transition();
+}
+
+// sub_5E7770
+void als::ikcrawl_mocomp::post_anim_action(f32 delta_t) {
+    if (!ikcrawl_enabled) {
+        relative_orientation::post_anim_action(delta_t);
+
+        return;
+    }
+
+    // ikcrawl: gathers the geometry around the actor
+    if (!retail::sub_5E63D0((i32)the_actor, (i32)the_base))
+        return;
+
+    vector3d prev_position = the_actor->my_abs_po->get_position();
+
+    po curr_offset;
+    retail::sub_4015B0((u64*)&curr_offset);
+
+    po moved;
+    retail::sub_4015B0((u64*)&moved);
+
+    get_po_curr_offset(curr_offset);
+
+    retail::sub_44E230((u64*)&moved, (f32*)&curr_offset, (f32*)the_actor->my_rel_po);
+    retail::sub_9595B0((i32)&moved);
+
+    retail::sub_5E6760((u32*)the_actor, delta_t, (f32*)&prev_position, (i32)&curr_offset, (f32*)&moved); // ikcrawl: crawls on it
+}
+
+// sub_5DD2B0
+void als::ikcrawl_mocomp::get_directions(animation_logic_system* als_core, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    if (!ikcrawl_enabled)
+        relative_orientation::get_directions(als_core, base, desired_dir, desired_up);
 }
