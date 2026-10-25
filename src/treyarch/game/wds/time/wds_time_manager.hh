@@ -16,7 +16,8 @@ namespace treyarch {
         u32 frame_sequence;
         u8  reserved_020[0x04];
         f32 unk_024;
-        u8  reserved_028[0x14];
+        f32 time_inc;               // this frame's undilated step, from frame_advance
+        u8  reserved_02c[0x10];
 
         wds_time_manager();
 
@@ -38,4 +39,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(wds_time_manager, unk_00c,                0x0C);
     ASSERT_OFFSETOF(wds_time_manager, frame_sequence,         0x1C);
     ASSERT_OFFSETOF(wds_time_manager, unk_024,                0x24);
+    ASSERT_OFFSETOF(wds_time_manager, time_inc,               0x28);
 } // treyarch
