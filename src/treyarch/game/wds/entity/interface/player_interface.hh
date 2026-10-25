@@ -28,9 +28,11 @@ namespace treyarch {
         void*                           reserved_slots_095[292];
         void*                           (__thiscall* unk_387)(player_interface* self); // rvb: the pole it swings on (+0x8CC); null in player_interface
         bool                            (__thiscall* unk_388)(player_interface* self); // rvb: that pole leans more than 45 degrees off vertical
+        void*                           reserved_slots_389[78];
+        void*                           (__thiscall* unk_467)(player_interface* self); // rvb: clears +0xA44's first byte and returns it, a handle at +4; null in player_interface
     };
 
-    ASSERT_SIZEOF(player_interface_vtable, 389 * 4);
+    ASSERT_SIZEOF(player_interface_vtable, 468 * 4);
 
     class player_interface : public actor_interface {
 
@@ -81,6 +83,10 @@ namespace treyarch {
 
         bool unk_388() {
             return get_vtable()->unk_388(this);
+        }
+
+        void* unk_467() {
+            return get_vtable()->unk_467(this);
         }
 
         player_reflexes* get_reflexes() {

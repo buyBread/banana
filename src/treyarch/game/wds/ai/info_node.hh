@@ -101,6 +101,13 @@ namespace treyarch {
     inline const string_hash flight_layer_inode_key       = string_hash(hash::djb2("flight_layer_inode"));
     inline const string_hash swift_flight_layer_inode_key = string_hash(hash::djb2("swift_flight_layer_inode"));
 
+    class std_carry_inode : public info_node {
+
+    public:
+        info_node* unk_030;            // the other side's node; als::sync_move_and_face pairs the actor with its core's actor
+        u8         reserved_034[0x34];
+    };
+
     class swift_stationary_layer_inode : public loco_inode {
 
     public:
@@ -144,6 +151,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0f4, 0xF4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_115, 0x115);
+
+    ASSERT_SIZEOF  (std_carry_inode,          0x68);
+    ASSERT_OFFSETOF(std_carry_inode, unk_030, 0x30);
 
     ASSERT_SIZEOF(swift_stationary_layer_inode, 0xB8);
 
