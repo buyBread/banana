@@ -4,6 +4,7 @@
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/amalga/resource_partition.hh"
 #include "treyarch/game/als/meta_anim.hh"
+#include "treyarch/game/als/state_machine.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/shared/fixed_string.hh"
 #include "treyarch/shared/hash/algo.hh"
@@ -262,23 +263,17 @@ nal::anim* als::als_meta_anim_by_filename::get_anim_proxy() const {
 als::nal_als_instance_bridge als::als_meta_anim_by_filename::create_anim_inst(nal::transport_list*    the_skel,
                                                                               u32                     flags,
                                                                               nal::skeleton_map*      skel_map,
-                                                                              u32                     unk,
-                                                                              void*                   the_anim,
-                                                                              animation_logic_system* the_als,
+                                                                              u32,
+                                                                              void*,
+                                                                              animation_logic_system*,
                                                                               state_machine*          the_layer) {
 
-    using create_anim_inst_t = nal_als_instance_bridge* (__thiscall*)(als_meta_anim_by_filename*,
-                                                                      nal_als_instance_bridge*,
-                                                                      nal::transport_list*,
-                                                                      u32,
-                                                                      nal::skeleton_map*,
-                                                                      u32,
-                                                                      void*,
-                                                                      animation_logic_system*,
-                                                                      state_machine*);
+    nal::anim_instance* nal_inst = the_anim_ptr->create_instance(flags, skel_map, the_skel);
+    nal_inst->force_looping = the_layer->is_looping();
 
     nal_als_instance_bridge result;
-    ((create_anim_inst_t)retail::sub_5BEC90)(this, &result, the_skel, flags, skel_map, unk, the_anim, the_als, the_layer);
+    result.nal_inst = nal_inst;
+    result.als_inst = nullptr;
 
     return result;
 }

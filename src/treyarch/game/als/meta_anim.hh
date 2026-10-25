@@ -7,6 +7,7 @@
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/skeleton_map.hh"
+#include "treyarch/nal/transport_fk.hh"
 #include "treyarch/nal/transport_list.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/mash_info.hh"
@@ -28,12 +29,15 @@ namespace treyarch {
         class animation_logic_system;
         class state_machine;
 
+        class als_anim_instance;
         class als_nal_meta_anim;
 
         // the side that's set samples the pose
         struct nal_als_instance_bridge {
             nal::anim_instance* nal_inst;
-            void*               als_inst;
+            als_anim_instance*  als_inst;
+
+            void get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk);
         };
 
         // the side that's set is the animation to play

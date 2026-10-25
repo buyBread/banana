@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "treyarch/game/als/meta_anim_swing.hh"
+#include "treyarch/game/als/meta_anim_instance.hh"
 
 using namespace treyarch;
 
@@ -58,23 +59,14 @@ nal::anim* als::als_meta_anim_swing::get_anim_proxy() const {
 als::nal_als_instance_bridge als::als_meta_anim_swing::create_anim_inst(nal::transport_list*    the_skel,
                                                                         u32                     flags,
                                                                         nal::skeleton_map*      skel_map,
-                                                                        u32                     unk,
-                                                                        void*                   the_anim,
+                                                                        u32,
+                                                                        void*,
                                                                         animation_logic_system* the_als,
                                                                         state_machine*          the_layer) {
 
-    using create_anim_inst_t = nal_als_instance_bridge* (__thiscall*)(als_meta_anim_swing*,
-                                                                      nal_als_instance_bridge*,
-                                                                      nal::transport_list*,
-                                                                      u32,
-                                                                      nal::skeleton_map*,
-                                                                      u32,
-                                                                      void*,
-                                                                      animation_logic_system*,
-                                                                      state_machine*);
-
     nal_als_instance_bridge result;
-    ((create_anim_inst_t)retail::sub_5D8830)(this, &result, the_skel, flags, skel_map, unk, the_anim, the_als, the_layer);
+    result.als_inst = new als_meta_anim_swing_instance(this, the_skel, flags, skel_map, the_als, the_layer);
+    result.nal_inst = nullptr;
 
     return result;
 }
