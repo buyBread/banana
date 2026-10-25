@@ -30,6 +30,11 @@ namespace treyarch {
             return ((bool (__thiscall*)(const arch_base*))vtable[12])(this);
         }
 
+        // slot 13
+        bool is_a_conglomerate() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[13])(this);
+        }
+
         void raise_event(string_hash event_type_id);
         void raise_event(event* raised_event);
 
