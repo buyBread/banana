@@ -7,6 +7,7 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/event/event_manager.hh"
+#include "treyarch/game/spline.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/entity/actor.hh"
@@ -80,6 +81,8 @@ string_hash als::combat_pole_swing_attach::my_type_key    { 0xA771F9B4 }; // "al
 string_hash als::sync_move_and_face::my_type_key          { 0x8E26B3C7 }; // "als::sync_move_and_face"
 string_hash als::momentum_sync_move_and_face::my_type_key { 0xB44DA4B8 }; // "als::momentum_sync_move_and_face"
 string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "als::sturn_sync_move_and_face"
+
+string_hash als::combat_radial_move_and_face::my_type_key { 0xBF5E446C }; // "als::combat_radial_move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -361,6 +364,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(sturn_sync_move_and_face);
 
         return memory_buffer ? new (memory_buffer) sturn_sync_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == combat_radial_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(combat_radial_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) combat_radial_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -6243,4 +6252,156 @@ po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
     }
 
     return turned;
+}
+
+// sub_5AF140
+mash::virtual_types_key als::combat_radial_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::combat_radial_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_71C6B0
+i32 als::combat_radial_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8EB0
+void als::combat_radial_move_and_face::activate(animation_logic_system*, layer_id layer) {
+    // retail never stores the_als_core; the als's mocomp buffer still holds it from the mocomp before
+    the_base  = the_als->get_als_layer_internal(layer);
+    the_actor = the_als->get_actor();
+
+    read_params(0.033333335f);
+}
+
+// sub_5F57A0
+void als::combat_radial_move_and_face::deactivate() {
+    if (path) {
+        delete path;
+
+        path = nullptr;
+    }
+}
+
+// sub_5B4790
+void als::combat_radial_move_and_face::pre_anim_action(f32 delta_t) {
+    if (the_als->did_transition_succeed())
+        read_params(delta_t);
+    else {
+        anim_time = the_base->get_current_anim_time();
+
+        build_path(delta_t, false);
+    }
+
+    params_read = false;
+}
+
+// sub_5B4910
+void als::combat_radial_move_and_face::post_anim_action(f32 delta_t) {
+    vector3d old_position = the_actor->my_abs_po->get_position();
+
+    po       facing   = get_facing_po(delta_t);
+    vector3d position = get_path_position(delta_t);
+
+    facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+    const vector3d &moved_to = the_actor->my_abs_po->get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(moved_to.x - old_position.x, moved_to.y - old_position.y, moved_to.z - old_position.z), delta_t);
+}
+
+// sub_5F1C70
+void als::combat_radial_move_and_face::read_params(f32 delta_t) {
+    if (params_read)
+        return;
+
+    params_read = true;
+
+    read_signal_times();
+
+    anim_time                = the_base->get_current_anim_time();
+    closest_distance_allowed = the_base->get_optional_pb_float(closest_distance_allowed_id, 2.0f, nullptr);
+    max_rotation_angle       = the_base->get_optional_pb_float(max_rotation_angle_id, 120.0f, nullptr);
+    unk_030                  = the_base->get_external_float(95);
+
+    // retail drops any earlier path without freeing it
+    path       = nullptr;
+    path_built = false;
+
+    build_path(delta_t, false);
+}
+
+// sub_5B4700
+void als::combat_radial_move_and_face::read_signal_times() {
+    move_begin_time = the_base->get_time_to_signal(references::move_begin.read(), nullptr, false, nullptr);
+
+    if (move_begin_time < 0.0f)
+        move_begin_time = 0.0f;
+
+    move_end_time = the_base->get_time_to_signal(references::move_end.read(), nullptr, false, nullptr);
+
+    if (move_end_time < 0.0f)
+        move_end_time = the_base->get_duration();
+}
+
+// sub_5F6560
+void als::combat_radial_move_and_face::build_path(f32 delta_t, bool unk) {
+    using build_path_t = void (__thiscall*)(combat_radial_move_and_face*, f32, bool);
+
+    ((build_path_t)retail::sub_5F6560)(this, delta_t, unk);
+}
+
+// sub_5DB9A0
+po als::combat_radial_move_and_face::get_facing_po(f32 delta_t) {
+    using get_facing_po_t = po* (__thiscall*)(combat_radial_move_and_face*, po*, f32);
+
+    po facing;
+
+    ((get_facing_po_t)retail::sub_5DB9A0)(this, &facing, delta_t);
+
+    return facing;
+}
+
+// sub_5B47F0
+vector3d als::combat_radial_move_and_face::get_path_position(f32) {
+    vector3d position = the_actor->my_abs_po->get_position();
+
+    if (!path)
+        return position;
+
+    // through the move signals, never going back
+    f32 t = 0.0f;
+
+    if (!(anim_time >= move_begin_time) || !(move_end_time >= anim_time)) {
+        if (anim_time > move_end_time)
+            t = 1.0f;
+    } else {
+        t = (f32)(((f64)anim_time - (f64)move_begin_time) / ((f64)move_end_time - (f64)move_begin_time));
+
+        if (0.0f > t)
+            t = 0.0f;
+        else if (t > 1.0f)
+            t = 1.0f;
+    }
+
+    if (progress > t)
+        t = progress;
+    else
+        progress = t;
+
+    retail::sub_97A3B0(path, (f32*)&position, t, 0); // spline: the point at t
+
+    return position;
 }

@@ -13,6 +13,7 @@
 namespace treyarch {
     class actor;
     class flight_layer_inode;
+    class spline;
 
 namespace als {
     class animation_logic_system;
@@ -93,6 +94,10 @@ namespace als {
     inline const string_hash apply_turn_constant_id        = string_hash(hash::djb2("apply_turn_constant"));
     inline const string_hash preserve_y_facing_id          = string_hash(hash::djb2("preserve_y_facing"));
     inline const string_hash no_reorient_to_vertical_id    = string_hash(hash::djb2("no_reorient_to_vertical"));
+
+    // and about circling
+    inline const string_hash closest_distance_allowed_id = string_hash(hash::djb2("closest_distance_allowed"));
+    inline const string_hash max_rotation_angle_id       = string_hash(hash::djb2("max_rotation_angle"));
 
     // a pair's candidate sync bones; retail builds the same table at 0x010034C0
     inline const string_hash sync_bone_ids[10] = { string_hash(hash::djb2("SYNC")),
@@ -1384,6 +1389,49 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // moves the actor round a point on a spline through the move signals, turning with it
+    class combat_radial_move_and_face : public motion_compensator {
+
+    public:
+        bool    params_read;              // the state's params are read once a frame, on activation and a successful transition
+        u8      pad_011[0x03];
+        f32     anim_time;
+        f32     move_begin_time;
+        f32     move_end_time;
+        spline* path;
+        f32     closest_distance_allowed;
+        f32     max_rotation_angle;       // degrees
+        bool    path_built;
+        u8      pad_02d[0x03];
+        f32     unk_030;                  // param 95
+        f32     progress;                 // along the path, never going back
+
+        // inlined @ sub_5C3730
+        combat_radial_move_and_face() : params_read(false), path_built(false) {}
+
+        // inlined @ sub_723DA0
+        explicit combat_radial_move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
+                                                                                               params_read(false),
+                                                                                               path_built(false) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void pre_anim_action(f32 delta_t) override;
+        void post_anim_action(f32 delta_t) override;
+
+        virtual void     read_params(f32 delta_t);
+        virtual void     read_signal_times();
+        virtual void     build_path(f32 delta_t, bool unk);
+        virtual po       get_facing_po(f32 delta_t);
+        virtual vector3d get_path_position(f32 delta_t);
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1534,6 +1582,18 @@ namespace als {
     ASSERT_OFFSETOF(momentum_sync_move_and_face, turn_rate,               0xC4);
 
     ASSERT_SIZEOF(sturn_sync_move_and_face, 0xC8);
+
+    ASSERT_SIZEOF  (combat_radial_move_and_face,                           0x38);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, params_read,              0x10);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, anim_time,                0x14);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, move_begin_time,          0x18);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, move_end_time,            0x1C);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, path,                     0x20);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, closest_distance_allowed, 0x24);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, max_rotation_angle,       0x28);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, path_built,               0x2C);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, unk_030,                  0x30);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, progress,                 0x34);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
