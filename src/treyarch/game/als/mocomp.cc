@@ -6357,10 +6357,84 @@ void als::combat_radial_move_and_face::read_signal_times() {
 }
 
 // sub_5F6560
-void als::combat_radial_move_and_face::build_path(f32 delta_t, bool unk) {
-    using build_path_t = void (__thiscall*)(combat_radial_move_and_face*, f32, bool);
+void als::combat_radial_move_and_face::build_path(f32, bool) {
+    if (path_built)
+        return;
 
-    ((build_path_t)retail::sub_5F6560)(this, delta_t, unk);
+    // param 151 is the way from the actor to the point it circles
+    if (!the_base->has_ext_param_been_set(151))
+        return;
+
+    path_built = true;
+
+    const po &abs_po = *the_actor->my_abs_po;
+
+    vector3d up     = abs_po.get_y_facing();
+    vector3d dir    = abs_po.get_z_facing();
+    vector3d center = abs_po.get_position() + dir * 5.0f;
+    f32      radius = 5.0f;
+
+    if (the_base->has_ext_param_been_set(151)) {
+        vector3d offset = the_base->get_external_vector(151);
+
+        center = abs_po.get_position() + offset;
+        dir    = offset;
+        radius = offset.length();
+
+        retail::sub_402050((f32*)&dir);
+    }
+
+    // no closer than closest_distance_allowed, the middle point half way out to it
+    f32 middle_radius = radius;
+
+    if (closest_distance_allowed > radius) {
+        middle_radius = (f32)(((f64)closest_distance_allowed - (f64)radius) * 0.5 + (f64)radius);
+        radius        = closest_distance_allowed;
+    }
+
+    // param 95 is the arc's length, at most max_rotation_angle degrees round
+    f32 circumference = radius * 6.2831855f;
+    f32 arc_degrees   = (f32)((f64)unk_030 / (f64)circumference * 360.0);
+
+    if (arc_degrees > max_rotation_angle)
+        arc_degrees = max_rotation_angle;
+
+    // back toward the actor, swung about its up by half the arc and by all of it
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    vector3d         away = -dir;
+    const matrix4x4 &m    = rotation.get_matrix();
+
+    f32           half_arc = (f32)((f64)arc_degrees * 0.5 * 0.017453292519943295);
+    math::vector4 axis(up.x, up.y, up.z, 0.0f);
+    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &half_arc);
+
+    vector3d swung((f32)((f64)m.x.x * away.x + (f64)m.y.x * away.y + (f64)m.z.x * away.z + (f64)m.w.x * 0.0),
+                   (f32)((f64)m.y.y * away.y + (f64)m.x.y * away.x + (f64)m.z.y * away.z + (f64)m.w.y * 0.0),
+                   (f32)((f64)m.y.z * away.y + (f64)m.x.z * away.x + (f64)m.z.z * away.z + (f64)m.w.z * 0.0));
+
+    vector3d middle = swung * middle_radius + center;
+
+    f32 arc = (f32)((f64)arc_degrees * 0.017453292519943295);
+    axis    = math::vector4(up.x, up.y, up.z, 0.0f);
+    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &arc);
+
+    swung = vector3d((f32)((f64)m.y.x * away.y + (f64)m.x.x * away.x + (f64)m.z.x * away.z + (f64)m.w.x * 0.0),
+                     (f32)((f64)m.y.y * away.y + (f64)m.x.y * away.x + (f64)m.z.y * away.z + (f64)m.w.y * 0.0),
+                     (f32)((f64)m.y.z * away.y + (f64)m.x.z * away.x + (f64)m.z.z * away.z + (f64)m.w.z * 0.0));
+
+    vector3d end = swung * radius + center;
+
+    path = new spline;
+
+    path->set_type(2);
+    path->clear_control_pts();
+    path->add_control_pt(abs_po.get_position());
+    path->add_control_pt(middle);
+    path->add_control_pt(end);
+
+    progress = 0.0f;
 }
 
 // sub_5DB9A0
