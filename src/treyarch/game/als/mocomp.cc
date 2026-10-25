@@ -75,6 +75,8 @@ string_hash als::attach_hand_to_point::my_type_key        { 0x11A13AEE }; // "al
 string_hash als::constant_move_hand_to_point::my_type_key { 0x3420FEB9 }; // "als::constant_move_hand_to_point"
 string_hash als::combat_pole_swing_attach::my_type_key    { 0xA771F9B4 }; // "als::combat_pole_swing_attach"
 
+string_hash als::sync_move_and_face::my_type_key { 0x8E26B3C7 }; // "als::sync_move_and_face"
+
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
@@ -339,6 +341,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         return memory_buffer ? new (memory_buffer) combat_pole_swing_attach : nullptr;
     }
 
+    if (the_class_to_make == sync_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(sync_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) sync_move_and_face : nullptr;
+    }
+
     // the classes not in source yet
     using create_subclass_in_place_t = motion_compensator* (__cdecl*)(mash::virtual_types_key, void*);
 
@@ -363,6 +371,7 @@ i32 als::motion_compensator::get_mash_sizeof() const {
 // sub_5C48A0
 // inlined @ sub_5C49E0
 // inlined @ sub_5D89D0
+// inlined @ sub_5DA810
 void als::motion_compensator::activate(animation_logic_system* the_als_core, layer_id layer) {
     the_als   = the_als_core;
     the_base  = the_als_core->get_als_layer_internal(layer);
@@ -4948,4 +4957,426 @@ void als::combat_pole_swing_attach::set_desired_facing() {
 // sub_5B42F0
 void als::combat_pole_swing_attach::set_desired_up() {
     desired_up = treyarch::references::unk_00e6808c.get();
+}
+
+// sub_5AE960
+mash::virtual_types_key als::sync_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE970
+bool als::sync_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (use_anim_only::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (use_anim_only::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::sync_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA810
+void als::sync_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
+    motion_compensator::activate(the_als_core, layer);
+
+    tween_pos          = 0.0f;
+    tween_orient       = 0.0f;
+    sync_index_actor_a = nullptr;
+    sync_index_a       = -2;
+    sync_index_actor_b = nullptr;
+    sync_index_b       = -2;
+    lock_pos_a         = false;
+    lock_pos_b         = false;
+    lock_orient_a      = false;
+    lock_orient_b      = false;
+
+    // standing and physics stay allowed until the post says otherwise
+    if (the_actor->has_ifc(entity_ifc_standing))
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 0x4000;
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        the_actor->physical_ifc()->flags |= 0x800;
+
+    i32 disable_collision = the_base->get_optional_pb_int(sync_disable_collision_id, 0, nullptr);
+
+    ((void (__thiscall*)(entity*, bool, bool))the_actor->vtable[69])(the_actor, disable_collision == 0, true); // slot 69
+
+    unk_028 = treyarch::references::unk_00fd4370.get();
+    unk_034 = treyarch::references::unk_00fd4370.get();
+}
+
+// sub_5C1220
+void als::sync_move_and_face::deactivate() {
+    if (the_actor->has_ifc(entity_ifc_standing))
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 &= ~0x4000;
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        the_actor->physical_ifc()->flags &= ~0x800;
+
+    ((void (__thiscall*)(entity*, bool, bool))the_actor->vtable[69])(the_actor, true, true); // slot 69
+}
+
+// sub_5EAE80
+void als::sync_move_and_face::post_anim_action(f32 delta_t) {
+    using reorient_to_vertical_t = void (__thiscall*)(sync_move_and_face*, actor*, state_machine_interface*, actor*, state_machine_interface*);
+    using axis_slide_t           = void (__thiscall*)(sync_move_and_face*,
+                                                      actor*,
+                                                      state_machine_interface*,
+                                                      vector3d*,
+                                                      po*,
+                                                      actor*,
+                                                      state_machine_interface*,
+                                                      vector3d*,
+                                                      po*);
+    using sync_entities_t        = void (__cdecl*)(f32, actor*, po*, vector3d*, actor*, po*, vector3d*, f32, f32, bool, bool);
+
+    use_anim_only::post_anim_action(delta_t);
+
+    // the player syncs with the actor behind its unk_467 too, sync anim flag or not
+    bool has_partner = false;
+
+    if (the_actor->has_ifc(entity_ifc_player)) {
+        if (void* held = the_actor->player_ifc()->unk_467()) {
+            arch_base_vhandle target = *(arch_base_vhandle*)((u8*)held + 4);
+
+            if (target.resolve() && target.resolve()->is_an_actor())
+                has_partner = true;
+        }
+    }
+
+    if (!(the_actor->ext_flags & 0x20000) && !has_partner)
+        return;
+
+    actor* actor_a = nullptr;
+    actor* actor_b = nullptr;
+
+    if (!get_sync_actors(&actor_a, &actor_b))
+        return;
+
+    auto* als_a = (animation_logic_system*)actor_a->get_als();
+    auto* als_b = (animation_logic_system*)actor_b->get_als();
+
+    state_machine_interface* layer_a = als_a ? als_a->get_als_layer(als_a->curr_mocomp->get_layer_id()) : nullptr;
+    state_machine_interface* layer_b = als_b ? als_b->get_als_layer(als_b->curr_mocomp->get_layer_id()) : nullptr;
+
+    if (!layer_a && !layer_b)
+        return;
+
+    if (layer_a && layer_a->get_optional_pb_int(allow_sync_id, 1, nullptr) != 1)
+        return;
+
+    if (layer_b && layer_b->get_optional_pb_int(allow_sync_id, 1, nullptr) != 1)
+        return;
+
+    // each side's tween times, b's over a's and the specific ones over sync_tween_time
+    if (tween_pos < 1.0f) {
+        f32 tween_time = 0.5f;
+
+        if (layer_a)
+            tween_time = layer_a->get_optional_pb_float(sync_tween_time_id, tween_time, nullptr);
+
+        if (layer_b)
+            tween_time = layer_b->get_optional_pb_float(sync_tween_time_id, tween_time, nullptr);
+
+        if (layer_a)
+            tween_time = layer_a->get_optional_pb_float(sync_tween_time_pos_id, tween_time, nullptr);
+
+        if (layer_b)
+            tween_time = layer_b->get_optional_pb_float(sync_tween_time_pos_id, tween_time, nullptr);
+
+        if (tween_time < 0.0001f)
+            tween_pos = 1.0f;
+        else {
+            if (tween_time < 0.1f)
+                tween_time = 0.1f;
+
+            tween_pos = (f32)((f64)delta_t / (f64)tween_time + (f64)tween_pos);
+
+            if (tween_pos > 1.0f)
+                tween_pos = 1.0f;
+        }
+    }
+
+    if (tween_orient < 1.0f) {
+        f32 tween_time = 0.5f;
+
+        if (layer_a)
+            tween_time = layer_a->get_optional_pb_float(sync_tween_time_id, tween_time, nullptr);
+
+        if (layer_b)
+            tween_time = layer_b->get_optional_pb_float(sync_tween_time_id, tween_time, nullptr);
+
+        if (layer_a)
+            tween_time = layer_a->get_optional_pb_float(sync_tween_time_orient_id, tween_time, nullptr);
+
+        if (layer_b)
+            tween_time = layer_b->get_optional_pb_float(sync_tween_time_orient_id, tween_time, nullptr);
+
+        if (tween_time < 0.0001f)
+            tween_orient = 1.0f;
+        else {
+            if (tween_time < 0.1f)
+                tween_time = 0.1f;
+
+            tween_orient = (f32)((f64)delta_t / (f64)tween_time + (f64)tween_orient);
+
+            if (tween_orient > 1.0f)
+                tween_orient = 1.0f;
+        }
+    }
+
+    // a side out of the sync mocomps stays put
+    bool unsynced_a = !als_a || !als_a->curr_mocomp || !als_a->curr_mocomp->is_synced();
+    bool unsynced_b = !als_b || !als_b->curr_mocomp || !als_b->curr_mocomp->is_synced();
+
+    bool locked_a = unsynced_a || !layer_a || layer_a->get_optional_pb_int(sync_lock_id, 0, nullptr);
+    bool locked_b = unsynced_b || !layer_b || layer_b->get_optional_pb_int(sync_lock_id, 0, nullptr);
+
+    lock_pos_a    = locked_a || !layer_a || layer_a->get_optional_pb_int(sync_lock_pos_id, 0, nullptr);
+    lock_pos_b    = locked_b || !layer_b || layer_b->get_optional_pb_int(sync_lock_pos_id, 0, nullptr);
+    lock_orient_a = locked_a || !layer_a || layer_a->get_optional_pb_int(sync_lock_orient_id, 0, nullptr);
+    lock_orient_b = locked_b || !layer_b || layer_b->get_optional_pb_int(sync_lock_orient_id, 0, nullptr);
+
+    // what each side's state lets it keep; physics follows standing unless sync_allow_physics is set
+    bool allow_standing_a = false;
+    bool allow_physics_a  = false;
+    bool obey_signals_a   = false;
+
+    if ((actor_a->ext_flags & 0x20000) && layer_a) {
+        allow_standing_a = layer_a->get_optional_pb_int(sync_allow_standing_id, 1, nullptr) != 0;
+        allow_physics_a  = allow_standing_a;
+
+        if (layer_a->get_optional_pb_int(sync_allow_physics_id, -1, nullptr) > 0)
+            allow_physics_a = true;
+
+        obey_signals_a = layer_a->get_optional_pb_int(obey_move_and_face_signals_id, 0, nullptr) != 0;
+    }
+
+    if (actor_a->has_ifc(entity_ifc_standing)) {
+        auto* standing = (standing_interface*)actor_a->my_ifc_storage->get_ifc(entity_ifc_standing);
+
+        if (allow_standing_a)
+            standing->unk_044 |= 0x4000;
+        else
+            standing->unk_044 &= ~0x4000;
+    }
+
+    if (actor_a->has_ifc(entity_ifc_physical)) {
+        physical_interface* physical = actor_a->physical_ifc();
+
+        if (allow_physics_a)
+            physical->flags |= 0x800;
+        else
+            physical->flags &= ~0x800;
+    }
+
+    bool allow_standing_b = false;
+    bool allow_physics_b  = false;
+    bool obey_signals_b   = false;
+
+    if ((actor_b->ext_flags & 0x20000) && layer_b) {
+        allow_standing_b = layer_b->get_optional_pb_int(sync_allow_standing_id, 1, nullptr) != 0;
+        allow_physics_b  = allow_standing_b;
+
+        if (layer_b->get_optional_pb_int(sync_allow_physics_id, -1, nullptr) > 0)
+            allow_physics_b = true;
+
+        obey_signals_b = layer_b->get_optional_pb_int(obey_move_and_face_signals_id, 0, nullptr) != 0;
+    }
+
+    if (actor_b->has_ifc(entity_ifc_standing)) {
+        auto* standing = (standing_interface*)actor_b->my_ifc_storage->get_ifc(entity_ifc_standing);
+
+        if (allow_standing_b)
+            standing->unk_044 |= 0x4000;
+        else
+            standing->unk_044 &= ~0x4000;
+    }
+
+    if (actor_b->has_ifc(entity_ifc_physical)) {
+        physical_interface* physical = actor_b->physical_ifc();
+
+        if (allow_physics_b)
+            physical->flags |= 0x800;
+        else
+            physical->flags &= ~0x800;
+    }
+
+    // a side obeying the move and face signals stops the sync once it's past TRANSLATE_END
+    bool keep_syncing = true;
+
+    if (obey_signals_a) {
+        bool exists = false;
+        f32  time   = layer_a->get_time_to_signal(references::translate_end.read(), &exists, false, nullptr);
+
+        if (exists && time <= 0.0f)
+            keep_syncing = false;
+
+        layer_a->get_time_to_signal(references::rotate_end.read(), &exists, false, nullptr);
+    }
+
+    if (obey_signals_b) {
+        bool exists = false;
+        f32  time   = layer_b->get_time_to_signal(references::translate_end.read(), &exists, false, nullptr);
+
+        if (exists && time <= 0.0f)
+            keep_syncing = false;
+
+        layer_b->get_time_to_signal(references::rotate_end.read(), &exists, false, nullptr);
+    }
+
+    if (!keep_syncing)
+        return;
+
+    ((reorient_to_vertical_t)retail::sub_5C1350)(this, actor_a, layer_a, actor_b, layer_b);
+
+    po po_a;
+    po po_b;
+    retail::sub_4015B0((u64*)&po_a);
+    retail::sub_4015B0((u64*)&po_b);
+
+    get_sync_bone_po(actor_a, &po_a, actor_b, &po_b);
+
+    // the bones' positions, apart from their orientations
+    vector3d pos_a = po_a.get_position();
+
+    retail::sub_424900((u64*)&po_a, (u32*)&treyarch::references::unk_00fd4370.get()); // po::set_position
+    retail::sub_9595B0((i32)&po_a);
+
+    vector3d pos_b = po_b.get_position();
+
+    retail::sub_424900((u64*)&po_b, (u32*)&treyarch::references::unk_00fd4370.get());
+    retail::sub_9595B0((i32)&po_b);
+
+    apply_sync_rotate_angles(layer_a, &po_a, layer_b, &po_b);
+
+    ((axis_slide_t)retail::sub_5B31B0)(this, actor_a, layer_a, &pos_a, &po_a, actor_b, layer_b, &pos_b, &po_b);
+
+    // each side eases the other over, the whole tween when it's locked itself and half otherwise
+    if (!lock_pos_b || !lock_orient_b) {
+        f32 pos_weight    = lock_pos_b    ? 0.0f : (lock_pos_a    ? tween_pos    : tween_pos * 0.5f);
+        f32 orient_weight = lock_orient_b ? 0.0f : (lock_orient_a ? tween_orient : tween_orient * 0.5f);
+
+        ((sync_entities_t)retail::sub_5C1AE0)(delta_t, actor_a, &po_a, &pos_a, actor_b, &po_b, &pos_b, pos_weight, orient_weight, lock_pos_b, lock_orient_b);
+    }
+
+    if (!lock_pos_a || !lock_orient_a) {
+        f32 pos_weight    = lock_pos_a    ? 0.0f : (lock_pos_b    ? tween_pos    : tween_pos * 0.5f);
+        f32 orient_weight = lock_orient_a ? 0.0f : (lock_orient_b ? tween_orient : tween_orient * 0.5f);
+
+        ((sync_entities_t)retail::sub_5C1AE0)(delta_t, actor_b, &po_b, &pos_b, actor_a, &po_a, &pos_a, pos_weight, orient_weight, lock_pos_a, lock_orient_a);
+    }
+}
+
+// sub_667F80
+bool als::sync_move_and_face::is_synced() const {
+    return true;
+}
+
+// sub_667F80
+bool als::sync_move_and_face::force_reactivate() const {
+    return true;
+}
+
+// sub_5E31A0
+bool als::sync_move_and_face::get_sync_actors(actor** actor_a, actor** actor_b) {
+    if (!actor_a || !actor_b)
+        return false;
+
+    *actor_a = nullptr;
+    *actor_b = nullptr;
+
+    animation_controller* actor_nal_ctrl = the_actor->anim_ctrl;
+
+    // following a master, the master's actor leads
+    if (actor_nal_ctrl->has_master()) {
+        *actor_a = actor_nal_ctrl->get_master()->get_actor();
+        *actor_b = the_actor;
+    } else if (actor_nal_ctrl->has_slaves()) {
+        for (animation_controller** slave = actor_nal_ctrl->state->slaves.begin(); slave != actor_nal_ctrl->state->slaves.end(); ++slave) {
+            actor*                  slave_actor = (*slave)->get_actor();
+            animation_logic_system* slave_als   = (animation_logic_system*)slave_actor->get_als();
+
+            if (!slave_als || !slave_als->curr_mocomp || slave_als->curr_mocomp->get_virtual_type_key() != get_virtual_type_key()) {
+                *actor_a = the_actor;
+                *actor_b = slave_actor;
+
+                break;
+            }
+        }
+    }
+
+    // carrying or carried, the other side leads
+    if (!*actor_a && !*actor_b && the_actor->get_ai_core()) {
+        auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+        if (carry && carry->unk_030) {
+            *actor_a = (actor*)retail::sub_4C3A70((u32*)carry->unk_030); // info_node: its core's actor
+            *actor_b = the_actor;
+        }
+    }
+
+    // the player and the actor behind its unk_467
+    if (!*actor_a && !*actor_b && retail::sub_601C50((u32*)the_actor)) {
+        if (void* held = the_actor->player_ifc()->unk_467()) {
+            arch_base_vhandle target = *(arch_base_vhandle*)((u8*)held + 4);
+
+            if (target.resolve() && target.resolve()->is_an_actor()) {
+                *actor_a = (actor*)target.resolve();
+                *actor_b = the_actor;
+            }
+        }
+    }
+
+    return *actor_a && *actor_b;
+}
+
+// sub_5B3B40
+void als::sync_move_and_face::get_sync_bone_po(actor* actor_a, po* po_a, actor* actor_b, po* po_b) {
+    bool found = sync_index_a != -2 && sync_index_b != -2;
+
+    // found for this pair, or for it the other way round
+    if (!found || sync_index_actor_a != actor_a || sync_index_actor_b != actor_b) {
+        if (found && sync_index_actor_a == actor_b && sync_index_actor_b == actor_a) {
+            i16 index_a = sync_index_a;
+
+            sync_index_a       = sync_index_b;
+            sync_index_b       = index_a;
+            sync_index_actor_a = actor_a;
+            sync_index_actor_b = actor_b;
+        } else {
+            sync_index_actor_a = actor_a;
+            sync_index_actor_b = actor_b;
+
+            retail::sub_5B38C0((u32*)actor_a, (u32*)actor_b, &sync_index_a, &sync_index_b); // compute_best_sync_bones
+        }
+    }
+
+    if (sync_index_a >= 0)
+        retail::sub_62FC10((i32)actor_a, sync_index_a, (u64*)po_a, 0); // conglomerate::get_member_abs_po
+    else
+        retail::sub_583280((u64*)po_a, (u64*)actor_a->my_abs_po); // po copy
+
+    if (sync_index_b >= 0)
+        retail::sub_62FC10((i32)actor_b, sync_index_b, (u64*)po_b, 0);
+    else
+        retail::sub_583280((u64*)po_b, (u64*)actor_b->my_abs_po);
+}
+
+// sub_5C1290
+void als::sync_move_and_face::apply_sync_rotate_angles(state_machine_interface* layer_a, po* po_a, state_machine_interface* layer_b, po* po_b) {
+    if (layer_b) {
+        if (i32 angle = layer_b->get_optional_pb_int(sync_rotate_angle_id, 0, nullptr))
+            retail::sub_5B7400((f32*)po_a, (i32)&po_a->get_y_facing(), (f32)((f32)angle * 0.017453292519943295)); // po: turns about the axis
+    }
+
+    if (layer_a) {
+        if (i32 angle = layer_a->get_optional_pb_int(sync_rotate_angle_id, 0, nullptr))
+            retail::sub_5B7400((f32*)po_b, (i32)&po_b->get_y_facing(), (f32)((f32)angle * 0.017453292519943295));
+    }
 }

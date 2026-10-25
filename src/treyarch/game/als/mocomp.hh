@@ -66,6 +66,20 @@ namespace als {
     inline const string_hash destination_lock_id           = string_hash(hash::djb2("destination_lock"));
     inline const string_hash anchor_hand_id                = string_hash(hash::djb2("anchor_hand"));
 
+    // and about syncing a pair
+    inline const string_hash allow_sync_id                 = string_hash(hash::djb2("allow_sync"));
+    inline const string_hash sync_disable_collision_id     = string_hash(hash::djb2("sync_disable_collision"));
+    inline const string_hash sync_tween_time_id            = string_hash(hash::djb2("sync_tween_time"));
+    inline const string_hash sync_tween_time_pos_id        = string_hash(hash::djb2("sync_tween_time_pos"));
+    inline const string_hash sync_tween_time_orient_id     = string_hash(hash::djb2("sync_tween_time_orient"));
+    inline const string_hash sync_lock_id                  = string_hash(hash::djb2("sync_lock"));
+    inline const string_hash sync_lock_pos_id              = string_hash(hash::djb2("sync_lock_pos"));
+    inline const string_hash sync_lock_orient_id           = string_hash(hash::djb2("sync_lock_orient"));
+    inline const string_hash sync_allow_standing_id        = string_hash(hash::djb2("sync_allow_standing"));
+    inline const string_hash sync_allow_physics_id         = string_hash(hash::djb2("sync_allow_physics"));
+    inline const string_hash obey_move_and_face_signals_id = string_hash(hash::djb2("obey_move_and_face_signals"));
+    inline const string_hash sync_rotate_angle_id          = string_hash(hash::djb2("sync_rotate_angle"));
+
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
         inline util::memory_reference<string_hash> move_begin   { 0x0102C614 };
@@ -1173,6 +1187,57 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // keeps an anim pair on their sync bones, each side easing the other over as its tweens run
+    class sync_move_and_face : public use_anim_only {
+
+    public:
+        f32      tween_pos;          // 0 to 1 over the pair's sync_tween_time_pos
+        f32      tween_orient;
+        actor*   sync_index_actor_a; // the pair the sync indices were found for
+        i16      sync_index_a;       // conglomerate members; -2 until found, negative for the actor's own po
+        u8       pad_01e[0x02];
+        actor*   sync_index_actor_b;
+        i16      sync_index_b;
+        u8       pad_026[0x02];
+        vector3d unk_028;            // sub_5B31B0's axis slides, per side
+        vector3d unk_034;
+        bool     lock_pos_a;
+        bool     lock_pos_b;
+        bool     lock_orient_a;
+        bool     lock_orient_b;
+
+        // inlined @ sub_5C3730
+        sync_move_and_face() : lock_pos_a(false), lock_pos_b(false), lock_orient_a(false), lock_orient_b(false) {}
+
+        // inlined @ sub_723DA0
+        explicit sync_move_and_face(mash::generating_vtable_version so_do_nothing) : use_anim_only(so_do_nothing),
+                                                                                      lock_pos_a(false),
+                                                                                      lock_pos_b(false),
+                                                                                      lock_orient_a(false),
+                                                                                      lock_orient_b(false) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void post_anim_action(f32 delta_t) override;
+        bool is_synced() const override;
+        bool force_reactivate() const override;
+
+        // a master's actor and its follower, else a follower not in this mocomp, a carry or the player's hold; false without both
+        bool get_sync_actors(actor** actor_a, actor** actor_b);
+
+        // each actor's sync bone in the world, its own po without one
+        void get_sync_bone_po(actor* actor_a, po* po_a, actor* actor_b, po* po_b);
+
+        // each side's sync_rotate_angle turns the other's bone about its up
+        void apply_sync_rotate_angles(state_machine_interface* layer_a, po* po_a, state_machine_interface* layer_b, po* po_b);
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -1286,6 +1351,18 @@ namespace als {
     ASSERT_OFFSETOF(combat_pole_swing_attach, facing,      0xC8);
     ASSERT_OFFSETOF(combat_pole_swing_attach, side,        0xD4);
     ASSERT_OFFSETOF(combat_pole_swing_attach, face_target, 0xE0);
+
+    ASSERT_SIZEOF  (sync_move_and_face,                     0x44);
+    ASSERT_OFFSETOF(sync_move_and_face, tween_pos,          0x10);
+    ASSERT_OFFSETOF(sync_move_and_face, tween_orient,       0x14);
+    ASSERT_OFFSETOF(sync_move_and_face, sync_index_actor_a, 0x18);
+    ASSERT_OFFSETOF(sync_move_and_face, sync_index_a,       0x1C);
+    ASSERT_OFFSETOF(sync_move_and_face, sync_index_actor_b, 0x20);
+    ASSERT_OFFSETOF(sync_move_and_face, sync_index_b,       0x24);
+    ASSERT_OFFSETOF(sync_move_and_face, unk_028,            0x28);
+    ASSERT_OFFSETOF(sync_move_and_face, unk_034,            0x34);
+    ASSERT_OFFSETOF(sync_move_and_face, lock_pos_a,         0x40);
+    ASSERT_OFFSETOF(sync_move_and_face, lock_orient_b,      0x43);
 } // als
 
     inline const string_hash shaba_simple_helicopter_id = string_hash(hash::djb2("shaba_simple_helicopter"));
