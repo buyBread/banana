@@ -1130,7 +1130,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
     const state* base_state = the_base_sm.curr_state;
 
     if (base_state && (base_state->flags & state::biped_physics_state) && !(base_state->flags & state::biped_physics_blend_anim)) {
-        retail::sub_5D3370((i32*)the_controller, delta_t); // animation_controller, biped physics
+        the_controller->frame_advance(delta_t);
 
         return;
     }
