@@ -2,6 +2,7 @@
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/meta_anim_swing.hh"
 #include "treyarch/game/als/meta_linear_blend.hh"
+#include "treyarch/game/als/mocomp.hh"
 #include "treyarch/game/als/rules.hh"
 #include "treyarch/game/als/script_state.hh"
 #include "treyarch/game/meta_anims.hh"
@@ -25,6 +26,8 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::state_machine_shared>();
         mash::mash_virtual_base::register_class<als::als_meta_anim_swing>();
         mash::mash_virtual_base::register_class<als::als_meta_linear_blend>();
+        mash::mash_virtual_base::register_class<als::motion_compensator>();
+        mash::mash_virtual_base::register_class<als::use_anim_only>();
         mash::mash_virtual_base::register_class<als::bounded_number_rule>();
         mash::mash_virtual_base::register_class<als::constant_number_compare_rule>();
         mash::mash_virtual_base::register_class<als::hash_equal_rule>();
