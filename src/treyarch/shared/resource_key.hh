@@ -20,6 +20,14 @@ namespace treyarch {
             type = resource_type;
         }
 
+        // inlined @ sub_5D5F70
+        bool is_set() const {
+            string_hash none;
+            none.initialize(mash::ALLOCATED);
+
+            return hash != none;
+        }
+
         void construct_mashed_class() {}
         void destruct_mashed_class() {}
 
