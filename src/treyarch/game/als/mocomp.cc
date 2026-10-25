@@ -1,3 +1,4 @@
+#include <cmath>
 #include <new>
 
 #include "retail.hh"
@@ -6,12 +7,21 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/game/wds/entity/interface/player_interface.hh"
+#include "treyarch/shared/math/algebra/functions.hh"
 #include "treyarch/shared/math/references.hh"
+#include "treyarch/shared/math/vmath/trig.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 
 using namespace treyarch;
 
 string_hash als::motion_compensator::my_type_key { 0x2B582714 }; // "als::motion_compensator"
 string_hash als::use_anim_only::my_type_key      { 0xB17739A6 }; // "als::use_anim_only"
+
+string_hash als::simple_orientation::my_type_key     { 0x096B7F29 }; // "als::simple_orientation"
+string_hash als::strafe_mocomp::my_type_key          { 0x08E92C03 }; // "als::strafe_mocomp"
+string_hash als::relative_orientation::my_type_key   { 0x9E35853B }; // "als::relative_orientation"
+string_hash als::relative_strafe_mocomp::my_type_key { 0x1B85359E }; // "als::relative_strafe_mocomp"
 
 i32 als::motion_compensator::last_created_size = 0;
 
@@ -21,6 +31,30 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(use_anim_only);
 
         return memory_buffer ? new (memory_buffer) use_anim_only : nullptr;
+    }
+
+    if (the_class_to_make == simple_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(simple_orientation);
+
+        return memory_buffer ? new (memory_buffer) simple_orientation : nullptr;
+    }
+
+    if (the_class_to_make == strafe_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(strafe_mocomp);
+
+        return memory_buffer ? new (memory_buffer) strafe_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == relative_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(relative_orientation);
+
+        return memory_buffer ? new (memory_buffer) relative_orientation : nullptr;
+    }
+
+    if (the_class_to_make == relative_strafe_mocomp::my_type_key.source_hash_code) {
+        last_created_size = sizeof(relative_strafe_mocomp);
+
+        return memory_buffer ? new (memory_buffer) relative_strafe_mocomp : nullptr;
     }
 
     // the classes not in source yet
@@ -45,6 +79,7 @@ i32 als::motion_compensator::get_mash_sizeof() const {
 }
 
 // sub_5C48A0
+// inlined @ sub_5C49E0
 void als::motion_compensator::activate(animation_logic_system* the_als_core, layer_id layer) {
     the_als   = the_als_core;
     the_base  = the_als_core->get_als_layer_internal(layer);
@@ -176,4 +211,634 @@ void als::use_anim_only::post_anim_action(f32 delta_t) {
     const vector3d &position = the_actor->my_abs_po->get_position();
 
     the_actor->set_frame_delta_trans(vector3d(position.x - prev_position.x, position.y - prev_position.y, position.z - prev_position.z), delta_t);
+}
+
+// sub_5AE000
+als::simple_orientation::simple_orientation() : currently_rotating(false),
+                                                use_movement_window(false),
+                                                inside_movement_window(false),
+                                                use_accel_decel_mode(false),
+                                                use_instant_facing(false) {}
+
+// sub_5AE080
+als::simple_orientation::~simple_orientation() {}
+
+// sub_5B4A40
+void als::simple_orientation::construct_mashed_class() {
+    move_begin_callback.construct_mashed_class();
+    move_end_callback.construct_mashed_class();
+    rotate_begin_callback.construct_mashed_class();
+    rotate_end_callback.construct_mashed_class();
+}
+
+// sub_5B4AE0
+void als::simple_orientation::destruct_mashed_class() {
+    move_begin_callback.destruct_mashed_class();
+    move_end_callback.destruct_mashed_class();
+    rotate_begin_callback.destruct_mashed_class();
+    rotate_end_callback.destruct_mashed_class();
+}
+
+// sub_5E33C0
+void als::simple_orientation::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    move_begin_callback.unmash(mash_info, this, buffer);
+    move_end_callback.unmash(mash_info, this, buffer);
+    rotate_begin_callback.unmash(mash_info, this, buffer);
+    rotate_end_callback.unmash(mash_info, this, buffer);
+}
+
+// sub_5AE100
+mash::virtual_types_key als::simple_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::simple_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::simple_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5C49E0
+void als::simple_orientation::activate(animation_logic_system* the_als_core, layer_id layer) {
+    motion_compensator::activate(the_als_core, layer);
+
+    turn_rate          = 0.0f;
+    currently_rotating = false;
+
+    move_begin_callback.add  (the_actor->my_handle, references::move_begin.read(),   generic_event_callback::count_raise, nullptr);
+    move_end_callback.add    (the_actor->my_handle, references::move_end.read(),     generic_event_callback::count_raise, nullptr);
+    rotate_begin_callback.add(the_actor->my_handle, references::rotate_begin.read(), generic_event_callback::count_raise, nullptr);
+    rotate_end_callback.add  (the_actor->my_handle, references::rotate_end.read(),   generic_event_callback::count_raise, nullptr);
+}
+
+// sub_5C4AB0
+void als::simple_orientation::deactivate() {
+    move_begin_callback.remove  (the_actor->my_handle, references::move_begin.read());
+    move_end_callback.remove    (the_actor->my_handle, references::move_end.read());
+    rotate_begin_callback.remove(the_actor->my_handle, references::rotate_begin.read());
+    rotate_end_callback.remove  (the_actor->my_handle, references::rotate_end.read());
+}
+
+// sub_5B4B50
+void als::simple_orientation::transition() {
+    inside_movement_window = false;
+    use_movement_window    = the_base->get_optional_pb_int(use_movement_window_id, 0, nullptr) > 0;
+    use_accel_decel_mode   = the_base->get_optional_pb_int(use_accel_decel_mode_id, 0, nullptr) > 0;
+    use_instant_facing     = the_base->get_optional_pb_int(use_instant_facing_id, 0, nullptr) != 0;
+
+    move_begin_callback.times_raised   = 0;
+    move_end_callback.times_raised     = 0;
+    rotate_begin_callback.times_raised = 0;
+    rotate_end_callback.times_raised   = 0;
+}
+
+// sub_5C4B30
+void als::simple_orientation::post_anim_action(f32 delta_t) {
+    if (use_movement_window) {
+        if (move_begin_callback.times_raised || rotate_begin_callback.times_raised) {
+            inside_movement_window = true;
+            move_begin_signal_time = the_base->get_current_anim_time();
+
+            // the window runs to the matching end signal, else the other one, else the anim's end
+            string_hash end_signal = move_begin_callback.times_raised ? references::move_end.read() : references::rotate_end.read();
+
+            f32 time_to_end = the_base->get_time_to_signal(end_signal, nullptr, true, nullptr);
+            move_end_signal_time = time_to_end;
+
+            if (time_to_end < 0.0f) {
+                string_hash other_end_signal = move_begin_callback.times_raised ? references::rotate_end.read() : references::move_end.read();
+
+                time_to_end = the_base->get_time_to_signal(other_end_signal, nullptr, true, nullptr);
+                move_end_signal_time = time_to_end;
+            }
+
+            if (time_to_end < 0.0f)
+                move_end_signal_time = the_base->get_duration();
+            else
+                move_end_signal_time = time_to_end + move_begin_signal_time;
+        }
+
+        if (move_end_callback.times_raised || rotate_end_callback.times_raised)
+            inside_movement_window = false;
+    } else
+        inside_movement_window = false;
+
+    move_begin_callback.times_raised   = 0;
+    move_end_callback.times_raised     = 0;
+    rotate_begin_callback.times_raised = 0;
+    rotate_end_callback.times_raised   = 0;
+
+    po curr_offset;
+    retail::sub_4015B0((u64*)&curr_offset);
+
+    get_po_curr_offset(curr_offset);
+
+    if (use_movement_window && !inside_movement_window) {
+        turn_rate          = 0.0f;
+        currently_rotating = false;
+    } else if (use_instant_facing)
+        face_desired_direction();
+    else {
+        // the actor's own axes, unit length
+        auto unitized = [](const vector3d &axis) {
+            math::vector4 direction(axis.x, axis.y, axis.z, 0.0f);
+            math::vector4 unit;
+
+            retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+            return vector3d(unit[0], unit[1], unit[2]);
+        };
+
+        vector3d curr_dir = unitized(the_actor->my_abs_po->get_z_facing());
+        vector3d curr_up  = unitized(the_actor->my_abs_po->get_y_facing());
+
+        vector3d desired_dir;
+        vector3d desired_up;
+
+        get_directions(the_als, the_base, &desired_dir, &desired_up);
+
+        if (desired_up.length2() < 0.0001f)
+            desired_up = curr_up;
+        else
+            retail::sub_402050((f32*)&desired_up);
+
+        if (desired_dir.length2() < 0.0001f)
+            desired_dir = curr_dir;
+        else
+            retail::sub_402050((f32*)&desired_dir);
+
+        // the up only goes part of the way per frame
+        f32 reorient_speed = the_base->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, nullptr);
+
+        if (reorient_speed > 0.0f && reorient_speed < 1.0f)
+            desired_up = (desired_up - curr_up) * reorient_speed + curr_up;
+        else if (reorient_speed == 0.0f)
+            desired_up = curr_up;
+
+        // both directions in the plane of the desired up
+        desired_dir = desired_dir - desired_up * (f32)(desired_dir * desired_up);
+
+        if (desired_dir.length2() >= 0.0001f) {
+            retail::sub_402050((f32*)&desired_dir);
+
+            curr_dir = curr_dir - desired_up * (f32)(curr_dir * desired_up);
+
+            if (curr_dir.length2() < 0.0001f)
+                curr_dir = desired_dir;
+            else
+                retail::sub_402050((f32*)&curr_dir);
+
+            f32 heading_dot = curr_dir * desired_dir;
+            f32 up_dot      = curr_up * desired_up;
+
+            if (!currently_rotating && get_dir_tolerance() < heading_dot && get_up_tolerance() < up_dot)
+                turn_rate = 0.0f;
+            else {
+                const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+                math::vector4 basis_dir(curr_dir.x, curr_dir.y, curr_dir.z, 0.0f);
+                math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+                math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+                po basis;
+                retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+                currently_rotating = true;
+
+                if (heading_dot < -0.999999f)
+                    heading_dot = -0.999999f;
+                else if (heading_dot > 0.999999f)
+                    heading_dot = 0.999999f;
+
+                f32 heading_change = math::acos(heading_dot);
+
+                if (desired_dir * basis.get_x_facing() > 0.0f)
+                    heading_change *= -1.0f;
+
+                // the state can force the way round
+                i32 turn_direction = the_base->get_optional_pb_int(turn_direction_id, 0, nullptr);
+
+                if (turn_direction == -1) {
+                    if (heading_change < 0.0f)
+                        heading_change += 6.2831855f;
+                } else if (turn_direction == 1 && heading_change > 0.0f)
+                    heading_change -= 6.2831855f;
+
+                turn_rate = get_turn_rate(delta_t, the_als, the_base);
+
+                f32  step = turn_rate * delta_t;
+                bool overshoots;
+
+                if (heading_change < 0.0f) {
+                    step *= -1.0f;
+
+                    overshoots = heading_change > step;
+                } else
+                    overshoots = step > heading_change;
+
+                if (overshoots) {
+                    currently_rotating = false;
+                    step               = heading_change;
+                }
+
+                apply_rotation(&curr_offset, delta_t, step, curr_up, curr_dir, desired_up, desired_dir);
+            }
+        }
+    }
+
+    vector3d prev_position = the_actor->my_abs_po->get_position();
+
+    other_po_changes(delta_t, &curr_offset);
+
+    if (!retail::sub_5AA570((f32*)&curr_offset, (f32*)&treyarch::references::po_identity_matrix.get()))
+        set_po_curr_offset(the_actor, curr_offset);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(position.x - prev_position.x, position.y - prev_position.y, position.z - prev_position.z), delta_t);
+}
+
+// sub_5DBE40
+void als::simple_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    const po* abs_po = the_actor->my_abs_po;
+
+    // facing away from the destination, the direction param, or the actor's own
+    bool facing_found = false;
+
+    if (base->get_optional_pb_int(use_destination_facing_id, 0, nullptr) && base->has_ext_param_been_set(145)) {
+        vector3d destination = base->get_external_vector(145);
+
+        if (abs_po->get_position().x != destination.x || abs_po->get_position().y != destination.y || abs_po->get_position().z != destination.z) {
+            destination = base->get_external_vector(145);
+
+            vector3d away(abs_po->get_position().x - destination.x, abs_po->get_position().y - destination.y, abs_po->get_position().z - destination.z);
+            retail::sub_402050((f32*)&away);
+
+            *desired_dir = away;
+            facing_found = true;
+        }
+    }
+
+    if (!facing_found) {
+        if (base->has_ext_param_been_set(143))
+            *desired_dir = base->get_external_vector(143);
+        else
+            *desired_dir = abs_po->get_z_facing();
+    }
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else {
+        bool own_up = false;
+
+        if (the_actor->has_ifc(entity_ifc_player)) {
+            player_interface* player = the_actor->player_ifc();
+
+            // slot 485
+            own_up = ((bool (__thiscall*)(player_interface*))((void**)player->vtable)[485])(player);
+
+            if (!own_up) {
+                player = the_actor->player_ifc();
+
+                // slot 487
+                own_up = ((bool (__thiscall*)(player_interface*))((void**)player->vtable)[487])(player);
+            }
+        }
+
+        *desired_up = own_up ? abs_po->get_y_facing() : treyarch::references::unk_00e6808c.get();
+    }
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
+}
+
+// sub_5F2050
+f32 als::simple_orientation::get_turn_rate(f32 delta_t, animation_logic_system*, state_machine* base) {
+    f32 scale = base->has_ext_param_been_set(3) ? std::fabs(base->get_external_float(3)) : 1.0f;
+    f32 rate  = base->has_ext_param_been_set(2) ? base->get_external_float(2) : 0.0f;
+
+    if (rate <= 0.0001f)
+        rate = 720.0f;
+
+    // degrees a second
+    rate = base->get_optional_pb_float(turn_rate_id, rate, nullptr);
+    rate = rate * 0.017453293f;
+    rate = rate * scale;
+
+    if (retail::sub_601C50((u32*)the_actor)) {
+        turn_rate = rate;
+
+        return turn_rate;
+    }
+
+    // ramps up and down through the movement window
+    if (use_accel_decel_mode) {
+        f32 default_rate = rate > 0.0001f ? (f32)((f64)rate * 57.29577791868205) : 720.0f;
+
+        rate = base->get_optional_pb_float(turn_rate_id, default_rate, nullptr);
+        rate = rate * 0.017453293f;
+
+        f32 time     = base->get_current_anim_time();
+        f32 progress = (f32)(((f64)time - move_begin_signal_time) / ((f64)move_end_signal_time - move_begin_signal_time));
+
+        if (turn_ramp_up_end > progress) {
+            turn_rate = progress / turn_ramp_up_end * rate;
+
+            return turn_rate;
+        }
+
+        if (progress > turn_ramp_down_start) {
+            f32 remaining = (f32)(1.0 - ((f64)progress - turn_ramp_down_start) / (1.0 - turn_ramp_down_start));
+
+            turn_rate = remaining * rate;
+
+            return turn_rate;
+        }
+
+        turn_rate = rate;
+
+        return turn_rate;
+    }
+
+    // speeds up to the rate over the accel time; it never slows down here
+    if ((f64)rate - 0.0001f > turn_rate) {
+        f32 accel_time = base->has_ext_param_been_set(4) ? std::fabs(base->get_external_float(4))
+                                                         : base->get_optional_pb_float(turn_accel_time_id, 0.25f, nullptr);
+
+        if (accel_time > 0.01f) {
+            turn_rate = (f32)((f64)rate / accel_time * delta_t + turn_rate);
+
+            if (turn_rate > rate)
+                turn_rate = rate;
+
+            return turn_rate;
+        }
+
+        turn_rate = rate;
+    }
+
+    return turn_rate;
+}
+
+// sub_AD2D40
+void als::simple_orientation::other_po_changes(f32, po*) {}
+
+// sub_5C5560
+void als::simple_orientation::apply_rotation(po*, f32, f32 heading_change, const vector3d &, const vector3d &curr_dir, const vector3d &desired_up, const vector3d &) {
+    // turns the facing about the desired up
+    po rotation;
+    retail::sub_4015B0((u64*)&rotation);
+
+    math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &heading_change);
+
+    const matrix4x4 &m = rotation.get_matrix();
+
+    math::vector4 turned((f32)((f64)m.y.x * curr_dir.y + (f64)m.x.x * curr_dir.x + (f64)m.z.x * curr_dir.z + (f64)m.w.x * 0.0),
+                         (f32)((f64)m.y.y * curr_dir.y + (f64)m.x.y * curr_dir.x + (f64)m.z.y * curr_dir.z + (f64)m.w.y * 0.0),
+                         (f32)((f64)m.y.z * curr_dir.y + (f64)m.x.z * curr_dir.x + (f64)m.z.z * curr_dir.z + (f64)m.w.z * 0.0),
+                         0.0f);
+
+    math::vector4 up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    math::vector4   origin(position.x, position.y, position.z, 0.0f);
+
+    po facing;
+    retail::sub_402260((u64*)&facing, (f32*)&turned, (f32*)&up, (i64*)&origin);
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+}
+
+// sub_5C57C0
+void als::simple_orientation::face_desired_direction() {
+    vector3d desired_dir;
+    vector3d desired_up;
+
+    get_directions(the_als, the_base, &desired_dir, &desired_up);
+
+    // nothing to build a facing from when they're parallel
+    vector3d side = cross(desired_dir, desired_up);
+
+    if ((side - treyarch::references::unk_00fd4370.get()).length2() > 0.00000001f) {
+        math::vector4 basis_dir(desired_dir.x, desired_dir.y, desired_dir.z, 0.0f);
+        math::vector4 basis_up(desired_up.x, desired_up.y, desired_up.z, 0.0f);
+
+        const vector3d &position = the_actor->my_abs_po->get_position();
+        math::vector4   origin(position.x, position.y, position.z, 0.0f);
+
+        po facing;
+        retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+        retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    }
+}
+
+// sub_5B4BF0
+f32 als::simple_orientation::get_dir_tolerance() const {
+    return retail::sub_601C50((u32*)the_actor) ? 0.9999f : 0.99f;
+}
+
+// sub_5B4BF0
+f32 als::simple_orientation::get_up_tolerance() const {
+    return retail::sub_601C50((u32*)the_actor) ? 0.9999f : 0.99f;
+}
+
+// sub_5AE210
+mash::virtual_types_key als::strafe_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::strafe_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::strafe_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F2B70
+void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
+    vector3d direction = the_actor->my_abs_po->get_z_facing();
+
+    if (the_base->has_ext_param_been_set(144))
+        direction = the_base->get_external_vector(144);
+
+    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+
+    // as fast as the anim moves along the ground, or the state's speed when it doesn't
+    vector3d offset = curr_offset->get_position();
+    f32      speed  = std::sqrt(offset.x * offset.x + offset.z * offset.z);
+
+    if (speed < 0.0001f) {
+        f32 default_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+
+        speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
+        speed = speed * delta_t;
+    }
+
+    const vector3d &position = the_actor->my_abs_po->get_position();
+    vector3d        moved(unit[0] * speed + position.x, unit[1] * speed + position.y, position.z + unit[2] * speed);
+
+    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+
+    // only the height is left for the offset
+    curr_offset->get_matrix().w = vector4d(0.0f, offset.y, 0.0f, 1.0f);
+}
+
+// sub_5AEE30
+mash::virtual_types_key als::relative_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::relative_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::relative_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DC240
+void als::relative_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    const po* abs_po = the_actor->my_abs_po;
+
+    if (base->has_ext_param_been_set(143))
+        *desired_dir = base->get_external_vector(143);
+    else
+        *desired_dir = abs_po->get_z_facing();
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else
+        *desired_up = abs_po->get_y_facing();
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
+}
+
+// sub_5AE280
+mash::virtual_types_key als::relative_strafe_mocomp::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE290
+bool als::relative_strafe_mocomp::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (strafe_mocomp::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (strafe_mocomp::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::relative_strafe_mocomp::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DC240
+void als::relative_strafe_mocomp::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    const po* abs_po = the_actor->my_abs_po;
+
+    if (base->has_ext_param_been_set(143))
+        *desired_dir = base->get_external_vector(143);
+    else
+        *desired_dir = abs_po->get_z_facing();
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else
+        *desired_up = abs_po->get_y_facing();
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
 }

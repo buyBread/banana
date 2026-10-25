@@ -1,11 +1,13 @@
 #pragma once
 
 #include "treyarch/game/als/als.hh"
+#include "treyarch/game/event/generic_event_callback.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
 #include "treyarch/shared/math/po.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch {
@@ -23,6 +25,31 @@ namespace als {
     inline const string_hash mocomp_allow_air_knockback_scale_id = string_hash(hash::djb2("mocomp_allow_air_knockback_scale"));
     inline const string_hash mocomp_allow_air_knockup_scale_id   = string_hash(hash::djb2("mocomp_allow_air_knockup_scale"));
     inline const string_hash mocomp_allow_air_knockdown_scale_id = string_hash(hash::djb2("mocomp_allow_air_knockdown_scale"));
+
+    // and about turning
+    inline const string_hash use_movement_window_id        = string_hash(hash::djb2("use_movement_window"));
+    inline const string_hash use_accel_decel_mode_id       = string_hash(hash::djb2("use_accel_decel_mode"));
+    inline const string_hash use_instant_facing_id         = string_hash(hash::djb2("use_instant_facing"));
+    inline const string_hash inverse_facing_id             = string_hash(hash::djb2("inverse_facing"));
+    inline const string_hash use_x_facing_id               = string_hash(hash::djb2("use_x_facing"));
+    inline const string_hash use_destination_facing_id     = string_hash(hash::djb2("use_destination_facing"));
+    inline const string_hash turn_rate_id                  = string_hash(hash::djb2("turn_rate"));
+    inline const string_hash turn_accel_time_id            = string_hash(hash::djb2("turn_accel_time"));
+    inline const string_hash turn_direction_id             = string_hash(hash::djb2("turn_direction"));
+    inline const string_hash reorient_to_vertical_speed_id = string_hash(hash::djb2("reorient_to_vertical_speed"));
+    inline const string_hash movement_speed_id             = string_hash(hash::djb2("movement_speed"));
+
+    namespace references {
+        // static event-type ids, hashed from their names by the CRT initializers
+        inline util::memory_reference<string_hash> move_begin   { 0x0102C614 };
+        inline util::memory_reference<string_hash> move_end     { 0x0102C72C };
+        inline util::memory_reference<string_hash> rotate_begin { 0x0102C46C };
+        inline util::memory_reference<string_hash> rotate_end   { 0x0102C62C };
+    } // references
+
+    // where the accel/decel mode's turn rate is done ramping up and starts ramping down, through the movement window; nothing writes them
+    inline f32 turn_ramp_up_end     = 0.25f;
+    inline f32 turn_ramp_down_start = 0.5f;
 
     // moves and turns the actor the way its animation asks; built in the als's own storage
     class motion_compensator : public mash::mash_virtual_base {
@@ -78,6 +105,138 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // turns the actor toward the state's direction and up at a turn rate, applying the anim's offset as it goes
+    class simple_orientation : public motion_compensator {
+
+    public:
+        f32                    turn_rate;
+        bool                   currently_rotating;
+        bool                   use_movement_window;
+        bool                   inside_movement_window;
+        bool                   use_accel_decel_mode;
+        bool                   use_instant_facing;
+        u8                     pad_019[0x03];
+        generic_event_callback move_begin_callback;
+        generic_event_callback move_end_callback;
+        generic_event_callback rotate_begin_callback;
+        generic_event_callback rotate_end_callback;
+        f32                    move_begin_signal_time;
+        f32                    move_end_signal_time;
+
+        simple_orientation();
+
+        // inlined @ sub_723DA0
+        explicit simple_orientation(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
+                                                                                     currently_rotating(false),
+                                                                                     use_movement_window(false),
+                                                                                     inside_movement_window(false),
+                                                                                     use_accel_decel_mode(false),
+                                                                                     use_instant_facing(false),
+                                                                                     move_begin_callback(so_do_nothing),
+                                                                                     move_end_callback(so_do_nothing),
+                                                                                     rotate_begin_callback(so_do_nothing),
+                                                                                     rotate_end_callback(so_do_nothing) {}
+
+        ~simple_orientation() override;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void transition() override;
+        void post_anim_action(f32 delta_t) override;
+
+        virtual void get_directions(animation_logic_system* als_core,
+                                    state_machine*          base,
+                                    vector3d*               desired_dir,
+                                    vector3d*               desired_up) const;
+
+        virtual f32  get_turn_rate(f32 delta_t, animation_logic_system* als_core, state_machine* base);
+        virtual void other_po_changes(f32 delta_t, po* curr_offset);
+
+        virtual void apply_rotation(      po*       curr_offset,
+                                          f32       delta_t,
+                                          f32       heading_change,
+                                    const vector3d &curr_up,
+                                    const vector3d &curr_dir,
+                                    const vector3d &desired_up,
+                                    const vector3d &desired_dir);
+
+        virtual void face_desired_direction();  // what use_instant_facing turns with
+        virtual f32  get_dir_tolerance() const; // dots past these count as facing already
+        virtual f32  get_up_tolerance() const;
+
+        static string_hash my_type_key;
+    };
+
+    // turns like simple_orientation, but moves along the strafe direction instead of the anim's ground offset
+    class strafe_mocomp : public simple_orientation {
+
+    public:
+        strafe_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit strafe_mocomp(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void other_po_changes(f32 delta_t, po* curr_offset) override;
+
+        static string_hash my_type_key;
+    };
+
+    // keeps the actor's own direction and up unless the state sets them
+    class relative_orientation : public simple_orientation {
+
+    public:
+        relative_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit relative_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
+    // strafes with relative_orientation's directions
+    class relative_strafe_mocomp : public strafe_mocomp {
+
+    public:
+        relative_strafe_mocomp() = default;
+
+        // inlined @ sub_723DA0
+        explicit relative_strafe_mocomp(mash::generating_vtable_version so_do_nothing) : strafe_mocomp(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -86,4 +245,16 @@ namespace als {
     ASSERT_OFFSETOF(motion_compensator, the_actor, 0x0C);
 
     ASSERT_SIZEOF(use_anim_only, 0x10);
+
+    ASSERT_SIZEOF  (simple_orientation,                         0x44);
+    ASSERT_OFFSETOF(simple_orientation, turn_rate,              0x10);
+    ASSERT_OFFSETOF(simple_orientation, use_instant_facing,     0x18);
+    ASSERT_OFFSETOF(simple_orientation, move_begin_callback,    0x1C);
+    ASSERT_OFFSETOF(simple_orientation, rotate_end_callback,    0x34);
+    ASSERT_OFFSETOF(simple_orientation, move_begin_signal_time, 0x3C);
+    ASSERT_OFFSETOF(simple_orientation, move_end_signal_time,   0x40);
+
+    ASSERT_SIZEOF(strafe_mocomp,          0x44);
+    ASSERT_SIZEOF(relative_orientation,   0x44);
+    ASSERT_SIZEOF(relative_strafe_mocomp, 0x44);
 }} // treyarch::als
