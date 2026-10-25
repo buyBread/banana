@@ -19,6 +19,11 @@ namespace treyarch {
         struct resource_pack_slot;
     } // amalga
 
+    namespace als {
+        class animation_logic_system_interface;
+        struct als_res_data;
+    } // als
+
     class ai_core;
     class animation_controller;
     class capsule_alter_sys;
@@ -35,6 +40,8 @@ namespace treyarch {
         u8*                         unk_010;  // its script object's name hash sits at +4
         resource_key*               unk_014;  // the script's resource; its hash is the filename
         string_hash                 unk_018;  // key prefix
+        u8                          reserved_01c[0x04];
+        als::als_res_data*          als_data;
     };
 
     class actor : public entity {
@@ -51,7 +58,8 @@ namespace treyarch {
         base_ai_data*               my_base_ai_data;
         capsule_alter_sys*          capsule_alter;
 
-        ai_core* get_ai_core() const;
+        ai_core*                               get_ai_core() const;
+        als::animation_logic_system_interface* get_als() const;
 
         // slot 137
         void allocate_anim_controller() {
@@ -63,6 +71,7 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(actor_unk_0b0, instance, 0x0C);
     ASSERT_OFFSETOF(actor_unk_0b0, unk_018,  0x18);
+    ASSERT_OFFSETOF(actor_unk_0b0, als_data, 0x20);
 
     ASSERT_OFFSETOF(actor, m_skeleton,      0xA4);
     ASSERT_OFFSETOF(actor, skeleton_map,    0xA8);
