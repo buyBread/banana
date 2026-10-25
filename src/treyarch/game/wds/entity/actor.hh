@@ -65,6 +65,11 @@ namespace treyarch {
         void allocate_anim_controller() {
             ((void (__thiscall*)(actor*))vtable[137])(this);
         }
+
+        // slot 156; adds to the movement the actor takes this frame
+        void set_frame_delta_trans(const vector3d &delta, f32 delta_t) {
+            ((void (__thiscall*)(actor*, const vector3d*, f32))vtable[156])(this, &delta, delta_t);
+        }
     };
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
