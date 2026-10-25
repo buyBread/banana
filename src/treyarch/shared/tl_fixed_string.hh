@@ -18,6 +18,7 @@ namespace treyarch {
 
         void construct_mashed_class() {}
         void destruct_mashed_class() {}
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
     };
 
     ASSERT_SIZEOF  (tl_fixed_string,       0x20);

@@ -16,7 +16,7 @@ namespace treyarch {
     };
 
     // the lookups into it stay native for now
-    class param_block {
+    class alignas(8) param_block {
 
     public:
         mash::vector
