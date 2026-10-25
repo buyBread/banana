@@ -23,12 +23,14 @@ namespace treyarch { namespace mash {
                 array[index].construct_mashed_class();
         }
 
-        // delete[] through the engine heap; the element count sits in front of the array
+        // delete[] through the engine heap; the element count sits in front of the array, padded to its alignment
         void finalize_helper_allocated(u32) {
             if (!array)
                 return;
 
-            u32* count = (u32*)array - 1;
+            constexpr u32 cookie_size = alignof(T) > sizeof(u32) ? (u32)alignof(T) : (u32)sizeof(u32);
+
+            u32* count = (u32*)((u8*)array - cookie_size);
 
             for (u32 index = *count; index > 0; --index)
                 array[index - 1].~T();
@@ -45,6 +47,7 @@ namespace treyarch { namespace mash {
                 array[index].destruct_mashed_class();
         }
 
+        // sub_5EC4F0
         // sub_7D90D0
         // sub_903820
         void custom_unmash_helper(i32              n,
