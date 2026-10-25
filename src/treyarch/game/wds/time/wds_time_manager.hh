@@ -18,6 +18,8 @@ namespace treyarch {
         f32 unk_024;
         u8  reserved_028[0x14];
 
+        wds_time_manager();
+
         /* inlined (frame_advance sub_968530, world_dynamics_system::frame_advance, time_interface::calc_time_dilation).
            SM3 multiplies global and velocity dilation, then reflexes unless ignored, and floors at 0.000001 */
         f32 get_time_dilation_factor(bool ignore_reflex_dilation = false) const {

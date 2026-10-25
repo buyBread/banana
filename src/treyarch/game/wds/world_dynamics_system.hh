@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vc8/list.hh"
 #include "vc8/map.hh"
 #include "vc8/vector.hh"
 #include "treyarch/game/animation/scene_anim.hh"
@@ -27,11 +28,15 @@ namespace treyarch {
         scene_anim_handle_t         last_snm_handle;
         scene_anim_map_t            scene_anim_map;
         sa_handle_obj_map_t         playing_scene_anims;
-        u8                          reserved_01c[0x04];
+        u32                         unk_01c;
         f32*                        gv_busy_teaching;
         vc8::vector
             <animation_controller*> anim_ctrls;
-        u8                          reserved_034[0x08];
+        u32                         unk_034;
+        bool                        unk_038;
+        bool                        unk_039;
+        bool                        saved_hero_enabled; // player interface enabled, carried over to the next hero
+        u8                          pad_03b[0x01];
         wds_ai_manager              ai_mgr;
         wds_camera_manager          camera_mgr;
         wds_entity_manager          ent_mgr;
@@ -39,10 +44,17 @@ namespace treyarch {
         wds_script_manager          script_mgr;
         wds_time_manager            time_mgr;
         terrain*                    the_terrain;
-        u8                          reserved_114[0x0C];
+        mash::string                unk_114;
         entity*                     hero_ptr;
         camera_handle               chase_cam_ptr;
-        u8                          reserved_128[0x18];
+        vc8::list<void*>            unk_128;
+        u32                         unk_134;
+        u8                          reserved_138[0x01];
+        bool                        unk_139;
+        u8                          pad_13a[0x02];
+        i32                         unk_13c;
+
+        world_dynamics_system();
 
         entity* get_hero_ptr() const {
             return hero_ptr;
@@ -86,6 +98,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(world_dynamics_system, script_mgr,          0x0C8);
     ASSERT_OFFSETOF(world_dynamics_system, time_mgr,            0x0D4);
     ASSERT_OFFSETOF(world_dynamics_system, the_terrain,         0x110);
+    ASSERT_OFFSETOF(world_dynamics_system, unk_114,             0x114);
     ASSERT_OFFSETOF(world_dynamics_system, hero_ptr,            0x120);
     ASSERT_OFFSETOF(world_dynamics_system, chase_cam_ptr,       0x124);
+    ASSERT_OFFSETOF(world_dynamics_system, unk_128,             0x128);
+    ASSERT_OFFSETOF(world_dynamics_system, unk_134,             0x134);
+    ASSERT_OFFSETOF(world_dynamics_system, unk_139,             0x139);
+    ASSERT_OFFSETOF(world_dynamics_system, unk_13c,             0x13C);
 } // treyarch

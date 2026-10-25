@@ -74,7 +74,7 @@ game::game() {
     strcpy(&references::level_name_buffer.get(), level_name.c_str());
 
     void* world_allocation = memory::heap::allocate(sizeof(world_dynamics_system));
-    the_world = world_allocation ? (world_dynamics_system*)retail::sub_97A860(world_allocation) : nullptr;
+    the_world = world_allocation ? new (world_allocation) world_dynamics_system() : nullptr;
     references::g_world_ptr.write(the_world);
 
     mb = nullptr;
@@ -265,7 +265,7 @@ void game::unload_current_level() {
 
     // the next level gets a fresh world
     void* world_allocation = memory::heap::allocate(sizeof(world_dynamics_system));
-    the_world = world_allocation ? (world_dynamics_system*)retail::sub_97A860(world_allocation) : nullptr;
+    the_world = world_allocation ? new (world_allocation) world_dynamics_system() : nullptr;
     references::g_world_ptr.write(the_world);
 
     references::unk_00f4cd30.write(1);

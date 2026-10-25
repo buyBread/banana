@@ -13,6 +13,8 @@ namespace treyarch {
         u8                    reserved_01c[0x14];
         void*                 unk_30;         // a vector of the slots pushed as resource context
         u8                    reserved_034[0x04];
+
+        wds_entity_manager();
     };
 
     ASSERT_SIZEOF  (wds_entity_manager,         0x38);

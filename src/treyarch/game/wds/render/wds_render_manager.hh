@@ -19,6 +19,9 @@ namespace treyarch {
     public:
         u8 reserved_000[0x08];
 
+        // inlined @ sub_97A860
+        wds_render_manager() : reserved_000{} {}
+
         void render();
         void render_depth_shadows();
 

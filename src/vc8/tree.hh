@@ -430,6 +430,8 @@ namespace treyarch { namespace vc8 {
 
     private:
         // sub_42A1C0
+        // sub_9285E0
+        // sub_928C40
         static node* buy_head_node() {
             node* result = (node*)memory::heap::allocate(sizeof(node));
 
