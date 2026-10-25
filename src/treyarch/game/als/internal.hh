@@ -1,0 +1,166 @@
+#pragma once
+
+#include "treyarch/game/als/als.hh"
+#include "treyarch/game/als/animation_blend.hh"
+#include "treyarch/game/als/animation_event.hh"
+#include "treyarch/game/wds/ai/param_block.hh"
+#include "treyarch/shared/hash/string_hash.hh"
+#include "treyarch/shared/mash/mash_info.hh"
+#include "treyarch/shared/mash/types.hh"
+#include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/mash/virtual_base.hh"
+#include "util/macros/sanity_assert.hh"
+#include "util/types.hh"
+
+namespace treyarch { namespace als {
+    class animation_logic_system;
+    class state_machine;
+
+    // what a transition evaluation asks of the state machine
+    struct request_data {
+        bool     did_transition_occur;
+        bool     is_trans_to_category;
+        bool     ignore_no_transition;
+        bool     unk_03;
+        bool     unk_04;
+        u8       pad_05[0x03];
+        state_id state_name; // a category's name when is_trans_to_category
+    };
+
+    struct state_unk_44 {
+        string_hash unk_00;
+        f32         unk_04;
+        f32         unk_08;
+        f32         unk_0c;
+        f32         unk_10;
+        f32         unk_14;
+        u32         unk_18;
+        u32         unk_1c;
+        f32         unk_20;
+        u32         unk_24;
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+    };
+
+    struct state_unk_58 {
+        string_hash unk_00;
+        i32         unk_04;
+        u32         unk_08;
+        f32         unk_0c;
+        f32         unk_10;
+        f32         unk_14;
+        f32         unk_18;
+        f32         unk_1c;
+        f32         unk_20;
+        f32         unk_24;
+        f32         unk_28;
+        f32         unk_2c;
+        u32         unk_30;
+        u32         unk_34;
+        u32         unk_38;
+        u32         unk_3c;
+
+        void construct_mashed_class();
+        void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+    };
+
+    class alignas(8) state : public mash::mash_virtual_base {
+
+    public:
+        enum e_flags : u32 {
+            uninterruptable          = 0x00000001,
+            super_uninterruptable    = 0x00000002,
+            animation_reverse        = 0x00000004,
+            fail_as_default          = 0x00000008,
+            initial_state            = 0x00000010,
+            no_blend                 = 0x00000020,
+            quick_blend              = 0x00000040,
+            medium_blend             = 0x00000080,
+            long_blend               = 0x00000100,
+            no_blend_out             = 0x00000200,
+            quick_blend_out          = 0x00000400,
+            medium_blend_out         = 0x00000800,
+            long_blend_out           = 0x00001000,
+            force_mo_comp_init       = 0x00002000,
+            allow_reenter_category   = 0x00004000,
+            biped_physics_state      = 0x00008000,
+            is_querryable            = 0x00010000,
+            biped_phys_no_velocity   = 0x00020000,
+            biped_physics_blend_anim = 0x00040000,
+            cancel_all_velocity      = 0x00080000,
+            initially_suspended      = 0x00100000,
+            use_this_layers_mocomp   = 0x00200000,
+            cloned_anim              = 0x00400000,
+            use_prev_anim_start_time = 0x00800000,
+            non_animated             = 0x01000000,
+            suspended                = 0x02000000
+        };
+
+        u8                     pad_004[0x04];
+        state_id               name;
+        category_id            cat_name;
+        u32                    flags; // e_flags
+        param_block*           my_param_block;
+        mash::vector
+            <animation_event>  events;
+        mash::vector
+            <animation_event>  hit_pause_events; // only HIT_PAUSE ones
+        animation_blends_list* blends;
+        mash::vector
+            <state_unk_44>     unk_44;
+        mash::vector
+            <state_unk_58>     unk_58;
+        mash::vector
+            <state_unk_58>     unk_6c;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        virtual mash::virtual_types_key get_mocomp_type() const = 0;
+        virtual request_data            do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const = 0;
+        virtual request_data            do_explicit_trans(animation_logic_system* the_als,
+                                                          state_machine*          the_sm,
+                                                          category_id             desired_category) const = 0;
+        virtual nal_anim_id             get_nal_anim_name() const = 0;
+        virtual f32                     get_secondary_playback_speed(f32 anim_time, f32 anim_duration) const;
+        virtual f32                     get_playback_speed() const;
+        virtual f32                     get_start_time() const;
+
+        static string_hash my_type_key;
+    };
+
+    ASSERT_SIZEOF  (request_data,                       0x0C);
+    ASSERT_OFFSETOF(request_data, is_trans_to_category, 0x01);
+    ASSERT_OFFSETOF(request_data, ignore_no_transition, 0x02);
+    ASSERT_OFFSETOF(request_data, unk_04,               0x04);
+    ASSERT_OFFSETOF(request_data, state_name,           0x08);
+
+    ASSERT_SIZEOF(state_unk_44, 0x28);
+    ASSERT_SIZEOF(state_unk_58, 0x40);
+
+    ASSERT_SIZEOF  (state,                   0x80);
+    ASSERT_OFFSETOF(state, name,             0x08);
+    ASSERT_OFFSETOF(state, cat_name,         0x0C);
+    ASSERT_OFFSETOF(state, flags,            0x10);
+    ASSERT_OFFSETOF(state, my_param_block,   0x14);
+    ASSERT_OFFSETOF(state, events,           0x18);
+    ASSERT_OFFSETOF(state, hit_pause_events, 0x2C);
+    ASSERT_OFFSETOF(state, blends,           0x40);
+    ASSERT_OFFSETOF(state, unk_44,           0x44);
+    ASSERT_OFFSETOF(state, unk_58,           0x58);
+    ASSERT_OFFSETOF(state, unk_6c,           0x6C);
+}} // treyarch::als

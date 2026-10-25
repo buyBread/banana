@@ -1,7 +1,11 @@
+#include "retail.hh"
 #include "treyarch/game/als/script_state.hh"
 #include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
+
+string_hash als::scripted_state::my_type_key            { 0xB7E96372 }; // "als::scripted_state"
+string_hash als::base_layer_scripted_state::my_type_key { 0x0082A908 }; // "als::base_layer_scripted_state"
 
 // sub_5B0220
 als::basic_rule_list::~basic_rule_list() {
@@ -336,4 +340,137 @@ void als::explicit_trans::unmash(mash::mash_info_struct* mash_info, void* contai
     trans_rule::unmash(mash_info, containing_class_ptr, buffer);
 
     category.unmash(mash_info, this, buffer);
+}
+
+// sub_5F80A0
+void als::scripted_state::construct_mashed_class() {
+    state::construct_mashed_class();
+
+    anim_name           .construct_mashed_class();
+    trans_group_ref_list.construct_mashed_class();
+    implicit_trans_list .construct_mashed_class();
+    explicit_trans_list .construct_mashed_class();
+    speed_range_list    .construct_mashed_class();
+}
+
+// sub_5F7020
+void als::scripted_state::destruct_mashed_class() {
+    anim_name           .destruct_mashed_class();
+    trans_group_ref_list.destruct_mashed_class();
+    implicit_trans_list .destruct_mashed_class();
+    explicit_trans_list .destruct_mashed_class();
+    speed_range_list    .destruct_mashed_class();
+
+    state::destruct_mashed_class();
+}
+
+// sub_5F8220
+void als::scripted_state::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    state::unmash(mash_info, containing_class_ptr, buffer);
+
+    anim_name           .unmash(mash_info, this, buffer);
+    trans_group_ref_list.unmash(mash_info, this, buffer);
+    implicit_trans_list .unmash(mash_info, this, buffer);
+    explicit_trans_list .unmash(mash_info, this, buffer);
+    speed_range_list    .unmash(mash_info, this, buffer);
+}
+
+// sub_5F7F80
+mash::virtual_types_key als::scripted_state::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5F7F90
+bool als::scripted_state::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (state::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (state::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5F7FC0
+i32 als::scripted_state::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B02F0
+mash::virtual_types_key als::scripted_state::get_mocomp_type() const {
+    return mash::invalid_type_key;
+}
+
+// sub_5D6E90
+als::request_data als::scripted_state::do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const {
+    using do_implicit_trans_t = request_data* (__thiscall*)(const scripted_state*, request_data*, animation_logic_system*, state_machine*);
+
+    request_data result;
+    ((do_implicit_trans_t)retail::sub_5D6E90)(this, &result, the_als, the_sm);
+
+    return result;
+}
+
+// sub_5D7090
+als::request_data als::scripted_state::do_explicit_trans(animation_logic_system* the_als,
+                                                         state_machine*          the_sm,
+                                                         category_id             desired_category) const {
+
+    using do_explicit_trans_t = request_data* (__thiscall*)(const scripted_state*, request_data*, animation_logic_system*, state_machine*, category_id);
+
+    request_data result;
+    ((do_explicit_trans_t)retail::sub_5D7090)(this, &result, the_als, the_sm, desired_category);
+
+    return result;
+}
+
+// sub_5D7270
+nal_anim_id als::scripted_state::get_nal_anim_name() const {
+    return anim_name;
+}
+
+// sub_5D72C0
+f32 als::scripted_state::get_secondary_playback_speed(f32 anim_time, f32 anim_duration) const {
+    return ((f32 (__thiscall*)(const scripted_state*, f32, f32))retail::sub_5D72C0)(this, anim_time, anim_duration);
+}
+
+// sub_5F8110
+void als::base_layer_scripted_state::construct_mashed_class() {
+    scripted_state::construct_mashed_class();
+}
+
+// sub_5F70B0
+void als::base_layer_scripted_state::destruct_mashed_class() {
+    scripted_state::destruct_mashed_class();
+}
+
+// sub_5F82C0
+void als::base_layer_scripted_state::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    scripted_state::unmash(mash_info, containing_class_ptr, buffer);
+}
+
+// sub_723BC0
+mash::virtual_types_key als::base_layer_scripted_state::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_723BD0
+bool als::base_layer_scripted_state::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (scripted_state::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (scripted_state::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_723C00
+i32 als::base_layer_scripted_state::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5B0300
+mash::virtual_types_key als::base_layer_scripted_state::get_mocomp_type() const {
+    return mocomp_type;
 }

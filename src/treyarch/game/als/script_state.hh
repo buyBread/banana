@@ -1,11 +1,13 @@
 #pragma once
 
 #include "treyarch/game/als/als.hh"
+#include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/rules.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/mash_info.hh"
 #include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/mash/vector.hh"
+#include "treyarch/shared/mash/vector_basic.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
 
@@ -106,6 +108,71 @@ namespace treyarch { namespace als {
         u8   pad_021[0x03];
     };
 
+    class scripted_state : public state {
+
+    public:
+        // scales the playback speed while the animation time is in [start, end)
+        struct speed_range {
+            f32 speed;
+            f32 start;
+            f32 end;
+        };
+
+        nal_anim_id               anim_name;
+        mash::vector
+            <trans_group_ref>     trans_group_ref_list;
+        mash::vector
+            <implicit_trans>      implicit_trans_list;
+        mash::vector
+            <explicit_trans>      explicit_trans_list;
+        mash::vector_basic
+            <speed_range>         speed_range_list;
+        f32                       attack_start; // negative when the state has no attack region
+        f32                       attack_end;
+        u8                        pad_0f4[0x04];
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        mash::virtual_types_key get_mocomp_type() const override;
+        request_data            do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const override;
+        request_data            do_explicit_trans(animation_logic_system* the_als,
+                                                  state_machine*          the_sm,
+                                                  category_id             desired_category) const override;
+        nal_anim_id             get_nal_anim_name() const override;
+        f32                     get_secondary_playback_speed(f32 anim_time, f32 anim_duration) const override;
+
+        static string_hash my_type_key;
+    };
+
+    class base_layer_scripted_state : public scripted_state {
+
+    public:
+        mash::virtual_types_key mocomp_type;
+        u8                      pad_0fc[0x04];
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        mash::virtual_types_key get_mocomp_type() const override;
+
+        static string_hash my_type_key;
+    };
+
     ASSERT_SIZEOF  (basic_rule_list,            0x08);
     ASSERT_OFFSETOF(basic_rule_list, rules,     0x00);
     ASSERT_OFFSETOF(basic_rule_list, num_rules, 0x04);
@@ -133,4 +200,17 @@ namespace treyarch { namespace als {
     ASSERT_SIZEOF  (incoming_trans,                   0x24);
     ASSERT_OFFSETOF(incoming_trans, from,             0x1C);
     ASSERT_OFFSETOF(incoming_trans, from_is_category, 0x20);
+
+    ASSERT_SIZEOF  (scripted_state::speed_range,          0x0C);
+    ASSERT_SIZEOF  (scripted_state,                       0xF8);
+    ASSERT_OFFSETOF(scripted_state, anim_name,            0x80);
+    ASSERT_OFFSETOF(scripted_state, trans_group_ref_list, 0xA0);
+    ASSERT_OFFSETOF(scripted_state, implicit_trans_list,  0xB4);
+    ASSERT_OFFSETOF(scripted_state, explicit_trans_list,  0xC8);
+    ASSERT_OFFSETOF(scripted_state, speed_range_list,     0xDC);
+    ASSERT_OFFSETOF(scripted_state, attack_start,         0xEC);
+    ASSERT_OFFSETOF(scripted_state, attack_end,           0xF0);
+
+    ASSERT_SIZEOF  (base_layer_scripted_state,              0x100);
+    ASSERT_OFFSETOF(base_layer_scripted_state, mocomp_type, 0x0F8);
 }} // treyarch::als
