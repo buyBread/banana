@@ -6,6 +6,7 @@
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/time_interface.hh"
+#include "treyarch/game/wds/entity/interface/towing_interface.hh"
 #include "treyarch/game/wds/entity/interface_storage.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
 #include "treyarch/shared/hash/string_hash.hh"
@@ -54,6 +55,10 @@ namespace treyarch {
 
         combo_interface* combo_ifc() const {
             return (combo_interface*)my_ifc_storage->get_ifc(entity_ifc_combo);
+        }
+
+        towing_interface* towing_ifc() const {
+            return (towing_interface*)my_ifc_storage->get_ifc(entity_ifc_towing);
         }
 
         // slot 67
