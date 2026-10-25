@@ -63,6 +63,7 @@ namespace treyarch {
             // inlined @ sub_5BA290
             // inlined @ sub_5BA510
             // inlined @ sub_5D3950
+            // inlined @ sub_5D3370
             f32 get_duration() const {
                 if (nal_inst)
                     return nal_inst->anim->duration;
@@ -76,6 +77,7 @@ namespace treyarch {
             f32 get_inverse_duration() const;
 
             // inlined @ sub_5BB5A0
+            // inlined @ sub_5BA370
             // inlined @ sub_5D3950
             void set_speed(f32 new_speed) {
                 speed = new_speed;
@@ -85,6 +87,7 @@ namespace treyarch {
             }
 
             // inlined @ sub_5BB600
+            // inlined @ sub_5BA440
             // inlined @ sub_5D3950
             void set_secondary_speed(f32 new_speed) {
                 secondary_speed = new_speed;
@@ -200,6 +203,14 @@ namespace treyarch {
         // the controller job: playback times, blends, retiring blended-out anims, and the pose records
         static void advance(animation_controller* controller);
 
+        // advance's playback on the spot, raising each layer's newest anim's signals; biped physics runs it
+        void frame_advance(f32 delta_t);
+
+        bool                  has_master() const;
+        animation_controller* get_master() const;
+        bool                  is_synced_to_master() const;
+        actor*                get_actor() const;
+
         // the anim becomes the layer's newest, cross-fading from the one before over blend_time; a layer keeps two
         void play(const als::nal_als_anim_bridge     &anim,
                         f32                           start_time,
@@ -224,6 +235,8 @@ namespace treyarch {
         f32  get_anim_time           (u32 layer);
         bool is_anim_looping         (u32 layer);
         void set_anim_normalized_time(u32 layer, f32 time);
+        void set_anim_speed          (u32 layer, f32 speed);
+        void set_secondary_anim_speed(u32 layer, f32 speed);
 
         // inlined @ sub_5BB810
         // inlined @ sub_5E0D20

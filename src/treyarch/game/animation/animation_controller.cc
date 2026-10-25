@@ -178,6 +178,70 @@ void animation_controller::advance(animation_controller* controller) {
     }
 }
 
+// sub_5D3370
+void animation_controller::frame_advance(f32 delta_t) {
+    if (!state || state->unk_128 || state->is_suspended)
+        return;
+
+    engine_lock_scope lock(&state->lock);
+
+    for (u32 layer = 0; layer < 15; ++layer) {
+        animation_records &anims = state->layer_anims[layer];
+
+        for (u32 index = 0; index < anims.size(); ++index) {
+            animation_controller_state::layer_anim* anim = anims[index];
+
+            bool older = anims.size() > index + 1;
+            f32  prev  = anim->normalized_time;
+            f32  time;
+
+            // only the base layer follows the master here
+            if (has_master() && is_synced_to_master() && !layer && !older && state->should_follow_master()) {
+                f32 master_time = state->master->get_anim_time(0);
+
+                time = anim->get_inverse_duration() * master_time;
+
+                set_anim_speed(0, get_master()->get_anim_speed(0));
+                set_secondary_anim_speed(0, get_master()->get_secondary_anim_speed(0));
+            } else
+                time = anim->speed * delta_t * anim->secondary_speed * (1.0f / anim->get_duration()) + prev;
+
+            anim->set_normalized_time(time);
+
+            // under a newer anim that's finished blending in
+            animation_controller_state::layer_anim* newer = older ? anims[index + 1] : nullptr;
+
+            if (newer && std::fabs(newer->alpha_start - newer->alpha_end) > 0.0001f && newer->normalized_time > newer->blend_end) {
+                delete anim;
+                anims.erase(index);
+
+                --index;
+            } else if (index == anims.size() - 1)
+                anim->raise_animation_signals(time, prev, get_actor());
+        }
+    }
+}
+
+// sub_5AD280
+bool animation_controller::has_master() const {
+    return state && state->master;
+}
+
+// sub_5AD2A0
+animation_controller* animation_controller::get_master() const {
+    return state ? state->master : nullptr;
+}
+
+// sub_5AD2C0
+bool animation_controller::is_synced_to_master() const {
+    return state && state->sync_to_master;
+}
+
+// sub_5AD2F0
+actor* animation_controller::get_actor() const {
+    return state ? state->the_actor : nullptr;
+}
+
 // sub_5DFE20
 void animation_controller::play(const als::nal_als_anim_bridge     &anim,
                                       f32                           start_time,
@@ -320,6 +384,18 @@ f32 animation_controller::get_secondary_anim_speed(u32 layer) const {
     return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->secondary_speed : 1.0f;
 }
 
+// sub_5BA370
+void animation_controller::set_anim_speed(u32 layer, f32 speed) {
+    if (state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_speed(speed);
+}
+
+// sub_5BA440
+void animation_controller::set_secondary_anim_speed(u32 layer, f32 speed) {
+    if (state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_secondary_speed(speed);
+}
+
 // sub_5BA140
 bool animation_controller::is_anim_looping(u32 layer) {
     if (!state->layer_anims[layer].size())
@@ -454,6 +530,7 @@ f32 animation_controller_state::layer_anim::get_inverse_duration() const {
 
 // inlined @ sub_5BA1A0
 // inlined @ sub_5D3950
+// inlined @ sub_5D3370
 void animation_controller_state::layer_anim::set_normalized_time(f32 time) {
     prev_normalized_time = normalized_time;
     normalized_time      = time;
