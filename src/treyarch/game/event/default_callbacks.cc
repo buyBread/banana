@@ -1,44 +1,6 @@
 #include "retail.hh"
 #include "treyarch/game/event/default_callbacks.hh"
 #include "treyarch/game/event/event_manager.hh"
-#include "treyarch/shared/hash/string_hash.hh"
-#include "util/memory_reference.hh"
-
-namespace treyarch { namespace references {
-        // static event-type ids, hashed from their names by the CRT initializers
-        util::memory_reference<string_hash> collide_ragdoll     { 0x0102CB84 };
-        util::memory_reference<string_hash> footstep_l          { 0x0102C5E4 };
-        util::memory_reference<string_hash> footstep_r          { 0x0102C6C8 };
-        util::memory_reference<string_hash> handplant_l         { 0x0102CABC };
-        util::memory_reference<string_hash> handplant_r         { 0x0102C808 };
-        util::memory_reference<string_hash> play_sound          { 0x0102CB58 };
-        util::memory_reference<string_hash> play_sound_on_trans { 0x0102CB64 };
-        util::memory_reference<string_hash> play_effect         { 0x0102C654 };
-        util::memory_reference<string_hash> trail_1             { 0x0102C6D4 };
-        util::memory_reference<string_hash> trail_2             { 0x0102C684 };
-        util::memory_reference<string_hash> trail_3             { 0x0102C658 };
-        util::memory_reference<string_hash> trail_4             { 0x0102C754 };
-        util::memory_reference<string_hash> tentacle_1          { 0x0102C288 };
-        util::memory_reference<string_hash> tentacle_2          { 0x0102C390 };
-        util::memory_reference<string_hash> tentacle_3          { 0x0102C2B0 };
-        util::memory_reference<string_hash> tentacle_4          { 0x0102C720 };
-        util::memory_reference<string_hash> tentacle_5          { 0x0102C5E0 };
-        util::memory_reference<string_hash> tentacle_6          { 0x0102CAC0 };
-        util::memory_reference<string_hash> tentacle_7          { 0x0102C38C };
-        util::memory_reference<string_hash> tentacle_8          { 0x0102C350 };
-        util::memory_reference<string_hash> tentacle_9          { 0x0102C284 };
-        util::memory_reference<string_hash> tentacle_10         { 0x0102CCB4 };
-        util::memory_reference<string_hash> tentacle_11         { 0x0102C648 };
-        util::memory_reference<string_hash> tentacle_12         { 0x0102C280 };
-        util::memory_reference<string_hash> tentacle_13         { 0x0102C5D8 };
-        util::memory_reference<string_hash> tentacle_14         { 0x0102C5D0 };
-        util::memory_reference<string_hash> tentacle_15         { 0x0102C4EC };
-        util::memory_reference<string_hash> tentacle_16         { 0x0102C444 };
-        util::memory_reference<string_hash> set_vulnerable      { 0x0102C6B0 };
-        util::memory_reference<string_hash> in_limbo            { 0x0102CAAC };
-        util::memory_reference<string_hash> particle_event      { 0x0102C7A4 };
-        util::memory_reference<string_hash> hit_pause           { 0x0102CB78 };
-}} // treyarch::references
 
 using namespace treyarch;
 
