@@ -3,7 +3,9 @@
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
+#include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 #include "vc8/vector.hh"
 
@@ -26,19 +28,48 @@ namespace treyarch {
 
     // what a controller points at; the milestone asserts on it as `state`
     struct animation_controller_state {
-        struct unk_02c_entry {
-            nal::anim_instance*         nal_inst;   // the als's meta instance samples the pose when this is null
+        // an animation playing on a layer; one of a nal instance or an als meta instance samples it
+        struct layer_anim {
+            nal::anim_instance*         nal_inst;
             void*                       als_inst;
             f32                         normalized_time;
             f32                         prev_normalized_time;
             nal::pose                   pose;
             f32                         alpha;
-            u8                          reserved_054[0x10];
+            f32                         blend_start;          // alpha runs from alpha_start to alpha_end over these normalized times
+            f32                         blend_end;
+            f32                         alpha_start;
+            f32                         alpha_end;
             f32                         speed;
             f32                         secondary_speed;
-            bool                        unk_06c; // raise_animation_signals_for_time_span takes it to include the span's start
+            bool                        unk_06c;              // raise_animation_signals_for_time_span takes it to include the span's start
             u8                          pad_06d[0x03];
             animation_controller_state* owner;
+
+            ~layer_anim();
+
+            // from a pool
+            void* operator new   (std::size_t size) noexcept;
+            void  operator delete(void* allocation) noexcept;
+
+            // inlined @ sub_5BA290
+            // inlined @ sub_5BA510
+            // inlined @ sub_5D3950
+            f32 get_duration() const {
+                if (nal_inst)
+                    return nal_inst->anim->duration;
+
+                // slot 1
+                if (als_inst)
+                    return ((f32 (__thiscall*)(void*))(*(void***)als_inst)[1])(als_inst);
+
+                return 0.0f;
+            }
+
+            f32 get_inverse_duration() const;
+
+            // the alpha follows the time through the blend
+            void set_normalized_time(f32 time);
 
             void raise_animation_signals(f32 time, f32 prev_time, entity* the_entity);
         };
@@ -46,10 +77,11 @@ namespace treyarch {
         // the controller job's input and output; the flush fills it each frame
         struct advance_job {
             struct pose_record {
-                unk_02c_entry* entry;
-                f32            prev_time;
-                f32            time;
-                u32            unk_0c;
+                layer_anim* anim;
+                f32         prev_time;
+                f32         time;
+                bool        newest;
+                u8          pad_0d[0x03];
             };
 
             pose_record           pose_records[10];
@@ -62,12 +94,14 @@ namespace treyarch {
             u8                    pad_b1[0x03];
         };
 
-        nal::po                   trajectory;   // the pose job writes the combined pose's trajectory here
-        u8                        unk_020;
-        bool                      is_suspended; // mirrors the als's
-        u8                        reserved_022[0x0A];
+        nal::po                   trajectory;      // the pose job writes the combined pose's trajectory here
+        bool                      sync_to_master;
+        bool                      is_suspended;    // mirrors the als's
+        u8                        pad_022[0x02];
+        animation_controller*     master;
+        u32                       synced_layer;    // the layer whose newest anim follows the master's
         container::fixed_vector
-            <unk_02c_entry*, 2>   unk_02c[15];
+            <layer_anim*, 2>      layer_anims[15]; // the newest last
         u8                        reserved_0e0[0x04];
         entity*                   unk_0e4; // the entity the controller animates
         nal::pose                 combined_pose;
@@ -77,12 +111,17 @@ namespace treyarch {
         void*                     skeleton_map;
         u32                       unk_144;
         advance_job               job;
-        u8                        reserved_1fc[0x14];
-        nal::nal_jq_batch_input_t pose_input; // add_pose_jq_batch fills it for the pose job
+        u32                       unk_1fc;
+        engine_recursive_lock     lock;          // the controller job holds it
+        nal::nal_jq_batch_input_t pose_input;    // add_pose_jq_batch fills it for the pose job
+        f32                       unk_2f4;       // a hold: the base layer jumps to unk_2f8 seconds, then waits this long
+        f32                       unk_2f8;
+
+        bool should_follow_master() const;
     };
 
-    // a layer's playing records, newest last
-    using animation_records = container::fixed_vector<animation_controller_state::unk_02c_entry*, 2>;
+    // a layer's playing anims, newest last
+    using animation_records = container::fixed_vector<animation_controller_state::layer_anim*, 2>;
 
     // the transport signals the newest record crossed this frame
     void raise_newest_animation_signals(animation_records* records);
@@ -98,23 +137,38 @@ namespace treyarch {
            false when the arena can't hold the matrices */
         bool add_pose_jq_batch(scratch_arena* arena, bool immediate);
 
-        // the controller job: playback times, envelopes and the pose records
+        // the controller job: playback times, blends, retiring blended-out anims, and the pose records
         static void advance(animation_controller* controller);
+
+        // the layer's newest anim; 1 without one
+        f32  get_anim_duration(u32 layer);
+        f32  get_anim_time(u32 layer);
+        void set_anim_normalized_time(u32 layer, f32 time);
     };
 
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, als_inst,             0x04);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, normalized_time,      0x08);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, prev_normalized_time, 0x0C);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, pose,                 0x10);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, alpha,                0x50);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, speed,                0x64);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, secondary_speed,      0x68);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, unk_06c,              0x6C);
-    ASSERT_OFFSETOF(animation_controller_state::unk_02c_entry, owner,                0x70);
+    namespace references {
+        inline util::memory_reference<animation_controller_state::layer_anim*> layer_anim_free_list { 0x00FFCE58 };
+
+        // shared by the animation pools
+        inline util::memory_reference<engine_recursive_lock> pool_lock { 0x01126D00 };
+    } // references
+
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, als_inst,             0x04);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, normalized_time,      0x08);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, prev_normalized_time, 0x0C);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, pose,                 0x10);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, alpha,                0x50);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, blend_start,          0x54);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, alpha_end,            0x60);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, speed,                0x64);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, secondary_speed,      0x68);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, unk_06c,              0x6C);
+    ASSERT_OFFSETOF(animation_controller_state::layer_anim, owner,                0x70);
 
     ASSERT_SIZEOF  (animation_controller_state::advance_job::pose_record,  0x10);
     ASSERT_OFFSETOF(animation_controller_state::advance_job::pose_record, prev_time, 0x04);
     ASSERT_OFFSETOF(animation_controller_state::advance_job::pose_record, time,      0x08);
+    ASSERT_OFFSETOF(animation_controller_state::advance_job::pose_record, newest,    0x0C);
 
     ASSERT_OFFSETOF(animation_controller_state::advance_job, num_pose_records, 0xA0);
     ASSERT_OFFSETOF(animation_controller_state::advance_job, controller,       0xA4);
@@ -122,9 +176,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state::advance_job, delta_t,          0xAC);
     ASSERT_OFFSETOF(animation_controller_state::advance_job, unk_b0,           0xB0);
 
-    ASSERT_OFFSETOF(animation_controller_state, unk_020,       0x020);
-    ASSERT_OFFSETOF(animation_controller_state, is_suspended,  0x021);
-    ASSERT_OFFSETOF(animation_controller_state, unk_02c,       0x02C);
+    ASSERT_OFFSETOF(animation_controller_state, sync_to_master, 0x020);
+    ASSERT_OFFSETOF(animation_controller_state, is_suspended,   0x021);
+    ASSERT_OFFSETOF(animation_controller_state, master,         0x024);
+    ASSERT_OFFSETOF(animation_controller_state, synced_layer,   0x028);
+    ASSERT_OFFSETOF(animation_controller_state, layer_anims,    0x02C);
     ASSERT_OFFSETOF(animation_controller_state, unk_0e4,       0x0E4);
     ASSERT_OFFSETOF(animation_controller_state, combined_pose, 0x0E8);
     ASSERT_OFFSETOF(animation_controller_state, unk_128,       0x128);
@@ -133,7 +189,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state, skeleton_map,  0x140);
     ASSERT_OFFSETOF(animation_controller_state, unk_144,       0x144);
     ASSERT_OFFSETOF(animation_controller_state, job,           0x148);
+    ASSERT_OFFSETOF(animation_controller_state, lock,          0x200);
     ASSERT_OFFSETOF(animation_controller_state, pose_input,    0x210);
+    ASSERT_OFFSETOF(animation_controller_state, unk_2f4,       0x2F4);
 
     ASSERT_SIZEOF(animation_controller, 0x04);
 } // treyarch

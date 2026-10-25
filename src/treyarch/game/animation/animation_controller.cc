@@ -1,10 +1,14 @@
+#include <cmath>
 #include <cstring>
+#include <limits>
 
 #include "retail.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_pose_jq.hh"
 #include "treyarch/game/wds/entity/entity.hh"
+#include "treyarch/nal/anim.hh"
+#include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/transport_fk.hh"
 #include "treyarch/nal/transport_list.hh"
 
@@ -52,23 +56,23 @@ bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediat
 
     for (u32 index = 0; index < the_state->job.num_pose_records; ++index) {
         animation_controller_state::advance_job::pose_record &record = the_state->job.pose_records[index];
-        animation_controller_state::unk_02c_entry*            entry  = record.entry;
+        animation_controller_state::layer_anim*               anim   = record.anim;
 
         input.t_prev[index] = record.prev_time;
         input.t[index]      = record.time;
-        input.poses[index]  = &entry->pose;
+        input.poses[index]  = &anim->pose;
 
-        if (entry->nal_inst) {
-            input.instances[index] = entry->nal_inst;
+        if (anim->nal_inst) {
+            input.instances[index] = anim->nal_inst;
         } else {
             input.instances[index] = nullptr;
 
             // slot 2
-            ((get_pose_t)(*(void***)entry->als_inst)[2])(entry->als_inst, record.time, record.prev_time, &entry->pose, fk);
+            ((get_pose_t)(*(void***)anim->als_inst)[2])(anim->als_inst, record.time, record.prev_time, &anim->pose, fk);
         }
 
         if (index)
-            input.alphas[index] = entry->alpha;
+            input.alphas[index] = anim->alpha;
     }
 
     if (immediate) {
@@ -88,12 +92,197 @@ bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediat
 
 // sub_5D3950
 void animation_controller::advance(animation_controller* controller) {
-    ((void (__cdecl*)(animation_controller*))retail::sub_5D3950)(controller);
+    if (!controller)
+        return;
+
+    animation_controller_state* the_state = controller->state;
+
+    f32  delta_t = the_state->job.delta_t;
+    bool jumped  = false;
+
+    engine_lock_scope lock(&the_state->lock);
+
+    if (the_state->unk_2f4 > 0.0f) {
+        f32 base_time = the_state->layer_anims[0].size() ? the_state->layer_anims[0].back()->normalized_time : 0.0f;
+
+        if (the_state->unk_2f8 / controller->get_anim_duration(0) <= base_time + 0.000001f) {
+            if (delta_t > the_state->unk_2f4) {
+                delta_t            -= the_state->unk_2f4;
+                the_state->unk_2f4  = 0.0f;
+            } else {
+                the_state->unk_2f4 -= delta_t;
+                delta_t             = 0.0f;
+            }
+        } else {
+            controller->set_anim_normalized_time(0, the_state->unk_2f8 / controller->get_anim_duration(0));
+
+            jumped  = true;
+            delta_t = 0.0f;
+        }
+    }
+
+    for (u32 layer = 0; layer < 15; ++layer) {
+        animation_records &anims = the_state->layer_anims[layer];
+
+        for (u32 index = 0; index < anims.size(); ++index) {
+            animation_controller_state::layer_anim* anim = anims[index];
+
+            bool older = anims.size() > index + 1;
+            f32  prev  = anim->normalized_time;
+            f32  time;
+
+            if (!older && the_state->master && the_state->sync_to_master && layer == the_state->synced_layer) {
+                if (the_state->should_follow_master()) {
+                    time = anim->get_inverse_duration() * the_state->master->get_anim_time(layer);
+
+                    animation_records &master_anims = the_state->master->state->layer_anims[layer];
+
+                    f32 speed = master_anims.size() ? master_anims.back()->speed : 1.0f;
+
+                    if (anims.size()) {
+                        anims.back()->speed = speed;
+
+                        if (speed < 0.0f)
+                            anims.back()->speed = 0.0f;
+                    }
+
+                    f32 secondary_speed = master_anims.size() ? master_anims.back()->secondary_speed : 1.0f;
+
+                    if (anims.size()) {
+                        anims.back()->secondary_speed = secondary_speed;
+
+                        if (secondary_speed < 0.0f)
+                            anims.back()->secondary_speed = 0.0f;
+                    }
+                } else {
+                    time = anim->get_inverse_duration() * (anim->speed * delta_t * anim->secondary_speed) + prev;
+                }
+            } else {
+                time = anim->speed * delta_t * anim->secondary_speed * (1.0f / anim->get_duration()) + prev;
+            }
+
+            // a jump leaves the base layer where it put it
+            if (!jumped || layer || time != prev)
+                anim->set_normalized_time(time);
+
+            // under a newer anim that's finished blending in
+            animation_controller_state::layer_anim* newer = older ? anims[index + 1] : nullptr;
+
+            if (newer && std::fabs(newer->alpha_start - newer->alpha_end) > 0.0001f && newer->normalized_time > newer->blend_end) {
+                delete anim;
+                anims.erase(index);
+
+                --index;
+            } else {
+                animation_controller_state::advance_job::pose_record &record = the_state->job.pose_records[the_state->job.num_pose_records];
+
+                record.anim      = anim;
+                record.prev_time = prev;
+                record.time      = time;
+                record.newest    = index == anims.size() - 1;
+
+                ++the_state->job.num_pose_records;
+            }
+        }
+    }
+}
+
+// sub_5BA290
+f32 animation_controller::get_anim_duration(u32 layer) {
+    if (!state || !state->layer_anims[layer].size())
+        return 1.0f;
+
+    return state->layer_anims[layer].back()->get_duration();
+}
+
+// sub_5BA510
+f32 animation_controller::get_anim_time(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return 0.0f;
+
+    animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();
+
+    return anim->get_duration() * anim->normalized_time;
+}
+
+// sub_5BA1A0
+void animation_controller::set_anim_normalized_time(u32 layer, f32 time) {
+    if (state && !state->master && state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_normalized_time(time);
+}
+
+// sub_5BA030
+bool animation_controller_state::should_follow_master() const {
+    return ((bool (__thiscall*)(const animation_controller_state*))retail::sub_5BA030)(this);
+}
+
+// sub_5B9EF0
+animation_controller_state::layer_anim::~layer_anim() {
+    if (nal_inst)
+        delete nal_inst;
+    else if (als_inst)
+        ((void (__thiscall*)(void*, u32))(*(void***)als_inst)[0])(als_inst, 1); // the deleting destructor
+}
+
+// sub_5DFBD0
+void* animation_controller_state::layer_anim::operator new(std::size_t) noexcept {
+    engine_lock_scope lock(&references::pool_lock.get());
+
+    layer_anim* result = references::layer_anim_free_list.read();
+
+    if (result || (result = (layer_anim*)retail::sub_5CD170()) != nullptr) {
+        references::layer_anim_free_list.write(*(layer_anim**)result);
+    } else {
+        retail::sub_9CC940((char*)"Out of pool memory limit");
+
+        result = nullptr;
+    }
+
+    return result;
+}
+
+// sub_5B9FF0
+// inlined @ sub_5D3950
+void animation_controller_state::layer_anim::operator delete(void* allocation) noexcept {
+    engine_lock_scope lock(&references::pool_lock.get());
+
+    *(layer_anim**)allocation = references::layer_anim_free_list.read();
+
+    references::layer_anim_free_list.write((layer_anim*)allocation);
+}
+
+// sub_5B77E0
+f32 animation_controller_state::layer_anim::get_inverse_duration() const {
+    if (nal_inst)
+        return 1.0f / nal_inst->anim->duration;
+
+    // slot 1
+    if (als_inst)
+        return 1.0f / ((f32 (__thiscall*)(void*))(*(void***)als_inst)[1])(als_inst);
+
+    // retail divides by zero here
+    return std::numeric_limits<f32>::infinity();
+}
+
+// inlined @ sub_5BA1A0
+// inlined @ sub_5D3950
+void animation_controller_state::layer_anim::set_normalized_time(f32 time) {
+    prev_normalized_time = normalized_time;
+    normalized_time      = time;
+
+    if (time <= blend_start || blend_end <= time) {
+        if (time > blend_end)
+            alpha = alpha_end;
+    } else {
+        f32 t = (time - blend_start) / (blend_end - blend_start);
+
+        alpha = (1.0f - t) * alpha_start + alpha_end * t;
+    }
 }
 
 // sub_5B9F60
-void animation_controller_state::unk_02c_entry::raise_animation_signals(f32 time, f32 prev_time, entity* the_entity) {
-    ((void (__thiscall*)(unk_02c_entry*, f32, f32, entity*))retail::sub_5B9F60)(this, time, prev_time, the_entity);
+void animation_controller_state::layer_anim::raise_animation_signals(f32 time, f32 prev_time, entity* the_entity) {
+    ((void (__thiscall*)(layer_anim*, f32, f32, entity*))retail::sub_5B9F60)(this, time, prev_time, the_entity);
 }
 
 // sub_5D3F30
@@ -120,7 +309,7 @@ void treyarch::raise_newest_animation_signals(animation_records* records) {
     if (!records || !records->size())
         return;
 
-    if (animation_controller_state::unk_02c_entry* newest = records->back())
+    if (animation_controller_state::layer_anim* newest = records->back())
         newest->raise_animation_signals(newest->normalized_time, newest->prev_normalized_time, newest->owner->unk_0e4);
 }
 

@@ -377,8 +377,8 @@ void scene_anim::frame_advance(f32 delta_t) {
         bool                  looping       = info.instance->force_looping || (info.instance->anim->flags & nal::anim_flag_looping);
         bool                  include_start = false;
 
-        if (ctrl->state->unk_02c[0].size())
-            include_start = ctrl->state->unk_02c[0].back()->unk_06c;
+        if (ctrl->state->layer_anims[0].size())
+            include_start = ctrl->state->layer_anims[0].back()->unk_06c;
 
         retail::sub_5B9BF0((i32)info.instance->anim, t, t_prev, (i32)ent, include_start, looping); // raise_animation_signals_for_time_span
 

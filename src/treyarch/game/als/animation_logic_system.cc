@@ -794,14 +794,14 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 
     for (i32 index = 0; index < num_active; ++index) {
         state_machine*     machine = active[index];
-        animation_records &records = the_controller->state->unk_02c[machine->get_layer_id()];
+        animation_records &records = the_controller->state->layer_anims[machine->get_layer_id()];
 
         if (records.size())
             records.back()->unk_06c = false;
 
         // nothing new to play: a wrapped loop takes the speed again
         if (!machine->our_ret.did_do_trans && (index != 0 || machine->unk_7bc) && !needs_reinit_anim) {
-            animation_records &playing = the_controller->state->unk_02c[machine->get_layer_id()];
+            animation_records &playing = the_controller->state->layer_anims[machine->get_layer_id()];
 
             i32 loops      = (i32)(playing.size() ? playing.back()->normalized_time : 0.0f);
             i32 prev_loops = (i32)(playing.size() ? playing.back()->prev_normalized_time : 0.0f);
@@ -809,7 +809,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
             if (prev_loops != loops) {
                 f32 speed = machine->get_playback_speed();
 
-                animation_records &speed_records = the_controller->state->unk_02c[machine->get_layer_id()];
+                animation_records &speed_records = the_controller->state->layer_anims[machine->get_layer_id()];
 
                 if (speed_records.size()) {
                     speed_records.back()->speed = speed;
@@ -960,7 +960,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 
         f32 speed = machine->get_playback_speed();
 
-        animation_records &speed_records = the_controller->state->unk_02c[machine->get_layer_id()];
+        animation_records &speed_records = the_controller->state->layer_anims[machine->get_layer_id()];
 
         if (speed_records.size()) {
             speed_records.back()->speed = speed;
@@ -1122,12 +1122,12 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
                 references::queued_pre_event_machines.get()[references::num_queued_pre_event_machines.get()++] = machine;
                 references::queued_pre_event_deltas  .get()[references::num_queued_pre_event_deltas  .get()++] = delta_t;
             }
-        } else if (the_controller->state->unk_02c[machine->get_layer_id()].size()) {
+        } else if (the_controller->state->layer_anims[machine->get_layer_id()].size()) {
             animation_controller_state* controller_state = the_controller->state;
             layer_id                    layer            = machine->get_layer_id();
 
-            animation_records* signal_records = controller_state && controller_state->unk_02c[layer].size() ?
-                &controller_state->unk_02c[layer] :
+            animation_records* signal_records = controller_state && controller_state->layer_anims[layer].size() ?
+                &controller_state->layer_anims[layer] :
                 nullptr;
 
             references::queued_signal_records.get()[references::num_queued_signal_records.get()++] = signal_records;
