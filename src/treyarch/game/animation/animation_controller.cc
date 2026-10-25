@@ -187,6 +187,101 @@ void animation_controller::advance(animation_controller* controller) {
     }
 }
 
+// sub_5DFE20
+void animation_controller::play(const als::nal_als_anim_bridge     &anim,
+                                      f32                           start_time,
+                                      f32                           blend_time,
+                                      u32                           flags,
+                                      bool,
+                                      u32                           layer,
+                                      als::animation_logic_system*  the_als,
+                                      als::state_machine*           the_sm,
+                                      bool                          looping) {
+
+    als::nal_als_instance_bridge instance;
+
+    if (anim.nal_anim) {
+        nal::anim_instance* nal_inst = anim.nal_anim->create_instance(flags, state->skeleton_map, nullptr);
+        nal_inst->force_looping = looping;
+
+        instance.nal_inst = nal_inst;
+        instance.als_inst = nullptr;
+    } else
+        instance = anim.als_anim->create_anim_inst(state->skeleton, flags, state->skeleton_map, (u32)anim.nal_anim, anim.als_anim, the_als, the_sm);
+
+    animation_records &anims = state->layer_anims[layer];
+
+    auto added = new animation_controller_state::layer_anim(state, instance, state->combined_pose.pose_layout);
+
+    added->normalized_time = start_time / added->get_duration();
+
+    // a looping anim starting before its start wraps round
+    if (added->normalized_time < 0.0f) {
+        bool loops = false;
+
+        // slot 3
+        if (instance.nal_inst)
+            loops = instance.nal_inst->force_looping || (instance.nal_inst->anim->flags & nal::anim_flag_looping);
+        else if (instance.als_inst)
+            loops = ((bool (__thiscall*)(void*))(*(void***)instance.als_inst)[3])(instance.als_inst);
+
+        if (loops)
+            added->normalized_time += 1.0f;
+    }
+
+    // the newest fades out as the new one fades in
+    if (anims.size()) {
+        animation_controller_state::layer_anim* newest = anims.back();
+
+        f32 fade_out = newest->get_inverse_duration() * blend_time;
+
+        newest->blend_start = newest->normalized_time;
+        newest->blend_end   = newest->normalized_time + fade_out;
+        newest->alpha_start = 1.0f;
+        newest->alpha_end   = 0.0f;
+
+        // slot 5
+        if (newest->als_inst)
+            ((void (__thiscall*)(void*))(*(void***)newest->als_inst)[5])(newest->als_inst);
+
+        f32 fade_in = added->get_inverse_duration() * blend_time;
+
+        added->blend_start = added->normalized_time;
+        added->blend_end   = added->normalized_time + fade_in;
+        added->alpha_start = 0.0f;
+        added->alpha_end   = 1.0f;
+    }
+
+    if (anims.size() == 2) {
+        delete anims[0];
+        anims.erase(0);
+    }
+
+    anims.push_back(added);
+}
+
+// sub_5BA3B0
+void animation_controller::kill_layer_anims(u32 layer) {
+    animation_records &anims = state->layer_anims[layer];
+
+    for (u32 index = 0; index < anims.size(); ++index)
+        delete anims[index];
+
+    anims.clear();
+}
+
+// sub_5D44E0
+void animation_controller::reset_speeds() {
+    for (animation_records &anims : state->layer_anims) {
+        if (anims.size()) {
+            anims.back()->speed = 1.0f;
+
+            if (anims.size())
+                anims.back()->secondary_speed = 1.0f;
+        }
+    }
+}
+
 // sub_5BA290
 f32 animation_controller::get_anim_duration(u32 layer) {
     if (!state || !state->layer_anims[layer].size())
@@ -214,6 +309,28 @@ void animation_controller::set_anim_normalized_time(u32 layer, f32 time) {
 // sub_5BA030
 bool animation_controller_state::should_follow_master() const {
     return ((bool (__thiscall*)(const animation_controller_state*))retail::sub_5BA030)(this);
+}
+
+// sub_5D2950
+animation_controller_state::layer_anim::layer_anim(animation_controller_state*         the_owner,
+                                                   const als::nal_als_instance_bridge &instance,
+                                                   nal::pose_layout*                   layout) : nal_inst(nullptr),
+                                                                                                 als_inst(nullptr),
+                                                                                                 normalized_time(0.0f),
+                                                                                                 prev_normalized_time(0.0f),
+                                                                                                 pose(layout, nullptr),
+                                                                                                 alpha(1.0f),
+                                                                                                 blend_start(0.0f),
+                                                                                                 blend_end(1.0f),
+                                                                                                 alpha_start(1.0f),
+                                                                                                 alpha_end(1.0f),
+                                                                                                 speed(1.0f),
+                                                                                                 secondary_speed(1.0f),
+                                                                                                 unk_06c(true),
+                                                                                                 owner(the_owner) {
+
+    nal_inst = instance.nal_inst;
+    als_inst = instance.als_inst;
 }
 
 // sub_5B9EF0

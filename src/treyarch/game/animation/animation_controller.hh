@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/game/als/meta_anim.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/shared/container/fixed_vector.hh"
@@ -11,7 +12,10 @@
 
 namespace treyarch {
     namespace nal {
+        struct anim;
         struct anim_instance;
+        struct pose_layout;
+        struct skeleton_map;
         struct transport_list;
     }
 
@@ -46,6 +50,7 @@ namespace treyarch {
             u8                          pad_06d[0x03];
             animation_controller_state* owner;
 
+            layer_anim(animation_controller_state* the_owner, const als::nal_als_instance_bridge &instance, nal::pose_layout* layout);
             ~layer_anim();
 
             // from a pool
@@ -90,7 +95,7 @@ namespace treyarch {
             bool                  skip_matrices;
             u8                    pad_a9[0x03];
             f32                   delta_t;
-            bool                  unk_b0;           // copied to skip_matrices when the controller is queued
+            bool                  wants_skip_matrices; // copied to skip_matrices when the controller is queued
             u8                    pad_b1[0x03];
         };
 
@@ -108,7 +113,7 @@ namespace treyarch {
         animation_controller*     unk_128;    // set with unk_144 (sub_5ADB20); the jobs skip a controller that has it
         vc8::vector<void*>        unk_12c;    // an als with something in here advances with the high priority ones
         nal::transport_list*      skeleton;     // the actor's m_skeleton
-        void*                     skeleton_map;
+        nal::skeleton_map*        skeleton_map;
         u32                       unk_144;
         advance_job               job;
         u32                       unk_1fc;
@@ -139,6 +144,22 @@ namespace treyarch {
 
         // the controller job: playback times, blends, retiring blended-out anims, and the pose records
         static void advance(animation_controller* controller);
+
+        // the anim becomes the layer's newest, cross-fading from the one before over blend_time; a layer keeps two
+        void play(const als::nal_als_anim_bridge     &anim,
+                        f32                           start_time,
+                        f32                           blend_time,
+                        u32                           flags,
+                        bool                          unk,
+                        u32                           layer,
+                        als::animation_logic_system*  the_als,
+                        als::state_machine*           the_sm,
+                        bool                          looping);
+
+        void kill_layer_anims(u32 layer);
+
+        // every layer's newest anim back to unit speeds
+        void reset_speeds();
 
         // the layer's newest anim; 1 without one
         f32  get_anim_duration(u32 layer);
@@ -174,7 +195,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(animation_controller_state::advance_job, controller,       0xA4);
     ASSERT_OFFSETOF(animation_controller_state::advance_job, skip_matrices,    0xA8);
     ASSERT_OFFSETOF(animation_controller_state::advance_job, delta_t,          0xAC);
-    ASSERT_OFFSETOF(animation_controller_state::advance_job, unk_b0,           0xB0);
+    ASSERT_OFFSETOF(animation_controller_state::advance_job, wants_skip_matrices, 0xB0);
 
     ASSERT_OFFSETOF(animation_controller_state, sync_to_master, 0x020);
     ASSERT_OFFSETOF(animation_controller_state, is_suspended,   0x021);
