@@ -21,7 +21,6 @@ namespace treyarch {
     class ai_core;
     class ai_state_machine;
     class core_ai_resource;
-    class loco_inode;
 
     enum e_ai_core_flags : u32 {
         ai_core_flag_forcing_high_priority = 0x00000001,

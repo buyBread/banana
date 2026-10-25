@@ -114,6 +114,16 @@ mash::mash_virtual_base* param_block::get_pb_class(string_hash parameter) const 
     return ((mash::mash_virtual_base* (__thiscall*)(const param_block*, string_hash))retail::sub_435150)(this, parameter);
 }
 
+// sub_435280
+f32 param_block::get_optional_pb_float(string_hash parameter, f32 default_value, bool* exists) const {
+    return ((f32 (__thiscall*)(const param_block*, string_hash, f32, bool*))retail::sub_435280)(this, parameter, default_value, exists);
+}
+
+// sub_435340
+i32 param_block::get_optional_pb_int(string_hash parameter, i32 default_value, bool* exists) const {
+    return ((i32 (__thiscall*)(const param_block*, string_hash, i32, bool*))retail::sub_435340)(this, parameter, default_value, exists);
+}
+
 // sub_4354C0
 vector3d param_block::get_optional_pb_vector3d(string_hash parameter, const vector3d &default_value, bool* exists) const {
     using get_optional_pb_vector3d_t = vector3d* (__thiscall*)(const param_block*, vector3d*, string_hash, const vector3d*, bool*);

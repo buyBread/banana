@@ -1,6 +1,8 @@
 #pragma once
 
 #include "treyarch/game/wds/ai/param_block.hh"
+#include "treyarch/shared/hash/algo.hh"
+#include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
 #include "treyarch/shared/math/po.hh"
 #include "util/macros/sanity_assert.hh"
@@ -74,6 +76,30 @@ namespace treyarch {
         u32   unk_034;
     };
 
+    class loco_inode : public info_node {
+
+    public:
+        u8   reserved_030[0x5C];
+        bool unk_08c;           // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
+        u8   reserved_08d[0x23];
+    };
+
+    // flight_mocomp flies the actor through it; swift_flight_layer_inode derives from it
+    class flight_layer_inode : public loco_inode {
+
+    public:
+        u8       reserved_0b0[0x04];
+        vector3d unk_0b4;            // with unk_115 set, flight_mocomp moves by it times dt
+        u8       reserved_0c0[0x34];
+        vector3d unk_0f4;            // otherwise toward it, at the inode's speeds
+        u8       reserved_100[0x15];
+        bool     unk_115;
+        u8       reserved_116[0x3A];
+    };
+
+    inline const string_hash flight_layer_inode_key       = string_hash(hash::djb2("flight_layer_inode"));
+    inline const string_hash swift_flight_layer_inode_key = string_hash(hash::djb2("swift_flight_layer_inode"));
+
     // the hero's; wall_po is the wall's facing (z) and up (y) that wallsprint_mocomp runs along
     class wall_sprint_inode : public info_node {
 
@@ -96,6 +122,14 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (als_inode,         0x38);
     ASSERT_OFFSETOF(als_inode, my_als, 0x30);
+
+    ASSERT_SIZEOF  (loco_inode,          0xB0);
+    ASSERT_OFFSETOF(loco_inode, unk_08c, 0x8C);
+
+    ASSERT_SIZEOF  (flight_layer_inode,          0x150);
+    ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);
+    ASSERT_OFFSETOF(flight_layer_inode, unk_0f4, 0xF4);
+    ASSERT_OFFSETOF(flight_layer_inode, unk_115, 0x115);
 
     ASSERT_SIZEOF  (wall_sprint_inode,          0x160);
     ASSERT_OFFSETOF(wall_sprint_inode, unk_058, 0x58);
