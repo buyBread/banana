@@ -46,6 +46,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::use_anim_only>();
         mash::mash_virtual_base::register_class<als::velocity_orientation>();
         mash::mash_virtual_base::register_class<als::vertical_orientation>();
+        mash::mash_virtual_base::register_class<als::wallsprint_mocomp>();
         mash::mash_virtual_base::register_class<als::bounded_number_rule>();
         mash::mash_virtual_base::register_class<als::constant_number_compare_rule>();
         mash::mash_virtual_base::register_class<als::hash_equal_rule>();
