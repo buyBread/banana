@@ -85,8 +85,18 @@ als::animation_logic_system::~animation_logic_system() {
         delete unk_a68;
 }
 
-// sub_5BB2F0
+// sub_5D4C70
 als::state_machine_interface* als::animation_logic_system::get_als_layer(layer_id the_layer) {
+    return get_als_layer_internal(the_layer);
+}
+
+// sub_5D4C80
+bool als::animation_logic_system::has_als_layer(layer_id the_layer) const {
+    return has_als_layer_internal(the_layer);
+}
+
+// sub_5BB2F0
+als::state_machine* als::animation_logic_system::get_als_layer_internal(layer_id the_layer) {
     if (the_layer == the_base_sm.get_layer_id())
         return &the_base_sm;
 
@@ -99,7 +109,7 @@ als::state_machine_interface* als::animation_logic_system::get_als_layer(layer_i
 }
 
 // sub_5BB370
-bool als::animation_logic_system::has_als_layer(layer_id the_layer) const {
+bool als::animation_logic_system::has_als_layer_internal(layer_id the_layer) const {
     if (the_layer == the_base_sm.get_layer_id())
         return true;
 
@@ -109,6 +119,31 @@ bool als::animation_logic_system::has_als_layer(layer_id the_layer) const {
     }
 
     return false;
+}
+
+// sub_5BB280
+bool als::animation_logic_system::is_als_interruptable() const {
+    // -1 stands for the base machine, but the unsigned compare ends the walk before it starts
+    for (u32 index = (u32)-1; index < the_layers.size(); ++index) {
+        const state_machine* machine = index == (u32)-1 ? (const state_machine*)&the_base_sm : the_layers[index];
+
+        if (machine->is_active() && (machine->curr_state->flags & state::super_uninterruptable))
+            return false;
+    }
+
+    return true;
+}
+
+// sub_5E2300
+// inlined @ sub_5E8FE0
+void als::animation_logic_system::end_layer(layer_id the_layer) {
+    state_machine* machine = get_als_layer_internal(the_layer);
+
+    if (machine && machine->is_active()) {
+        machine->end_layer();
+
+        retail::sub_5BA3B0((i32*)the_controller, the_layer); // animation_controller::kill_layer_anims
+    }
 }
 
 // sub_5BAFB0

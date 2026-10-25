@@ -5,6 +5,7 @@
 #include "treyarch/game/als/animation_event.hh"
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/param.hh"
+#include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/string.hh"
 #include "treyarch/shared/mash/vector.hh"
@@ -15,6 +16,11 @@
 
 namespace treyarch { namespace als {
     class animation_logic_system;
+
+    // what a state's param block names for its script
+    inline const string_hash script_exe_id          = string_hash(hash::djb2("script_exe"));
+    inline const string_hash script_obj_id          = string_hash(hash::djb2("script_obj"));
+    inline const string_hash maintain_script_obj_id = string_hash(hash::djb2("maintain_script_obj"));
 
     // a layer's live state; the states and categories it moves between are shared
     class state_machine : public state_machine_interface {
@@ -56,8 +62,10 @@ namespace treyarch { namespace als {
         parameter_list                 parameter_buffers[2]; // the request and pending pointers swap between these
         const state*                   prev_state;
         const category*                prev_category;
-        mash::vector<animation_event>* curr_events;
-        mash::vector<animation_event>* curr_hit_pause_events;
+        const mash::vector
+            <animation_event>*         curr_events;
+        const mash::vector
+            <animation_event>*         curr_hit_pause_events;
         animation_blends_list*         curr_blends;
         resource_key                   unk_794;
         u32                            unk_79c;
@@ -162,11 +170,24 @@ namespace treyarch { namespace als {
         virtual f32          get_playback_speed() const;
         virtual f32          get_start_time() const;
 
+        void process_requests(animation_logic_system* the_als);
+        void process_post_requests(animation_logic_system* the_als);
+        void end_layer();
+
+        const category* get_curr_category();
+        const state*    find_state(state_id the_id, bool error_on_not_found) const;
         const category* find_category(category_id the_id, bool error_on_not_found) const;
-        void            kill_als_state_script(animation_logic_system* the_als, bool unk);
+
+        void start_als_script(animation_logic_system* the_als, const char* script_name, string_hash function_name, bool maintain);
+        void kill_als_state_script(animation_logic_system* the_als, bool unk);
 
     protected:
         void reset(state_machine_shared* shared_machine);
+
+        void do_implicit_trans(animation_logic_system* the_als);
+        void do_explicit_trans(animation_logic_system* the_als);
+        void do_force_state_trans(animation_logic_system* the_als);
+        void change_state(animation_logic_system* the_als, const state* new_state, bool force_implicit);
     };
 
     class base_state_machine : public state_machine {

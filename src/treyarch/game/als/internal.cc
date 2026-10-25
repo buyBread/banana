@@ -1,6 +1,26 @@
+#include "retail.hh"
 #include "treyarch/game/als/internal.hh"
+#include "treyarch/game/wds/ai/ai_core.hh"
+#include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/shared/hash/algo.hh"
 
 using namespace treyarch;
+
+// sub_5BB4F0
+void als::request_data::correct_category_name(actor* the_actor) {
+    static const string_hash default_ai_loco_category = string_hash(hash::djb2("default_ai_loco_category"));
+
+    // the shared default stands in for whatever locomotion category the actor's ai uses
+    if (!is_trans_to_category || state_name != default_ai_loco_category)
+        return;
+
+    ai_core* core = the_actor->get_ai_core();
+
+    if (core && core->my_loco_inode) {
+        string_hash category;
+        state_name = *((string_hash* (__thiscall*)(loco_inode*, string_hash*))retail::sub_44EDB0)(core->my_loco_inode, &category);
+    }
+}
 
 string_hash als::state::my_type_key                      { 0xCE728D15 }; // "als::state"
 string_hash als::category::my_type_key                   { 0x8F24B512 }; // "als::category"

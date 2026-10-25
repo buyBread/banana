@@ -23,9 +23,11 @@ namespace treyarch { namespace als {
         bool     is_trans_to_category;
         bool     ignore_no_transition;
         bool     unk_03;
-        bool     unk_04;
+        bool     unk_04; // end the layer instead
         u8       pad_05[0x03];
         state_id state_name; // a category's name when is_trans_to_category
+
+        void correct_category_name(actor* the_actor);
     };
 
     struct state_unk_44 {
@@ -101,7 +103,8 @@ namespace treyarch { namespace als {
             cloned_anim              = 0x00400000,
             use_prev_anim_start_time = 0x00800000,
             non_animated             = 0x01000000,
-            suspended                = 0x02000000
+            suspended                = 0x02000000,
+            unk_08000000             = 0x08000000  // change_state keeps the previous state's events and blends
         };
 
         u8                     pad_004[0x04];
@@ -187,6 +190,11 @@ namespace treyarch { namespace als {
 
         mash::virtual_types_key get_virtual_type_key() const override;
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+
+        // sub_5FD100
+        category_id get_cat_id() const {
+            return name;
+        }
 
         virtual request_data do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const = 0;
         virtual request_data do_explicit_trans(animation_logic_system* the_als,

@@ -104,6 +104,11 @@ namespace treyarch { namespace als {
 
         virtual void unk_025(void* unk);
         virtual void change_mocomp(const state* curr_state, layer_id layer);
+
+        state_machine* get_als_layer_internal(layer_id the_layer);
+        bool           has_als_layer_internal(layer_id the_layer) const;
+        bool           is_als_interruptable() const;
+        void           end_layer(layer_id the_layer);
     };
 
     // what an entity's resource asks for; post-load setup turns it into the actor's als
