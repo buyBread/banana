@@ -1,6 +1,7 @@
 #pragma once
 
 #include "treyarch/game/wds/ai/param_block.hh"
+#include "treyarch/shared/arch_base_vhandle.hh"
 #include "treyarch/shared/hash/algo.hh"
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/mash/virtual_base.hh"
@@ -100,6 +101,19 @@ namespace treyarch {
     inline const string_hash flight_layer_inode_key       = string_hash(hash::djb2("flight_layer_inode"));
     inline const string_hash swift_flight_layer_inode_key = string_hash(hash::djb2("swift_flight_layer_inode"));
 
+    class swift_stationary_layer_inode : public loco_inode {
+
+    public:
+        u8 reserved_0b0[0x08];
+    };
+
+    class teleporting_layer_inode : public swift_stationary_layer_inode {
+
+    public:
+        arch_base_vhandle unk_0b8;           // als::combat_pole_swing_attach swings the ai round it
+        u8                reserved_0bc[0x1C];
+    };
+
     // the hero's; wall_po is the wall's facing (z) and up (y) that wallsprint_mocomp runs along
     class wall_sprint_inode : public info_node {
 
@@ -130,6 +144,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0f4, 0xF4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_115, 0x115);
+
+    ASSERT_SIZEOF(swift_stationary_layer_inode, 0xB8);
+
+    ASSERT_SIZEOF  (teleporting_layer_inode,          0xD8);
+    ASSERT_OFFSETOF(teleporting_layer_inode, unk_0b8, 0xB8);
 
     ASSERT_SIZEOF  (wall_sprint_inode,          0x160);
     ASSERT_OFFSETOF(wall_sprint_inode, unk_058, 0x58);

@@ -25,9 +25,12 @@ namespace treyarch {
         player_interface_advance_method frame_advance;          // sub_9978B0
         player_interface_advance_method frame_advance_disabled; // sub_992120; clears input/swing state, ignores delta_t
         player_interface_advance_method unk_094;                // nullsub in player_interface; spiderman_rvb_player_interface overrides it
+        void*                           reserved_slots_095[292];
+        void*                           (__thiscall* unk_387)(player_interface* self); // rvb: the pole it swings on (+0x8CC); null in player_interface
+        bool                            (__thiscall* unk_388)(player_interface* self); // rvb: that pole leans more than 45 degrees off vertical
     };
 
-    ASSERT_SIZEOF(player_interface_vtable, 95 * 4);
+    ASSERT_SIZEOF(player_interface_vtable, 389 * 4);
 
     class player_interface : public actor_interface {
 
@@ -70,6 +73,14 @@ namespace treyarch {
 
         void unk_094(f32 delta_t) {
             get_vtable()->unk_094(this, delta_t);
+        }
+
+        void* unk_387() {
+            return get_vtable()->unk_387(this);
+        }
+
+        bool unk_388() {
+            return get_vtable()->unk_388(this);
         }
 
         player_reflexes* get_reflexes() {
