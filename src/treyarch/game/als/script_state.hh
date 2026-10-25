@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "treyarch/game/als/als.hh"
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/rules.hh"
@@ -12,6 +14,13 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace als {
+    // what a trans group is asked to check
+    enum e_trans_type : u32 {
+        trans_implicit = 0,
+        trans_explicit = 1,
+        trans_layer    = 2  // unsupported, like any other type
+    };
+
     // passes when every rule passes
     class basic_rule_list {
 
@@ -20,6 +29,9 @@ namespace treyarch { namespace als {
         u32                    num_rules;
 
         ~basic_rule_list();
+
+        // an empty list passes
+        bool check(const rule_context &context) const;
 
         void construct_mashed_class() {}
         void destruct_mashed_class() {}
@@ -37,7 +49,10 @@ namespace treyarch { namespace als {
     public:
         enum e_action : u16 {
             transition          = 0,
-            transition_category = 1
+            transition_category = 1,
+            defer               = 2, // no transition, the category gets its turn
+            fail                = 3,
+            end_layer           = 4
         };
 
         struct destination {
@@ -48,6 +63,12 @@ namespace treyarch { namespace als {
         destination* destinations;
         u16          num_destinations;
         e_action     the_action;
+
+        state_id get_dest() const;
+        void     process_action(request_data &result) const;
+
+        // weighted by the positive weights from first on; -1 when there are none
+        static i32 pick_destination(const destination* destinations, i32 num_destinations, i32 first);
 
         void unmash(mash::mash_info_struct* mash_info,
                     void*                   containing_class_ptr,
@@ -62,7 +83,9 @@ namespace treyarch { namespace als {
 
     public:
         u32 trans_group; // index into the state machine's trans_group_list
-        u32 order;       // checked in ascending order together with the owner's implicit or explicit transitions
+        i32 order;       // checked in ascending order together with the owner's implicit or explicit transitions
+
+        bool check_transition(request_data &result, e_trans_type type, rule_context context, category_id desired_category) const;
     };
 
     // takes the first action whose rules pass, once its own rules pass
@@ -71,6 +94,8 @@ namespace treyarch { namespace als {
     public:
         mash::vector
             <basic_rule_data> actions;
+
+        const basic_rule_data* get_passing_action(const rule_context &context) const;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -82,7 +107,7 @@ namespace treyarch { namespace als {
     class implicit_trans : public trans_rule {
 
     public:
-        u32 order;
+        i32 order;
     };
 
     // only considered when the requested category is this one
@@ -90,7 +115,7 @@ namespace treyarch { namespace als {
 
     public:
         category_id category;
-        u32         order;
+        i32         order;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -106,6 +131,9 @@ namespace treyarch { namespace als {
         u32  from;
         bool from_is_category;
         u8   pad_021[0x03];
+
+        // the state being left must match before the rules run
+        bool check_incoming(const rule_context &context) const;
     };
 
     class scripted_state : public state {
@@ -262,8 +290,57 @@ namespace treyarch { namespace als {
 
         void placeholder_function() override;
 
+        bool check_transition(request_data &result, e_trans_type type, rule_context context, category_id desired_category) const;
+
         static string_hash my_type_key;
     };
+
+    // the owner's transitions and trans group refs, merged by ascending order; the first to pass makes the request
+    // inlined @ sub_5BD030
+    // inlined @ sub_5D6E90
+    // inlined @ sub_5D7090
+    // inlined @ sub_5D75D0
+    // inlined @ sub_5D7780
+    template<typename T>
+    bool check_transitions(const mash::vector<T>               &transitions,
+                           const mash::vector<trans_group_ref> &refs,
+                                 request_data                  &result,
+                                 e_trans_type                   type,
+                           const rule_context                  &context,
+                                 category_id                    desired_category) {
+
+        u32 transition_index = 0;
+        u32 ref_index        = 0;
+
+        for (u32 checked = 0; checked < transitions.size + refs.size; ++checked) {
+            const T*               transition = transition_index < transitions.size ? transitions[transition_index] : nullptr;
+            const trans_group_ref* ref        = ref_index        < refs.size        ? refs[ref_index]               : nullptr;
+
+            if (transition && (!ref || transition->order < ref->order)) {
+                ++transition_index;
+
+                if constexpr (std::is_same_v<T, explicit_trans>) {
+                    if (transition->category != desired_category)
+                        continue;
+                }
+
+                if (!transition->check(context))
+                    continue;
+
+                if (const basic_rule_data* action = transition->get_passing_action(context)) {
+                    action->process_action(result);
+                    return true;
+                }
+            } else {
+                ++ref_index;
+
+                if (ref->check_transition(result, type, context, desired_category))
+                    return true;
+            }
+        }
+
+        return false;
+    }
 
     ASSERT_SIZEOF  (basic_rule_list,            0x08);
     ASSERT_OFFSETOF(basic_rule_list, rules,     0x00);

@@ -1,5 +1,8 @@
+#include <cstdlib>
+
 #include "retail.hh"
 #include "treyarch/game/als/script_state.hh"
+#include "treyarch/game/als/state_machine.hh"
 #include "treyarch/shared/memory/heap.hh"
 
 using namespace treyarch;
@@ -287,6 +290,104 @@ void als::basic_rule_list::custom_unmash(mash::mash_info_struct* mash_info,
     }
 }
 
+// sub_5B01E0
+// inlined @ sub_5BCFD0
+// inlined @ sub_5D6E90
+// inlined @ sub_5D7090
+// inlined @ sub_5D75D0
+// inlined @ sub_5D7780
+bool als::basic_rule_list::check(const rule_context &context) const {
+    for (u32 index = 0; index < num_rules; ++index) {
+        if (!rules[index]->evaluate(context))
+            return false;
+    }
+
+    return true;
+}
+
+// sub_5BCED0
+als::state_id als::basic_rule_data::get_dest() const {
+    if (num_destinations == 1)
+        return destinations[0].name;
+
+    i32 index = pick_destination(destinations, num_destinations, 0);
+
+    if (index < 0)
+        index = 0;
+
+    return destinations[index].name;
+}
+
+// sub_5BCF20
+void als::basic_rule_data::process_action(request_data &result) const {
+    switch (the_action) {
+        case transition:
+            result.did_transition_occur = true;
+            result.is_trans_to_category = false;
+            result.state_name           = get_dest();
+            result.unk_04               = false;
+            break;
+
+        case transition_category:
+            result.did_transition_occur = true;
+            result.is_trans_to_category = true;
+            result.state_name           = get_dest();
+            result.unk_04               = false;
+            break;
+
+        case defer:
+            result.did_transition_occur = false;
+            result.ignore_no_transition = true;
+            result.unk_04               = false;
+            break;
+
+        case fail:
+            result.did_transition_occur = false;
+            result.ignore_no_transition = false;
+            result.unk_04               = false;
+            break;
+
+        case end_layer:
+            result.did_transition_occur = true;
+            result.is_trans_to_category = false;
+            result.unk_04               = true;
+            break;
+
+        default:
+            break;
+    }
+}
+
+// sub_5B70D0
+i32 als::basic_rule_data::pick_destination(const destination* destinations, i32 num_destinations, i32 first) {
+    if (first >= num_destinations || first < 0 || num_destinations <= 0)
+        return -1;
+
+    f32 total = 0.0f;
+
+    for (i32 index = first; index < num_destinations; ++index) {
+        if (destinations[index].weight > 0.0f)
+            total += destinations[index].weight;
+    }
+
+    if (total <= 0.0f)
+        return -1;
+
+    f32 pick = (f32)std::rand() * (1.0f / 32767.0f) * total;
+    f32 sum  = 0.0f;
+
+    for (i32 index = first; index < num_destinations; ++index) {
+        if (destinations[index].weight > 0.0f) {
+            sum += destinations[index].weight;
+
+            if (sum >= pick)
+                return index;
+        }
+    }
+
+    return -1;
+}
+
 // inlined @ sub_5F47B0
 void als::basic_rule_data::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
     basic_rule_list::unmash(mash_info, containing_class_ptr, buffer);
@@ -321,6 +422,48 @@ void als::trans_rule::unmash(mash::mash_info_struct* mash_info, void* containing
     basic_rule_list::unmash(mash_info, containing_class_ptr, buffer);
 
     actions.unmash(mash_info, this, buffer);
+}
+
+// sub_5BCFD0
+const als::basic_rule_data* als::trans_rule::get_passing_action(const rule_context &context) const {
+    for (u32 index = 0; index < actions.size; ++index) {
+        if (actions[index]->check(context))
+            return actions[index];
+    }
+
+    return nullptr;
+}
+
+// sub_5D6E30
+// inlined @ sub_5D6E90
+// inlined @ sub_5D7090
+// inlined @ sub_5D75D0
+// inlined @ sub_5D7780
+bool als::trans_group_ref::check_transition(request_data &result, e_trans_type type, rule_context context, category_id desired_category) const {
+    if (!check(context))
+        return false;
+
+    auto group = (const scripted_trans_group*)context.the_sm->shared_portion->trans_group_list[trans_group];
+
+    return group->check_transition(result, type, context, desired_category);
+}
+
+// sub_5B0270
+bool als::incoming_trans::check_incoming(const rule_context &context) const {
+    if (from) {
+        if (const state* leaving = context.the_sm->curr_state) {
+            string_hash from_name;
+            from_name.initialize(mash::ALLOCATED, nullptr, from);
+
+            if (from_is_category) {
+                if (from_name != leaving->get_cat_id())
+                    return false;
+            } else if (from_name != leaving->get_state_id())
+                return false;
+        }
+    }
+
+    return check(context);
 }
 
 // inlined @ sub_5F71E0
@@ -405,10 +548,15 @@ mash::virtual_types_key als::scripted_state::get_mocomp_type() const {
 
 // sub_5D6E90
 als::request_data als::scripted_state::do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const {
-    using do_implicit_trans_t = request_data* (__thiscall*)(const scripted_state*, request_data*, animation_logic_system*, state_machine*);
-
     request_data result;
-    ((do_implicit_trans_t)retail::sub_5D6E90)(this, &result, the_als, the_sm);
+    result.clear();
+
+    rule_context context = { the_als, the_sm };
+
+    check_transitions(implicit_trans_list, trans_group_ref_list, result, trans_implicit, context, category_id());
+
+    if (!result.did_transition_occur)
+        result.ignore_no_transition = !(flags & fail_as_default);
 
     return result;
 }
@@ -418,10 +566,15 @@ als::request_data als::scripted_state::do_explicit_trans(animation_logic_system*
                                                          state_machine*          the_sm,
                                                          category_id             desired_category) const {
 
-    using do_explicit_trans_t = request_data* (__thiscall*)(const scripted_state*, request_data*, animation_logic_system*, state_machine*, category_id);
-
     request_data result;
-    ((do_explicit_trans_t)retail::sub_5D7090)(this, &result, the_als, the_sm, desired_category);
+    result.clear();
+
+    rule_context context = { the_als, the_sm };
+
+    check_transitions(explicit_trans_list, trans_group_ref_list, result, trans_explicit, context, desired_category);
+
+    if (!result.did_transition_occur)
+        result.ignore_no_transition = !(flags & fail_as_default);
 
     return result;
 }
@@ -530,10 +683,12 @@ i32 als::scripted_category::get_mash_sizeof() const {
 
 // sub_5D75D0
 als::request_data als::scripted_category::do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const {
-    using do_implicit_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*);
-
     request_data result;
-    ((do_implicit_trans_t)retail::sub_5D75D0)(this, &result, the_als, the_sm);
+    result.clear();
+
+    rule_context context = { the_als, the_sm };
+
+    check_transitions(implicit_trans_list, trans_group_ref_list, result, trans_implicit, context, category_id());
 
     return result;
 }
@@ -543,10 +698,12 @@ als::request_data als::scripted_category::do_explicit_trans(animation_logic_syst
                                                             state_machine*          the_sm,
                                                             category_id             desired_category) const {
 
-    using do_explicit_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*, category_id);
-
     request_data result;
-    ((do_explicit_trans_t)retail::sub_5D7780)(this, &result, the_als, the_sm, desired_category);
+    result.clear();
+
+    rule_context context = { the_als, the_sm };
+
+    check_transitions(explicit_trans_list, trans_group_ref_list, result, trans_explicit, context, desired_category);
 
     return result;
 }
@@ -554,12 +711,24 @@ als::request_data als::scripted_category::do_explicit_trans(animation_logic_syst
 // sub_5BD200
 als::request_data als::scripted_category::do_incoming_trans(animation_logic_system* the_als,
                                                             state_machine*          the_sm,
-                                                            bool                    unk) const {
-
-    using do_incoming_trans_t = request_data* (__thiscall*)(const scripted_category*, request_data*, animation_logic_system*, state_machine*, bool);
+                                                            bool) const {
 
     request_data result;
-    ((do_incoming_trans_t)retail::sub_5BD200)(this, &result, the_als, the_sm, unk);
+    result.clear();
+
+    rule_context context = { the_als, the_sm };
+
+    for (u32 index = 0; index < incoming_trans_list.size; ++index) {
+        const incoming_trans* incoming = incoming_trans_list[index];
+
+        if (!incoming->check_incoming(context))
+            continue;
+
+        if (const basic_rule_data* action = incoming->get_passing_action(context)) {
+            action->process_action(result);
+            break;
+        }
+    }
 
     return result;
 }
@@ -611,3 +780,14 @@ i32 als::scripted_trans_group::get_mash_sizeof() const {
 
 // sub_5B4A70
 void als::scripted_trans_group::placeholder_function() {}
+
+// sub_5BD030
+bool als::scripted_trans_group::check_transition(request_data &result, e_trans_type type, rule_context context, category_id desired_category) const {
+    if (type == trans_implicit)
+        return check_transitions(implicit_trans_list, trans_group_ref_list, result, trans_implicit, context, category_id());
+
+    if (type == trans_explicit)
+        return check_transitions(explicit_trans_list, trans_group_ref_list, result, trans_explicit, context, desired_category);
+
+    return false;
+}

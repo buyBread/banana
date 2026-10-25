@@ -27,6 +27,20 @@ namespace treyarch { namespace als {
         u8       pad_05[0x03];
         state_id state_name; // a category's name when is_trans_to_category
 
+        // inlined @ sub_5BD200
+        // inlined @ sub_5D6E90
+        // inlined @ sub_5D7090
+        // inlined @ sub_5D75D0
+        // inlined @ sub_5D7780
+        void clear() {
+            did_transition_occur = false;
+            is_trans_to_category = false;
+            ignore_no_transition = false;
+            unk_03               = false;
+            unk_04               = false;
+            state_name           = state_id();
+        }
+
         void correct_category_name(actor* the_actor);
     };
 

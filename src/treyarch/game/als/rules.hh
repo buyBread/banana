@@ -7,6 +7,15 @@
 #include "util/types.hh"
 
 namespace treyarch { namespace als {
+    class animation_logic_system;
+    class state_machine;
+
+    // what rules read their parameters from
+    struct rule_context {
+        animation_logic_system* the_als;
+        state_machine*          the_sm;
+    };
+
     enum class e_comparison : u32 {
         equal = 0,
         not_equal,
@@ -102,6 +111,9 @@ namespace treyarch { namespace als {
 
     public:
         param_id param;
+
+        // retail passes this on the stack, so every override keeps the convention
+        virtual bool __stdcall evaluate(const rule_context &context) const;
     };
 
     // ==== constant compares ==== //
