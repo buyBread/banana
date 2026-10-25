@@ -16,6 +16,7 @@ namespace treyarch { namespace references {
     inline util::memory_reference<vector3d> unk_00f4d1ec { 0x00F4D1EC };
     inline util::memory_reference<vector3d> unk_00f4d1f8 { 0x00F4D1F8 };
     inline util::memory_reference<vector3d> unk_00e6808c { 0x00E6808C };
+    inline util::memory_reference<vector3d> unk_00e68098 { 0x00E68098 };
 
     // (0, 0, 0); read by box triggers and other entity setup
     inline util::memory_reference<vector3d> unk_0102ff40 { 0x0102FF40 };

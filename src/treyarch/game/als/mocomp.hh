@@ -44,6 +44,7 @@ namespace als {
     inline const string_hash lock_foot_id                  = string_hash(hash::djb2("lock_foot"));
     inline const string_hash r_foot_id                     = string_hash(hash::djb2("r_foot_id"));
     inline const string_hash l_foot_id                     = string_hash(hash::djb2("l_foot_id"));
+    inline const string_hash inverse_velocity_id           = string_hash(hash::djb2("inverse_velocity"));
 
     namespace references {
         // static event-type ids, hashed from their names by the CRT initializers
@@ -421,6 +422,59 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // faces the way the actor moved when it started, upright
+    class initial_velocity_orientation : public simple_orientation {
+
+    public:
+        vector3d initial_dir;
+
+        initial_velocity_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit initial_velocity_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        bool force_reactivate() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
+    // faces and leans the way the actor moved when it started
+    class initial3D_velocity_orientation : public simple_orientation {
+
+    public:
+        vector3d initial_dir;
+        vector3d initial_up;
+
+        initial3D_velocity_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit initial3D_velocity_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        bool force_reactivate() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -458,4 +512,11 @@ namespace als {
     ASSERT_SIZEOF(velocity_orientation,       0x44);
     ASSERT_SIZEOF(vertical_orientation,       0x44);
     ASSERT_SIZEOF(momentum_grapple_unsynched, 0x44);
+
+    ASSERT_SIZEOF  (initial_velocity_orientation,              0x50);
+    ASSERT_OFFSETOF(initial_velocity_orientation, initial_dir, 0x44);
+
+    ASSERT_SIZEOF  (initial3D_velocity_orientation,              0x5C);
+    ASSERT_OFFSETOF(initial3D_velocity_orientation, initial_dir, 0x44);
+    ASSERT_OFFSETOF(initial3D_velocity_orientation, initial_up,  0x50);
 }} // treyarch::als
