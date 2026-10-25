@@ -17,7 +17,6 @@ namespace treyarch {
     namespace references {
         util::memory_reference<u8> unk_00fc49d0 { 0x00FC49D0 };
         util::memory_reference<u8> unk_010fc53d { 0x010FC53D }; // never read
-        util::memory_reference<u8> unk_010fc53e { 0x010FC53E };
 
         util::memory_reference<u32> unk_010fc550 { 0x010FC550 }; // never read
 
