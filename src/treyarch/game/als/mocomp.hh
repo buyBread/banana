@@ -360,6 +360,67 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // faces the way the actor moves along the ground, upright
+    class velocity_orientation : public simple_orientation {
+
+    public:
+        velocity_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit velocity_orientation(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
+    // faces up, keeping the actor's up unless the state sets one
+    class vertical_orientation : public relative_orientation {
+
+    public:
+        vertical_orientation() = default;
+
+        // inlined @ sub_723DA0
+        explicit vertical_orientation(mash::generating_vtable_version so_do_nothing) : relative_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void get_directions(animation_logic_system* als_core,
+                            state_machine*          base,
+                            vector3d*               desired_dir,
+                            vector3d*               desired_up) const override;
+
+        static string_hash my_type_key;
+    };
+
+    // simple_orientation with the actor's standing and physics bits off while it runs
+    class momentum_grapple_unsynched : public simple_orientation {
+
+    public:
+        momentum_grapple_unsynched() = default;
+
+        // inlined @ sub_723DA0
+        explicit momentum_grapple_unsynched(mash::generating_vtable_version so_do_nothing) : simple_orientation(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+
+        static string_hash my_type_key;
+    };
+
     inline const string_hash biped_physics_mocomp_key = string_hash(hash::djb2("als::biped_physics_mocomp"));
 
     ASSERT_SIZEOF  (motion_compensator,            0x10);
@@ -393,4 +454,8 @@ namespace als {
     ASSERT_SIZEOF(strafe_mocomp_on_foot,          0x88);
     ASSERT_SIZEOF(relative_orientation_on_foot,   0x88);
     ASSERT_SIZEOF(relative_strafe_mocomp_on_foot, 0x88);
+
+    ASSERT_SIZEOF(velocity_orientation,       0x44);
+    ASSERT_SIZEOF(vertical_orientation,       0x44);
+    ASSERT_SIZEOF(momentum_grapple_unsynched, 0x44);
 }} // treyarch::als

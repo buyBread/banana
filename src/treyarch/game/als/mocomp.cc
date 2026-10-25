@@ -7,7 +7,9 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/wds/entity/actor.hh"
+#include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
+#include "treyarch/game/wds/entity/interface/standing_interface.hh"
 #include "treyarch/shared/math/algebra/functions.hh"
 #include "treyarch/shared/math/references.hh"
 #include "treyarch/shared/math/vmath/trig.hh"
@@ -27,6 +29,10 @@ string_hash als::simple_orientation_on_foot::my_type_key     { 0xBCDF51FC }; // 
 string_hash als::strafe_mocomp_on_foot::my_type_key          { 0xB74138D6 }; // "als::strafe_mocomp_on_foot"
 string_hash als::relative_orientation_on_foot::my_type_key   { 0x970F4A0E }; // "als::relative_orientation_on_foot"
 string_hash als::relative_strafe_mocomp_on_foot::my_type_key { 0x8D2EAD71 }; // "als::relative_strafe_mocomp_on_foot"
+
+string_hash als::velocity_orientation::my_type_key       { 0xC42161AE }; // "als::velocity_orientation"
+string_hash als::vertical_orientation::my_type_key       { 0x3EE226B9 }; // "als::vertical_orientation"
+string_hash als::momentum_grapple_unsynched::my_type_key { 0x938D8220 }; // "als::momentum_grapple_unsynched"
 
 i32 als::motion_compensator::last_created_size = 0;
 
@@ -84,6 +90,24 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(relative_strafe_mocomp_on_foot);
 
         return memory_buffer ? new (memory_buffer) relative_strafe_mocomp_on_foot : nullptr;
+    }
+
+    if (the_class_to_make == velocity_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(velocity_orientation);
+
+        return memory_buffer ? new (memory_buffer) velocity_orientation : nullptr;
+    }
+
+    if (the_class_to_make == vertical_orientation::my_type_key.source_hash_code) {
+        last_created_size = sizeof(vertical_orientation);
+
+        return memory_buffer ? new (memory_buffer) vertical_orientation : nullptr;
+    }
+
+    if (the_class_to_make == momentum_grapple_unsynched::my_type_key.source_hash_code) {
+        last_created_size = sizeof(momentum_grapple_unsynched);
+
+        return memory_buffer ? new (memory_buffer) momentum_grapple_unsynched : nullptr;
     }
 
     // the classes not in source yet
@@ -1232,4 +1256,148 @@ void als::relative_strafe_mocomp_on_foot::get_directions(animation_logic_system*
         desired_dir->y = desired_dir->y * -1.0f;
         desired_dir->z = desired_dir->z * -1.0f;
     }
+}
+
+// sub_5AEC10
+mash::virtual_types_key als::velocity_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::velocity_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::velocity_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5F37B0
+void als::velocity_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    // the actor's ground velocity, unless param 105 says otherwise
+    if (the_actor->has_ifc(entity_ifc_physical) && (!base->has_ext_param_been_set(105) || base->get_external_float(105) == 0.0f)) {
+        vector3d velocity;
+        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+
+        *desired_dir = vector3d(velocity.x, 0.0f, velocity.z);
+    } else if (base->has_ext_param_been_set(143))
+        *desired_dir = base->get_external_vector(143);
+    else
+        *desired_dir = the_actor->my_abs_po->get_z_facing();
+
+    // too slow to say
+    if (desired_dir->length2() < 1.0f)
+        *desired_dir = the_actor->my_abs_po->get_z_facing();
+
+    math::vector4 direction(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+    *desired_dir = vector3d(unit[0], unit[1], unit[2]);
+    *desired_up  = treyarch::references::unk_00e6808c.get();
+}
+
+// sub_5AEE60
+mash::virtual_types_key als::vertical_orientation::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEE70
+bool als::vertical_orientation::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (relative_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (relative_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::vertical_orientation::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DCF50
+void als::vertical_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
+    bool inverse_facing = base->get_optional_pb_int(inverse_facing_id, 0, nullptr) != 0;
+    bool use_x_facing   = base->get_optional_pb_int(use_x_facing_id, 0, nullptr) != 0;
+
+    *desired_dir = treyarch::references::unk_00e6808c.get();
+
+    if (base->has_ext_param_been_set(142))
+        *desired_up = base->get_external_vector(142);
+    else
+        *desired_up = the_actor->my_abs_po->get_y_facing();
+
+    // the facing goes to the side
+    if (use_x_facing) {
+        const vector3d &zero = treyarch::references::unk_00fd4370.get();
+
+        math::vector4 basis_dir(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
+        math::vector4 basis_up(desired_up->x, desired_up->y, desired_up->z, 0.0f);
+        math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+        po basis;
+        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+
+        *desired_dir = basis.get_x_facing();
+    }
+
+    if (inverse_facing) {
+        desired_dir->x = desired_dir->x * -1.0f;
+        desired_dir->y = desired_dir->y * -1.0f;
+        desired_dir->z = desired_dir->z * -1.0f;
+    }
+}
+
+// sub_5AEAF0
+mash::virtual_types_key als::momentum_grapple_unsynched::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AEC80
+bool als::momentum_grapple_unsynched::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (simple_orientation::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (simple_orientation::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_4D6250
+i32 als::momentum_grapple_unsynched::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DABE0
+void als::momentum_grapple_unsynched::activate(animation_logic_system* the_als_core, layer_id layer) {
+    simple_orientation::activate(the_als_core, layer);
+
+    if (the_actor->has_ifc(entity_ifc_standing))
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 &= ~1;
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        retail::sub_6007A0((u32*)the_actor->physical_ifc(), false); // physical_interface: flags bit 0
+}
+
+// sub_5DAC50
+void als::momentum_grapple_unsynched::deactivate() {
+    simple_orientation::deactivate();
+
+    if (the_actor->has_ifc(entity_ifc_standing))
+        ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 1;
+
+    if (the_actor->has_ifc(entity_ifc_physical))
+        retail::sub_6007A0((u32*)the_actor->physical_ifc(), true);
 }
