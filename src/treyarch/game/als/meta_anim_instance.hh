@@ -26,6 +26,13 @@ namespace treyarch { namespace als {
     inline const string_hash meta_linear_param_index_id       = string_hash(hash::djb2("meta_linear_param_index"));
     inline const string_hash meta_linear_param_blend_speed_id = string_hash(hash::djb2("meta_linear_param_blend_speed"));
 
+    // the swing's tuning; nothing writes it
+    inline f32 swing_time_rise_rate = 1.0f;
+    inline f32 swing_time_fall_rate = 1.0f;
+    inline f32 swing_mid_speed      = 20.0f;
+    inline f32 swing_high_speed     = 30.0f;
+    inline f32 swing_low_speed      = 15.0f;
+
     // alsAnimInstance: what an als meta anim plays as
     class als_anim_instance {
 
@@ -94,9 +101,9 @@ namespace treyarch { namespace als {
         animation_logic_system* the_als;
         state_machine*          the_layer;
         als_meta_anim_swing*    meta_anim;
-        f32                     unk_50;
-        f32                     unk_54;
-        f32                     unk_58;
+        f32                     hold_timer;  // counts down before target_time flips
+        f32                     target_time; // 0 or 1, by the actor's speed and how upright it is
+        f32                     time;        // eased toward target_time; the keys are sampled there
 
         als_meta_anim_swing_instance(als_meta_anim_swing*    the_meta_anim,
                                      nal::transport_list*    the_skel,
@@ -112,6 +119,15 @@ namespace treyarch { namespace als {
 
         f32  get_duration() override;
         void get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk) override;
+
+        // samples both at the time into the pose with the weight
+        void blend_two_anims(f32                     t,
+                             f32                     t_prev,
+                             nal::pose*              pose,
+                             f32                     weight,
+                             nal_als_instance_bridge first,
+                             nal_als_instance_bridge second,
+                             nal::transport_fk*      fk);
     };
 
     ASSERT_SIZEOF  (als_anim_instance, 0x04);
@@ -121,9 +137,11 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(als_meta_linear_blend_instance, meta_anim,     0x10);
     ASSERT_OFFSETOF(als_meta_linear_blend_instance, follows_param, 0x14);
 
-    ASSERT_SIZEOF  (als_meta_anim_swing_instance,            0x5C);
-    ASSERT_OFFSETOF(als_meta_anim_swing_instance, keys,      0x04);
-    ASSERT_OFFSETOF(als_meta_anim_swing_instance, the_als,   0x44);
-    ASSERT_OFFSETOF(als_meta_anim_swing_instance, meta_anim, 0x4C);
-    ASSERT_OFFSETOF(als_meta_anim_swing_instance, unk_50,    0x50);
+    ASSERT_SIZEOF  (als_meta_anim_swing_instance,              0x5C);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, keys,        0x04);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, the_als,     0x44);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, meta_anim,   0x4C);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, hold_timer,  0x50);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, target_time, 0x54);
+    ASSERT_OFFSETOF(als_meta_anim_swing_instance, time,        0x58);
 }} // treyarch::als

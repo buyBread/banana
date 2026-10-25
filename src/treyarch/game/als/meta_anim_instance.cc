@@ -9,6 +9,7 @@
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/blend.hh"
 #include "treyarch/shared/math/usefulmath.hh"
+#include "treyarch/shared/math/vmath/vector.hh"
 
 using namespace treyarch;
 
@@ -204,9 +205,9 @@ als::als_meta_anim_swing_instance::als_meta_anim_swing_instance(als_meta_anim_sw
                                                                                                  the_als(als),
                                                                                                  the_layer(layer),
                                                                                                  meta_anim(the_meta_anim),
-                                                                                                 unk_50(1.0f),
-                                                                                                 unk_54(1.0f),
-                                                                                                 unk_58(0.0f) {
+                                                                                                 hold_timer(1.0f),
+                                                                                                 target_time(1.0f),
+                                                                                                 time(0.0f) {
 
     for (u32 index = 0; index < 8; ++index) {
         if (nal::anim* key_anim = meta_anim->keys[index].the_anim_ptr) {
@@ -253,7 +254,152 @@ f32 als::als_meta_anim_swing_instance::get_duration() {
 
 // sub_5EFE70
 void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* pose, nal::transport_fk* fk) {
-    using get_pose_t = void (__thiscall*)(als_meta_anim_swing_instance*, f32, f32, nal::pose*, nal::transport_fk*);
+    f32 dt = meta_anim->get_anim_duration() * std::fabs(t - t_prev);
 
-    ((get_pose_t)retail::sub_5EFE70)(this, t, t_prev, pose, fk);
+    // the eight keys sit 45 degrees apart; the two around the angle are blended
+    f32 angle = the_layer->get_float_param(the_als, 176);
+    f32 upper_angle;
+    u32 lower_key;
+    u32 upper_key;
+
+    if (angle >= 315.0f) {
+        upper_angle = 360.0f;
+        lower_key   = 7;
+        upper_key   = 0;
+    } else if (angle >= 270.0f) {
+        upper_angle = 315.0f;
+        lower_key   = 6;
+        upper_key   = 7;
+    } else if (angle >= 225.0f) {
+        upper_angle = 270.0f;
+        lower_key   = 5;
+        upper_key   = 6;
+    } else if (angle >= 180.0f) {
+        upper_angle = 225.0f;
+        lower_key   = 4;
+        upper_key   = 5;
+    } else if (angle >= 135.0f) {
+        upper_angle = 180.0f;
+        lower_key   = 3;
+        upper_key   = 4;
+    } else if (angle >= 90.0f) {
+        upper_angle = 135.0f;
+        lower_key   = 2;
+        upper_key   = 3;
+    } else if (angle >= 45.0f) {
+        upper_angle = 90.0f;
+        lower_key   = 1;
+        upper_key   = 2;
+    } else {
+        if (angle < 0.0f)
+            angle = 0.0f;
+
+        upper_angle = 45.0f;
+        lower_key   = 0;
+        upper_key   = 1;
+    }
+
+    f32 weight = 1.0f - (upper_angle - angle) * (1.0f / 45.0f);
+
+    nal::pose blended(pose->pose_layout, nullptr);
+
+    vector3d      up = the_layer->get_vector_param(the_als, 255);
+    math::vector4 up_dir(up.x, up.y, up.z, 0.0f);
+    math::vector4 up_unit;
+
+    retail::sub_401AA0((u64*)&up_unit, (f32*)&up_dir);
+
+    // the target flips with a delay, by speed and only while upright
+    if (up_unit[1] > 0.5f) {
+        f32 speed = the_layer->get_vector_param(the_als, 258).length();
+
+        if (target_time > 0.5f) {
+            if (speed < swing_low_speed) {
+                f32 step = dt;
+
+                if (up_unit[1] > 0.8f && swing_low_speed * 0.5f > speed)
+                    step = dt * 2.0f;
+
+                hold_timer -= step;
+
+                if (hold_timer < 0.0f)
+                    hold_timer = 0.0f;
+
+                if (hold_timer <= 0.0f) {
+                    target_time = 0.0f;
+                    hold_timer  = 1.0f;
+                }
+            } else {
+                hold_timer += dt;
+
+                if (hold_timer > 1.5f)
+                    hold_timer = 1.5f;
+            }
+        } else if (speed >= swing_high_speed) {
+            target_time = 1.0f;
+            hold_timer  = 1.5f;
+        } else if (speed >= swing_mid_speed) {
+            hold_timer -= dt;
+
+            if (hold_timer < 0.0f)
+                hold_timer = 0.0f;
+
+            if (hold_timer <= 0.0f) {
+                target_time = 1.0f;
+                hold_timer  = 1.5f;
+            }
+        } else
+            hold_timer = 1.5f;
+    } else {
+        target_time = 1.0f;
+        hold_timer  = 1.5f;
+    }
+
+    if (target_time < 0.0f)
+        target_time = 0.0f;
+
+    if (target_time > 1.0f)
+        target_time = 1.0f;
+
+    if (time > target_time) {
+        time -= swing_time_fall_rate * dt;
+
+        if (target_time > time)
+            time = target_time;
+    } else {
+        time += swing_time_rise_rate * dt;
+
+        if (time > target_time)
+            time = target_time;
+    }
+
+    if (time > 0.99f)
+        time = 0.99f;
+
+    if (time < 0.0f)
+        time = 0.0f;
+
+    f32 time_prev = time > 0.0001f ? time - 0.0001f : 0.0f;
+
+    blend_two_anims(time, time_prev, &blended, weight, keys[lower_key], keys[upper_key], fk);
+
+    pose->copy(blended);
+}
+
+// sub_5B1920
+void als::als_meta_anim_swing_instance::blend_two_anims(f32                     t,
+                                                        f32                     t_prev,
+                                                        nal::pose*              pose,
+                                                        f32                     weight,
+                                                        nal_als_instance_bridge first,
+                                                        nal_als_instance_bridge second,
+                                                        nal::transport_fk*      fk) {
+
+    nal::pose first_pose (pose->pose_layout, nullptr);
+    nal::pose second_pose(pose->pose_layout, nullptr);
+
+    first.get_pose (t, t_prev, &first_pose,  fk);
+    second.get_pose(t, t_prev, &second_pose, fk);
+
+    nal::blend(pose, weight, &first_pose, &second_pose);
 }

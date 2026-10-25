@@ -582,6 +582,7 @@ bool als::state_machine::has_ext_param_been_set(param_id param) const {
 // inlined @ sub_5EF960
 // inlined @ sub_5EFA50
 // inlined @ sub_5F4BD0
+// inlined @ sub_5EFE70
 f32 als::state_machine::get_float_param(animation_logic_system* the_als, param_id param) {
     if (param < num_external_hash_params)
         return get_external_float(param);
@@ -590,6 +591,7 @@ f32 als::state_machine::get_float_param(animation_logic_system* the_als, param_i
 }
 
 // sub_5D5F00
+// inlined @ sub_5EFE70
 vector3d als::state_machine::get_vector_param(animation_logic_system* the_als, param_id param) {
     if (param < num_external_hash_params)
         return get_external_vector(param);
