@@ -50,6 +50,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::initial3D_velocity_orientation>();
         mash::mash_virtual_base::register_class<als::initial_velocity_orientation>();
         mash::mash_virtual_base::register_class<als::input_orientation>();
+        mash::mash_virtual_base::register_class<als::momentum_combat_move_and_face>();
         mash::mash_virtual_base::register_class<als::momentum_grapple_unsynched>();
         mash::mash_virtual_base::register_class<als::momentum_sync_move_and_face>();
         mash::mash_virtual_base::register_class<als::move_and_face>();
