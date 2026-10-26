@@ -7,6 +7,7 @@
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/param.hh"
 #include "treyarch/game/als/state_machine.hh"
+#include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/entity/actor.hh"
@@ -131,9 +132,165 @@ string_hash als::internal_parameter_cache::get_internal_hash(animation_logic_sys
 
 // sub_5E90D0
 f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_system* the_als, state_machine* the_sm, param_id param) {
+    actor* the_actor = the_als->get_actor();
+
+    switch (param) {
+        case param_current_time_in_seconds: {
+            f32 duration = the_sm->the_controller->get_anim_duration(the_sm->get_layer_id());
+
+            return (f32)((f64)the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id()) * duration);
+        }
+
+        case param_current_anim_time_in_seconds: {
+            f32 t        = the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id());
+            f32 duration = the_sm->the_controller->get_anim_duration(the_sm->get_layer_id());
+
+            return duration * (f32)(t - (i32)t);
+        }
+
+        case param_current_normalized_time:
+            return the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id());
+
+        case param_current_anim_normalized_time: {
+            f32 t = the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id());
+
+            return t - (i32)t;
+        }
+
+        // retail's pitch is the yaw as well
+        case param_aim_pitch_angle:
+        case param_aim_yaw_angle: {
+            vector3d aim = the_sm->get_external_vector(param_aim_direction);
+
+            return compute_angle_between_vectors(the_actor->my_abs_po->get_z_facing(), the_actor->my_abs_po->get_x_facing(), aim);
+        }
+
+        case param_frames_from_end_of_anim: {
+            f32 left = (f32)-((f64)the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id()) - 1.0);
+
+            if (retail::sub_5BA330((i32*)the_sm->the_controller, the_sm->get_layer_id()))
+                left = the_sm->the_controller->get_anim_duration(the_sm->get_layer_id()) * left;
+
+            return (f32)((f64)left * 30.0);
+        }
+
+        case param_jump_charge:
+            if (!retail::sub_402500((u32*)the_actor)) // has_player_ifc
+                return 0.0f;
+
+            return the_actor->player_ifc()->unk_149();
+
+        case param_active_jump_charge:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return the_actor->player_ifc()->unk_148();
+
+        case param_damage_stunned:
+            if (!retail::sub_4024A0((u32*)the_actor) || !retail::sub_40A880((u32*)the_actor->damage_ifc())) // has_damage_ifc
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_damage_hit_point_percent:
+            if (!retail::sub_4024A0((u32*)the_actor))
+                return 1.0f;
+
+            return (f32)retail::sub_5BAB80((u32*)the_actor->damage_ifc());
+
+        case param_damage_armor_percent:
+            if (!retail::sub_4024A0((u32*)the_actor))
+                return 0.0f;
+
+            return (f32)retail::sub_5BABD0((u32*)the_actor->damage_ifc());
+
+        case param_swing_time:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return the_actor->player_ifc()->unk_374();
+
+        case param_swing_to_anchor_angle:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 1.0f;
+
+            return the_actor->player_ifc()->unk_429();
+
+        case param_swing_angle:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 270.0f;
+
+            return the_actor->player_ifc()->unk_425();
+
+        case param_swing_side_angle:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 1.0f;
+
+            return the_actor->player_ifc()->unk_427();
+
+        case param_swing_hand:
+            if (!retail::sub_402500((u32*)the_actor))
+                return -1.0f;
+
+            return (f32)the_actor->player_ifc()->unk_401();
+
+        case param_swing_entry_speed:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 1.0f;
+
+            return the_actor->player_ifc()->unk_432();
+
+        case param_swing_exit_speed:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 1.0f;
+
+            return the_actor->player_ifc()->unk_433();
+
+        case param_trick_window:
+            if (!retail::sub_402500((u32*)the_actor) || !the_actor->player_ifc()->unk_152())
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_max_trick_combo:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return (f32)the_actor->player_ifc()->unk_154();
+
+        case param_blacksuit_swing_window:
+            if (!retail::sub_402500((u32*)the_actor) || !the_actor->player_ifc()->unk_150())
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_swing_level_rating:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 1.0f;
+
+            return the_actor->player_ifc()->unk_403();
+
+        default:
+            break;
+    }
+
+    // the cases not in source yet
     using calculate_internal_float_t = f32 (__thiscall*)(internal_parameter_cache*, animation_logic_system*, state_machine*, param_id);
 
     return ((calculate_internal_float_t)retail::sub_5E90D0)(this, the_als, the_sm, param);
+}
+
+// sub_5AFC80
+f32 als::compute_angle_between_vectors(const vector3d &forward, const vector3d &side, const vector3d &dir) {
+    f32 along   = dir * forward;
+    f32 across  = side * dir;
+    f32 angle   = (f32)retail::sub_44D790(across, along);
+    f32 degrees = (f32)(retail::sub_48DEE0(angle) * 57.29577791868205);
+
+    if (degrees > 180.0f)
+        return (f32)((f64)degrees - 360.0);
+
+    return degrees;
 }
 
 // sub_5BC4E0

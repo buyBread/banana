@@ -329,6 +329,9 @@ namespace treyarch { namespace als {
 
     f32 get_vector_component(const vector3d &vec, e_vector_component component);
 
+    // dir's angle round from forward toward side, in degrees within 180 either way
+    f32 compute_angle_between_vectors(const vector3d &forward, const vector3d &side, const vector3d &dir);
+
     namespace references {
         // "BIP01 PELVIS", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_pelvis { 0x010034A8 };
