@@ -87,7 +87,8 @@ string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "al
 
 string_hash als::combat_radial_move_and_face::my_type_key { 0xBF5E446C }; // "als::combat_radial_move_and_face"
 
-string_hash als::biped_physics_mocomp::my_type_key { 0x91DC0B04 }; // "als::biped_physics_mocomp"
+string_hash als::biped_physics_mocomp::my_type_key       { 0x91DC0B04 }; // "als::biped_physics_mocomp"
+string_hash als::swing_attack_move_and_face::my_type_key { 0xABCBD289 }; // "als::swing_attack_move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -381,6 +382,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(biped_physics_mocomp);
 
         return memory_buffer ? new (memory_buffer) biped_physics_mocomp : nullptr;
+    }
+
+    if (the_class_to_make == swing_attack_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(swing_attack_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) swing_attack_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -6815,4 +6822,176 @@ void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
 // sub_667F80
 bool als::biped_physics_mocomp::force_reactivate() const {
     return true;
+}
+
+// sub_5AE570
+mash::virtual_types_key als::swing_attack_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::swing_attack_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE580
+i32 als::swing_attack_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5DA2E0
+void als::swing_attack_move_and_face::activate(animation_logic_system*, layer_id layer) {
+    // retail never stores the_als_core; the als's mocomp buffer still holds it from the mocomp before
+    the_base  = the_als->get_als_layer_internal(layer);
+    the_actor = the_als->get_actor();
+
+    read_params(0.033333335f);
+}
+
+// sub_5C11C0
+void als::swing_attack_move_and_face::pre_anim_action(f32 delta_t) {
+    if (the_als->did_transition_succeed())
+        read_params(delta_t);
+    else {
+        anim_time = the_base->get_current_anim_time();
+
+        track(delta_t);
+    }
+
+    params_read = false;
+}
+
+// sub_5B3040
+void als::swing_attack_move_and_face::post_anim_action(f32 delta_t) {
+    track(delta_t);
+    steer_velocity(delta_t);
+
+    // turned where its physics left it
+    vector3d position = the_actor->my_abs_po->get_position();
+    po       turned   = get_turned_po(delta_t);
+
+    turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_627180((i32)the_actor, (f32*)&turned); // entity_base::set_abs_po
+}
+
+// sub_5B2DE0
+void als::swing_attack_move_and_face::read_signal_times() {
+    rotate_begin_time = the_base->get_time_to_signal(references::rotate_begin.read(), nullptr, false, nullptr);
+
+    if (rotate_begin_time < 0.0f)
+        rotate_begin_time = 0.0f;
+
+    rotate_end_time = the_base->get_time_to_signal(references::rotate_end.read(), nullptr, false, nullptr);
+
+    if (rotate_end_time < 0.0f)
+        rotate_end_time = the_base->get_duration();
+}
+
+// sub_5B2E70
+void als::swing_attack_move_and_face::read_params(f32) {
+    if (params_read)
+        return;
+
+    params_read = true;
+    anim_time   = the_base->get_current_anim_time();
+
+    read_signal_times();
+
+    turn_rate            = the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr);
+    turn_vel_with_facing = the_base->get_optional_pb_int(turn_vel_with_facing_id, 1, nullptr) != 0;
+    tracking_dist_min    = the_base->get_optional_pb_float(tracking_dist_min_id, 2.0f, nullptr);
+    tracking_angle_max   = the_base->get_optional_pb_float(tracking_angle_max_id, 180.0f, nullptr);
+
+    f32 up_max = the_base->get_optional_pb_float(tracking_angle_up_max_id, 180.0f, nullptr);
+
+    stop_tracking         = false;
+    tracking_angle_up_max = (f32)((f64)up_max * 0.017453292519943295);
+    turn_rate             = (f32)((f64)turn_rate * 0.017453292519943295);
+    tracking_angle_max    = (f32)((f64)tracking_angle_max * 0.017453292519943295);
+
+    up     = the_actor->my_abs_po->get_y_facing();
+    facing = the_actor->my_abs_po->get_z_facing();
+
+    track(0.033333335f);
+}
+
+// sub_5DA320
+void als::swing_attack_move_and_face::track(f32) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    // up toward the player's web anchor while it holds one, else the actor's
+    if (the_actor->has_ifc(entity_ifc_player)) {
+        vector3d anchor;
+
+        if (the_actor->player_ifc()->unk_377(&anchor)) {
+            up = anchor - the_actor->my_abs_po->get_position();
+
+            retail::sub_402050((f32*)&up);
+        }
+    } else
+        up = the_actor->my_abs_po->get_y_facing();
+
+    // toward param 145's point or along param 143 until the target leaves tracking_dist_min or tracking_angle_max
+    if (!stop_tracking) {
+        if (the_base->has_ext_param_been_set(145)) {
+            vector3d offset = the_base->get_external_vector(145) - the_actor->my_abs_po->get_position();
+
+            if (tracking_dist_min > offset.length())
+                stop_tracking = true;
+            else {
+                vector3d dir = offset;
+
+                retail::sub_402050((f32*)&dir);
+
+                f32 limit = math::cos(tracking_angle_max);
+
+                if (limit > dir * the_actor->my_abs_po->get_z_facing())
+                    stop_tracking = true;
+                else
+                    facing = dir;
+            }
+        } else if (the_base->has_ext_param_been_set(143)) {
+            vector3d dir   = the_base->get_external_vector(143);
+            f32      limit = math::cos(tracking_angle_max);
+
+            if (limit > dir * the_actor->my_abs_po->get_z_facing())
+                stop_tracking = true;
+            else
+                facing = dir;
+        }
+    }
+
+    facing = unitized(facing - up * (f32)(up * facing));
+}
+
+// sub_5C0750
+void als::swing_attack_move_and_face::steer_velocity(f32 delta_t) {
+    using steer_velocity_t = void (__thiscall*)(swing_attack_move_and_face*, f32);
+
+    ((steer_velocity_t)retail::sub_5C0750)(this, delta_t);
+}
+
+// sub_5C0A70
+po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
+    using get_turned_po_t = po* (__thiscall*)(swing_attack_move_and_face*, po*, f32);
+
+    po turned;
+
+    ((get_turned_po_t)retail::sub_5C0A70)(this, &turned, delta_t);
+
+    return turned;
 }

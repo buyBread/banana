@@ -122,6 +122,12 @@ namespace als {
                                                  string_hash(hash::djb2("rb_right_thigh")),
                                                  string_hash(hash::djb2("rb_right_calf")) };
 
+    // and about swing attacks
+    inline const string_hash turn_vel_with_facing_id  = string_hash(hash::djb2("turn_vel_with_facing"));
+    inline const string_hash tracking_dist_min_id     = string_hash(hash::djb2("tracking_dist_min"));
+    inline const string_hash tracking_angle_max_id    = string_hash(hash::djb2("tracking_angle_max"));
+    inline const string_hash tracking_angle_up_max_id = string_hash(hash::djb2("tracking_angle_up_max"));
+
     // and about circling
     inline const string_hash closest_distance_allowed_id = string_hash(hash::djb2("closest_distance_allowed"));
     inline const string_hash max_rotation_angle_id       = string_hash(hash::djb2("max_rotation_angle"));
@@ -1460,6 +1466,47 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // turns the actor toward its target through the rotate signals while its physics carries it, round a web anchor when it has one
+    class swing_attack_move_and_face : public motion_compensator {
+
+    public:
+        vector3d up;                    // toward the player's web anchor, else the actor's up
+        vector3d facing;                // toward the tracked target, kept level with up
+        f32      anim_time;
+        bool     stop_tracking;         // set once the target leaves the tracking limits
+        u8       pad_02d[0x03];
+        f32      tracking_dist_min;
+        f32      tracking_angle_max;    // radians
+        f32      tracking_angle_up_max; // radians
+        bool     params_read;           // the state's params are read once a frame, on activation and a successful transition
+        bool     turn_vel_with_facing;
+        u8       pad_03e[0x02];
+        f32      turn_rate;             // radians a second
+        f32      rotate_begin_time;
+        f32      rotate_end_time;
+
+        swing_attack_move_and_face() = default;
+
+        // inlined @ sub_723DA0
+        explicit swing_attack_move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing) {}
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void pre_anim_action(f32 delta_t) override;
+        void post_anim_action(f32 delta_t) override;
+
+        virtual void read_signal_times();
+        virtual void read_params(f32 delta_t);
+        virtual void track(f32 delta_t);
+        virtual void steer_velocity(f32 delta_t);
+        virtual po   get_turned_po(f32 delta_t);
+
+        static string_hash my_type_key;
+    };
+
     // hands the actor to its biped physics with the state's push, holding its pose and po for the physics until each capture
     class biped_physics_mocomp : public motion_compensator {
 
@@ -1657,6 +1704,20 @@ namespace als {
     ASSERT_OFFSETOF(combat_radial_move_and_face, path_built,               0x2C);
     ASSERT_OFFSETOF(combat_radial_move_and_face, unk_030,                  0x30);
     ASSERT_OFFSETOF(combat_radial_move_and_face, progress,                 0x34);
+
+    ASSERT_SIZEOF  (swing_attack_move_and_face,                        0x4C);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, up,                    0x10);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, facing,                0x1C);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, anim_time,             0x28);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, stop_tracking,         0x2C);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, tracking_dist_min,     0x30);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, tracking_angle_max,    0x34);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, tracking_angle_up_max, 0x38);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, params_read,           0x3C);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, turn_vel_with_facing,  0x3D);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, turn_rate,             0x40);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, rotate_begin_time,     0x44);
+    ASSERT_OFFSETOF(swing_attack_move_and_face, rotate_end_time,       0x48);
 
     ASSERT_SIZEOF  (biped_physics_mocomp,                            0xB0);
     ASSERT_OFFSETOF(biped_physics_mocomp, saved_po,                  0x10);
