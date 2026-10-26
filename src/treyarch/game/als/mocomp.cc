@@ -7298,10 +7298,123 @@ void als::momentum_combat_move_and_face::read_signal_times() {
 }
 
 // sub_5D8EF0
-void als::momentum_combat_move_and_face::track(f32 delta_t, bool initial) {
-    using track_t = void (__thiscall*)(momentum_combat_move_and_face*, f32, bool);
+void als::momentum_combat_move_and_face::track(f32, bool initial) {
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
 
-    ((track_t)retail::sub_5D8EF0)(this, delta_t, initial);
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    if (stop_tracking || (!initial && !tracking && target_dir_set))
+        return;
+
+    bool no_target     = true;
+    bool no_target_pos = true;
+
+    // toward the sync partner, unless forced onto the target vector
+    if (!force_target_vec && target_sync_partner) {
+        actor* actor_a = nullptr;
+        actor* actor_b = nullptr;
+
+        if (get_sync_actors(&actor_a, &actor_b)) {
+            actor* partner = actor_a == the_actor ? actor_b : actor_a;
+
+            if (align_to_target_up)
+                up = partner->my_abs_po->get_y_facing();
+
+            target_pos = partner->my_abs_po->get_position();
+            target_dir = target_pos - the_actor->my_abs_po->get_position();
+
+            if (target_dir.length2() > 0.0001f) {
+                no_target      = false;
+                has_target_pos = true;
+            } else
+                has_target_pos = false;
+
+            retail::sub_402050((f32*)&target_dir);
+
+            no_target_pos = false;
+        }
+    }
+
+    if (no_target) {
+        // else toward param 145's point, which stops tracking once within tracking_dist_min
+        if (!force_target_vec && the_base->has_ext_param_been_set(145)) {
+            target_pos = the_base->get_external_vector(145);
+            target_dir = target_pos - the_actor->my_abs_po->get_position();
+
+            if (retail::sub_401FF0((f32*)&target_dir) > 0.0001f) {
+                no_target      = false;
+                has_target_pos = true;
+
+                if (!initial && tracking_dist_min >= retail::sub_402020((f32*)&target_dir))
+                    stop_tracking = true;
+            } else
+                has_target_pos = false;
+
+            retail::sub_402050((f32*)&target_dir);
+
+            no_target_pos = false;
+        } else
+            has_target_pos = false;
+
+        // else along target_vector, param 143 or the initial velocity
+        if (no_target) {
+            if (the_base->does_parameter_exist(target_vector_id)) {
+                target_dir = the_base->get_optional_pb_vector3d(target_vector_id, treyarch::references::unk_00e68098.get(), nullptr);
+
+                if (!target_vector_world) {
+                    const matrix4x4 &m   = the_actor->my_abs_po->get_matrix();
+                    vector3d         dir = target_dir;
+
+                    target_dir = vector3d((f32)((f64)m.y.x * dir.y + (f64)m.x.x * dir.x + (f64)m.z.x * dir.z + (f64)m.w.x * 0.0),
+                                          (f32)((f64)m.x.y * dir.x + (f64)m.y.y * dir.y + (f64)m.z.y * dir.z + (f64)m.w.y * 0.0),
+                                          (f32)((f64)m.x.z * dir.x + (f64)m.y.z * dir.y + (f64)m.z.z * dir.z + (f64)m.w.z * 0.0));
+                }
+
+                target_dir_set = true;
+            } else if (the_base->has_ext_param_been_set(143)) {
+                target_dir     = the_base->get_external_vector(143);
+                target_dir_set = true;
+
+                // without a point, param 142 is up as it comes
+                if (no_target_pos && the_base->has_ext_param_been_set(142)) {
+                    up = the_base->get_external_vector(142);
+
+                    return;
+                }
+            } else {
+                target_dir = initial_velocity;
+
+                if (target_dir.length2() < 0.0001f)
+                    target_dir = the_actor->my_abs_po->get_z_facing();
+
+                retail::sub_402050((f32*)&target_dir);
+
+                target_dir_set = true;
+            }
+        }
+    }
+
+    // up squared to target_dir, through the world's up or the actor's rows when they line up
+    vector3d side = cross(up, target_dir);
+
+    if (side.length2() < 0.1f) {
+        side = cross(treyarch::references::unk_00e6808c.get(), target_dir);
+
+        if (side.length2() < 0.1f) {
+            side = cross(the_actor->my_abs_po->get_y_facing(), target_dir);
+
+            if (side.length2() < 0.0001f)
+                side = cross(the_actor->my_abs_po->get_x_facing(), target_dir);
+        }
+    }
+
+    side = unitized(side);
+    up   = unitized(cross(target_dir, side));
 }
 
 // sub_5D97F0
