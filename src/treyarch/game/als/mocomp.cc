@@ -7417,14 +7417,113 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
 }
 
 // sub_5D97F0
-po als::momentum_combat_move_and_face::get_facing_po(f32 delta_t) {
-    using get_facing_po_t = po* (__thiscall*)(momentum_combat_move_and_face*, po*, f32);
+po als::momentum_combat_move_and_face::get_facing_po(f32) {
+    po turned = *the_actor->my_abs_po;
 
-    po facing;
+    vector3d facing  = turned.get_z_facing();
+    vector3d y_row   = turned.get_y_facing();
+    vector3d minus_x = -turned.get_x_facing();
+    vector3d up_dir  = up;
+    vector3d desired = target_dir;
 
-    ((get_facing_po_t)retail::sub_5D97F0)(this, &facing, delta_t);
+    // param 143 when forced, with an up squared to it as track squares its own
+    if (the_base->get_optional_pb_int(force_use_desired_facing_id, 0, nullptr) && the_base->has_ext_param_been_set(143)) {
+        vector3d dir  = the_base->get_external_vector(143);
+        vector3d side = cross(treyarch::references::unk_00e6808c.get(), dir);
 
-    return facing;
+        desired = dir;
+
+        if (side.length2() < 0.1f) {
+            side = cross(up, dir);
+
+            if (side.length2() < 0.1f) {
+                side = cross(the_actor->my_abs_po->get_y_facing(), dir);
+
+                if (side.length2() < 0.0001f)
+                    side = cross(the_actor->my_abs_po->get_x_facing(), dir);
+            }
+        }
+
+        retail::sub_402050((f32*)&side);
+
+        up_dir = cross(dir, side);
+
+        retail::sub_402050((f32*)&up_dir);
+        retail::sub_402050((f32*)&desired);
+    }
+
+    if (preserve_y_facing)
+        up_dir = y_row;
+
+    // only strictly inside the rotate signals
+    if (!(anim_time > rotate_begin_time) || !(rotate_end_time > anim_time))
+        return turned;
+
+    // its up onto up first, giving up tracking past tracking_angle_up_max
+    if (up_dir.length2() > 0.0001f) {
+        f32 angle = math::acos(y_row * up_dir);
+
+        if (angle > tracking_angle_up_max)
+            stop_tracking = true;
+
+        if (angle > 0.01f || angle < -0.01f) {
+            vector3d axis = cross(y_row, up_dir);
+
+            retail::sub_402050((f32*)&axis);
+
+            if (axis.length2() < 0.01f)
+                axis = facing;
+
+            po rotation;
+            retail::sub_4015B0((u64*)&rotation);
+
+            angle = -angle;
+
+            math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+
+            facing  = turned.get_z_facing();
+            minus_x = -turned.get_x_facing();
+        }
+    }
+
+    // then all the way toward desired, giving up tracking past tracking_angle_max
+    vector3d level = desired - up_dir * (f32)(up_dir * desired);
+
+    if (!(level.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&level);
+
+    facing = facing - up_dir * (f32)(up_dir * facing);
+
+    if (!(facing.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&facing);
+
+    minus_x = minus_x - up_dir * (f32)(up_dir * minus_x);
+
+    retail::sub_402050((f32*)&minus_x);
+
+    f32 along  = facing * level;
+    f32 across = minus_x * level;
+    f32 angle  = (f32)retail::sub_44D790(across, along);
+
+    if (angle > tracking_angle_max)
+        stop_tracking = true;
+
+    if (angle > 0.01f || angle < -0.01f) {
+        po rotation;
+        retail::sub_4015B0((u64*)&rotation);
+
+        math::vector4 axis_dir(up_dir.x, up_dir.y, up_dir.z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+    }
+
+    return turned;
 }
 
 // sub_5C00F0
