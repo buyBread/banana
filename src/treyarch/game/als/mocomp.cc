@@ -7006,8 +7006,7 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
     vector3d from = the_actor->my_abs_po->get_position();
     vector3d to   = from + ahead * 2.5f;
 
-    line_info probe;
-    retail::sub_4030F0((char*)&probe, (i32)&from, (i32)&to); // line_info::line_info
+    line_info probe(from, to);
     retail::sub_798F50((char*)&probe, (i32)treyarch::references::unk_00e7b2a0.read(), (i32)treyarch::references::unk_00e7b2d0.read(), nullptr, 0); // line_info::check_collision
 
     if (probe.collision) {
@@ -7430,11 +7429,83 @@ po als::momentum_combat_move_and_face::get_facing_po(f32 delta_t) {
 
 // sub_5C00F0
 vector3d als::momentum_combat_move_and_face::get_move_position(f32 delta_t) {
-    using get_move_position_t = vector3d* (__thiscall*)(momentum_combat_move_and_face*, vector3d*, f32);
+    vector3d old_position = the_actor->my_abs_po->get_position();
 
-    vector3d position;
+    // looked up and dropped
+    if (the_actor->has_ifc(entity_ifc_standing))
+        the_actor->my_ifc_storage->get_ifc(entity_ifc_standing);
 
-    ((get_move_position_t)retail::sub_5C00F0)(this, &position, delta_t);
+    // along target_dir at target_speed, unless reaching the point by MOVE_END takes more, kept within the speed limits
+    vector3d velocity = target_dir * target_speed;
+
+    if (!stop_tracking && has_target_pos && move_end_time > anim_time) {
+        vector3d offset    = target_pos - old_position;
+        f32      remaining = move_end_time - anim_time;
+        f32      fraction;
+
+        if (remaining < 0.0001f)
+            fraction = 1.0f;
+        else
+            fraction = delta_t / remaining;
+
+        vector3d step = offset * fraction;
+        vector3d needed(step.x / delta_t, step.y / delta_t, step.z / delta_t);
+        f32      speed = needed.length();
+
+        if (speed > target_speed) {
+            if (target_speed_min > speed)
+                velocity = needed * (target_speed_min / speed);
+            else if (speed > target_speed_max)
+                velocity = needed * (target_speed_max / speed);
+            else
+                velocity = needed;
+        }
+    }
+
+    // blended from the initial velocity until MOVE_BEGIN, else still outside the move signals
+    if (blend_vel) {
+        if (move_begin_time > anim_time) {
+            f32 t = anim_time / move_begin_time;
+
+            if (0.0f > t)
+                t = 0.0f;
+            else if (t > 1.0f)
+                t = 1.0f;
+
+            f32 weight = (f32)(1.0 - t);
+
+            velocity = (initial_velocity - velocity) * weight + velocity;
+        }
+    } else if (move_begin_time > anim_time || anim_time > move_end_time)
+        velocity = treyarch::references::unk_00fd4370.get();
+
+    vector3d position = old_position + velocity * delta_t;
+
+    // never past the point
+    if (has_target_pos) {
+        vector3d before = target_pos - old_position;
+        vector3d after  = target_pos - position;
+        f32      along  = before * after;
+
+        if (along <= 0.0f)
+            position = target_pos;
+    }
+
+    // stopped where the move hits the world, for good
+    if (stop_on_collision) {
+        line_info probe(old_position, position);
+
+        if (retail::sub_798F50((char*)&probe, (i32)treyarch::references::unk_00e7b2a0.read(), (i32)treyarch::references::unk_00e7b2d0.read(), nullptr, 0)) { // line_info::check_collision
+            position = probe.hit_point;
+
+            collided         = true;
+            target_speed     = 0.0f;
+            target_speed_min = 0.0f;
+            target_speed_max = 0.0f;
+        }
+
+        retail::sub_798F10((u8*)&probe); // line_info::~line_info
+    }
 
     return position;
 }
