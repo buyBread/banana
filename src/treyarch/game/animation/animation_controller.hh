@@ -216,6 +216,7 @@ namespace treyarch {
         bool                  has_slaves() const;
         bool                  is_synced_to_master() const;
         actor*                get_actor() const;
+        u32                   get_synced_layer() const; // 0 without a master
 
         // the anim becomes the layer's newest, cross-fading from the one before over blend_time; a layer keeps two
         void play(const als::nal_als_anim_bridge     &anim,
@@ -240,6 +241,7 @@ namespace treyarch {
         f32  get_secondary_anim_speed(u32 layer) const;
         f32  get_anim_time           (u32 layer);
         bool is_anim_looping         (u32 layer);
+        bool has_anim_instance       (u32 layer) const; // the newest has a nal or als instance
         void set_anim_normalized_time(u32 layer, f32 time);
         void set_anim_speed          (u32 layer, f32 speed);
         void set_secondary_anim_speed(u32 layer, f32 speed);

@@ -234,6 +234,14 @@ animation_controller* animation_controller::get_master() const {
     return state ? state->master : nullptr;
 }
 
+// sub_5AD300
+u32 animation_controller::get_synced_layer() const {
+    if (!state || !state->master)
+        return 0;
+
+    return state->synced_layer;
+}
+
 // sub_5BA300
 bool animation_controller::has_slaves() const {
     return state->slaves.size() != 0;
@@ -410,6 +418,16 @@ bool animation_controller::is_anim_looping(u32 layer) {
         return false;
 
     return state->layer_anims[layer].back()->is_looping();
+}
+
+// sub_5BA330
+bool animation_controller::has_anim_instance(u32 layer) const {
+    if (!state->layer_anims[layer].size())
+        return false;
+
+    animation_controller_state::layer_anim* newest = state->layer_anims[layer].back();
+
+    return newest->nal_inst || newest->als_inst;
 }
 
 // sub_5BA0F0
