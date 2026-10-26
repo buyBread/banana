@@ -303,7 +303,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
 
     nal::pose blended(pose->pose_layout, nullptr);
 
-    vector3d      up = the_layer->get_vector_param(the_als, 255);
+    vector3d      up = the_layer->get_vector_param(the_als, current_up_vector);
     math::vector4 up_dir(up.x, up.y, up.z, 0.0f);
     math::vector4 up_unit;
 
@@ -311,7 +311,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
 
     // the target flips with a delay, by speed and only while upright
     if (up_unit[1] > 0.5f) {
-        f32 speed = the_layer->get_vector_param(the_als, 258).length();
+        f32 speed = the_layer->get_vector_param(the_als, current_velocity_vector).length();
 
         if (target_time > 0.5f) {
             if (speed < swing_low_speed) {

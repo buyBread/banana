@@ -16,8 +16,18 @@ namespace treyarch { namespace als {
     enum external_vector_parameter_types : u32 { num_external_vector_params = 156 };
     enum external_hash_parameter_types   : u32 { num_external_hash_params   = 161 };
     enum internal_float_parameter_types  : u32 { num_internal_float_params  = 255 };
-    enum internal_vector_parameter_types : u32 { num_internal_vector_params = 261 };
-    enum internal_hash_parameter_types   : u32 { num_internal_hash_params   = 275 };
+
+    enum internal_vector_parameter_types : u32 {
+        current_up_vector = num_internal_float_params,
+        current_right_vector,
+        current_forward_vector,
+        current_velocity_vector,
+        pelvis_facing,
+        last_collision_normal,
+        num_internal_vector_params
+    };
+
+    enum internal_hash_parameter_types : u32 { num_internal_hash_params = 275 };
 
     // what a vector parameter is reduced to when a single number is wanted; retail's debug names
     enum e_vector_component : u32 {
