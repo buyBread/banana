@@ -88,7 +88,7 @@ string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "al
 
 string_hash als::combat_radial_move_and_face::my_type_key { 0xBF5E446C }; // "als::combat_radial_move_and_face"
 
-string_hash als::biped_physics_mocomp::my_type_key       { 0x91DC0B04 }; // "als::biped_physics_mocomp"
+string_hash als::biped_physics_mocomp::my_type_key          { 0x91DC0B04 }; // "als::biped_physics_mocomp"
 string_hash als::swing_attack_move_and_face::my_type_key    { 0xABCBD289 }; // "als::swing_attack_move_and_face"
 string_hash als::momentum_combat_move_and_face::my_type_key { 0xBE2EEA31 }; // "als::momentum_combat_move_and_face"
 
@@ -398,10 +398,7 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         return memory_buffer ? new (memory_buffer) momentum_combat_move_and_face : nullptr;
     }
 
-    // the classes not in source yet
-    using create_subclass_in_place_t = motion_compensator* (__cdecl*)(mash::virtual_types_key, void*);
-
-    return ((create_subclass_in_place_t)retail::sub_5C3730)(the_class_to_make, memory_buffer);
+    return nullptr;
 }
 
 // sub_5ADBB0
