@@ -13,7 +13,9 @@ namespace treyarch {
     class physical_interface : public actor_interface {
 
     public:
-        u32 flags;
+        u32      flags;
+        u8       reserved_010[0x40];
+        vector3d last_collision_normal;
 
         // inlined
         bool is_flagged(e_physical_interface_flags flag) const {
@@ -24,5 +26,6 @@ namespace treyarch {
         void cancel_all_velocity(const vector3d &dir, bool both_dir = true);
     };
 
-    ASSERT_OFFSETOF(physical_interface, flags, 0x0C);
+    ASSERT_OFFSETOF(physical_interface, flags,                 0x0C);
+    ASSERT_OFFSETOF(physical_interface, last_collision_normal, 0x50);
 } // treyarch
