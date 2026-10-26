@@ -78,6 +78,7 @@ namespace treyarch { namespace vc8 {
             erase(first, last);
         }
 
+        // sub_51D5F0
         void destroy() noexcept {
             clear();
 
@@ -143,6 +144,7 @@ namespace treyarch { namespace vc8 {
         // sub_444540
         // sub_444590
         // sub_4F6FD0
+        // sub_52CEC0
         // sub_5F5850
         // sub_5F6D70
         // sub_5F7130
@@ -195,6 +197,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_5F5020
+        // sub_6F4C40
         // sub_87E470
         // sub_A188A0
         T* erase(T* range_first, T* range_last) noexcept {
