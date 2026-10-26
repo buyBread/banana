@@ -92,8 +92,9 @@ namespace treyarch {
         u32                             record_slot_mask;     // bit n is set while records[n] is in use
         u8                              records[32][0x2C];
         vc8::list<void*>                active_records;       // entries point into records
-        u32                             unk_5bc;              // the cut scene player sets it while it has the hero
-        u8                              reserved_5c0[0x08];
+        u32                             unk_5bc;              // the als's ai_idle_type; the cut scene player sets it while it has the hero
+        u32                             unk_5c0;              // the als's ai_walk_run_cycle
+        u32                             unk_5c4;              // the als's ai_walk_item
         u8                              reserved_5c8[0x0C];
         ai_state_machine*               my_base_machine;
         ai_state_machine*               my_locomotion_machine;
@@ -114,7 +115,12 @@ namespace treyarch {
         u8                              reserved_624[0x10];
         u32                             lifetime_effect;
         u32                             unk_638;
-        u8                              reserved_63c[0x24];
+        bool                            unk_63c;              // the als's on_fire
+        u8                              pad_63d[0x07];
+        u32                             unk_644;              // the als's in_water when set
+        u8                              reserved_648[0x0C];
+        u32                             unk_654;              // the als's wading_water when set
+        u8                              reserved_658[0x08];
         param_block                     my_param_block;
         bool                            unk_680;
         u8                              pad_681[0x03];
@@ -149,6 +155,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, records,                0x030);
     ASSERT_OFFSETOF(ai_core, active_records,         0x5B0);
     ASSERT_OFFSETOF(ai_core, unk_5bc,                0x5BC);
+    ASSERT_OFFSETOF(ai_core, unk_5c4,                0x5C4);
     ASSERT_OFFSETOF(ai_core, my_base_machine,        0x5D4);
     ASSERT_OFFSETOF(ai_core, my_machine_list,        0x5DC);
     ASSERT_OFFSETOF(ai_core, my_mode,                0x5F4);
@@ -158,6 +165,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, locomotion_exit_status, 0x60C);
     ASSERT_OFFSETOF(ai_core, my_team,                0x614);
     ASSERT_OFFSETOF(ai_core, alive,                  0x618);
+    ASSERT_OFFSETOF(ai_core, unk_63c,                0x63C);
+    ASSERT_OFFSETOF(ai_core, unk_644,                0x644);
+    ASSERT_OFFSETOF(ai_core, unk_654,                0x654);
     ASSERT_OFFSETOF(ai_core, state_category,         0x61C);
     ASSERT_OFFSETOF(ai_core, flags,                  0x620);
     ASSERT_OFFSETOF(ai_core, lifetime_effect,        0x634);

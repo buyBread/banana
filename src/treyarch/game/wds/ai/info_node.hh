@@ -35,6 +35,7 @@ namespace treyarch {
         info_node_type_std_fear                = 20,
         info_node_type_flight_layer            = 21,
         info_node_type_jump_layer              = 22,
+        info_node_type_ai_rappel               = 25,
         info_node_type_slave                   = 27,
         info_node_type_combat_target           = 30,
         info_node_type_voice_box               = 31,
@@ -82,7 +83,8 @@ namespace treyarch {
     public:
         u8   reserved_030[0x5C];
         bool unk_08c;           // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
-        u8   reserved_08d[0x23];
+        u8   reserved_08d[0x1F];
+        u32  unk_0ac;           // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
     };
 
     // flight_mocomp flies the actor through it; swift_flight_layer_inode derives from it
@@ -95,11 +97,21 @@ namespace treyarch {
         vector3d unk_0f4;            // otherwise toward it, at the inode's speeds
         u8       reserved_100[0x15];
         bool     unk_115;
-        u8       reserved_116[0x3A];
+        u8       reserved_116[0x02];
+        f32      unk_118;            // the als's ai_flight_bank
+        u8       reserved_11c[0x0C];
+        f32      unk_128;            // the als's ai_flight_pitch
+        u8       reserved_12c[0x24];
     };
 
-    inline const string_hash flight_layer_inode_key       = string_hash(hash::djb2("flight_layer_inode"));
-    inline const string_hash swift_flight_layer_inode_key = string_hash(hash::djb2("swift_flight_layer_inode"));
+    inline const string_hash biped_layer_inode_key            = string_hash(hash::djb2("biped_layer_inode"));
+    inline const string_hash crawl_layer_inode_key            = string_hash(hash::djb2("crawl_layer_inode"));
+    inline const string_hash flight_layer_inode_key           = string_hash(hash::djb2("flight_layer_inode"));
+    inline const string_hash swift_flight_layer_inode_key     = string_hash(hash::djb2("swift_flight_layer_inode"));
+    inline const string_hash hybrid_layer_inode_key           = string_hash(hash::djb2("hybrid_layer_inode"));
+    inline const string_hash swift_surface_layer_inode_key    = string_hash(hash::djb2("swift_surface_layer_inode"));
+    inline const string_hash swift_stationary_layer_inode_key = string_hash(hash::djb2("swift_stationary_layer_inode"));
+    inline const string_hash teleporting_layer_inode_key      = string_hash(hash::djb2("teleporting_layer_inode"));
 
     class std_carry_inode : public info_node {
 
@@ -146,11 +158,14 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (loco_inode,          0xB0);
     ASSERT_OFFSETOF(loco_inode, unk_08c, 0x8C);
+    ASSERT_OFFSETOF(loco_inode, unk_0ac, 0xAC);
 
     ASSERT_SIZEOF  (flight_layer_inode,          0x150);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0f4, 0xF4);
     ASSERT_OFFSETOF(flight_layer_inode, unk_115, 0x115);
+    ASSERT_OFFSETOF(flight_layer_inode, unk_118, 0x118);
+    ASSERT_OFFSETOF(flight_layer_inode, unk_128, 0x128);
 
     ASSERT_SIZEOF  (std_carry_inode,          0x68);
     ASSERT_OFFSETOF(std_carry_inode, unk_030, 0x30);
