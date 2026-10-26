@@ -91,6 +91,39 @@ namespace treyarch { namespace chuck { namespace vm {
                                e_vm_dynamic_array_release_mode mode);
     };
 
+    // SM3: a native's array argument; one it allocated itself goes back with it
+    template<typename T>
+    class script_dynamic_array {
+
+    public:
+        chuck_dynamic_array_t* array;
+        bool                   allocated;
+
+        script_dynamic_array(chuck_dynamic_array_t* arr) : array(arr),
+                                                           allocated(false) {}
+
+        // sub_8433A0
+        ~script_dynamic_array() {
+            destroy_array();
+        }
+
+        void destroy_array() {
+            if (allocated)
+                vm_dynamic_array_manager::inst()->remove_reference(array);
+
+            array     = nullptr;
+            allocated = false;
+        }
+
+        i32 size() const {
+            return (i32)array->size();
+        }
+
+        T &operator[](u32 index) {
+            return *(T*)&(*array)[index].stuff[0];
+        }
+    };
+
     namespace references {
         inline util::memory_reference<engine_recursive_lock*> dynamic_array_lock { 0x01124758 };
     } // references
@@ -105,4 +138,7 @@ namespace treyarch { namespace chuck { namespace vm {
     ASSERT_SIZEOF  (vm_dynamic_array_manager,               0x0C);
     ASSERT_OFFSETOF(vm_dynamic_array_manager, slot_buckets, 0x04);
     ASSERT_OFFSETOF(vm_dynamic_array_manager, unk_08,       0x08);
+
+    ASSERT_SIZEOF  (script_dynamic_array<f32>,            0x08);
+    ASSERT_OFFSETOF(script_dynamic_array<f32>, allocated, 0x04);
 }}} // treyarch::chuck::vm
