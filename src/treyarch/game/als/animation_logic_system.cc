@@ -695,9 +695,109 @@ const als::als_meta_anim_table_shared* als::animation_logic_system::get_meta_ani
 
 // sub_5E1EC0
 void als::animation_logic_system::enter_biped_physics(state_machine** machines, i32 num_machines, bool unk) {
-    using enter_biped_physics_t = void (__thiscall*)(animation_logic_system*, state_machine**, i32, bool);
+    engine_lock_scope lock(&jq::references::unk_01003428.get());
 
-    ((enter_biped_physics_t)retail::sub_5E1EC0)(this, machines, num_machines, unk);
+    actor* entering = the_actor;
+
+    // a state with flag 0x20000 starts from rest; otherwise one frame more is posed in place first, the queues run here and now
+    if (unk || (the_base_sm.curr_state->flags & 0x20000))
+        entering->physical_ifc()->cancel_all_velocity(treyarch::references::unk_00fd4370.get(), true);
+    else {
+        vector3d position = entering->my_abs_po->get_position();
+
+        retail::sub_816E40((i32)entering, 0); // biped physics: the pose before
+
+        curr_mocomp->pre_anim_action(0.033333335f);
+
+        {
+            engine_lock_scope queues(&jq::references::unk_01126d10.get());
+
+            // the controller won't run, so the machines raise their own signals
+            auto controller_down = [this] {
+                animation_controller_state* state = the_controller->state;
+
+                return (state && state->unk_128) || !state || state->is_suspended;
+            };
+
+            if (controller_down()) {
+                for (i32 index = 0; index < num_machines; ++index) {
+                    state_machine* machine = machines[index];
+
+                    if (!machine->curr_hit_pause_events || !machine->curr_hit_pause_events->size)
+                        continue;
+
+                    animation_controller_state* state = the_controller->state;
+
+                    if (state && !state->unk_128 && !state->is_suspended)
+                        state->job.delta_t = 0.033333335f;
+                    else
+                        state->job.controller = nullptr;
+
+                    pre_animation_event_signal_jq::start(false);
+                    pre_animation_event_signal_jq::static_batch.get().payload[0] = machine;
+                    pre_animation_event_signal_jq::add_batch(1);
+                    pre_animation_event_signal_jq::finish(false);
+                }
+            }
+
+            animation_controller_jq::start(false);
+
+            if (animation_controller_state* state = the_controller->state; state && !state->unk_128 && !state->is_suspended) {
+                state->job.controller       = the_controller;
+                state->job.skip_matrices    = state->job.wants_skip_matrices;
+                state->job.delta_t          = 0.033333335f;
+                state->job.num_pose_records = 0;
+
+                animation_controller_jq::static_batch.get().payload[0] = &state->job;
+                animation_controller_jq::add_batch(1);
+            }
+
+            animation_controller_jq::finish(false);
+
+            if (controller_down()) {
+                for (i32 index = 0; index < num_machines; ++index) {
+                    state_machine* machine = machines[index];
+
+                    if (machine->curr_events && machine->curr_events->size) {
+                        animation_event_signal_jq::start(false);
+                        animation_event_signal_jq::static_batch.get().payload[0] = machine;
+                        animation_event_signal_jq::add_batch(1);
+                        animation_event_signal_jq::finish(false);
+                    } else if (the_controller->state->layer_anims[machine->get_layer_id()].size()) {
+                        layer_id                    layer = machine->get_layer_id();
+                        animation_controller_state* state = the_controller->state;
+
+                        if (state && !state->unk_128 && !state->is_suspended && state->layer_anims[layer].size()) {
+                            animation_signal_jq::start(false);
+                            animation_signal_jq::static_batch.get().payload[0] = &state->layer_anims[layer];
+                            animation_signal_jq::add_batch(1);
+                            animation_signal_jq::finish(false);
+                        }
+                    }
+                }
+            }
+
+            scratch_arena arena;
+            arena.size      = 0x10000;
+            arena.alignment = 16;
+            arena.base      = &references::pose_scratch.get();
+            arena.cursor    = arena.base;
+
+            the_controller->add_pose_jq_batch(&arena, true);
+        }
+
+        curr_mocomp->post_anim_action(0.033333335f);
+
+        retail::sub_816E40((i32)the_actor, 1); // biped physics: the pose after
+
+        ((void (__cdecl*)(f32))retail::sub_80EC50)(0.033333335f); // biped physics: the step it starts with
+
+        retail::sub_6271F0((u32*)entering, (i32)&position); // entity_base::set_abs_position
+    }
+
+    retail::sub_6271F0((u32*)entering, (i32)&actor_position);
+
+    retail::sub_67FB10((u32*)entering->physical_ifc()); // physical_interface::start_biped_physics
 }
 
 // sub_5BB200
