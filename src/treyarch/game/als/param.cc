@@ -605,6 +605,149 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             return *(f32*)((u8*)rappel + 0x48);
         }
 
+        case param_random_zero_to_one:
+            return (f32)retail::sub_408AC0();
+
+        case param_random_plus_minus_one:
+            return (f32)(retail::sub_408AE0(2.0f) - 1.0);
+
+        // 1 or -1
+        case param_on_fire: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core || !core->unk_63c)
+                return -1.0f;
+
+            return 1.0f;
+        }
+
+        case param_in_water: {
+            ai_core* core = the_actor->get_ai_core();
+
+            return core && core->unk_644 ? 1.0f : 0.0f;
+        }
+
+        case param_wading_water: {
+            ai_core* core = the_actor->get_ai_core();
+
+            return core && core->unk_654 ? 1.0f : 0.0f;
+        }
+
+        // whether the master's layer changed state this frame; -1 without a master
+        case param_sync_master_changed_state: {
+            animation_controller* ctrl = the_actor->anim_ctrl;
+
+            if (!ctrl || !ctrl->has_master())
+                return -1.0f;
+
+            actor* master = ctrl->get_master()->get_actor();
+
+            if (!master)
+                return 0.0f;
+
+            animation_logic_system_interface* master_als = master->get_als();
+
+            if (!master_als)
+                return 0.0f;
+
+            state_machine_interface* layer = master_als->get_als_layer((layer_id)retail::sub_5AD300((i32*)ctrl));
+
+            return layer && layer->did_transition_succeed() ? 1.0f : 0.0f;
+        }
+
+        // the same of the coordinator's layer; -1 without a coordinator
+        case param_coordinator_changed_state: {
+            if (!the_als->has_coordinator())
+                return -1.0f;
+
+            animation_logic_system_interface* coordinator = the_als->get_coordinator();
+            state_machine_interface*          layer       = coordinator->get_als_layer((layer_id)coordinator->get_coordinator_unk());
+
+            return layer && layer->did_transition_succeed() ? 1.0f : 0.0f;
+        }
+
+        case param_ai_cover_type: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return -1.0f;
+
+            info_node* cover = core->get_info_node(info_node_type_ai_cover);
+
+            if (!cover)
+                return -1.0f;
+
+            return (f32)retail::sub_454F20((char*)cover);
+        }
+
+        // where a conglomerate rolls against its facing, both level: 0 ahead, 1 behind; with 4 ways, 2 right and 3 left
+        case param_ai_roll_type_2:
+        case param_ai_roll_type_4: {
+            if (!the_actor->is_a_conglomerate())
+                return 0.0f;
+
+            u32* physical = (u32*)retail::sub_5B76B0((u32*)the_actor);
+
+            if (!physical)
+                return 0.0f;
+
+            vector3d velocity;
+            retail::sub_60F130((i32)physical, (i32)&velocity); // physical_interface::get_velocity
+
+            using get_member_abs_position_t = bool (__thiscall*)(actor*, const string_hash*, vector3d*, i32);
+
+            // the pelvis toward the head when it has both, else the velocity
+            vector3d facing = velocity;
+            vector3d head;
+            vector3d pelvis;
+
+            if (((get_member_abs_position_t)retail::sub_402560)(the_actor, &references::bip01_head.get(), &head, 0) && // conglomerate::get_member_abs_position
+                ((get_member_abs_position_t)retail::sub_402560)(the_actor, &references::bip01_pelvis.get(), &pelvis, 0)) {
+
+                facing.x = head.x - pelvis.x;
+                facing.z = head.z - pelvis.z;
+            }
+
+            facing.y = 0.0f;
+
+            if (retail::sub_401FF0((f32*)&facing) > 0.0001f)
+                retail::sub_402050((f32*)&facing);
+            else
+                facing = treyarch::references::unk_00e68098.get();
+
+            vector3d moving = velocity;
+            moving.y = 0.0f;
+
+            if (retail::sub_401FF0((f32*)&moving) > 0.0001f)
+                retail::sub_402050((f32*)&moving);
+            else
+                moving = facing;
+
+            if (param == param_ai_roll_type_2)
+                return moving * facing >= 0.0f ? 0.0f : 1.0f;
+
+            const vector3d &world_up = treyarch::references::unk_00e6808c.get();
+            const vector3d &zero     = treyarch::references::unk_00fd4370.get();
+
+            math::vector4 dir(moving.x, moving.y, moving.z, 0.0f);
+            math::vector4 up(world_up.x, world_up.y, world_up.z, 0.0f);
+            math::vector4 origin(zero.x, zero.y, zero.z, 0.0f);
+
+            po basis;
+            retail::sub_402C60((u64*)&basis, (f32*)&dir, (f32*)&up, (i32)&origin);
+
+            f32 along  = basis.get_z_facing() * facing;
+            f32 across = basis.get_x_facing() * facing;
+
+            if (std::fabs(along) > std::fabs(across))
+                return along >= 0.0f ? 0.0f : 1.0f;
+
+            return !(across >= 0.0f) ? 3.0f : 2.0f;
+        }
+
+        case param_is_visible:
+            return retail::sub_4E1FC0((u32*)the_actor) ? 1.0f : 0.0f;
+
         default:
             break;
     }

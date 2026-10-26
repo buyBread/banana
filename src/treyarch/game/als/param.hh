@@ -333,8 +333,9 @@ namespace treyarch { namespace als {
     f32 compute_angle_between_vectors(const vector3d &forward, const vector3d &side, const vector3d &dir);
 
     namespace references {
-        // "BIP01 PELVIS", hashed by the CRT initializers
+        // "BIP01 PELVIS" and "BIP01 HEAD", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_pelvis { 0x010034A8 };
+        inline util::memory_reference<string_hash> bip01_head   { 0x01003A40 };
     } // references
 
     // what a request carries to the state machine
