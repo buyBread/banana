@@ -18,7 +18,9 @@ namespace treyarch {
     struct player_interface_vtable : generic_interface_vtable {
         bool                            (__thiscall* is_enabled)(const player_interface* self);
         void                            (__thiscall* set_enabled)(player_interface* self, bool enabled);
-        void*                           reserved_slots_021[68];
+        void*                           reserved_slots_021[40];
+        arch_base_vhandle*              (__thiscall* unk_061)(player_interface* self, arch_base_vhandle* result); // rvb: its +0x728; a null handle in player_interface
+        void*                           reserved_slots_062[27];
         bool                            (__thiscall* map_controls)(player_interface* self, i32 config, bool force);
         player_interface_method         render_phase;           // entity::invoke_render_phase
         player_interface_method         update_interface;
@@ -33,9 +35,11 @@ namespace treyarch {
         bool                            (__thiscall* unk_388)(player_interface* self); // rvb: that pole leans more than 45 degrees off vertical
         void*                           reserved_slots_389[78];
         void*                           (__thiscall* unk_467)(player_interface* self); // rvb: clears +0xA44's first byte and returns it, a handle at +4; null in player_interface
+        void*                           reserved_slots_468[5];
+        arch_base_vhandle*              (__thiscall* unk_473)(player_interface* self, arch_base_vhandle* result); // its +0x498
     };
 
-    ASSERT_SIZEOF(player_interface_vtable, 468 * 4);
+    ASSERT_SIZEOF(player_interface_vtable, 474 * 4);
 
     class player_interface : public actor_interface {
 
@@ -62,6 +66,13 @@ namespace treyarch {
 
         void set_enabled(bool value) {
             get_vtable()->set_enabled(this, value);
+        }
+
+        arch_base_vhandle unk_061() {
+            arch_base_vhandle result;
+            get_vtable()->unk_061(this, &result);
+
+            return result;
         }
 
         void render_phase() {
@@ -98,6 +109,13 @@ namespace treyarch {
 
         void* unk_467() {
             return get_vtable()->unk_467(this);
+        }
+
+        arch_base_vhandle unk_473() {
+            arch_base_vhandle result;
+            get_vtable()->unk_473(this, &result);
+
+            return result;
         }
 
         player_reflexes* get_reflexes() {
