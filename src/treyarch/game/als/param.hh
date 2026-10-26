@@ -336,6 +336,13 @@ namespace treyarch { namespace als {
         // "BIP01 PELVIS" and "BIP01 HEAD", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_pelvis { 0x010034A8 };
         inline util::memory_reference<string_hash> bip01_head   { 0x01003A40 };
+
+        // the switch signals, hashed from their names by the CRT initializers
+        inline util::memory_reference<string_hash> combo_next_move_switch_time { 0x0102C634 };
+        inline util::memory_reference<string_hash> combo_restart_switch_time   { 0x0102C39C };
+        inline util::memory_reference<string_hash> nav_exit_switch_time        { 0x0102C53C };
+        inline util::memory_reference<string_hash> block_exit_switch_time      { 0x0102C4AC };
+        inline util::memory_reference<string_hash> early_exit_switch_time      { 0x0102C63C };
     } // references
 
     // what a request carries to the state machine

@@ -8,14 +8,20 @@
 #include "treyarch/game/als/internal.hh"
 #include "treyarch/game/als/param.hh"
 #include "treyarch/game/als/state_machine.hh"
+#include "treyarch/app/app.hh"
 #include "treyarch/game/animation/animation_controller.hh"
+#include "treyarch/game/game.hh"
+#include "treyarch/game/spawn_table_manager.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
+#include "treyarch/game/wds/ai/ai_state_machine.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/conglomerate.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/player_interface.hh"
 #include "treyarch/game/wds/entity/interface/standing_interface.hh"
+#include "treyarch/game/wds/references.hh"
+#include "treyarch/game/wds/world_dynamics_system.hh"
 #include "treyarch/shared/math/references.hh"
 
 using namespace treyarch;
@@ -134,6 +140,17 @@ string_hash als::internal_parameter_cache::get_internal_hash(animation_logic_sys
 // sub_5E90D0
 f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_system* the_als, state_machine* the_sm, param_id param) {
     actor* the_actor = the_als->get_actor();
+
+    // 1 once the state's signal is behind, 0 before it
+    auto signal_passed = [the_sm](const string_hash &signal, f32 missing) {
+        bool exists = false;
+        f32  time   = the_sm->get_time_to_signal(signal, &exists, false, nullptr);
+
+        if (!exists)
+            return missing;
+
+        return 0.0f >= time ? 1.0f : 0.0f;
+    };
 
     switch (param) {
         case param_current_time_in_seconds: {
@@ -748,14 +765,259 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         case param_is_visible:
             return retail::sub_4E1FC0((u32*)the_actor) ? 1.0f : 0.0f;
 
+        // -1 without a view camera
+        case param_distance_to_camera: {
+            if (!treyarch::references::game.read() || !treyarch::references::game.read()->get_current_view_camera())
+                return -1.0f;
+
+            const vector3d &camera_position = treyarch::references::game.read()->get_current_view_camera()->my_abs_po->get_position();
+            const vector3d &position        = the_actor->my_abs_po->get_position();
+
+            math::vector4 offset(position.x - camera_position.x, position.y - camera_position.y, position.z - camera_position.z, 0.0f - 0.0f);
+
+            return (f32)retail::sub_42A9E0((f32*)&offset);
+        }
+
+        // -1 without a hero
+        case param_distance_to_hero: {
+            world_dynamics_system* world = treyarch::references::g_world_ptr.read();
+
+            if (!world)
+                return -1.0f;
+
+            entity* hero = world->get_hero_ptr();
+
+            if (!hero)
+                return -1.0f;
+
+            const vector3d &hero_position = hero->my_abs_po->get_position();
+            const vector3d &position      = the_actor->my_abs_po->get_position();
+
+            math::vector4 offset(position.x - hero_position.x, position.y - hero_position.y, position.z - hero_position.z, 0.0f - 0.0f);
+
+            return (f32)retail::sub_42A9E0((f32*)&offset);
+        }
+
+        // the view camera's facing against the way from it to the actor; -1 without one
+        case param_pos_to_camera_facing_dot_product:
+        case param_pos_to_camera_facing_angle: {
+            if (!treyarch::references::game.read() || !treyarch::references::game.read()->get_current_view_camera())
+                return -1.0f;
+
+            vector3d away = the_actor->my_abs_po->get_position() - treyarch::references::game.read()->get_current_view_camera()->my_abs_po->get_position();
+
+            retail::sub_402050((f32*)&away);
+
+            vector3d facing = treyarch::references::game.read()->get_current_view_camera()->my_abs_po->get_z_facing();
+
+            retail::sub_402050((f32*)&facing);
+
+            if (param == param_pos_to_camera_facing_dot_product)
+                return away * facing;
+
+            f32 dot = away * facing;
+
+            if (dot > 1.0f)
+                return 0.0f;
+
+            if (-1.0f > dot)
+                return 180.0f;
+
+            return (f32)((f64)math::acos(dot) * 57.29577791868205);
+        }
+
+        case param_combo_next_move_switch:
+            return signal_passed(references::combo_next_move_switch_time.read(), 0.0f);
+
+        case param_combo_restart_switch:
+            return signal_passed(references::combo_restart_switch_time.read(), 0.0f);
+
+        case param_nav_exit_switch:
+            return signal_passed(references::nav_exit_switch_time.read(), 0.0f);
+
+        // open when the anim has no such signal
+        case param_block_exit_switch:
+            return signal_passed(references::block_exit_switch_time.read(), 1.0f);
+
+        case param_early_exit_switch:
+            return signal_passed(references::early_exit_switch_time.read(), 0.0f);
+
+        // 1 or -1
+        case param_is_informant_scared:
+        case param_is_informant_dropped: {
+            if (!the_actor->get_ai_core())
+                return -1.0f;
+
+            info_node* carry = the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+            if (!carry || !retail::sub_425020((u32*)carry))
+                return -1.0f;
+
+            if (param == param_is_informant_scared ? !retail::sub_492510((u32*)carry) : !retail::sub_492540((u32*)carry))
+                return -1.0f;
+
+            return 1.0f;
+        }
+
+        case param_can_super_recover: {
+            ai_core* core = the_actor->get_ai_core();
+
+            return core && retail::sub_4C9EC0((i32)core) ? 1.0f : 0.0f;
+        }
+
+        case param_can_recover_to_wall: {
+            ai_core* core = the_actor->get_ai_core();
+
+            return core && retail::sub_4C9530((i32)core) ? 1.0f : 0.0f;
+        }
+
+        case param_can_recover_to_rooftop: {
+            ai_core* core = the_actor->get_ai_core();
+
+            return core && retail::sub_4C8860((i32)core) ? 1.0f : 0.0f;
+        }
+
+        case param_ai_rvb_pod_off_base:
+        case param_is_pod_converting_symbiote:
+        case param_ai_rvb_frenzy_mode: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+
+            if (!basic)
+                return 0.0f;
+
+            if (param == param_ai_rvb_pod_off_base)
+                return (f32)retail::sub_4F9030((u8**)basic, 649);
+
+            if (param == param_is_pod_converting_symbiote)
+                return (f32)!retail::sub_4F9030((u8**)basic, 963);
+
+            return (f32)retail::sub_4F9030((u8**)basic, 397);
+        }
+
+        case param_is_in_stars_mode:
+            if (!spawn_table_manager::is_inst() || !*((u8*)spawn_table_manager::inst()->unk_04c + 0x144))
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_pod_conversion_type: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+
+            if (!basic)
+                return 0.0f;
+
+            string_hash name;
+            name.initialize(mash::ALLOCATED, nullptr, 0x0DB63789);
+
+            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+        }
+
+        // the player's unk_061 target's basic node's, which the player always has
+        case param_target_mini_head_damage_level: {
+            arch_base* target = the_actor->player_ifc()->unk_061().resolve();
+
+            if (!target || !target->is_an_actor())
+                return 0.0f;
+
+            ai_core* core = ((actor*)target)->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+
+            if (!basic)
+                return 0.0f;
+
+            string_hash name;
+            name.initialize(mash::ALLOCATED, nullptr, 0x6698AF55);
+
+            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+        }
+
+        case param_mv_mini_head_index: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return -1.0f;
+
+            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+
+            if (!basic)
+                return -1.0f;
+
+            string_hash name;
+            name.initialize(mash::ALLOCATED, nullptr, 0x2BBCDF37);
+
+            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+        }
+
+        case param_is_riding_rhino: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* puppet = core->get_info_node(info_node_type_std_puppet);
+
+            if (!puppet)
+                return 0.0f;
+
+            return (f32)retail::sub_490FF0((u32*)puppet);
+        }
+
+        // the base machine's combat state's first target, whether it's in a sync anim or carried
+        case param_rvb_target_in_sync_anim:
+        case param_rvb_target_is_carried: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core || !core->my_base_machine)
+                return 0.0f;
+
+            treyarch::base_state* current = core->my_base_machine->my_curr_state;
+
+            // slot 15, true only for combat_state
+            if (!((bool (__thiscall*)(treyarch::base_state*))(*(void***)current)[15])(current))
+                return 0.0f;
+
+            if (retail::sub_83D760((void*)retail::sub_A1D180((u32*)current)) <= 0)
+                return 0.0f;
+
+            arch_base_vhandle target_handle = **(arch_base_vhandle**)(*(u8**)retail::sub_A1D180((u32*)current) + 4);
+            arch_base*        target        = target_handle.resolve();
+
+            if (!target)
+                return 0.0f;
+
+            if (param == param_rvb_target_in_sync_anim)
+                return (f32)((((entity*)target)->ext_flags >> 17) & 1);
+
+            if (!target->is_an_actor())
+                return 0.0f;
+
+            info_node* carry = ((actor*)target)->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+            if (!carry)
+                return 0.0f;
+
+            return (f32)(((std_carry_inode*)carry)->unk_030 != nullptr);
+        }
+
         default:
             break;
     }
 
-    // the cases not in source yet
-    using calculate_internal_float_t = f32 (__thiscall*)(internal_parameter_cache*, animation_logic_system*, state_machine*, param_id);
-
-    return ((calculate_internal_float_t)retail::sub_5E90D0)(this, the_als, the_sm, param);
+    return 0.0f;
 }
 
 // sub_5AFC80
