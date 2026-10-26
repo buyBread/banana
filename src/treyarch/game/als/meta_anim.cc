@@ -285,7 +285,26 @@ bool als::als_meta_anim_by_filename::is_delay_create() {
 
 // sub_5E2F80
 void als::als_meta_anim_by_filename::delay_create(actor* the_actor) {
-    ((void (__thiscall*)(als_meta_anim_by_filename*, actor*))retail::sub_5E2F80)(this, the_actor);
+    nal_anim_id the_anim_name = get_anim_id_to_play(the_actor);
+
+    fixed_string name;
+
+    name.hash = string_hash(hash::djb2(the_anim_name.text));
+    name.set_text(the_anim_name.text);
+
+    nal::anim* anim = nal::get_anim(&name);
+
+    if (name.text)
+        memory::heap::free(name.text);
+
+    // the current context's, then the packs that may hold it
+    if (!anim &&
+        !(anim = find_anim_in_partition(amalga::resource_partition_mission, the_anim_name, false, nullptr)) &&
+        !(anim = find_anim_in_partition(amalga::resource_partition_common,  the_anim_name, false, nullptr)))
+
+        anim = find_anim_in_partition(amalga::resource_partition_district, the_anim_name, true, nullptr);
+
+    the_anim_ptr = anim;
 }
 
 // inlined @ sub_5F6220
