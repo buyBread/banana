@@ -17,6 +17,12 @@ namespace treyarch {
 
         explicit simple_timer(mash::generating_vtable_version) {}
 
+        simple_timer &operator=(f32 t) {
+            time = t;
+
+            return *this;
+        }
+
         // sub_7E9740
         void construct_mashed_class() {
             time = 0.0f;
