@@ -8,7 +8,7 @@
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
-#include "treyarch/game/cutscene/toa_cutscene.hh"
+#include "treyarch/game/cutscene/cut_scene_toa_helper.hh"
 #include "treyarch/game/event/event_manager.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_loading_screen.hh"
@@ -514,7 +514,7 @@ void mission_manager::process_state_start_unloading() {
     if (references::frontend.get().igo && references::frontend.get().igo->face_button_system)
         retail::sub_6DE2E0((u32*)references::frontend.get().igo->face_button_system);
 
-    retail::sub_808070((i32)toa_cutscene::get());
+    cut_scene_toa_helper::get()->stop();
     retail::sub_730F10((u32*)references::glass_house_manager.read(), 1); // set_glass_house_level
 
     retail::sub_73E3C0((flags & mission_manager_flag_unk_00020000) != 0);

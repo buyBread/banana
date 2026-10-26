@@ -1,7 +1,7 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
 #include "treyarch/game/cutscene/cut_scene_player.hh"
-#include "treyarch/game/cutscene/toa_cutscene.hh"
+#include "treyarch/game/cutscene/cut_scene_toa_helper.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_loading_screen.hh"
 #include "treyarch/game/frontend/igo/igo_3d_scrapbook.hh"
@@ -141,7 +141,7 @@ void game_data::frame_advance() {
         if (references::cut_scene_player.read() && references::cut_scene_player.read()->is_playing())
             open_scrapbook = false;
 
-        if (toa_cutscene::get() && toa_cutscene::get()->is_running())
+        if (cut_scene_toa_helper::get() && cut_scene_toa_helper::get()->is_running())
             open_scrapbook = false;
 
         if (!references::frontend.get().igo->scrapbook->is_active() && open_scrapbook) {

@@ -1,6 +1,6 @@
 #include "retail.hh"
 #include "treyarch/app/app.hh"
-#include "treyarch/game/cutscene/toa_cutscene.hh"
+#include "treyarch/game/cutscene/cut_scene_toa_helper.hh"
 #include "treyarch/game/frontend/frontend_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_camera_widget.hh"
 #include "treyarch/game/frontend/igo/igo_3d_face_button_system.hh"
@@ -149,7 +149,7 @@ void ui_frontend::draw() {
         if (!current_game->disable_interface) {
             if (!current_game->game_paused) {
                 if (!current_igo->letterbox || !current_igo->letterbox->is_visible()) {
-                    if (!toa_cutscene::get()->is_running()) {
+                    if (!cut_scene_toa_helper::get()->is_running()) {
                         if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0c0)
                                 unknown_widget_0c0->draw();
@@ -307,7 +307,7 @@ void ui_frontend::draw() {
         (!current_igo->letterbox ||
          !current_igo->letterbox->is_visible())) {
 
-        if (!toa_cutscene::get()->is_running() && !conversation_menu_system->is_conversation_active())
+        if (!cut_scene_toa_helper::get()->is_running() && !conversation_menu_system->is_conversation_active())
             if (radar_widget)
                 radar_widget->draw();
     }

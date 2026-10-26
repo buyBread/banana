@@ -2,6 +2,7 @@
 
 #include "vc8/list.hh"
 #include "treyarch/game/frontend/conversation_menu_system.hh"
+#include "treyarch/game/frontend/igo/igo_3d_agility_test.hh"
 #include "treyarch/game/frontend/igo/igo_3d_boss_meter_system.hh"
 #include "treyarch/game/frontend/igo/igo_3d_enemy_health_manager.hh"
 #include "treyarch/game/frontend/igo/igo_3d_ped_warning_widget.hh"
@@ -88,7 +89,7 @@ namespace treyarch {
         igo_3d_nav_button_bar*              nav_button_bar;
         igo_3d_widget*                      modal_save_dialog;
         igo_3d_widget*                      generic_modal_dialog;
-        igo_3d_widget*                      agility_test;
+        igo_3d_agility_test*                agility_test;
         igo_3d_widget*                      autosave_indicator;
         igo_3d_widget*                      controller_disconnect_dialog;
         igo_3d_face_button_system*          face_button_system;

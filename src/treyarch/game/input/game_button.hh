@@ -2,6 +2,7 @@
 
 #include "treyarch/game/input/input_device.hh"
 #include "treyarch/shared/delta_variable.hh"
+#include "treyarch/shared/mash/types.hh"
 #include "treyarch/shared/timing/simple_timer.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/types.hh"
@@ -40,6 +41,8 @@ namespace treyarch {
             gbflag_non_responsive    = gbflag_disabled | gbflag_suspended
         };
 
+        inline static constexpr f32 default_timeout = 0.3f;
+
         e_trigger_type      trigger_type;
         device_id_t         device_id;
         i32                 control;
@@ -60,10 +63,60 @@ namespace treyarch {
         i16                 tap_counter;
         u16                 flags;
 
+        game_button();
         explicit game_button(i32 control);
+
+        // sub_687320
+        ~game_button() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void initialize(mash::allocation_scope scope);
+        void finalize(mash::allocation_scope scope);
+
+        void set_flag(u32 flag, bool set) {
+            if (set)
+                flags |= flag;
+            else
+                flags &= ~flag;
+        }
 
         bool is_flagged(u32 flag) const {
             return (flags & flag) != 0;
+        }
+
+        void enable(bool tof) {
+            set_flag(gbflag_disabled, !tof);
+        }
+
+        // sub_736050
+        // inlined @ sub_809BB0
+        void set_device_id(device_id_t id) {
+            device_id = id;
+
+            if (primary && !is_flagged(gbflag_external_primary))
+                primary->set_device_id(id);
+
+            if (modifier && !is_flagged(gbflag_external_modifier))
+                modifier->set_device_id(id);
+
+            clear();
+        }
+
+        void set_control(i32 ctrl);
+
+        void clear() {
+            state.force(0.0f);
+
+            pressed_time        = 0.0f;
+            last_pressed_time   = 0.0f;
+            tap_counter         = 0;
+            tap_timeout         = default_timeout;
+            time_since_last_tap = 0.0f;
+            trigger_delay_timer = trigger_delay;
+
+            set_flag(gbflag_positive_tap, false);
+            set_flag(gbflag_negative_tap, false);
         }
 
         bool triggered(bool ignore_disabled = false) const {
