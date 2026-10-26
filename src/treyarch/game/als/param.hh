@@ -3,6 +3,7 @@
 #include "treyarch/shared/hash/string_hash.hh"
 #include "treyarch/shared/math/algebra/vector3d.hh"
 #include "util/macros/sanity_assert.hh"
+#include "util/memory_reference.hh"
 #include "util/types.hh"
 
 namespace treyarch { namespace als {
@@ -45,6 +46,11 @@ namespace treyarch { namespace als {
     };
 
     f32 get_vector_component(const vector3d &vec, e_vector_component component);
+
+    namespace references {
+        // "BIP01 PELVIS", hashed by the CRT initializers
+        inline util::memory_reference<string_hash> bip01_pelvis { 0x010034A8 };
+    } // references
 
     // what a request carries to the state machine
     struct parameter_list {
