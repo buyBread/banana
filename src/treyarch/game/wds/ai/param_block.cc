@@ -124,6 +124,11 @@ i32 param_block::get_optional_pb_int(string_hash parameter, i32 default_value, b
     return ((i32 (__thiscall*)(const param_block*, string_hash, i32, bool*))retail::sub_435340)(this, parameter, default_value, exists);
 }
 
+// sub_435670
+const char* param_block::get_optional_pb_fixedstring(string_hash parameter, const char* default_value, bool* exists) const {
+    return ((const char* (__thiscall*)(const param_block*, string_hash, const char*, bool*))retail::sub_435670)(this, parameter, default_value, exists);
+}
+
 // sub_4354C0
 vector3d param_block::get_optional_pb_vector3d(string_hash parameter, const vector3d &default_value, bool* exists) const {
     using get_optional_pb_vector3d_t = vector3d* (__thiscall*)(const param_block*, vector3d*, string_hash, const vector3d*, bool*);
