@@ -19,6 +19,8 @@
 #include "vc8/vector.hh"
 
 namespace treyarch { namespace als {
+    class expression_animation_entry;
+
     // an actor's animation logic: its base machine, its layers and the mocomp moving it
     class animation_logic_system : public animation_logic_system_interface {
 
@@ -34,7 +36,7 @@ namespace treyarch { namespace als {
         motion_compensator*                curr_mocomp;
         motion_compensator*                the_mocomp_data; // 256 bytes the mocomps are built in
         engine_recursive_lock*             access_lock;
-        void*                              unk_a6c;
+        const expression_animation_entry*  curr_expression; // the entry the morph came from
         bool                               is_suspended;
         bool                               needs_reinit_anim;
         bool                               unk_a72;
@@ -87,7 +89,7 @@ namespace treyarch { namespace als {
         animation_controller* get_controller() const override;
         void                  frame_advance(f32 delta_t, bool force) override;
 
-        virtual void unk_025(void* unk);
+        virtual void set_expression(const expression_animation_entry* entry); // picks the entry's morph when it changes
         virtual void change_mocomp(const state* curr_state, layer_id layer);
 
         // runs what the frame queued, stage by stage; threaded lets the stages use the workers
@@ -177,7 +179,7 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(animation_logic_system, curr_mocomp,        0xA60);
     ASSERT_OFFSETOF(animation_logic_system, the_mocomp_data,    0xA64);
     ASSERT_OFFSETOF(animation_logic_system, access_lock,        0xA68);
-    ASSERT_OFFSETOF(animation_logic_system, unk_a6c,            0xA6C);
+    ASSERT_OFFSETOF(animation_logic_system, curr_expression,    0xA6C);
     ASSERT_OFFSETOF(animation_logic_system, is_suspended,       0xA70);
     ASSERT_OFFSETOF(animation_logic_system, needs_reinit_anim,  0xA71);
     ASSERT_OFFSETOF(animation_logic_system, unk_a72,            0xA72);

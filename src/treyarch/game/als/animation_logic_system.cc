@@ -5,6 +5,7 @@
 #include "treyarch/amalga/resource_pack_slot.hh"
 #include "treyarch/game/als/als_jq.hh"
 #include "treyarch/game/als/animation_logic_system.hh"
+#include "treyarch/game/als/expression_animation.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/animation/animation_controller_jq.hh"
 #include "treyarch/game/animation/animation_pose_jq.hh"
@@ -12,6 +13,7 @@
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/entity/actor.hh"
 #include "treyarch/game/wds/entity/capsule_alter_sys.hh"
+#include "treyarch/game/wds/entity/interface/morph_interface.hh"
 #include "treyarch/game/wds/entity/interface/physical_interface.hh"
 #include "treyarch/game/wds/entity/interface/standing_interface.hh"
 #include "treyarch/game/wds/references.hh"
@@ -27,7 +29,7 @@ als::animation_logic_system::animation_logic_system(actor* _the_actor) : als_sha
                                                                          the_controller(nullptr),
                                                                          mocomp_layer_index(0),
                                                                          curr_mocomp(nullptr),
-                                                                         unk_a6c(nullptr),
+                                                                         curr_expression(nullptr),
                                                                          is_suspended(false),
                                                                          needs_reinit_anim(false),
                                                                          unk_a72(true),
@@ -76,7 +78,7 @@ als::animation_logic_system::~animation_logic_system() {
 
     remove_from_als_list(this);
 
-    unk_a6c = nullptr;
+    curr_expression = nullptr;
 
     if (access_lock)
         memory::heap::free(access_lock);
@@ -1132,22 +1134,17 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
             continue;
 
         if (machine_state->my_param_block) {
-            using get_class_t = void* (__thiscall*)(param_block*, string_hash, i32, bool*);
-
-            // param_block
-            if (void* expression = ((get_class_t)retail::sub_435730)(machine_state->my_param_block, expression_animation_data_id, 0, nullptr)) {
+            if (auto* expression = (expression_animation_data*)machine_state->my_param_block->get_optional_pb_class(expression_animation_data_id, nullptr, nullptr)) {
                 f32 duration  = machine->get_duration();
                 f32 anim_time = machine->get_current_anim_time();
 
-                using apply_t = void (__thiscall*)(void*, animation_logic_system*, actor*, f32, f32);
-
-                ((apply_t)retail::sub_5D4B40)(expression, this, the_actor, anim_time, duration);
+                expression->apply(this, the_actor, anim_time, duration);
 
                 continue;
             }
         }
 
-        unk_025(nullptr);
+        set_expression(nullptr);
     }
 
     // the topmost machine that asks for its own mocomp gets it; the base one by default
@@ -1270,8 +1267,18 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 }
 
 // sub_5D4F80
-void als::animation_logic_system::unk_025(void* unk) {
-    ((void (__thiscall*)(animation_logic_system*, void*))retail::sub_5D4F80)(this, unk);
+void als::animation_logic_system::set_expression(const expression_animation_entry* entry) {
+    if (curr_expression == entry)
+        return;
+
+    curr_expression = entry;
+
+    if (!the_actor->has_ifc(entity_ifc_morph))
+        return;
+
+    resource_key morph = entry ? entry->pick() : resource_key {};
+
+    ((morph_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_morph))->set_morph(morph);
 }
 
 // sub_5D4F10
