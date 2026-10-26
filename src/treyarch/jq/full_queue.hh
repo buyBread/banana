@@ -85,6 +85,7 @@ namespace treyarch { namespace jq {
         }
 
         // sub_5AD430
+        // sub_5AD740
         // sub_5ADA50
         static void add_batch(i32 priority) {
             if (!T::multi_threading.read()) {
@@ -102,8 +103,11 @@ namespace treyarch { namespace jq {
         }
 
         // sub_5AD350
+        // sub_5AD660
         // sub_5AD970
         // sub_5ADE90
+        // sub_5AF420
+        // sub_5AF6E0
         static void wait_on_threads(bool set_work, bool set_unk) {
             if (T::batches_added.read() <= 0)
                 return;
@@ -152,8 +156,11 @@ namespace treyarch { namespace jq {
         }
 
         // sub_5AD480
+        // sub_5AD790
         // sub_5ADAA0
         // sub_5ADF70
+        // sub_5AF500
+        // sub_5AF7C0
         static void finish(bool set_work) {
             unlock_batch_pool();
             wait_on_threads(set_work, false);

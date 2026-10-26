@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/shared/mutex.hh"
 #include "util/macros/sanity_assert.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
@@ -45,6 +46,9 @@ namespace treyarch { namespace jq {
         inline util::memory_reference<bool> tracking_active    { 0x01126CF4 };
         inline util::memory_reference<u32>  tracking_thread_id { 0x01126CF8 };
         inline util::memory_reference<u32>  unk_01126cfc       { 0x01126CFC };
+
+        // zeroed with 0x01126D00 by jobqueue_init; the als takes it around a single-threaded run of its queues
+        inline util::memory_reference<engine_recursive_lock> unk_01126d10 { 0x01126D10 };
 
         // a lite queue with no name of its own, set up at the end of jobqueue_init
         inline util::memory_reference<u8> unnamed_queue_active   { 0x00FD42C2 };
