@@ -186,7 +186,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         case param_frames_from_end_of_anim: {
             f32 left = (f32)-((f64)the_sm->the_controller->get_anim_normalized_time(the_sm->get_layer_id()) - 1.0);
 
-            if (retail::sub_5BA330((i32*)the_sm->the_controller, the_sm->get_layer_id()))
+            if (the_sm->the_controller->has_anim_instance(the_sm->get_layer_id()))
                 left = the_sm->the_controller->get_anim_duration(the_sm->get_layer_id()) * left;
 
             return (f32)((f64)left * 30.0);
@@ -667,7 +667,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!master_als)
                 return 0.0f;
 
-            state_machine_interface* layer = master_als->get_als_layer((layer_id)retail::sub_5AD300((i32*)ctrl));
+            state_machine_interface* layer = master_als->get_als_layer((layer_id)ctrl->get_synced_layer());
 
             return layer && layer->did_transition_succeed() ? 1.0f : 0.0f;
         }
