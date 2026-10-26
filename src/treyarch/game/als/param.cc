@@ -434,6 +434,177 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             return 1.0f;
 
+        // biped 0, crawl 1, flight 2, hybrid 3, teleporting 4; the swift layers by their state; -1 without one
+        case param_ai_locomotion_mode: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return -1.0f;
+
+            loco_inode* loco = core->my_loco_inode;
+
+            if (!loco)
+                return -1.0f;
+
+            if (loco->get_virtual_type_key() == biped_layer_inode_key.source_hash_code)
+                return 0.0f;
+
+            if (loco->get_virtual_type_key() == crawl_layer_inode_key.source_hash_code)
+                return 1.0f;
+
+            if (loco->get_virtual_type_key() == flight_layer_inode_key.source_hash_code)
+                return 2.0f;
+
+            if (loco->get_virtual_type_key() == swift_flight_layer_inode_key.source_hash_code)
+                return 2.0f;
+
+            if (loco->get_virtual_type_key() == hybrid_layer_inode_key.source_hash_code)
+                return 3.0f;
+
+            if (loco->get_virtual_type_key() == swift_surface_layer_inode_key.source_hash_code)
+                return (loco->unk_0ac & 2) ? 1.0f : 0.0f;
+
+            if (loco->get_virtual_type_key() == swift_stationary_layer_inode_key.source_hash_code)
+                return retail::sub_4517D0((u32*)loco) ? 2.0f : 0.0f;
+
+            if (loco->get_virtual_type_key() == teleporting_layer_inode_key.source_hash_code)
+                return 4.0f;
+
+            return -1.0f;
+        }
+
+        case param_ai_flight_bank: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            loco_inode* loco = core->my_loco_inode;
+
+            if (!loco || loco->get_virtual_type_key() != flight_layer_inode_key.source_hash_code)
+                return 0.0f;
+
+            return ((flight_layer_inode*)loco)->unk_118;
+        }
+
+        case param_ai_flight_pitch: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            loco_inode* loco = core->my_loco_inode;
+
+            if (!loco || loco->get_virtual_type_key() != flight_layer_inode_key.source_hash_code)
+                return 0.0f;
+
+            return ((flight_layer_inode*)loco)->unk_128;
+        }
+
+        // the combat node's slice of its pie, while it has one
+        case param_ai_pie_ring: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return -1.0f;
+
+            info_node* combat = core->get_info_node(info_node_type_cpu_combat);
+
+            if (!combat)
+                return -1.0f;
+
+            u8* slice = (u8*)combat + 0x60;
+
+            if (!retail::sub_4E38A0((u32*)slice) || retail::sub_4E7640((f32*)slice))
+                return -1.0f;
+
+            return (f32)*(i32*)(slice + 0x0C);
+        }
+
+        case param_ai_idle_type: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            return (f32)(i32)core->unk_5bc;
+        }
+
+        case param_ai_walk_run_cycle: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            return (f32)(i32)core->unk_5c0;
+        }
+
+        case param_ai_walk_item: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            return (f32)(i32)core->unk_5c4;
+        }
+
+        // the basic node's seat, else the car node's
+        case param_ai_car_seat: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return -1.0f;
+
+            if (info_node* basic = core->get_info_node(info_node_type_ai_basic))
+                return (f32)retail::sub_4E2C10((u32*)basic);
+
+            info_node* car = core->get_info_node(info_node_type_ai_car);
+
+            if (!car)
+                return -1.0f;
+
+            return (f32)*(i32*)((u8*)car + 0x80);
+        }
+
+        case param_ai_car_combat_engaged: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* car = core->get_info_node(info_node_type_ai_car);
+
+            if (!car)
+                return 0.0f;
+
+            return retail::sub_493430((char*)car) ? 1.0f : 0.0f;
+        }
+
+        case param_ai_rappel_engaged: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* rappel = core->get_info_node(info_node_type_ai_rappel);
+
+            return rappel && retail::sub_424DC0((u32*)rappel) ? 1.0f : 0.0f;
+        }
+
+        case param_ai_rappel_speed: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core)
+                return 0.0f;
+
+            info_node* rappel = core->get_info_node(info_node_type_ai_rappel);
+
+            if (!rappel)
+                return 0.0f;
+
+            return *(f32*)((u8*)rappel + 0x48);
+        }
+
         default:
             break;
     }
