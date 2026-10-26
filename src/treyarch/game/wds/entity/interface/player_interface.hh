@@ -28,12 +28,35 @@ namespace treyarch {
         player_interface_advance_method frame_advance_disabled; // sub_992120; clears input/swing state, ignores delta_t
         player_interface_advance_method unk_094;                // nullsub in player_interface; spiderman_rvb_player_interface overrides it
         vector3d*                       (__thiscall* unk_095)(player_interface* self); // its own +0x2F0; the als takes it as a player's velocity
-        void*                           reserved_slots_096[281];
+        void*                           reserved_slots_096[52];
+        f32                             (__thiscall* unk_148)(player_interface* self); // the als's active_jump_charge
+        f32                             (__thiscall* unk_149)(player_interface* self); // the als's jump_charge
+        bool                            (__thiscall* unk_150)(player_interface* self); // the als's blacksuit_swing_window
+        void*                           reserved_slots_151[1];
+        bool                            (__thiscall* unk_152)(player_interface* self); // the als's trick_window
+        void*                           reserved_slots_153[1];
+        i32                             (__thiscall* unk_154)(player_interface* self); // the als's max_trick_combo
+        void*                           reserved_slots_155[219];
+        f32                             (__thiscall* unk_374)(player_interface* self); // the als's swing_time
+        void*                           reserved_slots_375[2];
         bool                            (__thiscall* unk_377)(player_interface* self, vector3d* point); // rvb: the anchor of whichever of its two hands (+0x638) holds one; false in player_interface
         void*                           reserved_slots_378[9];
         void*                           (__thiscall* unk_387)(player_interface* self); // rvb: the pole it swings on (+0x8CC); null in player_interface
         bool                            (__thiscall* unk_388)(player_interface* self); // rvb: that pole leans more than 45 degrees off vertical
-        void*                           reserved_slots_389[78];
+        void*                           reserved_slots_389[12];
+        i32                             (__thiscall* unk_401)(player_interface* self); // the als's swing_hand
+        void*                           reserved_slots_402[1];
+        f32                             (__thiscall* unk_403)(player_interface* self); // the als's swing_level_rating
+        void*                           reserved_slots_404[21];
+        f32                             (__thiscall* unk_425)(player_interface* self); // the als's swing_angle, in degrees
+        void*                           reserved_slots_426[1];
+        f32                             (__thiscall* unk_427)(player_interface* self); // the als's swing_side_angle, in degrees
+        void*                           reserved_slots_428[1];
+        f32                             (__thiscall* unk_429)(player_interface* self); // the als's swing_to_anchor_angle, in degrees
+        void*                           reserved_slots_430[2];
+        f32                             (__thiscall* unk_432)(player_interface* self); // the als's swing_entry_speed
+        f32                             (__thiscall* unk_433)(player_interface* self); // the als's swing_exit_speed
+        void*                           reserved_slots_434[33];
         void*                           (__thiscall* unk_467)(player_interface* self); // rvb: clears +0xA44's first byte and returns it, a handle at +4; null in player_interface
         void*                           reserved_slots_468[5];
         arch_base_vhandle*              (__thiscall* unk_473)(player_interface* self, arch_base_vhandle* result); // its +0x498
@@ -95,6 +118,30 @@ namespace treyarch {
             return get_vtable()->unk_095(this);
         }
 
+        f32 unk_148() {
+            return get_vtable()->unk_148(this);
+        }
+
+        f32 unk_149() {
+            return get_vtable()->unk_149(this);
+        }
+
+        bool unk_150() {
+            return get_vtable()->unk_150(this);
+        }
+
+        bool unk_152() {
+            return get_vtable()->unk_152(this);
+        }
+
+        i32 unk_154() {
+            return get_vtable()->unk_154(this);
+        }
+
+        f32 unk_374() {
+            return get_vtable()->unk_374(this);
+        }
+
         bool unk_377(vector3d* point) {
             return get_vtable()->unk_377(this, point);
         }
@@ -105,6 +152,34 @@ namespace treyarch {
 
         bool unk_388() {
             return get_vtable()->unk_388(this);
+        }
+
+        i32 unk_401() {
+            return get_vtable()->unk_401(this);
+        }
+
+        f32 unk_403() {
+            return get_vtable()->unk_403(this);
+        }
+
+        f32 unk_425() {
+            return get_vtable()->unk_425(this);
+        }
+
+        f32 unk_427() {
+            return get_vtable()->unk_427(this);
+        }
+
+        f32 unk_429() {
+            return get_vtable()->unk_429(this);
+        }
+
+        f32 unk_432() {
+            return get_vtable()->unk_432(this);
+        }
+
+        f32 unk_433() {
+            return get_vtable()->unk_433(this);
         }
 
         void* unk_467() {
