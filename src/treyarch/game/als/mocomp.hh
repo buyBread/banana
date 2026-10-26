@@ -128,6 +128,20 @@ namespace als {
     inline const string_hash tracking_angle_max_id    = string_hash(hash::djb2("tracking_angle_max"));
     inline const string_hash tracking_angle_up_max_id = string_hash(hash::djb2("tracking_angle_up_max"));
 
+    // and about momentum combat
+    inline const string_hash target_speed_id             = string_hash(hash::djb2("target_speed"));
+    inline const string_hash target_speed_min_id         = string_hash(hash::djb2("target_speed_min"));
+    inline const string_hash target_speed_max_id         = string_hash(hash::djb2("target_speed_max"));
+    inline const string_hash blend_vel_id                = string_hash(hash::djb2("blend_vel"));
+    inline const string_hash tracking_id                 = string_hash(hash::djb2("tracking"));
+    inline const string_hash target_sync_partner_id      = string_hash(hash::djb2("target_sync_partner"));
+    inline const string_hash force_target_vec_id         = string_hash(hash::djb2("force_target_vec"));
+    inline const string_hash target_vector_id            = string_hash(hash::djb2("target_vector"));
+    inline const string_hash target_vector_world_id      = string_hash(hash::djb2("target_vector_world"));
+    inline const string_hash stop_on_collision_id        = string_hash(hash::djb2("stop_on_collision"));
+    inline const string_hash align_to_target_up_id       = string_hash(hash::djb2("align_to_target_up"));
+    inline const string_hash force_use_desired_facing_id = string_hash(hash::djb2("force_use_desired_facing"));
+
     // and about circling
     inline const string_hash closest_distance_allowed_id = string_hash(hash::djb2("closest_distance_allowed"));
     inline const string_hash max_rotation_angle_id       = string_hash(hash::djb2("max_rotation_angle"));
@@ -1507,6 +1521,67 @@ namespace als {
         static string_hash my_type_key;
     };
 
+    // carries the actor toward its target at a clamped speed through the move signals, turning it to face it through the rotate signals
+    class momentum_combat_move_and_face : public motion_compensator {
+
+    public:
+        bool     params_read;           // the state's params are read once a frame, on activation and a successful transition
+        u8       pad_011[0x03];
+        f32      initial_speed;         // the velocity's on activation; 0 without physics
+        vector3d initial_velocity;      // the z row without physics
+        bool     collided;              // set when stop_on_collision's probe hits; never read
+        bool     stop_on_collision;
+        bool     align_to_target_up;
+        bool     preserve_y_facing;
+        bool     force_target_vec;
+        bool     target_vector_world;
+        bool     target_dir_set;        // target_vector, param 143 or the velocity chose target_dir; without tracking it then stays
+        bool     tracking;
+        bool     stop_tracking;         // set once the target leaves the tracking limits
+        bool     has_target_pos;        // target_pos is the sync partner's or param 145's, clear of the actor
+        u8       pad_02e[0x02];
+        vector3d target_pos;
+        vector3d up;                    // the world's, the partner's or param 142's, square to target_dir
+        vector3d target_dir;
+        f32      target_speed;          // param target_speed, else the initial speed within the limits below
+        f32      target_speed_min;
+        f32      target_speed_max;
+        f32      tracking_dist_min;
+        f32      tracking_angle_max;    // radians
+        f32      tracking_angle_up_max; // radians
+        bool     target_sync_partner;
+        bool     blend_vel;
+        u8       pad_06e[0x02];
+        f32      anim_time;
+        f32      move_begin_time;
+        f32      move_end_time;
+        f32      rotate_begin_time;
+        f32      rotate_end_time;
+
+        momentum_combat_move_and_face();
+        explicit momentum_combat_move_and_face(mash::generating_vtable_version so_do_nothing);
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(animation_logic_system* the_als_core, layer_id layer) override;
+        void deactivate() override;
+        void pre_anim_action(f32 delta_t) override;
+        void post_anim_action(f32 delta_t) override;
+
+        virtual void     read_params(f32 delta_t);
+        virtual void     read_signal_times();
+        virtual void     track(f32 delta_t, bool initial);
+        virtual po       get_facing_po(f32 delta_t);
+        virtual vector3d get_move_position(f32 delta_t);
+
+        // a master's actor and its follower, else a follower not in this mocomp, a carry or the player's hold; false without both
+        virtual bool get_sync_actors(actor** actor_a, actor** actor_b);
+
+        static string_hash my_type_key;
+    };
+
     // hands the actor to its biped physics with the state's push, holding its pose and po for the physics until each capture
     class biped_physics_mocomp : public motion_compensator {
 
@@ -1718,6 +1793,23 @@ namespace als {
     ASSERT_OFFSETOF(swing_attack_move_and_face, turn_rate,             0x40);
     ASSERT_OFFSETOF(swing_attack_move_and_face, rotate_begin_time,     0x44);
     ASSERT_OFFSETOF(swing_attack_move_and_face, rotate_end_time,       0x48);
+
+    ASSERT_SIZEOF  (momentum_combat_move_and_face,                        0x84);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, params_read,           0x10);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, initial_speed,         0x14);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, initial_velocity,      0x18);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, collided,              0x24);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, target_dir_set,        0x2A);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, has_target_pos,        0x2D);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, target_pos,            0x30);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, up,                    0x3C);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, target_dir,            0x48);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, target_speed,          0x54);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, tracking_angle_up_max, 0x68);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, target_sync_partner,   0x6C);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, blend_vel,             0x6D);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, anim_time,             0x70);
+    ASSERT_OFFSETOF(momentum_combat_move_and_face, rotate_end_time,       0x80);
 
     ASSERT_SIZEOF  (biped_physics_mocomp,                            0xB0);
     ASSERT_OFFSETOF(biped_physics_mocomp, saved_po,                  0x10);

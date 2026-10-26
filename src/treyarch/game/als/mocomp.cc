@@ -89,7 +89,8 @@ string_hash als::sturn_sync_move_and_face::my_type_key    { 0xC0B28A22 }; // "al
 string_hash als::combat_radial_move_and_face::my_type_key { 0xBF5E446C }; // "als::combat_radial_move_and_face"
 
 string_hash als::biped_physics_mocomp::my_type_key       { 0x91DC0B04 }; // "als::biped_physics_mocomp"
-string_hash als::swing_attack_move_and_face::my_type_key { 0xABCBD289 }; // "als::swing_attack_move_and_face"
+string_hash als::swing_attack_move_and_face::my_type_key    { 0xABCBD289 }; // "als::swing_attack_move_and_face"
+string_hash als::momentum_combat_move_and_face::my_type_key { 0xBE2EEA31 }; // "als::momentum_combat_move_and_face"
 
 string_hash flight_mocomp::my_type_key { 0x9161F0E8 }; // "flight_mocomp"
 
@@ -389,6 +390,12 @@ als::motion_compensator* als::motion_compensator::create_subclass_in_place(mash:
         last_created_size = sizeof(swing_attack_move_and_face);
 
         return memory_buffer ? new (memory_buffer) swing_attack_move_and_face : nullptr;
+    }
+
+    if (the_class_to_make == momentum_combat_move_and_face::my_type_key.source_hash_code) {
+        last_created_size = sizeof(momentum_combat_move_and_face);
+
+        return memory_buffer ? new (memory_buffer) momentum_combat_move_and_face : nullptr;
     }
 
     // the classes not in source yet
@@ -7101,4 +7108,273 @@ po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
     }
 
     return turned;
+}
+
+// sub_5AE4E0
+als::momentum_combat_move_and_face::momentum_combat_move_and_face() : params_read(false),
+                                                                      collided(false),
+                                                                      stop_on_collision(false),
+                                                                      align_to_target_up(false),
+                                                                      preserve_y_facing(false),
+                                                                      force_target_vec(false),
+                                                                      target_vector_world(false),
+                                                                      target_dir_set(false),
+                                                                      tracking(false),
+                                                                      stop_tracking(false),
+                                                                      has_target_pos(false),
+                                                                      target_sync_partner(false),
+                                                                      blend_vel(false) {}
+
+// sub_719350
+als::momentum_combat_move_and_face::momentum_combat_move_and_face(mash::generating_vtable_version so_do_nothing) : motion_compensator(so_do_nothing),
+                                                                                                                   params_read(false),
+                                                                                                                   collided(false),
+                                                                                                                   stop_on_collision(false),
+                                                                                                                   align_to_target_up(false),
+                                                                                                                   preserve_y_facing(false),
+                                                                                                                   force_target_vec(false),
+                                                                                                                   target_vector_world(false),
+                                                                                                                   target_dir_set(false),
+                                                                                                                   tracking(false),
+                                                                                                                   stop_tracking(false),
+                                                                                                                   has_target_pos(false),
+                                                                                                                   target_sync_partner(false),
+                                                                                                                   blend_vel(false) {}
+
+// sub_5AE520
+mash::virtual_types_key als::momentum_combat_move_and_face::get_virtual_type_key() const {
+    return my_type_key.source_hash_code;
+}
+
+// sub_5AE530
+bool als::momentum_combat_move_and_face::is_subclass_of(mash::virtual_types_key parent_class) const {
+    if (motion_compensator::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (motion_compensator::is_subclass_of(parent_class))
+        return true;
+
+    return false;
+}
+
+// sub_5AE560
+i32 als::momentum_combat_move_and_face::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// sub_5D8EB0
+void als::momentum_combat_move_and_face::activate(animation_logic_system*, layer_id layer) {
+    // retail never stores the_als_core; the als's mocomp buffer still holds it from the mocomp before
+    the_base  = the_als->get_als_layer_internal(layer);
+    the_actor = the_als->get_actor();
+
+    read_params(0.033333335f);
+}
+
+// sub_5C0040
+void als::momentum_combat_move_and_face::deactivate() {
+    // the velocity set back to itself
+    if (the_actor->has_ifc(entity_ifc_physical)) {
+        vector3d velocity;
+        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+        retail::sub_6006A0((u32**)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::set_velocity
+    }
+}
+
+// sub_5C0090
+void als::momentum_combat_move_and_face::pre_anim_action(f32 delta_t) {
+    if (the_als->did_transition_succeed())
+        read_params(delta_t);
+    else {
+        anim_time = the_base->get_current_anim_time();
+
+        track(delta_t, false);
+    }
+
+    params_read = false;
+}
+
+// sub_5B4910
+void als::momentum_combat_move_and_face::post_anim_action(f32 delta_t) {
+    vector3d old_position = the_actor->my_abs_po->get_position();
+
+    po       facing   = get_facing_po(delta_t);
+    vector3d position = get_move_position(delta_t);
+
+    facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+
+    const vector3d &moved_to = the_actor->my_abs_po->get_position();
+
+    the_actor->set_frame_delta_trans(vector3d(moved_to.x - old_position.x, moved_to.y - old_position.y, moved_to.z - old_position.z), delta_t);
+}
+
+// sub_5BFBE0
+void als::momentum_combat_move_and_face::read_params(f32 delta_t) {
+    if (params_read)
+        return;
+
+    params_read = true;
+
+    read_signal_times();
+
+    if (the_actor->has_ifc(entity_ifc_physical)) {
+        vector3d velocity;
+        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+
+        initial_velocity = velocity;
+        initial_speed    = initial_velocity.length();
+    } else {
+        initial_velocity = the_actor->my_abs_po->get_z_facing();
+        initial_speed    = 0.0f;
+    }
+
+    target_speed_min   = the_base->get_optional_pb_float(target_speed_min_id, 20.0f, nullptr);
+    target_speed_max   = the_base->get_optional_pb_float(target_speed_max_id, 75.0f, nullptr);
+    tracking_dist_min  = the_base->get_optional_pb_float(tracking_dist_min_id, 1.0f, nullptr);
+    tracking_angle_max = the_base->get_optional_pb_float(tracking_angle_max_id, 180.0f, nullptr);
+
+    f32 up_max = the_base->get_optional_pb_float(tracking_angle_up_max_id, 180.0f, nullptr);
+
+    tracking_angle_up_max = (f32)((f64)up_max * 0.017453293005625408);
+    tracking_angle_max    = (f32)((f64)tracking_angle_max * 0.017453293005625408);
+    stop_tracking         = false;
+
+    blend_vel           = the_base->get_optional_pb_int(blend_vel_id, 0, nullptr) != 0;
+    tracking            = the_base->get_optional_pb_int(tracking_id, 1, nullptr) != 0;
+    target_sync_partner = the_base->get_optional_pb_int(target_sync_partner_id, 0, nullptr) != 0;
+    force_target_vec    = the_base->get_optional_pb_int(force_target_vec_id, 0, nullptr) != 0;
+    target_vector_world = the_base->get_optional_pb_int(target_vector_world_id, 0, nullptr) != 0;
+    stop_on_collision   = the_base->get_optional_pb_int(stop_on_collision_id, 0, nullptr) != 0;
+    align_to_target_up  = the_base->get_optional_pb_int(align_to_target_up_id, 0, nullptr) != 0;
+    preserve_y_facing   = the_base->get_optional_pb_int(preserve_y_facing_id, 0, nullptr) != 0;
+
+    collided  = false;
+    anim_time = the_base->get_current_anim_time();
+
+    if (the_base->does_parameter_exist(target_speed_id))
+        target_speed = the_base->get_optional_pb_float(target_speed_id, 25.0f, nullptr);
+    else {
+        target_speed = initial_speed;
+
+        if (target_speed_min > target_speed)
+            target_speed = target_speed_min;
+        else if (target_speed > target_speed_max)
+            target_speed = target_speed_max;
+    }
+
+    up = treyarch::references::unk_00e6808c.get();
+
+    track(delta_t, true);
+
+    target_dir_set = false;
+
+    the_actor->physical_ifc()->cancel_all_velocity(treyarch::references::unk_00fd4370.get(), true);
+}
+
+// sub_5B2CC0
+void als::momentum_combat_move_and_face::read_signal_times() {
+    // a missing begin is the start, a missing end the anim's end
+    move_begin_time = the_base->get_time_to_signal(references::move_begin.read(), nullptr, false, nullptr);
+
+    if (move_begin_time < 0.0f)
+        move_begin_time = 0.0f;
+
+    move_end_time = the_base->get_time_to_signal(references::move_end.read(), nullptr, false, nullptr);
+
+    if (move_end_time < 0.0f)
+        move_end_time = the_base->get_duration();
+
+    rotate_begin_time = the_base->get_time_to_signal(references::rotate_begin.read(), nullptr, false, nullptr);
+
+    if (rotate_begin_time < 0.0f)
+        rotate_begin_time = 0.0f;
+
+    rotate_end_time = the_base->get_time_to_signal(references::rotate_end.read(), nullptr, false, nullptr);
+
+    if (rotate_end_time < 0.0f)
+        rotate_end_time = the_base->get_duration();
+}
+
+// sub_5D8EF0
+void als::momentum_combat_move_and_face::track(f32 delta_t, bool initial) {
+    using track_t = void (__thiscall*)(momentum_combat_move_and_face*, f32, bool);
+
+    ((track_t)retail::sub_5D8EF0)(this, delta_t, initial);
+}
+
+// sub_5D97F0
+po als::momentum_combat_move_and_face::get_facing_po(f32 delta_t) {
+    using get_facing_po_t = po* (__thiscall*)(momentum_combat_move_and_face*, po*, f32);
+
+    po facing;
+
+    ((get_facing_po_t)retail::sub_5D97F0)(this, &facing, delta_t);
+
+    return facing;
+}
+
+// sub_5C00F0
+vector3d als::momentum_combat_move_and_face::get_move_position(f32 delta_t) {
+    using get_move_position_t = vector3d* (__thiscall*)(momentum_combat_move_and_face*, vector3d*, f32);
+
+    vector3d position;
+
+    ((get_move_position_t)retail::sub_5C00F0)(this, &position, delta_t);
+
+    return position;
+}
+
+// sub_5E31A0
+bool als::momentum_combat_move_and_face::get_sync_actors(actor** actor_a, actor** actor_b) {
+    if (!actor_a || !actor_b)
+        return false;
+
+    *actor_a = nullptr;
+    *actor_b = nullptr;
+
+    animation_controller* actor_nal_ctrl = the_actor->anim_ctrl;
+
+    // following a master, the master's actor leads
+    if (actor_nal_ctrl->has_master()) {
+        *actor_a = actor_nal_ctrl->get_master()->get_actor();
+        *actor_b = the_actor;
+    } else if (actor_nal_ctrl->has_slaves()) {
+        for (animation_controller** slave = actor_nal_ctrl->state->slaves.begin(); slave != actor_nal_ctrl->state->slaves.end(); ++slave) {
+            actor*                  slave_actor = (*slave)->get_actor();
+            animation_logic_system* slave_als   = (animation_logic_system*)slave_actor->get_als();
+
+            if (!slave_als || !slave_als->curr_mocomp || slave_als->curr_mocomp->get_virtual_type_key() != get_virtual_type_key()) {
+                *actor_a = the_actor;
+                *actor_b = slave_actor;
+
+                break;
+            }
+        }
+    }
+
+    // carrying or carried, the other side leads
+    if (!*actor_a && !*actor_b && the_actor->get_ai_core()) {
+        auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+        if (carry && carry->unk_030) {
+            *actor_a = (actor*)retail::sub_4C3A70((u32*)carry->unk_030); // info_node: its core's actor
+            *actor_b = the_actor;
+        }
+    }
+
+    // the player and the actor behind its unk_467
+    if (!*actor_a && !*actor_b && retail::sub_601C50((u32*)the_actor)) {
+        if (void* held = the_actor->player_ifc()->unk_467()) {
+            arch_base_vhandle target = *(arch_base_vhandle*)((u8*)held + 4);
+
+            if (target.resolve() && target.resolve()->is_an_actor()) {
+                *actor_a = (actor*)target.resolve();
+                *actor_b = the_actor;
+            }
+        }
+    }
+
+    return *actor_a && *actor_b;
 }
