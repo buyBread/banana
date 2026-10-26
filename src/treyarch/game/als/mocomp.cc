@@ -7017,11 +7017,88 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
 
 // sub_5C0A70
 po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
-    using get_turned_po_t = po* (__thiscall*)(swing_attack_move_and_face*, po*, f32);
+    auto unitized = [](const vector3d &value) {
+        math::vector4 direction(value.x, value.y, value.z, 0.0f);
+        math::vector4 unit;
 
-    po turned;
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
 
-    ((get_turned_po_t)retail::sub_5C0A70)(this, &turned, delta_t);
+        return vector3d(unit[0], unit[1], unit[2]);
+    };
+
+    po turned = *the_actor->my_abs_po;
+
+    vector3d z_row   = turned.get_z_facing();
+    vector3d y_row   = turned.get_y_facing();
+    vector3d minus_x = -turned.get_x_facing();
+
+    // its up onto up first, giving up tracking past tracking_angle_up_max
+    if (up.length2() > 0.0001f) {
+        f32 angle = math::acos(y_row * up);
+
+        if (angle > tracking_angle_up_max)
+            stop_tracking = true;
+
+        if (angle > 0.01f || angle < -0.01f) {
+            vector3d axis = unitized(cross(y_row, up));
+
+            if (axis.length2() < 0.01f)
+                axis = z_row;
+
+            po rotation;
+            retail::sub_4015B0((u64*)&rotation);
+
+            angle = -angle;
+
+            math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
+            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+
+            z_row   = turned.get_z_facing();
+            minus_x = -turned.get_x_facing();
+        }
+    }
+
+    // then toward facing at turn_rate, giving up tracking past tracking_angle_max
+    vector3d desired = facing - up * (f32)(up * facing);
+
+    if (!(desired.length2() > 0.0001f))
+        return turned;
+
+    desired = unitized(desired);
+    z_row   = z_row - up * (f32)(up * z_row);
+
+    if (!(z_row.length2() > 0.0001f))
+        return turned;
+
+    retail::sub_402050((f32*)&z_row);
+
+    minus_x = minus_x - up * (f32)(up * minus_x);
+
+    retail::sub_402050((f32*)&minus_x);
+
+    f32 along  = z_row * desired;
+    f32 across = minus_x * desired;
+    f32 angle  = (f32)retail::sub_44D790(across, along);
+
+    if (angle > tracking_angle_max)
+        stop_tracking = true;
+
+    f32 max_turn = turn_rate * delta_t;
+
+    if (-max_turn > angle)
+        angle = -max_turn;
+    else if (angle > max_turn)
+        angle = max_turn;
+
+    if (angle > 0.01f || angle < -0.01f) {
+        po rotation;
+        retail::sub_4015B0((u64*)&rotation);
+
+        math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+    }
 
     return turned;
 }
