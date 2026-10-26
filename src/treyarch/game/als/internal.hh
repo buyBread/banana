@@ -172,6 +172,9 @@ namespace treyarch { namespace als {
             return cat_name;
         }
 
+        // the unk_58 record (unk_6c with unk) for the entity's combat id, else for its hit react group, else the unnamed one; past its name
+        void* unk_048(bool unk, entity* the_entity) const;
+
         virtual mash::virtual_types_key get_mocomp_type() const = 0;
         virtual request_data            do_implicit_trans(animation_logic_system* the_als, state_machine* the_sm) const = 0;
         virtual request_data            do_explicit_trans(animation_logic_system* the_als,

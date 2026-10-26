@@ -498,7 +498,7 @@ void* als::state_machine::unk_048(bool unk, entity* the_entity) const {
     if (!curr_state)
         return nullptr;
 
-    return ((void* (__thiscall*)(const state*, bool, entity*))retail::sub_5D4760)(curr_state, unk, the_entity);
+    return curr_state->unk_048(unk, the_entity);
 }
 
 // sub_5D5B50

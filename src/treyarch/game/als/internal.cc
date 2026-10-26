@@ -137,6 +137,59 @@ i32 als::state::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
+// sub_5D4760
+void* als::state::unk_048(bool unk, entity* the_entity) const {
+    string_hash combat_id;
+    string_hash group;
+
+    // the entity's script data names them; a shielded actor's group is the mechs'
+    if (the_entity && the_entity->has_ifc(entity_ifc_script_data)) {
+        string_hash combat_id_name;
+        combat_id_name.initialize(mash::ALLOCATED, "Combat_ID");
+
+        string_hash value;
+        value.initialize(mash::ALLOCATED, ((param_block*)((u8*)the_entity->my_ifc_storage->get_ifc(entity_ifc_script_data) + 0x10))->get_optional_pb_fixedstring(combat_id_name, "", nullptr));
+
+        combat_id = value;
+
+        string_hash group_name;
+        group_name.initialize(mash::ALLOCATED, "hit_react_group");
+
+        value.initialize(mash::ALLOCATED, ((param_block*)((u8*)the_entity->my_ifc_storage->get_ifc(entity_ifc_script_data) + 0x10))->get_optional_pb_fixedstring(group_name, "", nullptr));
+
+        group = value;
+
+        if (the_entity->is_an_actor()) {
+            if (ai_core* core = ((actor*)the_entity)->get_ai_core()) {
+                string_hash shield;
+                shield.initialize(mash::ALLOCATED, "SYM_SHIELD_UP");
+
+                if (core->my_param_block.get_optional_pb_int(shield, 0, nullptr)) {
+                    string_hash mechs;
+                    mechs.initialize(mash::ALLOCATED, "mechs");
+
+                    group = mechs;
+                }
+            }
+        }
+    }
+
+    void* by_group = nullptr;
+    void* unnamed  = nullptr;
+
+    for (state_unk_58* record : unk ? unk_6c : unk_58) {
+        if (combat_id != string_hash() && combat_id == record->unk_00)
+            return &record->unk_04;
+
+        if (group != string_hash() && !by_group && group == record->unk_00)
+            by_group = &record->unk_04;
+        else if (!unnamed && record->unk_00 == string_hash())
+            unnamed = &record->unk_04;
+    }
+
+    return by_group ? by_group : unnamed;
+}
+
 // sub_5EC8C0
 f32 als::state::get_secondary_playback_speed(f32, f32) const {
     return 1.0f;
