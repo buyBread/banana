@@ -477,19 +477,19 @@ void als::motion_compensator::get_po_curr_offset(po &curr_offset) {
 
     // the hit params scale knockdowns and knockups vertically, knockbacks along the ground
     if (position.y <= 0.0f) {
-        if (the_base->get_optional_pb_int(mocomp_allow_air_knockdown_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(89))
-            position.y = the_base->get_external_float(89) * position.y;
-        else if (the_base->get_optional_pb_int(mocomp_allow_knockdown_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(86))
-            position.y = the_base->get_external_float(86) * position.y;
+        if (the_base->get_optional_pb_int(mocomp_allow_air_knockdown_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_air_knockdown_scale))
+            position.y = the_base->get_external_float(param_air_knockdown_scale) * position.y;
+        else if (the_base->get_optional_pb_int(mocomp_allow_knockdown_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_knockdown_scale))
+            position.y = the_base->get_external_float(param_knockdown_scale) * position.y;
     } else {
-        if (the_base->get_optional_pb_int(mocomp_allow_air_knockup_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(88))
-            position.y = the_base->get_external_float(88) * position.y;
-        else if (the_base->get_optional_pb_int(mocomp_allow_knockup_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(85))
-            position.y = the_base->get_external_float(85) * position.y;
+        if (the_base->get_optional_pb_int(mocomp_allow_air_knockup_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_air_knockup_scale))
+            position.y = the_base->get_external_float(param_air_knockup_scale) * position.y;
+        else if (the_base->get_optional_pb_int(mocomp_allow_knockup_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_knockup_scale))
+            position.y = the_base->get_external_float(param_knockup_scale) * position.y;
     }
 
-    if (the_base->get_optional_pb_int(mocomp_allow_air_knockback_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(87)) {
-        f32 scale = the_base->get_external_float(87);
+    if (the_base->get_optional_pb_int(mocomp_allow_air_knockback_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_air_knockback_scale)) {
+        f32 scale = the_base->get_external_float(param_air_knockback_scale);
 
         position.x = position.x * scale;
         position.z = scale * position.z;
@@ -497,8 +497,8 @@ void als::motion_compensator::get_po_curr_offset(po &curr_offset) {
         return;
     }
 
-    if (the_base->get_optional_pb_int(mocomp_allow_knockback_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(84)) {
-        f32 scale = the_base->get_external_float(84);
+    if (the_base->get_optional_pb_int(mocomp_allow_knockback_scale_id, 0, nullptr) && the_base->has_ext_param_been_set(param_knockback_scale)) {
+        f32 scale = the_base->get_external_float(param_knockback_scale);
 
         position.x = position.x * scale;
         position.z = scale * position.z;
@@ -833,11 +833,11 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
     // facing away from the destination, the direction param, or the actor's own
     bool facing_found = false;
 
-    if (base->get_optional_pb_int(use_destination_facing_id, 0, nullptr) && base->has_ext_param_been_set(145)) {
-        vector3d destination = base->get_external_vector(145);
+    if (base->get_optional_pb_int(use_destination_facing_id, 0, nullptr) && base->has_ext_param_been_set(param_desired_destination)) {
+        vector3d destination = base->get_external_vector(param_desired_destination);
 
         if (abs_po->get_position().x != destination.x || abs_po->get_position().y != destination.y || abs_po->get_position().z != destination.z) {
-            destination = base->get_external_vector(145);
+            destination = base->get_external_vector(param_desired_destination);
 
             vector3d away(abs_po->get_position().x - destination.x, abs_po->get_position().y - destination.y, abs_po->get_position().z - destination.z);
             retail::sub_402050((f32*)&away);
@@ -848,14 +848,14 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
     }
 
     if (!facing_found) {
-        if (base->has_ext_param_been_set(143))
-            *desired_dir = base->get_external_vector(143);
+        if (base->has_ext_param_been_set(param_desired_forward_vector))
+            *desired_dir = base->get_external_vector(param_desired_forward_vector);
         else
             *desired_dir = abs_po->get_z_facing();
     }
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else {
         bool own_up = false;
 
@@ -899,8 +899,8 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
 
 // sub_5F2050
 f32 als::simple_orientation::get_turn_rate(f32 delta_t, animation_logic_system*, state_machine* base) {
-    f32 scale = base->has_ext_param_been_set(3) ? std::fabs(base->get_external_float(3)) : 1.0f;
-    f32 rate  = base->has_ext_param_been_set(2) ? base->get_external_float(2) : 0.0f;
+    f32 scale = base->has_ext_param_been_set(param_turn_rate_multiplier) ? std::fabs(base->get_external_float(param_turn_rate_multiplier)) : 1.0f;
+    f32 rate  = base->has_ext_param_been_set(param_turn_rate) ? base->get_external_float(param_turn_rate) : 0.0f;
 
     if (rate <= 0.0001f)
         rate = 720.0f;
@@ -947,7 +947,7 @@ f32 als::simple_orientation::get_turn_rate(f32 delta_t, animation_logic_system*,
 
     // speeds up to the rate over the accel time; it never slows down here
     if ((f64)rate - 0.0001f > turn_rate) {
-        f32 accel_time = base->has_ext_param_been_set(4) ? std::fabs(base->get_external_float(4))
+        f32 accel_time = base->has_ext_param_been_set(param_turn_rate_accel_time) ? std::fabs(base->get_external_float(param_turn_rate_accel_time))
                                                          : base->get_optional_pb_float(turn_accel_time_id, 0.25f, nullptr);
 
         if (accel_time > 0.01f) {
@@ -1052,8 +1052,8 @@ i32 als::strafe_mocomp::get_mash_sizeof() const {
 void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
     vector3d direction = the_actor->my_abs_po->get_z_facing();
 
-    if (the_base->has_ext_param_been_set(144))
-        direction = the_base->get_external_vector(144);
+    if (the_base->has_ext_param_been_set(param_desired_movement_dir))
+        direction = the_base->get_external_vector(param_desired_movement_dir);
 
     math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
     math::vector4 unit;
@@ -1065,7 +1065,7 @@ void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
     f32      speed  = std::sqrt(offset.x * offset.x + offset.z * offset.z);
 
     if (speed < 0.0001f) {
-        f32 default_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+        f32 default_speed = the_base->has_ext_param_been_set(param_desired_speed) ? the_base->get_external_float(param_desired_speed) : 1.0f;
 
         speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
         speed = speed * delta_t;
@@ -1108,13 +1108,13 @@ void als::relative_orientation::get_directions(animation_logic_system*, state_ma
 
     const po* abs_po = the_actor->my_abs_po;
 
-    if (base->has_ext_param_been_set(143))
-        *desired_dir = base->get_external_vector(143);
+    if (base->has_ext_param_been_set(param_desired_forward_vector))
+        *desired_dir = base->get_external_vector(param_desired_forward_vector);
     else
         *desired_dir = abs_po->get_z_facing();
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else
         *desired_up = abs_po->get_y_facing();
 
@@ -1167,13 +1167,13 @@ void als::relative_strafe_mocomp::get_directions(animation_logic_system*, state_
 
     const po* abs_po = the_actor->my_abs_po;
 
-    if (base->has_ext_param_been_set(143))
-        *desired_dir = base->get_external_vector(143);
+    if (base->has_ext_param_been_set(param_desired_forward_vector))
+        *desired_dir = base->get_external_vector(param_desired_forward_vector);
     else
         *desired_dir = abs_po->get_z_facing();
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else
         *desired_up = abs_po->get_y_facing();
 
@@ -1408,8 +1408,8 @@ i32 als::strafe_mocomp_on_foot::get_mash_sizeof() const {
 void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) {
     vector3d direction = the_actor->my_abs_po->get_z_facing();
 
-    if (the_base->has_ext_param_been_set(144))
-        direction = the_base->get_external_vector(144);
+    if (the_base->has_ext_param_been_set(param_desired_movement_dir))
+        direction = the_base->get_external_vector(param_desired_movement_dir);
 
     math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
     math::vector4 unit;
@@ -1421,7 +1421,7 @@ void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) 
     f32      speed  = std::sqrt(offset.x * offset.x + offset.z * offset.z);
 
     if (speed < 0.0001f) {
-        f32 default_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+        f32 default_speed = the_base->has_ext_param_been_set(param_desired_speed) ? the_base->get_external_float(param_desired_speed) : 1.0f;
 
         speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
         speed = speed * delta_t;
@@ -1467,13 +1467,13 @@ void als::relative_orientation_on_foot::get_directions(animation_logic_system*, 
 
     const po* abs_po = the_actor->my_abs_po;
 
-    if (base->has_ext_param_been_set(143))
-        *desired_dir = base->get_external_vector(143);
+    if (base->has_ext_param_been_set(param_desired_forward_vector))
+        *desired_dir = base->get_external_vector(param_desired_forward_vector);
     else
         *desired_dir = abs_po->get_z_facing();
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else
         *desired_up = abs_po->get_y_facing();
 
@@ -1529,13 +1529,13 @@ void als::relative_strafe_mocomp_on_foot::get_directions(animation_logic_system*
 
     const po* abs_po = the_actor->my_abs_po;
 
-    if (base->has_ext_param_been_set(143))
-        *desired_dir = base->get_external_vector(143);
+    if (base->has_ext_param_been_set(param_desired_forward_vector))
+        *desired_dir = base->get_external_vector(param_desired_forward_vector);
     else
         *desired_dir = abs_po->get_z_facing();
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else
         *desired_up = abs_po->get_y_facing();
 
@@ -1583,14 +1583,14 @@ i32 als::velocity_orientation::get_mash_sizeof() const {
 
 // sub_5F37B0
 void als::velocity_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
-    // the actor's ground velocity, unless param 105 says otherwise
-    if (the_actor->has_ifc(entity_ifc_physical) && (!base->has_ext_param_been_set(105) || base->get_external_float(105) == 0.0f)) {
+    // the actor's ground velocity, unless disable_mocomp_facing says otherwise
+    if (the_actor->has_ifc(entity_ifc_physical) && (!base->has_ext_param_been_set(param_disable_mocomp_facing) || base->get_external_float(param_disable_mocomp_facing) == 0.0f)) {
         vector3d velocity;
         retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
 
         *desired_dir = vector3d(velocity.x, 0.0f, velocity.z);
-    } else if (base->has_ext_param_been_set(143))
-        *desired_dir = base->get_external_vector(143);
+    } else if (base->has_ext_param_been_set(param_desired_forward_vector))
+        *desired_dir = base->get_external_vector(param_desired_forward_vector);
     else
         *desired_dir = the_actor->my_abs_po->get_z_facing();
 
@@ -1635,8 +1635,8 @@ void als::vertical_orientation::get_directions(animation_logic_system*, state_ma
 
     *desired_dir = treyarch::references::unk_00e6808c.get();
 
-    if (base->has_ext_param_been_set(142))
-        *desired_up = base->get_external_vector(142);
+    if (base->has_ext_param_been_set(param_desired_up_vector))
+        *desired_up = base->get_external_vector(param_desired_up_vector);
     else
         *desired_up = the_actor->my_abs_po->get_y_facing();
 
@@ -1744,8 +1744,8 @@ void als::initial_velocity_orientation::activate(animation_logic_system* the_als
     // the actor's velocity, the direction param, or its facing; along the ground
     if (the_actor->has_ifc(entity_ifc_physical))
         retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&initial_dir); // physical_interface::get_velocity
-    else if (the_base->has_ext_param_been_set(143))
-        initial_dir = the_base->get_external_vector(143);
+    else if (the_base->has_ext_param_been_set(param_desired_forward_vector))
+        initial_dir = the_base->get_external_vector(param_desired_forward_vector);
     else
         initial_dir = the_actor->my_abs_po->get_z_facing();
 
@@ -1833,8 +1833,8 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
     // the actor's velocity, the direction param, or its facing; along the ground
     if (the_actor->has_ifc(entity_ifc_physical))
         retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&initial_dir); // physical_interface::get_velocity
-    else if (the_base->has_ext_param_been_set(143))
-        initial_dir = the_base->get_external_vector(143);
+    else if (the_base->has_ext_param_been_set(param_desired_forward_vector))
+        initial_dir = the_base->get_external_vector(param_desired_forward_vector);
     else
         initial_dir = the_actor->my_abs_po->get_z_facing();
 
@@ -1880,8 +1880,8 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
 
         initial_up = cross(side, heading);
         initial_up = unitized(initial_up);
-    } else if (the_base->has_ext_param_been_set(142))
-        initial_up = the_base->get_external_vector(142);
+    } else if (the_base->has_ext_param_been_set(param_desired_up_vector))
+        initial_up = the_base->get_external_vector(param_desired_up_vector);
     else
         initial_up = treyarch::references::unk_00e6808c.get();
 }
@@ -1993,8 +1993,8 @@ void als::strict_simple_orientation::post_anim_action(f32 delta_t) {
 void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
     vector3d direction = the_actor->my_abs_po->get_z_facing();
 
-    if (the_base->has_ext_param_been_set(144))
-        direction = the_base->get_external_vector(144);
+    if (the_base->has_ext_param_been_set(param_desired_movement_dir))
+        direction = the_base->get_external_vector(param_desired_movement_dir);
 
     math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
     math::vector4 unit;
@@ -2003,8 +2003,8 @@ void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
 
     f32 speed = 1.0f;
 
-    if (the_base->has_ext_param_been_set(0))
-        speed = the_base->get_external_float(0);
+    if (the_base->has_ext_param_been_set(param_desired_speed))
+        speed = the_base->get_external_float(param_desired_speed);
 
     f32 step = speed * delta_t;
 
@@ -2072,22 +2072,22 @@ void als::direct_mocomp::other_po_changes(f32 delta_t, po*) {
 
 // sub_5F3EC0
 void als::direct_mocomp::update_params(f32) {
-    if (the_base->has_ext_param_been_set(144))
-        des_move_dir = the_base->get_external_vector(144);
+    if (the_base->has_ext_param_been_set(param_desired_movement_dir))
+        des_move_dir = the_base->get_external_vector(param_desired_movement_dir);
     else
         des_move_dir = the_actor->my_abs_po->get_z_facing();
 
-    if (the_base->has_ext_param_been_set(143))
-        des_face_dir = the_base->get_external_vector(143);
+    if (the_base->has_ext_param_been_set(param_desired_forward_vector))
+        des_face_dir = the_base->get_external_vector(param_desired_forward_vector);
     else
         des_face_dir = des_move_dir;
 
-    if (the_base->has_ext_param_been_set(142))
-        des_up_dir = the_base->get_external_vector(142);
+    if (the_base->has_ext_param_been_set(param_desired_up_vector))
+        des_up_dir = the_base->get_external_vector(param_desired_up_vector);
     else
         des_up_dir = the_actor->my_abs_po->get_y_facing();
 
-    des_speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+    des_speed = the_base->has_ext_param_been_set(param_desired_speed) ? the_base->get_external_float(param_desired_speed) : 1.0f;
 }
 
 // sub_5AEED0
@@ -2166,8 +2166,8 @@ void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
         move_dir = vector3d((f32)((f64)y_row.x * dir.y + (f64)dir.x * x_row.x + (f64)z_row.x * dir.z + (f64)position.x * 0.0),
                             (f32)((f64)x_row.y * dir.x + (f64)y_row.y * dir.y + (f64)z_row.y * dir.z + (f64)position.y * 0.0),
                             (f32)((f64)x_row.z * dir.x + (f64)y_row.z * dir.y + (f64)z_row.z * dir.z + (f64)position.z * 0.0));
-    } else if (the_base->has_ext_param_been_set(144))
-        move_dir = the_base->get_external_vector(144);
+    } else if (the_base->has_ext_param_been_set(param_desired_movement_dir))
+        move_dir = the_base->get_external_vector(param_desired_movement_dir);
 
     // pulled back toward the facing
     f32 blend = the_base->get_optional_pb_float(facing_input_dir_blend_id, -1.0f, nullptr);
@@ -2184,8 +2184,8 @@ void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
 
     f32 speed = anim_speed;
 
-    if (speed_override_enabled > 0 && the_base->get_optional_pb_int(allow_speed_override_id, 0, nullptr) && the_base->has_ext_param_been_set(0))
-        speed = the_base->get_external_float(0);
+    if (speed_override_enabled > 0 && the_base->get_optional_pb_int(allow_speed_override_id, 0, nullptr) && the_base->has_ext_param_been_set(param_desired_speed))
+        speed = the_base->get_external_float(param_desired_speed);
 
     // plays the anim as fast as the actor moves
     if (match_playback_speed) {
@@ -3046,24 +3046,24 @@ void als::move_and_face::set_orientation_time_left() {
 
 // sub_5D88B0
 void als::move_and_face::set_destination_point() {
-    if (the_base->has_ext_param_been_set(145)) {
-        destination_point       = the_base->get_external_vector(145);
+    if (the_base->has_ext_param_been_set(param_desired_destination)) {
+        destination_point       = the_base->get_external_vector(param_desired_destination);
         destination_point_valid = true;
     }
 }
 
 // sub_5D8910
 void als::move_and_face::set_desired_facing() {
-    if (the_base->has_ext_param_been_set(143)) {
-        desired_facing       = the_base->get_external_vector(143);
+    if (the_base->has_ext_param_been_set(param_desired_forward_vector)) {
+        desired_facing       = the_base->get_external_vector(param_desired_forward_vector);
         desired_facing_valid = true;
     }
 }
 
 // sub_5D8970
 void als::move_and_face::set_desired_up() {
-    if (the_base->has_ext_param_been_set(142))
-        desired_up = the_base->get_external_vector(142);
+    if (the_base->has_ext_param_been_set(param_desired_up_vector))
+        desired_up = the_base->get_external_vector(param_desired_up_vector);
 }
 
 // sub_5B1CF0
@@ -3332,10 +3332,10 @@ vector3d als::move_and_face::translation_action(f32 delta_t, const po &old_po, c
     if (translation_time_left <= 0.0f)
         action = post_signal_translation_action;
 
-    // with no destination, or when param 104 asks, the anim moves it
+    // with no destination, or when disable_mocomp_movement asks, the anim moves it
     if (action != mocomp_action_none && !destination_point_valid)
         action = mocomp_action_from_anim;
-    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(104) && the_base->get_external_float(104) > 0.0001f)
+    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(param_disable_mocomp_movement) && the_base->get_external_float(param_disable_mocomp_movement) > 0.0001f)
         action = mocomp_action_from_anim;
 
     vector3d position;
@@ -3415,10 +3415,10 @@ po als::move_and_face::orientation_action(f32 delta_t, const po &old_po, const p
     if (orientation_time_left <= 0.0f)
         action = post_signal_orientation_action;
 
-    // with no facing, or when param 105 asks, the anim turns it
+    // with no facing, or when disable_mocomp_facing asks, the anim turns it
     if (action != mocomp_action_none && !desired_facing_valid)
         action = mocomp_action_from_anim;
-    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(105) && the_base->get_external_float(105) > 0.0001f)
+    else if (action != mocomp_action_from_anim && the_base->has_ext_param_been_set(param_disable_mocomp_facing) && the_base->get_external_float(param_disable_mocomp_facing) > 0.0001f)
         action = mocomp_action_from_anim;
 
     po result;
@@ -3556,9 +3556,9 @@ void als::move_and_face::face_and_arrive_by(f32 delta_t) {
     po anim_po = calculate_anim_motion();
     po facing  = orientation_action(delta_t, old_po, anim_po);
 
-    // once the up is near param 152, the facing turns to the rest of it
-    if (the_base->has_ext_param_been_set(60) && the_base->get_external_float(60) > 0.5f && the_base->has_ext_param_been_set(152)) {
-        vector3d target = the_base->get_external_vector(152);
+    // once the up is near combat_primary_target_delta_norm, the facing turns to the rest of it
+    if (the_base->has_ext_param_been_set(param_combat_first_target_hit_this_frame) && the_base->get_external_float(param_combat_first_target_hit_this_frame) > 0.5f && the_base->has_ext_param_been_set(param_combat_primary_target_delta_norm)) {
+        vector3d target = the_base->get_external_vector(param_combat_primary_target_delta_norm);
         f32      dot    = facing.get_y_facing() * target;
 
         if (dot > 0.9f) {
@@ -4181,7 +4181,7 @@ void als::constant_move_and_face::activate(animation_logic_system* the_als_core,
 
     max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, 5.0f, nullptr);
 
-    f32 default_turn_rate = the_base->has_ext_param_been_set(2) ? the_base->get_external_float(2) : 720.0f;
+    f32 default_turn_rate = the_base->has_ext_param_been_set(param_turn_rate) ? the_base->get_external_float(param_turn_rate) : 720.0f;
 
     max_turn_speed = (f32)(the_base->get_optional_pb_float(turn_rate_id, default_turn_rate, nullptr) * 0.017453293005625408);
 }
@@ -4384,13 +4384,13 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
     f32  vert_wall_offset   = the_base->get_optional_pb_float(vert_wall_offset_id, 0.0f, nullptr);
     bool wall_normal_is_up  = the_base->get_optional_pb_int(wall_normal_is_up_id, 0, nullptr) != 0;
     bool use_instant_facing = the_base->get_optional_pb_int(use_instant_facing_id, 0, nullptr) != 0;
-    bool facing_from_normal = the_base->has_ext_param_been_set(7) && the_base->get_external_float(7) == 1.0f;
+    bool facing_from_normal = the_base->has_ext_param_been_set(param_crawl_transition_type) && the_base->get_external_float(param_crawl_transition_type) == 1.0f;
 
     // retail reads every external vector through this one temporary, and the climb onto a top uses whichever came last
     vector3d param;
 
-    if (the_base->has_ext_param_been_set(141)) {
-        param  = the_base->get_external_vector(141);
+    if (the_base->has_ext_param_been_set(param_attach_normal)) {
+        param  = the_base->get_external_vector(param_attach_normal);
         normal = param;
 
         if (wall_normal_is_up)
@@ -4399,8 +4399,8 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
         on_top = desired_facing.y >= 0.7f && desired_up.y >= 0.7f;
     }
 
-    if (the_base->has_ext_param_been_set(143)) {
-        param          = the_base->get_external_vector(143);
+    if (the_base->has_ext_param_been_set(param_desired_forward_vector)) {
+        param          = the_base->get_external_vector(param_desired_forward_vector);
         desired_facing = param;
     } else if (facing_from_normal)
         desired_facing = normal;
@@ -4409,8 +4409,8 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
 
     destination_point = the_actor->my_abs_po->get_position();
 
-    if (the_base->has_ext_param_been_set(146)) {
-        param             = the_base->get_external_vector(146);
+    if (the_base->has_ext_param_been_set(param_attach_point)) {
+        param             = the_base->get_external_vector(param_attach_point);
         destination_point = param;
     } else if (the_actor->has_ifc(entity_ifc_player))
         destination_point = the_actor->player_ifc()->unk_2a0;
@@ -4420,7 +4420,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
     }
 
     if (on_top) {
-        // over the edge: along the surface to the destination, then out past param 146 against the facing
+        // over the edge: along the surface to the destination, then out past attach_point against the facing
         const vector3d &position = the_actor->my_abs_po->get_position();
         const vector3d &facing   = the_actor->my_abs_po->get_z_facing();
         const vector3d &zero     = treyarch::references::unk_00fd4370.get();
@@ -4436,7 +4436,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
 
         vector3d start = the_actor->my_abs_po->get_position();
 
-        param = the_base->get_external_vector(146);
+        param = the_base->get_external_vector(param_attach_point);
 
         const vector3d &basis_y = basis.get_y_facing();
         const vector3d &basis_z = basis.get_z_facing();
@@ -4559,15 +4559,15 @@ void als::rvb_crawl_transition::activate(animation_logic_system* the_als_core, l
     desired_facing    = the_actor->my_abs_po->get_z_facing();
     destination_point = the_actor->my_abs_po->get_position();
 
-    if (use_desired_normal && the_base->has_ext_param_been_set(141))
-        desired_up = the_base->get_external_vector(141);
+    if (use_desired_normal && the_base->has_ext_param_been_set(param_attach_normal))
+        desired_up = the_base->get_external_vector(param_attach_normal);
 
-    if (the_base->has_ext_param_been_set(143))
-        desired_facing = the_base->get_external_vector(143);
+    if (the_base->has_ext_param_been_set(param_desired_forward_vector))
+        desired_facing = the_base->get_external_vector(param_desired_forward_vector);
 
     // the destination param, raised along the up
-    if (!use_fakeroot_position && the_base->has_ext_param_been_set(146)) {
-        destination_point = the_base->get_external_vector(146);
+    if (!use_fakeroot_position && the_base->has_ext_param_been_set(param_attach_point)) {
+        destination_point = the_base->get_external_vector(param_attach_point);
         destination_point = vector3d(destination_point.x + desired_up.x * dest_point_up_offset,
                                      destination_point.y + desired_up.y * dest_point_up_offset,
                                      destination_point.z + desired_up.z * dest_point_up_offset);
@@ -4706,10 +4706,10 @@ void als::attach_hand_to_point::post_anim_action(f32 delta_t) {
 
 // sub_5DB760
 void als::attach_hand_to_point::set_destination_point() {
-    if (!the_base->has_ext_param_been_set(145))
+    if (!the_base->has_ext_param_been_set(param_desired_destination))
         return;
 
-    vector3d point       = the_base->get_external_vector(145);
+    vector3d point       = the_base->get_external_vector(param_desired_destination);
     i32      anchor_hand = the_base->get_optional_pb_int(anchor_hand_id, 1, nullptr);
 
     destination_point = the_actor->my_abs_po->get_position();
@@ -4753,9 +4753,9 @@ void als::attach_hand_to_point::face_and_arrive_by(f32 delta_t) {
     po anim_po = calculate_anim_motion();
     po facing  = orientation_action(delta_t, old_po, anim_po);
 
-    // a near-vertical param 152 faces it along the ground
-    if (the_base->has_ext_param_been_set(60) && the_base->get_external_float(60) > 0.5f && the_base->has_ext_param_been_set(152)) {
-        vector3d target = the_base->get_external_vector(152);
+    // a near-vertical combat_primary_target_delta_norm faces it along the ground
+    if (the_base->has_ext_param_been_set(param_combat_first_target_hit_this_frame) && the_base->get_external_float(param_combat_first_target_hit_this_frame) > 0.5f && the_base->has_ext_param_been_set(param_combat_primary_target_delta_norm)) {
+        vector3d target = the_base->get_external_vector(param_combat_primary_target_delta_norm);
 
         if (target.y > 0.9f) {
             target.y = 0.0f;
@@ -4823,11 +4823,11 @@ vector3d als::constant_move_hand_to_point::compute_translation(f32 delta_t, cons
         return vector3d(unit[0], unit[1], unit[2]);
     };
 
-    // straight at the point, at param 0's speed
+    // straight at the point, at desired_speed
     vector3d position = old_po.get_position();
     vector3d dir      = unitized(destination_point - position);
 
-    f32 speed = the_base->has_ext_param_been_set(0) ? the_base->get_external_float(0) : 1.0f;
+    f32 speed = the_base->has_ext_param_been_set(param_desired_speed) ? the_base->get_external_float(param_desired_speed) : 1.0f;
     f32 step  = speed * delta_t;
 
     if (position.x == destination_point.x && position.y == destination_point.y && position.z == destination_point.z)
@@ -4984,9 +4984,9 @@ void als::combat_pole_swing_attach::set_desired_facing() {
         return vector3d(unit[0], unit[1], unit[2]);
     };
 
-    // level, from the pole toward param 145
-    if (the_base->has_ext_param_been_set(145)) {
-        facing   = the_base->get_external_vector(145) - pole_point;
+    // level, from the pole toward desired_destination
+    if (the_base->has_ext_param_been_set(param_desired_destination)) {
+        facing   = the_base->get_external_vector(param_desired_destination) - pole_point;
         facing.y = 0.0f;
         facing   = unitized(facing);
     }
@@ -5952,15 +5952,15 @@ void als::momentum_sync_move_and_face::read_signal_times() {
 
 // sub_5F0A00
 void als::momentum_sync_move_and_face::read_hit(f32) {
-    // param 120 over 0.0001 reports one: param 143 its normal, 145 its point, raised off the surface
-    if (the_base->has_ext_param_been_set(120) && the_base->get_external_float(120) > 0.0001f) {
+    // had_wall_collision over 0.0001 reports one: desired_forward_vector its normal, desired_destination its point, raised off the surface
+    if (the_base->has_ext_param_been_set(param_had_wall_collision) && the_base->get_external_float(param_had_wall_collision) > 0.0001f) {
         has_hit    = true;
-        hit_normal = the_base->get_external_vector(143);
-        hit_point  = the_base->get_external_vector(145);
+        hit_normal = the_base->get_external_vector(param_desired_forward_vector);
+        hit_point  = the_base->get_external_vector(param_desired_destination);
         hit_point += hit_normal * hit_norm_offset;
 
-        // and up by hit_height_min when internal param 196 is under it
-        if (hit_height_min > the_als->the_cache.get_internal_float(the_als, the_base, 196))
+        // and up by hit_height_min when height_above_floor is under it
+        if (hit_height_min > the_als->the_cache.get_internal_float(the_als, the_base, param_height_above_floor))
             hit_point += treyarch::references::unk_00e6808c.get() * hit_height_min;
     }
 }
@@ -5974,11 +5974,11 @@ void als::momentum_sync_move_and_face::update_slide_axes(f32) {
             up = up * (1.0f - reorient_blend) + treyarch::references::unk_00e6808c.get() * reorient_blend;
     }
 
-    // into the wall when stuck to a hit, else param 143 when set
+    // into the wall when stuck to a hit, else desired_forward_vector when set
     if (stick_to_collision && has_hit)
         slide_dir = -hit_normal;
-    else if (the_base->has_ext_param_been_set(143))
-        slide_dir = the_base->get_external_vector(143);
+    else if (the_base->has_ext_param_been_set(param_desired_forward_vector))
+        slide_dir = the_base->get_external_vector(param_desired_forward_vector);
 
     slide_dir = slide_dir - up * (f32)(up * slide_dir);
 }
@@ -6358,7 +6358,7 @@ void als::combat_radial_move_and_face::read_params(f32 delta_t) {
     anim_time                = the_base->get_current_anim_time();
     closest_distance_allowed = the_base->get_optional_pb_float(closest_distance_allowed_id, 2.0f, nullptr);
     max_rotation_angle       = the_base->get_optional_pb_float(max_rotation_angle_id, 120.0f, nullptr);
-    unk_030                  = the_base->get_external_float(95);
+    desired_distance         = the_base->get_external_float(param_desired_distance);
 
     // retail drops any earlier path without freeing it
     path       = nullptr;
@@ -6385,8 +6385,8 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
     if (path_built)
         return;
 
-    // param 151 is the way from the actor to the point it circles
-    if (!the_base->has_ext_param_been_set(151))
+    // combat_primary_target_delta is the way from the actor to the point it circles
+    if (!the_base->has_ext_param_been_set(param_combat_primary_target_delta))
         return;
 
     path_built = true;
@@ -6398,8 +6398,8 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
     vector3d center = abs_po.get_position() + dir * 5.0f;
     f32      radius = 5.0f;
 
-    if (the_base->has_ext_param_been_set(151)) {
-        vector3d offset = the_base->get_external_vector(151);
+    if (the_base->has_ext_param_been_set(param_combat_primary_target_delta)) {
+        vector3d offset = the_base->get_external_vector(param_combat_primary_target_delta);
 
         center = abs_po.get_position() + offset;
         dir    = offset;
@@ -6418,7 +6418,7 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 
     // param 95 is the arc's length, at most max_rotation_angle degrees round
     f32 circumference = radius * 6.2831855f;
-    f32 arc_degrees   = (f32)((f64)unk_030 / (f64)circumference * 360.0);
+    f32 arc_degrees   = (f32)((f64)desired_distance / (f64)circumference * 360.0);
 
     if (arc_degrees > max_rotation_angle)
         arc_degrees = max_rotation_angle;
@@ -6478,11 +6478,11 @@ po als::combat_radial_move_and_face::get_facing_po(f32) {
     vector3d facing  = turned.get_z_facing();
     vector3d minus_x = -turned.get_x_facing();
 
-    // level, toward param 152 when it's set
+    // level, toward combat_primary_target_delta_norm when it's set
     vector3d desired = facing;
 
-    if (the_base->has_ext_param_been_set(152))
-        desired = the_base->get_external_vector(152);
+    if (the_base->has_ext_param_been_set(param_combat_primary_target_delta_norm))
+        desired = the_base->get_external_vector(param_combat_primary_target_delta_norm);
 
     desired = desired - up * (f32)(up * desired);
 
@@ -6612,15 +6612,15 @@ i32 als::biped_physics_mocomp::get_mash_sizeof() const {
 void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, layer_id layer) {
     using push_t = i32 (__thiscall*)(u32*, i32, vector3d*, vector3d*, f32);
 
-    // the state's push: params 100 to 103, 149 and 150 unless use_internal_force_params, else the state's own
+    // the state's push: the phys_prim_force params unless use_internal_force_params, else the state's own
     auto push = [this](u32* biped) {
         bool scale_from_params = false;
         bool dir_from_params   = false;
         f32  force_scale;
         f32  force_y           = 0.0f;
 
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(100)) {
-            force_scale       = the_base->get_float_param(the_als, 100);
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_force_scale)) {
+            force_scale       = the_base->get_float_param(the_als, param_phys_prim_force_scale);
             scale_from_params = true;
         } else {
             force_scale = the_base->get_optional_pb_float(force_scale_id, 0.0f, nullptr);
@@ -6632,8 +6632,8 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
 
         vector3d force_dir = treyarch::references::unk_00fd4370.get();
 
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(149)) {
-            force_dir       = the_base->get_vector_param(the_als, 149);
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_force_dir)) {
+            force_dir       = the_base->get_vector_param(the_als, param_phys_prim_force_dir);
             dir_from_params = true;
         } else {
             // the state's is in the actor's frame
@@ -6656,11 +6656,11 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
         force_dir.y = force_dir.y * force_scale + force_y;
         force_dir.z = force_dir.z * force_scale;
 
-        // param 101's index, else force_bone's name
+        // phys_prim_bone's index, else force_bone's name
         i32 bone = 0;
 
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(101)) {
-            i32 index = (i32)(i64)the_base->get_float_param(the_als, 101);
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_bone)) {
+            i32 index = (i32)(i64)the_base->get_float_param(the_als, param_phys_prim_bone);
 
             if ((u32)index < 10)
                 bone = index;
@@ -6681,21 +6681,21 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
 
         f32 torque_mul;
 
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(102))
-            torque_mul = the_base->get_float_param(the_als, 102);
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_force_torque_mul))
+            torque_mul = the_base->get_float_param(the_als, param_phys_prim_force_torque_mul);
         else
             torque_mul = the_base->get_optional_pb_float(force_torque_mul_id, 1.0f, nullptr);
 
         bool spin_only;
 
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(103))
-            spin_only = the_base->get_float_param(the_als, 103) > 0.01f;
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_force_spin_only))
+            spin_only = the_base->get_float_param(the_als, param_phys_prim_force_spin_only) > 0.01f;
         else
             spin_only = the_base->get_optional_pb_int(force_spin_only_id, 0, nullptr) != 0;
 
-        // at param 150, else at the state's point in the actor's frame, else on the bone itself
-        if (!use_internal_force_params && the_base->has_ext_param_been_set(150)) {
-            vector3d point = the_base->get_vector_param(the_als, 150);
+        // at phys_prim_force_point, else at the state's point in the actor's frame, else on the bone itself
+        if (!use_internal_force_params && the_base->has_ext_param_been_set(param_phys_prim_force_point)) {
+            vector3d point = the_base->get_vector_param(the_als, param_phys_prim_force_point);
 
             if (spin_only)
                 ((push_t)retail::sub_424F00)(biped, bone, &point, &force_dir, torque_mul); // biped physics: spins the bone
@@ -6950,10 +6950,10 @@ void als::swing_attack_move_and_face::track(f32) {
     } else
         up = the_actor->my_abs_po->get_y_facing();
 
-    // toward param 145's point or along param 143 until the target leaves tracking_dist_min or tracking_angle_max
+    // toward desired_destination or along desired_forward_vector until the target leaves tracking_dist_min or tracking_angle_max
     if (!stop_tracking) {
-        if (the_base->has_ext_param_been_set(145)) {
-            vector3d offset = the_base->get_external_vector(145) - the_actor->my_abs_po->get_position();
+        if (the_base->has_ext_param_been_set(param_desired_destination)) {
+            vector3d offset = the_base->get_external_vector(param_desired_destination) - the_actor->my_abs_po->get_position();
 
             if (tracking_dist_min > offset.length())
                 stop_tracking = true;
@@ -6969,8 +6969,8 @@ void als::swing_attack_move_and_face::track(f32) {
                 else
                     facing = dir;
             }
-        } else if (the_base->has_ext_param_been_set(143)) {
-            vector3d dir   = the_base->get_external_vector(143);
+        } else if (the_base->has_ext_param_been_set(param_desired_forward_vector)) {
+            vector3d dir   = the_base->get_external_vector(param_desired_forward_vector);
             f32      limit = math::cos(tracking_angle_max);
 
             if (limit > dir * the_actor->my_abs_po->get_z_facing())
@@ -7337,9 +7337,9 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
     }
 
     if (no_target) {
-        // else toward param 145's point, which stops tracking once within tracking_dist_min
-        if (!force_target_vec && the_base->has_ext_param_been_set(145)) {
-            target_pos = the_base->get_external_vector(145);
+        // else toward desired_destination, which stops tracking once within tracking_dist_min
+        if (!force_target_vec && the_base->has_ext_param_been_set(param_desired_destination)) {
+            target_pos = the_base->get_external_vector(param_desired_destination);
             target_dir = target_pos - the_actor->my_abs_po->get_position();
 
             if (retail::sub_401FF0((f32*)&target_dir) > 0.0001f) {
@@ -7357,7 +7357,7 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
         } else
             has_target_pos = false;
 
-        // else along target_vector, param 143 or the initial velocity
+        // else along target_vector, desired_forward_vector or the initial velocity
         if (no_target) {
             if (the_base->does_parameter_exist(target_vector_id)) {
                 target_dir = the_base->get_optional_pb_vector3d(target_vector_id, treyarch::references::unk_00e68098.get(), nullptr);
@@ -7372,13 +7372,13 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
                 }
 
                 target_dir_set = true;
-            } else if (the_base->has_ext_param_been_set(143)) {
-                target_dir     = the_base->get_external_vector(143);
+            } else if (the_base->has_ext_param_been_set(param_desired_forward_vector)) {
+                target_dir     = the_base->get_external_vector(param_desired_forward_vector);
                 target_dir_set = true;
 
-                // without a point, param 142 is up as it comes
-                if (no_target_pos && the_base->has_ext_param_been_set(142)) {
-                    up = the_base->get_external_vector(142);
+                // without a point, desired_up_vector is up as it comes
+                if (no_target_pos && the_base->has_ext_param_been_set(param_desired_up_vector)) {
+                    up = the_base->get_external_vector(param_desired_up_vector);
 
                     return;
                 }
@@ -7423,9 +7423,9 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
     vector3d up_dir  = up;
     vector3d desired = target_dir;
 
-    // param 143 when forced, with an up squared to it as track squares its own
-    if (the_base->get_optional_pb_int(force_use_desired_facing_id, 0, nullptr) && the_base->has_ext_param_been_set(143)) {
-        vector3d dir  = the_base->get_external_vector(143);
+    // desired_forward_vector when forced, with an up squared to it as track squares its own
+    if (the_base->get_optional_pb_int(force_use_desired_facing_id, 0, nullptr) && the_base->has_ext_param_been_set(param_desired_forward_vector)) {
+        vector3d dir  = the_base->get_external_vector(param_desired_forward_vector);
         vector3d side = cross(treyarch::references::unk_00e6808c.get(), dir);
 
         desired = dir;

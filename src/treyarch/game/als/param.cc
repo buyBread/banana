@@ -135,16 +135,16 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
     actor* the_actor = the_als->get_actor();
 
     switch (param) {
-        case current_up_vector:
+        case param_current_up_vector:
             return the_actor->my_abs_po->get_y_facing();
 
-        case current_right_vector:
+        case param_current_right_vector:
             return the_actor->my_abs_po->get_x_facing();
 
-        case current_forward_vector:
+        case param_current_forward_vector:
             return the_actor->my_abs_po->get_z_facing();
 
-        case current_velocity_vector: {
+        case param_current_velocity_vector: {
             // the physics' while they move the actor, else the body it's kept in, a player's own or the entity's
             if (the_actor->has_ifc(entity_ifc_physical)) {
                 if (retail::sub_6005E0((u32*)the_actor->physical_ifc()) ||
@@ -177,7 +177,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
             return velocity;
         }
 
-        case pelvis_facing:
+        case param_pelvis_facing:
             // the pelvis bone's z row reversed, else the forward row
             if (the_actor->is_a_conglomerate()) {
                 using get_member_abs_po_t = bool (__thiscall*)(actor*, const string_hash*, po*, i32);
@@ -199,7 +199,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
 
             return the_actor->my_abs_po->get_z_facing();
 
-        case last_collision_normal:
+        case param_last_collision_normal:
             if (the_actor->has_ifc(entity_ifc_physical) && retail::sub_408F70((u32*)the_actor->physical_ifc()))
                 return the_actor->physical_ifc()->last_collision_normal;
 

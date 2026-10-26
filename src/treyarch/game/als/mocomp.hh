@@ -1247,7 +1247,7 @@ namespace als {
         vector3d pole_point;
         vector3d facing;
         vector3d side;
-        bool     face_target; // faces param 145 rather than along the pole's side
+        bool     face_target; // faces desired_destination rather than along the pole's side
         u8       pad_0e1[0x03];
 
         combat_pole_swing_attach();
@@ -1373,8 +1373,8 @@ namespace als {
         vector3d up;
         vector3d slide_dir;               // kept level with up
         vector3d unk_060;                 // never read
-        vector3d hit_normal;              // param 143 when param 120 reports a hit
-        vector3d hit_point;               // param 145, off the surface
+        vector3d hit_normal;              // desired_forward_vector when had_wall_collision reports a hit
+        vector3d hit_point;               // desired_destination, off the surface
         bool     has_hit;
         u8       pad_085[0x03];
         f32      hit_height_min;
@@ -1451,7 +1451,7 @@ namespace als {
         f32     max_rotation_angle;       // degrees
         bool    path_built;
         u8      pad_02d[0x03];
-        f32     unk_030;                  // param 95
+        f32     desired_distance;         // the arc's length
         f32     progress;                 // along the path, never going back
 
         // inlined @ sub_5C3730
@@ -1535,13 +1535,13 @@ namespace als {
         bool     preserve_y_facing;
         bool     force_target_vec;
         bool     target_vector_world;
-        bool     target_dir_set;        // target_vector, param 143 or the velocity chose target_dir; without tracking it then stays
+        bool     target_dir_set;        // target_vector, desired_forward_vector or the velocity chose target_dir; without tracking it then stays
         bool     tracking;
         bool     stop_tracking;         // set once the target leaves the tracking limits
-        bool     has_target_pos;        // target_pos is the sync partner's or param 145's, clear of the actor
+        bool     has_target_pos;        // target_pos is the sync partner's or desired_destination, clear of the actor
         u8       pad_02e[0x02];
         vector3d target_pos;
-        vector3d up;                    // the world's, the partner's or param 142's, square to target_dir
+        vector3d up;                    // the world's, the partner's or desired_up_vector, square to target_dir
         vector3d target_dir;
         f32      target_speed;          // param target_speed, else the initial speed within the limits below
         f32      target_speed_min;
@@ -1777,7 +1777,7 @@ namespace als {
     ASSERT_OFFSETOF(combat_radial_move_and_face, closest_distance_allowed, 0x24);
     ASSERT_OFFSETOF(combat_radial_move_and_face, max_rotation_angle,       0x28);
     ASSERT_OFFSETOF(combat_radial_move_and_face, path_built,               0x2C);
-    ASSERT_OFFSETOF(combat_radial_move_and_face, unk_030,                  0x30);
+    ASSERT_OFFSETOF(combat_radial_move_and_face, desired_distance,         0x30);
     ASSERT_OFFSETOF(combat_radial_move_and_face, progress,                 0x34);
 
     ASSERT_SIZEOF  (swing_attack_move_and_face,                        0x4C);

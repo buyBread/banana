@@ -179,19 +179,19 @@ void als::als_meta_linear_blend_instance::blend_two_anims(f32                 t,
 als::param_id als::als_meta_linear_blend_instance::get_blend_amount_param(i32 index) {
     switch (index) {
         case 1:
-            return 107;
+            return param_meta_linear_blend_amount_2;
 
         case 2:
-            return 108;
+            return param_meta_linear_blend_amount_3;
 
         case 3:
-            return 109;
+            return param_meta_linear_blend_amount_4;
 
         case 4:
-            return 110;
+            return param_meta_linear_blend_amount_5;
 
         default:
-            return 106;
+            return param_meta_linear_blend_amount;
     }
 }
 
@@ -257,7 +257,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
     f32 dt = meta_anim->get_anim_duration() * std::fabs(t - t_prev);
 
     // the eight keys sit 45 degrees apart; the two around the angle are blended
-    f32 angle = the_layer->get_float_param(the_als, 176);
+    f32 angle = the_layer->get_float_param(the_als, param_swing_angle);
     f32 upper_angle;
     u32 lower_key;
     u32 upper_key;
@@ -303,7 +303,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
 
     nal::pose blended(pose->pose_layout, nullptr);
 
-    vector3d      up = the_layer->get_vector_param(the_als, current_up_vector);
+    vector3d      up = the_layer->get_vector_param(the_als, param_current_up_vector);
     math::vector4 up_dir(up.x, up.y, up.z, 0.0f);
     math::vector4 up_unit;
 
@@ -311,7 +311,7 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
 
     // the target flips with a delay, by speed and only while upright
     if (up_unit[1] > 0.5f) {
-        f32 speed = the_layer->get_vector_param(the_als, current_velocity_vector).length();
+        f32 speed = the_layer->get_vector_param(the_als, param_current_velocity_vector).length();
 
         if (target_time > 0.5f) {
             if (speed < swing_low_speed) {
