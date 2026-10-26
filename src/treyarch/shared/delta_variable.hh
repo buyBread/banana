@@ -6,5 +6,10 @@ namespace treyarch {
     struct delta_variable {
         T previous;
         T current;
+
+        void force(const T &value) {
+            current  = value;
+            previous = current;
+        }
     };
 } // treyarch
