@@ -2,6 +2,7 @@
 
 #include "vc8/vector.hh"
 #include "treyarch/game/wds/entity/interface/generic_interface.hh"
+#include "treyarch/shared/resource_key.hh"
 #include "util/memory_reference.hh"
 #include "util/types.hh"
 
@@ -9,6 +10,9 @@ namespace treyarch {
     class morph_interface : public entity_interface {
 
     public:
+        // switches to the morph unless it's already the one; a null key clears it
+        bool set_morph(resource_key morph);
+
         static void frame_advance_all_morph_ifcs(f32 t);
     };
 

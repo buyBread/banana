@@ -138,3 +138,8 @@ vector3d param_block::get_optional_pb_vector3d(string_hash parameter, const vect
 
     return result;
 }
+
+// sub_435730
+mash::mash_virtual_base* param_block::get_optional_pb_class(string_hash parameter, mash::mash_virtual_base* default_value, bool* exists) const {
+    return ((mash::mash_virtual_base* (__thiscall*)(const param_block*, string_hash, mash::mash_virtual_base*, bool*))retail::sub_435730)(this, parameter, default_value, exists);
+}

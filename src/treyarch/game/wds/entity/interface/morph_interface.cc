@@ -8,3 +8,8 @@ void morph_interface::frame_advance_all_morph_ifcs(f32 t) {
     for (morph_interface* ifc : references::all_morph_ifcs.get())
         retail::sub_6351D0((i32)ifc, t); // morph_interface::frame_advance
 }
+
+// sub_61FEC0
+bool morph_interface::set_morph(resource_key morph) {
+    return ((bool (__thiscall*)(morph_interface*, resource_key))retail::sub_61FEC0)(this, morph);
+}
