@@ -1,3 +1,4 @@
+#include <cfloat>
 #include <cmath>
 #include <cstring>
 #include <new>
@@ -269,6 +270,169 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_403();
+
+        // 1 or -1
+        case param_is_carrying: {
+            if (!the_actor->get_ai_core())
+                return -1.0f;
+
+            info_node* carry = the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+            if (carry && retail::sub_50C9D0((u32*)carry))
+                return 1.0f;
+
+            if (!retail::sub_402500((u32*)the_actor))
+                return -1.0f;
+
+            if (the_actor->player_ifc()->unk_244 == 21 || the_actor->player_ifc()->unk_244 == 22)
+                return 1.0f;
+
+            return -1.0f;
+        }
+
+        case param_is_being_carried: {
+            if (!the_actor->get_ai_core())
+                return -1.0f;
+
+            auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+            if (!carry || !carry->unk_030)
+                return -1.0f;
+
+            return 1.0f;
+        }
+
+        case param_smoothed_speed:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return (f32)retail::sub_402020((f32*)the_actor->player_ifc()->unk_095());
+
+        case param_smoothed_lateral_speed:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return (f32)retail::sub_4248B0((f32*)the_actor->player_ifc()->unk_095());
+
+        case param_smoothed_vertical_speed:
+            if (!retail::sub_402500((u32*)the_actor))
+                return 0.0f;
+
+            return the_actor->player_ifc()->unk_095()->y;
+
+        case param_strafe_angle: {
+            vector3d move = the_sm->get_external_vector(param_desired_movement_dir);
+
+            return compute_angle_between_vectors(the_actor->my_abs_po->get_z_facing(), the_actor->my_abs_po->get_x_facing(), move);
+        }
+
+        case param_strafe_y_angle: {
+            vector3d move = the_sm->get_external_vector(param_desired_movement_dir);
+
+            return compute_angle_between_vectors(the_actor->my_abs_po->get_z_facing(), the_actor->my_abs_po->get_y_facing(), move);
+        }
+
+        case param_strafing_mode: {
+            ai_core* core = the_actor->get_ai_core();
+
+            if (!core || !retail::sub_4C2F60((u32*)core))
+                return 0.0f;
+
+            return 1.0f;
+        }
+
+        case param_elevation:
+            if (!retail::sub_4024E0((u32*)the_actor)) // has_standing_ifc
+                return 0.0f;
+
+            return ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_03c;
+
+        // the physics' heights, none when it reports a negative one
+        case param_height_above_ground:
+        case param_height_above_floor:
+        case param_height_above_wall: {
+            f32 height = FLT_MAX;
+
+            if (!retail::sub_4024C0((u32*)the_actor)) // has_physical_ifc
+                return height;
+
+            height = (f32)retail::sub_60D730((u32*)the_actor->physical_ifc(), param == param_height_above_floor, param == param_height_above_wall);
+
+            if (0.0f > height)
+                height = FLT_MAX;
+
+            return height;
+        }
+
+        case param_attack_angle: {
+            vector3d      attack = the_sm->get_external_vector(param_attack_direction);
+            math::vector4 dir(attack.x, attack.y, attack.z, 0.0f);
+            math::vector4 reversed;
+
+            retail::sub_401A20((f32*)&reversed, (f32*)&dir);
+
+            vector3d from(reversed[0], reversed[1], reversed[2]);
+
+            return compute_angle_between_vectors(the_actor->my_abs_po->get_z_facing(), the_actor->my_abs_po->get_x_facing(), from);
+        }
+
+        case param_computed_distance: {
+            vector3d        destination = the_sm->get_external_vector(param_desired_destination);
+            const vector3d &position    = the_actor->my_abs_po->get_position();
+
+            math::vector4 offset(destination.x - position.x, destination.y - position.y, destination.z - position.z, 0.0f - 0.0f);
+
+            return (f32)retail::sub_42A9E0((f32*)&offset);
+        }
+
+        case param_desired_angle: {
+            vector3d forward = the_sm->get_external_vector(param_desired_forward_vector);
+
+            return compute_angle_between_vectors(the_actor->my_abs_po->get_z_facing(), the_actor->my_abs_po->get_x_facing(), forward);
+        }
+
+        // the desired angle's quarter: ahead, right, behind, left
+        case param_desired_dir: {
+            f32 angle = get_internal_float(the_als, the_sm, param_desired_angle);
+
+            if (angle >= -45.0f && angle < 45.0f)
+                return 0.0f;
+
+            if (angle >= 45.0f && angle < 135.0f)
+                return 1.0f;
+
+            if (angle >= 135.0f || angle < -135.0f)
+                return 2.0f;
+
+            if (angle >= -135.0f && angle < -45.0f)
+                return 3.0f;
+
+            return 0.0f;
+        }
+
+        case param_phys_stable:
+            if (!retail::sub_4024C0((u32*)the_actor) || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) || retail::sub_600630((i32)the_actor->physical_ifc(), false))
+                return 1.0f;
+
+            return 0.0f;
+
+        case param_phys_active:
+            if (!retail::sub_4024C0((u32*)the_actor) || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_phys_allowed:
+            if (!retail::sub_4024C0((u32*)the_actor) || (the_actor->physical_ifc()->flags & 0x40000))
+                return 0.0f;
+
+            return 1.0f;
+
+        case param_effectively_standing:
+            if (!retail::sub_4024E0((u32*)the_actor) || !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2))
+                return 0.0f;
+
+            return 1.0f;
 
         default:
             break;
