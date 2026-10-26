@@ -61,6 +61,9 @@ namespace treyarch {
             void* operator new   (std::size_t size) noexcept;
             void  operator delete(void* allocation) noexcept;
 
+            // another 1024 entries, threaded first to last; null past the block limit
+            static layer_anim* grow_pool();
+
             // inlined @ sub_5BA290
             // inlined @ sub_5BA510
             // inlined @ sub_5D3950
@@ -260,10 +263,15 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<animation_controller_state::layer_anim*> layer_anim_free_list { 0x00FFCE58 };
 
+        // the pool's blocks: a count and a chain of { block, next } links
+        inline util::memory_reference<i32>    layer_anim_block_count { 0x00FFCE98 };
+        inline util::memory_reference<void**> layer_anim_blocks      { 0x00FFCED0 };
+
         // shared by the animation pools
         inline util::memory_reference<engine_recursive_lock> pool_lock { 0x01126D00 };
     } // references
 
+    ASSERT_SIZEOF  (animation_controller_state::layer_anim,                       0x74);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, als_inst,             0x04);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, normalized_time,      0x08);
     ASSERT_OFFSETOF(animation_controller_state::layer_anim, prev_normalized_time, 0x0C);

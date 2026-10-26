@@ -511,13 +511,40 @@ animation_controller_state::layer_anim::~layer_anim() {
         delete als_inst;
 }
 
+// sub_5CD170
+animation_controller_state::layer_anim* animation_controller_state::layer_anim::grow_pool() {
+    if (references::layer_anim_block_count.read() >= 0x1FFFFFFF)
+        return nullptr;
+
+    auto* block = (layer_anim*)memory::allocate(sizeof(layer_anim) * 1024, 4, 0);
+    auto* link  = (void**)memory::allocate(8, 4, 0);
+
+    link[0] = block;
+    link[1] = references::layer_anim_blocks.read();
+
+    ++references::layer_anim_block_count.get();
+    references::layer_anim_blocks.write(link);
+
+    layer_anim* next  = nullptr;
+    layer_anim* entry = block + 1024;
+
+    do {
+        --entry;
+
+        *(layer_anim**)entry = next;
+        next                 = entry;
+    } while (entry != block);
+
+    return entry;
+}
+
 // sub_5DFBD0
 void* animation_controller_state::layer_anim::operator new(std::size_t) noexcept {
     engine_lock_scope lock(&references::pool_lock.get());
 
     layer_anim* result = references::layer_anim_free_list.read();
 
-    if (result || (result = (layer_anim*)retail::sub_5CD170()) != nullptr) {
+    if (result || (result = grow_pool()) != nullptr) {
         references::layer_anim_free_list.write(*(layer_anim**)result);
     } else {
         retail::sub_9CC940((char*)"Out of pool memory limit");
