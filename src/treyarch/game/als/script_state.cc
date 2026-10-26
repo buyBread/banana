@@ -586,7 +586,37 @@ nal_anim_id als::scripted_state::get_nal_anim_name() const {
 
 // sub_5D72C0
 f32 als::scripted_state::get_secondary_playback_speed(f32 anim_time, f32 anim_duration) const {
-    return ((f32 (__thiscall*)(const scripted_state*, f32, f32))retail::sub_5D72C0)(this, anim_time, anim_duration);
+    static const string_hash attack_windup_region_duration_id     = string_hash(hash::djb2("attack_windup_region_duration"));
+    static const string_hash attack_region_duration_id            = string_hash(hash::djb2("attack_region_duration"));
+    static const string_hash attack_followthru_region_duration_id = string_hash(hash::djb2("attack_followthru_region_duration"));
+
+    f32 scale = 1.0f;
+
+    // the attack's windup, region and followthru, each stretched to its param's duration
+    if (my_param_block && attack_start >= 0.0f) {
+        if (attack_start > anim_time) {
+            if (my_param_block->does_parameter_exist(attack_windup_region_duration_id))
+                scale = attack_start / my_param_block->get_pb_float(attack_windup_region_duration_id);
+        } else if (attack_end > anim_time) {
+            if (my_param_block->does_parameter_exist(attack_region_duration_id)) {
+                f32 duration = my_param_block->get_pb_float(attack_region_duration_id);
+                f32 end      = anim_duration > attack_end ? attack_end : anim_duration;
+
+                scale = (f32)(((f64)end - (f64)attack_start) / (f64)duration);
+            }
+        } else if (anim_duration > attack_end) {
+            if (my_param_block->does_parameter_exist(attack_followthru_region_duration_id))
+                scale = (anim_duration - attack_end) / my_param_block->get_pb_float(attack_followthru_region_duration_id);
+        }
+    }
+
+    // then the first speed range the time is in
+    for (const speed_range &range : speed_range_list) {
+        if (!(anim_time < range.start) && range.end > anim_time)
+            return range.speed * scale;
+    }
+
+    return scale;
 }
 
 // sub_5F8110
