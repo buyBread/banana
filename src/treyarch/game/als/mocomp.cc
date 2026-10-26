@@ -8,6 +8,7 @@
 #include "treyarch/game/als/state_machine.hh"
 #include "treyarch/game/animation/animation_controller.hh"
 #include "treyarch/game/event/event_manager.hh"
+#include "treyarch/game/line_info.hh"
 #include "treyarch/game/spline.hh"
 #include "treyarch/game/wds/ai/ai_core.hh"
 #include "treyarch/game/wds/ai/info_node.hh"
@@ -6979,10 +6980,39 @@ void als::swing_attack_move_and_face::track(f32) {
 }
 
 // sub_5C0750
-void als::swing_attack_move_and_face::steer_velocity(f32 delta_t) {
-    using steer_velocity_t = void (__thiscall*)(swing_attack_move_and_face*, f32);
+void als::swing_attack_move_and_face::steer_velocity(f32) {
+    if (!the_actor->has_ifc(entity_ifc_physical) || !turn_vel_with_facing)
+        return;
 
-    ((steer_velocity_t)retail::sub_5C0750)(this, delta_t);
+    // through the rotate signals the velocity turns with the actor, sliding off whatever's just ahead
+    if (!(anim_time >= rotate_begin_time) || !(rotate_end_time > anim_time))
+        return;
+
+    vector3d velocity;
+    retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+
+    f32      speed = (f32)retail::sub_402020((f32*)&velocity);
+    vector3d ahead = the_actor->my_abs_po->get_z_facing();
+
+    velocity = ahead * speed;
+
+    vector3d from = the_actor->my_abs_po->get_position();
+    vector3d to   = from + ahead * 2.5f;
+
+    line_info probe;
+    retail::sub_4030F0((char*)&probe, (i32)&from, (i32)&to); // line_info::line_info
+    retail::sub_798F50((char*)&probe, (i32)treyarch::references::unk_00e7b2a0.read(), (i32)treyarch::references::unk_00e7b2d0.read(), nullptr, 0); // line_info::check_collision
+
+    if (probe.collision) {
+        ahead = ahead - probe.hit_normal * (f32)(ahead * probe.hit_normal);
+
+        retail::sub_402050((f32*)&ahead);
+
+        velocity = ahead * speed;
+    }
+
+    retail::sub_6006A0((u32**)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::set_velocity
+    retail::sub_798F10((u8*)&probe);                                     // line_info::~line_info
 }
 
 // sub_5C0A70
