@@ -2,10 +2,10 @@
 
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/list/arena.hh"
+#include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/submission.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 
 using namespace treyarch;
@@ -15,10 +15,10 @@ i32 ngl::cull_mesh_sphere(const math::position3 &center, f32 radius, u8 flags) {
     if (flags & 0x40)
         return 0;
 
-    scene* current_scene = references::current_scene.read();
+    scene* build_scene = references::build_scene.read();
 
     for (u32 index = 0; index < 6; ++index) {
-        const math::vector4 &plane = current_scene->clip_planes[index];
+        const math::vector4 &plane = build_scene->clip_planes[index];
 
         if (plane[1] * center[1] +
             plane[0] * center[0] +
@@ -53,13 +53,13 @@ ngl::mesh_node* ngl::create_transient_mesh_node(      mesh*        value,
     if (cull_mesh_sphere(center, sphere.get_w(), 0) == -1)
         return nullptr;
 
-    mesh_node* node = (mesh_node*)list::allocate(0xB0, 64);
+    mesh_node* node = (mesh_node*)list_alloc(0xB0, 64);
     node->mesh_data = (u8*)value;
     node->local_to_world = *local_to_world;
 
-    scene* current_scene = references::current_scene.read();
+    scene* build_scene = references::build_scene.read();
 
-    node->local_to_screen = ~(math::mat44(*local_to_world) * current_scene->world_to_screen);
+    node->local_to_screen = ~(math::mat44(*local_to_world) * build_scene->world_to_screen);
 
     node->scale             = 1.0f;
     node->node_info         = &references::default_node_info.get();
@@ -97,9 +97,9 @@ ngl::mesh_node* ngl::list_add_transient_mesh(      mesh*        value,
             section_shader->add_node(node, section, section_material);
     }
 
-    references::performance.get().total_polygons += value->polygon_count;
+    references::perf_info.get().total_polygons += value->polygon_count;
 
-    u32 frame_epoch = references::frame_epoch.read();
+    u32 frame_epoch = references::frame.read();
     value->last_frame_reference = frame_epoch;
 
     if (value->owner_file)

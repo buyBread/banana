@@ -1,10 +1,10 @@
 #include <cstring>
 
 #include "retail.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
-#include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/ngl/texture/runtime.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/texture.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "game/hash/algo.hh"
 #include "treyarch/mm/heap.hh"
 #include "treyarch/base/tl_system.hh"
@@ -66,12 +66,12 @@ bool ngl::initialize_volume_resource(d3d9::texture_resource &resource,
 }
 
 // sub_9E25B0
-ngl::texture* ngl::create_runtime_texture(u32       flags,
-                                          D3DFORMAT format,
-                                          u32       width,
-                                          u32       height,
-                                          u32       depth,
-                                          u32       level_count) {
+ngl::texture* ngl::create_texture(u32       flags,
+                                  D3DFORMAT format,
+                                  u32       width,
+                                  u32       height,
+                                  u32       depth,
+                                  u32       level_count) {
 
     texture* value = (texture*)tl_mem_alloc(sizeof(texture), 8, 0);
 
@@ -158,12 +158,12 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
             depth_format = d3d9::references::framebuffers.get().depth_texture_format;
         }
 
-        value->depth_target = create_runtime_texture(depth_flags,
-                                                     depth_format,
-                                                     width,
-                                                     height,
-                                                     1,
-                                                     1);
+        value->depth_target = create_texture(depth_flags,
+                                             depth_format,
+                                             width,
+                                             height,
+                                             1,
+                                             1);
     }
 
     value->last_frame_reference = -1;
@@ -194,5 +194,5 @@ void ngl::name_runtime_texture(texture* value, const char* name) {
 void ngl::register_runtime_texture(texture* value, const fixed_string &name) {
     value->name.assign(name);
 
-    references::textures.get().add(value);
+    references::texture_directory.get().add(value);
 }

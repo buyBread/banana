@@ -5,12 +5,11 @@
 #include "retail.hh"
 #include "game/pre_light.hh"
 #include "game/speedtree/wrapper.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
@@ -20,7 +19,7 @@ void speed_tree_wrapper::render_billboards_only(const speed_tree_billboards_only
     if (!effect)
         return;
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     if (!scene->color_target || scene->depth_bias_enabled)
         return;
@@ -62,7 +61,7 @@ void speed_tree_wrapper::render_billboards_only(const speed_tree_billboards_only
 
 // sub_7CC710
 void speed_tree_wrapper::render_billboards(const speed_tree_render_params* params) {
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     if (!scene->color_target || scene->depth_bias_enabled)
         return;
@@ -138,7 +137,7 @@ void speed_tree_wrapper::render_billboards(const speed_tree_render_params* param
         ngl::d3d9::set_vertex_buffer(&billboard_vertex_buffer, &references::speed_tree_billboard_format.get(), 0, 0);
         ngl::d3d9::set_index_buffer(&billboard_index_buffer);
 
-        ngl::d3d9::references::device.get()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
+        ngl::d3d9::references::dev.get()->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
     }
 }
 
@@ -147,7 +146,7 @@ void speed_tree_wrapper::render_branches(const speed_tree_render_params* params)
     speedtree::lod_values lods;
     retail::sub_A3C7D0((u32*)&lods);
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     bool depth_only = !scene->color_target || scene->depth_bias_enabled;
 
@@ -225,12 +224,12 @@ void speed_tree_wrapper::render_branches(const speed_tree_render_params* params)
             ngl::d3d9::set_vertex_buffer(&branch_vertex_buffer, &references::speed_tree_branch_format.get(), 0, 0);
             ngl::d3d9::set_index_buffer(&branch_index_buffers[lod]);
 
-            ngl::d3d9::references::device.get()->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP,
-                                                                      0,
-                                                                      0,
-                                                                      branch_vertex_count,
-                                                                      0,
-                                                                      branch_strip_lengths[lod] - 2);
+            ngl::d3d9::references::dev.get()->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP,
+                                                                   0,
+                                                                   0,
+                                                                   branch_vertex_count,
+                                                                   0,
+                                                                   branch_strip_lengths[lod] - 2);
 
             drawn = true;
         }
@@ -247,7 +246,7 @@ void speed_tree_wrapper::render_fronds(const speed_tree_render_params* params) {
     speedtree::lod_values lods;
     retail::sub_A3C7D0((u32*)&lods);
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     bool depth_only = !scene->color_target || scene->depth_bias_enabled;
 
@@ -348,7 +347,7 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
     speedtree::lod_values lods;
     retail::sub_A3C7D0((u32*)&lods);
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     bool depth_only = !scene->color_target || scene->depth_bias_enabled;
 
@@ -512,7 +511,7 @@ void speed_tree_wrapper::render_leafs(const speed_tree_render_params* params) {
                                          0,
                                          0);
 
-            ngl::d3d9::references::device.get()->DrawPrimitive(D3DPT_TRIANGLELIST, 0, (u32)(6 * leaf_lod.card_count) / 3);
+            ngl::d3d9::references::dev.get()->DrawPrimitive(D3DPT_TRIANGLELIST, 0, (u32)(6 * leaf_lod.card_count) / 3);
 
             drawn = true;
         }

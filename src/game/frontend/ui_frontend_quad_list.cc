@@ -1,8 +1,8 @@
 #include "game/frontend/ui_frontend.hh"
-#include "treyarch/ngl/d3d9/scratch_mesh.hh"
+#include "treyarch/ngl/gpu/d3d9/scratch_mesh.hh"
 #include "treyarch/ngl/mesh/submission.hh"
-#include "treyarch/ngl/mesh/transient.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 
 using namespace treyarch;
@@ -43,19 +43,19 @@ void ui_frontend::draw_quad_list() {
             continue;
 
         flat_material->texture_data = value->texture_data ?
-            value->texture_data : ngl::references::white_texture.read();
+            value->texture_data : ngl::references::white_tex.read();
         flat_material->blend_mode_low  = (u32)value->blend_mode;
         flat_material->blend_mode_high = (u32)(value->blend_mode >> 32);
         flat_material->map_flags       = value->map_flags;
 
         ngl::mesh* mesh = ngl::create_transient_mesh(0x40000, 1);
-        ngl::mesh_section* section = ngl::d3d9::allocate_scratch_mesh_section(
+        ngl::mesh_section* section = ngl::d3d9::create_scratch_section(
             D3DPT_TRIANGLESTRIP, 4, 4, &ngl::shaders::program_exports::pcuv::format.get());
 
         ngl::attach_transient_mesh_section(mesh, section, &flat_material->base, 1);
 
-        u16* indices = ngl::d3d9::lock_scratch_mesh_indices(section);
-        auto* vertices = (quad_scratch_vertex*)ngl::d3d9::lock_scratch_mesh_vertices(section);
+        u16* indices = ngl::d3d9::lock_section_indices(section);
+        auto* vertices = (quad_scratch_vertex*)ngl::d3d9::lock_section_vertices(section);
 
         for (u32 index = 0; index < 4; ++index) {
             const ngl::quad_vertex &source = value->vertices[index];
@@ -72,8 +72,8 @@ void ui_frontend::draw_quad_list() {
             indices[index]        = (u16)index;
         }
 
-        ngl::d3d9::unlock_scratch_mesh_indices(section);
-        ngl::d3d9::unlock_scratch_mesh_vertices(section);
+        ngl::d3d9::unlock_section_indices(section);
+        ngl::d3d9::unlock_section_vertices(section);
 
         math::mat43 transform = quad_transform;
         ngl::list_add_transient_mesh(mesh, &transform);

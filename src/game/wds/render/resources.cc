@@ -6,7 +6,7 @@
 #include "game/wds/render/wds_render_manager.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/resources/resolver.hh"
+#include "treyarch/ngl/resources/resources.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/fixed_string.hh"
 #include "game/four_cc.hh"

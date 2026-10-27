@@ -1,15 +1,14 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/batch_renderer.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -80,7 +79,7 @@ void draw_single_pass_batch_node(ngl::fx::render_node* value) {
     // non-indexed meshes use the section's vertex offset here, unlike the regular draw path
     ngl::d3d9::set_vertex_buffer(&section->vertex_buffer, section->vertex_definition_data, section->vertex_offset, 0);
 
-    ngl::d3d9::references::device.get()
+    ngl::d3d9::references::dev.get()
         ->DrawPrimitive(primitive_type,
                         0,
                         ngl::d3d9::get_primitive_count(primitive_type, section->vertex_count));
@@ -89,12 +88,12 @@ void draw_single_pass_batch_node(ngl::fx::render_node* value) {
 void begin_depth_only_technique(ngl::fx::pass*      pass_data,
                                 IDirect3DSurface9** saved_color_target) {
 
-    ngl::scene* current_scene = ngl::references::current_scene.read();
+    ngl::scene* build_scene = ngl::references::build_scene.read();
 
-    if (!current_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
+    if (!build_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
         return;
 
-    ngl::d3d9::references::device.get()->GetRenderTarget(0, saved_color_target);
+    ngl::d3d9::references::dev.get()->GetRenderTarget(0, saved_color_target);
 
     // binding nothing to target 0 only turns color writes off
     ngl::d3d9::set_render_target(0, nullptr, false);
@@ -103,9 +102,9 @@ void begin_depth_only_technique(ngl::fx::pass*      pass_data,
 void finish_depth_only_technique(ngl::fx::pass*     pass_data,
                                  IDirect3DSurface9* saved_color_target) {
 
-    ngl::scene* current_scene = ngl::references::current_scene.read();
+    ngl::scene* build_scene = ngl::references::build_scene.read();
 
-    if (!current_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
+    if (!build_scene->depth_bias_enabled || pass_data->states.alpha_test_enabled)
         return;
 
     ngl::d3d9::set_render_target(0, &saved_color_target, true);
@@ -131,7 +130,7 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
         ngl::fx::update_material_parameters(effect_data,
                                             node->node_data,
                                             node->section,
-                                            ngl::references::current_scene.read()->depth_bias_enabled != 0);
+                                            ngl::references::build_scene.read()->depth_bias_enabled != 0);
         ngl::fx::prepare_effect_material(effect_data, node->material_data);
         ngl::fx::prepare_animated_textures(effect_data,
                                            node->material_data,
@@ -147,7 +146,7 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
                 ngl::fx::pass* pass_data = &technique_data->passes[index];
 
                 ngl::fx::apply_pass(effect_data, pass_data);
-                ngl::d3d9::draw_mesh_section(node->section);
+                ngl::d3d9::draw_section(node->section);
                 ngl::fx::finish_pass(effect_data, pass_data);
 
                 pass_data->active_programs = &pass_data->programs;

@@ -8,7 +8,7 @@ void ngl::geometry_shader::register_item() {
     id = references::next_geometry_shader_id.read();
     references::next_geometry_shader_id.write(id + 1);
 
-    references::geometry_shaders.get().add(this);
+    references::geometry_shader_bank.get().add(this);
 }
 
 // sub_9E2FF0
@@ -37,5 +37,5 @@ string_hash ngl::geometry_shader_name::get(const geometry_shader* value) {
 }
 
 void ngl::initialize_geometry_shader_bank() {
-    references::geometry_shaders.get().init();
+    references::geometry_shader_bank.get().init();
 }

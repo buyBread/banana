@@ -1,0 +1,101 @@
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/work_buffers.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/ngl.hh"
+#include "treyarch/base/tl_system.hh"
+
+using namespace treyarch;
+
+void ngl::d3d9::replace_scratch_index_buffers(u32 maximum_index_count) {
+    scratch_buffers &scratch = references::scratch_buffers.get();
+
+    if (scratch.maximum_index_count) {
+        scratch.index_buffer_0->Release();
+        scratch.index_buffer_1->Release();
+    }
+
+    if (maximum_index_count) {
+        IDirect3DDevice9* device = references::dev.get();
+
+        device->CreateIndexBuffer(maximum_index_count * sizeof(u16),
+                                  0,
+                                  D3DFMT_INDEX16,
+                                  D3DPOOL_MANAGED,
+                                  &scratch.index_buffer_0,
+                                  nullptr);
+        device->CreateIndexBuffer(maximum_index_count * sizeof(u16),
+                                  0,
+                                  D3DFMT_INDEX16,
+                                  D3DPOOL_MANAGED,
+                                  &scratch.index_buffer_1,
+                                  nullptr);
+    }
+
+    scratch.maximum_index_count = maximum_index_count;
+}
+
+void ngl::d3d9::replace_scratch_vertex_buffers(u32 size) {
+    scratch_buffers &scratch = references::scratch_buffers.get();
+
+    if (scratch.vertex_buffer_size) {
+        scratch.vertex_buffer_0->Release();
+        scratch.vertex_buffer_1->Release();
+    }
+
+    if (size) {
+        IDirect3DDevice9* device = references::dev.get();
+
+        device->CreateVertexBuffer(size,
+                                   0,
+                                   0,
+                                   D3DPOOL_MANAGED,
+                                   &scratch.vertex_buffer_0,
+                                   nullptr);
+        device->CreateVertexBuffer(size,
+                                   0,
+                                   0,
+                                   D3DPOOL_MANAGED,
+                                   &scratch.vertex_buffer_1,
+                                   nullptr);
+    }
+
+    scratch.vertex_buffer_size = size;
+}
+
+void ngl::d3d9::replace_platform_work_buffer(u32 size) {
+    void* &buffer      = references::platform_work_buffer.get();
+    u32   &buffer_size = references::platform_work_buffer_size.get();
+
+    if (buffer_size) {
+        tl_mem_free(buffer);
+
+        buffer = nullptr;
+    }
+
+    if (size) {
+        buffer = tl_mem_alloc(size,
+                              0x80,
+                              tl_memalloc_physical |
+                              tl_memalloc_writecombine);
+    }
+
+    buffer_size = size;
+}
+
+// sub_9E8AF0
+void ngl::d3d9::ngli_init_work_buffers() {
+    if (!ngl::references::list_work.read())
+        ngl::set_buffer_size(ngl::buffer_list_work, 0x40000, true, true);
+
+    scratch_buffers &scratch = references::scratch_buffers.get();
+
+    if (!scratch.maximum_index_count)
+        ngl::set_buffer_size(ngl::buffer_scratch_index, 0x100000, true, true);
+
+    if (!scratch.vertex_buffer_size)
+        ngl::set_buffer_size(ngl::buffer_scratch_vertex, 0x800000, true, true);
+
+    // pc doesn't have a default platform work buffer.
+    if (!references::platform_work_buffer_size.read())
+        ngl::set_buffer_size(ngl::buffer_platform_work, 0, true, true);
+}

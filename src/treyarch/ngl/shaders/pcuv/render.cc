@@ -1,10 +1,9 @@
 #include <bit>
 
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
@@ -38,10 +37,10 @@ void set_pcuv_basic_blend() {
 }
 
 math::mat44 get_pcuv_local_to_screen(const ngl::fx::mesh_node_data* node_data,
-                                     const ngl::scene*              current_scene) {
+                                     const ngl::scene*              build_scene) {
 
     const math::mat43 &local  = node_data->local_to_world;
-    const math::mat44 &screen = current_scene->world_to_screen;
+    const math::mat44 &screen = build_scene->world_to_screen;
 
     math::mat44 result;
 
@@ -68,12 +67,12 @@ void ngl::shaders::pcuv::render(render_node* value) {
         return;
     }
 
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
-    IDirect3DDevice9* device = d3d9::references::device.get();
+    IDirect3DDevice9* device = d3d9::references::dev.get();
 
     math::mat44 local_to_screen = get_pcuv_local_to_screen(value->node_data,
-                                                           current_scene);
+                                                           build_scene);
 
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
 
@@ -167,8 +166,8 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     d3d9::set_sampler_address(0, address_u, address_v);
 
-    d3d9::draw_mesh_section(value->section);
+    d3d9::draw_section(value->section);
 
-    d3d9::set_render_state(D3DRS_COLORWRITEENABLE, current_scene->framebuffer_write_mask);
-    d3d9::set_render_state(D3DRS_ZWRITEENABLE, current_scene->z_write_enabled);
+    d3d9::set_render_state(D3DRS_COLORWRITEENABLE, build_scene->framebuffer_write_mask);
+    d3d9::set_render_state(D3DRS_ZWRITEENABLE, build_scene->z_write_enabled);
 }

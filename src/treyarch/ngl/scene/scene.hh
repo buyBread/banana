@@ -1,10 +1,12 @@
 #pragma once
 
-#include "treyarch/ngl/lighting/context.hh"
+#include "treyarch/ngl/lighting/lighting.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/math/matrix.hh"
 #include "treyarch/math/matrix_rot.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
@@ -139,15 +141,84 @@ namespace treyarch { namespace ngl {
         u32                      platform_scene_state_4dc;
     };
 
-    scene* set_color_target(texture* target);
-    scene* set_depth_target(texture* target);
+    scene* set_render_target(texture* target);
+    scene* set_z_target(texture* target);
     u32    set_clear_stencil(u32 stencil);
     scene* set_camera_matrix(const math::rot_tran_mat43 &camera_to_world);
     math::rot_tran_mat43* set_world_to_view_matrix(const math::rot_tran_mat43 &world_to_view);
-    scene* set_clear_depth(f32 depth);
+    scene* set_clear_z(f32 depth);
     scene* set_aspect_ratio(f32 ratio);
-    scene* set_perspective_parameters(f32 field_of_view, f32 near_plane, f32 far_plane);
-    scene* set_ortho_parameters(f32 ortho_width, f32 ortho_height, f32 near_plane, f32 far_plane);
+    scene* set_perspective_matrix(f32 field_of_view, f32 near_plane, f32 far_plane);
+    scene* set_ortho_matrix(f32 ortho_width, f32 ortho_height, f32 near_plane, f32 far_plane);
+
+    enum e_scene_parameter_source : u32 {
+        scene_parameter_defaults = 0,
+        scene_parameter_parent   = 1,
+        scene_parameter_root     = 2
+    };
+
+    u32               get_scene_parameter_set_size();
+    bool              has_scene_parameter(const scene_parameters* parameters, u32 id);
+    void*             get_scene_parameter(const scene_parameters* parameters, u32 id);
+    void*             find_scene_parameter(const scene_parameters* parameters, u32 id);
+    scene_parameters* allocate_scene_parameters();
+    void              clear_scene_parameters(scene_parameters* parameters);
+    void              copy_scene_parameters(      scene_parameters* destination,
+                                            const scene_parameters* source);
+
+    scene* list_begin_scene(e_scene_parameter_source parameter_source);
+    void   list_end_scene();
+    scene* list_select_scene(scene* value);
+    void   sort_scene(scene* value);
+
+    const char* set_scene_name(const char* name);
+
+    locked_texture_node* lock_texture(texture* value);
+
+    void set_scene_callback(e_scene_callback_type   type,
+                            scene_callback_function function,
+                            void*                   context = nullptr);
+
+    void set_clear_flags(u32 flags);
+    void set_clear_color(f32 red, f32 green, f32 blue, f32 alpha);
+    void set_z_write_enable(bool enable);
+    void set_z_test_enable(bool enable);
+    void set_animation_time(f32 time);
+
+    scene* set_scene_option_group_0(bool first, bool second, bool third);
+    scene* set_scene_option_group_1(bool first, bool second, bool third);
+
+    scene* set_default_scene_params();
+    scene* clear_and_set_default_scene_state(scene* value);
+
+    void calculate_matrices(scene* value);
+    void validate_matrices(scene* value);
+
+    math::mat44* get_matrix_world_to_screen(scene* value);
+
+    void apply_matrix_plane(      math::vector4 &out,
+                            const math::mat44   &matrix,
+                            const math::vector4 &plane);
+
+    bool   is_viewport_override_enabled();
+    void   set_viewport(f32 left, f32 top, f32 right, f32 bottom);
+    scene* set_scissor(f32 left, f32 top, f32 right, f32 bottom);
+    scene* set_pixel_viewport(f32 left, f32 top, f32 right, f32 bottom);
+    void   apply_active_viewport();
+
+    void scene_dump_start();
+
+    namespace references {
+        inline util::memory_reference<scene*> build_scene      { 0x01115C54 };
+        inline util::memory_reference<scene*> root_build_scene { 0x01115C58 };
+        inline util::memory_reference<u8>     in_shadow_scene  { 0x01073DFA };
+
+        inline util::memory_reference<u32> scene_parameter_count { 0x011162AC };
+
+        inline util::memory_reference<scene_callback> end_of_render_callback { 0x01115C70 };
+        inline util::memory_reference<scene_callback> end_of_frame_callback  { 0x01115C78 };
+        inline util::memory_reference<scene_callback> end_of_vblank_callback { 0x01115C80 };
+    } // references
 
     ASSERT_SIZEOF  (scene_callback,           0x08);
     ASSERT_OFFSETOF(scene_callback, function, 0x00);

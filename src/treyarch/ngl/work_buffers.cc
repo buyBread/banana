@@ -1,11 +1,9 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/work_buffers.hh"
-#include "treyarch/ngl/list/arena.hh"
-#include "treyarch/ngl/list/init.hh"
-#include "treyarch/ngl/scene/references.hh"
-#include "treyarch/ngl/scene/render_sort.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/work_buffers.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -18,24 +16,24 @@ void ngl::set_buffer_size(e_buffer_type buffer,
     // unused
     (void)allow_resize;
 
-    scene* current_scene = references::current_scene.read();
+    scene* build_scene = references::build_scene.read();
 
-    bool restart_list = current_scene != nullptr;
+    bool restart_list = build_scene != nullptr;
 
     if (restart_list) {
-        render_sort(current_scene);
+        sort_scene(build_scene);
 
         if (send_list)
-            list_send();
+            ngli_list_send();
     }
 
-    if (d3d9::references::device.read())
+    if (d3d9::references::dev.read())
         d3d9::wait_for_rendering();
 
     switch (buffer) {
         case buffer_list_work:
             banana::log.ngl("list work buffer size -> 0x{:X} bytes", size);
-            list::replace_storage(size);
+            replace_list_work_buffer(size);
 
             break;
         case buffer_scratch_index:
@@ -60,5 +58,5 @@ void ngl::set_buffer_size(e_buffer_type buffer,
     }
 
     if (restart_list)
-        list_init();
+        ngli_list_init();
 }

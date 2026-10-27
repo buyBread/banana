@@ -1,11 +1,9 @@
 #include <cstdio>
 
 #include "treyarch/ngl/debug/debug.hh"
-#include "treyarch/ngl/debug/performance_display.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/font/font.hh"
-#include "treyarch/ngl/font/text.hh"
-#include "treyarch/ngl/list/arena.hh"
+#include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/version.hh"
 
@@ -13,8 +11,8 @@ using namespace treyarch;
 
 // sub_9E9AE0
 void ngl::debug::render_performance_info() {
-    const debug_state      &state       = references::synchronized_debug.get();
-    const performance_info &performance = references::synchronized_performance.get();
+    const debug_state      &state       = references::sync_debug.get();
+    const performance_info &performance = references::sync_perf_info.get();
 
     char text[2048];
 
@@ -42,7 +40,7 @@ void ngl::debug::render_performance_info() {
             performance.total_polygons,
             performance.node_count,
             performance.list_work_bytes_used,
-            list::references::arena.get().capacity,
+            ngl::references::list_work_size.read(),
             performance.scratch_mesh_bytes_used,
             performance.max_scratch_mesh_bytes_used);
     } else {
@@ -52,11 +50,11 @@ void ngl::debug::render_performance_info() {
             performance.render_milliseconds);
     }
 
-    font* system_font = references::system_font.read();
+    font* sys_font = references::sys_font.read();
     
     u32 text_width;
     u32 text_height;
-    get_string_dimensions(system_font, text, &text_width, &text_height, 1.0f, 1.0f);
+    get_string_dimensions(sys_font, text, &text_width, &text_height, 1.0f, 1.0f);
 
     quad background;
     init_quad(&background);
@@ -71,7 +69,7 @@ void ngl::debug::render_performance_info() {
     set_quad_color(&background, 0xC0000000);
     set_quad_z(&background, -9999.0f);
     list_add_quad(&background);
-    list_add_string(system_font,
+    list_add_string(sys_font,
                     text,
                     screen_width - (f32)text_width - 40.0f,
                     30.0f,

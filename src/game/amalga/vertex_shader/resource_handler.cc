@@ -2,7 +2,7 @@
 #include "game/amalga/resource_directory.hh"
 #include "game/amalga/vertex_shader/resource_handler.hh"
 #include "game/shader_resource_manager.hh"
-#include "treyarch/ngl/d3d9/shader_program_cache.hh"
+#include "treyarch/ngl/gpu/d3d9/shader_program_cache.hh"
 
 using namespace treyarch;
 

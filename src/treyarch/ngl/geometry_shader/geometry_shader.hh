@@ -34,22 +34,22 @@ namespace treyarch { namespace ngl {
         static string_hash get(const geometry_shader* value);
     };
 
-    struct geometry_shader_bank : instance_bank<geometry_shader, geometry_shader_name> {};
+    struct geometry_shader_bank_t : instance_bank<geometry_shader, geometry_shader_name> {};
 
     void initialize_geometry_shader_bank();
 
     namespace references {
-        inline util::memory_reference<geometry_shader_bank>  geometry_shaders                 { 0x01116200 };
-        inline util::memory_reference<u32>                   next_geometry_shader_id          { 0x011188D4 };
-        inline util::memory_reference<morph_geometry_shader> morph_geometry_shader_instance   { 0x00F52F50 };
-        inline util::memory_reference<fixed_string>          morph_geometry_shader_name       { 0x01118620 };
-        inline util::memory_reference<u32>                   morph_geometry_shader_name_guard { 0x01118628 };
+        inline util::memory_reference<geometry_shader_bank_t> geometry_shader_bank             { 0x01116200 };
+        inline util::memory_reference<u32>                    next_geometry_shader_id          { 0x011188D4 };
+        inline util::memory_reference<morph_geometry_shader>  morph_geometry_shader_instance   { 0x00F52F50 };
+        inline util::memory_reference<fixed_string>           morph_geometry_shader_name       { 0x01118620 };
+        inline util::memory_reference<u32>                    morph_geometry_shader_name_guard { 0x01118628 };
     } // references
 
     ASSERT_SIZEOF  (geometry_shader,     0x0C);
     ASSERT_OFFSETOF(geometry_shader, id, 0x08);
 
-    ASSERT_SIZEOF(geometry_shader_bank, 0x10);
+    ASSERT_SIZEOF(geometry_shader_bank_t, 0x10);
 
     ASSERT_SIZEOF(morph_geometry_shader, 0x0C);
 }} // treyarch::ngl

@@ -3,7 +3,7 @@
 #include <array>
 #include <cstddef>
 
-#include "treyarch/ngl/d3d9/shader_program.hh"
+#include "treyarch/ngl/gpu/d3d9/shader_program.hh"
 
 namespace treyarch { namespace ngl { namespace shaders {
     inline bool create_program_pair(d3d9::vertex_program &vertex_program, e_shader_program vertex_key,

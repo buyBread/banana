@@ -1,7 +1,6 @@
-#include "treyarch/ngl/list/arena.hh"
+#include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/list/render_callback.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -12,9 +11,9 @@ void ngl::render_callback::render(ngl::render_callback::node* value) {
 
 // sub_9D9350
 ngl::scene* ngl::render_callback::list_add_custom_node(function callback, void* data, const sort_info* sorting) {
-    validate_matrices(ngl::references::current_scene.read());
+    validate_matrices(ngl::references::build_scene.read());
 
-    auto* value = (node*)list::allocate(sizeof(node), 16);
+    auto* value = (node*)list_alloc(sizeof(node), 16);
 
     if (!value)
         return nullptr;

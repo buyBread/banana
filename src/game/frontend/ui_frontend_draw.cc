@@ -12,11 +12,7 @@
 #include "game/mission/mission_manager.hh"
 #include "game/quest_manager.hh"
 #include "game/region_spawn_manager.hh"
-#include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/ngl/lighting/references.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/lighting/lighting.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
@@ -29,9 +25,9 @@ void ui_frontend::draw_startup() {
     render_background_effects();
     scene_draw_state_278 = 1;
 
-    ngl::lighting::light_context* previous_context = ngl::lighting::references::current_context.read();
-    ngl::lighting::light_context* context = ngl::lighting::create_context();
-    ngl::lighting::select_context(context);
+    ngl::lighting::light_context* previous_context = ngl::lighting::references::build_light_context.read();
+    ngl::lighting::light_context* context = ngl::lighting::create_light_context();
+    ngl::lighting::select_build_light_context(context);
 
     ngl::scene* scene = ngl::list_begin_scene(ngl::scene_parameter_defaults);
     ngl::set_scene_name("UIFrontEnd::DrawStartup");
@@ -40,14 +36,14 @@ void ui_frontend::draw_startup() {
     const igo_startup_projection &projection = references::startup_projection.get();
 
     if (projection.orthographic) {
-        ngl::set_ortho_parameters(projection.ortho_width,
-                                  projection.ortho_height,
-                                  projection.near_plane,
-                                  projection.far_plane);
+        ngl::set_ortho_matrix(projection.ortho_width,
+                              projection.ortho_height,
+                              projection.near_plane,
+                              projection.far_plane);
     } else {
-        ngl::set_perspective_parameters(projection.field_of_view,
-                                        projection.near_plane,
-                                        projection.far_plane);
+        ngl::set_perspective_matrix(projection.field_of_view,
+                                    projection.near_plane,
+                                    projection.far_plane);
     }
 
     i32 environment_index = select_ui_environment_index();
@@ -56,7 +52,7 @@ void ui_frontend::draw_startup() {
     math::rot_tran_mat43 identity = math::identity_mat33();
     ngl::set_world_to_view_matrix(identity);
 
-    ngl::lighting::set_scene_context(context, ngl::references::current_scene.read());
+    ngl::lighting::set_light_context(context, ngl::references::build_scene.read());
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);
     ngl::set_clear_flags(6);
@@ -72,7 +68,7 @@ void ui_frontend::draw_startup() {
         startup_widget_184->draw();
 
     ngl::list_end_scene();
-    ngl::lighting::select_context(previous_context);
+    ngl::lighting::select_build_light_context(previous_context);
 
     current_ui_environment = nullptr;
 }
@@ -82,9 +78,9 @@ void ui_frontend::draw() {
     render_background_effects();
     scene_draw_state_278 = 1;
 
-    ngl::lighting::light_context* previous_context = ngl::lighting::references::current_context.read();
-    ngl::lighting::light_context* context = ngl::lighting::create_context();
-    ngl::lighting::select_context(context);
+    ngl::lighting::light_context* previous_context = ngl::lighting::references::build_light_context.read();
+    ngl::lighting::light_context* context = ngl::lighting::create_light_context();
+    ngl::lighting::select_build_light_context(context);
 
     ngl::scene* pass_1 = ngl::list_begin_scene(ngl::scene_parameter_defaults);
     ngl::set_scene_name("UIFrontEnd::Draw (1)");
@@ -101,14 +97,14 @@ void ui_frontend::draw() {
     const igo_draw_projection &projection = references::draw_projection.get();
 
     if (projection.orthographic) {
-        ngl::set_ortho_parameters(projection.ortho_width,
-                                  projection.ortho_height,
-                                  projection.near_plane,
-                                  projection.far_plane);
+        ngl::set_ortho_matrix(projection.ortho_width,
+                              projection.ortho_height,
+                              projection.near_plane,
+                              projection.far_plane);
     } else {
-        ngl::set_perspective_parameters(fov_cache.field_of_view,
-                                        projection.near_plane,
-                                        projection.far_plane);
+        ngl::set_perspective_matrix(fov_cache.field_of_view,
+                                    projection.near_plane,
+                                    projection.far_plane);
     }
 
     i32 environment_index = select_ui_environment_index();
@@ -123,7 +119,7 @@ void ui_frontend::draw() {
         ngl::set_world_to_view_matrix(identity);
     }
 
-    ngl::lighting::set_scene_context(context, pass_1);
+    ngl::lighting::set_light_context(context, pass_1);
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);
     ngl::set_clear_flags(6);
@@ -315,14 +311,14 @@ void ui_frontend::draw() {
     ngl::scene* pass_2 = ngl::list_begin_scene(ngl::scene_parameter_defaults);
     ngl::set_scene_name("UIFrontEnd::Draw (2)");
     ngl::set_clear_flags(0);
-    ngl::set_ortho_parameters(projection.ortho_width,
-                              projection.ortho_height,
-                              projection.near_plane,
-                              projection.far_plane);
+    ngl::set_ortho_matrix(projection.ortho_width,
+                          projection.ortho_height,
+                          projection.near_plane,
+                          projection.far_plane);
 
     math::rot_tran_mat43 identity = math::identity_mat33();
     ngl::set_world_to_view_matrix(identity);
-    ngl::lighting::set_scene_context(context, pass_1);
+    ngl::lighting::set_light_context(context, pass_1);
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);
     ngl::set_clear_flags(0);
@@ -343,7 +339,7 @@ void ui_frontend::draw() {
         autosave_indicator->draw();
 
     ngl::list_end_scene();
-    ngl::lighting::select_context(previous_context);
+    ngl::lighting::select_build_light_context(previous_context);
 
     current_ui_environment = nullptr;
 }

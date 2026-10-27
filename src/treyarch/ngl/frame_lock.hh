@@ -14,11 +14,14 @@ namespace treyarch { namespace ngl {
         frame_lock_three_or_immediate
     };
 
-    u32  apply_frame_lock(e_frame_lock frame_lock);
     void set_frame_lock(e_frame_lock frame_lock);
 
+    namespace d3d9 {
+        u32 set_frame_lock_params(e_frame_lock frame_lock);
+    } // d3d9
+
     namespace references {
-        inline util::memory_reference<e_frame_lock> current_frame_lock   { 0x00F528D8 };
-        inline util::memory_reference<e_frame_lock> requested_frame_lock { 0x00F528DC };
+        inline util::memory_reference<e_frame_lock> frame_lock      { 0x00F528D8 };
+        inline util::memory_reference<e_frame_lock> prev_frame_lock { 0x00F528DC };
     } // references
 }} // treyarch::ngl

@@ -1,11 +1,10 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "treyarch/ngl/font/text.hh"
+#include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/font/render.hh"
-#include "treyarch/ngl/list/arena.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 
@@ -29,12 +28,12 @@ const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
 }
 
 // sub_6980C0
-u32 get_glyph_cell_width(const ngl::font* font_data, u8 character) {
+u32 get_cell_width(const ngl::font* font_data, u8 character) {
     return (u32)(get_glyph_info(font_data, character)->cell_width - 1);
 }
 
 // sub_9DA560
-void parse_color_token(const char** cursor, u32* color) {
+void font_parse_token(const char** cursor, u32* color) {
     char* end;
     u32 parsed = std::strtoul(++*cursor, &end, 16);
 
@@ -43,7 +42,7 @@ void parse_color_token(const char** cursor, u32* color) {
 }
 
 // sub_9DA590
-void parse_scale_token(const char** cursor, f32* scale) {
+void font_parse_token(const char** cursor, f32* scale) {
     char* end;
     f64 parsed = std::strtod(++*cursor, &end);
 
@@ -52,9 +51,9 @@ void parse_scale_token(const char** cursor, f32* scale) {
 }
 
 // sub_9DA5B0
-void parse_scale_xy_token(const char** cursor,
-                                f32*   scale_x,
-                                f32*   scale_y) {
+void font_parse_token(const char** cursor,
+                            f32*   scale_x,
+                            f32*   scale_y) {
 
     char* end;
     f64 parsed_x = std::strtod(++*cursor, &end);
@@ -73,13 +72,13 @@ u32 rotate_color(u32 value) {
 }
 
 // sub_9DA5F0
-ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
-                                            f32        x,
-                                            f32        y,
-                                            f32        scale_x,
-                                            f32        scale_y,
-                                            u32        color,
-                                      const char*      text) {
+ngl_string_chunk* build_string_list(      ngl::font* font_data,
+                                          f32        x,
+                                          f32        y,
+                                          f32        scale_x,
+                                          f32        scale_y,
+                                          u32        color,
+                                    const char*      text) {
                                                 
     f32 line_height = (f32)font_data->header.cell_height;
     f32 line_start  = x;
@@ -87,7 +86,7 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
     f32 maximum_scale_y = scale_y;
 
     auto* sentinel = (ngl_string_chunk*)
-        ngl::list::allocate(sizeof(ngl_string_chunk), 16);
+        ngl::list_alloc(sizeof(ngl_string_chunk), 16);
 
     sentinel->next = nullptr;
 
@@ -102,13 +101,13 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
             case 1: {
                 u32 parsed_color;
 
-                parse_color_token(&cursor, &parsed_color);
+                font_parse_token(&cursor, &parsed_color);
                 color = rotate_color(parsed_color);
 
                 break;
             }
             case 2:
-                parse_scale_token(&cursor, &scale_x);
+                font_parse_token(&cursor, &scale_x);
                 scale_y = scale_x;
 
                 if (scale_y > maximum_scale_y)
@@ -116,14 +115,14 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
 
                 break;
             case 3:
-                parse_scale_xy_token(&cursor, &scale_x, &scale_y);
+                font_parse_token(&cursor, &scale_x, &scale_y);
 
                 if (scale_y > maximum_scale_y)
                     maximum_scale_y = scale_y;
 
                 break;
             case 9:
-                x += (f32)get_glyph_cell_width(font_data, 'a') *
+                x += (f32)get_cell_width(font_data, 'a') *
                     scale_x * 4.0f + 1.0f;
 
                 break;
@@ -135,14 +134,14 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
 
                 break;
             case 32:
-                x += (f32)get_glyph_cell_width(font_data, 'a') * scale_x + 1.0f;
+                x += (f32)get_cell_width(font_data, 'a') * scale_x + 1.0f;
 
                 break;
             default: {
                 const char* chunk_start = cursor - 1;
 
                 auto* chunk = (ngl_string_chunk*)
-                    ngl::list::allocate(sizeof(ngl_string_chunk), 16);
+                    ngl::list_alloc(sizeof(ngl_string_chunk), 16);
 
                 current->next = chunk;
                 current       = chunk;
@@ -160,7 +159,7 @@ ngl_string_chunk* build_string_chunks(      ngl::font* font_data,
                        *cursor != 3 && *cursor != 9 && *cursor != 10 &&
                        *cursor != 32) {
 
-                    x += (f32)get_glyph_cell_width(font_data, (u8)*cursor) * scale_x + 1.0f;
+                    x += (f32)get_cell_width(font_data, (u8)*cursor) * scale_x + 1.0f;
 
                     ++cursor;
                 }
@@ -201,12 +200,12 @@ void ngl::get_string_dimensions(      font* font_data,
                 case 1: {
                     u32 ignored_color;
 
-                    parse_color_token(&cursor, &ignored_color);
+                    font_parse_token(&cursor, &ignored_color);
 
                     break;
                 }
                 case 2:
-                    parse_scale_token(&cursor, &scale_x);
+                    font_parse_token(&cursor, &scale_x);
                     scale_y = scale_x;
 
                     if (scale_y > maximum_scale_y)
@@ -214,7 +213,7 @@ void ngl::get_string_dimensions(      font* font_data,
 
                     break;
                 case 3:
-                    parse_scale_xy_token(&cursor, &scale_x, &scale_y);
+                    font_parse_token(&cursor, &scale_x, &scale_y);
 
                     if (scale_y > maximum_scale_y)
                         maximum_scale_y = scale_y;
@@ -222,7 +221,7 @@ void ngl::get_string_dimensions(      font* font_data,
                     break;
                 case 9:
                     current_width +=
-                        (f32)get_glyph_cell_width(font_data, ' ') * scale_x * 4.0f + 1.0f;
+                        (f32)get_cell_width(font_data, ' ') * scale_x * 4.0f + 1.0f;
 
                     last_character = ' ';
 
@@ -233,7 +232,7 @@ void ngl::get_string_dimensions(      font* font_data,
 
                         current_width +=
                             (f32)(glyph->glyph_size[0] + glyph->glyph_origin[0]) -
-                            (f32)(get_glyph_cell_width(font_data, last_character) + 1) *
+                            (f32)(get_cell_width(font_data, last_character) + 1) *
                             scale_x;
                     }
 
@@ -248,13 +247,13 @@ void ngl::get_string_dimensions(      font* font_data,
                     
                     break;
                 case 32:
-                    current_width += (f32)get_glyph_cell_width(font_data, 'a') * scale_x + 1.0f;
+                    current_width += (f32)get_cell_width(font_data, 'a') * scale_x + 1.0f;
 
                     last_character = 'a';
 
                     break;
                 default:
-                    current_width += (f32)get_glyph_cell_width(font_data, character) * scale_x + 1.0f;
+                    current_width += (f32)get_cell_width(font_data, character) * scale_x + 1.0f;
                     
                     last_character = character;
                     
@@ -267,7 +266,7 @@ void ngl::get_string_dimensions(      font* font_data,
             
             current_width +=
                 (f32)(glyph->glyph_size[0] + glyph->glyph_origin[0]) -
-                (f32)(get_glyph_cell_width(font_data, last_character) + 1) *
+                (f32)(get_cell_width(font_data, last_character) + 1) *
                 scale_x;
         }
 
@@ -299,19 +298,19 @@ void ngl::list_add_string(      font* font_data,
                                 f32   scale_x,
                                 f32   scale_y) {
 
-    scene* current_scene = references::current_scene.read();
+    scene* build_scene = references::build_scene.read();
 
-    validate_matrices(current_scene);
+    validate_matrices(build_scene);
 
     if (text && *text && font_data && font_data->texture_data) {
         auto* node = (ngl_string_node*)
-            list::allocate(sizeof(ngl_string_node), 16);
+            list_alloc(sizeof(ngl_string_node), 16);
 
         if (node) {
             node->base.vtable = &string_renderer::references::node_vtable.get();
 
             u32 text_length = (u32)std::strlen(text);
-            char* stored_text = (char*)list::allocate(text_length + 1, 16);
+            char* stored_text = (char*)list_alloc(text_length + 1, 16);
 
             node->text = stored_text;
             std::memcpy(stored_text, text, text_length + 1);
@@ -324,11 +323,11 @@ void ngl::list_add_string(      font* font_data,
             node->scale_y                = scale_y;
             node->color                  = color;
             node->base.sort_key.floating = z;
-            node->chunks                 = build_string_chunks(font_data, x, y, scale_x, scale_y, color, stored_text);
-            node->base.next              = current_scene->translucent_render_list;
+            node->chunks                 = build_string_list(font_data, x, y, scale_x, scale_y, color, stored_text);
+            node->base.next              = build_scene->translucent_render_list;
             
-            ++current_scene->translucent_render_list_count;
-            current_scene->translucent_render_list = &node->base;
+            ++build_scene->translucent_render_list_count;
+            build_scene->translucent_render_list = &node->base;
         }
     }
 }

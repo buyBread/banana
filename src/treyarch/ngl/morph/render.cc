@@ -1,8 +1,8 @@
 #include <cstring>
 
-#include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/morph/vertex_codec.hh"
 #include "treyarch/base/tl_system.hh"
@@ -154,7 +154,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
         bindings.stream_sources[0]  = nullptr;
         bindings.vertex_declaration = nullptr;
 
-        d3d9::references::device.get()->SetStreamSource(0, nullptr, 0, 0);
+        d3d9::references::dev.get()->SetStreamSource(0, nullptr, 0, 0);
 
         D3DVERTEXELEMENT9 output_element = *element;
         output_element.Stream = 1;
@@ -228,7 +228,7 @@ void ngl::morph_geometry::render(render_node* value) {
                                            ordered,
                                            nullptr };
 
-    IDirect3DDevice9* device = d3d9::references::device.get();
+    IDirect3DDevice9* device = d3d9::references::dev.get();
 
     device->CreateVertexDeclaration(ordered, &morphed_definition.declaration);
 

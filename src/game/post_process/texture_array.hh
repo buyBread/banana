@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "treyarch/ngl/d3d9/texture.hh"
+#include "treyarch/ngl/gpu/d3d9/texture.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"

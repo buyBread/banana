@@ -9,11 +9,9 @@
 #include "game/wds/world_dynamics_system.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/render/wds_render_manager.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/defaults.hh"
-#include "treyarch/ngl/scene/matrices.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "game/math/algebra.hh"
 
 using namespace treyarch;
@@ -98,7 +96,7 @@ void wds_render_manager::render_z_pre_pass(ngl::scene* game_scene, f32 near_plan
     ngl::set_clear_flags(0);
     ngl::set_z_test_enable(true);
     ngl::set_z_write_enable(true);
-    ngl::set_color_target(nullptr);
+    ngl::set_render_target(nullptr);
 
     z_pre_pass->depth_bias_enabled     = true;
     z_pre_pass->near_plane             = near_plane - 0.19f;

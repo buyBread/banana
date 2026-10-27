@@ -2,9 +2,9 @@
 
 #include <windows.h>
 
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
-#include "treyarch/ngl/debug/screenshot.hh"
+#include "treyarch/ngl/debug/debug.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 #include "banana/core.hh"
 #include "banana/util/types.hh"
 #include "banana/util/memory_reference.hh"
@@ -23,7 +23,7 @@ namespace treyarch { namespace ngl { namespace debug { namespace references {
 }}}} // treyarch::ngl::debug::references
 
 // sub_9E4540
-void ngl::debug::capture_screenshot(const char* name) {
+void ngl::debug::screen_shot(const char* name) {
     d3d9::wait_for_rendering();
 
     char* generated_name = &references::screenshot_name_buffer.get();

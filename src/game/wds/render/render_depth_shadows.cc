@@ -11,11 +11,7 @@
 #include "game/wds/render/depth_shadows.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/render/wds_render_manager.hh"
-#include "treyarch/ngl/scene/defaults.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
-#include "treyarch/ngl/scene/viewport.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "game/container/fixed_vector.hh"
 #include "treyarch/math/matrix_rot.hh"
 #include "treyarch/math/trig.hh"
@@ -143,9 +139,9 @@ void treyarch::enter_shadow_scene(void* context) {
     ngl::references::in_shadow_scene.write(1);
 
     // 114.8 is stored one ulp below the nearest float
-    set_shadow_cascades(20.0f, 114.799995f, 16.4f, 94.135994f, ngl::references::current_scene.read());
+    set_shadow_cascades(20.0f, 114.799995f, 16.4f, 94.135994f, ngl::references::build_scene.read());
 
-    const math::mat44 &world_to_screen = *ngl::get_world_to_screen(ngl::references::current_scene.read());
+    const math::mat44 &world_to_screen = *ngl::get_matrix_world_to_screen(ngl::references::build_scene.read());
 
     if (index == 0)
         shadow::references::matrix_0.write(world_to_screen);
@@ -191,9 +187,9 @@ void wds_render_manager::render_depth_shadows() {
         ngl::set_clear_flags(7);
         ngl::set_clear_color(1.0f, 1.0f, 1.0f, 1.0f);
 
-        ngl::set_color_target(targets.color_targets[index]);
-        ngl::set_depth_target(targets.depth_targets[index]);
-        ngl::set_clear_depth(1.0f);
+        ngl::set_render_target(targets.color_targets[index]);
+        ngl::set_z_target(targets.depth_targets[index]);
+        ngl::set_clear_z(1.0f);
 
         f32 viewport_right  = (f32)dimensions.widths[index]  - 1.0f;
         f32 viewport_bottom = (f32)dimensions.heights[index] - 1.0f;
@@ -273,7 +269,7 @@ void wds_render_manager::render_depth_shadows() {
 
         f32 far_plane = 400.0f + span_cap + references::shadow_far_adjustment.read();
 
-        ngl::set_ortho_parameters(1.0f, 1.0f, 1.0f, far_plane);
+        ngl::set_ortho_matrix(1.0f, 1.0f, 1.0f, far_plane);
         ngl::set_world_to_view_matrix(*(const math::rot_tran_mat43*)&geometry_manager::references::world_to_view.get());
 
         ngl::set_z_write_enable(true);

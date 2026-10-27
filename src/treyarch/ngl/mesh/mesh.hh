@@ -3,7 +3,7 @@
 #include <d3d9.h>
 
 #include "treyarch/apk/file.hh"
-#include "treyarch/ngl/d3d9/vertex_definition.hh"
+#include "treyarch/ngl/gpu/d3d9/vertex_definition.hh"
 #include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "treyarch/math/vector.hh"
@@ -73,27 +73,35 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct mesh_directory : tl_skip_list<mesh, mesh_name> {};
+    struct mesh_directory_t : tl_skip_list<mesh, mesh_name> {};
 
-    void upload_mesh_section(mesh_section* section);
-    void release_mesh_section(mesh_section* section);
-    void process_mesh_section(mesh* owner, mesh_section* section);
+    void ngli_process_section(mesh_section* section);
+    void ngli_release_section(mesh_section* section);
+    void process_section(mesh* owner, mesh_section* section);
     void process_mesh(mesh* value);
-    void release_mesh(mesh* value);
+    void unload_mesh(mesh* value);
     
     void initialize_mesh_directory();
 
-    void load_mesh(apk::file*       owner,
-                   apk::file_entry* entry,
-                   void**           mapped_sections,
-                   void*            user_data);
-    void remove_mesh(apk::file*       owner,
-                     apk::file_entry* entry,
-                     void**           mapped_sections,
-                     void*            user_data);
+    void apk_mesh_load_callback(apk::file*       owner,
+                                apk::file_entry* entry,
+                                void**           mapped_sections,
+                                void*            user_data);
+    void apk_mesh_delete_callback(apk::file*       owner,
+                                  apk::file_entry* entry,
+                                  void**           mapped_sections,
+                                  void*            user_data);
+
+    void mesh_init();
+
+    mesh* create_transient_mesh(u32 flags, u32 section_count);
+    u32   attach_transient_mesh_section(mesh*         value,
+                                        mesh_section* section,
+                                        material*     section_material,
+                                        u32           flags);
 
     namespace references {
-        inline util::memory_reference<mesh_directory> meshes { 0x01116190 };
+        inline util::memory_reference<mesh_directory_t> mesh_directory { 0x01116190 };
     } // references
 
     namespace sm_lod_mesh_instance { namespace references {
@@ -146,5 +154,5 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(mesh, polygon_count,        0x44);
     ASSERT_OFFSETOF(mesh, last_frame_reference, 0x48);
 
-    ASSERT_SIZEOF(mesh_directory, 0x10);
+    ASSERT_SIZEOF(mesh_directory_t, 0x10);
 }} // treyarch::ngl

@@ -8,9 +8,7 @@
 #include "game/wds/world_dynamics_system.hh"
 #include "game/zombie_manager.hh"
 #include "treyarch/ngl/frame_lock.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/references.hh"
-#include "treyarch/ngl/scene/viewport.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "banana/util/gimmie/fn.hh"
 #include "banana/util/memory_reference.hh"
 
@@ -45,10 +43,10 @@ camera_handle game::get_current_view_camera() {
 
 // sub_783800
 void game::render() {
-    if (ngl::references::current_frame_lock.read() != ngl::frame_lock_two_or_immediate)
+    if (ngl::references::frame_lock.read() != ngl::frame_lock_two_or_immediate)
         ngl::set_frame_lock(ngl::frame_lock_two_or_immediate);
 
-    if (!ngl::references::current_scene.get()->callbacks[0].function) {
+    if (!ngl::references::build_scene.get()->callbacks[0].function) {
         ngl::set_scene_callback(ngl::scene_callback_pre,
                                 util::gimmie::fn<ngl::scene_callback_function>(0x007DF4C0));
         ngl::set_scene_callback(ngl::scene_callback_4,
@@ -98,13 +96,13 @@ void game::render() {
     ngl::set_scene_option_group_0(false, true, false);
     ngl::set_scene_option_group_1(false, true, false);
     
-    ngl::references::current_scene.get()->local_state_430 = 1;
+    ngl::references::build_scene.get()->local_state_430 = 1;
 
     if (helpers::clear_uses_game_scene()) {
         ngl::set_clear_flags(7);
         ngl::set_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
 
-        ngl::references::current_scene.get()->callback_state = references::scene_callback_state.read();
+        ngl::references::build_scene.get()->callback_state = references::scene_callback_state.read();
     } else {
         ngl::set_clear_flags(0);
 
@@ -114,7 +112,7 @@ void game::render() {
         ngl::set_clear_flags(7);
         ngl::set_clear_color(0.0f, 0.0f, 0.0f, 0.0f);
 
-        ngl::references::current_scene.get()->local_state_430 = 1;
+        ngl::references::build_scene.get()->local_state_430 = 1;
 
         ngl::list_end_scene();
     }

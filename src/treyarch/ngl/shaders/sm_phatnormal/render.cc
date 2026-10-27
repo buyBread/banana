@@ -1,5 +1,5 @@
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 #include "treyarch/ngl/shaders/sm_phatnormal/render_node.hh"
 

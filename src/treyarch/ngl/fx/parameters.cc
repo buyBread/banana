@@ -2,17 +2,14 @@
 #include <cstring>
 
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
-#include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/ngl/lighting/light_data.hh"
-#include "treyarch/ngl/lighting/references.hh"
+#include "treyarch/ngl/lighting/lighting.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "game/mission/mission_manager.hh"
@@ -67,7 +64,7 @@ void ngl::fx::set_matrix(parameter* entry, const math::mat44 &value) {
 
 // sub_9DF6F0
 void ngl::fx::set_texture(parameter* entry, texture* value) {
-    *(texture**)entry->data = value ? value : ngl::references::default_texture.read();
+    *(texture**)entry->data = value ? value : ngl::references::default_tex.read();
 }
 
 void copy_parameter_subset(      ngl::fx::effect*         value,
@@ -136,9 +133,9 @@ u8* get_light_source(const ngl::fx::mesh_node_data* node_data) {
     if (source)
         return source;
 
-    ngl::scene* current_scene = ngl::references::current_scene.read();
+    ngl::scene* build_scene = ngl::references::build_scene.read();
 
-    return (u8*)get_scene_parameter(current_scene->parameters,
+    return (u8*)get_scene_parameter(build_scene->parameters,
                                     ngl::fx::references::parameter_id_scene_light_source.read());
 }
 
@@ -533,21 +530,21 @@ void ngl::fx::build_general_lighting(      general_lighting_parameters* value,
 
     u8* source = get_light_source(node_data);
     
-    ngl::scene* current_scene = ngl::references::current_scene.read();
+    ngl::scene* build_scene = ngl::references::build_scene.read();
 
     value->light_source = source;
 
-    value->view_position = math::vector4(current_scene->view_to_world.get_w()[0],
-                                         current_scene->view_to_world.get_w()[1],
-                                         current_scene->view_to_world.get_w()[2],
+    value->view_position = math::vector4(build_scene->view_to_world.get_w()[0],
+                                         build_scene->view_to_world.get_w()[1],
+                                         build_scene->view_to_world.get_w()[2],
                                          1.0f);
 
     value->ambient_direction = math::vector4(*(f32*)(source + 0x220), *(f32*)(source + 0x224), *(f32*)(source + 0x228), 0.0f);
 
     value->ambient_color = *(const math::vector4*)(source + 0x210);
-    value->post_view_position = math::vector4(current_scene->view_to_world.get_w()[0],
-                                              current_scene->view_to_world.get_w()[1],
-                                              current_scene->view_to_world.get_w()[2],
+    value->post_view_position = math::vector4(build_scene->view_to_world.get_w()[0],
+                                              build_scene->view_to_world.get_w()[1],
+                                              build_scene->view_to_world.get_w()[2],
                                               0.0f);
 
     const f32* normal = (const f32*)(source + 0x230);
@@ -689,9 +686,9 @@ void get_subset_lighting(      ngl::fx::subset_lighting_parameters* destination,
                                            fx::references::parameter_id_light_source.read());
 
     if (!source) {
-        ngl::scene* current_scene = ngl::references::current_scene.read();
+        ngl::scene* build_scene = ngl::references::build_scene.read();
 
-        source = (u8*)get_scene_parameter(current_scene->parameters,
+        source = (u8*)get_scene_parameter(build_scene->parameters,
                                           ngl::fx::references::parameter_id_scene_light_source.read());
     }
 
@@ -761,7 +758,7 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
 
     math::mat44 &destination = *(math::mat44*)entry->data;
     math::mat44  local(node_data->local_to_world);
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
     switch (entry->type) {
         case parameter_world:
@@ -777,26 +774,26 @@ void write_specialized_matrix(      ngl::fx::parameter*      entry,
             destination = math::inv(get_unscaled_local_to_world(node_data));
             break;
         case parameter_world_view:
-            destination = ~(local * current_scene->world_to_view);
+            destination = ~(local * build_scene->world_to_view);
             break;
         case parameter_world_view_inverse: {
-            math::mat44 local_to_view = local * current_scene->world_to_view;
+            math::mat44 local_to_view = local * build_scene->world_to_view;
             destination = ~math::mat44(math::inv(*(const math::rot_tran_mat43*)&local_to_view));
             break;
         }
         case parameter_world_view_transpose:
-            destination = local * current_scene->world_to_view;
+            destination = local * build_scene->world_to_view;
             break;
         case parameter_world_view_inverse_transpose: {
-            math::mat44 local_to_view = local * current_scene->world_to_view;
+            math::mat44 local_to_view = local * build_scene->world_to_view;
             destination = math::inv(*(const math::rot_tran_mat43*)&local_to_view);
             break;
         }
         case parameter_world_view_projection:
-            destination = ~(local * current_scene->world_to_screen);
+            destination = ~(local * build_scene->world_to_screen);
             break;
         case parameter_world_view_projection_transpose:
-            destination = local * current_scene->world_to_screen;
+            destination = local * build_scene->world_to_screen;
             break;
         case parameter_world_view_projection_inverse:
         case parameter_world_view_projection_inverse_transpose:
@@ -921,7 +918,7 @@ bool is_depth_bias_parameter(ngl::fx::e_parameter_type type) {
 
 // sub_9DFF60
 void ngl::fx::update_scene_parameters(effect* value) {
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
     for (parameter* entry = value->parameter_chains[0]; entry; entry = entry->next) {
         f32* destination = (f32*)entry->data;
@@ -929,42 +926,42 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
         switch (entry->type) {
             case parameter_view_position:
-                vectors[0] = math::vector4(current_scene->view_position);
+                vectors[0] = math::vector4(build_scene->view_position);
 
                 break;
             case parameter_viewport_pixel_size:
-                vectors[0] = math::vector4((f32)current_scene->color_target->gpu_texture.width,
-                                           (f32)current_scene->color_target->gpu_texture.height, 0.0f, 0.0f);
+                vectors[0] = math::vector4((f32)build_scene->color_target->gpu_texture.width,
+                                           (f32)build_scene->color_target->gpu_texture.height, 0.0f, 0.0f);
 
                 break;
             case parameter_frame:
-                *(u32*)destination = ngl::references::frame_epoch.read();
+                *(u32*)destination = ngl::references::frame.read();
 
                 break;
             case parameter_time:
-                destination[0] = current_scene->current_animation_time;
+                destination[0] = build_scene->current_animation_time;
 
                 break;
             case parameter_view: {
-                *(math::mat44*)destination = ~math::mat44(current_scene->world_to_view);
+                *(math::mat44*)destination = ~math::mat44(build_scene->world_to_view);
 
                 break;
             }
             case parameter_view_inverse: {
-                *(math::mat44*)destination = ~math::mat44(current_scene->view_to_world);
+                *(math::mat44*)destination = ~math::mat44(build_scene->view_to_world);
 
                 break;
             }
             case parameter_view_transpose:
-                *(math::mat44*)destination = current_scene->world_to_view;
+                *(math::mat44*)destination = build_scene->world_to_view;
 
                 break;
             case parameter_view_inverse_transpose:
-                *(math::mat44*)destination = current_scene->view_to_world;
+                *(math::mat44*)destination = build_scene->view_to_world;
 
                 break;
             case parameter_projection:
-                *(math::mat44*)destination = ~current_scene->view_to_screen;
+                *(math::mat44*)destination = ~build_scene->view_to_screen;
 
                 break;
             case parameter_projection_inverse:
@@ -972,7 +969,7 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
                 break;
             case parameter_projection_transpose:
-                *(math::mat44*)(destination) = current_scene->view_to_screen;
+                *(math::mat44*)(destination) = build_scene->view_to_screen;
 
                 break;
             case parameter_projection_inverse_transpose:
@@ -980,7 +977,7 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
                 break;
             case parameter_view_projection:
-                *(math::mat44*)destination = ~current_scene->world_to_screen;
+                *(math::mat44*)destination = ~build_scene->world_to_screen;
 
                 break;
             case parameter_view_projection_inverse:
@@ -988,7 +985,7 @@ void ngl::fx::update_scene_parameters(effect* value) {
 
                 break;
             case parameter_view_projection_transpose:
-                *(math::mat44*)(destination) = current_scene->world_to_screen;
+                *(math::mat44*)(destination) = build_scene->world_to_screen;
 
                 break;
             case parameter_view_projection_inverse_transpose:
@@ -1123,7 +1120,7 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             case parameter_horizon_texture: {
                 fx::set_texture(entry,
-                                active_horizon_texture ? active_horizon_texture : ngl::references::white_texture.read());
+                                active_horizon_texture ? active_horizon_texture : ngl::references::white_tex.read());
 
                 break;
             }
@@ -1341,19 +1338,19 @@ void ngl::fx::update_material_parameters(effect*         value,
                 break;
             }
             case parameter_viewport_to_world: {
-                scene* current_scene = ngl::references::current_scene.read();
+                scene* build_scene = ngl::references::build_scene.read();
                 *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) *
-                                               current_scene->derived_matrix_250);
+                                               build_scene->derived_matrix_250);
                 break;
             }
             case parameter_world_to_viewport: {
-                scene* current_scene = ngl::references::current_scene.read();
+                scene* build_scene = ngl::references::build_scene.read();
                 // world_to_viewport also includes the viewport matrix,
                 // leaving it out makes projected decals move and resize with the camera
                 *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) *
-                                               current_scene->world_to_view    *
-                                               current_scene->projection       *
-                                               current_scene->view);
+                                               build_scene->world_to_view    *
+                                               build_scene->projection       *
+                                               build_scene->view);
                 break;
             }
             case parameter_ui_parameters: {

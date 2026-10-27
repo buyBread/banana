@@ -1,7 +1,7 @@
 #include "game/shadow/shadow.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/ngl/texture/runtime.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "game/four_cc.hh"
 
 using namespace treyarch;
@@ -30,20 +30,20 @@ void shadow::create_device_resources() {
         references::active.write(0);
 
     for (u32 index = 0; index < 2; ++index) {
-        targets.depth_targets[index] = ngl::create_runtime_texture(ngl::runtime_texture_surface_only | ngl::runtime_texture_surface_level | 0x10,
-                                                                   format,
-                                                                   dimensions.widths[index],
-                                                                   dimensions.heights[index],
-                                                                   1,
-                                                                   1);
+        targets.depth_targets[index] = ngl::create_texture(ngl::runtime_texture_surface_only | ngl::runtime_texture_surface_level | 0x10,
+                                                           format,
+                                                           dimensions.widths[index],
+                                                           dimensions.heights[index],
+                                                           1,
+                                                           1);
 
         if (references::create_color_targets.read()) {
-            targets.color_targets[index] = ngl::create_runtime_texture(ngl::runtime_texture_render_target | 0x10,
-                                                                       D3DFMT_A8R8G8B8,
-                                                                       dimensions.widths[index],
-                                                                       dimensions.heights[index],
-                                                                       1,
-                                                                       1);
+            targets.color_targets[index] = ngl::create_texture(ngl::runtime_texture_render_target | 0x10,
+                                                               D3DFMT_A8R8G8B8,
+                                                               dimensions.widths[index],
+                                                               dimensions.heights[index],
+                                                               1,
+                                                               1);
         }
     }
 }
@@ -58,8 +58,8 @@ void shadow::release_device_resources() {
     device_resource_state &targets = references::device_resources.get();
 
     for (u32 index = 0; index < 2; ++index) {
-        ngl::release_texture(targets.depth_targets[index]);
-        ngl::release_texture(targets.color_targets[index]);
+        ngl::destroy_texture(targets.depth_targets[index]);
+        ngl::destroy_texture(targets.color_targets[index]);
     }
 }
 

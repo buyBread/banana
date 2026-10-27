@@ -1,12 +1,11 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/fx/render_support.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -21,7 +20,7 @@ void draw_single_pass(ngl::fx::render_node* value) {
         return;
     }
 
-    // draw_mesh_section's logic, but calling draw_primitive where that one inlines it
+    // draw_section's logic, but calling draw_primitive where that one inlines it
     ngl::mesh_section* section        = value->section;
     D3DPRIMITIVETYPE   primitive_type = (D3DPRIMITIVETYPE)section->primitive_type;
 
@@ -60,7 +59,7 @@ void ngl::fx::render(render_node* value) {
     update_material_parameters(effect_data,
                                value->node_data,
                                value->section,
-                               ngl::references::current_scene.read()->depth_bias_enabled != 0);
+                               ngl::references::build_scene.read()->depth_bias_enabled != 0);
 
     if (technique_data->pass_count == 1) {
         pass* pass_data = technique_data->passes;
@@ -74,7 +73,7 @@ void ngl::fx::render(render_node* value) {
             pass* pass_data = &technique_data->passes[index];
 
             apply_pass(effect_data, pass_data);
-            ngl::d3d9::draw_mesh_section(value->section);
+            ngl::d3d9::draw_section(value->section);
             finish_pass(effect_data, pass_data);
             
             pass_data->active_programs = &pass_data->programs;

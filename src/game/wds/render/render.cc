@@ -8,10 +8,7 @@
 #include "game/wds/terrain.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/render/wds_render_manager.hh"
-#include "treyarch/ngl/scene/defaults.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -41,7 +38,7 @@ void wds_render_manager::render() {
     if (is_special_case_level())
         references::level_render_special_case.write(1);
 
-    ngl::scene* game_scene = ngl::references::current_scene.read();
+    ngl::scene* game_scene = ngl::references::build_scene.read();
 
     ngl::set_world_to_view_matrix(*(const math::rot_tran_mat43*)&geometry_manager::references::world_to_view.get());
 

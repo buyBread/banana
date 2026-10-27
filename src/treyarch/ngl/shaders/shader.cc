@@ -7,9 +7,9 @@ ngl::shader& ngl::get_default_shader() {
 }
 
 ngl::shader* ngl::find_shader(string_hash name) {
-    return references::shaders.get().find(name);
+    return references::shader_bank.get().find(name);
 }
 
 void ngl::initialize_shader_bank() {
-    references::shaders.get().init();
+    references::shader_bank.get().init();
 }

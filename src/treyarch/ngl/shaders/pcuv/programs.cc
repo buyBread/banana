@@ -1,5 +1,5 @@
 #include "banana/logging.hh"
-#include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/program_helpers.hh"
 #include "treyarch/ngl/shaders/pcuv/programs.hh"
@@ -25,7 +25,7 @@ bool create_vertex_declaration() {
     format.elements    = vertex_elements;
     format.declaration = nullptr;
 
-    HRESULT result = ngl::d3d9::references::device.read()->CreateVertexDeclaration(format.elements, &format.declaration);
+    HRESULT result = ngl::d3d9::references::dev.read()->CreateVertexDeclaration(format.elements, &format.declaration);
 
     if (FAILED(result)) {
         banana::log.ngl("failed to create the compressed PCUV vertex declaration (0x{:08X})", (u32)result);

@@ -2,6 +2,7 @@
 
 #include "treyarch/apk/file.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/base/tl_init_list.hh"
 #include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -43,20 +44,39 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct font_directory : tl_skip_list<font, font_name> {};
+    struct font_directory_t : tl_skip_list<font, font_name> {};
 
-    void load_font(apk::file*       owner,
-                   apk::file_entry* entry,
-                   void**           mapped_sections,
-                   void*            user_data);
-    void remove_font(apk::file*       owner,
-                     apk::file_entry* entry,
-                     void**           mapped_sections,
-                     void*            user_data);
+    void apk_font_load_callback(apk::file*       owner,
+                                apk::file_entry* entry,
+                                void**           mapped_sections,
+                                void*            user_data);
+    void apk_font_delete_callback(apk::file*       owner,
+                                  apk::file_entry* entry,
+                                  void**           mapped_sections,
+                                  void*            user_data);
+
+    void font_init();
+
+    void get_string_dimensions(      font* font_data,
+                               const char* text,
+                                     u32*  width,
+                                     u32*  height,
+                                     f32   scale_x,
+                                     f32   scale_y);
+
+    void list_add_string(      font* font_data,
+                         const char* text,
+                               f32   x,
+                               f32   y,
+                               f32   z,
+                               u32   color,
+                               f32   scale_x,
+                               f32   scale_y);
 
     namespace references {
-        inline util::memory_reference<font*>          system_font { 0x011160D0 };
-        inline util::memory_reference<font_directory> fonts       { 0x01116110 };
+        inline util::memory_reference<font*>            sys_font       { 0x011160D0 };
+        inline util::memory_reference<font_directory_t> font_directory { 0x01116110 };
+        inline util::memory_reference<tl_init_list>     font_init_list { 0x00F522E0 };
     } // references
 
     ASSERT_SIZEOF  (glyph_info,                 0x1C);
@@ -72,16 +92,16 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(font_header, first_glyph, 0x0C);
     ASSERT_OFFSETOF(font_header, glyph_count, 0x10);
 
-    ASSERT_SIZEOF  (font,                     0x3C);
-    ASSERT_OFFSETOF(font, name,               0x00);
-    ASSERT_OFFSETOF(font, texture_data,       0x08);
-    ASSERT_OFFSETOF(font, glyphs,             0x0C);
-    ASSERT_OFFSETOF(font, system,             0x10);
-    ASSERT_OFFSETOF(font, map_flags,          0x18);
-    ASSERT_OFFSETOF(font, blend_mode,         0x1C);
-    ASSERT_OFFSETOF(font, header,             0x20);
+    ASSERT_SIZEOF  (font,                      0x3C);
+    ASSERT_OFFSETOF(font, name,                0x00);
+    ASSERT_OFFSETOF(font, texture_data,        0x08);
+    ASSERT_OFFSETOF(font, glyphs,              0x0C);
+    ASSERT_OFFSETOF(font, system,              0x10);
+    ASSERT_OFFSETOF(font, map_flags,           0x18);
+    ASSERT_OFFSETOF(font, blend_mode,          0x1C);
+    ASSERT_OFFSETOF(font, header,              0x20);
     ASSERT_OFFSETOF(font, texture_coordinates, 0x34);
-    ASSERT_OFFSETOF(font, reserved_038,       0x38);
+    ASSERT_OFFSETOF(font, reserved_038,        0x38);
 
-    ASSERT_SIZEOF(font_directory, 0x10);
+    ASSERT_SIZEOF(font_directory_t, 0x10);
 }} // treyarch::ngl

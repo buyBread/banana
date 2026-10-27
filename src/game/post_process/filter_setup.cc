@@ -2,9 +2,9 @@
 #include <cmath>
 
 #include "game/post_process/post_process.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/display.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
 
 using namespace treyarch;
@@ -22,7 +22,7 @@ void post_process::setup_luminosity_filter(      treyarch::blitter*     owner,
 
     const f32 constants[4] { scale, (f32)((f64)value.unk_00 * (f64)scale), 0.0f, 1.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 1);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 1);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -43,7 +43,7 @@ void post_process::setup_adapt_filter(      treyarch::blitter* owner,
 
     const f32 constants[4] { value, 1.0f, 0.0f, 0.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 1);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 1);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -62,7 +62,7 @@ void post_process::setup_blend_filter(      treyarch::blitter* owner,
 
     const f32 constants[4] { value.unk_00, value.unk_04, 0.0f, 0.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 1);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 1);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -111,7 +111,7 @@ void post_process::setup_bloom_filter(      treyarch::blitter* owner,
                               values[16],
                               1.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 6);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 6);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -138,7 +138,7 @@ void post_process::setup_radial_blur_filter(      treyarch::blitter*      owner,
                              (f32)((f64)value.unk_10 / remaining),
                              (f32)((f64)-diagonal * (f64)value.unk_10 / remaining) };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 1);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 1);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -166,7 +166,7 @@ void post_process::setup_spherize_filter(      treyarch::blitter* owner,
 
     const f32 constants[4] { parameters ? *parameters : 0.0f, 1.0f, 0.0f, 0.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 1);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 1);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -186,7 +186,7 @@ void post_process::setup_vignette_filter(      treyarch::blitter*   owner,
                               values[4], -values[5], 0.0f,     0.0f,
                               values[6], values[7], values[8], values[9] };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 3);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 3);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -248,7 +248,7 @@ void post_process::setup_noise_filter(      treyarch::blitter* owner,
         octave *= 2.0f;
     }
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 3);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 3);
 }
 
 // sub_730CC0
@@ -265,7 +265,7 @@ void post_process::setup_color_adjust_filter(      treyarch::blitter*       owne
                               values[3],           values[4], values[5], 1.0f,
                               values[6],           values[7], values[8], 1.0f };
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(8, constants, 3);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(8, constants, 3);
 
     ngl::d3d9::set_sampler_filters(0, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_NONE, 1);
     ngl::d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
@@ -312,7 +312,7 @@ void post_process::setup_gaussian_blur_filter(      treyarch::blitter* owner,
     for (f32 &weight : weights)
         weight = (f32)((f64)weight * (f64)inverse_sum);
 
-    ngl::d3d9::references::device.get()->SetPixelShaderConstantF(0, weights, 2);
+    ngl::d3d9::references::dev.get()->SetPixelShaderConstantF(0, weights, 2);
 
     // tap 15 is left alone
     const f64 positions[15] { 0.0, -1.0, 1.0, -2.0, 2.0, -3.0, 3.0, -4.0, 4.0, -5.0, 5.0, -6.0, 6.0, -7.0, 7.0 };
@@ -404,7 +404,7 @@ void post_process::setup_depth_of_field_blur_filter(      treyarch::blitter*    
     const depth_of_field_blur_parameters  defaults { 0.5f, 0.0f, 0.0f, 3, nullptr };
     const depth_of_field_blur_parameters &value = parameters ? *parameters : defaults;
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     math::mat44 transform;
 

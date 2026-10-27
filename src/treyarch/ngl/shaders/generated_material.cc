@@ -3,15 +3,14 @@
 #include <cstring>
 
 #include "game/shadow/shadow.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/fx/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 
@@ -25,13 +24,13 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
         if (register_index == -1)
             return;
 
-        d3d9::references::device.get()
+        d3d9::references::dev.get()
             ->SetPixelShaderConstantF(register_index,
                                       (const f32*)values,
                                       count);
     }
 
-    void bind_texture(u32 stage, texture* value) {
+    void set_texture(u32 stage, texture* value) {
         if (value)
             d3d9::set_texture(stage, value->gpu_texture.resource);
     }
@@ -80,7 +79,7 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
 
 bool ngl::shaders::generated_material::texture_is_usable(const texture* value) {
     return value &&
-           value != ngl::references::white_texture.read() &&
+           value != ngl::references::white_tex.read() &&
            value->gpu_texture.width * value->gpu_texture.height >= 256;
 }
 
@@ -142,7 +141,7 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
 
     snapshot->scalar_180 = snapshot->scalar_17c;
 
-    f32 animation_time = ngl::references::current_scene.read()->current_animation_time;
+    f32 animation_time = ngl::references::build_scene.read()->current_animation_time;
 
     f32 scale_u  = material->texture_scale_u;
     f32 scale_v  = material->texture_scale_v;
@@ -286,7 +285,7 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
     context->prefix.compressed_to_screen =
         context->compressed_to_local *
         local_to_world *
-        ngl::references::current_scene.read()->world_to_screen;
+        ngl::references::build_scene.read()->world_to_screen;
 
     context->suffix.local_to_ambient     = lighting.ambient_color;
     context->suffix.fog_eye_to_local     = lighting.post_view_position;
@@ -401,18 +400,18 @@ void ngl::shaders::generated_material::bind_textures(const fx::general_lighting_
                                                      const scene_snapshot*                  snapshot,
                                                      const material_data*                   material) {
 
-    bind_texture( 0, lighting.horizon_texture);
-    bind_texture( 1, shadow::references::device_resources.get().depth_targets[0]);
-    bind_texture( 2, shadow::references::device_resources.get().depth_targets[1]);
-    bind_texture( 3, lighting.projector_texture);
-    bind_texture( 4, snapshot->diffuse_texture);
-    bind_texture( 5, material->opacity_texture);
-    bind_texture( 6, material->specularity_texture);
-    bind_texture( 7, material->specular_exponent_texture);
-    bind_texture( 8, material->environment_texture);
-    bind_texture( 9, material->emissiveness_texture);
-    bind_texture(10, material->normal_texture);
-    bind_texture(11, material->horizon_texture);
+    set_texture( 0, lighting.horizon_texture);
+    set_texture( 1, shadow::references::device_resources.get().depth_targets[0]);
+    set_texture( 2, shadow::references::device_resources.get().depth_targets[1]);
+    set_texture( 3, lighting.projector_texture);
+    set_texture( 4, snapshot->diffuse_texture);
+    set_texture( 5, material->opacity_texture);
+    set_texture( 6, material->specularity_texture);
+    set_texture( 7, material->specular_exponent_texture);
+    set_texture( 8, material->environment_texture);
+    set_texture( 9, material->emissiveness_texture);
+    set_texture(10, material->normal_texture);
+    set_texture(11, material->horizon_texture);
 }
 
 void ngl::shaders::generated_material::upload_pixel_constants(const program_exports::pixel_pipeline_descriptor &pipeline,
@@ -555,5 +554,5 @@ void ngl::shaders::generated_material::draw_pixel_pipeline(
     configure_samplers(snapshot, material);
     bind_textures(lighting, snapshot, material);
     upload_pixel_constants(pipeline, lighting, snapshot, material, local_to_world);
-    d3d9::draw_mesh_section(section);
+    d3d9::draw_section(section);
 }

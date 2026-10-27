@@ -5,10 +5,8 @@
 #include "game/amalga/resource_types.hh"
 #include "game/speedtree/render_node.hh"
 #include "game/speedtree/wrapper.hh"
-#include "treyarch/ngl/list/arena.hh"
+#include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/list/render_node.hh"
-#include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -16,7 +14,7 @@ using namespace treyarch;
 
 // sub_7D8390
 void speed_tree_wrapper::submit_nodes() {
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     ngl::validate_matrices(scene);
 
@@ -78,7 +76,7 @@ void speed_tree_wrapper::submit_nodes() {
             continue;
 
         if (fading) {
-            f32* fades = (f32*)ngl::list::allocate(entry.instance_count * sizeof(f32), 16);
+            f32* fades = (f32*)ngl::list_alloc(entry.instance_count * sizeof(f32), 16);
 
             params.fades = fades;
 
@@ -129,7 +127,7 @@ void speed_tree_wrapper::submit_nodes() {
             if (nearest != 3.4028235e38f) {
                 params.translucent = true;
 
-                auto* node = (speed_tree_leafs_node*)ngl::list::allocate(sizeof(speed_tree_leafs_node), 16);
+                auto* node = (speed_tree_leafs_node*)ngl::list_alloc(sizeof(speed_tree_leafs_node), 16);
 
                 node->base.vtable = &references::speed_tree_leafs_node_vtable.get();
                 node->wrapper     = this;
@@ -144,7 +142,7 @@ void speed_tree_wrapper::submit_nodes() {
                 params.fades = nullptr;
         }
 
-        auto* leafs = (speed_tree_leafs_node*)ngl::list::allocate(sizeof(speed_tree_leafs_node), 16);
+        auto* leafs = (speed_tree_leafs_node*)ngl::list_alloc(sizeof(speed_tree_leafs_node), 16);
 
         leafs->base.vtable = &references::speed_tree_leafs_node_vtable.get();
         leafs->wrapper     = this;
@@ -154,7 +152,7 @@ void speed_tree_wrapper::submit_nodes() {
 
         ngl::list_push_node(&leafs->base, ngl::sort_opaque);
 
-        auto* billboards = (speed_tree_billboards_node*)ngl::list::allocate(sizeof(speed_tree_billboards_node), 16);
+        auto* billboards = (speed_tree_billboards_node*)ngl::list_alloc(sizeof(speed_tree_billboards_node), 16);
 
         billboards->base.vtable = &references::speed_tree_billboards_node_vtable.get();
         billboards->wrapper     = this;
@@ -164,7 +162,7 @@ void speed_tree_wrapper::submit_nodes() {
 
         ngl::list_push_node(&billboards->base, ngl::sort_opaque);
 
-        auto* fronds = (speed_tree_fronds_node*)ngl::list::allocate(sizeof(speed_tree_fronds_node), 16);
+        auto* fronds = (speed_tree_fronds_node*)ngl::list_alloc(sizeof(speed_tree_fronds_node), 16);
 
         fronds->base.vtable = &references::speed_tree_fronds_node_vtable.get();
         fronds->wrapper     = this;
@@ -174,7 +172,7 @@ void speed_tree_wrapper::submit_nodes() {
 
         ngl::list_push_node(&fronds->base, ngl::sort_opaque);
 
-        auto* branches = (speed_tree_branches_node*)ngl::list::allocate(sizeof(speed_tree_branches_node), 16);
+        auto* branches = (speed_tree_branches_node*)ngl::list_alloc(sizeof(speed_tree_branches_node), 16);
 
         branches->base.vtable = &references::speed_tree_branches_node_vtable.get();
         branches->wrapper     = this;
@@ -201,7 +199,7 @@ void speed_tree_wrapper::submit_billboards_only(bool all_regions) {
 
     auto* light = (light_source_data*)retail::sub_7D6D60(environment, 1);
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     ngl::validate_matrices(scene);
 
@@ -234,7 +232,7 @@ void speed_tree_wrapper::submit_billboards_only(bool all_regions) {
                 continue;
         }
 
-        auto* node = (speed_tree_billboards_only_node*)ngl::list::allocate(sizeof(speed_tree_billboards_only_node), 16);
+        auto* node = (speed_tree_billboards_only_node*)ngl::list_alloc(sizeof(speed_tree_billboards_only_node), 16);
 
         node->base.vtable   = &references::speed_tree_billboards_only_node_vtable.get();
         node->wrapper       = this;

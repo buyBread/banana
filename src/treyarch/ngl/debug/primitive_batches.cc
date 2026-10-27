@@ -1,4 +1,4 @@
-#include "treyarch/ngl/debug/primitive_batches.hh"
+#include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/ngl.hh"
 
 using namespace treyarch;
@@ -22,7 +22,7 @@ void ngl::debug::reset_primitive_batches() {
         state.peak_allocation_bytes = peak_allocation_bytes;
     }
 
-    const u32 frame_epoch = references::frame_epoch.read();
+    const u32 frame_epoch = references::frame.read();
 
     if (state.synchronized_frame_epoch != frame_epoch) {
         state.synchronized_frame_epoch           = frame_epoch;

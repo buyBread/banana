@@ -1,8 +1,8 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/gpu/d3d9/texture.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/sm_phatnormal/render_node.hh"
@@ -48,7 +48,7 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
 
     math::mat44 world_view_projection =
         math::mat44(value->node_data->local_to_world) *
-        ngl::references::current_scene.read()->world_to_screen;
+        ngl::references::build_scene.read()->world_to_screen;
     math::mat44 compressed_to_local = fx::get_compressed_to_local(value->node_data);
 
     math::vector4 uv_scale_offset(snapshot.texture_matrix[0][0],
@@ -60,12 +60,12 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
                              compressed_to_local[3][2],
                              compressed_to_local[0][0]);
 
-    IDirect3DDevice9* device = d3d9::references::device.get();
+    IDirect3DDevice9* device = d3d9::references::dev.get();
     device->SetVertexShaderConstantF(0, (const f32*)&world_view_projection, 4);
     device->SetVertexShaderConstantF(4, (const f32*)&uv_scale_offset, 1);
     device->SetVertexShaderConstantF(5, (const f32*)&compressed, 1);
 
-    d3d9::draw_mesh_section(value->section);
+    d3d9::draw_section(value->section);
 
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, 0);

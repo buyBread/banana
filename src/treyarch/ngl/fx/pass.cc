@@ -1,10 +1,10 @@
 #include <bit>
 
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
@@ -78,9 +78,9 @@ void apply_sampler_states(u32 stage, const u32* sampler) {
     set_sampler_filters(stage, sampler[5], sampler[6], sampler[4], 1);
 }
 
-void bind_texture(      ngl::fx::effect*           effect_data,
-                  const ngl::fx::function_binding &binding,
-                        void**                     sources) {
+void set_texture(      ngl::fx::effect*           effect_data,
+                 const ngl::fx::function_binding &binding,
+                       void**                     sources) {
 
     ngl::texture* texture = *(ngl::texture**)((u8*)sources[binding.source_class] + binding.source_offset);
 
@@ -95,7 +95,7 @@ void bind_vertex_function(ngl::fx::effect*   effect_data,
                           ngl::fx::function* value,
                           void**             sources) {
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     if (!value) {
         ngl::d3d9::set_vertex_program(nullptr);
@@ -109,7 +109,7 @@ void bind_vertex_function(ngl::fx::effect*   effect_data,
         const ngl::fx::function_binding &binding = value->bindings[index];
 
         if (binding.destination_type == ngl::fx::binding_sampler) {
-            bind_texture(effect_data, binding, sources);
+            set_texture(effect_data, binding, sources);
 
             continue;
         }
@@ -135,7 +135,7 @@ void bind_pixel_function(ngl::fx::effect*   effect_data,
                          ngl::fx::function* value,
                          void**             sources) {
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     if (!value) {
         ngl::d3d9::set_pixel_program(nullptr);
@@ -169,7 +169,7 @@ void bind_pixel_function(ngl::fx::effect*   effect_data,
 
             case ngl::fx::binding_sampler:
                 if (binding.handle != (u32)-1)
-                    bind_texture(effect_data, binding, sources);
+                    set_texture(effect_data, binding, sources);
                 break;
         }
     }
@@ -192,7 +192,7 @@ void ngl::fx::apply_pass(effect* effect_data, pass* value) {
     void* sources[8] {};
 
     sources[binding_parameters] = effect_data->parameter_data;
-    sources[binding_scene] = ngl::references::current_scene.read();
+    sources[binding_scene] = ngl::references::build_scene.read();
     sources[binding_bones] = &ngl::fx::references::bone_constants.get();
     sources[binding_global_constants] = &ngl::fx::references::global_constants.get();
     sources[binding_fallback_texture] = references::parameter_texture_fallback_pointer.read();
@@ -211,10 +211,10 @@ void ngl::fx::finish_pass(effect* effect_data, pass* value) {
 
     unbind_samplers(value->active_programs->pixel_programs[0]);
 
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
-    ngl::d3d9::set_render_state(D3DRS_ZWRITEENABLE, current_scene->z_write_enabled);
-    ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, current_scene->framebuffer_write_mask);
+    ngl::d3d9::set_render_state(D3DRS_ZWRITEENABLE, build_scene->z_write_enabled);
+    ngl::d3d9::set_render_state(D3DRS_COLORWRITEENABLE, build_scene->framebuffer_write_mask);
 }
 
 // sub_9DF630

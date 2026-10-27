@@ -50,9 +50,9 @@ namespace treyarch { namespace ngl {
                        f32   right,
                        f32   bottom);
     void set_quad_color(quad* value, u32 color);
-    void set_quad_texture(quad* value, texture* texture_data);
+    void set_quad_tex(quad* value, texture* texture_data);
     void set_quad_map_flags(quad* value, u32 map_flags);
-    void set_quad_blend_mode(quad* value, u32 mode, u32 source);
+    void set_quad_blend(quad* value, u32 mode, u32 source);
     void set_quad_uv(quad* value,
                      f32   left,
                      f32   top,

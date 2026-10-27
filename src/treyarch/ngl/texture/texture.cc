@@ -1,16 +1,16 @@
-#include "game/four_cc.hh"
-#include "treyarch/mm/heap.hh"
-#include "treyarch/base/tl_system.hh"
-#include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/texture/runtime.hh"
 #include "treyarch/ngl/texture/texture.hh"
+#include "treyarch/apk/file.hh"
+#include "treyarch/base/tl_system.hh"
+#include "treyarch/mm/heap.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 
 // sub_9E45C0
-bool ngl::can_release_texture(const texture* value) { // nglCanReleaseTexture
-    return value->last_frame_reference + 1 < (i32)references::frame_epoch.read();
+bool ngl::can_release_texture(const texture* value) {
+    return value->last_frame_reference + 1 < (i32)references::frame.read();
 }
 
 // sub_9EAE60
@@ -55,7 +55,7 @@ void ngl::process_texture(apk::file* owner, void** mapped_sections) {
 }
 
 // sub_9E27D0
-void ngl::release_texture(texture* value) {
+void ngl::destroy_texture(texture* value) {
     if (!value)
         return;
 
@@ -65,7 +65,7 @@ void ngl::release_texture(texture* value) {
         d3d9::wait_for_rendering();
 
     if (value->depth_target) {
-        release_texture(value->depth_target);
+        destroy_texture(value->depth_target);
         
         value->depth_target = nullptr;
     }
@@ -88,14 +88,14 @@ void ngl::release_texture(texture* value) {
 }
 
 void ngl::initialize_texture_directory() {
-    references::textures.get().init();
+    references::texture_directory.get().init();
 }
 
 // sub_9E45E0
-void ngl::load_texture(apk::file*       owner,
-                       apk::file_entry* entry,
-                       void**           mapped_sections,
-                       void*            user_data) {
+void ngl::apk_texture_load_callback(apk::file*       owner,
+                                    apk::file_entry* entry,
+                                    void**           mapped_sections,
+                                    void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -107,15 +107,15 @@ void ngl::load_texture(apk::file*       owner,
 
     process_texture(owner, mapped_sections);
 
-    if (!references::resource_callback.read())
-        references::textures.get().add(value);
+    if (!references::resource_callback_function.read())
+        references::texture_directory.get().add(value);
 }
 
 // sub_9E4620
-void ngl::remove_texture(apk::file*       owner,
-                         apk::file_entry* entry,
-                         void**           mapped_sections,
-                         void*            user_data) {
+void ngl::apk_texture_delete_callback(apk::file*       owner,
+                                      apk::file_entry* entry,
+                                      void**           mapped_sections,
+                                      void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -125,11 +125,21 @@ void ngl::remove_texture(apk::file*       owner,
 
     texture* value = (texture*)mapped_sections[image_section];
 
-    if (!references::resource_callback.read())
-        references::textures.get().del(value);
+    if (!references::resource_callback_function.read())
+        references::texture_directory.get().del(value);
 
-    if (value->last_frame_reference + 1 >= (i32)references::frame_epoch.read())
+    if (value->last_frame_reference + 1 >= (i32)references::frame.read())
         d3d9::wait_for_rendering();
 
-    release_texture(value);
+    destroy_texture(value);
+}
+
+// sub_9E4680
+void ngl::texture_init() {
+    initialize_texture_directory();
+
+    apk::register_file_type(four_cc('T', 'E', 'X'),
+                            3,
+                            apk_texture_load_callback,
+                            apk_texture_delete_callback);
 }

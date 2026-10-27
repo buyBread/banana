@@ -64,7 +64,7 @@ void register_shader(      ngl::shader        &value,
 
     value.id = (ngl::e_shader_id)shader_id;
     ngl::shaders::registration::references::next_shader_id.write(shader_id + 1);
-    ngl::references::shaders.get().add(&value);
+    ngl::references::shader_bank.get().add(&value);
 
     if (initialize)
         initialize_programs(name, initialize);

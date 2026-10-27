@@ -67,7 +67,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct shader_bank : instance_bank<shader, shader_name> {};
+    struct shader_bank_t : instance_bank<shader, shader_name> {};
 
     shader &get_default_shader();
     shader* find_shader(string_hash name);
@@ -75,15 +75,15 @@ namespace treyarch { namespace ngl {
     void initialize_shader_bank();
 
     namespace references {
-        inline util::memory_reference<u8>          all_shaders    { 0x00F4AA3C };
-        inline util::memory_reference<u8>          wireframe      { 0x00BE93CB };
-        inline util::memory_reference<shader>      default_shader { 0x00F523E0 };
-        inline util::memory_reference<shader_bank> shaders        { 0x011161E0 };
+        inline util::memory_reference<u8>            all_shaders    { 0x00F4AA3C };
+        inline util::memory_reference<u8>            wireframe      { 0x00BE93CB };
+        inline util::memory_reference<shader>        default_shader { 0x00F523E0 };
+        inline util::memory_reference<shader_bank_t> shader_bank    { 0x011161E0 };
     } // references
 
     ASSERT_SIZEOF  (shader,           0x10);
     ASSERT_OFFSETOF(shader, disabled, 0x08);
     ASSERT_OFFSETOF(shader, id,       0x0C);
 
-    ASSERT_SIZEOF(shader_bank, 0x10);
+    ASSERT_SIZEOF(shader_bank_t, 0x10);
 }} // treyarch::ngl

@@ -6,7 +6,6 @@
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/quad/quad.hh"
-#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
@@ -163,7 +162,7 @@ ngl::scene* ngl::list_add_node(render_node* value) {
 
     value->sort_key = sorting.key;
 
-    scene* current = references::current_scene.read();
+    scene* current = references::build_scene.read();
 
     if (sorting.type == sort_translucent) {
         value->next = current->translucent_render_list;
@@ -182,7 +181,7 @@ ngl::scene* ngl::list_add_node(render_node* value) {
 
 // inlined @ sub_7D8160, sub_7D8390
 void ngl::list_push_node(render_node* value, e_sort_type type) { // keeps the node's own sort key
-    scene* current = references::current_scene.read();
+    scene* current = references::build_scene.read();
 
     if (type == sort_translucent) {
         value->next = current->translucent_render_list;

@@ -21,8 +21,8 @@
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/d3d9/display.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/display.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 #include "treyarch/mm/heap.hh"
 #include "game/os_file.hh"
 #include "game/timing/hires_clock.hh"
@@ -195,7 +195,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
         retail::sub_A374C0(16000);
         retail::sub_A374D0(48000);
         retail::sub_A26530();
-        ngl::references::resource_callback.write((ngl::resource_callback)retail::sub_76A960);
+        ngl::references::resource_callback_function.write((ngl::resource_callback)retail::sub_76A960);
         ngl::set_frame_lock(references::default_frame_lock.read());
         ngl::set_buffer_size(ngl::buffer_list_work, 0xC00000, true, true);
         ngl::set_buffer_size(ngl::buffer_scratch_index, 0x3FFFE, true, true);

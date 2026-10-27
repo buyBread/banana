@@ -1,10 +1,10 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/internal_programs.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/ngl/d3d9/vertex_formats.hh"
 #include "treyarch/ngl/font/render.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/internal_programs.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/gpu/d3d9/texture.hh"
+#include "treyarch/ngl/gpu/d3d9/vertex_formats.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -73,12 +73,12 @@ void ngl::string_renderer::render(node* value) {
     if (!character_count)
         return;
 
-    scene* current_scene = ngl::references::current_scene.read();
-    IDirect3DDevice9* device = d3d9::references::device.get();
+    scene* build_scene = ngl::references::build_scene.read();
+    IDirect3DDevice9* device = d3d9::references::dev.get();
 
     d3d9::set_render_state(D3DRS_FOGENABLE, FALSE);
 
-    math::mat44 matrix = current_scene->derived_matrix_2d0;
+    math::mat44 matrix = build_scene->derived_matrix_2d0;
 
     d3d9::set_render_state(D3DRS_FILLMODE, D3DFILL_SOLID);
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -91,29 +91,29 @@ void ngl::string_renderer::render(node* value) {
 
     u64 blend_mode = ((u64)value->font_data->blend_mode << 32) | value->font_data->map_flags;
 
-    d3d9::apply_blend_mode(blend_mode);
+    d3d9::set_blend_mode(blend_mode);
     d3d9::set_render_state(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
     d3d9::set_render_state(D3DRS_SRCBLENDALPHA, D3DBLEND_ZERO);
     d3d9::set_render_state(D3DRS_DESTBLENDALPHA, D3DBLEND_ONE);
     d3d9::set_render_state(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 
-    d3d9::bind_texture(0,
-                       value->font_data->texture_data,
-                       value->font_data->system,
-                       3);
+    d3d9::set_texture(0,
+                      value->font_data->texture_data,
+                      value->font_data->system,
+                      3);
 
     f32 depth_z = value->z;
 
-    if (current_scene->near_plane > depth_z)
-        depth_z = current_scene->near_plane;
-    else if (depth_z > current_scene->far_plane)
-        depth_z = current_scene->far_plane;
+    if (build_scene->near_plane > depth_z)
+        depth_z = build_scene->near_plane;
+    else if (depth_z > build_scene->far_plane)
+        depth_z = build_scene->far_plane;
 
-    f32 numerator = (f32)((f64)current_scene->view_to_screen[2][2] * (f64)depth_z);
-        numerator = (f32)((f64)numerator + (f64)current_scene->view_to_screen[3][2]);
+    f32 numerator = (f32)((f64)build_scene->view_to_screen[2][2] * (f64)depth_z);
+        numerator = (f32)((f64)numerator + (f64)build_scene->view_to_screen[3][2]);
 
-    f32 denominator = (f32)((f64)current_scene->view_to_screen[2][3] * (f64)depth_z);
-        denominator = (f32)((f64)denominator + (f64)current_scene->view_to_screen[3][3]);
+    f32 denominator = (f32)((f64)build_scene->view_to_screen[2][3] * (f64)depth_z);
+        denominator = (f32)((f64)denominator + (f64)build_scene->view_to_screen[3][3]);
 
     f32 depth = (f32)((f64)numerator / (f64)denominator);
 

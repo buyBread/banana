@@ -8,7 +8,7 @@
 #include "game/wds/render/references.hh"
 #include "game/wds/render/wds_render_manager.hh"
 #include "game/wds/entity/entity.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 
 using namespace treyarch;
 

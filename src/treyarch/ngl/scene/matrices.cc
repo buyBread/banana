@@ -1,16 +1,16 @@
 #include <cmath>
 
 #include "treyarch/ngl/display.hh"
-#include "treyarch/ngl/scene/matrices.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/math/trig.hh"
 
 using namespace treyarch;
 
 // sub_9D3A10
-math::mat44 make_perspective(f32 horizontal_scale,
-                             f32 vertical_scale,
-                             f32 near_plane,
-                             f32 far_plane) {
+math::mat44 perspective(f32 horizontal_scale,
+                        f32 vertical_scale,
+                        f32 near_plane,
+                        f32 far_plane) {
 
     f32 depth_scale = (f32)((f64)far_plane / ((f64)far_plane - near_plane));
 
@@ -21,10 +21,10 @@ math::mat44 make_perspective(f32 horizontal_scale,
 }
 
 // sub_9D3B30
-math::mat44 make_orthographic(f32 horizontal_scale,
-                              f32 vertical_scale,
-                              f32 near_plane,
-                              f32 far_plane) {
+math::mat44 ortho(f32 horizontal_scale,
+                  f32 vertical_scale,
+                  f32 near_plane,
+                  f32 far_plane) {
 
     f32 depth_scale = (f32)(1.0 / ((f64)far_plane - near_plane));
 
@@ -35,10 +35,10 @@ math::mat44 make_orthographic(f32 horizontal_scale,
 }
 
 // sub_9D3C50
-math::mat44 make_viewport(f32 left,
-                          f32 top,
-                          f32 right,
-                          f32 bottom) {
+math::mat44 viewport(f32 left,
+                     f32 top,
+                     f32 right,
+                     f32 bottom) {
 
     return math::mat44(math::vector4((right - left) * 0.5f,  0.0f,                 0.0f, 0.0f),
                        math::vector4( 0.0f,                 (top - bottom) * 0.5f, 0.0f, 0.0f),
@@ -158,7 +158,7 @@ math::mat44 make_ui_to_screen(const ngl::scene* value) {
 }
 
 // sub_9D3D90
-math::mat44 make_ui_to_device(const ngl::scene* value) {
+math::mat44 ui(const ngl::scene* value) {
     const math::mat44 &viewport   = value->view;
     const math::mat44 &projection = value->projection;
 
@@ -259,10 +259,10 @@ void ngl::calculate_matrices(scene* value) {
         viewport_top    = (viewport_top    - viewport_center_y) * maximum_y + viewport_center_y;
         viewport_bottom = (viewport_bottom - viewport_center_y) * maximum_y + viewport_center_y;
 
-        value->projection = make_perspective(1.0f / value->viewport_half_width,
-                                             1.0f / value->viewport_half_height,
-                                             value->near_plane,
-                                             value->far_plane);
+        value->projection = perspective(1.0f / value->viewport_half_width,
+                                        1.0f / value->viewport_half_height,
+                                        value->near_plane,
+                                        value->far_plane);
 
         f32 left_slope    = horizontal_tangent * value->pixel_scissor_left;
         f32 right_slope   = horizontal_tangent * value->pixel_scissor_right;
@@ -290,10 +290,10 @@ void ngl::calculate_matrices(scene* value) {
                                        bottom_length * bottom_slope,
                                        0.0f);
     } else {
-        value->projection = make_orthographic(1.0f / (value->ortho_width * value->aspect_ratio),
-                                              1.0f / value->ortho_height,
-                                              value->near_plane,
-                                              value->far_plane);
+        value->projection = ortho(1.0f / (value->ortho_width * value->aspect_ratio),
+                                  1.0f / value->ortho_height,
+                                  value->near_plane,
+                                  value->far_plane);
 
         view_planes[0] = math::vector4(1.0f, 0.0f, 0.0f,
                                        value->pixel_scissor_left * value->aspect_ratio);
@@ -308,10 +308,10 @@ void ngl::calculate_matrices(scene* value) {
     view_planes[4] = math::vector4(0.0f, 0.0f, 1.0f, value->near_plane);
     view_planes[5] = math::vector4(0.0f, 0.0f, -1.0f, -value->far_plane);
 
-    value->view = make_viewport(viewport_left,
-                                viewport_top,
-                                viewport_right,
-                                viewport_bottom);
+    value->view = viewport(viewport_left,
+                           viewport_top,
+                           viewport_right,
+                           viewport_bottom);
 
     value->device = make_d3d9_clip_adjustment();
 
@@ -319,7 +319,7 @@ void ngl::calculate_matrices(scene* value) {
     value->view_to_world     = math::inv(value->world_to_view);
     value->world_to_screen   = value->world_to_view * value->view_to_screen;
     value->viewport_to_world = math::inv(value->world_to_screen);
-    value->ui_to_device      = make_ui_to_device(value);
+    value->ui_to_device      = ui(value);
 
     value->derived_matrix_250 = value->ui_to_device * value->view_to_world;
     value->derived_matrix_290 = inverse(value->world_to_screen);
@@ -339,7 +339,7 @@ void ngl::validate_matrices(scene* value) {
 }
 
 // sub_9D7F20
-math::mat44* ngl::get_world_to_screen(scene* value) {
+math::mat44* ngl::get_matrix_world_to_screen(scene* value) {
     if (value && value->derived_matrices_dirty)
         calculate_matrices(value);
 

@@ -2,10 +2,10 @@
 #include <new>
 
 #include "game/post_process/post_process.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
-#include "treyarch/ngl/d3d9/work_buffers.hh"
-#include "treyarch/ngl/texture/runtime.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/work_buffers.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
@@ -17,7 +17,7 @@ void post_process::create_device_resources() {
     if (state.initialized)
         return;
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     state.initialized = 1;
 
@@ -29,7 +29,7 @@ void post_process::create_device_resources() {
     device->CreateVertexDeclaration(definition.elements, &definition.declaration);
     state.quad_vertex_definition = definition;
 
-    ngl::texture* back_buffer = ngl::d3d9::get_back_buffer();
+    ngl::texture* back_buffer = ngl::d3d9::get_back_buffer_tex();
 
     i32 width  = (i32)back_buffer->gpu_texture.width;
     i32 height = (i32)back_buffer->gpu_texture.height;
@@ -39,10 +39,10 @@ void post_process::create_device_resources() {
 
     const u32 target_flags = ngl::runtime_texture_render_target | 0x10;
 
-    state.render_targets[0]   = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width,      height,      1, 1);
-    state.quarter_target      = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 2, height >> 2, 1, 1);
-    state.eighth_target       = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 3, height >> 3, 1, 1);
-    state.sixty_fourth_target = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, width >> 6, height >> 6, 1, 1);
+    state.render_targets[0]   = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, width,      height,      1, 1);
+    state.quarter_target      = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, width >> 2, height >> 2, 1, 1);
+    state.eighth_target       = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, width >> 3, height >> 3, 1, 1);
+    state.sixty_fourth_target = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, width >> 6, height >> 6, 1, 1);
 
     // position, texture coordinate
     const f32 quad[16] { -1.0f,  1.0f, 0.0f, 0.0f,
@@ -142,8 +142,8 @@ void post_process::create_device_resources() {
     i32 half_width  = width  >> 1;
     i32 half_height = height >> 1;
 
-    state.render_targets[1] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
-    state.render_targets[2] = ngl::create_runtime_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
+    state.render_targets[1] = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
+    state.render_targets[2] = ngl::create_texture(target_flags, D3DFMT_A8R8G8B8, half_width, half_height, 1, 1);
 
     f32 half_texel_u = (f32)(0.5 / (f64)(f32)half_width);
     f32 half_texel_v = (f32)(0.5 / (f64)(f32)half_height);
@@ -219,19 +219,19 @@ void post_process::release_device_resources() {
 
     for (u32 index = 0; index < 3; ++index) {
         if (state.render_targets[index])
-            ngl::release_texture(state.render_targets[index]);
+            ngl::destroy_texture(state.render_targets[index]);
     }
 
     if (state.quarter_target)
-        ngl::release_texture(state.quarter_target);
+        ngl::destroy_texture(state.quarter_target);
 
     state.quarter_target = nullptr;
 
     if (state.eighth_target)
-        ngl::release_texture(state.eighth_target);
+        ngl::destroy_texture(state.eighth_target);
 
     if (state.sixty_fourth_target)
-        ngl::release_texture(state.sixty_fourth_target);
+        ngl::destroy_texture(state.sixty_fourth_target);
 
     state.eighth_target       = nullptr;
     state.sixty_fourth_target = nullptr;

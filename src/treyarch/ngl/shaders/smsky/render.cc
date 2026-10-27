@@ -2,10 +2,10 @@
 
 #include "game/post_process/post_process.hh"
 #include "game/shader_resource_manager.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/smsky/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
 
@@ -25,17 +25,17 @@ void ngl::shaders::smsky::render(render_node* value) {
     if (!sky || !sky->resource_0d8 || !sky->resource_0dc)
         return;
 
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
     math::mat44 camera_translation = math::identity_mat33();
-    camera_translation.set_w(current_scene->view_position);
+    camera_translation.set_w(build_scene->view_position);
 
     math::mat44 local_to_screen;
 
     for (u32 row_index = 0; row_index < 4; ++row_index) {
         for (u32 column = 0; column < 4; ++column) {
             const math::vector4 &source = camera_translation[row_index];
-            const math::mat44   &screen = current_scene->world_to_screen;
+            const math::mat44   &screen = build_scene->world_to_screen;
 
             local_to_screen[row_index][column] = source[0] * screen[0][column] +
                                                  source[1] * screen[1][column] +
@@ -61,7 +61,7 @@ void ngl::shaders::smsky::render(render_node* value) {
     math::mat44 vertex_constants[2] { ~local_to_screen,
                                       ~camera_translation };
 
-    IDirect3DDevice9* device = d3d9::references::device.get();
+    IDirect3DDevice9* device = d3d9::references::dev.get();
 
     device->SetVertexShaderConstantF(0, (const f32*)&vertex_constants[0], 4);
     device->SetVertexShaderConstantF(4, (const f32*)&vertex_constants[1], 4);
@@ -84,23 +84,23 @@ void ngl::shaders::smsky::render(render_node* value) {
     d3d9::set_sampler_address(0, D3DTADDRESS_CLAMP, D3DTADDRESS_CLAMP);
     d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_POINT, 1);
 
-    f32 half_angle = (f32)(current_scene->field_of_view * 0.5f * 0.01745329300562541);
+    f32 half_angle = (f32)(build_scene->field_of_view * 0.5f * 0.01745329300562541);
     
-    f32 vertical_extent   = (f32)std::tan((f64)half_angle) * current_scene->far_plane;
-    f32 horizontal_extent = current_scene->aspect_ratio * vertical_extent;
+    f32 vertical_extent   = (f32)std::tan((f64)half_angle) * build_scene->far_plane;
+    f32 horizontal_extent = build_scene->aspect_ratio * vertical_extent;
 
-    f32 camera_height = current_scene->view_to_world.get_w()[1];
+    f32 camera_height = build_scene->view_to_world.get_w()[1];
 
-    math::vector4 pixel_constants[8] { current_scene->view_to_world.get_x(),
-                                       current_scene->view_to_world.get_y(),
-                                       current_scene->view_to_world.get_z(),
+    math::vector4 pixel_constants[8] { build_scene->view_to_world.get_x(),
+                                       build_scene->view_to_world.get_y(),
+                                       build_scene->view_to_world.get_z(),
                                        math::vector4(-horizontal_extent,
                                                      -vertical_extent - camera_height,
-                                                     current_scene->far_plane,
+                                                     build_scene->far_plane,
                                                      1.0f),
                                        math::vector4(horizontal_extent,
                                                      vertical_extent - camera_height,
-                                                     current_scene->far_plane,
+                                                     build_scene->far_plane,
                                                      1.0f),
                                  light_source->color_2d0,
                                  sky->color_0e0,
@@ -114,5 +114,5 @@ void ngl::shaders::smsky::render(render_node* value) {
 
     post_process::references::device_resources.get().system->blitter->draw_fullscreen();
 
-    d3d9::set_render_state(D3DRS_ZWRITEENABLE, current_scene->z_write_enabled);
+    d3d9::set_render_state(D3DRS_ZWRITEENABLE, build_scene->z_write_enabled);
 }

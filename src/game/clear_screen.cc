@@ -1,6 +1,6 @@
 #include "game/game.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace references {

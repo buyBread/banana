@@ -1,22 +1,20 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "treyarch/ngl/list/arena.hh"
-#include "treyarch/ngl/scene/defaults.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
 // sub_9D9030
-ngl::scene* initialize_scene(ngl::scene*                   value,
-                             ngl::e_scene_parameter_source parameter_source) {
+ngl::scene* setup_begin_scene(ngl::scene*                   value,
+                              ngl::e_scene_parameter_source parameter_source) {
 
-    ngl::scene* parent = ngl::references::current_scene.read();
+    ngl::scene* parent = ngl::references::build_scene.read();
     ngl::scene* source = parent;
 
-    ngl::references::current_scene.write(value);
+    ngl::references::build_scene.write(value);
 
     value->color_target     = nullptr;
     value->depth_target     = nullptr;
@@ -27,7 +25,7 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
         ngl::clear_and_set_default_scene_state(value);
     else {
         if (parameter_source == ngl::scene_parameter_root)
-            source = ngl::references::root_scene.read();
+            source = ngl::references::root_build_scene.read();
 
         if (parameter_source == ngl::scene_parameter_parent ||
             parameter_source == ngl::scene_parameter_root) {
@@ -43,7 +41,7 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
     if (parameter_source == ngl::scene_parameter_parent)
         ngl::copy_scene_parameters(value->parameters, parent->parameters);
     else if (parameter_source == ngl::scene_parameter_root)
-        ngl::copy_scene_parameters(value->parameters, ngl::references::root_scene.read()->parameters);
+        ngl::copy_scene_parameters(value->parameters, ngl::references::root_build_scene.read()->parameters);
 
     value->locked_textures  = nullptr;
     value->options          = 0;
@@ -75,9 +73,9 @@ ngl::scene* initialize_scene(ngl::scene*                   value,
 
 // sub_9D91D0
 ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
-    auto* value = (scene*)list::allocate(sizeof(scene), 16);
+    auto* value = (scene*)list_alloc(sizeof(scene), 16);
 
-    // yes, retail allocates this twice; initialize_scene throws this one away
+    // yes, retail allocates this twice; setup_begin_scene throws this one away
     if (value) {
         value->parameters = allocate_scene_parameters();
         clear_scene_parameters(value->parameters);
@@ -86,7 +84,7 @@ ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
     if (!value)
         return nullptr;
 
-    scene* parent = references::current_scene.read();
+    scene* parent = references::build_scene.read();
 
     if (parent) {
         if (parent->last_child)
@@ -96,56 +94,51 @@ ngl::scene* ngl::list_begin_scene(e_scene_parameter_source parameter_source) {
 
         parent->last_child = value;
     } else
-        references::root_scene.write(value);
+        references::root_build_scene.write(value);
 
-    initialize_scene(value, parameter_source);
+    setup_begin_scene(value, parameter_source);
 
     return value;
 }
 
 // sub_9D52A0
 void ngl::list_end_scene() {
-    scene* value = references::current_scene.read();
+    scene* value = references::build_scene.read();
 
-    if (value == references::root_scene.read()) {
+    if (value == references::root_build_scene.read())
         tl_fatal("Scene stack underflow (too many nglListEndScene calls!).\n");
 
-        banana::log.ngl("scene stack underflow; too many ngl::list_end_scene calls!");
-    }
-
-    references::current_scene.write(value->parent);
+    references::build_scene.write(value->parent);
 }
 
 // sub_9D52E0
 ngl::scene* ngl::list_select_scene(scene* value) {
-    scene* previous = references::current_scene.read();
+    scene* previous = references::build_scene.read();
 
-    references::current_scene.write(value);
+    references::build_scene.write(value);
 
     return previous;
 }
 
 // sub_9D52F0
 const char* ngl::set_scene_name(const char* name) {
-    references::current_scene.get()->name = name;
+    references::build_scene.get()->name = name;
     
     return name;
 }
 
 // sub_9D5200
-void ngl::set_scene_callback(e_scene_callback_type type,
-                                     scene_callback_function function,
-                                     void* context) {
+void ngl::set_scene_callback(e_scene_callback_type   type,
+                             scene_callback_function function,
+                             void*                   context) {
 
     if ((u32)type > scene_callback_4) {
         tl_fatal("Unknown type for scene callback.");
 
-        banana::log.ngl("unknown type for scene callback ({})", (u32)type);
-
         return;
     }
 
-    scene_callback &callback = references::current_scene.get()->callbacks[(u32)type];
+    scene_callback &callback = references::build_scene.get()->callbacks[(u32)type];
 
     callback.function = function;
     callback.context  = context;
@@ -153,27 +146,27 @@ void ngl::set_scene_callback(e_scene_callback_type type,
 
 // sub_9D3840
 void ngl::set_clear_flags(u32 flags) {
-    references::current_scene.get()->clear_flags = flags;
+    references::build_scene.get()->clear_flags = flags;
 }
 
 // sub_9D3860
 void ngl::set_clear_color(f32 red, f32 green, f32 blue, f32 alpha) {
-    references::current_scene.get()->clear_color = math::vector4(red, green, blue, alpha);
+    references::build_scene.get()->clear_color = math::vector4(red, green, blue, alpha);
 }
 
 // sub_9D38E0
 void ngl::set_z_write_enable(bool enable) {
-    references::current_scene.get()->z_write_enabled = enable;
+    references::build_scene.get()->z_write_enabled = enable;
 }
 
 // sub_9D3900
 void ngl::set_z_test_enable(bool enable) {
-    references::current_scene.get()->z_test_enabled = enable;
+    references::build_scene.get()->z_test_enabled = enable;
 }
 
 // sub_9D39F0
 void ngl::set_animation_time(f32 time) {
-    references::current_scene.get()->animation_time = time;
+    references::build_scene.get()->animation_time = time;
 }
 
 // sub_9D3920
@@ -181,7 +174,7 @@ ngl::scene* ngl::set_scene_option_group_0(bool first,
                                           bool second,
                                           bool third) {
 
-    scene* value = references::current_scene.read();
+    scene* value = references::build_scene.read();
 
     value->options &= 0xFFFFFFF0;
 
@@ -200,7 +193,7 @@ ngl::scene* ngl::set_scene_option_group_1(bool first,
                                           bool second,
                                           bool third) {
 
-    scene* value = references::current_scene.read();
+    scene* value = references::build_scene.read();
 
     value->options &= 0xFFFFFF0F;
 
@@ -216,10 +209,10 @@ ngl::scene* ngl::set_scene_option_group_1(bool first,
 
 // sub_9D54E0
 ngl::locked_texture_node* ngl::lock_texture(texture* value) {
-    auto* node = (locked_texture_node*)list::allocate(sizeof(locked_texture_node), 16);
+    auto* node = (locked_texture_node*)list_alloc(sizeof(locked_texture_node), 16);
 
     if (node) {
-        scene* current = references::current_scene.read();
+        scene* current = references::build_scene.read();
 
         node->texture_data       = value;
         node->next               = current->locked_textures;

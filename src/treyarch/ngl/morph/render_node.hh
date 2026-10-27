@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/ngl/d3d9/geometry_stream.hh"
+#include "treyarch/ngl/gpu/d3d9/geometry_stream.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/morph.hh"

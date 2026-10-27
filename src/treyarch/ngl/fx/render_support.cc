@@ -3,16 +3,14 @@
 
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "treyarch/ngl/scene/parameters.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
 #include "game/light/references.hh"
 #include "game/rtree.hh"
-#include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/ngl/lighting/references.hh"
+#include "treyarch/ngl/lighting/lighting.hh"
 
 using namespace treyarch;
 
@@ -169,7 +167,7 @@ void query_point_lights(      ngl::fx::mesh_node_data*  node_data,
                               f32                       radius) {
 
     ngl::lighting::light_context* context =
-        ngl::lighting::references::selected_light_context.read();
+        ngl::lighting::references::send_light_context.read();
 
     if (context->head.next == &context->head)
         return;
@@ -212,9 +210,9 @@ ngl::lighting::light_context* ngl::fx::prepare_light_context(
             node_data->parameters,
             references::parameter_id_light_context.read());
     else
-        context = ngl::references::current_scene.read()->light_context;
+        context = ngl::references::build_scene.read()->light_context;
 
-    lighting::references::selected_light_context.write(context);
+    lighting::references::send_light_context.write(context);
     context->head.local_next = &context->head;
 
     return context;
@@ -291,7 +289,7 @@ ngl::fx::effect* ngl::fx::select_effect(render_node* value) {
 }
 
 void ngl::fx::prepare_effect_scene(effect* value) {
-    u32 frame_epoch = ngl::references::frame_epoch.read();
+    u32 frame_epoch = ngl::references::frame.read();
 
     if (value->current_frame_epoch != frame_epoch) {
         value->current_frame_epoch = frame_epoch;
@@ -300,11 +298,11 @@ void ngl::fx::prepare_effect_scene(effect* value) {
         value->current_material    = nullptr;
     }
 
-    scene* current_scene = ngl::references::current_scene.read();
+    scene* build_scene = ngl::references::build_scene.read();
 
-    if (value->current_scene != current_scene) {
+    if (value->current_scene != build_scene) {
         update_scene_parameters(value);
-        value->current_scene = current_scene;
+        value->current_scene = build_scene;
     }
 }
 
@@ -340,5 +338,5 @@ void ngl::fx::prepare_animated_textures(effect*         effect_data,
     if (has_scene_parameter(parameters, parameter_id))
         ngl::references::animation_frame.write((u32)get_scene_parameter(parameters, parameter_id));
     else
-        ngl::references::animation_frame.write(ngl::references::current_scene.read()->ifl_frame);
+        ngl::references::animation_frame.write(ngl::references::build_scene.read()->ifl_frame);
 }

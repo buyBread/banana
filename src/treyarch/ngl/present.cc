@@ -1,28 +1,23 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/debug/primitive_batches.hh"
-#include "treyarch/ngl/debug/render.hh"
-#include "treyarch/ngl/list/init.hh"
-#include "treyarch/ngl/scene/references.hh"
-#include "treyarch/ngl/scene/render_sort.hh"
+#include "treyarch/ngl/debug/debug.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
 // sub_9DA500
 ngl::scene* ngl::present() {
-    if (references::current_scene.read() != references::root_scene.read()) {
+    if (references::build_scene.read() != references::root_build_scene.read())
         tl_fatal("nglPresent called while one or more scenes were still active (need to call nglListEndScene).");
-
-        banana::log.ngl("ngl::present called while one or more scenes were still active; need to call ngl::list_end_scene!");
-    }
 
     ngl::debug::reset_primitive_batches();
     ngl::debug::render();
     
-    ngl::render_sort(references::root_scene.read());
+    ngl::sort_scene(references::root_build_scene.read());
 
-    ngl::list_send();
+    ngl::ngli_list_send();
 
-    return ngl::list_init();
+    return ngl::ngli_list_init();
 }

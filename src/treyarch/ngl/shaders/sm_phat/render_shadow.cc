@@ -1,7 +1,7 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/mesh_submission.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/sm_phat/render_node.hh"
 
@@ -26,13 +26,13 @@ void ngl::shaders::sm_phat::render_shadow(render_node* value) {
 
     math::mat44 compressed_to_screen =
         compressed_to_local * math::mat44(value->node_data->local_to_world) *
-        ngl::references::current_scene.read()->world_to_screen;
+        ngl::references::build_scene.read()->world_to_screen;
 
     math::mat44 constants[2] { fx::get_compressed_to_uv(), compressed_to_screen, };
 
-    d3d9::references::device.get()
+    d3d9::references::dev.get()
         ->SetVertexShaderConstantF(0, (const f32*)constants, 8);
-    d3d9::draw_mesh_section(value->section);
+    d3d9::draw_section(value->section);
 
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, 0);

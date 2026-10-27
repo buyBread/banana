@@ -39,7 +39,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct morph_directory : tl_skip_list<morph_set, morph_set_name> {};
+    struct morph_directory_t : tl_skip_list<morph_set, morph_set_name> {};
 
     void initialize_morph_directory();
 
@@ -53,7 +53,7 @@ namespace treyarch { namespace ngl {
                       void*            user_data);
 
     namespace references {
-        inline util::memory_reference<morph_directory> morphs { 0x01118660 };
+        inline util::memory_reference<morph_directory_t> morph_directory { 0x01118660 };
     } // references
 
     ASSERT_SIZEOF  (morph_component,                 0x10);
@@ -77,5 +77,5 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(morph_set, frame_count, 0x08);
     ASSERT_OFFSETOF(morph_set, frames,      0x0C);
 
-    ASSERT_SIZEOF(morph_directory, 0x10);
+    ASSERT_SIZEOF(morph_directory_t, 0x10);
 }} // treyarch::ngl

@@ -1,7 +1,7 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/parameters.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/sm_phat/configuration.hh"
@@ -61,7 +61,7 @@ void render_normal(render_node* value) {
                                                   vertex_context.compressed_to_local[3][2],
                                                   vertex_context.compressed_to_local[0][0]);
 
-    d3d9::references::device.get()
+    d3d9::references::dev.get()
         ->SetVertexShaderConstantF(0, (const f32*)&constants, 45);
 
     generated_material::transform_light_matrix(&snapshot, lighting);

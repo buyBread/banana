@@ -3,7 +3,7 @@
 #include "game/app.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 

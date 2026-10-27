@@ -4,8 +4,7 @@
 #include "game/light/light_source.hh"
 #include "game/light/references.hh"
 #include "game/light/render_submission.hh"
-#include "treyarch/ngl/lighting/light_data.hh"
-#include "treyarch/ngl/lighting/light_node.hh"
+#include "treyarch/ngl/lighting/lighting.hh"
 
 namespace treyarch { namespace light_render_submission {
     using radius_method = f32 (__thiscall*)(light_source* self);
@@ -72,9 +71,9 @@ namespace treyarch { namespace light_render_submission {
         direction = -direction_source;
         direction.set_w(0.0f);
 
-        ngl::lighting::add_directional_light( ngl::lighting::light_category_general,
-                                             &direction,
-                                             &color);
+        ngl::lighting::list_add_light( ngl::lighting::light_category_general,
+                                      &direction,
+                                      &color);
     }
 
 }} // treyarch::light_render_submission

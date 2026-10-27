@@ -1,18 +1,21 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "game/four_cc.hh"
-#include "treyarch/ngl/d3d9/device.hh"
+#include "treyarch/ngl/geometry_shader/geometry_shader.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/morph/morph.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/shaders/shader.hh"
+#include "treyarch/apk/file.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 
 // sub_9E8EE0
-void ngl::upload_mesh_section(mesh_section* section) {
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+void ngl::ngli_process_section(mesh_section* section) {
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     const void*     source_indices = section->index_buffer;
           u32       index_bytes    = section->index_count * section->index_size;
@@ -54,13 +57,13 @@ void ngl::upload_mesh_section(mesh_section* section) {
 }
 
 // sub_9E8EC0
-void ngl::release_mesh_section(mesh_section* section) {
+void ngl::ngli_release_section(mesh_section* section) {
     section->vertex_buffer->Release();
     section->index_buffer->Release();
 }
 
 // sub_9DB0C0
-void ngl::process_mesh_section(mesh* owner, mesh_section* section) {
+void ngl::process_section(mesh* owner, mesh_section* section) {
     const char* mesh_name = owner->name.text ? owner->name.text : "(null)";
 
     if (!section->material_data) {
@@ -80,7 +83,7 @@ void ngl::process_mesh_section(mesh* owner, mesh_section* section) {
         section_material->shader_data = &get_default_shader();
     }
 
-    upload_mesh_section(section);
+    ngli_process_section(section);
 
     section_shader = section_material->shader_data;
     section_shader->bind_section(section, owner);
@@ -102,12 +105,12 @@ void ngl::process_mesh(mesh* value) {
         entry.flags = section_owner;
 
         if (entry.section)
-            process_mesh_section(value, entry.section);
+            process_section(value, entry.section);
     }
 }
 
 // sub_9DB180
-void ngl::release_mesh(mesh* value) {
+void ngl::unload_mesh(mesh* value) {
     constexpr u32 mesh_processed = 0x00010000;
     constexpr u32 section_owner  = 0x00000001;
 
@@ -118,21 +121,21 @@ void ngl::release_mesh(mesh* value) {
         mesh_section_table_entry& entry = value->sections[index];
 
         if ((entry.flags & section_owner) && entry.section)
-            release_mesh_section(entry.section);
+            ngli_release_section(entry.section);
     }
 
     value->flags &= ~mesh_processed;
 }
 
 void ngl::initialize_mesh_directory() {
-    references::meshes.get().init();
+    references::mesh_directory.get().init();
 }
 
 // sub_9DC510
-void ngl::load_mesh(apk::file*       owner,
-                    apk::file_entry* entry,
-                    void**           mapped_sections,
-                    void*            user_data) {
+void ngl::apk_mesh_load_callback(apk::file*       owner,
+                                 apk::file_entry* entry,
+                                 void**           mapped_sections,
+                                 void*            user_data) {
 
     (void)user_data;
 
@@ -154,15 +157,15 @@ void ngl::load_mesh(apk::file*       owner,
             value->sections[index].flags &= ~section_owner;
     }
 
-    if (!references::resource_callback.read())
-        references::meshes.get().add(value);
+    if (!references::resource_callback_function.read())
+        references::mesh_directory.get().add(value);
 }
 
 // sub_9DC5A0
-void ngl::remove_mesh(apk::file*       owner,
-                      apk::file_entry* entry,
-                      void**           mapped_sections,
-                      void*            user_data) {
+void ngl::apk_mesh_delete_callback(apk::file*       owner,
+                                   apk::file_entry* entry,
+                                   void**           mapped_sections,
+                                   void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -171,11 +174,36 @@ void ngl::remove_mesh(apk::file*       owner,
     
     mesh* value = (mesh*)mapped_sections[image_section];
 
-    if (!references::resource_callback.read())
-        references::meshes.get().del(value);
+    if (!references::resource_callback_function.read())
+        references::mesh_directory.get().del(value);
 
-    if (value->last_frame_reference + 1 >= (i32)references::frame_epoch.read())
+    if (value->last_frame_reference + 1 >= (i32)references::frame.read())
         d3d9::wait_for_rendering();
 
-    release_mesh(value);
+    unload_mesh(value);
+}
+
+// sub_9DC6F0
+void ngl::mesh_init() {
+    apk::register_file_type(four_cc('M', 'E', 'S', 'H'),
+                            2,
+                            apk_mesh_load_callback,
+                            apk_mesh_delete_callback);
+
+    apk::register_file_type(four_cc('M', 'A', 'T'),
+                            2,
+                            apk_material_load_callback,
+                            apk_material_delete_callback);
+
+    initialize_mesh_directory();
+    initialize_material_directory();
+    initialize_shader_bank();
+    initialize_geometry_shader_bank();
+
+    apk::register_file_type(four_cc('M', 'O', 'R', 'H'),
+                            1,
+                            load_morph,
+                            remove_morph);
+
+    initialize_morph_directory();
 }

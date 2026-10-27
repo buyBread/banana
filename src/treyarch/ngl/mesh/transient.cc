@@ -1,19 +1,19 @@
 #include <cstring>
 
-#include "treyarch/ngl/list/arena.hh"
-#include "treyarch/ngl/mesh/transient.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
 
 // sub_9E2C10
 ngl::mesh* ngl::create_transient_mesh(u32 flags, u32 section_count) {
-    mesh* value = (mesh*)list::allocate(0x50, 16);
+    mesh* value = (mesh*)list_alloc(0x50, 16);
 
     std::memset(value, 0, 0x50);
 
     value->flags         = flags | 0x20000;
     value->section_count = section_count;
-    value->sections      = (mesh_section_table_entry*)list::allocate(8 * section_count, 16);
+    value->sections      = (mesh_section_table_entry*)list_alloc(8 * section_count, 16);
 
     for (u32 index = 0; index < section_count; ++index) {
         value->sections[index].flags   = 0;

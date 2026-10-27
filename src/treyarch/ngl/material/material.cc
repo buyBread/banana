@@ -47,14 +47,14 @@ void ngl::process_material(material* value) {
 }
 
 void ngl::initialize_material_directory() {
-    references::materials.get().init();
+    references::material_directory.get().init();
 }
 
 // sub_9DC6B0
-void ngl::load_material(apk::file*       owner,
-                        apk::file_entry* entry,
-                        void**           mapped_sections,
-                        void*            user_data) {
+void ngl::apk_material_load_callback(apk::file*       owner,
+                                     apk::file_entry* entry,
+                                     void**           mapped_sections,
+                                     void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -65,15 +65,15 @@ void ngl::load_material(apk::file*       owner,
 
     process_material(value);
 
-    if (!references::resource_callback.read())
-        references::materials.get().add(value);
+    if (!references::resource_callback_function.read())
+        references::material_directory.get().add(value);
 }
 
 // sub_9DC5F0
-void ngl::remove_material(apk::file*       owner,
-                          apk::file_entry* entry,
-                          void**           mapped_sections,
-                          void*            user_data) {
+void ngl::apk_material_delete_callback(apk::file*       owner,
+                                       apk::file_entry* entry,
+                                       void**           mapped_sections,
+                                       void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -85,6 +85,6 @@ void ngl::remove_material(apk::file*       owner,
     if (value->shader_data)
         value->shader_data->release_material(value);
 
-    if (!references::resource_callback.read())
-        references::materials.get().del(value);
+    if (!references::resource_callback_function.read())
+        references::material_directory.get().del(value);
 }

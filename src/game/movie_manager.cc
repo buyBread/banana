@@ -2,7 +2,7 @@
 
 #include "vendor/bink/bink.hh"
 #include "game/movie_manager.hh"
-#include "treyarch/ngl/texture/runtime.hh"
+#include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
@@ -88,7 +88,7 @@ bool movie_manager::create_textures(BINKFRAMEBUFFERS* frame_buffers) {
             if (!entry.plane->Allocate)
                 continue;
 
-            ngl::texture* value = ngl::create_runtime_texture(0x00100000, D3DFMT_A8, entry.width, entry.height, 1, 1);
+            ngl::texture* value = ngl::create_texture(0x00100000, D3DFMT_A8, entry.width, entry.height, 1, 1);
             *entry.frame_texture = value;
 
             // bink decodes straight into the texture memory it was handed while locked
@@ -110,7 +110,7 @@ bool movie_manager::create_textures(BINKFRAMEBUFFERS* frame_buffers) {
             }
 
             if (!index)
-                *entry.upload_texture = ngl::create_runtime_texture(0x00001000, D3DFMT_A8, entry.width, entry.height, 1, 1);
+                *entry.upload_texture = ngl::create_texture(0x00001000, D3DFMT_A8, entry.width, entry.height, 1, 1);
         }
     }
 
@@ -121,22 +121,22 @@ bool movie_manager::create_textures(BINKFRAMEBUFFERS* frame_buffers) {
 void movie_manager::release_textures() {
     movie_textures &textures = references::movie_textures.get();
 
-    ngl::release_texture(textures.upload_y);
+    ngl::destroy_texture(textures.upload_y);
     textures.upload_y = nullptr;
-    ngl::release_texture(textures.upload_a);
+    ngl::destroy_texture(textures.upload_a);
     textures.upload_a = nullptr;
-    ngl::release_texture(textures.upload_cr);
+    ngl::destroy_texture(textures.upload_cr);
     textures.upload_cr = nullptr;
-    ngl::release_texture(textures.upload_cb);
+    ngl::destroy_texture(textures.upload_cb);
     textures.upload_cb = nullptr;
 
     for (u32 index = 0; index < 2; ++index) {
         textures.frame_decoded[index] = 0;
 
-        ngl::release_texture(textures.frame_y[index]);
-        ngl::release_texture(textures.frame_a[index]);
-        ngl::release_texture(textures.frame_cr[index]);
-        ngl::release_texture(textures.frame_cb[index]);
+        ngl::destroy_texture(textures.frame_y[index]);
+        ngl::destroy_texture(textures.frame_a[index]);
+        ngl::destroy_texture(textures.frame_cr[index]);
+        ngl::destroy_texture(textures.frame_cb[index]);
 
         textures.frame_y[index]  = nullptr;
         textures.frame_a[index]  = nullptr;

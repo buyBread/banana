@@ -1,7 +1,7 @@
 #include "game/post_process/blitter.hh"
 #include "game/shader_resource_manager.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
 
 using namespace treyarch;
 
@@ -20,7 +20,7 @@ blitter::blitter() {
 
 // sub_75E8A0
 bool blitter::initialize() {
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     vertex_elements[0] = { 0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 };
     vertex_elements[1] = { 0, 8, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 };
@@ -93,7 +93,7 @@ void blitter::draw(f32 x,
     if (0.0 > bottom || y > 1.0f)
         return;
 
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     D3DVIEWPORT9 viewport;
     device->GetViewport(&viewport);
@@ -208,7 +208,7 @@ void blitter::draw_texture(f32                     x,
     draw(x, y, width, height, u, v, u_size, v_size, z);
 
     // the unbind skips the cache check
-    ngl::d3d9::references::device.get()->SetTexture(0, nullptr);
+    ngl::d3d9::references::dev.get()->SetTexture(0, nullptr);
     ngl::d3d9::references::bindings.get().textures[0] = nullptr;
 }
 

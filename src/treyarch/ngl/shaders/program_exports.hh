@@ -6,7 +6,7 @@
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
-#include "treyarch/ngl/d3d9/vertex_definition.hh"
+#include "treyarch/ngl/gpu/d3d9/vertex_definition.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace program_exports {
 struct pixel_pipeline_descriptor {

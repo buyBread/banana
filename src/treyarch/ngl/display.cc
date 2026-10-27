@@ -1,5 +1,5 @@
-#include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/display.hh"
+#include "treyarch/ngl/gpu/d3d9/display.hh"
 
 using namespace treyarch;
 

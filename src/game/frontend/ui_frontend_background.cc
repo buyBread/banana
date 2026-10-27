@@ -4,7 +4,6 @@
 #include "game/post_process/post_process.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/quad/quad.hh"
-#include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/math/matrix_rot.hh"
 #include "treyarch/math/trig.hh"
@@ -76,7 +75,7 @@ void ui_frontend::draw_background_overlay(f32 strength, u32) {
     f32 width  = (f32)(i32)ngl::get_screen_width();
 
     ngl::set_quad_rect(&overlay, 0.0f, 0.0f, width, height);
-    ngl::set_quad_blend_mode(&overlay, 0x06C10000, 5);
+    ngl::set_quad_blend(&overlay, 0x06C10000, 5);
 
     ngl::set_quad_color(&overlay, (u32)(i64)(strength * 128.0f) << 24);
     ngl::list_add_quad(&overlay);
@@ -110,8 +109,8 @@ void ui_frontend::draw_background_texture(f32 strength) {
 
     ngl::set_quad_rect(&overlay, 0.0f, 0.0f, width, height);
     ngl::set_quad_map_flags(&overlay, 1);
-    ngl::set_quad_blend_mode(&overlay, 0x06C10000, 5);
-    ngl::set_quad_texture(&overlay, background_texture);
+    ngl::set_quad_blend(&overlay, 0x06C10000, 5);
+    ngl::set_quad_tex(&overlay, background_texture);
     ngl::set_quad_uv(&overlay, u, v, (f32)((f64)u + (f64)0.2f), (f32)((f64)v + (f64)0.2f));
 
     ngl::set_quad_color(&overlay, ((u32)(i64)(strength * 255.0f) << 24) | 0x00FFFFFF);

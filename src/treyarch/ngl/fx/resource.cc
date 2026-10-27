@@ -1,9 +1,9 @@
 #include <cstring>
 
-#include "treyarch/ngl/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/fx/effect.hh"
+#include "treyarch/ngl/gpu/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/ngl/resources/resolver.hh"
+#include "treyarch/ngl/resources/resources.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/four_cc.hh"
 #include "game/hash/algo.hh"
@@ -121,7 +121,7 @@ void resolve_texture_parameter(ngl::fx::parameter &parameter) {
     ngl::texture* texture = *(ngl::texture**)parameter.data;
 
     if (!texture)
-        texture = ngl::references::default_texture.read();
+        texture = ngl::references::default_tex.read();
 
     *(ngl::texture**)parameter.data = texture;
 }
@@ -161,7 +161,7 @@ void initialize_binding(ngl::fx::effect           &value,
         ngl::fx::parameter &texture_parameter = value.parameters[texture_parameter_index];
 
         if (is_forced_default_texture_type(texture_parameter.type))
-            *(ngl::texture**)texture_parameter.data = ngl::references::default_texture.read();
+            *(ngl::texture**)texture_parameter.data = ngl::references::default_tex.read();
 
         resolve_texture_parameter(texture_parameter);
 
@@ -508,7 +508,7 @@ void ngl::fx::load(apk::file*       owner,
     (void)entry;
     (void)user_data;
 
-    references::parameter_texture_fallback        .write(ngl::references::default_texture.read());
+    references::parameter_texture_fallback        .write(ngl::references::default_tex.read());
     references::parameter_texture_fallback_pointer.write(&references::parameter_texture_fallback.get());
 
     i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
@@ -527,7 +527,7 @@ void ngl::fx::load(apk::file*       owner,
 
     value->runtime = create_effect_runtime(*value);
 
-    if (!ngl::references::resource_callback.read())
+    if (!ngl::references::resource_callback_function.read())
         references::effects.get().add(value);
 }
 

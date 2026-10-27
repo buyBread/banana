@@ -1,6 +1,8 @@
 #include <cstring>
 
+#include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/quad/quad.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -57,7 +59,7 @@ void ngl::set_quad_z(quad* value, f32 z) {
 }
 
 // sub_9E4AC0
-void ngl::set_quad_texture(quad* value, texture* texture_data) {
+void ngl::set_quad_tex(quad* value, texture* texture_data) {
     value->texture_data = texture_data;
 }
 
@@ -67,7 +69,7 @@ void ngl::set_quad_map_flags(quad* value, u32 map_flags) {
 }
 
 // sub_9E4AF0
-void ngl::set_quad_blend_mode(quad* value, u32 mode, u32 source) {
+void ngl::set_quad_blend(quad* value, u32 mode, u32 source) {
     value->blend_mode = ((u64)source << 32) | mode;
 }
 
@@ -86,4 +88,35 @@ void ngl::set_quad_uv(quad* value,
     value->vertices[2].v = bottom;
     value->vertices[3].u = right;
     value->vertices[3].v = bottom;
+}
+
+// sub_9E4C20
+ngl::scene* ngl::list_add_quad(const quad* value) {
+    auto* node = (quad_renderer::node*)list_alloc(sizeof(quad_renderer::node), 16);
+
+    if (!node)
+        return nullptr;
+
+    node->base.vtable = &quad_renderer::references::node_vtable.get();
+
+    scene* current = references::build_scene.read();
+    validate_matrices(current);
+
+    std::memcpy(&node->value, value, sizeof(quad));
+
+    if ((value->blend_mode & 0x00800000) != 0) {
+        node->base.sort_key.floating = value->z;
+        node->base.next = current->translucent_render_list;
+
+        ++current->translucent_render_list_count;
+        current->translucent_render_list = &node->base;
+    } else {
+        node->base.sort_key.integer = (u32)value->texture_data;
+        node->base.next = current->opaque_render_list;
+
+        ++current->opaque_render_list_count;
+        current->opaque_render_list = &node->base;
+    }
+
+    return current;
 }

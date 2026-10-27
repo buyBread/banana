@@ -1,14 +1,15 @@
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/apk/file.hh"
 #include "game/four_cc.hh"
 
 using namespace treyarch;
 
 // sub_9DAE60
-void ngl::load_font(apk::file*       owner,
-                    apk::file_entry* entry,
-                    void**           mapped_sections,
-                    void*            user_data) {
+void ngl::apk_font_load_callback(apk::file*       owner,
+                                 apk::file_entry* entry,
+                                 void**           mapped_sections,
+                                 void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -33,15 +34,15 @@ void ngl::load_font(apk::file*       owner,
         coordinates[3] *= inverse_height;
     }
 
-    if (!references::resource_callback.read())
-        references::fonts.get().add(value);
+    if (!references::resource_callback_function.read())
+        references::font_directory.get().add(value);
 }
 
 // sub_9DAF80
-void ngl::remove_font(apk::file*       owner,
-                      apk::file_entry* entry,
-                      void**           mapped_sections,
-                      void*            user_data) {
+void ngl::apk_font_delete_callback(apk::file*       owner,
+                                   apk::file_entry* entry,
+                                   void**           mapped_sections,
+                                   void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -51,6 +52,16 @@ void ngl::remove_font(apk::file*       owner,
 
     font* value = (font*)mapped_sections[image_section];
 
-    if (!references::resource_callback.read())
-        references::fonts.get().del(value);
+    if (!references::resource_callback_function.read())
+        references::font_directory.get().del(value);
+}
+
+// sub_9DAFB0
+void ngl::font_init() {
+    references::font_directory.get().init();
+
+    apk::register_file_type(four_cc('F', 'O', 'N', 'T'),
+                            1,
+                            apk_font_load_callback,
+                            apk_font_delete_callback);
 }

@@ -7,10 +7,6 @@
 #include "treyarch/ngl/scene/scene.hh"
 
 namespace treyarch {
-    namespace amalga { namespace merged_apk {
-        struct file;
-    }} // amalga::merged_apk
-
     namespace ngl {
         enum e_buffer_type : u32 {
             buffer_list_work,
@@ -21,7 +17,6 @@ namespace treyarch {
 
         ngl::scene* init(HWND window);
         ngl::scene* present();
-        void list_send();
         void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
 
         bool can_release_file(const apk::file* file);
@@ -30,10 +25,10 @@ namespace treyarch {
 
         namespace references {
             inline util::memory_reference<u8>   initialized   { 0x011184F0 };
-            inline util::memory_reference<u32>  frame_epoch   { 0x011184F4 };
+            inline util::memory_reference<u32>  frame         { 0x011184F4 };
             inline util::memory_reference<HWND> render_window { 0x0111AA90 };
 
-            inline util::memory_reference<ngl::resource_callback> resource_callback { 0x01118510 };
+            inline util::memory_reference<ngl::resource_callback> resource_callback_function { 0x01118510 };
         } // references
     } // ngl
 } // treyarch

@@ -6,7 +6,6 @@
 #include "game/wds/references.hh"
 #include "game/wds/terrain.hh"
 #include "game/wds/world_dynamics_system.hh"
-#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "game/mutex.hh"
 #include "game/timing/hires_clock.hh"
@@ -41,7 +40,7 @@ void speed_tree_manager::update_camera_and_wind(const matrix4x4* camera) {
         position  = camera->w;
         direction = camera->z;
     } else {
-        ngl::scene* scene = ngl::references::current_scene.read();
+        ngl::scene* scene = ngl::references::build_scene.read();
 
         math::mat43          basis   = speed_tree_wrapper::axis_basis();
         math::rot_tran_mat43 to_tree = math::inv(*(const math::rot_tran_mat43*)&basis);

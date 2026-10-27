@@ -1,8 +1,6 @@
 #include <algorithm>
 
 #include "treyarch/ngl/debug/debug.hh"
-#include "treyarch/ngl/debug/performance_bar.hh"
-#include "treyarch/ngl/debug/performance_display.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/quad/quad.hh"
 
@@ -10,7 +8,7 @@ using namespace treyarch;
 
 // sub_9E7320
 void ngl::debug::render_performance_bar() {
-    const performance_info &performance = references::performance.get();
+    const performance_info &performance = references::perf_info.get();
     
     f32 screen_width  = (f32)get_screen_width();
     f32 screen_height = (f32)get_screen_height();

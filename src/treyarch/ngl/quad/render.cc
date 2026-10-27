@@ -1,10 +1,10 @@
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/internal_programs.hh"
-#include "treyarch/ngl/d3d9/state_cache.hh"
-#include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/ngl/d3d9/vertex_formats.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/internal_programs.hh"
+#include "treyarch/ngl/gpu/d3d9/state_cache.hh"
+#include "treyarch/ngl/gpu/d3d9/texture.hh"
+#include "treyarch/ngl/gpu/d3d9/vertex_formats.hh"
 #include "treyarch/ngl/quad/quad.hh"
-#include "treyarch/ngl/scene/references.hh"
+#include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
 
@@ -31,10 +31,10 @@ ASSERT_SIZEOF(quad_textured_draw_vertex, 0x18);
 void ngl::quad_renderer::render(node* value) {
     const quad &source = value->value;
 
-    scene* current = ngl::references::current_scene.read();
+    scene* current = ngl::references::build_scene.read();
 
     d3d9::set_render_state(D3DRS_ZWRITEENABLE, TRUE);
-    d3d9::apply_blend_mode(source.blend_mode);
+    d3d9::set_blend_mode(source.blend_mode);
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_CCW);
     d3d9::set_render_state(D3DRS_FOGENABLE, FALSE);
 
@@ -44,7 +44,7 @@ void ngl::quad_renderer::render(node* value) {
 
     if (source.texture_data) {
         ngl::references::animation_frame.write(current->ifl_frame);
-        d3d9::bind_texture(0, source.texture_data, source.map_flags, 3);
+        d3d9::set_texture(0, source.texture_data, source.map_flags, 3);
         d3d9::set_vertex_program(programs.screen_pcuv_vertex_program);
 
         if (!pixel_program)
@@ -82,7 +82,7 @@ void ngl::quad_renderer::render(node* value) {
     bindings.stream_sources[0]  = nullptr;
     bindings.vertex_declaration = nullptr;
 
-    auto* device = d3d9::references::device.get();
+    auto* device = d3d9::references::dev.get();
 
     const math::mat44 &matrix = current->derived_matrix_2d0;
 

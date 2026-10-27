@@ -6,7 +6,6 @@
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/pass.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "game/hash/algo.hh"
 #include "game/math/references.hh"
@@ -140,7 +139,7 @@ bool speed_tree_wrapper::sphere_in_view(const math::mat43 &basis,
                            (f32)((f64)x[1] * position.x + (f64)y[1] * position.y + (f64)z[1] * position.z + w[1]),
                            (f32)((f64)x[2] * position.x + (f64)y[2] * position.y + (f64)z[2] * position.z + w[2]));
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     for (u32 index = 0; index < 6; ++index) {
         const math::vector4 &plane = scene->clip_planes[index];
@@ -222,7 +221,7 @@ void speed_tree_wrapper::upload_lighting(light_source_data* light) {
     ngl::fx::set_vector(parameters.depth_fog_color, lighting.depth_fog_color);
     ngl::fx::set_vector(parameters.depth_fog_control, lighting.depth_fog_control);
 
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     ngl::fx::set_vector(parameters.camera_position, math::vector4(scene->view_position));
 }
@@ -242,7 +241,7 @@ void speed_tree_wrapper::upload_color(const u8* color) {
 
 // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90
 void speed_tree_wrapper::upload_transforms(const math::mat43 &basis) {
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     ngl::fx::set_matrix(parameters.model_view_projection, math::mat44(basis) * scene->world_to_screen);
     ngl::fx::set_matrix(parameters.local_to_world, math::mat44(basis));
@@ -251,7 +250,7 @@ void speed_tree_wrapper::upload_transforms(const math::mat43 &basis) {
 
 // inlined @ sub_7CB940, sub_7CC710
 f32 speed_tree_wrapper::upload_billboard_images() { // returns the special azimuth
-    ngl::scene* scene = ngl::references::current_scene.read();
+    ngl::scene* scene = ngl::references::build_scene.read();
 
     if (scene->color_target) {
         ngl::fx::set_texture(parameters.billboard_diffuse_map, textures[16]);

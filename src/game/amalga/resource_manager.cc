@@ -82,10 +82,10 @@ void amalga::resource_manager::create_inst() {
     u32 texture_handle;
 
     references::default_texture
-        .write((ngl::texture*)*retail::sub_72BD10(&texture_handle, (i32)ngl::references::default_texture.read()));
+        .write((ngl::texture*)*retail::sub_72BD10(&texture_handle, (i32)ngl::references::default_tex.read()));
 
     references::white_texture
-        .write((ngl::texture*)*retail::sub_72BD10(&texture_handle, (i32)ngl::references::white_texture.read()));
+        .write((ngl::texture*)*retail::sub_72BD10(&texture_handle, (i32)ngl::references::white_tex.read()));
 
     references::resource_context.write(nullptr);
 

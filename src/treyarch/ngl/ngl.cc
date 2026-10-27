@@ -2,20 +2,20 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"
-#include "treyarch/ngl/d3d9/init.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/init_list/init.hh"
-#include "treyarch/ngl/list/init.hh"
-#include "treyarch/ngl/mesh/init.hh"
-#include "treyarch/ngl/resources/init.hh"
+#include "treyarch/ngl/list/list.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
+#include "treyarch/ngl/resources/resources.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/ngl/texture/init.hh"
+#include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
 
 // sub_9E45C0
-bool ngl::can_release_file(const apk::file* file) { // nglCanReleaseFile
-    return file->last_frame_ref + 1 < (i32)references::frame_epoch.read();
+bool ngl::can_release_file(const apk::file* file) {
+    return file->last_frame_ref + 1 < (i32)references::frame.read();
 }
 
 // sub_9E5CD0
@@ -33,7 +33,7 @@ ngl::scene* ngl::init(HWND window) {
     ngl::mesh_init();
     ngl::texture_init();
 
-    references::frame_epoch.write(0);
+    references::frame.write(0);
 
     ngl::d3d9::init();
 
@@ -44,11 +44,11 @@ ngl::scene* ngl::init(HWND window) {
 
     ngl::resources::init();
 
-    ngl::scene* root_scene = ngl::list_init();
+    ngl::scene* root_build_scene = ngl::ngli_list_init();
 
     references::initialized.write(1);
 
     banana::log.ngl("initialized");
 
-    return root_scene;
+    return root_build_scene;
 }

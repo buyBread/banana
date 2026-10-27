@@ -1,8 +1,8 @@
 #include <cstdlib>
 
 #include "game/post_process/texture_array.hh"
-#include "treyarch/ngl/d3d9/device.hh"
-#include "treyarch/ngl/d3d9/framebuffer.hh"
+#include "treyarch/ngl/gpu/d3d9/device.hh"
+#include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 
 using namespace treyarch;
 
@@ -85,7 +85,7 @@ u32 post_process::surface_texture::create_level(u8*       work_buffer,
 
 // sub_73DD60
 void post_process::surface_texture::clear(D3DCOLOR color) {
-    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::dev.get();
 
     target_index        = 0;
     saved_render_target = nullptr;

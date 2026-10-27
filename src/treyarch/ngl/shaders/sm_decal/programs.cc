@@ -3,7 +3,7 @@
 
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/shaders/program_helpers.hh"
-#include "treyarch/ngl/d3d9/shader_program.hh"
+#include "treyarch/ngl/gpu/d3d9/shader_program.hh"
 #include "treyarch/ngl/shaders/sm_bush/programs.hh"
 #include "configuration.hh"
 

@@ -5,7 +5,7 @@
 using namespace treyarch;
 
 void ngl::initialize_morph_directory() {
-    references::morphs.get().init();
+    references::morph_directory.get().init();
 }
 
 // sub_9E40B0
@@ -39,8 +39,8 @@ void ngl::load_morph(apk::file*       owner,
         }
     }
 
-    if (!references::resource_callback.read())
-        references::morphs.get().add(value);
+    if (!references::resource_callback_function.read())
+        references::morph_directory.get().add(value);
 }
 
 // sub_9E41B0
@@ -56,6 +56,6 @@ void ngl::remove_morph(apk::file*       owner,
     
     morph_set* value = (morph_set*)mapped_sections[image_section];
 
-    if (!references::resource_callback.read())
-        references::morphs.get().del(value);
+    if (!references::resource_callback_function.read())
+        references::morph_directory.get().del(value);
 }
