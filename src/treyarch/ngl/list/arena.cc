@@ -1,6 +1,6 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/list/arena.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -18,10 +18,10 @@ void* ngl::list::allocate(u32 size, u32 alignment) {
         return (void*)aligned;
     }
 
-    memory::report("Render list allocation overflow. Reserved = %d Requested = %d Free = %d.\n",
-                   state.capacity,
-                   size,
-                   arena_end - aligned);
+    tl_fatal("Render list allocation overflow. Reserved = %d Requested = %d Free = %d.\n",
+             state.capacity,
+             size,
+             arena_end - aligned);
 
     banana::log.ngl("render list allocation overflow -- reserved: {} | requested: {} | free: {}",
                     state.capacity,
@@ -35,13 +35,13 @@ void ngl::list::replace_storage(u32 capacity) {
     arena_state &state = references::arena.get();
 
     if (state.base) {
-        memory::free(state.base);
+        tl_mem_free(state.base);
 
         state.base = nullptr;
     }
 
     if (capacity)
-        state.base = (u8*)memory::allocate(capacity, 8, 0);
+        state.base = (u8*)tl_mem_alloc(capacity, 8, 0);
 
     state.capacity = capacity;
 }

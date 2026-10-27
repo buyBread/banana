@@ -3,7 +3,7 @@
 #include <d3d9.h>
 
 #include "game/amalga/merged_apk/file.hh"
-#include "treyarch/base/skip_list.hh"
+#include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -313,7 +313,7 @@ namespace treyarch { namespace ngl { namespace fx {
         }
     };
 
-    struct effect_directory : container::skip_list<effect, effect_name> {};
+    struct effect_directory : tl_skip_list<effect, effect_name> {};
 
     effect* find(string_hash name);
     void initialize_directory();

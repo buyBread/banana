@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -47,7 +47,7 @@ void mash::mash_info_struct::dupe_buffers_for_unmash_copies() {
     u8* source =
         mash_image_ptr[NORMAL_BUFFER] + buffer_size_used[NORMAL_BUFFER];
 
-    u8* copy = (u8*)memory::allocate(unread_size, 0x40, 0);
+    u8* copy = (u8*)tl_mem_alloc(unread_size, 0x40, 0);
 
     mash_image_ptr[NORMAL_BUFFER] = copy;
     std::memcpy(copy, source, unread_size);

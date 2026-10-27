@@ -125,7 +125,7 @@ void ngl::release_mesh(mesh* value) {
 }
 
 void ngl::initialize_mesh_directory() {
-    references::meshes.get().initialize();
+    references::meshes.get().init();
 }
 
 // sub_9DC510
@@ -155,7 +155,7 @@ void ngl::load_mesh(amalga::merged_apk::file*       owner,
     }
 
     if (!references::resource_callback.read())
-        references::meshes.get().insert(value);
+        references::meshes.get().add(value);
 }
 
 // sub_9DC5A0
@@ -172,7 +172,7 @@ void ngl::remove_mesh(amalga::merged_apk::file*       owner,
     mesh* value = (mesh*)mapped_sections[image_section];
 
     if (!references::resource_callback.read())
-        references::meshes.get().erase(value);
+        references::meshes.get().del(value);
 
     if (value->last_frame_reference + 1 >= (i32)references::frame_epoch.read())
         d3d9::wait_for_rendering();

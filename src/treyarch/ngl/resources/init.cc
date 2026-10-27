@@ -7,7 +7,7 @@
 #include "treyarch/ngl/resources/resolver.hh"
 #include "treyarch/ngl/texture/runtime.hh"
 #include "game/four_cc.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -37,7 +37,7 @@ void initialize_builtin_textures() {
 // sub_9E2240
 void ngl::resources::init() {
     u32 package_size = references::default_package_size.read();
-    void* package_copy = memory::allocate(package_size, 0x1000, 0);
+    void* package_copy = tl_mem_alloc(package_size, 0x1000, 0);
 
     references::default_package_copy.write(package_copy);
 

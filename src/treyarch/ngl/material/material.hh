@@ -2,7 +2,7 @@
 
 #include "game/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/shaders/shader.hh"
-#include "treyarch/base/skip_list.hh"
+#include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -22,7 +22,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct material_directory : container::skip_list<material, material_name> {};
+    struct material_directory : tl_skip_list<material, material_name> {};
 
     material &get_default_material();
     void initialize_default_material(shader* empty_shader);

@@ -1,7 +1,7 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/geometry_stream.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -40,7 +40,7 @@ void ngl::d3d9::geometry_stream::init() {
     references::active_buffer.write(references::primary_buffer.read());
 
     u32 segment_count = references::segment_count.read();
-    references::segments.write((segment*)memory::allocate(sizeof(segment) * segment_count, 0x80, 0));
+    references::segments.write((segment*)tl_mem_alloc(sizeof(segment) * segment_count, 0x80, 0));
 
     references::segment_write_index.write(0);
     references::segment_submit_index.write(0);
@@ -113,7 +113,7 @@ ngl::d3d9::geometry_stream::segment* ngl::d3d9::geometry_stream::allocate_segmen
     value->allocation_end   = allocation;
 
     if (value->allocation_start.buffer_index > 0) {
-        memory::report("Ran out of geometry shader vertex buffer memory.  Increase size in ngl_geometryshader.cpp.");
+        tl_fatal("Ran out of geometry shader vertex buffer memory.  Increase size in ngl_geometryshader.cpp.");
 
         banana::log.ngl("ran out of geometry shader vertex buffer memory -- requested: {} bytes", byte_count);
 

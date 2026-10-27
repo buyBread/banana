@@ -1,12 +1,12 @@
 #pragma once
 
-#include "treyarch/ngl/init_list/init_list.hh"
+#include "treyarch/base/tl_init_list.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace registration {
-    bool try_register(ngl::init_list* item);
+    bool try_register(tl_init_list* item);
 
     namespace references {
         inline util::memory_reference<u32> next_shader_id { 0x01118508 };
@@ -41,8 +41,8 @@ namespace treyarch { namespace ngl { namespace shaders { namespace registration 
         inline util::memory_reference<shader> sm_translucent { 0x00F4AB90 };
         inline util::memory_reference<shader> pcuv           { 0x00F4AB80 };
 
-        inline util::memory_reference<init_list_function> fake_peds   { 0x00F4ABF0 };
-        inline util::memory_reference<init_list_function> road_lights { 0x00F4D8D4 };
+        inline util::memory_reference<tl_init_list_function> fake_peds   { 0x00F4ABF0 };
+        inline util::memory_reference<tl_init_list_function> road_lights { 0x00F4D8D4 };
 
         inline util::memory_reference<void*> fx_parameter_data         { 0x01117E8C };
         inline util::memory_reference<u8>    fx_parameter_data_storage { 0x01117ED0 };

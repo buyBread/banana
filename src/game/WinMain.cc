@@ -15,6 +15,7 @@
 #include "game/post_process/post_process.hh"
 #include "game/shadow/shadow.hh"
 #include "game/wds/camera/references.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/jq/jq.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nfl/nfl.hh"
@@ -28,11 +29,11 @@
 
 namespace treyarch {
     namespace references {
-        inline util::memory_reference<u8>        video_confirmation_running { 0x00F4E295 };
-        inline util::memory_reference<u64>       log_callback_table         { 0x00F4E2B0 };
-        inline util::memory_reference<HINSTANCE> application_instance       { 0x011136FC };
-        inline util::memory_reference<void*>     nfl_work_space             { 0x01113700 };
-        inline util::memory_reference<u32>       nfl_work_space_size        { 0x01113704 };
+        inline util::memory_reference<u8>                  video_confirmation_running { 0x00F4E295 };
+        inline util::memory_reference<tl_system_callbacks> system_callbacks           { 0x00F4E2B0 };
+        inline util::memory_reference<HINSTANCE>           application_instance       { 0x011136FC };
+        inline util::memory_reference<void*>               nfl_work_space             { 0x01113700 };
+        inline util::memory_reference<u32>                 nfl_work_space_size        { 0x01113704 };
     } // references
 } // treyarch
 
@@ -133,7 +134,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
 
     HWND window = (HWND)retail::sub_9C8A20(instance);
     windows_app::inst()->window = window;
-    retail::sub_9CC900((i64*)&references::log_callback_table.get());
+    retail::sub_9CC900((i64*)&references::system_callbacks.get()); // tl_set_system_callbacks
     
     jq::jobqueue_init();
 

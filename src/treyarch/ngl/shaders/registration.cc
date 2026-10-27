@@ -39,7 +39,7 @@ namespace refs = registration::references;
 using program_initializer = bool(*)();
 
 struct registration_override {
-    ngl::init_list* item;
+    tl_init_list* item;
     
     void (*register_item)();
 };
@@ -64,7 +64,7 @@ void register_shader(      ngl::shader        &value,
 
     value.id = (ngl::e_shader_id)shader_id;
     ngl::shaders::registration::references::next_shader_id.write(shader_id + 1);
-    ngl::references::shaders.get().insert(&value);
+    ngl::references::shaders.get().add(&value);
 
     if (initialize)
         initialize_programs(name, initialize);
@@ -198,7 +198,7 @@ const registration_override* get_overrides(size_t &count) {
     return overrides;
 }
 
-bool register_override(ngl::init_list* item) {
+bool register_override(tl_init_list* item) {
     size_t count;
     
     const registration_override* overrides = get_overrides(count);
@@ -215,6 +215,6 @@ bool register_override(ngl::init_list* item) {
     return false;
 }
 
-bool ngl::shaders::registration::try_register(init_list* item) {
+bool ngl::shaders::registration::try_register(tl_init_list* item) {
     return register_override(item);
 }

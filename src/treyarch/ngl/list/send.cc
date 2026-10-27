@@ -4,7 +4,7 @@
 #include "treyarch/ngl/debug/primitive_batches.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "game/timing/hires_clock.hh"
 
 using namespace treyarch;
@@ -25,7 +25,7 @@ void ngl::list_send() {
     references::debug.get().current_node = 0;
 
     if (references::current_scene.read() != references::root_scene.read()) {
-        memory::report("nglListSend called while one or more scenes were still active (need to call nglListEndScene).\n");
+        tl_fatal("nglListSend called while one or more scenes were still active (need to call nglListEndScene).\n");
 
         banana::log.ngl("ngl::list_send called while one or more scenes were still active; need to call ngl::list_end_scene!");
     }

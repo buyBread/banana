@@ -1,5 +1,5 @@
 #include "game/amalga/merged_apk/file.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -311,7 +311,7 @@ void amalga::merged_apk::file::unload() {
     invoke_remove_callbacks();
 
     if (flags & file_from_file_buffer)
-        memory::free((u8*)this - sizeof(file_header));
+        tl_mem_free((u8*)this - sizeof(file_header));
 }
 
 amalga::merged_apk::file_type_handler* amalga::merged_apk::find_file_type_handler(u32 type,
@@ -341,7 +341,7 @@ amalga::merged_apk::file_type_handler* amalga::merged_apk::register_file_type(u3
                                                                               file_callback remove,
                                                                               void*         user_data) {
 
-    auto handler = (file_type_handler*)memory::allocate
+    auto handler = (file_type_handler*)tl_mem_alloc
         (sizeof(file_type_handler), 8, 0);
 
     handler->type      = type;
@@ -363,7 +363,7 @@ amalga::merged_apk::section_handler* amalga::merged_apk::register_section_type(s
                                                                                section_callback remove,
                                                                                void*            user_data) {
 
-    auto handler = (section_handler*)memory::allocate
+    auto handler = (section_handler*)tl_mem_alloc
         (sizeof(section_handler), 8, 0);
 
     handler->name      = name;

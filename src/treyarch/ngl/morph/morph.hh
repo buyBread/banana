@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/amalga/merged_apk/file.hh"
-#include "treyarch/base/skip_list.hh"
+#include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -39,7 +39,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct morph_directory : container::skip_list<morph_set, morph_set_name> {};
+    struct morph_directory : tl_skip_list<morph_set, morph_set_name> {};
 
     void initialize_morph_directory();
 

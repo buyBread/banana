@@ -3,7 +3,7 @@
 #include "retail.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -175,7 +175,7 @@ u8* treyarch::nfl::nfs_pre_allocate(u32 size, u32 alignment) {
 
     if (mem) {
         if (required > available) {
-            memory::report("nfsPreAllocate: Out of %d bytes, used %d, free %d, total %d", required, used, available, used + available);
+            tl_fatal("nfsPreAllocate: Out of %d bytes, used %d, free %d, total %d", required, used, available, used + available);
 
             return nullptr;
         }

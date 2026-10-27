@@ -47,7 +47,7 @@ void ngl::process_material(material* value) {
 }
 
 void ngl::initialize_material_directory() {
-    references::materials.get().initialize();
+    references::materials.get().init();
 }
 
 // sub_9DC6B0
@@ -66,7 +66,7 @@ void ngl::load_material(amalga::merged_apk::file*       owner,
     process_material(value);
 
     if (!references::resource_callback.read())
-        references::materials.get().insert(value);
+        references::materials.get().add(value);
 }
 
 // sub_9DC5F0
@@ -86,5 +86,5 @@ void ngl::remove_material(amalga::merged_apk::file*       owner,
         value->shader_data->release_material(value);
 
     if (!references::resource_callback.read())
-        references::materials.get().erase(value);
+        references::materials.get().del(value);
 }

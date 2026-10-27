@@ -2,7 +2,7 @@
 
 #include "game/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/base/skip_list.hh"
+#include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -33,7 +33,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct texture_directory : container::skip_list<texture, texture_name> {};
+    struct texture_directory : tl_skip_list<texture, texture_name> {};
 
     bool can_release_texture(const texture* value);
     void process_texture(amalga::merged_apk::file* owner, void** mapped_sections);

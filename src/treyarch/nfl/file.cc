@@ -2,7 +2,7 @@
 
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -139,7 +139,7 @@ void treyarch::nfl::nfs_close_file(i32 id, bool deferred) {
             --nfs_get_file(parent_id)->as.native.child_count;
             nfs_close_file(parent_id, false);
         } else
-            memory::report("nflCloseFile: Invalid filetype");
+            tl_fatal("nflCloseFile: Invalid filetype");
     } else if (!file->as.native.child_count) {
         // closing now would pull the file out from under requests that are still being canceled
         if (file->pending_closes && deferred)

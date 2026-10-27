@@ -74,7 +74,7 @@ ngl::fx::parameter* build_animated_texture_chain(ngl::fx::parameter* parameters,
     using namespace ngl::fx;
 
     // this marker means the chain was built but no animated textures were found
-    parameter* head = (parameter*)&references::parameter_chain_sentinel.get();
+    parameter* head = (parameter*)&ngl::fx::references::parameter_chain_sentinel.get();
 
     for (i32 index = 0; index < count; ++index) {
         parameter &entry = parameters[index];

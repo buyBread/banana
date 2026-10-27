@@ -2,7 +2,7 @@
 #include "treyarch/ngl/d3d9/work_buffers.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -67,16 +67,16 @@ void ngl::d3d9::replace_platform_work_buffer(u32 size) {
     u32   &buffer_size = references::platform_work_buffer_size.get();
 
     if (buffer_size) {
-        memory::free(buffer);
+        tl_mem_free(buffer);
 
         buffer = nullptr;
     }
 
     if (size) {
-        buffer = memory::allocate(size,
-                                  0x80,
-                                  memory::allocation_physical |
-                                  memory::allocation_write_combine);
+        buffer = tl_mem_alloc(size,
+                              0x80,
+                              tl_memalloc_physical |
+                              tl_memalloc_writecombine);
     }
 
     buffer_size = size;

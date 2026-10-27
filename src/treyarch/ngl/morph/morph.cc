@@ -5,7 +5,7 @@
 using namespace treyarch;
 
 void ngl::initialize_morph_directory() {
-    references::morphs.get().initialize();
+    references::morphs.get().init();
 }
 
 // sub_9E40B0
@@ -40,7 +40,7 @@ void ngl::load_morph(amalga::merged_apk::file*       owner,
     }
 
     if (!references::resource_callback.read())
-        references::morphs.get().insert(value);
+        references::morphs.get().add(value);
 }
 
 // sub_9E41B0
@@ -57,5 +57,5 @@ void ngl::remove_morph(amalga::merged_apk::file*       owner,
     morph_set* value = (morph_set*)mapped_sections[image_section];
 
     if (!references::resource_callback.read())
-        references::morphs.get().erase(value);
+        references::morphs.get().del(value);
 }

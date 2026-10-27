@@ -7,7 +7,7 @@
 #include "treyarch/ngl/texture/runtime.hh"
 #include "game/hash/algo.hh"
 #include "treyarch/mm/heap.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -73,7 +73,7 @@ ngl::texture* ngl::create_runtime_texture(u32       flags,
                                           u32       depth,
                                           u32       level_count) {
 
-    texture* value = (texture*)memory::allocate(sizeof(texture), 8, 0);
+    texture* value = (texture*)tl_mem_alloc(sizeof(texture), 8, 0);
 
     std::memset(value, 0, sizeof(texture));
 
@@ -194,5 +194,5 @@ void ngl::name_runtime_texture(texture* value, const char* name) {
 void ngl::register_runtime_texture(texture* value, const fixed_string &name) {
     value->name.assign(name);
 
-    references::textures.get().insert(value);
+    references::textures.get().add(value);
 }

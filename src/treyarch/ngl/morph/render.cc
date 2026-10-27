@@ -5,7 +5,7 @@
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/morph/vertex_codec.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -128,7 +128,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
         if (!element)
             continue;
 
-        auto* vertices = (math::vector4*)memory::allocate
+        auto* vertices = (math::vector4*)tl_mem_alloc
             (sizeof(math::vector4) * section->vertex_count, 16, 0);
 
         if (base_frame.flags & 1)
@@ -168,7 +168,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
                               mesh_data,
                               vertices);
 
-        memory::free(vertices);
+        tl_mem_free(vertices);
     }
 }
 

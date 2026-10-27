@@ -3,14 +3,14 @@
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/transport_fk.hh"
 #include "treyarch/math/matrix_diag.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 
 // sub_9D1800
 void nal::init() {
-    memory::initialize_stack_bounds();
+    tl_stack_range_init();
 
     auto null_callback = (amalga::merged_apk::file_callback)retail::sub_5B4A70;
 

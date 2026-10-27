@@ -64,7 +64,7 @@ void prepare_fullscreen_draw(ngl::texture*          source,
 
     bind_blit_texture(source, linear_filter);
 
-    internal_program_set &programs = references::internal_programs.get();
+    internal_program_set &programs = ngl::d3d9::references::internal_programs.get();
 
     set_vertex_program(programs.framebuffer_copy_vertex_program);
     set_pixel_program(pixel_program);
@@ -73,14 +73,14 @@ void prepare_fullscreen_draw(ngl::texture*          source,
 void draw_fullscreen_quad(const fullscreen_vertex* vertices) {
     using namespace ngl::d3d9;
 
-    binding_cache &bindings = references::bindings.get();
+    binding_cache &bindings = ngl::d3d9::references::bindings.get();
 
     bindings.stream_sources[0]  = nullptr;
     bindings.vertex_declaration = nullptr;
 
-    IDirect3DDevice9* device = references::device.get();
+    IDirect3DDevice9* device = ngl::d3d9::references::device.get();
 
-    device->SetVertexDeclaration(references::quad_position_uv_format.get().declaration);
+    device->SetVertexDeclaration(ngl::d3d9::references::quad_position_uv_format.get().declaration);
     device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,
                             2,
                             vertices,

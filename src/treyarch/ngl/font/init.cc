@@ -7,7 +7,7 @@ using namespace treyarch;
 
 // sub_9DAFB0
 void ngl::font_init() {
-    references::fonts.get().initialize();
+    references::fonts.get().init();
 
     amalga::merged_apk::register_file_type(four_cc('F', 'O', 'N', 'T'),
                                            1,

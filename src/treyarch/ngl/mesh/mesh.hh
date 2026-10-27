@@ -4,7 +4,7 @@
 
 #include "game/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
-#include "treyarch/base/skip_list.hh"
+#include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "treyarch/math/vector.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -73,7 +73,7 @@ namespace treyarch { namespace ngl {
         }
     };
 
-    struct mesh_directory : container::skip_list<mesh, mesh_name> {};
+    struct mesh_directory : tl_skip_list<mesh, mesh_name> {};
 
     void upload_mesh_section(mesh_section* section);
     void release_mesh_section(mesh_section* section);

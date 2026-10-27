@@ -4,7 +4,7 @@
 #include "treyarch/nal/pose.hh"
 #include "treyarch/math/quaternion.hh"
 #include "treyarch/math/vector.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
@@ -71,7 +71,7 @@ nal::pose::pose(nal::pose_layout* layout, void* preallocated_memory) {
 // sub_9CD1D0
 nal::pose::~pose() {
     if (alloced_data)
-        memory::free(pose_data);
+        tl_mem_free(pose_data);
 }
 
 // sub_9CEAB0
@@ -86,7 +86,7 @@ void nal::pose::init(nal::pose_layout* layout, void* preallocated_memory) {
         pose_data    = (u8*)preallocated_memory;
         alloced_data = 0;
     } else {
-        pose_data    = (u8*)memory::allocate(tl_align(pose_layout->pose_size, 16), 16, 0);
+        pose_data    = (u8*)tl_mem_alloc(tl_align(pose_layout->pose_size, 16), 16, 0);
         alloced_data = 1;
     }
 

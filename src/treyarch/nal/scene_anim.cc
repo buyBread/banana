@@ -1,7 +1,7 @@
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/scene_anim.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -18,9 +18,9 @@ void nal::scene_anim::link_transport_lists() {
             continue;
 
         if (!list)
-            memory::report("Skeleton (transport list) %s not present in the directory. Requested by cutscene %s",
-                           value->transport_list_name.get_text(),
-                           name.get_text());
+            tl_fatal("Skeleton (transport list) %s not present in the directory. Requested by cutscene %s",
+                     value->transport_list_name.get_text(),
+                     name.get_text());
 
         value->transport_list = list;
     }

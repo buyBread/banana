@@ -1,7 +1,7 @@
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/nal.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -13,7 +13,7 @@ void nal::anim::link_transport_list() {
     transport_list = get_skeleton(&transport_list_name);
 
     if (!transport_list)
-        memory::report("NAL2 error: TransportList not found in the directory. Please report to animation programmer.");
+        tl_fatal("NAL2 error: TransportList not found in the directory. Please report to animation programmer.");
 }
 
 // sub_9CD4A0

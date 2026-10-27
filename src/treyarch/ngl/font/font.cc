@@ -34,7 +34,7 @@ void ngl::load_font(amalga::merged_apk::file*       owner,
     }
 
     if (!references::resource_callback.read())
-        references::fonts.get().insert(value);
+        references::fonts.get().add(value);
 }
 
 // sub_9DAF80
@@ -52,5 +52,5 @@ void ngl::remove_font(amalga::merged_apk::file*       owner,
     font* value = (font*)mapped_sections[image_section];
 
     if (!references::resource_callback.read())
-        references::fonts.get().erase(value);
+        references::fonts.get().del(value);
 }

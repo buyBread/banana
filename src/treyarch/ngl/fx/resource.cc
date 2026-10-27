@@ -496,7 +496,7 @@ ngl::fx::effect* ngl::fx::find(string_hash name) {
 }
 
 void ngl::fx::initialize_directory() {
-    references::effects.get().initialize();
+    references::effects.get().init();
 }
 
 // sub_9E1A90
@@ -528,7 +528,7 @@ void ngl::fx::load(amalga::merged_apk::file*       owner,
     value->runtime = create_effect_runtime(*value);
 
     if (!ngl::references::resource_callback.read())
-        references::effects.get().insert(value);
+        references::effects.get().add(value);
 }
 
 // sub_9E12E0
@@ -543,6 +543,6 @@ void ngl::fx::remove(amalga::merged_apk::file*       owner,
     i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
     effect* value = (effect*)mapped_sections[image_section];
 
-    references::effects.get().erase(value);
+    references::effects.get().del(value);
     destroy_effect_runtime(*value);
 }

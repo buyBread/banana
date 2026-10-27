@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <d3d9.h>
 
-#include "treyarch/ngl/init_list/init_list.hh"
+#include "treyarch/base/tl_init_list.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -55,7 +55,7 @@ namespace treyarch { namespace ngl { namespace d3d9 { namespace geometry_stream 
         inline util::memory_reference<cursor>                  retirement_cursor    { 0x0111893C };
         inline util::memory_reference<u32>                     segment_count        { 0x00F530D4 };
         inline util::memory_reference<u32>                     buffer_size          { 0x00F530D8 };
-        inline util::memory_reference<init_list_function>      init_list            { 0x00F531A0 };
+        inline util::memory_reference<tl_init_list_function>   init_list            { 0x00F531A0 };
     } // references
 
     ASSERT_SIZEOF  (cursor,               0x0C);

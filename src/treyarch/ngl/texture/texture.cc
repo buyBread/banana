@@ -1,6 +1,6 @@
 #include "game/four_cc.hh"
 #include "treyarch/mm/heap.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/texture/runtime.hh"
@@ -71,7 +71,7 @@ void ngl::release_texture(texture* value) {
     }
 
     if (value->frames)
-        memory::free(value->frames);
+        tl_mem_free(value->frames);
 
     if (value->gpu_texture.resource && !value->gpu_texture.resource->Release())
         value->gpu_texture.resource = nullptr;
@@ -83,12 +83,12 @@ void ngl::release_texture(texture* value) {
         if (value->name.text)
             memory::heap::free(value->name.text);
 
-        memory::free(value);
+        tl_mem_free(value);
     }
 }
 
 void ngl::initialize_texture_directory() {
-    references::textures.get().initialize();
+    references::textures.get().init();
 }
 
 // sub_9E45E0
@@ -108,7 +108,7 @@ void ngl::load_texture(amalga::merged_apk::file*       owner,
     process_texture(owner, mapped_sections);
 
     if (!references::resource_callback.read())
-        references::textures.get().insert(value);
+        references::textures.get().add(value);
 }
 
 // sub_9E4620
@@ -126,7 +126,7 @@ void ngl::remove_texture(amalga::merged_apk::file*       owner,
     texture* value = (texture*)mapped_sections[image_section];
 
     if (!references::resource_callback.read())
-        references::textures.get().erase(value);
+        references::textures.get().del(value);
 
     if (value->last_frame_reference + 1 >= (i32)references::frame_epoch.read())
         d3d9::wait_for_rendering();

@@ -3,7 +3,7 @@
 #include "treyarch/nal/bitstream.hh"
 #include "treyarch/nal/nal2_decoder_state.hh"
 #include "treyarch/nal/transport_list.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
@@ -56,7 +56,7 @@ void nal::nal2_decoder_state::init(nal::anim* animation, u32 state_memory_size) 
     u32 pose_size = anim->transport_list->pose_layout->pose_size;
 
     for (i32 i = 0; i < 3; i++) {
-        cached_pose_data[i] = (u8*)memory::allocate(pose_size, 16, 0);
+        cached_pose_data[i] = (u8*)tl_mem_alloc(pose_size, 16, 0);
         cached_frame[i]     = -1;
     }
 

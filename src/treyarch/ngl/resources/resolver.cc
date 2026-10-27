@@ -8,7 +8,7 @@
 #include "treyarch/ngl/resources/resolver.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/four_cc.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -73,7 +73,7 @@ void* ngl::resources::resolve(fixed_string* name, u32 type) {
             fx::effect* value = fx::find(name->hash);
 
             if (!value) {
-                memory::report("NGL: Unable to locate effect resource %s - bailing.\n", name->text);
+                tl_fatal("NGL: Unable to locate effect resource %s - bailing.\n", name->text);
 
                 banana::log.ngl("unable to locate effect resource \"{}\" (0x{:08X}) -- bailing",
                                 display_name,

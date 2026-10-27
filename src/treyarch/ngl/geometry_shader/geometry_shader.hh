@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/ngl/init_list/init_list.hh"
+#include "treyarch/base/tl_init_list.hh"
 #include "treyarch/ngl/instance_bank/instance_bank.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -12,7 +12,7 @@ namespace treyarch { namespace ngl {
     struct mesh_node;
     struct mesh_section;
 
-    struct geometry_shader : init_list {
+    struct geometry_shader : tl_init_list {
         virtual ~geometry_shader() = default;
 
         virtual void register_item() override;

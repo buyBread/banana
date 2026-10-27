@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/mash/container_base.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "banana/util/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
 
@@ -73,7 +73,7 @@ namespace treyarch { namespace mash {
         void clear() {
             // unlike vector, the storage goes back through the plain allocator
             if (!is_pointer_in_mash_image(data))
-                memory::free(data);
+                tl_mem_free(data);
 
             data     = nullptr;
             capacity = 0;

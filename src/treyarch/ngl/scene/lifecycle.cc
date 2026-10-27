@@ -5,7 +5,7 @@
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
@@ -108,7 +108,7 @@ void ngl::list_end_scene() {
     scene* value = references::current_scene.read();
 
     if (value == references::root_scene.read()) {
-        memory::report("Scene stack underflow (too many nglListEndScene calls!).\n");
+        tl_fatal("Scene stack underflow (too many nglListEndScene calls!).\n");
 
         banana::log.ngl("scene stack underflow; too many ngl::list_end_scene calls!");
     }
@@ -138,7 +138,7 @@ void ngl::set_scene_callback(e_scene_callback_type type,
                                      void* context) {
 
     if ((u32)type > scene_callback_4) {
-        memory::report("Unknown type for scene callback.");
+        tl_fatal("Unknown type for scene callback.");
 
         banana::log.ngl("unknown type for scene callback ({})", (u32)type);
 

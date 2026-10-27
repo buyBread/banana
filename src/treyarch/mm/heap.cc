@@ -4,7 +4,7 @@
 
 #include "retail.hh"
 #include "treyarch/mm/heap.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 
@@ -161,7 +161,7 @@ static void release_page_lock() {
 */
 
 static void* allocate_heap_storage(u32 size, u32 alignment) {
-    auto callback = memory::references::allocation_handler.read();
+    auto callback = treyarch::references::tl_cur_system_callbacks.get().mem_alloc;
 
     if (!callback)
         std::abort();
@@ -175,7 +175,7 @@ static void* allocate_heap_storage(u32 size, u32 alignment) {
 }
 
 static void free_heap_storage(void* allocation) {
-    auto callback = memory::references::free_handler.read();
+    auto callback = treyarch::references::tl_cur_system_callbacks.get().mem_free;
 
     if (!callback)
         std::abort();

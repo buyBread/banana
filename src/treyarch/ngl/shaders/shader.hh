@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/instance_bank/instance_bank.hh"
-#include "treyarch/ngl/init_list/init_list.hh"
+#include "treyarch/base/tl_init_list.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -43,7 +43,7 @@ namespace treyarch { namespace ngl {
         pcuv                     = 26,
     };
 
-    struct shader : init_list {
+    struct shader : tl_init_list {
         virtual ~shader() = default;
         virtual void register_item() = 0;
         virtual const fixed_string& get_name() const = 0;

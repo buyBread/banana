@@ -11,5 +11,5 @@ ngl::shader* ngl::find_shader(string_hash name) {
 }
 
 void ngl::initialize_shader_bank() {
-    references::shaders.get().initialize();
+    references::shaders.get().init();
 }

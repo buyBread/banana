@@ -534,8 +534,8 @@ animation_controller_state::layer_anim* animation_controller_state::layer_anim::
     if (references::layer_anim_block_count.read() >= 0x1FFFFFFF)
         return nullptr;
 
-    auto* block = (layer_anim*)memory::allocate(sizeof(layer_anim) * 1024, 4, 0);
-    auto* link  = (void**)memory::allocate(8, 4, 0);
+    auto* block = (layer_anim*)tl_mem_alloc(sizeof(layer_anim) * 1024, 4, 0);
+    auto* link  = (void**)tl_mem_alloc(8, 4, 0);
 
     link[0] = block;
     link[1] = references::layer_anim_blocks.read();

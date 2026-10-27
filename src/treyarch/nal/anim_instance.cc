@@ -8,7 +8,7 @@
 #include "treyarch/nal/transport_list.hh"
 #include "treyarch/math/matrix_diag.hh"
 #include "treyarch/math/vector.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 #include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
@@ -22,7 +22,7 @@ nal::anim_instance::anim_instance(nal::anim* animation, u32 instance_flags, nal:
 
     u32 state_memory_size = (4 * (3 * animation->total_field_values_encoded + animation->transport_list->pose_layout->total_fields) + 0x253) & ~0xF;
 
-    decoder = (nal2_decoder_state*)memory::allocate(state_memory_size, 16, 0);
+    decoder = (nal2_decoder_state*)tl_mem_alloc(state_memory_size, 16, 0);
     decoder->init(animation, state_memory_size);
 
     last_trajectory_po             = math::identity_mat33();
@@ -46,9 +46,9 @@ nal::anim_instance::~anim_instance() {
         return;
 
     for (i32 i = 0; i < 3; i++)
-        memory::free(decoder->cached_pose_data[i]);
+        tl_mem_free(decoder->cached_pose_data[i]);
 
-    memory::free(decoder);
+    tl_mem_free(decoder);
 
     decoder = nullptr;
 }
