@@ -1,10 +1,9 @@
 #include <windows.h>
 #include <intrin.h>
-#include <cstdlib>
 #include <cstring>
 
+#include "retail.hh"
 #include "treyarch/mm/superheap.hh"
-#include "treyarch/base/tl_system.hh"
 #include "banana/util/memory_reference.hh"
 
 /*
@@ -60,57 +59,8 @@ static void release_superblock_lock() {
 }
 
 /*
-    game's allocator callbacks
-*/
-
-void* mm::allocate_storage(u32 size, u32 alignment) {
-    auto callback = treyarch::references::tl_cur_system_callbacks.get().mem_alloc;
-
-    if (!callback)
-        std::abort();
-
-    void* allocation = callback(size, alignment, 0);
-
-    if (!allocation)
-        std::abort();
-
-    return allocation;
-}
-
-void mm::free_storage(void* allocation) {
-    auto callback = treyarch::references::tl_cur_system_callbacks.get().mem_free;
-
-    if (!callback)
-        std::abort();
-
-    callback(allocation);
-}
-
-/*
     treiber stack
 */
-
-static void refill_queue_node_pool() {
-    volatile i64 &pool  = mm::references::queue_node_pool.get();
-             u64  state = (u64)pool;
-
-    if (tagged_pointer(state))
-        return; // if another thread has refilled it, bail
-
-    // allocate a page, slice it into linked 256 queue nodes
-    auto* nodes = (mm::superblock_queue_node*)mm::allocate_storage(0x1000, 0);
-
-    for (u32 index = 0; index < 0xFF; ++index)
-        nodes[index].next = (u32)&nodes[index + 1];
-
-    nodes[0xFF].next = (u32)tagged_pointer(state);
-
-    // atomic push onto the stack
-    u64 next = make_tagged_pointer(nodes, tagged_sequence(state) + 1);
-
-    if (!mm::compare_exchange(&pool, next, state))
-        mm::free_storage(nodes); // someone else beat us, discard our batch
-}
 
 // sub_5FB7D0
 static mm::superblock_queue_node* acquire_queue_node() {
@@ -121,7 +71,19 @@ static mm::superblock_queue_node* acquire_queue_node() {
         auto* node  = (mm::superblock_queue_node*)tagged_pointer(state);
 
         if (!node) {
-            refill_queue_node_pool();
+            // slice a block from the default space into 256 linked queue nodes
+            auto* nodes = (mm::superblock_queue_node*)retail::sub_5FAF00((i32)mm::get_default_space(), 0x1000, 0);
+
+            for (u32 index = 0; index < 0xFF; ++index)
+                nodes[index].next = (u32)&nodes[index + 1];
+
+            nodes[0xFF].next = (u32)tagged_pointer(state);
+
+            // atomic push onto the stack
+            u64 next = make_tagged_pointer(nodes, tagged_sequence(state) + 1);
+
+            if (!mm::compare_exchange(&pool, next, state)) // someone else beat us, discard our batch
+                retail::sub_5FAFB0((volatile i32*)mm::get_default_space(), (i32)nodes);
 
             continue;
         }
@@ -146,6 +108,25 @@ static void release_queue_node(mm::superblock_queue_node* node) {
         // lock-free push
         if (mm::compare_exchange(&pool, next, state))
             return;
+    }
+}
+
+// sub_5FAEB0
+mm::superheap_t::superheap_t() {
+    // each size class's queue starts with a dummy node
+    for (size_class &block_class : size_classes) {
+        block_class.available.head = 0;
+        block_class.available.tail = 0;
+
+        superblock_queue_node* node = acquire_queue_node();
+
+        node->next = 0;
+
+        block_class.available.tail = (u32)node;
+        block_class.available.head = (u32)node;
+        block_class.block_size     = 0;
+        block_class.active         = nullptr;
+        block_class.unused_entries = nullptr;
     }
 }
 
@@ -243,10 +224,24 @@ void mm::superblock_queue::enqueue(superblock_entry_t* value) {
     }
 }
 
+// sub_5FAB80
+u32 mm::superheap_t::get_block_size(u32 size, u32 alignment) { // 0 when no size class serves the request
+    if (size > 0x100)
+        return 0;
+
+    size_class* block_class = get_size_class(size);
+
+    if (alignment && block_class->block_size % alignment)
+        return 0;
+
+    return block_class->block_size;
+}
+
 /*
     retrieves the size class for a specific allocation size;
     sizes 1-4 bytes -> index 0; sizes 5-8 bytes -> index 1
 */
+// inlined @ sub_5FAB80
 // inlined @ sub_5FB4F0
 // inlined @ sub_5FBB00
 // inlined @ sub_5FBC20
@@ -272,7 +267,7 @@ void mm::superheap_t::register_superblock(superblock_entry_t* entry) {
     superblock_entry_t**  &level   = table[address >> 24];
 
     if (!level) {
-        level = (superblock_entry_t**)allocate_storage(0x4000, 0);
+        level = (superblock_entry_t**)retail::sub_5FAF00((i32)get_default_space(), 0x4000, 0);
 
         std::memset(level, 0, 0x4000);
     }
@@ -325,10 +320,12 @@ mm::superblock_entry_t* mm::superheap_t::create_superblock_entry(u32 block_size,
         superblock_entry_slab* slab = entry_allocator;
 
         if (!slab || slab->used + aligned_size >= 0x4000) {
-            slab = (superblock_entry_slab*)allocate_storage(0x4008, 0);
+            slab = (superblock_entry_slab*)retail::sub_5FAF00((i32)get_default_space(), sizeof(superblock_entry_slab), 0);
 
-            slab->previous = entry_allocator;
-            slab->used     = (u32)slab & 7 ? 8 - ((u32)slab & 7) : 0;
+            if (slab) {
+                slab->previous = entry_allocator;
+                slab->used     = (u32)slab & 7 ? 8 - ((u32)slab & 7) : 0;
+            }
 
             entry_allocator = slab;
         }
@@ -359,6 +356,22 @@ mm::superblock_entry_t* mm::superheap_t::create_superblock_entry(u32 block_size,
     return entry;
 }
 
+// sub_5F8600
+void mm::superheap_t::initialize(memory_space* owner) {
+    space = owner;
+
+    references::superblock_lock.get() = 0;
+    references::free_superblocks.write(nullptr);
+
+    entry_allocator = nullptr;
+
+    std::memset(&references::superblock_table.get(), 0, 0x100 * sizeof(superblock_entry_t**));
+
+    // four-byte size classes, 4 through 0x100 bytes
+    for (u32 index = 0; index < 64; ++index)
+        size_classes[index].block_size = 4 * (index + 1);
+}
+
 // inlined @ sub_5F8650
 void mm::superheap_t::destroy_superblock_entry(superblock_entry_t* entry) {
     // back to the size class's recycled entries, linked through block_size
@@ -368,12 +381,50 @@ void mm::superheap_t::destroy_superblock_entry(superblock_entry_t* entry) {
     block_class->unused_entries = entry;
 }
 
+// sub_5F8700
+void mm::superheap_t::get_usage(u32* used, u32* size) {
+    acquire_superblock_lock();
+
+    *used = 0;
+    *size = 0;
+
+    superblock_entry_t*** table = &references::superblock_table.get();
+
+    // every registered superblock counts its size and the blocks in use
+    for (u32 high = 0; high < 0x100; ++high) {
+        if (!table[high])
+            continue;
+
+        for (u32 middle = 0; middle < 0x1000; ++middle) {
+            superblock_entry_t* entry = table[high][middle];
+
+            if (!entry)
+                continue;
+
+            *size += 0x1000;
+            *used += entry->block_size * (entry->total_blocks - entry->unused_blocks);
+        }
+    }
+
+    // and the free superblocks their size alone
+    for (u8* superblock = references::free_superblocks.read(); superblock; superblock = *(u8**)superblock)
+        *size += 0x1000;
+
+    release_superblock_lock();
+}
+
+// sub_5F8820
+void mm::superheap_t::dump() {
+    acquire_superblock_lock();
+    release_superblock_lock();
+}
+
 // sub_5FB690
 mm::superblock_entry_t* mm::superheap_t::create_superblock(u32 block_size) {
     acquire_superblock_lock();
 
     /*
-        game allocates 0x40000 chunks from the OS;
+        game maps 0x40000 chunks from the OS;
         then manually partitions them into 0x1000 superblocks to feed this system...
     */
     u8* superblock = references::free_superblocks.read();
@@ -381,7 +432,14 @@ mm::superblock_entry_t* mm::superheap_t::create_superblock(u32 block_size) {
     if (superblock)
         references::free_superblocks.write(*(u8**)superblock);
     else {
-        superblock = (u8*)allocate_storage(0x40000, 0x1000);
+        superblock = (u8*)memory_space::map_memory(0x40000, space);
+
+        // the space reports the failure with the lock released
+        if (superblock == (u8*)-1) {
+            release_superblock_lock();
+            memory_space::allocation_failure(space->space);
+            acquire_superblock_lock();
+        }
 
         u8* free_superblock = references::free_superblocks.read();
 
@@ -422,81 +480,64 @@ void mm::superheap_t::destroy_superblock(superblock_entry_t* entry) {
 
 // sub_5FBB00
 void* mm::superheap_t::allocate(u32 size) {
-    if (size > 0x100) // only sizes up to 256 bytes
-        return nullptr;
-
     size_class* block_class = get_size_class(size);
 
     for (;;) {
-        superblock_entry_t* entry = block_class->active;
-
         // fast path: we have a designated active superblock for this size class
-        if (entry) {
+        for (superblock_entry_t* entry = block_class->active; entry; entry = block_class->active) {
             void* allocation = entry->allocate();
 
-            if (allocation) {
-                space->super_used += block_class->block_size;
-
+            if (allocation)
                 return allocation;
-            }
 
             /*
                 superblock is full...
-                transition it from active to full, then remove it as the active one so we fetch a new one next loop
+                transition it from active to full, then remove it as the active one so we fetch a new one
             */
             if (_InterlockedCompareExchange(&entry->state, superblock_full, superblock_active) == superblock_active)
                 _InterlockedCompareExchange((volatile long*)&block_class->active,
                                             0,
                                             (long)entry);
-
-            continue;
         }
 
-        // slooow path: no active superblock, pull a partially full one from the queue
-        if (!block_class->available.dequeue(&entry))
-        {
-            // even sloooooower path: queue is empty, create a brand new superblock
-            entry = create_superblock(block_class->block_size);
+        // slooow path: no active superblock, pull partially full ones from the queue
+        superblock_entry_t* entry;
 
-            // attempt to install as active superblock; if another thread beat us, release and try again
-            if (_InterlockedCompareExchange((volatile long*)&block_class->active, (long)entry, 0))
-                destroy_superblock(entry);
+        while (block_class->available.dequeue(&entry)) {
+            void* allocation = entry->allocate();
 
-            continue;
+            if (!allocation) {
+                entry->state = superblock_full; // it was in the queue, but is actually full
+
+                continue;
+            }
+
+            entry->state = superblock_active; // we succesfully pulled from it
+
+            // make it the active superblock for this size class
+            if (_InterlockedCompareExchange((volatile long*)&block_class->active, (long)entry, 0)) {
+                // another thread set an active superblock first, queue it again
+                entry->state = superblock_queued;
+
+                block_class->available.enqueue(entry);
+            }
+
+            return allocation;
         }
 
-        void* allocation = entry->allocate();
+        // even sloooooower path: queue is empty, create a brand new superblock
+        entry = create_superblock(block_class->block_size);
 
-        if (!allocation) {
-            entry->state = superblock_full; // it was in the queue, but is actually full
-
-            continue;
-        }
-
-        entry->state = superblock_active; // we succesfully pulled from it
-
-        // make it the active superblock for this size class
-        if (_InterlockedCompareExchange((volatile long*)&block_class->active, (long)entry, 0)) {
-            // another thread set an active superblock first, queue it again
-            entry->state = superblock_queued;
-
-            block_class->available.enqueue(entry);
-        }
-
-        space->super_used += block_class->block_size;
-
-        return allocation;
+        // attempt to install as active superblock; if another thread beat us, release and try again
+        if (_InterlockedCompareExchange((volatile long*)&block_class->active, (long)entry, 0))
+            destroy_superblock(entry);
     }
 }
 
 // sub_5FBC20
-void mm::superheap_t::deallocate(void* allocation) {
-    if (!allocation)
-        return;
-
-    superblock_entry_t* entry = find_superblock_entry(allocation);
-
-    space->super_used -= entry->block_size;
+void mm::superheap_t::deallocate(void* allocation, superblock_entry_t* entry) {
+    if (!entry)
+        entry = find_superblock_entry(allocation);
 
     entry->deallocate(allocation);
 

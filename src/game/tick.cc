@@ -4,6 +4,7 @@
 #include "game/cutscene/cut_scene_player.hh"
 #include "game/event/event_manager.hh"
 #include "game/input/input_mgr.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/ngl.hh"
 
@@ -43,7 +44,7 @@ void app::tick() {
     nfl::update();
     retail::sub_734610((f32*)&references::callback_timers.get(), time_inc);
     amalga::resource_manager::frame_advance(time_inc);
-    retail::sub_5F8870(0);
+    mm::memory_space::report_usage(false);
     this->the_game->frame_advance(time_inc);
 
     if (frames_to_skip) {

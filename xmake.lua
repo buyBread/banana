@@ -134,7 +134,7 @@ if has_config("game") then
 
         add_includedirs("src")
 
-        add_syslinks("winmm")
+        add_syslinks("winmm", "dbghelp", "psapi")
     target_end()
 end
 

@@ -43,10 +43,16 @@ namespace treyarch { namespace mm {
         u32                    reserved_004;
         size_class             size_classes[64];
         superblock_entry_slab* entry_allocator;
+        u8                     reserved_80c[0x14];
+
+        superheap_t();
+
+        void initialize(memory_space* owner);
 
         void* allocate(u32 size);
-        void  deallocate(void* allocation);
+        void  deallocate(void* allocation, superblock_entry_t* entry);
 
+        u32         get_block_size(u32 size, u32 alignment);
         size_class* get_size_class(u32 block_size);
 
         superblock_entry_t* create_superblock_entry(u32 block_size, u8* superblock);
@@ -57,13 +63,13 @@ namespace treyarch { namespace mm {
 
         void register_superblock(superblock_entry_t* entry);
         void unregister_superblock(superblock_entry_t* entry);
+
+        void get_usage(u32* used, u32* size);
+
+        static void dump();
     };
 
     superblock_entry_t* find_superblock_entry(void* allocation);
-
-    // the general storage behind the superheap and the large allocations
-    void* allocate_storage(u32 size, u32 alignment);
-    void  free_storage(void* allocation);
 
     ASSERT_SIZEOF  (superblock_queue_node,        0x10);
     ASSERT_OFFSETOF(superblock_queue_node, next,  0x00);
@@ -84,7 +90,7 @@ namespace treyarch { namespace mm {
     ASSERT_OFFSETOF(superblock_entry_slab, used,     0x0004);
     ASSERT_OFFSETOF(superblock_entry_slab, storage,  0x0008);
 
-    ASSERT_SIZEOF  (superheap_t,                  0x810);
+    ASSERT_SIZEOF  (superheap_t,                  0x820);
     ASSERT_OFFSETOF(superheap_t, space,           0x000);
     ASSERT_OFFSETOF(superheap_t, size_classes,    0x008);
     ASSERT_OFFSETOF(superheap_t, entry_allocator, 0x808);
