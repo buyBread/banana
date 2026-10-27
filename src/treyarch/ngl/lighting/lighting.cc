@@ -52,6 +52,29 @@ ngl::scene* ngl::lighting::set_light_context(light_context* context,
     return value;
 }
 
+// sub_9E4CD0
+const ngl::lighting::point_light_data* ngl::lighting::get_point_light(      point_light_data* scratch,
+                                                                      const light_node*       node,
+                                                                      const math::vector4    &position) {
+
+    if (node->type == light_point)
+        return (const point_light_data*)node->node_data;
+
+    if (node->type != light_directional)
+        return nullptr;
+
+    // a directional light stands in as a point light far behind the position
+    const auto* light = (const directional_light_data*)node->node_data;
+
+    scratch->position = math::vector4(position[0] - light->direction[0] * 1e12f,
+                                      position[1] - light->direction[1] * 1e12f,
+                                      position[2] - light->direction[2] * 1e12f,
+                                      1e24f);
+    scratch->color    = light->color;
+
+    return scratch;
+}
+
 void ngl::lighting::register_context(light_context* context) {
     context_registry* registry = references::context_registry.read();
 

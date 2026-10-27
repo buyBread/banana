@@ -2,8 +2,8 @@
 #include <cmath>
 #include <cstring>
 
+#include "game/light/lighting.hh"
 #include "game/shadow/shadow.hh"
-#include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
@@ -247,13 +247,30 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
     }
 }
 
-void ngl::shaders::generated_material::prepare_regular_vertex_context(      regular_vertex_context*          context,
-                                                                      const fx::general_lighting_parameters &lighting,
-                                                                      const scene_snapshot*                  snapshot,
-                                                                      const fx::mesh_node_data*              node_data,
-                                                                      const mesh_section*                    section,
-                                                                      const math::mat44                     &local_to_world,
-                                                                            bool                             receive_shadows) {
+// inlined @ sub_8CB2D0, sub_8E41B0
+light_table_lookup ngl::shaders::generated_material::get_light_table_lookup(const fx::mesh_node_data* node_data,
+                                                                            const math::mat44        &local_to_world) {
+
+    const mesh* mesh_data = (const mesh*)node_data->mesh_data;
+
+    // the mesh's top decides the projection row
+    light_table_lookup lookup;
+    lookup.index         = get_light_table_index(local_to_world[3] + mesh_data->sphere, mesh_data->position_scale);
+    lookup.offset        = 4;
+    lookup.force_horizon = false;
+    lookup.table         = (light_table*)find_scene_parameter(node_data->parameters,
+                                                              fx::references::parameter_id_light_table.read());
+
+    return lookup;
+}
+
+void ngl::shaders::generated_material::prepare_regular_vertex_context(      regular_vertex_context*      context,
+                                                                      const general_lighting_parameters &lighting,
+                                                                      const scene_snapshot*              snapshot,
+                                                                      const fx::mesh_node_data*          node_data,
+                                                                      const mesh_section*                section,
+                                                                      const math::mat44                 &local_to_world,
+                                                                            bool                         receive_shadows) {
 
     std::memset(context, 0, sizeof(*context));
 
@@ -341,11 +358,11 @@ void ngl::shaders::generated_material::restore_regular_pass_states() {
     d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, FALSE);
 }
 
-void ngl::shaders::generated_material::transform_light_matrix(      scene_snapshot*                  snapshot,
-                                                              const fx::general_lighting_parameters &lighting) {
+void ngl::shaders::generated_material::transform_light_matrix(      scene_snapshot*              snapshot,
+                                                              const general_lighting_parameters &lighting) {
 
     snapshot->light_matrix = math::mat44(*(const math::mat43*)&snapshot->light_matrix) *
-                             math::mat44(*(const math::mat43*)(lighting.light_source + 0x100));
+                             math::mat44(lighting.light_source->light_matrix);
 }
 
 void ngl::shaders::generated_material::configure_samplers(const scene_snapshot* snapshot,
@@ -396,11 +413,12 @@ void ngl::shaders::generated_material::configure_samplers(const scene_snapshot* 
     d3d9::set_sampler_state(11, D3DSAMP_ADDRESSV, horizon_address);
 }
 
-void ngl::shaders::generated_material::bind_textures(const fx::general_lighting_parameters &lighting,
-                                                     const scene_snapshot*                  snapshot,
-                                                     const material_data*                   material) {
+void ngl::shaders::generated_material::bind_textures(const general_lighting_parameters &lighting,
+                                                           texture*                     horizon_texture,
+                                                     const scene_snapshot*              snapshot,
+                                                     const material_data*               material) {
 
-    set_texture( 0, lighting.horizon_texture);
+    set_texture( 0, horizon_texture);
     set_texture( 1, shadow::references::device_resources.get().depth_targets[0]);
     set_texture( 2, shadow::references::device_resources.get().depth_targets[1]);
     set_texture( 3, lighting.projector_texture);
@@ -415,7 +433,7 @@ void ngl::shaders::generated_material::bind_textures(const fx::general_lighting_
 }
 
 void ngl::shaders::generated_material::upload_pixel_constants(const program_exports::pixel_pipeline_descriptor &pipeline,
-                                                              const fx::general_lighting_parameters            &lighting,
+                                                              const general_lighting_parameters                &lighting,
                                                               const scene_snapshot*                             snapshot,
                                                               const material_data*                              material,
                                                               const math::mat44                                &local_to_world) {
@@ -473,16 +491,16 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
                                 0.0f);
     set_pixel_constant(binding(pipeline, 14), &view_position);
 
-    math::vector4 effects_mul(lighting.reserved_1f0[1],
-                              lighting.reserved_1d0[3],
-                              lighting.reserved_1f0[2],
-                              lighting.reserved_1d0[1]);
-    math::vector4 effects_add(lighting.reserved_200[1],
-                              lighting.reserved_1e0[3],
-                              lighting.reserved_200[2],
-                              lighting.reserved_1e0[1]);
-    math::vector4 opacity_mad(lighting.reserved_1f0[0],
-                              lighting.reserved_200[0],
+    math::vector4 effects_mul(lighting.material_values[2][1],
+                              lighting.material_values[0][3],
+                              lighting.material_values[2][2],
+                              lighting.material_values[0][1]);
+    math::vector4 effects_add(lighting.material_values[3][1],
+                              lighting.material_values[1][3],
+                              lighting.material_values[3][2],
+                              lighting.material_values[1][1]);
+    math::vector4 opacity_mad(lighting.material_values[2][0],
+                              lighting.material_values[3][0],
                               1.0f,
                               0.0f);
     set_pixel_constant(binding(pipeline, 15), &effects_mul);
@@ -494,9 +512,9 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
     set_pixel_constant(binding(pipeline, 21), &lighting.fog_color);
     set_pixel_constant(binding(pipeline, 22), &lighting.fog_control);
 
-    f32 source_scalar = *(const f32*)(lighting.light_source + 0x200);
-    math::vector4 source_value(source_scalar, source_scalar, source_scalar, source_scalar);
-    set_pixel_constant(binding(pipeline, 23), &source_value);
+    f32 exposure = lighting.light_source->exposure;
+    math::vector4 exposure_value(exposure, exposure, exposure, exposure);
+    set_pixel_constant(binding(pipeline, 23), &exposure_value);
 
     math::vector4 horizon_color_scale(lighting.horizon_color_scale[0],
                                       lighting.horizon_color_scale[1],
@@ -538,21 +556,21 @@ void ngl::shaders::generated_material::upload_pixel_constants(const program_expo
 
     for (u32 index = 0; index < 9; ++index) {
         set_pixel_constant(ambient_register == -1 ? -1 : ambient_register + index,
-                           &lighting.ambient_defaults[index]);
+                           &lighting.ambient_defaults.values[index]);
     }
 }
 
-void ngl::shaders::generated_material::draw_pixel_pipeline(
-    const program_exports::pixel_pipeline_descriptor &pipeline,
-    const fx::general_lighting_parameters            &lighting,
-    const scene_snapshot*                             snapshot,
-    const material_data*                              material,
-    const math::mat44                                &local_to_world,
-          mesh_section*                               section) {
+void ngl::shaders::generated_material::draw_pixel_pipeline(const program_exports::pixel_pipeline_descriptor &pipeline,
+                                                           const general_lighting_parameters                &lighting,
+                                                                 texture*                                    horizon_texture,
+                                                           const scene_snapshot*                             snapshot,
+                                                           const material_data*                              material,
+                                                           const math::mat44                                &local_to_world,
+                                                                 mesh_section*                               section) {
 
     d3d9::set_pixel_program(*pipeline.pixel_program_output);
     configure_samplers(snapshot, material);
-    bind_textures(lighting, snapshot, material);
+    bind_textures(lighting, horizon_texture, snapshot, material);
     upload_pixel_constants(pipeline, lighting, snapshot, material, local_to_world);
     d3d9::draw_section(section);
 }

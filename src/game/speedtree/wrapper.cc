@@ -8,6 +8,7 @@
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "game/hash/algo.hh"
+#include "game/light/references.hh"
 #include "game/math/references.hh"
 #include "treyarch/mm/heap.hh"
 
@@ -18,10 +19,10 @@ void speed_tree_lighting::build(const light_source_data* light) {
     const sky_data* sky = light->sky;
 
     if (!sky) {
-        light_direction = ngl::fx::references::lighting_default_value.read();
-        diffuse         = ngl::fx::references::lighting_zero_value.read();
-        ambient         = ngl::fx::references::lighting_zero_value.read();
-        unk_30          = ngl::fx::references::lighting_zero_value.read();
+        light_direction = references::lighting_default_value.read();
+        diffuse         = references::lighting_zero_value.read();
+        ambient         = references::lighting_zero_value.read();
+        unk_30          = references::lighting_zero_value.read();
 
         exposure        = 1.0f;
         diffuse_scale   = 0.0f;
@@ -48,7 +49,7 @@ void speed_tree_lighting::build(const light_source_data* light) {
                            (f32)((f64)scale * sky->unk_0b0.z),
                            (f32)((f64)scale * sky->unk_0b0.w));
 
-    const math::vector4 &axis = ngl::fx::references::lighting_horizon_axis.get();
+    const math::vector4 &axis = references::lighting_horizon_axis.get();
 
     f32 facing = (f32)((f64)sky->direction_050.x * axis[0] +
                        (f64)sky->direction_050.y * axis[1] +
@@ -68,7 +69,7 @@ void speed_tree_lighting::build(const light_source_data* light) {
 
     light_direction = sky->direction_050;
     exposure        = light->exposure;
-    depth_fog_color = light->color_2d0;
+    depth_fog_color = light->depth_fog_color;
 
     f32 fog_start = light->depth_fog_start;
     f32 fog_end   = light->depth_fog_end;
@@ -163,7 +164,7 @@ math::mat43 speed_tree_wrapper::axis_basis() {
     return math::mat43(math::dir3(math::references::f4_1000.read()),
                        math::dir3(math::references::f4_0010.read()),
                        math::dir3(math::references::f4_0100.read()),
-                       math::position3(ngl::fx::references::unk_01086f40.read()));
+                       math::position3(references::unk_01086f40.read()));
 }
 
 // inlined @ sub_7CB940, sub_7CC710, sub_7CD8C0, sub_7CEA90, sub_7CFC10

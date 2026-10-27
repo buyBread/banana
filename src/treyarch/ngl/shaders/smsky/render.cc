@@ -105,7 +105,7 @@ void ngl::shaders::smsky::node::render_normal() {
                                                      vertical_extent - camera_height,
                                                      build_scene->far_plane,
                                                      1.0f),
-                                 light_source->color_2d0,
+                                 light_source->depth_fog_color,
                                  sky->color_0e0,
                                  sky->color_110 };
 

@@ -42,7 +42,9 @@ bool treyarch::find_shadow_light_direction(vector3d* direction,
         if (light_source->directional_light_count <= 0)
             return false;
 
-        *direction = -light_source->directional_lights[0].direction;
+        const math::vector4 &light_direction = light_source->directional_lights[0].direction;
+
+        *direction = -vector3d(light_direction[0], light_direction[1], light_direction[2]);
 
         return true;
     }

@@ -1,4 +1,3 @@
-#include "treyarch/ngl/fx/lighting_parameters.hh"
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/state_cache.hh"
@@ -33,12 +32,15 @@ void node::render_normal() {
         fx::get_unscaled_local_to_world(mesh_node);
     math::mat44 local_to_world =
         math::mat44(*(const math::mat43*)&snapshot->base_transform) * math::mat44(unscaled_local_to_world);
+    math::mat44 world_to_local = math::inv(*(const math::rot_tran_mat43*)&local_to_world);
 
-    fx::general_lighting_parameters lighting;
-    fx::build_general_lighting(&lighting, mesh_node, section);
+    light_table_lookup          lookup = generated_material::get_light_table_lookup(mesh_node, local_to_world);
+    general_lighting_parameters lighting;
 
-    fx::apply_material_values(&lighting, snapshot->material_values);
-    fx::transform_lighting_to_local(&lighting, local_to_world);
+    lighting.build_local(mesh_node, section, local_to_world, world_to_local, false, &lookup, true, true);
+
+    for (i32 index = 0; index < 4; ++index)
+        lighting.material_values[index] = snapshot->material_values[index];
 
     generated_material::regular_vertex_context vertex_context;
     generated_material::prepare_regular_vertex_context(&vertex_context,
@@ -65,7 +67,7 @@ void node::render_normal() {
                                                       false);
 
     bool gobo    = lighting.projector_texture != nullptr;
-    bool horizon = lighting.horizon_texture   != nullptr;
+    bool horizon = lookup.table               != nullptr;
 
     if (horizon && !gobo && vertex_context.shadow_count == 0)
         horizon = false;
@@ -81,6 +83,7 @@ void node::render_normal() {
 
     generated_material::draw_pixel_pipeline(pipeline,
                                             lighting,
+                                            lookup.table ? lookup.table->texture : nullptr,
                                             snapshot,
                                             material,
                                             local_to_world,

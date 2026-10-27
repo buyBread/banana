@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/ngl/fx/lighting_parameters.hh"
+#include "game/light/lighting.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/texture/texture.hh"
@@ -104,37 +104,42 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
                                 const fx::mesh_node_data* node_data,
                                 const mesh_section*       section);
 
-    void prepare_regular_vertex_context(      regular_vertex_context*          context,
-                                        const fx::general_lighting_parameters &lighting,
-                                        const scene_snapshot*                  snapshot,
-                                        const fx::mesh_node_data*              node_data,
-                                        const mesh_section*                    section,
-                                        const math::mat44                     &local_to_world,
-                                              bool                             receive_shadows);
+    light_table_lookup get_light_table_lookup(const fx::mesh_node_data* node_data,
+                                              const math::mat44        &local_to_world);
+
+    void prepare_regular_vertex_context(      regular_vertex_context*      context,
+                                        const general_lighting_parameters &lighting,
+                                        const scene_snapshot*              snapshot,
+                                        const fx::mesh_node_data*          node_data,
+                                        const mesh_section*                section,
+                                        const math::mat44                 &local_to_world,
+                                              bool                         receive_shadows);
 
     void configure_regular_pass_states(bool queue_class,
                                        u32  render_flags,
                                        bool use_packed_alpha);
     void restore_regular_pass_states();
 
-    void transform_light_matrix(      scene_snapshot*                  snapshot,
-                                const fx::general_lighting_parameters &lighting);
+    void transform_light_matrix(      scene_snapshot*              snapshot,
+                                const general_lighting_parameters &lighting);
 
     void configure_samplers(const scene_snapshot* snapshot,
                             const material_data*  material);
 
-    void bind_textures(const fx::general_lighting_parameters &lighting,
-                       const scene_snapshot*                  snapshot,
-                       const material_data*                   material);
+    void bind_textures(const general_lighting_parameters &lighting,
+                             texture*                     horizon_texture,
+                       const scene_snapshot*              snapshot,
+                       const material_data*               material);
 
     void upload_pixel_constants(const program_exports::pixel_pipeline_descriptor &pipeline,
-                                const fx::general_lighting_parameters            &lighting,
+                                const general_lighting_parameters                &lighting,
                                 const scene_snapshot*                             snapshot,
                                 const material_data*                              material,
                                 const math::mat44                                &local_to_world);
 
     void draw_pixel_pipeline(const program_exports::pixel_pipeline_descriptor &pipeline,
-                             const fx::general_lighting_parameters            &lighting,
+                             const general_lighting_parameters                &lighting,
+                                   texture*                                    horizon_texture,
                              const scene_snapshot*                             snapshot,
                              const material_data*                              material,
                              const math::mat44                                &local_to_world,

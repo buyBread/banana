@@ -39,4 +39,9 @@ namespace treyarch { namespace math { namespace references {
     inline util::memory_reference<float4> f4_1000 { 0x00E7CE30 };
     inline util::memory_reference<float4> f4_0100 { 0x00E7CE40 };
     inline util::memory_reference<float4> f4_0010 { 0x00E7CE50 };
+
+    // translation unit copies of float4.h's Float4_Half, Float4_Ones and Float4_Twos
+    inline util::memory_reference<float4> float4_half { 0x00E7CEB0 };
+    inline util::memory_reference<float4> float4_ones { 0x00E7CEC0 };
+    inline util::memory_reference<float4> float4_twos { 0x00E7CED0 };
 }}} // treyarch::math::references

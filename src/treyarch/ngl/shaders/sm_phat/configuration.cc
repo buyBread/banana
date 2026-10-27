@@ -1,4 +1,4 @@
-#include "treyarch/ngl/fx/lighting_parameters.hh"
+#include "game/light/lighting.hh"
 #include "treyarch/ngl/shaders/generated_material.hh"
 #include "treyarch/ngl/shaders/sm_phat/configuration.hh"
 
@@ -6,7 +6,7 @@ using namespace treyarch;
 
 size_t ngl::shaders::sm_phat::select_material_configuration(      generated_material::material_data*   material,
                                                             const generated_material::scene_snapshot*  snapshot,
-                                                            const fx::general_lighting_parameters     &lighting) {
+                                                            const general_lighting_parameters         &lighting) {
 
     const math::vector4 &default_value = generated_material::references::default_material_vector.get();
     const math::mat44   &matrix        = snapshot->light_matrix;
@@ -27,10 +27,10 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
         }
     }
 
-    bool opacity           = generated_material::texture_is_usable(material->opacity_texture)           && lighting.reserved_1f0.get_x() != 0.0f;
-    bool specularity       = generated_material::texture_is_usable(material->specularity_texture)       && lighting.reserved_1f0.get_y() != 0.0f;
-    bool specular_exponent = generated_material::texture_is_usable(material->specular_exponent_texture) && lighting.reserved_1d0.get_w() != 0.0f;
-    bool emissiveness      = generated_material::texture_is_usable(material->emissiveness_texture)      && lighting.reserved_1d0.get_y() != 0.0f;
+    bool opacity           = generated_material::texture_is_usable(material->opacity_texture)           && lighting.material_values[2].get_x() != 0.0f;
+    bool specularity       = generated_material::texture_is_usable(material->specularity_texture)       && lighting.material_values[2].get_y() != 0.0f;
+    bool specular_exponent = generated_material::texture_is_usable(material->specular_exponent_texture) && lighting.material_values[0].get_w() != 0.0f;
+    bool emissiveness      = generated_material::texture_is_usable(material->emissiveness_texture)      && lighting.material_values[0].get_y() != 0.0f;
 
     const math::vector4 &normal_value = material->normal_texture->gpu_texture.format == D3DFMT_DXT5 ?
         snapshot->material_vector_160 : generated_material::references::default_normal_vector.get();
@@ -39,9 +39,9 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
 
     e_environment_mapping environment_mapping = e_environment_mapping::none;
 
-    if (lighting.reserved_1f0.get_z() != 0.0f || lighting.reserved_200.get_z() != 0.0f) {
+    if (lighting.material_values[2].get_z() != 0.0f || lighting.material_values[3].get_z() != 0.0f) {
         environment_mapping =
-            generated_material::texture_is_usable(material->environment_texture) && lighting.reserved_1f0.get_z() != 0.0f ?
+            generated_material::texture_is_usable(material->environment_texture) && lighting.material_values[2].get_z() != 0.0f ?
                 e_environment_mapping::mapped : e_environment_mapping::uniform;
     }
 
@@ -90,7 +90,7 @@ size_t ngl::shaders::sm_phat::select_material_configuration(      generated_mate
 
 size_t ngl::shaders::sm_phat::resolve_material_configuration(      generated_material::material_data*   material,
                                                              const generated_material::scene_snapshot*  snapshot,
-                                                             const fx::general_lighting_parameters     &lighting) {
+                                                             const general_lighting_parameters         &lighting) {
 
     if (material->configuration_index > 0 &&
         material->configuration_index <= (i32)material_configuration_count) {

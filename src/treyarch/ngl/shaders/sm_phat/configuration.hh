@@ -5,9 +5,9 @@
 
 #include "banana/util/types.hh"
 
-namespace treyarch { namespace ngl { namespace fx {
+namespace treyarch {
     struct general_lighting_parameters;
-}}}
+}
 
 namespace treyarch { namespace ngl { namespace shaders { namespace generated_material {
     struct material_data;
@@ -130,10 +130,10 @@ namespace treyarch { namespace ngl { namespace shaders { namespace sm_phat {
 
     size_t select_material_configuration(      generated_material::material_data*   material,
                                          const generated_material::scene_snapshot*  snapshot,
-                                         const fx::general_lighting_parameters     &lighting);
+                                         const general_lighting_parameters         &lighting);
     size_t resolve_material_configuration(      generated_material::material_data*   material,
                                           const generated_material::scene_snapshot*  snapshot,
-                                          const fx::general_lighting_parameters     &lighting);
+                                          const general_lighting_parameters         &lighting);
     size_t select_lighting_configuration(bool horizon,
                                          i32  light_count,
                                          bool gobo,

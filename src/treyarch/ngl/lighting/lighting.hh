@@ -84,6 +84,10 @@ namespace lighting {
     light_context* select_build_light_context(light_context* context);
     scene*         set_light_context(light_context* context, scene* value);
 
+    const point_light_data* get_point_light(      point_light_data* scratch,
+                                            const light_node*       node,
+                                            const math::vector4    &position);
+
     light_node* list_add_light(      u32            category,
                                const math::vector4* direction,
                                const math::vector4* color);

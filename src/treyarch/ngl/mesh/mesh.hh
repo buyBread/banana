@@ -57,10 +57,7 @@ namespace treyarch { namespace ngl {
         u32                       lod_count;
         mesh_lod*                 lods;
         math::vector4             sphere;
-        u32                       unk_030;
-        u32                       unk_034;
-        u32                       unk_038;
-        u32                       unk_03c;
+        math::vector4             position_scale;
         apk::file* owner_file;
         u32                       polygon_count;
         i32                       last_frame_reference;
@@ -154,10 +151,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(mesh, lod_count,            0x18);
     ASSERT_OFFSETOF(mesh, lods,                 0x1C);
     ASSERT_OFFSETOF(mesh, sphere,               0x20);
-    ASSERT_OFFSETOF(mesh, unk_030,              0x30);
-    ASSERT_OFFSETOF(mesh, unk_034,              0x34);
-    ASSERT_OFFSETOF(mesh, unk_038,              0x38);
-    ASSERT_OFFSETOF(mesh, unk_03c,              0x3C);
+    ASSERT_OFFSETOF(mesh, position_scale,       0x30);
     ASSERT_OFFSETOF(mesh, owner_file,           0x40);
     ASSERT_OFFSETOF(mesh, polygon_count,        0x44);
     ASSERT_OFFSETOF(mesh, last_frame_reference, 0x48);
