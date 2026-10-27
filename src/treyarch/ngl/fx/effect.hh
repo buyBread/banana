@@ -287,6 +287,9 @@ namespace treyarch { namespace ngl { namespace fx {
         i32              priority;
         u8               queued;
         u8               reserved_01d[3];
+
+        effect* queue(effect* head);
+        i32     render_batches();
     };
 
     struct effect {

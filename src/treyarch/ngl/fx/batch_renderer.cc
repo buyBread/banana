@@ -13,40 +13,39 @@
 using namespace treyarch;
 
 // sub_9DF770
-ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
-                                      ngl::fx::effect*         head) {
-
-    ngl::fx::effect* previous = nullptr;
-    ngl::fx::effect* current  = head;
+ngl::fx::effect* ngl::fx::effect_runtime::queue(effect* head) {
+    effect* previous = nullptr;
+    effect* current  = head;
 
     while (current) {
-        ngl::fx::effect_runtime* current_runtime = current->runtime;
+        effect_runtime* current_runtime = current->runtime;
 
         // effects with the same priority are added before the ones already queued
-        if (runtime->priority >= current_runtime->priority)
+        if (priority >= current_runtime->priority)
             break;
 
         previous = current;
         current  = current_runtime->next;
     }
 
-    runtime->next = current;
+    next = current;
 
     if (previous)
-        previous->runtime->next = runtime->owner;
+        previous->runtime->next = owner;
     else
-        head = runtime->owner;
+        head = owner;
 
-    runtime->queued = 1;
+    queued = 1;
 
-    for (i32 index = 0; index < runtime->owner->technique_count; ++index) {
-        runtime->technique_batches[index].head  = nullptr;
-        runtime->technique_batches[index].count = 0;
+    for (i32 index = 0; index < owner->technique_count; ++index) {
+        technique_batches[index].head  = nullptr;
+        technique_batches[index].count = 0;
     }
 
     return head;
 }
 
+// inlined @ sub_9E0A50
 void draw_single_pass_batch_node(ngl::fx::shader_node* value) {
     ngl::mesh_section* section        = value->section;
     D3DPRIMITIVETYPE   primitive_type = (D3DPRIMITIVETYPE)section->primitive_type;
@@ -85,6 +84,7 @@ void draw_single_pass_batch_node(ngl::fx::shader_node* value) {
                         ngl::d3d9::get_primitive_count(primitive_type, section->vertex_count));
 }
 
+// inlined @ sub_9E0A50
 void begin_depth_only_technique(ngl::fx::pass*      pass_data,
                                 IDirect3DSurface9** saved_color_target) {
 
@@ -99,6 +99,7 @@ void begin_depth_only_technique(ngl::fx::pass*      pass_data,
     ngl::d3d9::set_render_target(0, nullptr, false);
 }
 
+// inlined @ sub_9E0A50
 void finish_depth_only_technique(ngl::fx::pass*     pass_data,
                                  IDirect3DSurface9* saved_color_target) {
 
@@ -110,6 +111,7 @@ void finish_depth_only_technique(ngl::fx::pass*     pass_data,
     ngl::d3d9::set_render_target(0, &saved_color_target, true);
 }
 
+// inlined @ sub_9E0A50
 i32 render_technique_batch(ngl::fx::effect*          effect_data,
                            ngl::fx::technique*       technique_data,
                            ngl::fx::technique_batch* batch) {
@@ -127,14 +129,9 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
 
     for (ngl::fx::shader_node* node = batch->head; node; node = (ngl::fx::shader_node*)node->next) {
         // this order is backwards from the regular draw path and changes which values get copied
-        ngl::fx::update_material_parameters(effect_data,
-                                            node->mesh_node,
-                                            node->section,
-                                            ngl::references::build_scene.read()->depth_bias_enabled != 0);
+        ngl::fx::update_material_parameters(effect_data, node->mesh_node, node->section);
         ngl::fx::prepare_effect_material(effect_data, node->material_data);
-        ngl::fx::prepare_animated_textures(effect_data,
-                                           node->material_data,
-                                           node->mesh_node);
+        ngl::fx::prepare_animated_textures(effect_data, node);
 
         if (technique_data->pass_count <= 1) {
             ngl::fx::apply_pass(effect_data, first_pass);
@@ -168,16 +165,16 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
 }
 
 // sub_9E0A50
-i32 render_effect_batches(ngl::fx::effect_runtime* runtime) {
-    ngl::fx::effect* effect_data = runtime->owner;
+i32 ngl::fx::effect_runtime::render_batches() {
+    effect* effect_data = owner;
 
     effect_data->name.get_text();
-    ngl::fx::prepare_effect_scene(effect_data);
+    prepare_effect_scene(effect_data);
 
     i32 rendered_count = 0;
 
     for (i32 index = 0; index < effect_data->technique_count; ++index) {
-        ngl::fx::technique_batch &batch = runtime->technique_batches[index];
+        technique_batch &batch = technique_batches[index];
 
         if (!batch.head)
             continue;
@@ -200,11 +197,11 @@ i32 ngl::fx::render_batch(ngl::render_node* head) {
         ngl::render_node* next = base->next;
 
         auto* node            = (shader_node*)base;
-        auto* selected_effect = select_effect(node);
+        auto* selected_effect = node->select_effect();
         auto* runtime         = selected_effect->runtime;
 
         if (!runtime->queued)
-            queued_effects = queue_effect_runtime(runtime, queued_effects);
+            queued_effects = runtime->queue(queued_effects);
 
         technique_batch &batch = runtime->technique_batches[node->technique_index];
 
@@ -222,7 +219,7 @@ i32 ngl::fx::render_batch(ngl::render_node* head) {
 
         effect* next = runtime->next;
 
-        rendered_count += render_effect_batches(runtime);
+        rendered_count += runtime->render_batches();
 
         runtime->next   = nullptr;
         runtime->queued = 0;

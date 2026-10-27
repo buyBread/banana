@@ -24,9 +24,10 @@ namespace treyarch {
     };
 
     // SpeedTreeManager::visitor_t
-    struct speed_tree_manager_visitor {
-        subdivision_visitor base;
-        vector3d            position;
+    struct speed_tree_manager_visitor : subdivision_visitor {
+        vector3d position;
+
+        e_visit_result visit(subdivision_leaf_handle leaf_handle) override;
     };
 
     class speed_tree_manager {
@@ -48,8 +49,6 @@ namespace treyarch {
         inline util::memory_reference<speed_tree_manager> speed_tree_manager { 0x01087188 };
 
         inline util::memory_reference<u32> speed_trees_enabled { 0x00F4CD48 };
-
-        inline util::memory_reference<void*> speed_tree_manager_visitor_vtable { 0x00BD9728 };
 
         // wind object inputs; nothing else reads or writes them
         inline util::memory_reference<f32>     speed_tree_wind_unk_01086f18 { 0x01086F18 };

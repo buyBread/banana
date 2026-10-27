@@ -115,6 +115,23 @@ void speed_tree_manager::update_camera_and_wind(const matrix4x4* camera) {
     retail::sub_A43880((i32)wind, (f32)((f64)elapsed / 1000.0), 1, 0, 0.0f, 0.0f, 1.0f);
 }
 
+// sub_7BCE20
+e_visit_result speed_tree_manager_visitor::visit(subdivision_leaf_handle leaf_handle) {
+    region** fading_regions = &references::speed_tree_fading_regions.get();
+
+    for (u32 index = 0; index < references::speed_tree_fading_region_count.read(); ++index) {
+        if (fading_regions[index] == (region*)leaf_handle)
+            return continue_visiting;
+    }
+
+    u32 count = references::speed_tree_fading_region_count.read();
+
+    fading_regions[count] = (region*)leaf_handle;
+    references::speed_tree_fading_region_count.write(count + 1);
+
+    return continue_visiting;
+}
+
 // sub_7CB590
 void speed_tree_manager::update() {
     {
@@ -128,11 +145,8 @@ void speed_tree_manager::update() {
 
         speed_tree_manager_visitor visitor;
 
-        visitor.base.vtable  = &references::speed_tree_manager_visitor_vtable.get();
-        visitor.base.visited = nullptr;
-        visitor.position     = position;
+        visitor.position = position;
 
-        // the visitor's slot 1 adds each region within 10 units to the fading list
         retail::sub_779710((i32)&visitor);
         retail::sub_7846F0((i32)world->the_terrain->subdivision, (f32*)&position, 10.0f, (i32)&visitor);
         retail::sub_7797D0((i32)&visitor);

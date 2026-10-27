@@ -18,6 +18,8 @@ namespace treyarch { namespace ngl { namespace fx {
 
         void render() override;
         i32  get_list_type() override;
+
+        effect* select_effect();
     };
 
     namespace references {

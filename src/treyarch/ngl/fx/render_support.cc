@@ -21,44 +21,44 @@ struct point_light_candidate {
     u32 reserved;
 };
 
-struct point_light_visitor {
-    visitor               base;
-    u32                   reserved_004;
+struct lighting_visitor : subdivision_visitor {
     point_light_candidate candidates[512];
     u32                   count;
     u32                   reserved_200C;
     math::vector4         center;
+
+    e_visit_result visit(subdivision_leaf_handle leaf_handle) override;
 };
 
 ASSERT_SIZEOF(point_light_candidate, 0x10);
 
-ASSERT_SIZEOF  (point_light_visitor,             0x2020);
-ASSERT_OFFSETOF(point_light_visitor, candidates, 0x0008);
-ASSERT_OFFSETOF(point_light_visitor, count,      0x2008);
-ASSERT_OFFSETOF(point_light_visitor, center,     0x2010);
+ASSERT_SIZEOF  (lighting_visitor,             0x2020);
+ASSERT_OFFSETOF(lighting_visitor, candidates, 0x0008);
+ASSERT_OFFSETOF(lighting_visitor, count,      0x2008);
+ASSERT_OFFSETOF(lighting_visitor, center,     0x2010);
 
 // sub_7B9680
-i32 visit_point_light(visitor* base, i32 index) {
-    auto* visitor = (point_light_visitor*)base;
+e_visit_result lighting_visitor::visit(subdivision_leaf_handle leaf_handle) {
+    u32 index = (u32)leaf_handle;
 
     const auto &light = (&ngl::lighting::references::point_lights.get())[index];
-    f32 x = (f32)((f64)visitor->center[0] - (f64)light.position[0]);
-    f32 y = (f32)((f64)visitor->center[1] - (f64)light.position[1]);
-    f32 z = (f32)((f64)visitor->center[2] - (f64)light.position[2]);
+    f32 x = (f32)((f64)center[0] - (f64)light.position[0]);
+    f32 y = (f32)((f64)center[1] - (f64)light.position[1]);
+    f32 z = (f32)((f64)center[2] - (f64)light.position[2]);
     f32 squared_distance = (f32)((f64)x * (f64)x +
                                  (f64)y * (f64)y +
                                  (f64)z * (f64)z);
 
     // the game sorts lights using a whole-number copy of their squared distance
     if (squared_distance < 1.8446744e19f) {
-        point_light_candidate &candidate = visitor->candidates[visitor->count++];
+        point_light_candidate &candidate = candidates[count++];
 
         candidate.index            = index;
         candidate.integer_distance = (u32)(i64)squared_distance;
         candidate.squared_distance = squared_distance;
     }
 
-    return 0;
+    return continue_visiting;
 }
 
 // this is the same heap sort the original game uses; changing it can pick
@@ -135,7 +135,7 @@ void sort_point_light_heap(point_light_candidate* candidates, i32 count) {
 }
 
 // sub_7DD9F0
-i32 select_nearest_point_lights(point_light_visitor* visitor) {
+i32 select_nearest_point_lights(lighting_visitor* visitor) {
     i32 selected_count = visitor->count > 8 ? 8 : visitor->count;
 
     if (selected_count > 1)
@@ -172,21 +172,14 @@ void query_point_lights(      ngl::fx::mesh_node_data*  node_data,
     if (context->head.next == &context->head)
         return;
 
-    static visitor_vtable methods {
-        nullptr,
-        visit_point_light
-    };
-
-    point_light_visitor visitor;
-    visitor.base.vtable   = &methods;
-    visitor.reserved_004  = 0;
+    lighting_visitor visitor;
     visitor.count         = 0;
     visitor.reserved_200C = 0;
 
     visitor.center = sphere;
 
     rtree* tree = *(rtree**)context->platform_state_040;
-    query_sphere(tree, *(const vector3d*)&sphere, radius, &visitor.base);
+    query_sphere(tree, *(const vector3d*)&sphere, radius, &visitor);
 
     i32 count = select_nearest_point_lights(&visitor);
 
@@ -269,12 +262,12 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
 }
 
 // sub_9DF800
-ngl::fx::effect* ngl::fx::select_effect(shader_node* value) {
-    gather_point_lights(value->mesh_node, value->section);
+ngl::fx::effect* ngl::fx::shader_node::select_effect() {
+    gather_point_lights(mesh_node, section);
 
-    effect* base = value->effect_data;
+    effect* base = effect_data;
     effect_runtime* runtime = base->runtime;
-    u8 count = value->mesh_node->point_light_count;
+    u8 count = mesh_node->point_light_count;
 
     if (!count && runtime->zero_point_lights)
         return runtime->zero_point_lights;
@@ -288,6 +281,7 @@ ngl::fx::effect* ngl::fx::select_effect(shader_node* value) {
     return base;
 }
 
+// inlined @ sub_9E0420, sub_9E0A50
 void ngl::fx::prepare_effect_scene(effect* value) {
     u32 frame_epoch = ngl::references::frame.read();
 
@@ -306,6 +300,7 @@ void ngl::fx::prepare_effect_scene(effect* value) {
     }
 }
 
+// inlined @ sub_9E0420, sub_9E0A50
 void ngl::fx::prepare_effect_material(effect* value, material* material_data) {
     if (value->current_material == material_data)
         return;
@@ -317,11 +312,10 @@ void ngl::fx::prepare_effect_material(effect* value, material* material_data) {
     value->current_material = material_data;
 }
 
-void ngl::fx::prepare_animated_textures(effect*         effect_data,
-                                        material*       material_data,
-                                        mesh_node_data* node_data) {
-
-    parameter* sentinel = (parameter*)&references::parameter_chain_sentinel.get();
+// inlined @ sub_9E0420, sub_9E0A50
+void ngl::fx::prepare_animated_textures(effect* effect_data, shader_node* node) {
+    material*  material_data = node->material_data;
+    parameter* sentinel      = (parameter*)&references::parameter_chain_sentinel.get();
 
     if (material_data->animated_texture_parameter_chain == sentinel)
         return;
@@ -332,11 +326,5 @@ void ngl::fx::prepare_animated_textures(effect*         effect_data,
     if (!material_data->animated_texture_parameter_chain)
         build_animated_texture_parameter_chain(material_data);
 
-    scene_parameters* parameters = node_data->parameters;
-    u32 parameter_id = references::parameter_id_ifl_frame.read();
-
-    if (has_scene_parameter(parameters, parameter_id))
-        ngl::references::animation_frame.write((u32)get_scene_parameter(parameters, parameter_id));
-    else
-        ngl::references::animation_frame.write(ngl::references::build_scene.read()->ifl_frame);
+    node->set_ifl_frame();
 }

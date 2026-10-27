@@ -9,6 +9,7 @@
 
 using namespace treyarch;
 
+// inlined @ sub_9E0420
 void draw_single_pass(ngl::fx::shader_node* value) {
     ngl::scene_parameters* parameters = value->mesh_node->parameters;
     u32 parameter_id = ngl::fx::references::parameter_id_mesh_runs.read();
@@ -44,22 +45,17 @@ void draw_single_pass(ngl::fx::shader_node* value) {
 
 // sub_9E0420
 void ngl::fx::shader_node::render() {
-    effect* selected_effect = select_effect(this);
+    effect* selected_effect = select_effect();
 
     effect_data = selected_effect;
     selected_effect->name.get_text();
     prepare_effect_scene(selected_effect);
     prepare_effect_material(selected_effect, material_data);
-    prepare_animated_textures(selected_effect,
-                              material_data,
-                              mesh_node);
+    prepare_animated_textures(selected_effect, this);
 
     technique* technique_data = &selected_effect->techniques[technique_index];
 
-    update_material_parameters(selected_effect,
-                               mesh_node,
-                               section,
-                               ngl::references::build_scene.read()->depth_bias_enabled != 0);
+    update_material_parameters(selected_effect, mesh_node, section);
 
     if (technique_data->pass_count == 1) {
         pass* pass_data = technique_data->passes;
@@ -85,6 +81,7 @@ void ngl::fx::shader_node::render() {
 
 // sub_9DF8E0
 i32 ngl::fx::shader_node::get_list_type() {
+    // todo: guess them
     switch (queue_class) {
         case 2:
         case 3:

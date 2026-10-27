@@ -6,9 +6,26 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    // vtable slot 1 receives each region the query reaches
+    struct subdivision_node;
+
+    enum e_visit_result : i32 {
+        continue_visiting              = 0,
+        early_exit_within_this_cell    = 1,
+        stop_visiting_farther_cells    = 2,
+        stop_visiting_within_this_cell = 3
+    };
+
+    using subdivision_leaf_handle = subdivision_node*;
+
+    // visit receives each leaf the query reaches
     struct subdivision_visitor {
-        void* vtable;
+        subdivision_visitor() : visited(nullptr) {}
+
+        // sub_968AF0
+        virtual ~subdivision_visitor() {}
+
+        virtual e_visit_result visit(subdivision_leaf_handle leaf_handle) = 0;
+
         void* visited; // 0xC4 bytes from a shared pool between sub_779710 and sub_7797D0
     };
 

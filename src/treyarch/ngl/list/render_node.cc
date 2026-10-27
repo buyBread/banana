@@ -1,5 +1,6 @@
 #include "game/speedtree/render_node.hh"
 #include "treyarch/ngl/font/render.hh"
+#include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
@@ -105,6 +106,18 @@ void ngl::shader_node::get_desc(char* desc) {
 // sub_8A25E0
 i32 ngl::shader_node::get_list_type() {
     return retail::sub_8A25E0((u32*)this);
+}
+
+// sub_9DF890
+// inlined @ sub_9E0A50
+void ngl::shader_node::set_ifl_frame() {
+    scene_parameters* parameters   = mesh_node->parameters;
+    u32               parameter_id = fx::references::parameter_id_ifl_frame.read();
+
+    if (has_scene_parameter(parameters, parameter_id))
+        references::animation_frame.write((u32)get_scene_parameter(parameters, parameter_id));
+    else
+        references::animation_frame.write(references::build_scene.read()->ifl_frame);
 }
 
 // sub_884E10

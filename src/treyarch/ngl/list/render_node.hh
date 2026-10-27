@@ -57,6 +57,8 @@ namespace treyarch { namespace ngl {
         void get_desc(char* desc) override;
 
         virtual i32 get_list_type();
+
+        void set_ifl_frame();
     };
 
     struct geometry_shader_node : render_node {};

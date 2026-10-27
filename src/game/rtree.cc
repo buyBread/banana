@@ -82,10 +82,10 @@ bool intersects(const packed_node* node, const i16* query_bounds) {
 }
 
 // sub_7933B0
-void traverse(const vector3d       &minimum,
-              const vector3d       &maximum,
-              const rtree_root*     root,
-                    visitor*        result_visitor) {
+void traverse(const vector3d            &minimum,
+              const vector3d            &maximum,
+              const rtree_root*          root,
+                    subdivision_visitor* result_visitor) {
 
     constexpr u32 traversal_capacity = 800;
     constexpr u32 result_capacity    = 5500;
@@ -125,18 +125,18 @@ void traverse(const vector3d       &minimum,
     }
 
     for (u32 index = 0; index < result_count; ++index) {
-        i32 visitor_index = (i32)((u32)root->visitor_index_base +
-                                  results[index]->relative_offset);
+        auto leaf_handle = (subdivision_leaf_handle)((u32)root->visitor_index_base +
+                                                     results[index]->relative_offset);
 
-        result_visitor->vtable->visit(result_visitor, visitor_index);
+        result_visitor->visit(leaf_handle);
     }
 }
 
 // sub_95C270
-void treyarch::query_sphere(      rtree*    value,
-                            const vector3d &center,
-                                  f32       radius,
-                                  visitor*  result_visitor) {
+void treyarch::query_sphere(      rtree*               value,
+                            const vector3d            &center,
+                                  f32                  radius,
+                                  subdivision_visitor* result_visitor) {
 
     auto* tree = (rtree_handle*)value;
 

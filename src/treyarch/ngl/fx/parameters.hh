@@ -20,8 +20,16 @@ namespace fx {
                                 const mesh_node_data*              node_data,
                                 const mesh_section*                section);
     void update_scene_parameters(effect* value);
+    void update_general_material_parameters(effect*         value,
+                                            mesh_node_data* node_data,
+                                            mesh_section*   section);
+    void update_subset_material_parameters(effect*         value,
+                                           mesh_node_data* node_data,
+                                           mesh_section*   section);
+    void update_subset_depth_bias_parameters(effect*         value,
+                                             mesh_node_data* node_data,
+                                             mesh_section*   section);
     void update_material_parameters(effect*         value,
                                     mesh_node_data* node_data,
-                                    mesh_section*   section,
-                                    bool            depth_bias_enabled);
+                                    mesh_section*   section);
 }}} // treyarch::ngl::fx
