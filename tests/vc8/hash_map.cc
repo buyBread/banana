@@ -2,7 +2,7 @@
 #include <map>
 
 #include "vc8/fixtures.hh"
-#include "treyarch/shared/arch_base_vhandle.hh"
+#include "game/arch_base_vhandle.hh"
 
 namespace vc8 = treyarch::vc8;
 using namespace tests::vc8_support;

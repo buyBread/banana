@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace references {
     inline util::memory_reference<scene*> current_scene   { 0x01115C54 };

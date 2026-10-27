@@ -1,6 +1,6 @@
 #include <cstring>
 
-#include "aspyr/win/config.hh"
+#include "vendor/aspyr/win/config.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/display.hh"
 #include "treyarch/ngl/ngl.hh"

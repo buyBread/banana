@@ -4,8 +4,8 @@
 #include "treyarch/ngl/debug/primitive_batches.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "treyarch/shared/memory/memory.hh"
-#include "treyarch/shared/timing/hires_clock.hh"
+#include "treyarch/base/memory.hh"
+#include "game/timing/hires_clock.hh"
 
 using namespace treyarch;
 

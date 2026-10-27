@@ -2,13 +2,13 @@
 
 #include <cstddef>
 
-#include "treyarch/shared/mash/mash_info.hh"
-#include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/memory/fixed_pool.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/mash/mash_info.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/ae_base/fixed_pool.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     enum e_so_data_block_flags : u32 {

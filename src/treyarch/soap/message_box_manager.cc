@@ -1,4 +1,4 @@
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 #include "treyarch/soap/message_box_manager.hh"
 
 using namespace treyarch;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/lighting/context.hh"
-#include "treyarch/shared/container/legacy_list.hh"
-#include "util/macros/sanity_assert.hh"
+#include "game/container/legacy_list.hh"
+#include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace ngl { namespace lighting {
     using context_registry_node = container::legacy_list_node<light_context*>;

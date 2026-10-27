@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "vc8/tree.hh"
-#include "util/macros/sanity_assert.hh"
+#include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace vc8 {
     template<typename K, typename V>

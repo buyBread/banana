@@ -4,12 +4,12 @@
 
 #include "treyarch/chuck/vm/so_data_block.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
-#include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/memory/fixed_pool.hh"
-#include "treyarch/shared/mutex.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/ae_base/fixed_pool.hh"
+#include "game/mutex.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_function;

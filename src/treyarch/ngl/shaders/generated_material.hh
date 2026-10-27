@@ -4,9 +4,9 @@
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/vmath/matrix.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "treyarch/math/matrix.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace fx {
     struct mesh_node_data;

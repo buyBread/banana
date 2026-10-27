@@ -1,8 +1,8 @@
 #pragma once
 
-#include "treyarch/shared/fixed_string.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     // how to play one source transport list's anims on the map's rig

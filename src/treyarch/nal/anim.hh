@@ -1,10 +1,10 @@
 #pragma once
 
 #include "treyarch/nal/pose.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "game/four_cc.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     constexpr u32 anim_type    = four_cc('A', 'N', 'I', 'M');

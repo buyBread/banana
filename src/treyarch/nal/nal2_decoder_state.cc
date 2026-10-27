@@ -3,8 +3,8 @@
 #include "treyarch/nal/bitstream.hh"
 #include "treyarch/nal/nal2_decoder_state.hh"
 #include "treyarch/nal/transport_list.hh"
-#include "treyarch/shared/memory/memory.hh"
-#include "treyarch/shared/tl_defs.hh"
+#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 

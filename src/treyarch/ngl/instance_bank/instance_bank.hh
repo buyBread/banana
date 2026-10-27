@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/shared/container/skip_list.hh"
+#include "treyarch/base/skip_list.hh"
 
 namespace treyarch { namespace ngl {
     template <typename value_type, typename key_access>

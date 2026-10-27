@@ -1,8 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/init_list/init_list.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace fx {
     void init();

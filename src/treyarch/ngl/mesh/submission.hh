@@ -2,7 +2,7 @@
 
 #include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl {
     struct mesh_node : fx::mesh_node_data {

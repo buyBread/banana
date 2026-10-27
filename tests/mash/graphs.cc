@@ -1,9 +1,9 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/amalga/mashable_resource_handler.hh"
-#include "treyarch/amalga/resource_amalgatoc.hh"
-#include "treyarch/shared/mash/unmash.hh"
+#include "game/amalga/mashable_resource_handler.hh"
+#include "game/amalga/resource_amalgatoc.hh"
+#include "treyarch/mash/unmash.hh"
 
 namespace mash   = treyarch::mash;
 namespace amalga = treyarch::amalga;

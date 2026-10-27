@@ -6,7 +6,7 @@
 #include <vector>
 #include <imgui.h>
 
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace banana { namespace imgui {
 namespace ext { namespace node_graph {

@@ -2,7 +2,7 @@
 
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/render_node.hh"
-#include "treyarch/shared/math/vmath/matrix.hh"
+#include "treyarch/math/matrix.hh"
 
 namespace treyarch { namespace ngl {
     struct mesh_section;

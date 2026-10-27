@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/lighting/context.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace lighting { namespace references {
     inline util::memory_reference<light_context*>   default_context        { 0x01118980 };

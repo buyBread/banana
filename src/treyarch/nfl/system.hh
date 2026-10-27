@@ -5,9 +5,9 @@
 
 #include "treyarch/nfl/driver.hh"
 #include "treyarch/nfl/pool.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
     using request_callback = void (__cdecl*)(i32 state, i32 request, void* user);

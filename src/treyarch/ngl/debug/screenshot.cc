@@ -6,9 +6,9 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/debug/screenshot.hh"
 #include "banana/core.hh"
-#include "util/types.hh"
-#include "util/memory_reference.hh"
-#include "util/gimmie/method.hh"
+#include "banana/util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/gimmie/method.hh"
 
 using namespace treyarch;
 

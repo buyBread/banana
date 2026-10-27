@@ -2,8 +2,8 @@
 
 #include <d3d9.h>
 
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct vertex_definition {

@@ -5,7 +5,7 @@
 #include "treyarch/ngl/scene/defaults.hh"
 #include "treyarch/ngl/scene/lifecycle.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

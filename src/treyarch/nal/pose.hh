@@ -1,10 +1,10 @@
 #pragma once
 
-#include "treyarch/shared/fixed_string.hh"
-#include "treyarch/shared/math/vmath/matrix_rot.hh"
-#include "treyarch/shared/tl_fixed_bitvector.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "treyarch/math/matrix_rot.hh"
+#include "treyarch/base/tl_fixed_bitvector.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     using po = math::quat_tran_mat43; // nalPO

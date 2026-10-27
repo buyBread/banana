@@ -3,9 +3,9 @@
 #include <cstddef>
 
 #include "treyarch/chuck/vm/vm_stack.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace script_library {
     class script_library_class;

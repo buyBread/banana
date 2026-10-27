@@ -1,5 +1,5 @@
 #include "retail.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 #include "treyarch/soap/notification_manager.hh"
 
 using namespace treyarch;

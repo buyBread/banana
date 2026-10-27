@@ -2,7 +2,7 @@
 
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/pose.hh"
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     // nalFieldTypeInterface

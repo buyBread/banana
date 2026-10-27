@@ -9,8 +9,8 @@
 #include "treyarch/ngl/debug/screenshot.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "treyarch/shared/container/legacy_list.hh"
-#include "treyarch/shared/timing/hires_clock.hh"
+#include "game/container/legacy_list.hh"
+#include "game/timing/hires_clock.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 { namespace references {
     util::memory_reference<container::legacy_list<void*>*> frame_owned_objects { 0x00F532A8 };

@@ -2,12 +2,12 @@
 
 #include <d3d9.h>
 
-#include "treyarch/amalga/merged_apk/file.hh"
-#include "treyarch/shared/container/skip_list.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/base/skip_list.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct texture;

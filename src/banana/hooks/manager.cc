@@ -3,7 +3,7 @@
 #include "banana/core.hh"
 #include "banana/hooks/base.hh"
 #include "banana/hooks/manager.hh"
-#include "util/macros/debug.hh"
+#include "banana/util/macros/debug.hh"
 
 #define MGR_MSG(str, ...) banana::log.msg("hook_manager: {}", std::format(str, __VA_ARGS__))
 #define MGR_WRN(str, ...) banana::log.wrn("hook_manager: {}", std::format(str, __VA_ARGS__))

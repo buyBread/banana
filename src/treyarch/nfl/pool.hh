@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
     // embedded in each pooled record.

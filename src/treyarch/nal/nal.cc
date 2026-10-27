@@ -2,9 +2,9 @@
 #include "treyarch/nal/blend.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/transport_fk.hh"
-#include "treyarch/shared/math/vmath/matrix_diag.hh"
-#include "treyarch/shared/memory/memory.hh"
-#include "treyarch/shared/tl_defs.hh"
+#include "treyarch/math/matrix_diag.hh"
+#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 

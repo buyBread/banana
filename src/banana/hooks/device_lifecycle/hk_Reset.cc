@@ -4,9 +4,9 @@
 #include "banana/core.hh"
 #include "banana/lifecycle.hh"
 #include "banana/hooks/base.hh"
-#include "util/gimmie/virt.hh"
-#include "util/vtables/IDirect3DDevice9.hh"
-#include "util/macros/lambda.hh"
+#include "banana/util/gimmie/virt.hh"
+#include "banana/util/vtables/IDirect3DDevice9.hh"
+#include "banana/util/macros/lambda.hh"
 
 DEFINE_HOOK(hk_Reset, hook_signatures::device_lifecycle::Reset) {
     

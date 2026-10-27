@@ -7,7 +7,7 @@
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
 #include "treyarch/ngl/shaders/program_exports.hh"
-#include "treyarch/shared/color.hh"
+#include "game/color.hh"
 
 using namespace treyarch;
 

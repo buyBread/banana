@@ -2,9 +2,9 @@
 
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/material/material.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace fx {
     struct material {

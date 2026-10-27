@@ -2,8 +2,8 @@
 
 #include <d3d9.h>
 
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 {
     struct internal_program_set {

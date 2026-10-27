@@ -1,8 +1,8 @@
 #include <stdexcept>
 
 #include "treyarch/ngl/lighting/context_registry.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/memory_reference.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace lighting { namespace references {
     util::memory_reference<lighting::context_registry*> context_registry { 0x00F532A4 };

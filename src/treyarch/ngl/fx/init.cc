@@ -1,7 +1,7 @@
-#include "treyarch/amalga/merged_apk/file.hh"
+#include "game/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/init.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 

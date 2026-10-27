@@ -5,9 +5,9 @@
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/resources/resolver.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "treyarch/shared/hash/algo.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "game/four_cc.hh"
+#include "game/hash/algo.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 

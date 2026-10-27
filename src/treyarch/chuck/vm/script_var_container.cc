@@ -1,6 +1,6 @@
 #include "treyarch/chuck/vm/script_var_container.hh"
-#include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;

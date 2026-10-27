@@ -4,8 +4,8 @@
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/d3d9/vertex_formats.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "util/memory_reference.hh"
+#include "game/four_cc.hh"
+#include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
 

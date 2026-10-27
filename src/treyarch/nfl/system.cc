@@ -3,7 +3,7 @@
 #include "retail.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

@@ -4,9 +4,9 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/mash/avl_tree.hh"
-#include "treyarch/shared/mash/unmash.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mash/avl_tree.hh"
+#include "treyarch/mash/unmash.hh"
+#include "treyarch/mm/heap.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;

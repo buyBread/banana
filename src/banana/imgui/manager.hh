@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "util/singleton.hh"
+#include "banana/util/singleton.hh"
 
 class i_gui;
 

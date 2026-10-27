@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;

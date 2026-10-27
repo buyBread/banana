@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "treyarch/game/post_process/post_process.hh"
-#include "treyarch/game/shader_resource_manager.hh"
+#include "game/post_process/post_process.hh"
+#include "game/shader_resource_manager.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/fx/references.hh"

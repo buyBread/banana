@@ -4,8 +4,8 @@
 
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "util/memory_reference.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl {
     enum e_runtime_texture_flags : u32 {

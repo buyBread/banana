@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     u16 get_screen_width();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/shared/math/vmath/matrix.hh"
+#include "treyarch/math/matrix.hh"
 
 namespace treyarch { namespace ngl {
     void calculate_matrices(scene* value);

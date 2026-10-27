@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace smsky {
     enum class e_pixel_variant : u8 {

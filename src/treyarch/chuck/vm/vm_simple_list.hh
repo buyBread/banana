@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     /* intrusive list; elements carry their own previous/next links.

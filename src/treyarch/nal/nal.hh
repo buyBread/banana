@@ -1,17 +1,17 @@
 #pragma once
 
-#include "treyarch/amalga/merged_apk/file.hh"
+#include "game/amalga/merged_apk/file.hh"
 #include "treyarch/jq/jq.hh"
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/nal/scene_anim.hh"
 #include "treyarch/nal/transport_list.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "treyarch/shared/math/vmath/matrix.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "treyarch/math/matrix.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     constexpr u32 max_batch_poses = 10;

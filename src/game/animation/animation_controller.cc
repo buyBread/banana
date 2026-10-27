@@ -1,0 +1,914 @@
+#include <cmath>
+#include <cstring>
+#include <limits>
+
+#include "retail.hh"
+#include "game/animation/animation_controller.hh"
+#include "game/animation/animation_controller_jq.hh"
+#include "game/animation/animation_pose_jq.hh"
+#include "game/event/anim_event.hh"
+#include "game/event/default_callbacks.hh"
+#include "game/event/event_manager.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/entity.hh"
+#include "treyarch/nal/anim.hh"
+#include "treyarch/nal/anim_instance.hh"
+#include "treyarch/nal/transport_fk.hh"
+#include "treyarch/nal/transport_list.hh"
+
+using namespace treyarch;
+
+// sub_5D2A20
+void animation_controller::get_matrix_data_from_pose(bool unk) {
+    retail::sub_5D2A20((i64**)this, unk);
+}
+
+// sub_5D4290
+bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediate) {
+    animation_controller_state* the_state = state;
+
+    // nothing to pose isn't a failure
+    if (!the_state || the_state->unk_128 || the_state->is_suspended)
+        return true;
+
+    nal::nal_jq_batch_input_t &input = the_state->pose_input;
+    std::memset(&input, 0, sizeof(input));
+
+    input.pose_count     = the_state->job.num_pose_records;
+    input.combined_pose  = &the_state->combined_pose;
+    input.alphas[0]      = 0.0f;
+    input.skip_matrices  = the_state->job.skip_matrices;
+    input.transport_list = the_state->skeleton;
+    input.trajectory     = &the_state->trajectory;
+
+    // slot 13
+    ((void (__thiscall*)(entity*))the_state->the_actor->vtable[13])(the_state->the_actor);
+
+    auto fk = (nal::transport_fk*)the_state->skeleton->get_transport(0);
+
+    input.result_matrix_count = fk->bone_count;
+
+    u32 needed = (arena->alignment + (input.result_matrix_count << 6) - 1) & ~(arena->alignment - 1);
+
+    if (arena->cursor + needed >= arena->base + arena->size)
+        return false;
+
+    arena->cursor        += needed;
+    input.result_matrices = (math::mat43*)(arena->cursor - needed);
+
+    for (u32 index = 0; index < the_state->job.num_pose_records; ++index) {
+        animation_controller_state::advance_job::pose_record &record = the_state->job.pose_records[index];
+        animation_controller_state::layer_anim*               anim   = record.anim;
+
+        input.t_prev[index] = record.prev_time;
+        input.t[index]      = record.time;
+        input.poses[index]  = &anim->pose;
+
+        if (anim->nal_inst) {
+            input.instances[index] = anim->nal_inst;
+        } else {
+            input.instances[index] = nullptr;
+
+            anim->als_inst->get_pose(record.time, record.prev_time, &anim->pose, fk);
+        }
+
+        if (index)
+            input.alphas[index] = anim->alpha;
+    }
+
+    if (immediate) {
+        animation_pose_jq::start(false);
+        animation_pose_jq::static_batch.get().payload[0] = &input;
+        animation_pose_jq::add_batch(1);
+        animation_pose_jq::finish(false);
+
+        get_matrix_data_from_pose(false);
+    } else {
+        animation_pose_jq::static_batch.get().payload[0] = &input;
+        animation_pose_jq::add_batch(1);
+    }
+
+    return true;
+}
+
+// sub_5D3950
+void animation_controller::advance(animation_controller* controller) {
+    if (!controller)
+        return;
+
+    animation_controller_state* the_state = controller->state;
+
+    f32  delta_t = the_state->job.delta_t;
+    bool jumped  = false;
+
+    engine_lock_scope lock(&the_state->lock);
+
+    if (the_state->unk_2f4 > 0.0f) {
+        f32 base_time = controller->get_anim_normalized_time(0);
+
+        if (the_state->unk_2f8 / controller->get_anim_duration(0) <= base_time + 0.000001f) {
+            if (delta_t > the_state->unk_2f4) {
+                delta_t            -= the_state->unk_2f4;
+                the_state->unk_2f4  = 0.0f;
+            } else {
+                the_state->unk_2f4 -= delta_t;
+                delta_t             = 0.0f;
+            }
+        } else {
+            controller->set_anim_normalized_time(0, the_state->unk_2f8 / controller->get_anim_duration(0));
+
+            jumped  = true;
+            delta_t = 0.0f;
+        }
+    }
+
+    for (u32 layer = 0; layer < 15; ++layer) {
+        animation_records &anims = the_state->layer_anims[layer];
+
+        for (u32 index = 0; index < anims.size(); ++index) {
+            animation_controller_state::layer_anim* anim = anims[index];
+
+            bool older = anims.size() > index + 1;
+            f32  prev  = anim->normalized_time;
+            f32  time;
+
+            if (!older && the_state->master && the_state->sync_to_master && layer == the_state->synced_layer) {
+                if (the_state->should_follow_master()) {
+                    time = anim->get_inverse_duration() * the_state->master->get_anim_time(layer);
+
+                    f32 speed = the_state->master->get_anim_speed(layer);
+
+                    if (anims.size())
+                        anims.back()->set_speed(speed);
+
+                    f32 secondary_speed = the_state->master->get_secondary_anim_speed(layer);
+
+                    if (anims.size())
+                        anims.back()->set_secondary_speed(secondary_speed);
+                } else {
+                    time = anim->get_inverse_duration() * (anim->speed * delta_t * anim->secondary_speed) + prev;
+                }
+            } else {
+                time = anim->speed * delta_t * anim->secondary_speed * (1.0f / anim->get_duration()) + prev;
+            }
+
+            // a jump leaves the base layer where it put it
+            if (!jumped || layer || time != prev)
+                anim->set_normalized_time(time);
+
+            // under a newer anim that's finished blending in
+            animation_controller_state::layer_anim* newer = older ? anims[index + 1] : nullptr;
+
+            if (newer && std::fabs(newer->alpha_start - newer->alpha_end) > 0.0001f && newer->normalized_time > newer->blend_end) {
+                delete anim;
+                anims.erase(index);
+
+                --index;
+            } else {
+                animation_controller_state::advance_job::pose_record &record = the_state->job.pose_records[the_state->job.num_pose_records];
+
+                record.anim      = anim;
+                record.prev_time = prev;
+                record.time      = time;
+                record.newest    = index == anims.size() - 1;
+
+                ++the_state->job.num_pose_records;
+            }
+        }
+    }
+}
+
+// sub_5D3370
+void animation_controller::frame_advance(f32 delta_t) {
+    if (!state || state->unk_128 || state->is_suspended)
+        return;
+
+    engine_lock_scope lock(&state->lock);
+
+    for (u32 layer = 0; layer < 15; ++layer) {
+        animation_records &anims = state->layer_anims[layer];
+
+        for (u32 index = 0; index < anims.size(); ++index) {
+            animation_controller_state::layer_anim* anim = anims[index];
+
+            bool older = anims.size() > index + 1;
+            f32  prev  = anim->normalized_time;
+            f32  time;
+
+            // only the base layer follows the master here
+            if (has_master() && is_synced_to_master() && !layer && !older && state->should_follow_master()) {
+                f32 master_time = state->master->get_anim_time(0);
+
+                time = anim->get_inverse_duration() * master_time;
+
+                set_anim_speed(0, get_master()->get_anim_speed(0));
+                set_secondary_anim_speed(0, get_master()->get_secondary_anim_speed(0));
+            } else
+                time = anim->speed * delta_t * anim->secondary_speed * (1.0f / anim->get_duration()) + prev;
+
+            anim->set_normalized_time(time);
+
+            // under a newer anim that's finished blending in
+            animation_controller_state::layer_anim* newer = older ? anims[index + 1] : nullptr;
+
+            if (newer && std::fabs(newer->alpha_start - newer->alpha_end) > 0.0001f && newer->normalized_time > newer->blend_end) {
+                delete anim;
+                anims.erase(index);
+
+                --index;
+            } else if (index == anims.size() - 1)
+                anim->raise_animation_signals(time, prev, get_actor());
+        }
+    }
+}
+
+// sub_5AD280
+// inlined @ sub_5E31A0
+bool animation_controller::has_master() const {
+    return state && state->master;
+}
+
+// sub_5AD2A0
+// inlined @ sub_5E31A0
+animation_controller* animation_controller::get_master() const {
+    return state ? state->master : nullptr;
+}
+
+// sub_5AD300
+u32 animation_controller::get_synced_layer() const {
+    if (!state || !state->master)
+        return 0;
+
+    return state->synced_layer;
+}
+
+// sub_5BA300
+bool animation_controller::has_slaves() const {
+    return state->slaves.size() != 0;
+}
+
+// sub_5AD2C0
+bool animation_controller::is_synced_to_master() const {
+    return state && state->sync_to_master;
+}
+
+// sub_5AD2F0
+// inlined @ sub_5E31A0
+actor* animation_controller::get_actor() const {
+    return state ? state->the_actor : nullptr;
+}
+
+// sub_5DFE20
+void animation_controller::play(const als::nal_als_anim_bridge     &anim,
+                                      f32                           start_time,
+                                      f32                           blend_time,
+                                      u32                           flags,
+                                      bool,
+                                      u32                           layer,
+                                      als::animation_logic_system*  the_als,
+                                      als::state_machine*           the_sm,
+                                      bool                          looping) {
+
+    als::nal_als_instance_bridge instance;
+
+    if (anim.nal_anim) {
+        nal::anim_instance* nal_inst = anim.nal_anim->create_instance(flags, state->skeleton_map, nullptr);
+        nal_inst->force_looping = looping;
+
+        instance.nal_inst = nal_inst;
+        instance.als_inst = nullptr;
+    } else
+        instance = anim.als_anim->create_anim_inst(state->skeleton, flags, state->skeleton_map, (u32)anim.nal_anim, anim.als_anim, the_als, the_sm);
+
+    animation_records &anims = state->layer_anims[layer];
+
+    auto added = new animation_controller_state::layer_anim(state, instance, state->combined_pose.pose_layout);
+
+    added->normalized_time = start_time / added->get_duration();
+
+    // a looping anim starting before its start wraps round
+    if (added->normalized_time < 0.0f) {
+        bool loops = false;
+
+        if (instance.nal_inst)
+            loops = instance.nal_inst->force_looping || (instance.nal_inst->anim->flags & nal::anim_flag_looping);
+        else if (instance.als_inst)
+            loops = instance.als_inst->is_looping();
+
+        if (loops)
+            added->normalized_time += 1.0f;
+    }
+
+    // the newest fades out as the new one fades in
+    if (anims.size()) {
+        animation_controller_state::layer_anim* newest = anims.back();
+
+        f32 fade_out = newest->get_inverse_duration() * blend_time;
+
+        newest->blend_start = newest->normalized_time;
+        newest->blend_end   = newest->normalized_time + fade_out;
+        newest->alpha_start = 1.0f;
+        newest->alpha_end   = 0.0f;
+
+        if (newest->als_inst)
+            newest->als_inst->on_blend_out();
+
+        f32 fade_in = added->get_inverse_duration() * blend_time;
+
+        added->blend_start = added->normalized_time;
+        added->blend_end   = added->normalized_time + fade_in;
+        added->alpha_start = 0.0f;
+        added->alpha_end   = 1.0f;
+    }
+
+    if (anims.size() == 2) {
+        delete anims[0];
+        anims.erase(0);
+    }
+
+    anims.push_back(added);
+}
+
+// sub_5BA3B0
+void animation_controller::kill_layer_anims(u32 layer) {
+    animation_records &anims = state->layer_anims[layer];
+
+    for (u32 index = 0; index < anims.size(); ++index)
+        delete anims[index];
+
+    anims.clear();
+}
+
+// sub_5D44E0
+void animation_controller::reset_speeds() {
+    for (animation_records &anims : state->layer_anims) {
+        if (anims.size()) {
+            anims.back()->speed = 1.0f;
+
+            if (anims.size())
+                anims.back()->secondary_speed = 1.0f;
+        }
+    }
+}
+
+// sub_5BA290
+f32 animation_controller::get_anim_duration(u32 layer) {
+    if (!state || !state->layer_anims[layer].size())
+        return 1.0f;
+
+    return state->layer_anims[layer].back()->get_duration();
+}
+
+// sub_5BA510
+f32 animation_controller::get_anim_time(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return 0.0f;
+
+    animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();
+
+    return anim->get_duration() * anim->normalized_time;
+}
+
+// sub_5BA4E0
+// inlined @ sub_5BB740
+// inlined @ sub_5BB790
+// inlined @ sub_5D5190
+// inlined @ sub_5E0D20
+// inlined @ sub_5E0EE0
+// inlined @ sub_5D3950
+f32 animation_controller::get_anim_normalized_time(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->normalized_time : 0.0f;
+}
+
+// sub_5BA4B0
+// inlined @ sub_5BB660
+// inlined @ sub_5D5190
+// inlined @ sub_5D57F0
+// inlined @ sub_5D59A0
+// inlined @ sub_5D3950
+f32 animation_controller::get_anim_speed(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->speed : 1.0f;
+}
+
+// sub_5BA480
+// inlined @ sub_5BB6C0
+// inlined @ sub_5D5190
+// inlined @ sub_5D57F0
+// inlined @ sub_5D59A0
+// inlined @ sub_5D3950
+f32 animation_controller::get_secondary_anim_speed(u32 layer) const {
+    return state->layer_anims[layer].size() ? state->layer_anims[layer].back()->secondary_speed : 1.0f;
+}
+
+// sub_5BA370
+void animation_controller::set_anim_speed(u32 layer, f32 speed) {
+    if (state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_speed(speed);
+}
+
+// sub_5BA440
+void animation_controller::set_secondary_anim_speed(u32 layer, f32 speed) {
+    if (state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_secondary_speed(speed);
+}
+
+// sub_5BA140
+bool animation_controller::is_anim_looping(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return false;
+
+    return state->layer_anims[layer].back()->is_looping();
+}
+
+// sub_5BA330
+bool animation_controller::has_anim_instance(u32 layer) const {
+    if (!state->layer_anims[layer].size())
+        return false;
+
+    animation_controller_state::layer_anim* newest = state->layer_anims[layer].back();
+
+    return newest->nal_inst || newest->als_inst;
+}
+
+// sub_5BA0F0
+// inlined @ sub_5BBE30
+// inlined @ sub_5BC130
+nal::anim* animation_controller::get_anim_ptr(u32 layer) {
+    if (!state->layer_anims[layer].size())
+        return nullptr;
+
+    animation_controller_state::layer_anim* newest = state->layer_anims[layer].back();
+
+    if (newest->nal_inst)
+        return newest->nal_inst->anim;
+
+    if (newest->als_inst)
+        return newest->als_inst->get_anim();
+
+    return nullptr;
+}
+
+// sub_5BA710
+po animation_controller::get_trajectory_po() const {
+    nal::po trajectory = state->trajectory;
+
+    // retail's po builder takes the quaternion w first
+    const auto &rotation = trajectory.get_m33().get_quaternion();
+    quaternion  w_first(rotation.get_w(), rotation.get_x(), rotation.get_y(), rotation.get_z());
+
+    po result;
+    retail::sub_5B74E0((i32)&result, (u32*)&trajectory.get_w(), (i32)&w_first, 1.0f);
+
+    return result;
+}
+
+// sub_5D3840
+f32 animation_controller::get_next_anim_normalized_time(u32 layer) {
+    animation_controller_state::layer_anim* anim = state->layer_anims[layer].back();
+
+    f32 delta_t = state->job.delta_t;
+    f32 time    = anim->normalized_time;
+
+    if (state->master && state->sync_to_master && layer == state->synced_layer && state->should_follow_master()) {
+        f32 master_time = state->master->get_anim_time(layer);
+
+        return anim->get_inverse_duration() * master_time;
+    }
+
+    return anim->get_inverse_duration() * (anim->speed * delta_t * anim->secondary_speed) + time;
+}
+
+// sub_5BA1A0
+void animation_controller::set_anim_normalized_time(u32 layer, f32 time) {
+    if (state && !state->master && state->layer_anims[layer].size())
+        state->layer_anims[layer].back()->set_normalized_time(time);
+}
+
+// sub_5BA030
+bool animation_controller_state::should_follow_master() const {
+    if (!master)
+        return false;
+
+    actor* master_actor = master->state ? master->state->the_actor : nullptr;
+
+    if (master_actor->get_als() && !master_actor->get_als()->did_transition_succeed())
+        return true;
+
+    actor* own_actor = the_actor;
+
+    return own_actor->get_als() && own_actor->get_als()->did_transition_succeed();
+}
+
+// sub_5D2950
+animation_controller_state::layer_anim::layer_anim(animation_controller_state*         the_owner,
+                                                   const als::nal_als_instance_bridge &instance,
+                                                   nal::pose_layout*                   layout) : nal_inst(nullptr),
+                                                                                                 als_inst(nullptr),
+                                                                                                 normalized_time(0.0f),
+                                                                                                 prev_normalized_time(0.0f),
+                                                                                                 pose(layout, nullptr),
+                                                                                                 alpha(1.0f),
+                                                                                                 blend_start(0.0f),
+                                                                                                 blend_end(1.0f),
+                                                                                                 alpha_start(1.0f),
+                                                                                                 alpha_end(1.0f),
+                                                                                                 speed(1.0f),
+                                                                                                 secondary_speed(1.0f),
+                                                                                                 just_started(true),
+                                                                                                 owner(the_owner) {
+
+    nal_inst = instance.nal_inst;
+    als_inst = instance.als_inst;
+}
+
+// sub_5B9EF0
+animation_controller_state::layer_anim::~layer_anim() {
+    if (nal_inst)
+        delete nal_inst;
+    else if (als_inst)
+        delete als_inst;
+}
+
+// sub_5CD170
+animation_controller_state::layer_anim* animation_controller_state::layer_anim::grow_pool() {
+    if (references::layer_anim_block_count.read() >= 0x1FFFFFFF)
+        return nullptr;
+
+    auto* block = (layer_anim*)memory::allocate(sizeof(layer_anim) * 1024, 4, 0);
+    auto* link  = (void**)memory::allocate(8, 4, 0);
+
+    link[0] = block;
+    link[1] = references::layer_anim_blocks.read();
+
+    ++references::layer_anim_block_count.get();
+    references::layer_anim_blocks.write(link);
+
+    layer_anim* next  = nullptr;
+    layer_anim* entry = block + 1024;
+
+    do {
+        --entry;
+
+        *(layer_anim**)entry = next;
+        next                 = entry;
+    } while (entry != block);
+
+    return entry;
+}
+
+// sub_5DFBD0
+void* animation_controller_state::layer_anim::operator new(std::size_t) noexcept {
+    engine_lock_scope lock(&references::pool_lock.get());
+
+    layer_anim* result = references::layer_anim_free_list.read();
+
+    if (result || (result = grow_pool()) != nullptr) {
+        references::layer_anim_free_list.write(*(layer_anim**)result);
+    } else {
+        retail::sub_9CC940((char*)"Out of pool memory limit");
+
+        result = nullptr;
+    }
+
+    return result;
+}
+
+// sub_5B9FF0
+// inlined @ sub_5D3950
+void animation_controller_state::layer_anim::operator delete(void* allocation) noexcept {
+    engine_lock_scope lock(&references::pool_lock.get());
+
+    *(layer_anim**)allocation = references::layer_anim_free_list.read();
+
+    references::layer_anim_free_list.write((layer_anim*)allocation);
+}
+
+// sub_5B77E0
+f32 animation_controller_state::layer_anim::get_inverse_duration() const {
+    if (nal_inst)
+        return 1.0f / nal_inst->anim->duration;
+
+    if (als_inst)
+        return 1.0f / als_inst->get_duration();
+
+    // retail divides by zero here
+    return std::numeric_limits<f32>::infinity();
+}
+
+// inlined @ sub_5BA1A0
+// inlined @ sub_5D3950
+// inlined @ sub_5D3370
+void animation_controller_state::layer_anim::set_normalized_time(f32 time) {
+    prev_normalized_time = normalized_time;
+    normalized_time      = time;
+
+    if (time <= blend_start || blend_end <= time) {
+        if (time > blend_end)
+            alpha = alpha_end;
+    } else {
+        f32 t = (time - blend_start) / (blend_end - blend_start);
+
+        alpha = (1.0f - t) * alpha_start + alpha_end * t;
+    }
+}
+
+// sub_5B9F60
+void animation_controller_state::layer_anim::raise_animation_signals(f32 time, f32 prev_time, entity* the_entity) {
+    nal::anim* anim = nal_inst ? nal_inst->anim : als_inst->get_anim();
+
+    raise_animation_signals_for_time_span(anim, time, prev_time, the_entity, just_started, is_looping());
+}
+
+// sub_5BBE30
+f32 treyarch::get_time_to_animation_signal(animation_controller* controller,
+                                           u32                   layer,
+                                           string_hash           signal_name,
+                                           f32                   anim_time,
+                                           bool*                 exists,
+                                           anim_event_param*     param) {
+
+    nal::anim* anim = controller->get_anim_ptr(layer);
+
+    if (exists)
+        *exists = false;
+
+    if (param)
+        param->type = 0;
+
+    if (!anim || !anim->has_transport_data(1))
+        return -1.0f;
+
+    auto signals = (nal::transport_data_signals*)anim->get_transport_data(1);
+
+    if (!signals || !signals->signal_count)
+        return -1.0f;
+
+    // the signal's param as an anim event takes it
+    auto get_param = [param](const nal::signal &signal) {
+        switch (signal.param_type) {
+            case 1:
+                param->type  = 4;
+                param->value = signal.param_value;
+                break;
+
+            case 2:
+                param->type  = 2;
+                param->value = signal.param_value;
+                break;
+
+            case 3:
+                param->type  = 1;
+                param->value = signal.param_value;
+                break;
+        }
+    };
+
+    u32 matches[100];
+    u32 num_matches = 0;
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        if (signals->signals[index].id != signal_name.source_hash_code)
+            continue;
+
+        matches[num_matches++] = index;
+
+        if (exists && !*exists) {
+            *exists = true;
+
+            if (param)
+                get_param(signals->signals[index]);
+        }
+    }
+
+    if (anim_time < 0.0f)
+        anim_time = 0.0f;
+
+    f32 duration   = anim->duration;
+    f32 frame_time = duration / (f32)(i32)anim->frame_count;
+    f32 nearest    = -1.0f;
+
+    for (u32 index = 0; index < num_matches; ++index) {
+        const nal::signal &signal = signals->signals[matches[index]];
+
+        f32 time = signal.frame * frame_time - anim_time;
+
+        if (time < 0.0f && controller->is_anim_looping(layer))
+            time += duration;
+
+        if (time < 0.0f || (nearest <= time && nearest >= 0.0f))
+            continue;
+
+        nearest = time;
+
+        if (param)
+            get_param(signal);
+    }
+
+    return nearest;
+}
+
+// sub_5BC130
+f32 treyarch::get_time_since_animation_signal(animation_controller* controller,
+                                              u32                   layer,
+                                              string_hash           signal_name,
+                                              f32                   anim_time,
+                                              bool*                 exists,
+                                              anim_event_param*     param) {
+
+    nal::anim* anim = controller->get_anim_ptr(layer);
+
+    if (exists)
+        *exists = false;
+
+    if (param)
+        param->type = 0;
+
+    if (!anim || !anim->has_transport_data(1))
+        return -1.0f;
+
+    auto signals = (nal::transport_data_signals*)anim->get_transport_data(1);
+
+    if (!signals || !signals->signal_count)
+        return -1.0f;
+
+    // the signal's param as an anim event takes it
+    auto get_param = [param](const nal::signal &signal) {
+        switch (signal.param_type) {
+            case 1:
+                param->type  = 4;
+                param->value = signal.param_value;
+                break;
+
+            case 2:
+                param->type  = 2;
+                param->value = signal.param_value;
+                break;
+
+            case 3:
+                param->type  = 1;
+                param->value = signal.param_value;
+                break;
+        }
+    };
+
+    u32 matches[100];
+    u32 num_matches = 0;
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        if (signals->signals[index].id != signal_name.source_hash_code)
+            continue;
+
+        matches[num_matches++] = index;
+
+        if (exists && !*exists) {
+            *exists = true;
+
+            if (param)
+                get_param(signals->signals[index]);
+        }
+    }
+
+    if (anim_time < 0.0f)
+        anim_time = 0.0f;
+
+    f32 duration   = anim->duration;
+    f32 frame_time = duration / (f32)(i32)anim->frame_count;
+    f32 nearest    = -1.0f;
+
+    for (u32 index = 0; index < num_matches; ++index) {
+        const nal::signal &signal = signals->signals[matches[index]];
+
+        f32 time = anim_time - signal.frame * frame_time;
+
+        if (time < 0.0f && controller->is_anim_looping(layer))
+            time += duration;
+
+        if (time < 0.0f || (nearest <= time && nearest >= 0.0f))
+            continue;
+
+        nearest = time;
+
+        if (param)
+            get_param(signal);
+    }
+
+    return nearest;
+}
+
+// sub_5B9BF0
+void treyarch::raise_animation_signals_for_time_span(nal::anim* the_anim,
+                                                    f32        t,
+                                                    f32        t_prev,
+                                                    entity*    the_entity,
+                                                    bool       include_start,
+                                                    bool       looping) {
+
+    if (!the_anim || !the_anim->has_transport_data(1))
+        return;
+
+    auto signals = (nal::transport_data_signals*)the_anim->get_transport_data(1);
+
+    if (!signals)
+        return;
+
+    f32 duration = the_anim->duration;
+    f32 start    = t_prev;
+    f32 end      = t;
+
+    // a loop only looks at where it is in its pass
+    if (looping) {
+        start = t_prev - (f32)(i32)t_prev;
+        end   = t - (f32)(i32)t;
+    }
+
+    f32 frame_time = duration / (f32)(i32)the_anim->frame_count;
+
+    // compared in steps of 1e-5
+    i32 start_step = (i32)(start * 100000.0);
+    i32 end_step   = (i32)(end * 100000.0);
+
+    for (u32 index = 0; index < signals->signal_count; ++index) {
+        nal::signal &signal = signals->signals[index];
+
+        f32 time = (f32)((f64)signal.frame * frame_time / duration);
+        i32 step = (i32)(time * 100000.0);
+
+        bool after_start = include_start ? step >= start_step : step > start_step;
+
+        // a wrapped span takes both ends of the pass
+        if (!after_start || step > end_step) {
+            if (!looping || end_step >= start_step || (!after_start && step > end_step))
+                continue;
+        }
+
+        auto fk = (nal::transport_fk*)the_anim->transport_list->get_transport(0);
+
+        string_hash event_type_id;
+        event_type_id.initialize(mash::ALLOCATED, nullptr, signal.id);
+
+        // these can't go without their parameter, and nothing after them is raised either
+        if ((event_type_id == references::play_sound.read() || event_type_id == references::set_vulnerable.read()) && !signal.param_type)
+            return;
+
+        u32 num_params = (event_type_id == references::play_sound.read()) + (signal.param_type != 0);
+
+        string_hash bone;
+        bone.initialize(mash::ALLOCATED, nullptr, hash::djb2(fk->bones[signal.bone].name.get_text()));
+
+        anim_event raised(event_type_id, bone, num_params, time);
+
+        if (signal.param_type) {
+            raised.params[0].type  = signal.param_type;
+            raised.params[0].value = signal.param_value;
+        }
+
+        // the sound is looked up by the anim's name
+        if (event_type_id == references::play_sound.read()) {
+            raised.params[1].type  = 1;
+            raised.params[1].value = the_anim->name.hash.source_hash_code;
+        }
+
+        event_manager::raise_event((event*)&raised, the_entity->my_handle);
+    }
+}
+
+// sub_5D3F30
+void treyarch::animation_controller_jq_callback(jq::batch* batch) {
+    animation_controller::advance(((animation_controller_state::advance_job*)batch->payload[0])->controller);
+}
+
+// sub_5D3FB0
+void treyarch::multi_animation_controller_jq_callback(jq::batch* batch) {
+    auto controllers = (animation_controller**)batch->payload[0];
+
+    for (i32 index = 0; index < batch->count; ++index) {
+        animation_controller* controller = controllers[index];
+
+        // the flush unhooks the ones that sit the frame out
+        if (controller->state->job.controller == controller)
+            animation_controller::advance(controller);
+    }
+}
+
+// inlined @ sub_5D4050
+// inlined @ sub_5D40F0
+void treyarch::raise_newest_animation_signals(animation_records* records) {
+    if (!records || !records->size())
+        return;
+
+    if (animation_controller_state::layer_anim* newest = records->back())
+        newest->raise_animation_signals(newest->normalized_time, newest->prev_normalized_time, newest->owner->the_actor);
+}
+
+// sub_5D4050
+void treyarch::animation_signal_jq_callback(jq::batch* batch) {
+    raise_newest_animation_signals((animation_records*)batch->payload[0]);
+}
+
+// sub_5D40F0
+void treyarch::multi_animation_signal_jq_callback(jq::batch* batch) {
+    auto records = (animation_records**)batch->payload[0];
+
+    for (i32 index = 0; index < batch->count; ++index)
+        raise_newest_animation_signals(records[index]);
+}

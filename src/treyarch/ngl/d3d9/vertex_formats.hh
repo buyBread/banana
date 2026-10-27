@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 {
     void initialize_internal_vertex_formats();

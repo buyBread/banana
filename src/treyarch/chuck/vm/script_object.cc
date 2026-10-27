@@ -4,7 +4,7 @@
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;

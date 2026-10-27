@@ -2,8 +2,8 @@
 
 #include <cstddef>
 
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     // CASTISTR and CASTFSTR write here before copying into a dynamic-array string

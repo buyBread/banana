@@ -2,9 +2,9 @@
 
 #include "treyarch/chuck/script_library/slc_manager.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
-#include "treyarch/game/script/chuck_register_script_libs.hh"
-#include "treyarch/game/script/client_script_libs.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "game/script/chuck_register_script_libs.hh"
+#include "game/script/client_script_libs.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::script_library;

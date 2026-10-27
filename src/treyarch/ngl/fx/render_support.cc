@@ -9,8 +9,8 @@
 #include "treyarch/ngl/fx/parameters.hh"
 #include "treyarch/ngl/fx/references.hh"
 #include "treyarch/ngl/fx/render_support.hh"
-#include "treyarch/game/light/references.hh"
-#include "treyarch/game/rtree.hh"
+#include "game/light/references.hh"
+#include "game/rtree.hh"
 #include "treyarch/ngl/lighting/context.hh"
 #include "treyarch/ngl/lighting/references.hh"
 

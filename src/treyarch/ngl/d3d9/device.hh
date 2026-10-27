@@ -3,9 +3,9 @@
 #include <d3d9.h>
 
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 {
     struct binding_cache {

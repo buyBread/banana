@@ -1,8 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 {
     void render_scene(scene* value);

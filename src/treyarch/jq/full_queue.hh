@@ -3,9 +3,9 @@
 #include <windows.h>
 
 #include "retail.hh"
-#include "treyarch/app/app.hh"
+#include "game/app.hh"
 #include "treyarch/jq/jq.hh"
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace jq {
     // T holds the queue's statics and its descriptor

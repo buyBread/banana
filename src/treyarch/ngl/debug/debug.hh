@@ -1,8 +1,8 @@
 #pragma once
 
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 #include "treyarch/ngl/debug/performance_info.hh"
 
 namespace treyarch { namespace ngl {

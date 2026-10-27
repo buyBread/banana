@@ -2,7 +2,7 @@
 
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/ngl/fx/effect.hh"
-#include "treyarch/shared/fixed_string.hh"
+#include "game/fixed_string.hh"
 
 namespace treyarch { namespace ngl { namespace resources {
     void* resolve(fixed_string* name, u32 type);

@@ -1,7 +1,7 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/geometry_stream.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

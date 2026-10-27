@@ -2,10 +2,10 @@
 
 #include "retail.hh"
 #include "treyarch/nal/pose.hh"
-#include "treyarch/shared/math/vmath/quaternion.hh"
-#include "treyarch/shared/math/vmath/vector.hh"
-#include "treyarch/shared/memory/memory.hh"
-#include "treyarch/shared/tl_defs.hh"
+#include "treyarch/math/quaternion.hh"
+#include "treyarch/math/vector.hh"
+#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 

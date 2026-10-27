@@ -1,9 +1,9 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/mash/array_replacement.hh"
-#include "treyarch/shared/mash/unmash.hh"
-#include "treyarch/shared/mash/vector.hh"
+#include "treyarch/mash/array_replacement.hh"
+#include "treyarch/mash/unmash.hh"
+#include "treyarch/mash/vector.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;

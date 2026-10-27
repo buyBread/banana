@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"

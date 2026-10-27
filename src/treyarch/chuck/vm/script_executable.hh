@@ -2,14 +2,14 @@
 
 #include "treyarch/chuck/vm/script_instance_visitor.hh"
 #include "treyarch/chuck/vm/script_object.hh"
-#include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/mash/mash_info.hh"
-#include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/mash/vector.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/mash_info.hh"
+#include "treyarch/mash/string.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mash/vector.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     using resolve_signal_callback_t               = void(*)(const char* signal_name, u32* signal_id);

@@ -6,10 +6,10 @@
 #include "treyarch/nal/field_interfaces.hh"
 #include "treyarch/nal/skeleton_map.hh"
 #include "treyarch/nal/transport_list.hh"
-#include "treyarch/shared/math/vmath/matrix_diag.hh"
-#include "treyarch/shared/math/vmath/vector.hh"
-#include "treyarch/shared/memory/memory.hh"
-#include "treyarch/shared/tl_defs.hh"
+#include "treyarch/math/matrix_diag.hh"
+#include "treyarch/math/vector.hh"
+#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 

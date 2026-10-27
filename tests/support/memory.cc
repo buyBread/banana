@@ -6,8 +6,8 @@
 #include <doctest/doctest.h>
 
 #include "support/memory.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/mm/heap.hh"
+#include "treyarch/base/memory.hh"
 
 tests::c_memory_fixture* tests::current_memory_fixture = nullptr;
 

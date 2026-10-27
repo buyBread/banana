@@ -1,4 +1,4 @@
-#include "treyarch/game/game.hh"
+#include "game/game.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/frame_lock.hh"

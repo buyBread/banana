@@ -2,7 +2,7 @@
 
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/scene/matrices.hh"
-#include "treyarch/shared/math/vmath/trig.hh"
+#include "treyarch/math/trig.hh"
 
 using namespace treyarch;
 

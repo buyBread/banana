@@ -2,7 +2,7 @@
 
 #include "treyarch/chuck/script_library/script_library_class.hh"
 #include "treyarch/chuck/script_library/slc_manager.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::script_library;

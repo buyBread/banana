@@ -4,9 +4,9 @@
 #include "treyarch/ngl/fx/material.hh"
 #include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/list/render_node.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct mesh_section;

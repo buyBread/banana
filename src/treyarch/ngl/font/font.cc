@@ -1,6 +1,6 @@
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 

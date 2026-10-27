@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     enum e_frame_lock : u32 {

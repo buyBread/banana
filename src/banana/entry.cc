@@ -11,7 +11,7 @@
 
     // wrapped d3d9 (w/ wrapped device); for temporary debugging tasks
     // we don't use this responsibly at all
-    #include "d3d9/IDirect3D9.hh"
+    #include "banana/debug/d3d9/IDirect3D9.hh"
 #else
     #include <d3d9.h>
 #endif
@@ -26,9 +26,9 @@ static_assert(sizeof(void*) == 4, "ensure compile architecture is 32-bit");
 #include <windows.h>
 #include <mutex>
 
-#include "util/gimmie/dll.hh"
-#include "util/gimmie/method.hh"
-#include "util/gimmie/module.hh"
+#include "banana/util/gimmie/dll.hh"
+#include "banana/util/gimmie/method.hh"
+#include "banana/util/gimmie/module.hh"
 #include "banana/core.hh"
 #include "banana/logging.hh"
 #include "banana/lifecycle.hh"

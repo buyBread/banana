@@ -5,7 +5,7 @@
 #include "treyarch/ngl/list/init.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/render_sort.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

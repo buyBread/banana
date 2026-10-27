@@ -1,0 +1,296 @@
+#include <cstdlib>
+#include <cstring>
+
+#include "game/event/event.hh"
+#include "game/event/event_manager.hh"
+#include "game/event/event_pools.hh"
+#include "game/event/event_recipient_entry.hh"
+#include "game/event/event_type.hh"
+#include "vc8/vector.hh"
+#include "treyarch/ae_base/fixed_pool.hh"
+#include "game/mutex.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
+
+namespace treyarch { namespace references {
+    util::memory_reference<bool>                            initialized       { 0x0102C234 };
+    util::memory_reference<i32>                             garbage_index     { 0x0102C238 };
+    util::memory_reference<event_type*>                     cached_event_type { 0x0102C23C };
+    util::memory_reference<vc8::vector<event_type*>> event_types       { 0x0102CC94 };
+}} // treyarch::references
+
+namespace treyarch { namespace fn {
+    // sub_683C10
+    int compare_event_types(const void* left, const void* right) {
+        const event_type* left_type  = *(event_type* const*)left;
+        const event_type* right_type = *(event_type* const*)right;
+
+        u32 left_id  = left_type->type_id().source_hash_code;
+        u32 right_id = right_type->type_id().source_hash_code;
+
+        return left_id < right_id ? -1 : left_id != right_id;
+    }
+}} // treyarch::fn
+
+using namespace treyarch;
+
+// sub_683AA0
+string_hash event_manager::register_script_event_type(const char* event_name) {
+    const char* separator = std::strrchr(event_name, ':');
+    string_hash event_type_id;
+    event_type_id.initialize(mash::ALLOCATED, separator ? separator + 1 : event_name);
+
+    return event_type_id;
+}
+
+// sub_683FC0
+event_type* event_manager::find_event_type(string_hash event_type_id) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* cached = references::cached_event_type.read();
+
+    if (cached && cached->type_id() == event_type_id)
+        return cached;
+
+    auto &event_types = references::event_types.get();
+    u32   first       = 0;
+    u32   count       = event_types.size();
+
+    while (count) {
+        u32 step      = count / 2;
+        u32 index     = first + step;
+        u32 candidate = event_types[index]->type_id().source_hash_code;
+
+        if (candidate < event_type_id.source_hash_code) {
+            first = index + 1;
+            count -= step + 1;
+        } else
+            count = step;
+    }
+
+    if (first == event_types.size() || event_types[first]->type_id() != event_type_id)
+        return nullptr;
+
+    cached = event_types[first];
+    references::cached_event_type.write(cached);
+
+    return cached;
+}
+
+// sub_684B60
+void event_manager::clear_script_callbacks(arch_base_vhandle             recipient,
+                                           chuck::vm::script_executable* executable) {
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    for (event_type* type : references::event_types.get())
+        type->clear_script_callbacks(recipient, executable);
+}
+
+// sub_684BE0
+void event_manager::clear_script_callback(arch_base_vhandle recipient, string_hash function_name) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    for (event_type* type : references::event_types.get())
+        type->clear_script_callback(recipient, function_name);
+}
+
+// sub_684C70
+void event_manager::clear_script_callback(arch_base_vhandle recipient, u32 callback_id) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    for (event_type* type : references::event_types.get())
+        type->clear_script_callback(recipient, callback_id);
+}
+
+// sub_684CF0
+void event_manager::remove_callback(u32               callback_id,
+                                    string_hash       event_type_id,
+                                    arch_base_vhandle recipient) {
+
+    if (!references::initialized.read())
+        return;
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = find_event_type(event_type_id);
+
+    if (!type)
+        return;
+
+    type->remove_default_callback(callback_id);
+
+    event_recipient_entry* entry = type->find_recipient_entry(recipient);
+
+    if (entry)
+        entry->remove_callback(callback_id);
+}
+
+// sub_684DA0
+bool event_manager::has_callbacks(arch_base_vhandle recipient, string_hash event_type_id) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = find_event_type(event_type_id);
+
+    return type && type->has_callbacks(recipient);
+}
+
+// sub_6854A0
+void event_manager::raise_event(string_hash event_type_id, arch_base_vhandle recipient) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = find_event_type(event_type_id);
+
+    if (type)
+        type->raise_event(recipient);
+}
+
+// sub_685520
+void event_manager::raise_event(event* raised_event, arch_base_vhandle recipient) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = find_event_type(raised_event->type_id());
+
+    if (type)
+        type->raise_event(recipient, raised_event);
+}
+
+// sub_686180
+void event_manager::clear() {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    auto &event_types = references::event_types.get();
+
+    for (event_type* type : event_types)
+        delete type;
+
+    event_types.clear();
+    references::garbage_index.write(0);
+    references::cached_event_type.write(nullptr);
+}
+
+// sub_686260
+event_type* event_manager::register_event_type(string_hash event_type_id) {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = find_event_type(event_type_id);
+
+    if (type)
+        return type;
+
+    type = new event_type(event_type_id);
+
+    auto &event_types = references::event_types.get();
+    event_types.push_back(type);
+
+    std::qsort(event_types.begin(),
+               event_types.size(),
+               sizeof(event_type*),
+               &fn::compare_event_types);
+    
+    return type;
+}
+
+// sub_686350
+void event_manager::garbage_collect() {
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    auto &event_types = references::event_types.get();
+    i32  &index       = references::garbage_index.get();
+
+    if (event_types.empty() || (u32)index >= event_types.size()) {
+        index = 0;
+
+        return;
+    }
+
+    event_type** position = event_types.begin() + index;
+    event_type*  type     = *position;
+
+    if (type->garbage_collect()) {
+        if (type == references::cached_event_type.read())
+            references::cached_event_type.write(nullptr);
+
+        delete type;
+        event_types.erase(position);
+    } else
+        ++index;
+}
+
+// sub_686420
+void event_manager::create_inst() {
+    clear();
+
+    event_pools::recipient_pool() .initialize("event_recipient_entry", 0x20, 4, 512, 3);
+    event_pools::event_type_pool().initialize("event_type",            0x58, 4, 256, 5);
+    event_pools::event_pool()     .initialize("event",                 0x10, 4, 256, 5);
+
+    delete new event_type(string_hash());
+    delete new event_recipient_entry(arch_base_vhandle());
+
+    references::initialized.write(true);
+}
+
+// sub_686700
+void event_manager::delete_inst() {
+    references::initialized.write(false);
+
+    clear();
+}
+
+// sub_686710
+event_recipient_entry* event_manager::create_event_recipient(string_hash       event_type_id,
+                                                             arch_base_vhandle recipient) {
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = register_event_type(event_type_id);
+
+    return type ?
+        type->create_recipient_entry(recipient) : nullptr;
+}
+
+// sub_6867A0
+u32 event_manager::add_callback(string_hash                  event_type_id,
+                                arch_base_vhandle            recipient,
+                                code_event_callback_function function,
+                                void*                        parameters,
+                                bool                         one_shot) {
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_recipient_entry* entry = create_event_recipient(event_type_id, recipient);
+
+    return entry ?
+        entry->add_callback(function, parameters, one_shot) : 0;
+}
+
+// sub_686830
+u32 event_manager::add_callback(      string_hash                 event_type_id,
+                                      arch_base_vhandle           recipient,
+                                      chuck::vm::script_instance* instance,
+                                      chuck::vm::script_function* function,
+                                const void*                       parameters,
+                                      bool                        one_shot) {
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_recipient_entry* entry = create_event_recipient(event_type_id, recipient);
+
+    return entry ?
+        entry->add_callback(instance, function, parameters, one_shot) : 0;
+}
+
+// sub_6868D0
+u32 event_manager::add_default_callback(string_hash                  event_type_id,
+                                        code_event_callback_function function,
+                                        void*                        parameters,
+                                        bool                         one_shot) {
+
+    engine_lock_scope scope(&references::event_manager_lock.get());
+
+    event_type* type = register_event_type(event_type_id);
+
+    return type ?
+        type->add_default_callback(function, parameters, one_shot) : 0;
+}

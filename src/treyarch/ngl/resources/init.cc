@@ -1,13 +1,13 @@
 #include <cstring>
 
 #include "banana/logging.hh"
-#include "treyarch/amalga/merged_apk/loader.hh"
+#include "game/amalga/merged_apk/loader.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/resources/init.hh"
 #include "treyarch/ngl/resources/resolver.hh"
 #include "treyarch/ngl/texture/runtime.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "game/four_cc.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

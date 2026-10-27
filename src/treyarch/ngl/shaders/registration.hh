@@ -2,8 +2,8 @@
 
 #include "treyarch/ngl/init_list/init_list.hh"
 #include "treyarch/ngl/shaders/shader.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace registration {
     bool try_register(ngl::init_list* item);

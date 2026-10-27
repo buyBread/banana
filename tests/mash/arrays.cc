@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/mash/array_replacement.hh"
+#include "treyarch/mash/array_replacement.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;

@@ -2,7 +2,7 @@
 
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/shader_program_cache.hh"
-#include "treyarch/shared/hash/algo.hh"
+#include "game/hash/algo.hh"
 
 using namespace treyarch;
 using namespace treyarch::ngl;

@@ -1,5 +1,5 @@
 #include "banana/hooks/base.hh"
-#include "treyarch/shared/mutex.hh"
+#include "game/mutex.hh"
 
 /*
     replacing this subroutine doesn't actually fix the stuttering properly.

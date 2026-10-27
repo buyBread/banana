@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 {
     void submit_list();

@@ -1,9 +1,9 @@
 #include "banana/hooks/base.hh"
 #include "banana/core.hh"
 #include "banana/imgui/manager.hh"
-#include "util/gimmie/virt.hh"
-#include "util/vtables/IDirect3DDevice9.hh"
-#include "util/macros/lambda.hh"
+#include "banana/util/gimmie/virt.hh"
+#include "banana/util/vtables/IDirect3DDevice9.hh"
+#include "banana/util/macros/lambda.hh"
 
 DEFINE_HOOK(hk_EndScene, hook_signatures::imgui::EndScene) {
 

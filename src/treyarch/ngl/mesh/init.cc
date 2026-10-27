@@ -1,5 +1,5 @@
-#include "treyarch/amalga/merged_apk/file.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/amalga/merged_apk/file.hh"
+#include "game/four_cc.hh"
 #include "treyarch/ngl/geometry_shader/geometry_shader.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/init.hh"

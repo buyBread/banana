@@ -2,8 +2,8 @@
 
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/list/render_node.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace string_renderer {
     struct chunk {

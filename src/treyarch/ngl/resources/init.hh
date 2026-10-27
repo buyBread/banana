@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace resources {
     void init();

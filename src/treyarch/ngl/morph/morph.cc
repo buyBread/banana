@@ -1,4 +1,4 @@
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 #include "treyarch/ngl/morph/morph.hh"
 #include "treyarch/ngl/ngl.hh"
 

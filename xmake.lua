@@ -92,8 +92,8 @@ if has_config("game") then
         set_kind  ("binary")
         set_policy("build.fence", true)
 
-        add_files("src/tools/ngl_shader_compiler/main.cc")
-        add_files("src/tools/ngl_shader_compiler/compiler.cc")
+        add_files("tools/ngl_shader_compiler/main.cc")
+        add_files("tools/ngl_shader_compiler/compiler.cc")
         add_files("src/treyarch/ngl/shaders/description.cc")
 
         add_includedirs("src")
@@ -131,7 +131,6 @@ if has_config("game") then
 
         add_files   ("src/**.cc")
         add_files   ("src/treyarch/ngl/shaders/resources.rc")
-        remove_files("src/tools/**.cc")
 
         add_includedirs("src")
 
@@ -156,11 +155,11 @@ if has_config("tests") then
 
         add_files("tests/**.cc")
 
-        add_files("src/treyarch/shared/mash/mash_info.cc")
-        add_files("src/treyarch/shared/mash/string.cc")
-        add_files("src/treyarch/shared/mash/virtual_base.cc")
-        add_files("src/treyarch/amalga/resource_directory.cc")
-        add_files("src/treyarch/amalga/merged_apk/file.cc")
+        add_files("src/treyarch/mash/mash_info.cc")
+        add_files("src/treyarch/mash/string.cc")
+        add_files("src/treyarch/mash/virtual_base.cc")
+        add_files("src/game/amalga/resource_directory.cc")
+        add_files("src/game/amalga/merged_apk/file.cc")
 
         add_includedirs("src", "tests")
         add_defines("_CRT_SECURE_NO_WARNINGS")

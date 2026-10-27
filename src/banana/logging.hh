@@ -14,10 +14,10 @@
 #include <filesystem>
 
 #include "flags.hh"
-#include "util/console.hh"
-#include "util/singleton.hh"
-#include "util/appdata_path.hh"
-#include "util/types.hh"
+#include "banana/util/console.hh"
+#include "banana/util/singleton.hh"
+#include "banana/util/appdata_path.hh"
+#include "banana/util/types.hh"
 
 #define PRINT_COLOR_TEST 0
 

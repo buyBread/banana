@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "treyarch/chuck/vm/vm_stack.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;

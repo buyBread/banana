@@ -7,8 +7,8 @@
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/resources/resolver.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "game/four_cc.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

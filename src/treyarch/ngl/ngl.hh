@@ -2,8 +2,8 @@
 
 #include <windows.h>
 
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
 namespace treyarch {

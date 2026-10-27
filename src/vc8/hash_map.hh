@@ -2,8 +2,8 @@
 
 #include "vc8/list.hh"
 #include "vc8/vector.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace vc8 {
     template<typename K, typename V>

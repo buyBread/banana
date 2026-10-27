@@ -1,8 +1,8 @@
 #pragma once
 
-#include "treyarch/shared/math/vmath/matrix.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/math/matrix.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct texture;

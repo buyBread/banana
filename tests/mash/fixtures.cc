@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "treyarch/mm/heap.hh"
 
 void tests::mash_support::trace_t::push(e_event                           kind,
                                         u32                               id,

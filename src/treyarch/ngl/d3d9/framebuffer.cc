@@ -3,7 +3,7 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/texture/runtime.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 

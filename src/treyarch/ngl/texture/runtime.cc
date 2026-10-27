@@ -5,9 +5,9 @@
 #include "treyarch/ngl/d3d9/framebuffer.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/texture/runtime.hh"
-#include "treyarch/shared/hash/algo.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "game/hash/algo.hh"
+#include "treyarch/mm/heap.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

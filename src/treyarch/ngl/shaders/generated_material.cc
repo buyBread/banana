@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstring>
 
-#include "treyarch/game/shadow/shadow.hh"
+#include "game/shadow/shadow.hh"
 #include "treyarch/ngl/d3d9/device.hh"
 #include "treyarch/ngl/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/d3d9/state_cache.hh"

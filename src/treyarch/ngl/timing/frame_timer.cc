@@ -1,7 +1,7 @@
 #include <windows.h>
 
 #include "treyarch/ngl/timing/frame_timer.hh"
-#include "treyarch/shared/timing/hires_clock.hh"
+#include "game/timing/hires_clock.hh"
 
 using namespace treyarch;
 

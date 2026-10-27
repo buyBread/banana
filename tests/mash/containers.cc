@@ -1,10 +1,10 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/shared/mash/vector.hh"
-#include "treyarch/shared/mash/vector_basic.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/mash/vector.hh"
+#include "treyarch/mash/vector_basic.hh"
+#include "treyarch/mm/heap.hh"
+#include "treyarch/base/memory.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;

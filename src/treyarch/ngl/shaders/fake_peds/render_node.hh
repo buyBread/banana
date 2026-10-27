@@ -2,9 +2,9 @@
 
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/math/vmath/vector.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "treyarch/math/vector.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace fake_peds {
     struct pedestrian {

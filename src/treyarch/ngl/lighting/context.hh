@@ -1,8 +1,8 @@
 #pragma once
 
 #include "treyarch/ngl/lighting/light_data.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct scene;

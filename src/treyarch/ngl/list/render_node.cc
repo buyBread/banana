@@ -1,4 +1,4 @@
-#include "treyarch/game/speedtree/render_node.hh"
+#include "game/speedtree/render_node.hh"
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/font/render.hh"
 #include "treyarch/ngl/list/render_callback.hh"

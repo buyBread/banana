@@ -1,11 +1,11 @@
 #include "banana/hooks/base.hh"
 #include "banana/core.hh"
 #include "banana/imgui/imgui.hh"
-#include "util/gimmie/virt_dinput8.hh"
-#include "util/gimmie/method.hh"
-#include "util/vtables/IDirectInputDeviceA.hh"
-#include "util/macros/lambda.hh"
-#include "util/types.hh"
+#include "banana/util/gimmie/virt_dinput8.hh"
+#include "banana/util/gimmie/method.hh"
+#include "banana/util/vtables/IDirectInputDeviceA.hh"
+#include "banana/util/macros/lambda.hh"
+#include "banana/util/types.hh"
 
 DEFINE_HOOK(hk_GetRawInputData, hook_signatures::imgui::GetRawInputData) {
 

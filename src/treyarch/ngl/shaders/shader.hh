@@ -2,10 +2,10 @@
 
 #include "treyarch/ngl/instance_bank/instance_bank.hh"
 #include "treyarch/ngl/init_list/init_list.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct material;

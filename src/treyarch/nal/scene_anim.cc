@@ -1,7 +1,7 @@
 #include "treyarch/nal/anim_instance.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/nal/scene_anim.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

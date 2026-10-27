@@ -1,12 +1,12 @@
 #pragma once
 
-#include "treyarch/amalga/merged_apk/file.hh"
+#include "game/amalga/merged_apk/file.hh"
 #include "treyarch/ngl/d3d9/texture.hh"
-#include "treyarch/shared/container/skip_list.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/base/skip_list.hh"
+#include "game/fixed_string.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     enum e_texture_flags : u32 {

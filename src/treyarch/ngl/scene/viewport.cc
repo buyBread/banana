@@ -3,7 +3,7 @@
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/scene/viewport.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace references {
     util::memory_reference<f32*> viewport_tops    { 0x01115C40 };

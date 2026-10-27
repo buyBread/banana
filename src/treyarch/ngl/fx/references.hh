@@ -1,8 +1,8 @@
 #pragma once
 
-#include "treyarch/shared/math/vmath/vector.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/math/vector.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl {
     struct texture;

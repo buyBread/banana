@@ -10,10 +10,10 @@
 #include <doctest/doctest.h>
 
 #include "support/memory.hh"
-#include "treyarch/shared/mash/mash_info.hh"
-#include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/mash/virtual_base.hh"
-#include "util/memory_reference.hh"
+#include "treyarch/mash/mash_info.hh"
+#include "treyarch/mash/string.hh"
+#include "treyarch/mash/virtual_base.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace mash { namespace detail {
     struct vtable_registry;

@@ -5,7 +5,7 @@
 #include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/morph/vertex_codec.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

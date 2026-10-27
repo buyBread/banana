@@ -2,11 +2,11 @@
 
 #include "vc8/vector.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
-#include "treyarch/shared/mutex.hh"
-#include "treyarch/shared/singleton.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "game/mutex.hh"
+#include "game/singleton.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class  script_instance;

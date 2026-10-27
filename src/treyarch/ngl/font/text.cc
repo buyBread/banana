@@ -6,8 +6,8 @@
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/scene/matrices.hh"
 #include "treyarch/ngl/scene/references.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
 

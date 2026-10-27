@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "treyarch/ngl/shaders/description.hh"
-#include "util/types.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace shaders {
     struct shader_compile_result {

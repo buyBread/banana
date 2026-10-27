@@ -1,6 +1,6 @@
 #include "banana/logging.hh"
 #include "treyarch/ngl/list/arena.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

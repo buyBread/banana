@@ -2,7 +2,7 @@
 #include "treyarch/ngl/d3d9/work_buffers.hh"
 #include "treyarch/ngl/list/arena.hh"
 #include "treyarch/ngl/ngl.hh"
-#include "treyarch/shared/memory/memory.hh"
+#include "treyarch/base/memory.hh"
 
 using namespace treyarch;
 

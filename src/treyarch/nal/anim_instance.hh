@@ -6,9 +6,9 @@
 #include "treyarch/nal/nal2_decoder_state.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/nal/transport_fk.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     struct anim_instance;

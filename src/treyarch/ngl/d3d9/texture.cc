@@ -5,7 +5,7 @@
 #include "treyarch/ngl/d3d9/texture.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/shared/four_cc.hh"
+#include "game/four_cc.hh"
 
 using namespace treyarch;
 

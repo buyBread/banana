@@ -1,7 +1,7 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl {
     enum e_scene_parameter_source : u32 {

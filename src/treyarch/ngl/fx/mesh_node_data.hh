@@ -1,9 +1,9 @@
 #pragma once
 
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/shared/math/vmath/matrix_rot.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/math/matrix_rot.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace ngl { namespace fx {
     struct mesh_node_data {

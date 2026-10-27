@@ -10,7 +10,7 @@
 #include "banana/core.hh"
 
 #if REL32_GAME_CALLS
-    #include "treyarch/redirects.hh"
+    #include "redirects.hh"
 #endif
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {

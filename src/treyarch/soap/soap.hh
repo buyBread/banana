@@ -1,7 +1,7 @@
 #pragma once
 
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace soap { namespace references {
     inline util::memory_reference<u8> enable_online   { 0x00B88728 };

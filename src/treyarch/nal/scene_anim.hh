@@ -3,11 +3,11 @@
 #include <cstddef>
 
 #include "treyarch/nal/anim.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "treyarch/shared/four_cc.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "game/four_cc.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     constexpr u32 scene_anim_type    = four_cc('S', 'A', 'N', 'M');

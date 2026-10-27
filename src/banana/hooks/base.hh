@@ -7,8 +7,8 @@
 #include "banana/hooks/signatures.hh"
 #include "banana/lifecycle.hh"
 #include "banana/logging.hh"
-#include "util/type_name.hh"
-#include "util/macros/unique_name.hh"
+#include "banana/util/type_name.hh"
+#include "banana/util/macros/unique_name.hh"
 
 #define DEFINE_HOOK(name, signature) class name : public c_hook<name, signature>
 #define CONSTRUCT_HOOK(name, address, ...) name() : c_hook(address, __VA_ARGS__)

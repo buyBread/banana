@@ -5,8 +5,8 @@
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace pcuv {
     struct pcuv_material {

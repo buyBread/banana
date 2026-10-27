@@ -3,9 +3,9 @@
 #include "retail.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/nal/transport_fk.hh"
-#include "treyarch/shared/math/vmath/matrix_rot.hh"
-#include "treyarch/shared/math/vmath/rotation.hh"
-#include "treyarch/shared/tl_defs.hh"
+#include "treyarch/math/matrix_rot.hh"
+#include "treyarch/math/rotation.hh"
+#include "treyarch/base/tl_defs.hh"
 
 using namespace treyarch;
 

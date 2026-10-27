@@ -4,11 +4,11 @@
 
 #include "vc8/vector.hh"
 #include "treyarch/chuck/script_library/script_library_function.hh"
-#include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/mash/string.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace script_library {
     /* one chuck value type; its script-visible functions are descriptors, not C++ members.

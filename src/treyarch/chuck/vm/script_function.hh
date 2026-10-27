@@ -1,10 +1,10 @@
 #pragma once
 
-#include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/mash/types.hh"
-#include "treyarch/shared/mash/vector_basic.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mash/vector_basic.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     class script_object;

@@ -4,8 +4,8 @@
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace puv {
     struct render_node {

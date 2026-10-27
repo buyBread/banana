@@ -1,5 +1,5 @@
 #include "treyarch/ngl/geometry_shader/geometry_shader.hh"
-#include "treyarch/shared/hash/algo.hh"
+#include "game/hash/algo.hh"
 
 using namespace treyarch;
 

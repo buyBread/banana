@@ -4,9 +4,9 @@
 #include <stdexcept>
 #include <utility>
 
-#include "treyarch/shared/memory/heap.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "treyarch/mm/heap.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace vc8 {
     enum e_tree_color : u8 {

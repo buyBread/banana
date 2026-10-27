@@ -1,12 +1,12 @@
 #pragma once
 
 #include "treyarch/nal/transport_list.hh"
-#include "treyarch/shared/fixed_string.hh"
-#include "treyarch/shared/math/vmath/matrix.hh"
-#include "treyarch/shared/math/vmath/quaternion.hh"
-#include "treyarch/shared/math/vmath/vector.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/types.hh"
+#include "game/fixed_string.hh"
+#include "treyarch/math/matrix.hh"
+#include "treyarch/math/quaternion.hh"
+#include "treyarch/math/vector.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace nal {
     struct pose;

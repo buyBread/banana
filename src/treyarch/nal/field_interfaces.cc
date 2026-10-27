@@ -3,9 +3,9 @@
 
 #include "retail.hh"
 #include "treyarch/nal/field_interfaces.hh"
-#include "treyarch/shared/math/vmath/quaternion.hh"
-#include "treyarch/shared/math/vmath/trig.hh"
-#include "treyarch/shared/math/vmath/vector.hh"
+#include "treyarch/math/quaternion.hh"
+#include "treyarch/math/trig.hh"
+#include "treyarch/math/vector.hh"
 
 using namespace treyarch;
 

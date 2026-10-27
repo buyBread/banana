@@ -6,8 +6,8 @@
 #include "treyarch/ngl/d3d9/state_cache.hh"
 #include "treyarch/ngl/scene/references.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
-#include "treyarch/shared/color.hh"
-#include "util/memory_reference.hh"
+#include "game/color.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace d3d9 { namespace references {
     util::memory_reference<u8> rendering_to_texture           { 0x00F53D50 };

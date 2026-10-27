@@ -2,9 +2,9 @@
 
 #include <array>
 
-#include "treyarch/shared/mutex.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "game/mutex.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 // locks of systems that still live in retail, all set up by jobqueue_init;
 // each one moves to its system's references once that system is owned (yay!)

@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include "treyarch/ngl/fx/lighting_parameters.hh"
-#include "treyarch/shared/math/vmath/matrix_rot.hh"
+#include "treyarch/math/matrix_rot.hh"
 
 using namespace treyarch;
 

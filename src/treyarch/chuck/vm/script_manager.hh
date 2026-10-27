@@ -6,14 +6,14 @@
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_executable_entry.hh"
 #include "treyarch/chuck/vm/script_var_container.hh"
-#include "treyarch/shared/hash/string_hash.hh"
-#include "treyarch/shared/mash/string.hh"
-#include "treyarch/shared/mutex.hh"
-#include "treyarch/shared/platform.hh"
-#include "treyarch/shared/singleton.hh"
-#include "util/macros/sanity_assert.hh"
-#include "util/memory_reference.hh"
-#include "util/types.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/string.hh"
+#include "game/mutex.hh"
+#include "game/platform.hh"
+#include "game/singleton.hh"
+#include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
+#include "banana/util/types.hh"
 
 namespace treyarch { namespace chuck { namespace vm {
     enum e_script_manager_callback_reason : i32 {

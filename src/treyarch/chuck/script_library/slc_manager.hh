@@ -2,8 +2,8 @@
 
 #include "vc8/vector.hh"
 #include "treyarch/chuck/script_library/script_library_class.hh"
-#include "treyarch/shared/singleton.hh"
-#include "util/macros/sanity_assert.hh"
+#include "game/singleton.hh"
+#include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace chuck { namespace script_library {
     /* slc_manager::setup runs from game::load_this_level and registers every class and function;

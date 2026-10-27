@@ -7,8 +7,8 @@
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
-#include "treyarch/game/script/script_garbage_collection.hh"
-#include "treyarch/shared/memory/heap.hh"
+#include "game/script/script_garbage_collection.hh"
+#include "treyarch/mm/heap.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
