@@ -24,8 +24,15 @@ namespace treyarch { namespace nfl {
         request_state_active
     };
 
+    enum e_state : i32 {
+        state_invalid = -1,
+        state_idle,
+        state_busy,
+        state_error
+    };
+
     struct request_params {
-        i32              file;
+        i32              file_id;
         request_callback callback;
         i32              type;        // 0 read, 1 write
         i32              priority;    // higher goes first
@@ -47,10 +54,10 @@ namespace treyarch { namespace nfl {
 
     i32 add_request(const request_params* params);
 
-    i32 media_status();
+    e_state get_state();
 
     namespace references {
-        inline util::memory_reference<init_params> params { 0x00FB84B0 };
+        inline util::memory_reference<init_params> nfs_init_params { 0x00FB84B0 };
 
         inline util::memory_reference<i32> thread_priority { 0x00FB84A4 };
     } // references

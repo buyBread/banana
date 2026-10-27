@@ -27,7 +27,7 @@ i32 treyarch::nfl::nfs_allocate_decompress_batch_job() {
 
 // sub_A15E60
 void treyarch::nfl::nfs_cancel_request(i32 id) {
-    request* request = get_request(id);
+    nfs_request* request = nfs_get_request(id);
 
     if (!request)
         return;
@@ -35,15 +35,15 @@ void treyarch::nfl::nfs_cancel_request(i32 id) {
     const i32 state = request->state;
 
     // anything with I/O or decompression in flight has to be stopped by the driver first
-    if (state == internal_request_state_working || request->chunk_jobs) {
-        request->state = internal_request_state_canceling;
+    if (state == nfs_request_state_working || request->chunk_jobs) {
+        request->state = nfs_request_state_canceling;
 
         SetEvent(references::cancel_event.read());
-    } else if (state == internal_request_state_io_error_waiting ||
-               state == internal_request_state_io_error ||
-              (state != internal_request_state_canceling && state != internal_request_state_workdone))
+    } else if (state == nfs_request_state_io_error_waiting ||
+               state == nfs_request_state_io_error ||
+              (state != nfs_request_state_canceling && state != nfs_request_state_workdone))
 
-        request->state = internal_request_state_canceled;
+        request->state = nfs_request_state_canceled;
 }
 
 // sub_A15F90
@@ -51,25 +51,25 @@ i32 treyarch::nfl::add_request(const request_params* params) {
     if (!nfs_validate_destination(params->destination))
         return -1;
 
-    if (!get_file(params->file))
+    if (!nfs_get_file(params->file_id))
         return -1;
 
-    lock();
+    nfs_lock();
 
-    const i32 id = references::request_pool.get().allocate();
+    const i32 id = tx::slot_new(&references::nfs_requests_pool.get());
 
     if (id == -1) {
-        unlock();
+        nfs_unlock();
 
         return -1;
     }
 
-    request* request = get_request(id);
-    file*    file    = get_file(resolve_file(params->file));
+    nfs_request* request = nfs_get_request(id);
+    nfs_file*    file    = nfs_get_file(nfs_get_native_file_id(params->file_id));
 
     request->type     = params->type;
-    request->file     = params->file;
-    request->driver   = file ? file->driver : nullptr;
+    request->file     = params->file_id;
+    request->driver   = file ? file->as.native.driver : nullptr;
     request->priority = params->priority;
     request->callback = params->callback;
     request->user     = params->user;
@@ -80,7 +80,7 @@ i32 treyarch::nfl::add_request(const request_params* params) {
     request->deadline   = params->timeout ? now + 1000 * params->timeout / 1000 : 0x7FFFFFFF;
 
     request->age                = now;
-    request->state              = internal_request_state_waiting;
+    request->state              = nfs_request_state_waiting;
     request->destination        = params->destination;
     request->decompress         = params->decompress;
     request->output_size        = params->output_size;
@@ -100,12 +100,12 @@ i32 treyarch::nfl::add_request(const request_params* params) {
     request->buffer           = -1;
     request->decompress_group = params->decompress ? nfs_allocate_decompress_batch_job() : -1;
 
-    if (references::params.get().thread_mode == 1) {
-        ReleaseMutex(references::mutex.read());
+    if (references::nfs_init_params.get().thread_mode == 1) {
+        ReleaseMutex(references::nfs_mutex.read());
 
         // retail checks the mode a second time
-        if (references::params.get().thread_mode == 1)
-            SetEvent(references::work_event.read());
+        if (references::nfs_init_params.get().thread_mode == 1)
+            SetEvent(references::nfs_event.read());
     }
 
     return id;

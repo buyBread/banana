@@ -33,7 +33,7 @@ void amalga::resource_pack_slot::frame_advance(f32, limited_timer* time_limit) {
     switch (slot_state) {
         case slot_state_streaming:
             // the result goes nowhere
-            nfl::media_status();
+            nfl::get_state();
 
             return;
 

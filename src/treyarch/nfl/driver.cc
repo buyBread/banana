@@ -4,33 +4,33 @@
 using namespace treyarch;
 
 // sub_A16A60
-i32 treyarch::nfl::media_status() {
-    // -1 with no drivers, otherwise the worst of 0 idle, 1 busy and 2 error
-    i32 status = -1;
+nfl::e_state treyarch::nfl::get_state() {
+    // the worst state across the drivers, invalid with none
+    e_state state = state_invalid;
 
-    for (i32 index = 0; index < references::driver_count.read(); ++index) {
-        switch (references::drivers.read()[index]->io_state) {
-            case 0:
-            case 2:
-            case 4:
-                if (status == -1)
-                    status = 0;
-
-                break;
-
-            case 1:
-            case 3:
-                if (status == -1 || status == 0)
-                    status = 1;
+    for (i32 index = 0; index < references::nfs_drivers_count.read(); ++index) {
+        switch (references::nfs_drivers.read()[index]->io_state) {
+            case nfd_io_state_idle:
+            case nfd_io_state_workdone:
+            case nfd_io_state_canceled:
+                if (state == state_invalid)
+                    state = state_idle;
 
                 break;
 
-            case 5:
-                status = 2;
+            case nfd_io_state_working:
+            case nfd_io_state_canceling:
+                if (state == state_invalid || state == state_idle)
+                    state = state_busy;
+
+                break;
+
+            case nfd_io_state_error:
+                state = state_error;
 
                 break;
         }
     }
 
-    return status;
+    return state;
 }

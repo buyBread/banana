@@ -200,7 +200,7 @@ void amalga::resource_pack_streamer::load_internal(const char*                 p
         file = nfl::open_file(1, path.c_str());
 
     nfl::request_params params {};
-    params.file     = -1;
+    params.file_id  = -1;
     params.type     = -1;
     params.priority = 2;
 
@@ -213,7 +213,7 @@ void amalga::resource_pack_streamer::load_internal(const char*                 p
         if (!curr_pack_entry->data_size[buffer])
             continue;
 
-        params.file        = file;
+        params.file_id     = file;
         params.callback    = stream_request_callback;
         params.type        = 0;
         params.offset      = offset;
