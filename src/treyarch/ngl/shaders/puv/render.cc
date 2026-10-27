@@ -1,5 +1,6 @@
 #include <bit>
 
+#include "retail.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/gpu/d3d9/state_cache.hh"
@@ -11,7 +12,7 @@
 using namespace treyarch;
 
 // sub_88D0F0
-void ngl::shaders::puv::render(render_node* value) {
+void ngl::shaders::puv::node::render() {
     if (references::puv_shader.read() != ngl::references::all_shaders.read() ||
         !ngl::references::in_shadow_scene.read()) {
 
@@ -27,7 +28,7 @@ void ngl::shaders::puv::render(render_node* value) {
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, std::bit_cast<DWORD>(0.001f));
 
-    const math::mat43 &local  = value->node_data->local_to_world;
+    const math::mat43 &local  = mesh_node->local_to_world;
     const math::mat44 &screen = ngl::references::build_scene.read()->world_to_screen;
 
     math::mat44 local_to_screen;
@@ -47,8 +48,13 @@ void ngl::shaders::puv::render(render_node* value) {
     d3d9::references::dev.get()
         ->SetVertexShaderConstantF(0, (const f32*)&local_to_screen, 4);
 
-    d3d9::draw_section(value->section);
+    d3d9::draw_section(section);
 
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, 0);
+}
+
+// sub_8AA510
+void ngl::shaders::puv::node::get_sort_info(sort_info &info) {
+    retail::sub_8AA510((u32*)this, (i32)&info);
 }

@@ -11,15 +11,18 @@
 
 using namespace treyarch;
 
-// sub_8ADB30
-void ngl::shaders::smsky::render(render_node* value) {
+// sub_8B2B30
+void ngl::shaders::smsky::node::render() {
     d3d9::set_render_state(D3DRS_FILLMODE, D3DFILL_SOLID);
 
-    if (ngl::references::in_shadow_scene.read())
-        return;
+    if (!ngl::references::in_shadow_scene.read())
+        render_normal();
+}
 
+// sub_8ADB30
+void ngl::shaders::smsky::node::render_normal() {
     u32 light_source_id = fx::references::parameter_id_light_source.read();
-    auto* light_source = (light_source_data*)value->node_data->parameters->values[light_source_id];
+    auto* light_source = (light_source_data*)mesh_node->parameters->values[light_source_id];
     sky_data* sky = light_source->sky;
 
     if (!sky || !sky->resource_0d8 || !sky->resource_0dc)

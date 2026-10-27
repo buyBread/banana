@@ -16,19 +16,19 @@ namespace treyarch { namespace ngl { namespace shaders { namespace fake_peds {
         u8            reserved_044[0x0C];
     };
 
-    struct render_node {
-        ngl::render_node base;
-        pedestrian*      pedestrians;
-        u32              pedestrian_count;
-        texture*         texture_data;
-        u32              atlas_tile_count;
-        u32              blend_mode;
+    struct render_node : ngl::render_node {
+        pedestrian* pedestrians;
+        u32         pedestrian_count;
+        texture*    texture_data;
+        u32         atlas_tile_count;
+        u32         blend_mode;
+
+        void render() override;
+        void get_desc(char* desc) override;
     };
 
-    void render(render_node* value);
-
     namespace references {
-        inline util::memory_reference<void*> node_vtable { 0x00BE5314 };
+        inline util::memory_reference<void*> render_node_vftable { 0x00BE5314 };
     } // references
 
     ASSERT_SIZEOF  (pedestrian,             0x50);

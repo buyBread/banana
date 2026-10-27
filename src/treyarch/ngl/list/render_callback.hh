@@ -5,29 +5,34 @@
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
-namespace treyarch { namespace ngl { namespace render_callback {
-    using function = void (__cdecl*)(void* data);
-
-    struct node {
-        render_node base;
-        u32         type;
-        function    callback;
-        void*       data;
-        sort_info   sorting;
+namespace treyarch { namespace ngl {
+    enum e_node_type : u32 {
+        node_scene  = 0,
+        node_custom = 1
     };
 
-    void render(node* value);
+    using custom_node_fn = void (__cdecl*)(void* data);
 
-    scene* list_add_custom_node(function callback, void* data, const sort_info* sorting);
+    struct render_callback_node : render_node {
+        e_node_type    type;
+        custom_node_fn fn;
+        void*          data;
+        ngl::sort_info sort_info;
+
+        void render() override;
+        void get_desc(char* desc) override;
+        void get_sort_info(ngl::sort_info &info) override;
+    };
+
+    scene* list_add_custom_node(custom_node_fn fn, void* data, const ngl::sort_info* sort_info);
 
     namespace references {
-        inline util::memory_reference<void*> node_vtable { 0x00DB716C };
+        inline util::memory_reference<void*> render_callback_node_vftable { 0x00DB716C };
     } // references
 
-    ASSERT_SIZEOF  (node,           0x20);
-    ASSERT_OFFSETOF(node, base,     0x00);
-    ASSERT_OFFSETOF(node, type,     0x0C);
-    ASSERT_OFFSETOF(node, callback, 0x10);
-    ASSERT_OFFSETOF(node, data,     0x14);
-    ASSERT_OFFSETOF(node, sorting,  0x18);
-}}} // treyarch::ngl::render_callback
+    ASSERT_SIZEOF  (render_callback_node,            0x20);
+    ASSERT_OFFSETOF(render_callback_node, type,      0x0C);
+    ASSERT_OFFSETOF(render_callback_node, fn,        0x10);
+    ASSERT_OFFSETOF(render_callback_node, data,      0x14);
+    ASSERT_OFFSETOF(render_callback_node, sort_info, 0x18);
+}} // treyarch::ngl

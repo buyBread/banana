@@ -41,7 +41,7 @@ void post_process::render_pause_menu_blur(f32 strength) {
 
     ngl::set_z_target(nullptr);
 
-    ngl::render_callback::list_add_custom_node(draw_pause_menu_blur, nullptr, &sorting);
+    ngl::list_add_custom_node(draw_pause_menu_blur, nullptr, &sorting);
 
     ngl::list_end_scene();
 }
@@ -61,7 +61,7 @@ void post_process::render_zoom_map_effect() {
 
     ngl::set_z_target(nullptr);
 
-    ngl::render_callback::list_add_custom_node(draw_zoom_map_effect, nullptr, &sorting);
+    ngl::list_add_custom_node(draw_zoom_map_effect, nullptr, &sorting);
 
     ngl::list_end_scene();
 }

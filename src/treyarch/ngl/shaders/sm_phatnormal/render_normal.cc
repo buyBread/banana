@@ -19,8 +19,8 @@ namespace rendering {
 } // rendering
 
 // sub_8E41B0
-void render_normal(render_node* value) {
-    generated_material::material_data* material = value->material_data;
+void node::render_normal() {
+    generated_material::material_data* material = material_data;
 
     if (!material->normal_texture)
         return;
@@ -31,15 +31,15 @@ void render_normal(render_node* value) {
     generated_material::scene_snapshot snapshot;
     generated_material::prepare_scene_snapshot(&snapshot,
                                                 material,
-                                                value->node_data,
-                                                value->section);
+                                                mesh_node,
+                                                section);
 
-    math::rot_tran_mat43 unscaled_local_to_world = fx::get_unscaled_local_to_world(value->node_data);
+    math::rot_tran_mat43 unscaled_local_to_world = fx::get_unscaled_local_to_world(mesh_node);
     math::mat44          local_to_world = math::mat44(*(const math::mat43*)&snapshot.base_transform) *
                                           math::mat44(unscaled_local_to_world);
 
     fx::general_lighting_parameters lighting;
-    fx::build_general_lighting(&lighting, value->node_data, value->section);
+    fx::build_general_lighting(&lighting, mesh_node, section);
 
     fx::apply_material_values(&lighting, snapshot.material_values);
     fx::transform_lighting_to_local(&lighting, local_to_world);
@@ -48,8 +48,8 @@ void render_normal(render_node* value) {
     generated_material::prepare_regular_vertex_context(&vertex_context,
                                                         lighting,
                                                        &snapshot,
-                                                        value->node_data,
-                                                        value->section,
+                                                        mesh_node,
+                                                        section,
                                                         local_to_world,
                                                         material->shadow_mode <= 1);
 
@@ -66,8 +66,8 @@ void render_normal(render_node* value) {
 
     generated_material::transform_light_matrix(&snapshot, lighting);
 
-    u32 render_flags = value->node_data->render_flags;
-    generated_material::configure_regular_pass_states(value->queue_class,
+    u32 render_flags = mesh_node->render_flags;
+    generated_material::configure_regular_pass_states(queue_class,
                                                        render_flags,
                                                        true);
 
@@ -91,7 +91,7 @@ void render_normal(render_node* value) {
                                             &snapshot,
                                              material,
                                              local_to_world,
-                                             value->section);
+                                             section);
     generated_material::restore_regular_pass_states();
 }
 

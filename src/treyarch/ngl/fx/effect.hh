@@ -265,7 +265,7 @@ namespace treyarch { namespace ngl { namespace fx {
     };
 
     struct effect;
-    struct render_node;
+    struct shader_node;
 
     struct priority_prefix {
         const char* prefix;
@@ -273,7 +273,7 @@ namespace treyarch { namespace ngl { namespace fx {
     };
 
     struct technique_batch {
-        render_node* head;
+        shader_node* head;
         i32          count;
     };
 

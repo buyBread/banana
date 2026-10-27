@@ -202,5 +202,5 @@ void ngl::advance_render_node() {
 // inlined @ sub_9E97E0
 void ngl::render_nodes(render_node* head) {
     for (begin_render_node(head); references::cur_render_node.read(); advance_render_node())
-        references::cur_render_node.read()->render();
+        dispatch_render(references::cur_render_node.read());
 }

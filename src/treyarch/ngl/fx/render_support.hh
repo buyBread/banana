@@ -7,7 +7,7 @@ namespace treyarch { namespace ngl { namespace lighting {
 }}}
 
 namespace treyarch { namespace ngl { namespace fx {
-    effect* select_effect(render_node* value);
+    effect* select_effect(shader_node* value);
 
     lighting::light_context* prepare_light_context(const mesh_node_data* node_data);
 

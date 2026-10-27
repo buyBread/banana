@@ -269,12 +269,12 @@ void gather_point_lights(      ngl::fx::mesh_node_data* node_data,
 }
 
 // sub_9DF800
-ngl::fx::effect* ngl::fx::select_effect(render_node* value) {
-    gather_point_lights(value->node_data, value->section);
+ngl::fx::effect* ngl::fx::select_effect(shader_node* value) {
+    gather_point_lights(value->mesh_node, value->section);
 
     effect* base = value->effect_data;
     effect_runtime* runtime = base->runtime;
-    u8 count = value->node_data->point_light_count;
+    u8 count = value->mesh_node->point_light_count;
 
     if (!count && runtime->zero_point_lights)
         return runtime->zero_point_lights;

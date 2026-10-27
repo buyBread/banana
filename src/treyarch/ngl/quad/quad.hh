@@ -26,22 +26,14 @@ namespace treyarch { namespace ngl {
         IDirect3DPixelShader9** pixel_program;
     };
 
-    namespace quad_renderer {
-        struct node {
-            render_node base;
-            u32         pad_00c;
-            quad        value;
-        };
+    struct quad_node : render_node {
+        ngl::quad quad;
 
-        void render(node* value);
+        void render() override;
+        void get_desc(char* desc) override;
+    };
 
-        namespace references {
-            inline util::memory_reference<void*> node_vtable { 0x00DB8F54 };
-        } // references
-
-        ASSERT_SIZEOF  (node,        0x78);
-        ASSERT_OFFSETOF(node, value, 0x10);
-    } // quad_renderer
+    void render_quad(const quad* value);
 
     void init_quad(quad* value);
     void set_quad_rect(quad* value,
@@ -61,6 +53,10 @@ namespace treyarch { namespace ngl {
     void set_quad_z(quad* value, f32 z);
     scene* list_add_quad(const quad* value);
 
+    namespace references {
+        inline util::memory_reference<void*> quad_node_vftable { 0x00DB8F54 };
+    } // references
+
     ASSERT_SIZEOF  (quad_vertex,        0x14);
     ASSERT_OFFSETOF(quad_vertex, x,     0x00);
     ASSERT_OFFSETOF(quad_vertex, y,     0x04);
@@ -75,4 +71,7 @@ namespace treyarch { namespace ngl {
     ASSERT_OFFSETOF(quad, blend_mode,   0x58);
     ASSERT_OFFSETOF(quad, texture_data, 0x60);
     ASSERT_OFFSETOF(quad, pixel_program, 0x64);
+
+    ASSERT_SIZEOF  (quad_node,       0x78);
+    ASSERT_OFFSETOF(quad_node, quad, 0x10);
 }} // treyarch::ngl

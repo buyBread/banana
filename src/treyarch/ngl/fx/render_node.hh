@@ -8,34 +8,26 @@
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
-namespace treyarch { namespace ngl {
-    struct mesh_section;
+namespace treyarch { namespace ngl { namespace fx {
+    struct shader_node : ngl::shader_node {
+        material* material_data;
+        effect*   effect_data;
+        i32       technique_index;
+        u32       queue_class;
+        u32       order_key;
 
-namespace fx {
-    struct render_node {
-        ngl::render_node base;
-        mesh_node_data*  node_data;
-        mesh_section*    section;
-        material*        material_data;
-        effect*          effect_data;
-        i32              technique_index;
-        u32              queue_class;
-        u32              order_key;
+        void render() override;
+        i32  get_list_type() override;
     };
 
-    void render(render_node* value);
-
     namespace references {
-        inline util::memory_reference<void*> node_vtable { 0x00DB7B84 };
+        inline util::memory_reference<void*> shader_node_vftable { 0x00DB7B84 };
     } // references
 
-    ASSERT_SIZEOF  (render_node,                  0x28);
-    ASSERT_OFFSETOF(render_node, node_data,       0x0C);
-    ASSERT_OFFSETOF(render_node, section,         0x10);
-    ASSERT_OFFSETOF(render_node, material_data,   0x14);
-    ASSERT_OFFSETOF(render_node, effect_data,     0x18);
-    ASSERT_OFFSETOF(render_node, technique_index, 0x1C);
-    ASSERT_OFFSETOF(render_node, queue_class,     0x20);
-    ASSERT_OFFSETOF(render_node, order_key,       0x24);
-} // fx
-}} // treyarch::ngl
+    ASSERT_SIZEOF  (shader_node,                  0x28);
+    ASSERT_OFFSETOF(shader_node, material_data,   0x14);
+    ASSERT_OFFSETOF(shader_node, effect_data,     0x18);
+    ASSERT_OFFSETOF(shader_node, technique_index, 0x1C);
+    ASSERT_OFFSETOF(shader_node, queue_class,     0x20);
+    ASSERT_OFFSETOF(shader_node, order_key,       0x24);
+}}} // treyarch::ngl::fx

@@ -1,5 +1,6 @@
 #include <bit>
 
+#include "retail.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/gpu/d3d9/state_cache.hh"
@@ -59,25 +60,33 @@ math::mat44 get_pcuv_local_to_screen(const ngl::fx::mesh_node_data* node_data,
     return result;
 }
 
-// sub_8A8FD0
-void ngl::shaders::pcuv::render(render_node* value) {
-    if (references::pcuv_shader.read() != ::ngl::references::all_shaders.read() ||
-        ngl::references::in_shadow_scene.read()) {
+// sub_8B8600
+void ngl::shaders::pcuv::node::render() {
+    if (references::pcuv_shader.read() == ::ngl::references::all_shaders.read() &&
+        !ngl::references::in_shadow_scene.read()) {
 
-        return;
+        render_normal();
     }
+}
 
+// sub_8A26A0
+void ngl::shaders::pcuv::node::get_sort_info(sort_info &info) {
+    retail::sub_8A26A0((u32*)this, (i32)&info);
+}
+
+// sub_8A8FD0
+void ngl::shaders::pcuv::node::render_normal() {
     scene* build_scene = ngl::references::build_scene.read();
 
     IDirect3DDevice9* device = d3d9::references::dev.get();
 
-    math::mat44 local_to_screen = get_pcuv_local_to_screen(value->node_data,
+    math::mat44 local_to_screen = get_pcuv_local_to_screen(mesh_node,
                                                            build_scene);
 
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
 
-    u32 blend_low  = value->material_data->blend_mode_low;
-    u32 blend_high = value->material_data->blend_mode_high;
+    u32 blend_low  = material->blend_mode_low;
+    u32 blend_high = material->blend_mode_high;
 
     if ((blend_low == 2 && blend_high == 0) ||
         (blend_low == 0x06C10000 && blend_high == 5)) {
@@ -131,7 +140,7 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     math::vector4 tint_color(1.0f, 1.0f, 1.0f, 1.0f);
 
-    void* tint_parameter = find_scene_parameter(value->node_data->parameters,
+    void* tint_parameter = find_scene_parameter(mesh_node->parameters,
                                                 fx::references::parameter_id_tint_color.read());
 
     if (tint_parameter)
@@ -144,20 +153,20 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     u32 emissive_parameter_id = fx::references::parameter_id_emissive.read();
 
-    if (has_scene_parameter(value->node_data->parameters, emissive_parameter_id))
-        emissive = std::bit_cast<f32>(value->node_data->parameters->values[emissive_parameter_id]);
+    if (has_scene_parameter(mesh_node->parameters, emissive_parameter_id))
+        emissive = std::bit_cast<f32>(mesh_node->parameters->values[emissive_parameter_id]);
 
     d3d9::set_pixel_program(program_exports::pcuv::pixel_program.read());
 
     math::vector4 emissive_constant(emissive, 0.0f, 0.0f, 0.0f);
     device->SetPixelShaderConstantF(0, (const f32*)&emissive_constant, 1);
 
-    texture* texture_data = value->material_data->texture_data;
+    texture* texture_data = material->texture_data;
     d3d9::set_texture(0, texture_data->gpu_texture.resource);
 
     d3d9::set_sampler_filters(0, D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_POINT, 1);
 
-    u32 map_flags = value->material_data->map_flags;
+    u32 map_flags = material->map_flags;
 
     u32 address_u = (map_flags & 0x80) ? D3DTADDRESS_MIRROR :
                     (map_flags & 0x10) ? D3DTADDRESS_CLAMP : D3DTADDRESS_WRAP;
@@ -166,7 +175,7 @@ void ngl::shaders::pcuv::render(render_node* value) {
 
     d3d9::set_sampler_address(0, address_u, address_v);
 
-    d3d9::draw_section(value->section);
+    d3d9::draw_section(section);
 
     d3d9::set_render_state(D3DRS_COLORWRITEENABLE, build_scene->framebuffer_write_mask);
     d3d9::set_render_state(D3DRS_ZWRITEENABLE, build_scene->z_write_enabled);

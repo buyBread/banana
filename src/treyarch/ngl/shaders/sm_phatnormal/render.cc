@@ -6,13 +6,13 @@
 using namespace treyarch;
 
 // sub_8FD150
-void ngl::shaders::sm_phatnormal::render(render_node* value) {
+void ngl::shaders::sm_phatnormal::node::render() {
     d3d9::set_render_state(D3DRS_FILLMODE,
                            ngl::references::wireframe.read() ?
                            D3DFILL_WIREFRAME : D3DFILL_SOLID);
 
     if (ngl::references::in_shadow_scene.read())
-        render_shadow(value);
+        render_shadow();
     else
-        render_normal(value);
+        render_normal();
 }

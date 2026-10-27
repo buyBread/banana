@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/internal_programs.hh"
 #include "treyarch/ngl/gpu/d3d9/state_cache.hh"
@@ -28,8 +30,8 @@ ASSERT_SIZEOF(quad_color_draw_vertex,    0x10);
 ASSERT_SIZEOF(quad_textured_draw_vertex, 0x18);
 
 // sub_9E5290
-void ngl::quad_renderer::render(node* value) {
-    const quad &source = value->value;
+void ngl::render_quad(const quad* value) {
+    const quad &source = *value;
 
     scene* current = ngl::references::build_scene.read();
 
@@ -126,4 +128,14 @@ void ngl::quad_renderer::render(node* value) {
         device->SetVertexDeclaration(d3d9::references::quad_position_color_format.get().declaration);
         device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(quad_color_draw_vertex));
     }
+}
+
+// sub_9E58E0
+void ngl::quad_node::render() {
+    render_quad(&quad);
+}
+
+// sub_9E4C00
+void ngl::quad_node::get_desc(char* desc) {
+    std::strcpy(desc, "Quad");
 }

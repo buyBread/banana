@@ -4,6 +4,7 @@
 
 #include "treyarch/apk/file.hh"
 #include "treyarch/ngl/gpu/d3d9/vertex_definition.hh"
+#include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
 #include "treyarch/math/vector.hh"
@@ -100,13 +101,20 @@ namespace treyarch { namespace ngl {
                                         material*     section_material,
                                         u32           flags);
 
-    namespace references {
-        inline util::memory_reference<mesh_directory_t> mesh_directory { 0x01116190 };
-    } // references
+    struct sm_lod_mesh_instance_node : render_node {
+        // sub_5B4A70
+        void render() override {}
 
-    namespace sm_lod_mesh_instance { namespace references {
-        inline util::memory_reference<void*> node_vtable { 0x00BE5348 };
-    }} // lod_mesh_instance_node::references
+        // sub_8B01A0
+        void get_desc(char* desc) override {
+            std::strcpy(desc, "sm_lod_mesh_instance_node");
+        }
+    };
+
+    namespace references {
+        inline util::memory_reference<mesh_directory_t> mesh_directory                    { 0x01116190 };
+        inline util::memory_reference<void*>            sm_lod_mesh_instance_node_vftable { 0x00BE5348 };
+    } // references
 
     ASSERT_SIZEOF  (mesh_section,                         0x58);
     ASSERT_OFFSETOF(mesh_section, sphere,                 0x00);

@@ -10,15 +10,15 @@
 using namespace treyarch;
 
 // sub_8AF670
-void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
-    generated_material::material_data* material = value->material_data;
+void ngl::shaders::sm_phatnormal::node::render_shadow() {
+    generated_material::material_data* material = material_data;
 
     if (material->shadow_mode != 1 && material->shadow_mode != 2)
         return;
 
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_CW);
 
-    if (value->queue_class && material->opacity_texture) {
+    if (queue_class && material->opacity_texture) {
         d3d9::bind_texture_resource(0,
                                     &material->opacity_texture->gpu_texture,
                                     D3DTADDRESS_WRAP,
@@ -43,13 +43,13 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
     generated_material::scene_snapshot snapshot;
     generated_material::prepare_scene_snapshot(&snapshot,
                                                 material,
-                                                value->node_data,
-                                                value->section);
+                                                mesh_node,
+                                                section);
 
     math::mat44 world_view_projection =
-        math::mat44(value->node_data->local_to_world) *
+        math::mat44(mesh_node->local_to_world) *
         ngl::references::build_scene.read()->world_to_screen;
-    math::mat44 compressed_to_local = fx::get_compressed_to_local(value->node_data);
+    math::mat44 compressed_to_local = fx::get_compressed_to_local(mesh_node);
 
     math::vector4 uv_scale_offset(snapshot.texture_matrix[0][0],
                                   snapshot.texture_matrix[1][1],
@@ -65,7 +65,7 @@ void ngl::shaders::sm_phatnormal::render_shadow(render_node* value) {
     device->SetVertexShaderConstantF(4, (const f32*)&uv_scale_offset, 1);
     device->SetVertexShaderConstantF(5, (const f32*)&compressed, 1);
 
-    d3d9::draw_section(value->section);
+    d3d9::draw_section(section);
 
     d3d9::set_render_state(D3DRS_SLOPESCALEDEPTHBIAS, 0);
     d3d9::set_render_state(D3DRS_DEPTHBIAS, 0);

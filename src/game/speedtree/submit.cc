@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <new>
 
 #include "retail.hh"
 #include "game/amalga/resource_types.hh"
@@ -127,60 +128,55 @@ void speed_tree_wrapper::submit_nodes() {
             if (nearest != 3.4028235e38f) {
                 params.translucent = true;
 
-                auto* node = (speed_tree_leafs_node*)ngl::list_alloc(sizeof(speed_tree_leafs_node), 16);
+                auto* node = new (ngl::list_alloc(sizeof(speed_tree_leafs_node), 16)) speed_tree_leafs_node;
 
-                node->base.vtable = &references::speed_tree_leafs_node_vtable.get();
-                node->wrapper     = this;
-                node->params      = params;
+                node->wrapper = this;
+                node->params  = params;
 
-                node->base.sort_key.floating = nearest;
+                node->sort_key.floating = nearest;
 
-                ngl::list_push_node(&node->base, ngl::sort_translucent);
+                ngl::list_push_node(node, ngl::sort_translucent);
 
                 params.translucent = false;
             } else
                 params.fades = nullptr;
         }
 
-        auto* leafs = (speed_tree_leafs_node*)ngl::list_alloc(sizeof(speed_tree_leafs_node), 16);
+        auto* leafs = new (ngl::list_alloc(sizeof(speed_tree_leafs_node), 16)) speed_tree_leafs_node;
 
-        leafs->base.vtable = &references::speed_tree_leafs_node_vtable.get();
-        leafs->wrapper     = this;
-        leafs->params      = params;
+        leafs->wrapper = this;
+        leafs->params  = params;
 
-        leafs->base.sort_key.integer = 0xF0000000;
+        leafs->sort_key.integer = 0xF0000000;
 
-        ngl::list_push_node(&leafs->base, ngl::sort_opaque);
+        ngl::list_push_node(leafs, ngl::sort_opaque);
 
-        auto* billboards = (speed_tree_billboards_node*)ngl::list_alloc(sizeof(speed_tree_billboards_node), 16);
+        auto* billboards = new (ngl::list_alloc(sizeof(speed_tree_billboards_node), 16)) speed_tree_billboards_node;
 
-        billboards->base.vtable = &references::speed_tree_billboards_node_vtable.get();
-        billboards->wrapper     = this;
-        billboards->params      = params;
+        billboards->wrapper = this;
+        billboards->params  = params;
 
-        billboards->base.sort_key.integer = 0xC0000000;
+        billboards->sort_key.integer = 0xC0000000;
 
-        ngl::list_push_node(&billboards->base, ngl::sort_opaque);
+        ngl::list_push_node(billboards, ngl::sort_opaque);
 
-        auto* fronds = (speed_tree_fronds_node*)ngl::list_alloc(sizeof(speed_tree_fronds_node), 16);
+        auto* fronds = new (ngl::list_alloc(sizeof(speed_tree_fronds_node), 16)) speed_tree_fronds_node;
 
-        fronds->base.vtable = &references::speed_tree_fronds_node_vtable.get();
-        fronds->wrapper     = this;
-        fronds->params      = params;
+        fronds->wrapper = this;
+        fronds->params  = params;
 
-        fronds->base.sort_key.integer = 0xE0000000;
+        fronds->sort_key.integer = 0xE0000000;
 
-        ngl::list_push_node(&fronds->base, ngl::sort_opaque);
+        ngl::list_push_node(fronds, ngl::sort_opaque);
 
-        auto* branches = (speed_tree_branches_node*)ngl::list_alloc(sizeof(speed_tree_branches_node), 16);
+        auto* branches = new (ngl::list_alloc(sizeof(speed_tree_branches_node), 16)) speed_tree_branches_node;
 
-        branches->base.vtable = &references::speed_tree_branches_node_vtable.get();
-        branches->wrapper     = this;
-        branches->params      = params;
+        branches->wrapper = this;
+        branches->params  = params;
 
-        branches->base.sort_key.integer = 0xD0000000;
+        branches->sort_key.integer = 0xD0000000;
 
-        ngl::list_push_node(&branches->base, ngl::sort_opaque);
+        ngl::list_push_node(branches, ngl::sort_opaque);
     }
 }
 
@@ -232,15 +228,14 @@ void speed_tree_wrapper::submit_billboards_only(bool all_regions) {
                 continue;
         }
 
-        auto* node = (speed_tree_billboards_only_node*)ngl::list_alloc(sizeof(speed_tree_billboards_only_node), 16);
+        auto* node = new (ngl::list_alloc(sizeof(speed_tree_billboards_only_node), 16)) speed_tree_billboards_only_node;
 
-        node->base.vtable   = &references::speed_tree_billboards_only_node_vtable.get();
         node->wrapper       = this;
         node->params.region = index;
         node->params.light  = light;
 
-        node->base.sort_key.integer = 0xC0000000;
+        node->sort_key.integer = 0xC0000000;
 
-        ngl::list_push_node(&node->base, ngl::sort_opaque);
+        ngl::list_push_node(node, ngl::sort_opaque);
     }
 }

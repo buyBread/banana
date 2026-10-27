@@ -1,164 +1,116 @@
 #include "game/speedtree/render_node.hh"
-#include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/font/render.hh"
+#include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/list/render_callback.hh"
 #include "treyarch/ngl/list/render_node.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/scene/scene.hh"
-#include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/fake_peds/render_node.hh"
+#include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "treyarch/ngl/shaders/puv/render_node.hh"
 #include "treyarch/ngl/shaders/sm_phat/render_node.hh"
 #include "treyarch/ngl/shaders/sm_phatnormal/render_node.hh"
 #include "treyarch/ngl/shaders/smsky/render_node.hh"
+#include "retail.hh"
 
 #ifdef DEBUG
     #include <unordered_set>
+    #include <windows.h>
 
     #include "banana/logging.hh"
 #endif
 
 using namespace treyarch;
 
-void ngl::render_node::render() {
-    if (vtable == &render_callback::references::node_vtable.get()) {
-        render_callback::render((render_callback::node*)this);
+// retail producers still build nodes on retail vftables
+struct native_node_class {
+    void* vftable;
+    void  (*render)(ngl::render_node* value);
+};
 
-        return;
+template <typename node_type>
+void render_native_node(ngl::render_node* value) {
+    ((node_type*)value)->node_type::render();
+}
+
+const native_node_class* find_native_node_class(void* vftable) {
+    static const native_node_class classes[] {
+        { &ngl::references::render_callback_node_vftable.get(),                 render_native_node<ngl::render_callback_node>            },
+        { &ngl::fx::references::shader_node_vftable.get(),                      render_native_node<ngl::fx::shader_node>                 },
+        { &ngl::references::sm_lod_mesh_instance_node_vftable.get(),            render_native_node<ngl::sm_lod_mesh_instance_node>       },
+        { &ngl::references::quad_node_vftable.get(),                            render_native_node<ngl::quad_node>                       },
+        { &ngl::references::string_node_vftable.get(),                          render_native_node<ngl::string_node>                     },
+        { &ngl::shaders::pcuv::references::node_vftable.get(),                  render_native_node<ngl::shaders::pcuv::node>             },
+        { &ngl::shaders::puv::references::node_vftable.get(),                   render_native_node<ngl::shaders::puv::node>              },
+        { &ngl::shaders::smsky::references::node_vftable.get(),                 render_native_node<ngl::shaders::smsky::node>            },
+        { &ngl::shaders::fake_peds::references::render_node_vftable.get(),      render_native_node<ngl::shaders::fake_peds::render_node> },
+        { &ngl::references::morph_geometry_shader_node_vftable.get(),           render_native_node<ngl::morph_geometry_shader_node>      },
+        { &ngl::shaders::sm_phat::references::node_vftable.get(),               render_native_node<ngl::shaders::sm_phat::node>          },
+        { &ngl::shaders::sm_phatnormal::references::node_vftable.get(),         render_native_node<ngl::shaders::sm_phatnormal::node>    },
+        { &treyarch::references::speed_tree_billboards_only_node_vftable.get(), render_native_node<speed_tree_billboards_only_node>      },
+        { &treyarch::references::speed_tree_billboards_node_vftable.get(),      render_native_node<speed_tree_billboards_node>           },
+        { &treyarch::references::speed_tree_branches_node_vftable.get(),        render_native_node<speed_tree_branches_node>             },
+        { &treyarch::references::speed_tree_fronds_node_vftable.get(),          render_native_node<speed_tree_fronds_node>               },
+        { &treyarch::references::speed_tree_leafs_node_vftable.get(),           render_native_node<speed_tree_leafs_node>                },
+    };
+
+    for (const native_node_class &entry : classes) {
+        if (entry.vftable == vftable)
+            return &entry;
     }
 
-    if (vtable == &fx::references::node_vtable.get()) {
-        fx::render((fx::render_node*)this);
+    return nullptr;
+}
 
-        return;
-    }
-
-    if (vtable == &sm_lod_mesh_instance::references::node_vtable.get())
-        return; // nullsub
-
-    if (vtable == &quad_renderer::references::node_vtable.get()) {
-        quad_renderer::render((quad_renderer::node*)this);
-
-        return;
-    }
-
-    if (vtable == &string_renderer::references::node_vtable.get()) {
-        string_renderer::render((string_renderer::node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::pcuv::references::node_vtable.get()) {
-        shaders::pcuv::render((shaders::pcuv::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::puv::references::node_vtable.get()) {
-        shaders::puv::render((shaders::puv::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::smsky::references::node_vtable.get()) {
-        shaders::smsky::render((shaders::smsky::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::fake_peds::references::node_vtable.get()) {
-        shaders::fake_peds::render((shaders::fake_peds::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &morph_geometry::references::node_vtable.get()) {
-        morph_geometry::render((morph_geometry::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::sm_phat::references::node_vtable.get()) {
-        shaders::sm_phat::render((shaders::sm_phat::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &shaders::sm_phatnormal::references::node_vtable.get()) {
-        shaders::sm_phatnormal::render((shaders::sm_phatnormal::render_node*)this);
-
-        return;
-    }
-
-    if (vtable == &treyarch::references::speed_tree_billboards_only_node_vtable.get()) {
-        ((speed_tree_billboards_only_node*)this)->render();
-
-        return;
-    }
-
-    if (vtable == &treyarch::references::speed_tree_billboards_node_vtable.get()) {
-        ((speed_tree_billboards_node*)this)->render();
-
-        return;
-    }
-
-    if (vtable == &treyarch::references::speed_tree_branches_node_vtable.get()) {
-        ((speed_tree_branches_node*)this)->render();
-
-        return;
-    }
-
-    if (vtable == &treyarch::references::speed_tree_fronds_node_vtable.get()) {
-        ((speed_tree_fronds_node*)this)->render();
-
-        return;
-    }
-
-    if (vtable == &treyarch::references::speed_tree_leafs_node_vtable.get()) {
-        ((speed_tree_leafs_node*)this)->render();
-
-        return;
-    }
-
-    /*
-        fallback
-    */
-
-    using render_function = void(__thiscall*)(render_node*);
-
-#ifndef DEBUG
-    ((render_function*)vtable)[2](this);
-#else
+#ifdef DEBUG
+// once per render target, for retail-built nodes no source class renders yet
+void log_unowned_node(void* vftable) {
     static std::unordered_set<void*> seen;
     static void* last = nullptr; // kill performance on debug builds slightly less
 
-    render_function fn = ((render_function*)vtable)[2];
+    void* target = ((void**)vftable)[2];
 
-    auto* address = (void*)fn;
+    if (target != last) {
+        last = target;
 
-    if (address != last) {
-        last = address;
+        if (seen.insert(target).second)
+            banana::log.ngl("unowned render node -- address: {:p} | vtable: {:p}", target, vftable);
+    }
+}
+#endif
 
-        if (seen.insert(address).second)
-            banana::log.ngl("unowned render node -- address: {:p} | vtable: {:p}", address, vtable);
+void ngl::dispatch_render(render_node* value) {
+    void* vftable = *(void**)value;
+
+    if (const native_node_class* native = find_native_node_class(vftable)) {
+        native->render(value);
+
+        return;
     }
 
-    fn(this);
+#ifdef DEBUG
+    log_unowned_node(vftable);
 #endif
+
+    value->render();
 }
 
-void ngl::render_node::get_sort_info(sort_info* result) {
-    using get_sort_info_function = void (__thiscall*)(render_node* self, sort_info* result);
+// sub_8A2550
+void ngl::shader_node::get_desc(char* desc) {
+    retail::sub_8A2550((u32*)this, desc);
+}
 
-    ((get_sort_info_function*)vtable)[4](this, result);
+// sub_8A25E0
+i32 ngl::shader_node::get_list_type() {
+    return retail::sub_8A25E0((u32*)this);
 }
 
 // sub_884E10
 ngl::scene* ngl::list_add_node(render_node* value) {
     sort_info sorting;
-    value->get_sort_info(&sorting);
+    value->get_sort_info(sorting);
 
     value->sort_key = sorting.key;
 

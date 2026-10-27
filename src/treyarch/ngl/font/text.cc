@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <cstring>
+#include <new>
 
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/font/render.hh"
@@ -9,9 +10,6 @@
 #include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
-
-using ngl_string_chunk = ngl::string_renderer::chunk;
-using ngl_string_node  = ngl::string_renderer::node;
 
 // sub_698080
 const ngl::glyph_info* get_glyph_info(const ngl::font* font_data,
@@ -72,25 +70,25 @@ u32 rotate_color(u32 value) {
 }
 
 // sub_9DA5F0
-ngl_string_chunk* build_string_list(      ngl::font* font_data,
-                                          f32        x,
-                                          f32        y,
-                                          f32        scale_x,
-                                          f32        scale_y,
-                                          u32        color,
-                                    const char*      text) {
+ngl::string_section* build_string_list(      ngl::font* font_data,
+                                             f32        x,
+                                             f32        y,
+                                             f32        scale_x,
+                                             f32        scale_y,
+                                             u32        color,
+                                       const char*      text) {
                                                 
     f32 line_height = (f32)font_data->header.cell_height;
     f32 line_start  = x;
 
     f32 maximum_scale_y = scale_y;
 
-    auto* sentinel = (ngl_string_chunk*)
-        ngl::list_alloc(sizeof(ngl_string_chunk), 16);
+    auto* sentinel = (ngl::string_section*)
+        ngl::list_alloc(sizeof(ngl::string_section), 16);
 
     sentinel->next = nullptr;
 
-    ngl_string_chunk* current = sentinel;
+    ngl::string_section* current = sentinel;
     
     const char* cursor = text;
 
@@ -140,8 +138,8 @@ ngl_string_chunk* build_string_list(      ngl::font* font_data,
             default: {
                 const char* chunk_start = cursor - 1;
 
-                auto* chunk = (ngl_string_chunk*)
-                    ngl::list_alloc(sizeof(ngl_string_chunk), 16);
+                auto* chunk = (ngl::string_section*)
+                    ngl::list_alloc(sizeof(ngl::string_section), 16);
 
                 current->next = chunk;
                 current       = chunk;
@@ -303,31 +301,28 @@ void ngl::list_add_string(      font* font_data,
     validate_matrices(build_scene);
 
     if (text && *text && font_data && font_data->texture_data) {
-        auto* node = (ngl_string_node*)
-            list_alloc(sizeof(ngl_string_node), 16);
+        auto* node = new (list_alloc(sizeof(string_node), 16)) string_node;
 
         if (node) {
-            node->base.vtable = &string_renderer::references::node_vtable.get();
-
             u32 text_length = (u32)std::strlen(text);
             char* stored_text = (char*)list_alloc(text_length + 1, 16);
 
             node->text = stored_text;
             std::memcpy(stored_text, text, text_length + 1);
 
-            node->font_data              = font_data;
-            node->x                      = x;
-            node->y                      = y;
-            node->z                      = z;
-            node->scale_x                = scale_x;
-            node->scale_y                = scale_y;
-            node->color                  = color;
-            node->base.sort_key.floating = z;
-            node->chunks                 = build_string_list(font_data, x, y, scale_x, scale_y, color, stored_text);
-            node->base.next              = build_scene->translucent_render_list;
+            node->font              = font_data;
+            node->x                 = x;
+            node->y                 = y;
+            node->z                 = z;
+            node->scale_x           = scale_x;
+            node->scale_y           = scale_y;
+            node->color             = color;
+            node->sort_key.floating = z;
+            node->sections          = build_string_list(font_data, x, y, scale_x, scale_y, color, stored_text);
+            node->next              = build_scene->translucent_render_list;
             
             ++build_scene->translucent_render_list_count;
-            build_scene->translucent_render_list = &node->base;
+            build_scene->translucent_render_list = node;
         }
     }
 }

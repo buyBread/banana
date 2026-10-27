@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/mesh_submission.hh"
 #include "treyarch/ngl/gpu/d3d9/scratch_mesh.hh"
@@ -23,8 +25,8 @@ struct fake_pedestrian_vertex {
 ASSERT_SIZEOF(fake_pedestrian_vertex, 0x18);
 
 // sub_887B30
-void ngl::shaders::fake_peds::render(render_node* value) {
-    if (ngl::references::in_shadow_scene.read() || !value->texture_data || !value->pedestrian_count)
+void ngl::shaders::fake_peds::render_node::render() {
+    if (ngl::references::in_shadow_scene.read() || !texture_data || !pedestrian_count)
         return;
 
     IDirect3DDevice9* device = d3d9::references::dev.get();
@@ -34,16 +36,16 @@ void ngl::shaders::fake_peds::render(render_node* value) {
 
     d3d9::set_render_state(D3DRS_CULLMODE, D3DCULL_NONE);
 
-    if (value->blend_mode <= 1) {
+    if (blend_mode <= 1) {
         d3d9::set_render_state(D3DRS_ALPHABLENDENABLE, TRUE);
         d3d9::set_render_state(D3DRS_SRCBLEND,
-                               value->blend_mode == 0 ? D3DBLEND_SRCALPHA : D3DBLEND_ONE);
+                               blend_mode == 0 ? D3DBLEND_SRCALPHA : D3DBLEND_ONE);
         d3d9::set_render_state(D3DRS_DESTBLEND,
-                               value->blend_mode == 0 ? D3DBLEND_INVSRCALPHA : D3DBLEND_ZERO);
+                               blend_mode == 0 ? D3DBLEND_INVSRCALPHA : D3DBLEND_ZERO);
         d3d9::set_render_state(D3DRS_BLENDFACTOR, 0);
         d3d9::set_render_state(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 
-        if (value->blend_mode == 1) {
+        if (blend_mode == 1) {
             d3d9::set_render_state(D3DRS_ALPHATESTENABLE, TRUE);
             d3d9::set_render_state(D3DRS_ALPHAFUNC, D3DCMP_GREATER);
             d3d9::set_render_state(D3DRS_ALPHAREF, 128);
@@ -62,20 +64,20 @@ void ngl::shaders::fake_peds::render(render_node* value) {
 
     device->SetVertexShaderConstantF(0, (const f32*)&build_scene->world_to_screen, 4);
 
-    d3d9::set_texture(0, value->texture_data, 1, 3);
+    d3d9::set_texture(0, texture_data, 1, 3);
 
     mesh_section* section = d3d9::create_scratch_section( D3DPT_TRIANGLELIST,
-                                                          6 * value->pedestrian_count,
-                                                          4 * value->pedestrian_count,
+                                                          6 * pedestrian_count,
+                                                          4 * pedestrian_count,
                                                          &d3d9::references::quad_position_color_uv_format.get());
 
     u16* indices = d3d9::lock_section_indices(section);
     auto* vertices = (fake_pedestrian_vertex*)d3d9::lock_section_vertices(section);
 
-    f32 tile_width = 1.0f / (f32)(i32)value->atlas_tile_count;
+    f32 tile_width = 1.0f / (f32)(i32)atlas_tile_count;
 
-    for (u32 index = 0; index < value->pedestrian_count; ++index) {
-        const pedestrian &ped = value->pedestrians[index];
+    for (u32 index = 0; index < pedestrian_count; ++index) {
+        const pedestrian &ped = pedestrians[index];
 
         u32 color = pack_color(ped.color);
         f32 tile_left  = (f32)ped.atlas_tile * tile_width;
@@ -119,4 +121,9 @@ void ngl::shaders::fake_peds::render(render_node* value) {
     d3d9::draw_section(section);
 
     d3d9::set_render_state(D3DRS_CULLMODE, previous_cull_mode);
+}
+
+// sub_8B0140
+void ngl::shaders::fake_peds::render_node::get_desc(char* desc) {
+    std::strcpy(desc, "sm_fake_peds_render_node");
 }

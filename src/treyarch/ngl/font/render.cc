@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "treyarch/ngl/font/render.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/internal_programs.hh"
@@ -61,13 +63,13 @@ void get_string_glyph_rectangle(const ngl::font*              font_data,
 }
 
 // sub_9E9D30
-void ngl::string_renderer::render(node* value) {
-    if (!value->text || !value->font_data->texture_data || !value->chunks)
+void ngl::string_node::render() {
+    if (!text || !font->texture_data || !sections)
         return;
 
     u32 character_count = 0;
 
-    for (chunk* current = value->chunks; current; current = current->next)
+    for (string_section* current = sections; current; current = current->next)
         character_count += current->length;
 
     if (!character_count)
@@ -89,7 +91,7 @@ void ngl::string_renderer::render(node* value) {
     d3d9::set_pixel_program(programs.texture_modulate_pixel_program);
     device->SetVertexShaderConstantF(0, (const f32*)&matrix, 4);
 
-    u64 blend_mode = ((u64)value->font_data->blend_mode << 32) | value->font_data->map_flags;
+    u64 blend_mode = ((u64)font->blend_mode << 32) | font->map_flags;
 
     d3d9::set_blend_mode(blend_mode);
     d3d9::set_render_state(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
@@ -98,11 +100,11 @@ void ngl::string_renderer::render(node* value) {
     d3d9::set_render_state(D3DRS_BLENDOPALPHA, D3DBLENDOP_ADD);
 
     d3d9::set_texture(0,
-                      value->font_data->texture_data,
-                      value->font_data->system,
+                      font->texture_data,
+                      font->system,
                       3);
 
-    f32 depth_z = value->z;
+    f32 depth_z = z;
 
     if (build_scene->near_plane > depth_z)
         depth_z = build_scene->near_plane;
@@ -122,14 +124,14 @@ void ngl::string_renderer::render(node* value) {
     else if (depth > 1.0f)
         depth = 1.0f;
 
-    for (chunk* current = value->chunks; current; current = value->chunks) {
+    for (string_section* current = sections; current; current = sections) {
         f32 pen_x = current->x;
 
         for (u32 index = 0; index < current->length; ++index) {
             u8 character = (u8)*current->text++;
 
             string_glyph_rectangle rectangle;
-            get_string_glyph_rectangle( value->font_data,
+            get_string_glyph_rectangle( font,
                                         character,
                                         current->scale_x,
                                         current->scale_y,
@@ -155,17 +157,22 @@ void ngl::string_renderer::render(node* value) {
             device->SetVertexDeclaration(d3d9::references::quad_position_color_uv_format.get().declaration);
             device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, vertices, sizeof(string_draw_vertex));
 
-            i32 glyph_index = (i32)character - value->font_data->header.first_glyph;
+            i32 glyph_index = (i32)character - font->header.first_glyph;
 
             if (glyph_index < 0)
                 glyph_index = 0;
-            else if (glyph_index > value->font_data->header.glyph_count - 1)
-                glyph_index = value->font_data->header.glyph_count - 1;
+            else if (glyph_index > font->header.glyph_count - 1)
+                glyph_index = font->header.glyph_count - 1;
 
-            u32 cell_width = (u32)(value->font_data->glyphs[glyph_index].cell_width - 1);
+            u32 cell_width = (u32)(font->glyphs[glyph_index].cell_width - 1);
             pen_x = (f32)((f64)cell_width * (f64)current->scale_x + 1.0 + (f64)pen_x);
         }
 
-        value->chunks = current->next;
+        sections = current->next;
     }
+}
+
+// sub_9DA970
+void ngl::string_node::get_desc(char* desc) {
+    std::strcpy(desc, "nglStringNode");
 }

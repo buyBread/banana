@@ -1,7 +1,7 @@
 #include <cstring>
 
+#include "treyarch/ngl/fx/mesh_node_data.hh"
 #include "treyarch/ngl/fx/references.hh"
-#include "treyarch/ngl/fx/render_node.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/morph/render_node.hh"
 #include "treyarch/ngl/morph/vertex_codec.hh"
@@ -25,9 +25,9 @@ namespace treyarch { namespace ngl { namespace morph_geometry {
                                   u32              vertex_count,
                                   math::vector4*   vertices);
 
-    void write_morph_stream(render_node* value,
-                            binding*     morph_binding,
-                            u32          vertex_stride);
+    void write_morph_stream(morph_geometry_shader_node* value,
+                            binding*                    morph_binding,
+                            u32                         vertex_stride);
 }}} // treyarch::ngl::morph_geometry
 
 void ngl::morph_geometry::on_stream_segment(d3d9::geometry_stream::segment* value, void* user_data) {
@@ -104,9 +104,9 @@ void ngl::morph_geometry::apply_sparse_frame(const morph_component &component,
 }
 
 // sub_9E38F0
-void ngl::morph_geometry::write_morph_stream(render_node* value,
-                                             binding*     morph_binding,
-                                             u32          vertex_stride) {
+void ngl::morph_geometry::write_morph_stream(morph_geometry_shader_node* value,
+                                             binding*                    morph_binding,
+                                             u32                         vertex_stride) {
 
     mesh_section* section = value->section;
 
@@ -117,8 +117,7 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
     auto* buffer        = d3d9::geometry_stream::references::active_buffer.read();
     u32   buffer_offset = value->stream_segment->allocation_start.byte_offset;
 
-    const auto* material_node = (const fx::render_node*)value->material_node;
-    const u8*   mesh_data     = material_node->node_data->mesh_data;
+    const u8* mesh_data = value->material_node->mesh_node->mesh_data;
 
     for (u32 component_index = 0; component_index < base_section.component_count; ++component_index) {
         const morph_component &base_component = base_section.components[component_index];
@@ -173,16 +172,13 @@ void ngl::morph_geometry::write_morph_stream(render_node* value,
 }
 
 // sub_9E3DA0
-void ngl::morph_geometry::render(render_node* value) {
-    mesh_section* section = value->section;
-
-    auto*               material_node = (fx::render_node*)value->material_node;
-    fx::mesh_node_data* node_data     = material_node->node_data;
+void ngl::morph_geometry_shader_node::render() {
+    fx::mesh_node_data* node_data = material_node->mesh_node;
 
     u32 parameter_id = fx::references::parameter_id_morph.read();
-    auto* morph_binding = (binding*)node_data->parameters->values[parameter_id];
+    auto* morph_binding = (morph_geometry::binding*)node_data->parameters->values[parameter_id];
 
-    const morph_section &base_section = morph_binding->set->frames[0].sections[value->section_index];
+    const morph_section &base_section = morph_binding->set->frames[0].sections[section_index];
 
     const D3DVERTEXELEMENT9 sentinel { 0xFF, 0, D3DDECLTYPE_UNUSED, 0, 0, 0 };
 
@@ -201,7 +197,7 @@ void ngl::morph_geometry::render(render_node* value) {
                 element.Stream = 1;
                 element.Offset = (WORD)morph_stride;
 
-                morph_stride += get_vertex_element_size(element.Type);
+                morph_stride += morph_geometry::get_vertex_element_size(element.Type);
 
                 break;
             }
@@ -232,19 +228,19 @@ void ngl::morph_geometry::render(render_node* value) {
 
     device->CreateVertexDeclaration(ordered, &morphed_definition.declaration);
 
-    value->stream_segment = d3d9::geometry_stream::allocate_segment(morph_stride * section->vertex_count,
-                                                                    morph_stride,
-                                                                    on_stream_segment,
-                                                                    value);
+    stream_segment = d3d9::geometry_stream::allocate_segment(morph_stride * section->vertex_count,
+                                                             morph_stride,
+                                                             morph_geometry::on_stream_segment,
+                                                             this);
 
-    write_morph_stream(value, morph_binding, morph_stride);
+    morph_geometry::write_morph_stream(this, morph_binding, morph_stride);
 
     // the definition carries the morph stride while binding stream 1, then the mesh's own size for the draw
     morphed_definition.vertex_size = morph_stride;
 
     d3d9::set_vertex_buffer(&d3d9::geometry_stream::references::active_buffer.get(),
                             &morphed_definition,
-                            value->stream_segment->allocation_start.byte_offset,
+                            stream_segment->allocation_start.byte_offset,
                             1);
 
     d3d9::binding_cache &bindings = d3d9::references::bindings.get();
@@ -257,7 +253,7 @@ void ngl::morph_geometry::render(render_node* value) {
     vertex_definition* original_definition = material_node->section->vertex_definition_data;
     material_node->section->vertex_definition_data = &morphed_definition;
 
-    material_node->base.render();
+    dispatch_render(material_node);
 
     bindings.stream_sources[1]  = nullptr;
     bindings.vertex_declaration = nullptr;
@@ -266,4 +262,14 @@ void ngl::morph_geometry::render(render_node* value) {
 
     material_node->section->vertex_definition_data = original_definition;
     morphed_definition.declaration->Release();
+}
+
+// sub_9E42B0
+void ngl::morph_geometry_shader_node::get_desc(char* desc) {
+    std::strcpy(desc, "nglMorphGeometryShaderNode");
+}
+
+// sub_9E4300
+void ngl::morph_geometry_shader_node::get_sort_info(sort_info &info) {
+    material_node->get_sort_info(info);
 }

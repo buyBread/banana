@@ -8,26 +8,22 @@
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace ngl { namespace shaders { namespace sm_phatnormal {
-    struct render_node {
-        ngl::render_node                   base;
-        fx::mesh_node_data*                node_data;
-        mesh_section*                      section;
+    struct node : shader_node {
         generated_material::material_data* material_data;
         u8                                 queue_class;
         u8                                 reserved_019[7];
+
+        void render() override;
+
+        void render_normal();
+        void render_shadow();
     };
 
-    void render       (render_node* value);
-    void render_normal(render_node* value);
-    void render_shadow(render_node* value);
-
     namespace references {
-        inline util::memory_reference<void*> node_vtable { 0x00BE56EC };
+        inline util::memory_reference<void*> node_vftable { 0x00BE56EC };
     } // references
 
-    ASSERT_SIZEOF  (render_node,                0x20);
-    ASSERT_OFFSETOF(render_node, node_data,     0x0C);
-    ASSERT_OFFSETOF(render_node, section,       0x10);
-    ASSERT_OFFSETOF(render_node, material_data, 0x14);
-    ASSERT_OFFSETOF(render_node, queue_class,   0x18);
+    ASSERT_SIZEOF  (node,                0x20);
+    ASSERT_OFFSETOF(node, material_data, 0x14);
+    ASSERT_OFFSETOF(node, queue_class,   0x18);
 }}}} // treyarch::ngl::shaders::sm_phatnormal

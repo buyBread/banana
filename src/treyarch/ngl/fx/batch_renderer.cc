@@ -47,7 +47,7 @@ ngl::fx::effect* queue_effect_runtime(ngl::fx::effect_runtime* runtime,
     return head;
 }
 
-void draw_single_pass_batch_node(ngl::fx::render_node* value) {
+void draw_single_pass_batch_node(ngl::fx::shader_node* value) {
     ngl::mesh_section* section        = value->section;
     D3DPRIMITIVETYPE   primitive_type = (D3DPRIMITIVETYPE)section->primitive_type;
 
@@ -65,7 +65,7 @@ void draw_single_pass_batch_node(ngl::fx::render_node* value) {
         return;
     }
 
-    ngl::scene_parameters* parameters = value->node_data->parameters;
+    ngl::scene_parameters* parameters = value->mesh_node->parameters;
     u32 parameter_id = ngl::fx::references::parameter_id_mesh_runs.read();
 
     if (ngl::has_scene_parameter(parameters, parameter_id)) {
@@ -125,16 +125,16 @@ i32 render_technique_batch(ngl::fx::effect*          effect_data,
 
     i32 rendered_count = 0;
 
-    for (ngl::fx::render_node* node = batch->head; node; node = (ngl::fx::render_node*)node->base.next) {
+    for (ngl::fx::shader_node* node = batch->head; node; node = (ngl::fx::shader_node*)node->next) {
         // this order is backwards from the regular draw path and changes which values get copied
         ngl::fx::update_material_parameters(effect_data,
-                                            node->node_data,
+                                            node->mesh_node,
                                             node->section,
                                             ngl::references::build_scene.read()->depth_bias_enabled != 0);
         ngl::fx::prepare_effect_material(effect_data, node->material_data);
         ngl::fx::prepare_animated_textures(effect_data,
                                            node->material_data,
-                                           node->node_data);
+                                           node->mesh_node);
 
         if (technique_data->pass_count <= 1) {
             ngl::fx::apply_pass(effect_data, first_pass);
@@ -199,7 +199,7 @@ i32 ngl::fx::render_batch(ngl::render_node* head) {
     for (ngl::render_node* base = head; base;) {
         ngl::render_node* next = base->next;
 
-        auto* node            = (render_node*)base;
+        auto* node            = (shader_node*)base;
         auto* selected_effect = select_effect(node);
         auto* runtime         = selected_effect->runtime;
 
@@ -208,7 +208,7 @@ i32 ngl::fx::render_batch(ngl::render_node* head) {
 
         technique_batch &batch = runtime->technique_batches[node->technique_index];
 
-        node->base.next = (ngl::render_node*)batch.head;
+        node->next = batch.head;
         ++batch.count;
         batch.head = node;
 
