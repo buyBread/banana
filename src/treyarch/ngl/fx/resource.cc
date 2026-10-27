@@ -500,10 +500,10 @@ void ngl::fx::initialize_directory() {
 }
 
 // sub_9E1A90
-void ngl::fx::load(amalga::merged_apk::file*       owner,
-                   amalga::merged_apk::file_entry* entry,
-                   void**                          mapped_sections,
-                   void*                           user_data) {
+void ngl::fx::load(apk::file*       owner,
+                   apk::file_entry* entry,
+                   void**           mapped_sections,
+                   void*            user_data) {
 
     (void)entry;
     (void)user_data;
@@ -511,7 +511,7 @@ void ngl::fx::load(amalga::merged_apk::file*       owner,
     references::parameter_texture_fallback        .write(ngl::references::default_texture.read());
     references::parameter_texture_fallback_pointer.write(&references::parameter_texture_fallback.get());
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     effect* value = (effect*)mapped_sections[image_section];
 
     for (i32 technique_index = 0; technique_index < value->technique_count; ++technique_index) {
@@ -532,15 +532,15 @@ void ngl::fx::load(amalga::merged_apk::file*       owner,
 }
 
 // sub_9E12E0
-void ngl::fx::remove(amalga::merged_apk::file*       owner,
-                     amalga::merged_apk::file_entry* entry,
-                     void**                          mapped_sections,
-                     void*                           user_data) {
+void ngl::fx::remove(apk::file*       owner,
+                     apk::file_entry* entry,
+                     void**           mapped_sections,
+                     void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     effect* value = (effect*)mapped_sections[image_section];
 
     references::effects.get().del(value);

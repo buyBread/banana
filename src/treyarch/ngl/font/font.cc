@@ -5,15 +5,15 @@
 using namespace treyarch;
 
 // sub_9DAE60
-void ngl::load_font(amalga::merged_apk::file*       owner,
-                    amalga::merged_apk::file_entry* entry,
-                    void**                          mapped_sections,
-                    void*                           user_data) {
+void ngl::load_font(apk::file*       owner,
+                    apk::file_entry* entry,
+                    void**           mapped_sections,
+                    void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
 
     font* value = (font*)mapped_sections[image_section];
 
@@ -38,15 +38,15 @@ void ngl::load_font(amalga::merged_apk::file*       owner,
 }
 
 // sub_9DAF80
-void ngl::remove_font(amalga::merged_apk::file*       owner,
-                      amalga::merged_apk::file_entry* entry,
-                      void**                          mapped_sections,
-                      void*                           user_data) {
+void ngl::remove_font(apk::file*       owner,
+                      apk::file_entry* entry,
+                      void**           mapped_sections,
+                      void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index
+    i32 image_section = owner->get_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
     font* value = (font*)mapped_sections[image_section];

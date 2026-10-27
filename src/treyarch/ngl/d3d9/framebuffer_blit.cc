@@ -27,7 +27,7 @@ ngl::texture* select_texture_frame(ngl::texture* value) {
     value->last_frame_reference = frame_epoch;
 
     if (value->owner_file)
-        value->owner_file->last_frame_reference = frame_epoch;
+        value->owner_file->last_frame_ref = frame_epoch;
 
     return value;
 }

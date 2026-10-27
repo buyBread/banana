@@ -103,7 +103,7 @@ ngl::mesh_node* ngl::list_add_transient_mesh(      mesh*        value,
     value->last_frame_reference = frame_epoch;
 
     if (value->owner_file)
-        value->owner_file->last_frame_reference = frame_epoch;
+        value->owner_file->last_frame_ref = frame_epoch;
 
     return node;
 }

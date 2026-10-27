@@ -24,7 +24,7 @@ namespace treyarch {
         void list_send();
         void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
 
-        bool can_release_file(const amalga::merged_apk::file* file);
+        bool can_release_file(const apk::file* file);
 
         using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
 

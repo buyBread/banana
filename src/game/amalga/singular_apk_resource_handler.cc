@@ -1,5 +1,5 @@
-#include "game/amalga/merged_apk/file.hh"
-#include "game/amalga/merged_apk/loader.hh"
+#include "treyarch/apk/file.hh"
+#include "treyarch/apk/loader.hh"
 #include "game/amalga/singular_apk_resource_handler.hh"
 #include "treyarch/ngl/ngl.hh"
 
@@ -11,19 +11,19 @@ i32 amalga::singular_apk_resource_handler::handle_resource(e_behavior           
                                                            limited_timer*) {
 
     if (behavior == unload) {
-        merged_apk::file* owner = (merged_apk::file*)((u8*)descriptor->raw_payload + sizeof(merged_apk::file_header));
+        apk::file* owner = (apk::file*)((u8*)descriptor->raw_payload + sizeof(apk::file_header));
 
         if (!ngl::can_release_file(owner))
             return 1;
 
-        owner->unload();
+        apk::delete_file(owner);
 
         return 0;
     }
 
-    merged_apk::file* owner = merged_apk::relocate_file_in_place(descriptor->raw_payload,
-                                                                 descriptor->extension->resource_references,
-                                                                 descriptor->extension->string_base);
+    apk::file* owner = apk::relocate_file_in_place(descriptor->raw_payload,
+                                                   descriptor->extension->resource_references,
+                                                   descriptor->extension->string_base);
 
     owner->apply_references(descriptor->extension->resource_references, descriptor->extension->string_base);
     owner->invoke_load_callbacks();

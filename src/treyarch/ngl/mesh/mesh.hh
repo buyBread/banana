@@ -2,7 +2,7 @@
 
 #include <d3d9.h>
 
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/ngl/d3d9/vertex_definition.hh"
 #include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
@@ -60,7 +60,7 @@ namespace treyarch { namespace ngl {
         u32                       unk_034;
         u32                       unk_038;
         u32                       unk_03c;
-        amalga::merged_apk::file* owner_file;
+        apk::file* owner_file;
         u32                       polygon_count;
         i32                       last_frame_reference;
         u32                       pad_04c;
@@ -83,14 +83,14 @@ namespace treyarch { namespace ngl {
     
     void initialize_mesh_directory();
 
-    void load_mesh(amalga::merged_apk::file*       owner,
-                   amalga::merged_apk::file_entry* entry,
-                   void**                          mapped_sections,
-                   void*                           user_data);
-    void remove_mesh(amalga::merged_apk::file*       owner,
-                     amalga::merged_apk::file_entry* entry,
-                     void**                          mapped_sections,
-                     void*                           user_data);
+    void load_mesh(apk::file*       owner,
+                   apk::file_entry* entry,
+                   void**           mapped_sections,
+                   void*            user_data);
+    void remove_mesh(apk::file*       owner,
+                     apk::file_entry* entry,
+                     void**           mapped_sections,
+                     void*            user_data);
 
     namespace references {
         inline util::memory_reference<mesh_directory> meshes { 0x01116190 };

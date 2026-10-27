@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/ngl/shaders/shader.hh"
 #include "treyarch/base/tl_skip_list.hh"
 #include "game/fixed_string.hh"
@@ -29,14 +29,14 @@ namespace treyarch { namespace ngl {
     void process_material(material* value);
     void initialize_material_directory();
 
-    void load_material(amalga::merged_apk::file*       owner,
-                       amalga::merged_apk::file_entry* entry,
-                       void**                          mapped_sections,
-                       void*                           user_data);
-    void remove_material(amalga::merged_apk::file*       owner,
-                         amalga::merged_apk::file_entry* entry,
-                         void**                          mapped_sections,
-                         void*                           user_data);
+    void load_material(apk::file*       owner,
+                       apk::file_entry* entry,
+                       void**           mapped_sections,
+                       void*            user_data);
+    void remove_material(apk::file*       owner,
+                         apk::file_entry* entry,
+                         void**           mapped_sections,
+                         void*            user_data);
 
     namespace references {
         inline util::memory_reference<material>           default_material { 0x01116160 };

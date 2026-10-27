@@ -14,8 +14,8 @@ bool ngl::can_release_texture(const texture* value) { // nglCanReleaseTexture
 }
 
 // sub_9EAE60
-void ngl::process_texture(amalga::merged_apk::file* owner, void** mapped_sections) {
-    i32 image_section = owner->find_section_index
+void ngl::process_texture(apk::file* owner, void** mapped_sections) {
+    i32 image_section = owner->get_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];
@@ -26,7 +26,7 @@ void ngl::process_texture(amalga::merged_apk::file* owner, void** mapped_section
     if (value->flags & texture_animated)
         return;
 
-    i32 physical_section = owner->find_section_index
+    i32 physical_section = owner->get_section_index
         (string_hash(four_cc('P', 'H', 'Y', 'S')));
 
     const void* source = mapped_sections[physical_section];
@@ -92,15 +92,15 @@ void ngl::initialize_texture_directory() {
 }
 
 // sub_9E45E0
-void ngl::load_texture(amalga::merged_apk::file*       owner,
-                       amalga::merged_apk::file_entry* entry,
-                       void**                          mapped_sections,
-                       void*                           user_data) {
+void ngl::load_texture(apk::file*       owner,
+                       apk::file_entry* entry,
+                       void**           mapped_sections,
+                       void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index
+    i32 image_section = owner->get_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];
@@ -112,15 +112,15 @@ void ngl::load_texture(amalga::merged_apk::file*       owner,
 }
 
 // sub_9E4620
-void ngl::remove_texture(amalga::merged_apk::file*       owner,
-                         amalga::merged_apk::file_entry* entry,
-                         void**                          mapped_sections,
-                         void*                           user_data) {
+void ngl::remove_texture(apk::file*       owner,
+                         apk::file_entry* entry,
+                         void**           mapped_sections,
+                         void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index
+    i32 image_section = owner->get_section_index
         (string_hash(four_cc('I', 'M', 'G')));
 
     texture* value = (texture*)mapped_sections[image_section];

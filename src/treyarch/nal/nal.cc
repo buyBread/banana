@@ -12,44 +12,44 @@ using namespace treyarch;
 void nal::init() {
     tl_stack_range_init();
 
-    auto null_callback = (amalga::merged_apk::file_callback)retail::sub_5B4A70;
+    auto null_callback = (apk::file_callback)retail::sub_5B4A70;
 
-    amalga::merged_apk::register_file_type(transport_list_type,
-                                           transport_list_version,
-                                           null_callback,
-                                           null_callback);
+    apk::register_file_type(transport_list_type,
+                            transport_list_version,
+                            null_callback,
+                            null_callback);
 
-    amalga::merged_apk::register_file_type(anim_type,
-                                           anim_version,
-                                           load_anim,
-                                           remove_anim);
+    apk::register_file_type(anim_type,
+                            anim_version,
+                            load_anim,
+                            remove_anim);
 
-    amalga::merged_apk::register_file_type(scene_anim_type,
-                                           scene_anim_version,
-                                           load_scene_anim,
-                                           null_callback);
+    apk::register_file_type(scene_anim_type,
+                            scene_anim_version,
+                            load_scene_anim,
+                            null_callback);
 }
 
 // sub_9CD550
 nal::transport_list* nal::get_skeleton(fixed_string* name) {
-    return (transport_list*)amalga::merged_apk::resolve_resource(name, transport_list_type);
+    return (transport_list*)apk::resolve_resource(name, transport_list_type);
 }
 
 // sub_9CD570
 nal::anim* nal::get_anim(fixed_string* name) {
-    return (anim*)amalga::merged_apk::resolve_resource(name, anim_type);
+    return (anim*)apk::resolve_resource(name, anim_type);
 }
 
 // sub_9CD590
 nal::scene_anim* nal::get_scene_anim(fixed_string* name) {
-    return (scene_anim*)amalga::merged_apk::resolve_resource(name, scene_anim_type);
+    return (scene_anim*)apk::resolve_resource(name, scene_anim_type);
 }
 
 // sub_9D1790
-void nal::load_anim(amalga::merged_apk::file*       owner,
-                    amalga::merged_apk::file_entry* entry,
-                    void**                          mapped_sections,
-                    void*                           user_data) {
+void nal::load_anim(apk::file*       owner,
+                    apk::file_entry* entry,
+                    void**           mapped_sections,
+                    void*            user_data) {
 
     (void)owner;
     (void)entry;
@@ -67,10 +67,10 @@ void nal::load_anim(amalga::merged_apk::file*       owner,
 }
 
 // sub_9CFAF0
-void nal::remove_anim(amalga::merged_apk::file*       owner,
-                      amalga::merged_apk::file_entry* entry,
-                      void**                          mapped_sections,
-                      void*                           user_data) {
+void nal::remove_anim(apk::file*       owner,
+                      apk::file_entry* entry,
+                      void**           mapped_sections,
+                      void*            user_data) {
 
     (void)owner;
     (void)entry;
@@ -81,10 +81,10 @@ void nal::remove_anim(amalga::merged_apk::file*       owner,
 }
 
 // sub_9D1770
-void nal::load_scene_anim(amalga::merged_apk::file*       owner,
-                          amalga::merged_apk::file_entry* entry,
-                          void**                          mapped_sections,
-                          void*                           user_data) {
+void nal::load_scene_anim(apk::file*       owner,
+                          apk::file_entry* entry,
+                          void**           mapped_sections,
+                          void*            user_data) {
 
     (void)owner;
     (void)entry;

@@ -1,4 +1,4 @@
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/font/init.hh"
 #include "game/four_cc.hh"
@@ -9,8 +9,8 @@ using namespace treyarch;
 void ngl::font_init() {
     references::fonts.get().init();
 
-    amalga::merged_apk::register_file_type(four_cc('F', 'O', 'N', 'T'),
-                                           1,
-                                           load_font,
-                                           remove_font);
+    apk::register_file_type(four_cc('F', 'O', 'N', 'T'),
+                            1,
+                            load_font,
+                            remove_font);
 }

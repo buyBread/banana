@@ -2,7 +2,7 @@
 
 #include "game/amalga/resource_types.hh"
 #include "game/amalga/resource_versions.hh"
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -30,7 +30,7 @@ namespace treyarch { namespace amalga {
     };
 
     struct resource_descriptor_extension {
-        merged_apk::data_reference*                       resource_references;
+        apk::data_reference*                              resource_references;
         u8*                                               string_base;
         u32                                               unk_08;
         mash::vector<resource_descriptor_extension_entry> unk_0c;
@@ -94,7 +94,7 @@ namespace treyarch { namespace amalga {
         u32                                type_starts[(size_t)e_resource_type::count];
         u32                                type_counts[(size_t)e_resource_type::count];
         u8                                 type_state[(size_t)e_resource_type::count];
-        merged_apk::file*                  merged_apk_file;
+        apk::file*                         merged_apk_file;
         resource_directory_unk_3c4*        unk_3c4;
         resource_pack_slot*                pack_slot;
         u32                                parent;           // the parent pack directory's handle

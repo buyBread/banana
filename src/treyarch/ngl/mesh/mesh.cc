@@ -129,16 +129,16 @@ void ngl::initialize_mesh_directory() {
 }
 
 // sub_9DC510
-void ngl::load_mesh(amalga::merged_apk::file*       owner,
-                    amalga::merged_apk::file_entry* entry,
-                    void**                          mapped_sections,
-                    void*                           user_data) {
+void ngl::load_mesh(apk::file*       owner,
+                    apk::file_entry* entry,
+                    void**           mapped_sections,
+                    void*            user_data) {
 
     (void)user_data;
 
     constexpr u32 section_owner = 0x00000001;
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     auto value = (mesh*)mapped_sections[image_section];
 
@@ -147,9 +147,9 @@ void ngl::load_mesh(amalga::merged_apk::file*       owner,
 
     process_mesh(value);
 
-    i32 vrml_section = owner->find_section_index(string_hash(four_cc('V', 'R', 'M', 'L')));
+    i32 vrml_section = owner->get_section_index(string_hash(four_cc('V', 'R', 'M', 'L')));
 
-    if (vrml_section != -1 && owner->get_section_span(entry, vrml_section, 0)) {
+    if (vrml_section != -1 && owner->get_data_size(entry, vrml_section, 0)) {
         for (u32 index = 0; index < value->section_count; ++index)
             value->sections[index].flags &= ~section_owner;
     }
@@ -159,15 +159,15 @@ void ngl::load_mesh(amalga::merged_apk::file*       owner,
 }
 
 // sub_9DC5A0
-void ngl::remove_mesh(amalga::merged_apk::file*       owner,
-                      amalga::merged_apk::file_entry* entry,
-                      void**                          mapped_sections,
-                      void*                           user_data) {
+void ngl::remove_mesh(apk::file*       owner,
+                      apk::file_entry* entry,
+                      void**           mapped_sections,
+                      void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     mesh* value = (mesh*)mapped_sections[image_section];
 

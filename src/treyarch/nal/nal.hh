@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/jq/jq.hh"
 #include "treyarch/nal/anim.hh"
 #include "treyarch/nal/anim_instance.hh"
@@ -54,20 +54,20 @@ namespace treyarch { namespace nal {
     anim*       get_anim(fixed_string* name);
     scene_anim* get_scene_anim(fixed_string* name);
 
-    void load_anim(amalga::merged_apk::file*       owner,
-                   amalga::merged_apk::file_entry* entry,
-                   void**                          mapped_sections,
-                   void*                           user_data);
+    void load_anim(apk::file*       owner,
+                   apk::file_entry* entry,
+                   void**           mapped_sections,
+                   void*            user_data);
 
-    void remove_anim(amalga::merged_apk::file*       owner,
-                     amalga::merged_apk::file_entry* entry,
-                     void**                          mapped_sections,
-                     void*                           user_data);
+    void remove_anim(apk::file*       owner,
+                     apk::file_entry* entry,
+                     void**           mapped_sections,
+                     void*            user_data);
 
-    void load_scene_anim(amalga::merged_apk::file*       owner,
-                         amalga::merged_apk::file_entry* entry,
-                         void**                          mapped_sections,
-                         void*                           user_data);
+    void load_scene_anim(apk::file*       owner,
+                         apk::file_entry* entry,
+                         void**           mapped_sections,
+                         void*            user_data);
 
     namespace references {
         inline util::memory_reference<bool> skip_linking            { 0x01115B68 };

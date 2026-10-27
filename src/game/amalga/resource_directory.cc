@@ -201,9 +201,9 @@ u8* amalga::resource_directory::get_resource(const resource_key         &key,
 // sub_72DEF0
 // inlined @ sub_74DAF0
 void* amalga::resource_directory::find_local_merged_resource(string_hash name, u32 type) const {
-    merged_apk::file_entry* entry = merged_apk_file->find_entry(name, type);
+    apk::file_entry* entry = merged_apk_file->get_file(name, type);
 
-    return entry ? entry->get_section_data(merged_apk_file, type, 0, 1) : nullptr;
+    return entry ? entry->get_data(merged_apk_file, type, 0, 1) : nullptr;
 }
 
 // sub_74DAF0

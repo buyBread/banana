@@ -1,16 +1,16 @@
-#include "game/amalga/merged_apk/loader.hh"
+#include "treyarch/apk/loader.hh"
 
 using namespace treyarch;
 
-bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_references,
-                                                 u8*             &string_base) {
+bool apk::file::relocate_in_place(data_reference* &resource_references,
+                                  u8*             &string_base) {
 
     flags |= file_loaded_in_place;
 
     if (flags & file_big_endian)
         return false;
 
-    if (!section_count) {
+    if (!n_sections) {
         sections   = nullptr;
         file_types = nullptr;
 
@@ -18,14 +18,14 @@ bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_refer
     }
 
     sections   = (file_section*)((u8*)&sections + (u32)sections);
-    file_types = (file_type*)((u8*)this + sizeof(file));
+    file_types = (file_type_entry*)((u8*)this + sizeof(file));
 
-    for (u32 index = 0; index < section_count; ++index) {
-        file_section     &section = sections[index];
-        section_handler*  handler = find_section_handler(section.name);
+    for (u32 index = 0; index < n_sections; ++index) {
+        file_section                &section  = sections[index];
+        section_callback_list_entry* callback = find_section_callback(section.name);
 
-        if ((section.flags & section_external) && handler && handler->resolve) {
-            void* data = handler->resolve(this, &section, handler->user_data);
+        if ((section.flags & section_external) && callback && callback->resolve) {
+            void* data = callback->resolve(this, &section, callback->user_data);
 
             if (data) {
                 section.data = data;
@@ -39,18 +39,18 @@ bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_refer
 
     u32 section_offsets[maximum_section_count] {};
 
-    for (file_type* type = file_types; type->type; type = type->next(section_count)) {
-        type->entries = (file_entry*)((u8*)&type->entries + (u32)type->entries);
+    for (file_type_entry* type = file_types; type->type; type = type->next(n_sections)) {
+        type->first_entry = (file_entry*)((u8*)&type->first_entry + (u32)type->first_entry);
 
-        u8* entry_data = (u8*)type->entries;
+        u8* entry_data = (u8*)type->first_entry;
 
-        for (u32 entry_index = 0; entry_index < type->entry_count; ++entry_index) {
+        for (u32 entry_index = 0; entry_index < type->n_entries; ++entry_index) {
             auto entry = (file_entry*)entry_data;
 
             if (entry->name.text)
                 entry->name.text = (char*)((u8*)entry + (u32)entry->name.text);
 
-            for (u32 section_index = 0; section_index < section_count; ++section_index) {
+            for (u32 section_index = 0; section_index < n_sections; ++section_index) {
                 const section_mapping &mapping = type->mapping(section_index);
                 u8                     slot    = mapping.section_slot();
 
@@ -69,9 +69,9 @@ bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_refer
         }
     }
 
-    u8* fixup_bytes = (u8*)sections + section_count * sizeof(file_section);
+    u8* fixup_bytes = (u8*)sections + n_sections * sizeof(file_section);
 
-    for (u32 index = 0; index < section_count; ++index) {
+    for (u32 index = 0; index < n_sections; ++index) {
         file_section &section = sections[index];
 
         if (!(section.flags & section_external))
@@ -88,16 +88,16 @@ bool amalga::merged_apk::file::relocate_in_place(data_reference* &resource_refer
 }
 
 // sub_A6B2F0
-amalga::merged_apk::file* amalga::merged_apk::relocate_file_in_place(void*            image,
-                                                                     data_reference* &resource_references,
-                                                                     u8*             &string_base) {
+apk::file* apk::relocate_file_in_place(void*            image,
+                                       data_reference* &resource_references,
+                                       u8*             &string_base) {
 
     resource_references = nullptr;
     string_base         = nullptr;
 
     auto header = (file_header*)image;
 
-    if (header->identifier != file_identifier)
+    if (header->tag != file_identifier)
         return nullptr;
 
     if ((u16)header->version != file_version)
@@ -112,7 +112,7 @@ amalga::merged_apk::file* amalga::merged_apk::relocate_file_in_place(void*      
 }
 
 // sub_A6B5D0
-amalga::merged_apk::file* amalga::merged_apk::load_file_in_place(void* image) {
+apk::file* apk::load_file_in_place(void* image) {
     data_reference* resource_references;
     u8*             string_base;
 

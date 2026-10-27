@@ -1,11 +1,11 @@
 #pragma once
 
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 
-namespace treyarch { namespace amalga { namespace merged_apk {
+namespace treyarch { namespace apk {
     file* relocate_file_in_place(void*            image,
                                  data_reference* &resource_references,
                                  u8*             &string_base);
 
     file* load_file_in_place(void* image);
-}}} // treyarch::amalga::merged_apk
+}} // treyarch::apk

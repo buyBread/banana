@@ -23,7 +23,7 @@ void ngl::d3d9::bind_texture(u32      stage,
     value->last_frame_reference = frame_epoch;
 
     if (value->owner_file)
-        value->owner_file->last_frame_reference = frame_epoch;
+        value->owner_file->last_frame_ref = frame_epoch;
 
     u8 flags = (u8)map_flags;
 

@@ -9,17 +9,17 @@ void ngl::initialize_morph_directory() {
 }
 
 // sub_9E40B0
-void ngl::load_morph(amalga::merged_apk::file*       owner,
-                     amalga::merged_apk::file_entry* entry,
-                     void**                          mapped_sections,
-                     void*                           user_data) {
+void ngl::load_morph(apk::file*       owner,
+                     apk::file_entry* entry,
+                     void**           mapped_sections,
+                     void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
     constexpr u32 component_types[] { 0, 3, 7, 6, 10, 5 };
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     morph_set* value = (morph_set*)mapped_sections[image_section];
 
@@ -44,15 +44,15 @@ void ngl::load_morph(amalga::merged_apk::file*       owner,
 }
 
 // sub_9E41B0
-void ngl::remove_morph(amalga::merged_apk::file*       owner,
-                       amalga::merged_apk::file_entry* entry,
-                       void**                          mapped_sections,
-                       void*                           user_data) {
+void ngl::remove_morph(apk::file*       owner,
+                       apk::file_entry* entry,
+                       void**           mapped_sections,
+                       void*            user_data) {
 
     (void)entry;
     (void)user_data;
 
-    i32 image_section = owner->find_section_index(string_hash(four_cc('I', 'M', 'G')));
+    i32 image_section = owner->get_section_index(string_hash(four_cc('I', 'M', 'G')));
     
     morph_set* value = (morph_set*)mapped_sections[image_section];
 

@@ -89,7 +89,7 @@ void amalga::resource_manager::create_inst() {
 
     references::resource_context.write(nullptr);
 
-    merged_apk::register_section_type(string_hash(four_cc('V', 'R', 'M', 'L')), resolve_vrml_section, nullptr, nullptr);
+    apk::register_section_type(string_hash(four_cc('V', 'R', 'M', 'L')), resolve_vrml_section, nullptr, nullptr);
 
     references::initialized.write(true);
 }
@@ -124,8 +124,8 @@ amalga::resource_amalgatoc* amalga::resource_manager::load_amalgapak() {
 }
 
 // sub_72DE10
-void* amalga::resource_manager::resolve_vrml_section(merged_apk::file*,
-                                                     merged_apk::file_section*,
+void* amalga::resource_manager::resolve_vrml_section(apk::file*,
+                                                     apk::file_section*,
                                                      void*) {
 
     return references::resource_context.read();

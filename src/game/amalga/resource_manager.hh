@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "game/amalga/resource_pack_slot.hh"
 #include "game/amalga/resource_amalgatoc.hh"
 #include "game/amalga/resource_memory_map.hh"
@@ -61,9 +61,9 @@ namespace treyarch {
             u8* get_resource(const resource_key &key, u32* size, resource_pack_slot** slot);
             void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot);
 
-            void* resolve_vrml_section(merged_apk::file*         owner,
-                                       merged_apk::file_section* section,
-                                       void*                     user_data);
+            void* resolve_vrml_section(apk::file*         owner,
+                                       apk::file_section* section,
+                                       void*              user_data);
 
             namespace references {
                 inline util::memory_reference<bool> initialized { 0x0102FE4C };

@@ -1,4 +1,4 @@
-#include "game/amalga/merged_apk/file.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/fx/init.hh"
 #include "game/four_cc.hh"
@@ -9,10 +9,10 @@ using namespace treyarch;
 void ngl::fx::init() {
     initialize_directory();
 
-    amalga::merged_apk::register_file_type(four_cc('F', 'X', '\0'),
-                                           1,
-                                           load,
-                                           remove);
+    apk::register_file_type(four_cc('F', 'X', '\0'),
+                            1,
+                            load,
+                            remove);
 
     references::initialization_state.write(0);
 }
