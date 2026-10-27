@@ -2,6 +2,7 @@
 #include <cstring>
 
 #include "treyarch/ngl/fx/material.hh"
+#include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
 
@@ -70,38 +71,33 @@ void ngl::fx::copy_material_parameters(material* value) {
     }
 }
 
-ngl::fx::parameter* build_animated_texture_chain(ngl::fx::parameter* parameters, i32 count) {
-    using namespace ngl::fx;
-
-    // this marker means the chain was built but no animated textures were found
-    parameter* head = (parameter*)&ngl::fx::references::parameter_chain_sentinel.get();
-
-    for (i32 index = 0; index < count; ++index) {
-        parameter &entry = parameters[index];
-
-        if (entry.type != parameter_texture)
-            continue;
-
-        u8* texture_data = (u8*)*(void**)entry.data;
-
-        if (!(texture_data[0x10] & 1))
-            continue;
-
-        entry.animated_texture_chain_next = head;
-        head = &entry;
-    }
-
-    return head;
-}
-
 // sub_9DE1F0
 void ngl::fx::build_animated_texture_parameter_chain(effect* value) {
-    value->animated_texture_parameter_chain =
-        build_animated_texture_chain(value->parameters, value->parameter_count);
+    // the sentinel means the chain was built but no animated textures were found
+    value->animated_texture_parameter_chain = (parameter*)&references::parameter_chain_sentinel.get();
+
+    for (i32 index = 0; index < value->parameter_count; ++index) {
+        parameter &entry = value->parameters[index];
+
+        if (entry.type != parameter_texture || !((*(texture**)entry.data)->flags & texture_animated))
+            continue;
+
+        entry.animated_texture_chain_next       = value->animated_texture_parameter_chain;
+        value->animated_texture_parameter_chain = &entry;
+    }
 }
 
 // sub_9DE240
-void ngl::fx::build_animated_texture_parameter_chain(material* value) {
-    value->animated_texture_parameter_chain =
-        build_animated_texture_chain(value->parameters, value->parameter_count);
+void ngl::fx::build_animated_texture_parameter_chain(effect*, material* value) {
+    value->animated_texture_parameter_chain = (parameter*)&references::parameter_chain_sentinel.get();
+
+    for (i32 index = 0; index < value->parameter_count; ++index) {
+        parameter &entry = value->parameters[index];
+
+        if (entry.type != parameter_texture || !((*(texture**)entry.data)->flags & texture_animated))
+            continue;
+
+        entry.animated_texture_chain_next       = value->animated_texture_parameter_chain;
+        value->animated_texture_parameter_chain = &entry;
+    }
 }

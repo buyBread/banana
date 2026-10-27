@@ -20,8 +20,7 @@ namespace treyarch { namespace ngl { namespace fx {
     };
 
     math::rot_tran_mat43 get_unscaled_local_to_world(const mesh_node_data* value);
-    math::mat44          get_compressed_to_local(const mesh_node_data* value);
-    math::mat44          get_compressed_to_uv();
+    math::rot_tran_mat43 get_unscaled_world_to_local(const mesh_node_data* value);
 
     ASSERT_OFFSETOF(mesh_node_data, local_to_world,      0x00);
     ASSERT_OFFSETOF(mesh_node_data, local_to_screen,     0x40);

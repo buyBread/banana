@@ -71,23 +71,20 @@ void apply_render_states(const ngl::fx::render_states &states) {
         set_render_state(D3DRS_POINTSPRITEENABLE, FALSE);
 }
 
-void apply_sampler_states(u32 stage, const u32* sampler) {
-    using namespace ngl::d3d9;
-
-    set_sampler_address(stage, sampler[1], sampler[2], sampler[3]);
-    set_sampler_filters(stage, sampler[5], sampler[6], sampler[4], 1);
-}
-
-void set_texture(      ngl::fx::effect*           effect_data,
-                 const ngl::fx::function_binding &binding,
-                       void**                     sources) {
+// inlined @ sub_9EA5B0
+// inlined @ sub_9EA730
+void bind_sampler(      ngl::fx::effect*           effect_data,
+                  const ngl::fx::function_binding &binding,
+                        void**                     sources) {
 
     ngl::texture* texture = *(ngl::texture**)((u8*)sources[binding.source_class] + binding.source_offset);
 
     ngl::d3d9::set_texture(binding.handle, texture->gpu_texture.resource);
 
-    ngl::fx::parameter &parameter = effect_data->parameters[binding.parameter_index];
-    apply_sampler_states(binding.handle, (const u32*)parameter.data);
+    const u32* sampler = (const u32*)effect_data->parameters[binding.parameter_index].data;
+
+    ngl::d3d9::set_sampler_address(binding.handle, sampler[1], sampler[2], sampler[3]);
+    ngl::d3d9::set_sampler_filters(binding.handle, sampler[5], sampler[6], sampler[4], 1);
 }
 
 // sub_9EA5B0
@@ -109,7 +106,7 @@ void bind_vertex_function(ngl::fx::effect*   effect_data,
         const ngl::fx::function_binding &binding = value->bindings[index];
 
         if (binding.destination_type == ngl::fx::binding_sampler) {
-            set_texture(effect_data, binding, sources);
+            bind_sampler(effect_data, binding, sources);
 
             continue;
         }
@@ -169,7 +166,7 @@ void bind_pixel_function(ngl::fx::effect*   effect_data,
 
             case ngl::fx::binding_sampler:
                 if (binding.handle != (u32)-1)
-                    set_texture(effect_data, binding, sources);
+                    bind_sampler(effect_data, binding, sources);
                 break;
         }
     }

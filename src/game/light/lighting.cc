@@ -45,14 +45,16 @@ math::vector4 multiply_lanes(const math::vector4 &a, const math::vector4 &b) {
     return math::vector4(a[0] * b[0], a[1] * b[1], a[2] * b[2], a[3] * b[3]);
 }
 
-// inlined @ sub_7C7EE0, sub_7DE410
+// inlined @ sub_7C7EE0
+// inlined @ sub_7DE410
 void set_general_light_category(const ngl::fx::mesh_node_data* node_data) {
     // the mesh flags' top byte picks the light list, one past its index
     node_data->mesh_data[0x0B] = 0;
     *(u32*)(node_data->mesh_data + 0x08) |= ngl::lighting::light_category_general;
 }
 
-// inlined @ sub_7C7EE0, sub_7DE410
+// inlined @ sub_7C7EE0
+// inlined @ sub_7DE410
 void select_light_context(const ngl::fx::mesh_node_data* node_data) {
     u32 parameter_id = ngl::fx::references::parameter_id_light_context.read();
     ngl::lighting::light_context* context;
@@ -66,7 +68,8 @@ void select_light_context(const ngl::fx::mesh_node_data* node_data) {
     context->head.local_next = &context->head;
 }
 
-// inlined @ sub_7C5720, sub_7C86D0
+// inlined @ sub_7C5720
+// inlined @ sub_7C86D0
 void write_ambient_and_fog(lighting_parameters* value, const light_source_data* source) {
     value->ambient_info = math::vector4(source->unk_278, source->unk_270, source->unk_274, source->unk_27c);
     value->fog_color    = source->depth_fog_color;

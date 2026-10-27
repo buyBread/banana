@@ -49,16 +49,18 @@ void ngl::shaders::sm_phatnormal::node::render_shadow() {
     math::mat44 world_view_projection =
         math::mat44(mesh_node->local_to_world) *
         ngl::references::build_scene.read()->world_to_screen;
-    math::mat44 compressed_to_local = fx::get_compressed_to_local(mesh_node);
 
     math::vector4 uv_scale_offset(snapshot.texture_matrix[0][0],
                                   snapshot.texture_matrix[1][1],
                                   snapshot.texture_matrix[3][0],
                                   snapshot.texture_matrix[3][1]);
-    math::vector4 compressed(compressed_to_local[3][0],
-                             compressed_to_local[3][1],
-                             compressed_to_local[3][2],
-                             compressed_to_local[0][0]);
+    // the mesh center with its decompression scale
+    const mesh* mesh_data = (const mesh*)mesh_node->mesh_data;
+
+    math::vector4 compressed(mesh_data->sphere[0],
+                             mesh_data->sphere[1],
+                             mesh_data->sphere[2],
+                             mesh_data->sphere[3] >= 32.0f ? 0.01f : 0.001f);
 
     IDirect3DDevice9* device = d3d9::references::dev.get();
     device->SetVertexShaderConstantF(0, (const f32*)&world_view_projection, 4);

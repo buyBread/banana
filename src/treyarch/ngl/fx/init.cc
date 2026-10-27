@@ -7,7 +7,7 @@ using namespace treyarch;
 
 // sub_9E1F10
 void ngl::fx::init() {
-    initialize_directory();
+    references::effects.get().init();
 
     apk::register_file_type(four_cc('F', 'X', '\0'),
                             1,

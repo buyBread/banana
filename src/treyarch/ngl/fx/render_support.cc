@@ -64,7 +64,8 @@ ngl::fx::effect* ngl::fx::shader_node::select_effect() {
     return base;
 }
 
-// inlined @ sub_9E0420, sub_9E0A50
+// inlined @ sub_9E0420
+// inlined @ sub_9E0A50
 void ngl::fx::prepare_effect_scene(effect* value) {
     u32 frame_epoch = ngl::references::frame.read();
 
@@ -83,7 +84,8 @@ void ngl::fx::prepare_effect_scene(effect* value) {
     }
 }
 
-// inlined @ sub_9E0420, sub_9E0A50
+// inlined @ sub_9E0420
+// inlined @ sub_9E0A50
 void ngl::fx::prepare_effect_material(effect* value, material* material_data) {
     if (value->current_material == material_data)
         return;
@@ -95,7 +97,8 @@ void ngl::fx::prepare_effect_material(effect* value, material* material_data) {
     value->current_material = material_data;
 }
 
-// inlined @ sub_9E0420, sub_9E0A50
+// inlined @ sub_9E0420
+// inlined @ sub_9E0A50
 void ngl::fx::prepare_animated_textures(effect* effect_data, shader_node* node) {
     material*  material_data = node->material_data;
     parameter* sentinel      = (parameter*)&references::parameter_chain_sentinel.get();
@@ -107,7 +110,7 @@ void ngl::fx::prepare_animated_textures(effect* effect_data, shader_node* node) 
         build_animated_texture_parameter_chain(effect_data);
 
     if (!material_data->animated_texture_parameter_chain)
-        build_animated_texture_parameter_chain(material_data);
+        build_animated_texture_parameter_chain(effect_data, material_data);
 
     node->set_ifl_frame();
 }

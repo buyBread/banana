@@ -21,19 +21,7 @@ math::rot_tran_mat43 ngl::fx::get_unscaled_local_to_world(const mesh_node_data* 
     return *(const math::rot_tran_mat43*)&result;
 }
 
-math::mat44 ngl::fx::get_compressed_to_local(const mesh_node_data* value) {
-    const f32* mesh_data = (const f32*)value->mesh_data;
-    f32 scale = mesh_data[11] >= 32.0f ? 0.01f : 0.001f;
-
-    return math::mat44(math::vector4(scale,        0.0f,         0.0f,          0.0f),
-                       math::vector4(0.0f,         scale,        0.0f,          0.0f),
-                       math::vector4(0.0f,         0.0f,         scale,         0.0f),
-                       math::vector4(mesh_data[8], mesh_data[9], mesh_data[10], 1.0f));
-}
-
-math::mat44 ngl::fx::get_compressed_to_uv() {
-    return math::mat44(math::vector4(1.0f / 1024.0f, 0.0f,           0.0f, 0.0f),
-                       math::vector4(0.0f,           1.0f / 1024.0f, 0.0f, 0.0f),
-                       math::vector4(0.0f,           0.0f,           1.0f, 0.0f),
-                       math::vector4(0.0f,           0.0f,           0.0f, 1.0f));
+// sub_884560
+math::rot_tran_mat43 ngl::fx::get_unscaled_world_to_local(const mesh_node_data* value) {
+    return math::inv(get_unscaled_local_to_world(value));
 }

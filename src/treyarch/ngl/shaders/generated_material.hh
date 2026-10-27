@@ -99,6 +99,9 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
 
     bool texture_is_usable(const texture* value);
 
+    math::mat44 get_compressed_to_local(const fx::mesh_node_data* node_data);
+    math::mat44 get_compressed_to_uv();
+
     void prepare_scene_snapshot(      scene_snapshot*     snapshot,
                                 const material_data*      material,
                                 const fx::mesh_node_data* node_data,
@@ -149,6 +152,11 @@ namespace treyarch { namespace ngl { namespace shaders { namespace generated_mat
         inline util::memory_reference<math::vector4>  default_material_vector { 0x010F7D30 };
         inline util::memory_reference<math::vector4>  default_normal_vector   { 0x010F7D50 };
         inline util::memory_reference<math::vector4>  facing_vector           { 0x00F4A980 };
+
+        // the decompression scales of meshes under and from radius 32, and the texture coordinates'
+        inline util::memory_reference<math::mat43> small_compressed_to_local { 0x00F4AA90 };
+        inline util::memory_reference<math::mat43> large_compressed_to_local { 0x00F4AAD0 };
+        inline util::memory_reference<math::mat43> compressed_to_uv          { 0x00F4AB10 };
         inline util::memory_reference<f32>            animation_time          { 0x01086F20 };
         inline util::memory_reference<scene_snapshot> default_scene_snapshot  { 0x010873B0 };
     } // references

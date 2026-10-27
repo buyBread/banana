@@ -144,7 +144,8 @@ ngl::scene* ngl::list_add_node(render_node* value) {
     return current;
 }
 
-// inlined @ sub_7D8160, sub_7D8390
+// inlined @ sub_7D8160
+// inlined @ sub_7D8390
 void ngl::list_push_node(render_node* value, e_sort_type type) { // keeps the node's own sort key
     scene* current = references::build_scene.read();
 

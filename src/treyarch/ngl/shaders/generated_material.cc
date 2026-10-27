@@ -83,6 +83,27 @@ bool ngl::shaders::generated_material::texture_is_usable(const texture* value) {
            value->gpu_texture.width * value->gpu_texture.height >= 256;
 }
 
+// inlined @ sub_8CB2D0
+// inlined @ sub_885020
+// inlined @ sub_8E41B0
+math::mat44 ngl::shaders::generated_material::get_compressed_to_local(const fx::mesh_node_data* node_data) {
+    const mesh* mesh_data = (const mesh*)node_data->mesh_data;
+
+    math::mat43 compressed_to_local = mesh_data->sphere[3] >= 32.0f ? references::large_compressed_to_local.read() :
+                                                                      references::small_compressed_to_local.read();
+
+    compressed_to_local.set_w(math::position3(mesh_data->sphere[0], mesh_data->sphere[1], mesh_data->sphere[2]));
+
+    return math::mat44(compressed_to_local);
+}
+
+// inlined @ sub_8CB2D0
+// inlined @ sub_885020
+// inlined @ sub_8E41B0
+math::mat44 ngl::shaders::generated_material::get_compressed_to_uv() {
+    return math::mat44(references::compressed_to_uv.read());
+}
+
 void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapshot*     snapshot,
                                                               const material_data*      material,
                                                               const fx::mesh_node_data* node_data,
@@ -247,7 +268,8 @@ void ngl::shaders::generated_material::prepare_scene_snapshot(      scene_snapsh
     }
 }
 
-// inlined @ sub_8CB2D0, sub_8E41B0
+// inlined @ sub_8CB2D0
+// inlined @ sub_8E41B0
 light_table_lookup ngl::shaders::generated_material::get_light_table_lookup(const fx::mesh_node_data* node_data,
                                                                             const math::mat44        &local_to_world) {
 
@@ -296,9 +318,9 @@ void ngl::shaders::generated_material::prepare_regular_vertex_context(      regu
                                                                  section->sphere);
     }
 
-    context->compressed_to_local = fx::get_compressed_to_local(node_data);
+    context->compressed_to_local = get_compressed_to_local(node_data);
     context->prefix.compressed_to_uv =
-        fx::get_compressed_to_uv() * math::mat44(*(const math::mat43*)&snapshot->texture_matrix);
+        get_compressed_to_uv() * math::mat44(*(const math::mat43*)&snapshot->texture_matrix);
     context->prefix.compressed_to_screen =
         context->compressed_to_local *
         local_to_world *

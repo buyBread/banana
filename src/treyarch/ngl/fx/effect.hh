@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cstddef>
 #include <d3d9.h>
 
 #include "treyarch/apk/file.hh"
 #include "treyarch/base/tl_skip_list.hh"
+#include "treyarch/mm/heap.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -275,6 +277,17 @@ namespace treyarch { namespace ngl { namespace fx {
     struct technique_batch {
         shader_node* head;
         i32          count;
+
+        // sub_683CA0
+        technique_batch() : head(nullptr), count(0) {}
+
+        void* operator new[](std::size_t size) noexcept {
+            return memory::heap::allocate((u32)size);
+        }
+
+        void operator delete[](void* allocation) noexcept {
+            memory::heap::free(allocation);
+        }
     };
 
     struct effect_runtime {
@@ -287,6 +300,17 @@ namespace treyarch { namespace ngl { namespace fx {
         i32              priority;
         u8               queued;
         u8               reserved_01d[3];
+
+        explicit effect_runtime(effect* value);
+        ~effect_runtime();
+
+        void* operator new(std::size_t size) noexcept {
+            return memory::heap::allocate((u32)size);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            memory::heap::free(allocation);
+        }
 
         effect* queue(effect* head);
         i32     render_batches();
@@ -317,9 +341,6 @@ namespace treyarch { namespace ngl { namespace fx {
     };
 
     struct effect_directory : tl_skip_list<effect, effect_name> {};
-
-    effect* find(string_hash name);
-    void initialize_directory();
 
     void load(apk::file*       owner,
               apk::file_entry* entry,

@@ -30,7 +30,10 @@ namespace treyarch {
         i32          index;
         i32          offset;
 
-        // inlined @ sub_8A2BA0, sub_8B8620, sub_8CB2D0, sub_8E41B0
+        // inlined @ sub_8A2BA0
+        // inlined @ sub_8B8620
+        // inlined @ sub_8CB2D0
+        // inlined @ sub_8E41B0
         light_table_lookup() : table(nullptr), force_horizon(false), fade_horizon_extra(true), index(-1), offset(4) {}
     };
 

@@ -91,59 +91,6 @@ void copy_parameter_subset(      ngl::fx::effect*         value,
     }
 }
 
-void write_specialized_matrix(      ngl::fx::parameter*      entry,
-                              const ngl::fx::mesh_node_data* node_data,
-                                    bool                     subset_effect) {
-    using namespace ngl::fx;
-
-    math::mat44 &destination = *(math::mat44*)entry->data;
-    math::mat44  local(node_data->local_to_world);
-    scene* build_scene = ngl::references::build_scene.read();
-
-    switch (entry->type) {
-        case parameter_world:
-            destination = ~local;
-            break;
-        case parameter_world_inverse:
-            destination = ~math::mat44(math::inv(get_unscaled_local_to_world(node_data)));
-            break;
-        case parameter_world_transpose:
-            destination = local;
-            break;
-        case parameter_world_inverse_transpose:
-            destination = math::inv(get_unscaled_local_to_world(node_data));
-            break;
-        case parameter_world_view:
-            destination = ~(local * build_scene->world_to_view);
-            break;
-        case parameter_world_view_inverse: {
-            math::mat44 local_to_view = local * build_scene->world_to_view;
-            destination = ~math::mat44(math::inv(*(const math::rot_tran_mat43*)&local_to_view));
-            break;
-        }
-        case parameter_world_view_transpose:
-            destination = local * build_scene->world_to_view;
-            break;
-        case parameter_world_view_inverse_transpose: {
-            math::mat44 local_to_view = local * build_scene->world_to_view;
-            destination = math::inv(*(const math::rot_tran_mat43*)&local_to_view);
-            break;
-        }
-        case parameter_world_view_projection:
-            destination = ~(local * build_scene->world_to_screen);
-            break;
-        case parameter_world_view_projection_transpose:
-            destination = local * build_scene->world_to_screen;
-            break;
-        case parameter_world_view_projection_inverse:
-        case parameter_world_view_projection_inverse_transpose:
-            // general effects get identity here, but subset effects leave the old value alone
-            if (!subset_effect)
-                destination = math::identity_mat33();
-            break;
-    }
-}
-
 // sub_9DE390
 void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
                          const ngl::mesh_section*       section) {
@@ -191,59 +138,13 @@ void write_bone_matrices(const ngl::fx::mesh_node_data* node_data,
     fx::references::bone_constant_count.write(section->bone_count);
 }
 
-void write_point_light_positions(      f32*                     destination,
-                                 const ngl::fx::mesh_node_data* node_data) {
-
-    lighting::point_light_data* lights = &lighting::references::point_lights.get();
-    // skip the 16-byte array header
-    destination += 4;
-
-    for (u32 index = 0; index < node_data->point_light_count; ++index) {
-        u32 light_index = node_data->point_light_indices[index];
-        const lighting::point_light_data &light = lights[light_index];
-
-        *(math::vector4*)(destination + 4 * index) = math::vector4(light.position[0],
-                                                                   light.position[1],
-                                                                   light.position[2],
-                                                                   1.0f / light.position[3]);
-    }
-}
-
-void write_point_light_colors(      f32*                     destination,
-                              const ngl::fx::mesh_node_data* node_data) {
-
-    lighting::point_light_data* lights = &lighting::references::point_lights.get();
-    u32 index = 0;
-    // skip the 16-byte array header
-    destination += 4;
-
-    for (; index < node_data->point_light_count; ++index) {
-        u32 light_index = node_data->point_light_indices[index];
-        const lighting::point_light_data &light = lights[light_index];
-
-        *(math::vector4*)(destination + 4 * index) = math::vector4(light.color[0],
-                                                                   light.color[1],
-                                                                   light.color[2],
-                                                                   0.0f);
-    }
-
-    // clear unused colors, but leave unused positions and ranges alone
-    for (; index < 8; ++index)
-        *(math::vector4*)(destination + 4 * index) = math::vector4(0.0f, 0.0f, 0.0f, 0.0f);
-}
-
+// inlined @ sub_8B8620
+// inlined @ sub_8A2BA0
 void write_shadow_size(f32* destination, u32 width, u32 height) {
     *(math::vector4*)(destination) = math::vector4((f32)width, (f32)height, 1.0f / (f32)width, 1.0f / (f32)height);
 }
 
-void write_default_environment_color(f32* destination) {
-    // default color starts at (10, 10, 20) / 255 and is squared below
-    *(math::vector4*)(destination) = math::vector4(0.03921569f, 0.03921569f, 0.07843138f, 1.0f);
-
-    for (u32 index = 0; index < 4; ++index)
-        destination[index] *= destination[index];
-}
-
+// inlined @ sub_8A6D50
 bool is_depth_bias_parameter(ngl::fx::e_parameter_type type) {
     return type == ngl::fx::parameter_bone_array_world ||
           (type >= ngl::fx::parameter_world && type <= ngl::fx::parameter_world_inverse_transpose) ||
@@ -336,7 +237,8 @@ void ngl::fx::update_scene_parameters(effect* value) {
     }
 }
 
-// inlined @ sub_8B8620, sub_8A2BA0
+// inlined @ sub_8B8620
+// inlined @ sub_8A2BA0
 light_table_lookup get_light_table_lookup(const ngl::fx::mesh_node_data* node_data) {
     light_table_lookup lookup;
 
@@ -359,7 +261,9 @@ light_table_lookup get_light_table_lookup(const ngl::fx::mesh_node_data* node_da
     return lookup;
 }
 
-// inlined @ sub_8B8620, sub_8A2BA0, sub_8A6D50
+// inlined @ sub_8B8620
+// inlined @ sub_8A2BA0
+// inlined @ sub_8A6D50
 void write_material_parameter(      ngl::fx::parameter*          entry,
                               const ngl::fx::mesh_node_data*     node_data,
                               const ngl::mesh_section*           section,
@@ -371,18 +275,7 @@ void write_material_parameter(      ngl::fx::parameter*          entry,
 
     f32* destination = (f32*)entry->data;
     math::vector4* vectors = (math::vector4*)entry->data;
-    e_parameter_type type = entry->type;
-
-    if ((type >= parameter_world && type <= parameter_world_inverse_transpose) ||
-        (type >= parameter_world_view && type <= parameter_world_view_inverse_transpose) ||
-        (type >= parameter_world_view_projection && type <= parameter_world_view_projection_inverse_transpose)) {
-
-        write_specialized_matrix(entry, node_data, subset_effect);
-
-        return;
-    }
-
-    switch (type) {
+    switch (entry->type) {
         case parameter_bone_array_world:
             write_bone_matrices(node_data, section);
 
@@ -390,6 +283,63 @@ void write_material_parameter(      ngl::fx::parameter*          entry,
         case parameter_bone_influences:
             if (!subset_effect)
                 destination[0] = section && section->bone_count > 0 ? 4.0f : 1.0f;
+
+            break;
+        case parameter_world:
+            *(math::mat44*)destination = ~math::mat44(node_data->local_to_world);
+
+            break;
+        case parameter_world_inverse:
+            *(math::mat44*)destination = ~math::mat44(get_unscaled_world_to_local(node_data));
+
+            break;
+        case parameter_world_transpose:
+            *(math::mat44*)destination = node_data->local_to_world;
+
+            break;
+        case parameter_world_inverse_transpose:
+            *(math::mat44*)destination = get_unscaled_world_to_local(node_data);
+
+            break;
+        case parameter_world_view:
+            *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_view);
+
+            break;
+        case parameter_world_view_inverse: {
+            math::mat44 local_to_view = math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_view;
+
+            *(math::mat44*)destination = ~math::mat44(math::inv(*(const math::rot_tran_mat43*)&local_to_view));
+
+            break;
+        }
+        case parameter_world_view_transpose:
+            *(math::mat44*)destination = math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_view;
+
+            break;
+        case parameter_world_view_inverse_transpose: {
+            math::mat44 local_to_view = math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_view;
+
+            *(math::mat44*)destination = math::inv(*(const math::rot_tran_mat43*)&local_to_view);
+
+            break;
+        }
+        case parameter_world_view_projection:
+            *(math::mat44*)destination = ~(math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_screen);
+
+            break;
+        case parameter_world_view_projection_inverse:
+            // subset effects leave these alone
+            if (!subset_effect)
+                *(math::mat44*)destination = math::identity_mat33();
+
+            break;
+        case parameter_world_view_projection_transpose:
+            *(math::mat44*)destination = math::mat44(node_data->local_to_world) * ngl::references::build_scene.read()->world_to_screen;
+
+            break;
+        case parameter_world_view_projection_inverse_transpose:
+            if (!subset_effect)
+                *(math::mat44*)destination = math::identity_mat33();
 
             break;
         case parameter_horizon_projection_u:
@@ -591,14 +541,37 @@ void write_material_parameter(      ngl::fx::parameter*          entry,
             destination[0] = (f32)node_data->point_light_count;
 
             break;
-        case parameter_point_light_positions_ranges:
-            write_point_light_positions(destination, node_data);
+        case parameter_point_light_positions_ranges: {
+            const ngl::lighting::point_light_data* lights = &ngl::lighting::references::point_lights.get();
+
+            // past the 16-byte array header
+            for (u32 index = 0; index < node_data->point_light_count; ++index) {
+                const ngl::lighting::point_light_data &light = lights[node_data->point_light_indices[index]];
+
+                vectors[1 + index] = math::vector4(light.position[0],
+                                                   light.position[1],
+                                                   light.position[2],
+                                                   1.0f / light.position[3]);
+            }
 
             break;
-        case parameter_point_light_colors:
-            write_point_light_colors(destination, node_data);
+        }
+        case parameter_point_light_colors: {
+            const ngl::lighting::point_light_data* lights = &ngl::lighting::references::point_lights.get();
+            u32                                    index  = 0;
+
+            for (; index < node_data->point_light_count; ++index) {
+                const ngl::lighting::point_light_data &light = lights[node_data->point_light_indices[index]];
+
+                vectors[1 + index] = math::vector4(light.color[0], light.color[1], light.color[2], 0.0f);
+            }
+
+            // unused colors are cleared, unused positions and ranges are left alone
+            for (; index < 8; ++index)
+                vectors[1 + index] = math::vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
             break;
+        }
         case parameter_ibl_parameters:
             vectors[0] = lighting->ambient_info;
 
@@ -634,8 +607,13 @@ void write_material_parameter(      ngl::fx::parameter*          entry,
                 destination[1] = color[1] * color[1];
                 destination[2] = color[2] * color[2];
                 destination[3] = color[3];
-            } else
-                write_default_environment_color(destination);
+            } else {
+                // (10, 10, 20) / 255, squared below
+                vectors[0] = math::vector4(0.03921569f, 0.03921569f, 0.07843138f, 1.0f);
+
+                for (u32 index = 0; index < 4; ++index)
+                    destination[index] *= destination[index];
+            }
 
             break;
         }
@@ -760,7 +738,8 @@ void ngl::fx::update_subset_depth_bias_parameters(effect*         value,
     }
 }
 
-// inlined @ sub_9E0420, sub_9E0A50
+// inlined @ sub_9E0420
+// inlined @ sub_9E0A50
 void ngl::fx::update_material_parameters(effect*         value,
                                          mesh_node_data* node_data,
                                          mesh_section*   section) {
