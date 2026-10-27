@@ -70,8 +70,8 @@ void amalga::resource_manager::create_inst() {
         references::resource_buffer_used.get()[buffer_location_vram] = 0;
 
         // pc only ever gets the main buffer
-        references::resource_buffer.get()[buffer_location_main] = (u8*)retail::sub_5FAF00
-            ((i32)mm::get_default_space(), buffer_size[buffer_location_main], 0x1000);
+        references::resource_buffer.get()[buffer_location_main] = (u8*)mm::get_default_space()->allocate_general
+            (buffer_size[buffer_location_main], 0x1000);
 
         retail::sub_76FB40(0); // configure_packs_by_memory_map
     }

@@ -2,7 +2,6 @@
 #include <intrin.h>
 #include <cstring>
 
-#include "retail.hh"
 #include "treyarch/mm/superheap.hh"
 #include "banana/util/memory_reference.hh"
 
@@ -72,7 +71,7 @@ static mm::superblock_queue_node* acquire_queue_node() {
 
         if (!node) {
             // slice a block from the default space into 256 linked queue nodes
-            auto* nodes = (mm::superblock_queue_node*)retail::sub_5FAF00((i32)mm::get_default_space(), 0x1000, 0);
+            auto* nodes = (mm::superblock_queue_node*)mm::get_default_space()->allocate_general(0x1000, 0);
 
             for (u32 index = 0; index < 0xFF; ++index)
                 nodes[index].next = (u32)&nodes[index + 1];
@@ -83,7 +82,7 @@ static mm::superblock_queue_node* acquire_queue_node() {
             u64 next = make_tagged_pointer(nodes, tagged_sequence(state) + 1);
 
             if (!mm::compare_exchange(&pool, next, state)) // someone else beat us, discard our batch
-                retail::sub_5FAFB0((volatile i32*)mm::get_default_space(), (i32)nodes);
+                mm::get_default_space()->deallocate_general(nodes);
 
             continue;
         }
@@ -267,7 +266,7 @@ void mm::superheap_t::register_superblock(superblock_entry_t* entry) {
     superblock_entry_t**  &level   = table[address >> 24];
 
     if (!level) {
-        level = (superblock_entry_t**)retail::sub_5FAF00((i32)get_default_space(), 0x4000, 0);
+        level = (superblock_entry_t**)get_default_space()->allocate_general(0x4000, 0);
 
         std::memset(level, 0, 0x4000);
     }
@@ -320,7 +319,7 @@ mm::superblock_entry_t* mm::superheap_t::create_superblock_entry(u32 block_size,
         superblock_entry_slab* slab = entry_allocator;
 
         if (!slab || slab->used + aligned_size >= 0x4000) {
-            slab = (superblock_entry_slab*)retail::sub_5FAF00((i32)get_default_space(), sizeof(superblock_entry_slab), 0);
+            slab = (superblock_entry_slab*)get_default_space()->allocate_general(sizeof(superblock_entry_slab), 0);
 
             if (slab) {
                 slab->previous = entry_allocator;

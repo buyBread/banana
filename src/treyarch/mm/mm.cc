@@ -4,7 +4,7 @@
 #include <cstring>
 #include <new>
 
-#include "retail.hh"
+#include "treyarch/mm/dlmalloc.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/mm/superheap.hh"
 
@@ -29,7 +29,7 @@ void mm::memory_space::report_usage(bool force) {
 }
 
 // sub_5F88C0
-void mm::memory_space::allocation_failure(void* failed_space) {
+void mm::memory_space::allocation_failure(malloc_state* failed_space) {
     for (memory_space* next = references::list_head.read(); next; next = next->list_next) {
         next->reported_used = next->used;
         next->reported_size = next->size;
@@ -53,9 +53,45 @@ void mm::memory_space::allocation_failure(void* failed_space) {
 // sub_5FABD0
 mm::memory_space::~memory_space() {
     if (space)
-        retail::sub_5FA240((u32*)space);
+        destroy_mspace(space);
 
     space = nullptr;
+}
+
+// sub_5FABF0
+u32 mm::memory_space::allocation_size_general(void* allocation) {
+    lock();
+
+    u32 bytes = mspace_usable_size(allocation);
+
+    unlock();
+
+    return bytes;
+}
+
+// sub_5FAF00
+void* mm::memory_space::allocate_general(u32 bytes, u32 alignment) {
+    lock();
+
+    if (alignment < 16)
+        alignment = 16;
+
+    void* allocation = mspace_memalign(space, alignment, bytes);
+
+    used += mspace_usable_size(allocation);
+
+    unlock();
+
+    return allocation;
+}
+
+// sub_5FAFB0
+void mm::memory_space::deallocate_general(void* allocation) {
+    used -= allocation_size_general(allocation);
+
+    lock();
+    mspace_free(space, allocation);
+    unlock();
 }
 
 // sub_5FB090
@@ -68,7 +104,7 @@ u32 mm::memory_space::allocation_size(void* allocation) {
     if (entry)
         return entry->block_size;
 
-    return retail::sub_5FABF0((volatile i32*)this, (i32)allocation);
+    return allocation_size_general(allocation);
 }
 
 // sub_5FB270
@@ -96,14 +132,14 @@ mm::memory_space::memory_space(const char* space_name, e_space_type space_type, 
 
     // physical, virtual and vram spaces map their own memory; a fixed one sits in its base when it has one
     if (type <= type_vram)
-        space = retail::sub_5FA110(initial_size, 0, (u32*)&callbacks);
+        space = create_mspace(initial_size, 0, &callbacks);
     else if (type == type_fixed) {
         max_size = initial_size;
 
         if (base)
-            space = retail::sub_5FA1E0((i32)base, initial_size, 0, (i32)&callbacks);
+            space = create_mspace_with_base(base, initial_size, 0, &callbacks);
         else
-            space = retail::sub_5FA110(initial_size, 0, (u32*)&callbacks);
+            space = create_mspace(initial_size, 0, &callbacks);
     }
 
     if (!(hint_flags & hint_superheap)) {
@@ -112,7 +148,7 @@ mm::memory_space::memory_space(const char* space_name, e_space_type space_type, 
         return;
     }
 
-    void* storage = retail::sub_5FAF00((i32)get_default_space(), sizeof(superheap_t), 0);
+    void* storage = get_default_space()->allocate_general(sizeof(superheap_t), 0);
 
     superheap = storage ? new (storage) superheap_t() : nullptr;
     superheap->initialize(this);
@@ -159,7 +195,7 @@ mm::memory_space* mm::get_default_space() {
 
 // sub_5FB7A0
 void* mm::allocate_general(u32 size, u32 alignment) {
-    return (void*)retail::sub_5FAF00((i32)get_default_space(), size, alignment);
+    return get_default_space()->allocate_general(size, alignment);
 }
 
 // sub_5FBD20
@@ -178,7 +214,7 @@ void* mm::memory_space::allocate(u32 bytes, u32 alignment) {
         }
     }
 
-    return retail::sub_5FAF00((i32)this, bytes, alignment);
+    return allocate_general(bytes, alignment);
 }
 
 // sub_5FBD70
@@ -193,7 +229,7 @@ void mm::memory_space::deallocate(void* allocation) {
 
         superheap->deallocate(allocation, entry);
     } else
-        retail::sub_5FAFB0((volatile i32*)this, (i32)allocation);
+        deallocate_general(allocation);
 }
 
 // sub_5FBDD0
@@ -206,12 +242,36 @@ void* mm::allocate(u32 size, u32 alignment) {
     return get_default_space()->allocate(size, alignment);
 }
 
+// sub_5FBE90
+void* mm::memory_space::reallocate_general(void* allocation, u32 bytes, u32 alignment) {
+    if (alignment < 16)
+        alignment = 16;
+
+    lock();
+
+    void* moved = mspace_memalign(space, alignment, bytes);
+
+    unlock();
+
+    used += allocation_size_general(moved);
+
+    u32 copied = allocation_size(allocation);
+
+    if (copied > bytes)
+        copied = bytes;
+
+    std::memcpy(moved, allocation, copied);
+    deallocate(allocation);
+
+    return moved;
+}
+
 // sub_5FBF50
 void* mm::memory_space::reallocate(void* allocation, u32 bytes, u32 alignment) {
     u32 block_size = superheap ? superheap->get_block_size(bytes, alignment) : 0;
 
     if (!block_size)
-        return retail::sub_5FBE90((i32)this, (u32)allocation, bytes, alignment);
+        return reallocate_general(allocation, bytes, alignment);
 
     // a small block moves into the superheap
     void* moved = superheap->allocate(bytes);

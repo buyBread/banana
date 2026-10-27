@@ -5,6 +5,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace mm {
+    struct malloc_state;
     struct memory_space;
     struct superheap_t;
 
@@ -44,7 +45,7 @@ namespace treyarch { namespace mm {
                  u32           reported_size;
                  u32           reported_used;
                  u32           report_threshold;
-                 void*         space;
+                 malloc_state* space;
                  u32           initial_size;
                  u32           max_size;
                  superheap_t*  superheap;
@@ -58,13 +59,19 @@ namespace treyarch { namespace mm {
         void  deallocate(void* allocation);
         u32   allocation_size(void* allocation);
 
+        // the dlmalloc space alone
+        void* allocate_general(u32 bytes, u32 alignment);
+        void* reallocate_general(void* allocation, u32 bytes, u32 alignment);
+        void  deallocate_general(void* allocation);
+        u32   allocation_size_general(void* allocation);
+
         void lock();
         void unlock();
 
         static i32 map_memory(u32 bytes, void* user_data);
         static i32 unmap_memory(void* address, u32 bytes, void* user_data);
 
-        static void allocation_failure(void* failed_space);
+        static void allocation_failure(malloc_state* failed_space);
         static void report_usage(bool force);
     };
 
