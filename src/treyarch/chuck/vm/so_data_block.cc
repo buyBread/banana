@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "treyarch/chuck/vm/so_data_block.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -36,7 +36,7 @@ void so_data_block::setup(i32 size) {
         setup_fixed_block<fixed_so_data_block_3000>();
     else {
         flags  = (e_so_data_block_flags)(flags | so_data_block_flag_buffer_allocated);
-        buffer = (u8*)memory::heap::allocate(size);
+        buffer = (u8*)mm::allocate(size);
     }
 
     if (blocksize > 0)
@@ -46,7 +46,7 @@ void so_data_block::setup(i32 size) {
 // sub_A24380
 void so_data_block::destroy() {
     if (flags & so_data_block_flag_buffer_allocated) {
-        memory::heap::free(buffer);
+        mm::free(buffer);
 
         flags     = (e_so_data_block_flags)(flags & ~so_data_block_flag_buffer_allocated);
         blocksize = 0;

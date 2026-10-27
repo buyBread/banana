@@ -11,7 +11,7 @@
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_string.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -72,7 +72,7 @@ void vm_thread_flow_stack_element::operator delete(void* allocation) noexcept {
 
 // sub_A21BD0
 void vm_thread::create_locks() {
-    auto* global_variable_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* global_variable_lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (global_variable_lock) {
         global_variable_lock->owner = 0;
@@ -86,7 +86,7 @@ void vm_thread::create_locks() {
     global_variable_lock->state = 0;
     global_variable_lock->depth = 0;
 
-    auto* callback_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* callback_lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (callback_lock) {
         callback_lock->owner = 0;

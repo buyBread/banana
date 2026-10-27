@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -42,7 +42,7 @@ namespace treyarch { namespace vc8 {
             if (count > 0xFFFFFFFF / sizeof(T))
                 throw std::length_error("vector<T> too long");
 
-            first        = (T*)memory::heap::allocate(count * sizeof(T));
+            first        = (T*)mm::allocate(count * sizeof(T));
             last         = first;
             capacity_end = first + count;
 
@@ -83,7 +83,7 @@ namespace treyarch { namespace vc8 {
             clear();
 
             if (first)
-                memory::heap::free(first);
+                mm::free(first);
 
             first        = nullptr;
             last         = nullptr;
@@ -95,7 +95,7 @@ namespace treyarch { namespace vc8 {
             if (capacity() < count) {
                 destroy();
 
-                first        = (T*)memory::heap::allocate(count * sizeof(T));
+                first        = (T*)mm::allocate(count * sizeof(T));
                 last         = first;
                 capacity_end = first + count;
             } else
@@ -120,7 +120,7 @@ namespace treyarch { namespace vc8 {
             if (capacity() >= count)
                 return;
 
-            T* allocation = (T*)memory::heap::allocate(count * sizeof(T));
+            T* allocation = (T*)mm::allocate(count * sizeof(T));
 
             for (T* source = first, *destination = allocation; source != last; ++source, ++destination)
                 new (destination) T(*source);
@@ -131,7 +131,7 @@ namespace treyarch { namespace vc8 {
                 old_size = size();
 
                 clear();
-                memory::heap::free(first);
+                mm::free(first);
             }
 
             capacity_end = allocation + count;
@@ -227,7 +227,7 @@ namespace treyarch { namespace vc8 {
             if (new_capacity < requested_size)
                 new_capacity = requested_size;
 
-            T* allocation = (T*)memory::heap::allocate(new_capacity * sizeof(T));
+            T* allocation = (T*)mm::allocate(new_capacity * sizeof(T));
 
             for (u32 index = 0; index < old_size; ++index)
                 new (allocation + index) T(std::move(first[index]));
@@ -235,7 +235,7 @@ namespace treyarch { namespace vc8 {
             clear();
 
             if (first)
-                memory::heap::free(first);
+                mm::free(first);
 
             first        = allocation;
             last         = allocation + old_size;

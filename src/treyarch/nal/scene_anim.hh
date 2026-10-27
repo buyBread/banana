@@ -5,7 +5,7 @@
 #include "treyarch/nal/anim.hh"
 #include "game/fixed_string.hh"
 #include "game/four_cc.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -49,11 +49,11 @@ namespace treyarch { namespace nal {
         void destroy();
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

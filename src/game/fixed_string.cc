@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "game/fixed_string.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
@@ -15,7 +15,7 @@ namespace treyarch { namespace references {
 
 // sub_408E10
 void fixed_string::set_text(const char* value) {
-    char* copy = (char*)memory::heap::allocate(std::strlen(value) + 1);
+    char* copy = (char*)mm::allocate(std::strlen(value) + 1);
 
     text = copy;
 
@@ -43,14 +43,14 @@ const char* fixed_string::get_text() const {
 
 // sub_4FAB70
 fixed_string &fixed_string::assign(const fixed_string &other) {
-    memory::heap::free(text);
+    mm::free(text);
 
     hash = other.hash;
 
     if (other.text) {
         u32 size = std::strlen(other.text) + 1;
 
-        text = (char*)memory::heap::allocate(size);
+        text = (char*)mm::allocate(size);
         std::memcpy(text, other.text, size);
     } else
         text = nullptr;

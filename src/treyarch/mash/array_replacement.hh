@@ -2,7 +2,7 @@
 
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/types.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -35,7 +35,7 @@ namespace treyarch { namespace mash {
             for (u32 index = *count; index > 0; --index)
                 array[index - 1].~T();
 
-            memory::heap::free(count);
+            mm::free(count);
         }
 
         // sub_6208D0

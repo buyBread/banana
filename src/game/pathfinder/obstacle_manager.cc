@@ -1,7 +1,7 @@
 #include <new>
 
 #include "game/pathfinder/obstacle_manager.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -13,7 +13,7 @@ pathfinder::obstacle_manager::obstacle_manager() {
 
 // sub_428FC0
 void pathfinder::obstacle_manager::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(obstacle_manager));
+    void* allocation = mm::allocate(sizeof(obstacle_manager));
 
     obstacle_manager::instance() = allocation ? new (allocation) obstacle_manager() : nullptr;
 }

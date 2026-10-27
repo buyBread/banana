@@ -5,7 +5,7 @@
 #include "vc8/vector.hh"
 #include "treyarch/chuck/script_library/script_library_function.hh"
 #include "treyarch/mash/string.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -31,12 +31,12 @@ namespace treyarch { namespace chuck { namespace script_library {
         script_library_function* get_function(i32 index) const;
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         // inlined into the deleting destructors
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

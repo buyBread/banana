@@ -4,14 +4,14 @@
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "game/script/chuck_register_script_libs.hh"
 #include "game/script/client_script_libs.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::script_library;
 
 // sub_A20FA0
 slc_manager::slc_manager() : classes(nullptr) {
-    void* allocation = memory::heap::allocate(sizeof(vc8::vector<script_library_class*>));
+    void* allocation = mm::allocate(sizeof(vc8::vector<script_library_class*>));
 
     classes = allocation ?
         new (allocation) vc8::vector<script_library_class*>() : nullptr;
@@ -34,14 +34,14 @@ slc_manager::~slc_manager() {
     }
 
     classes->~vector();
-    memory::heap::free(classes);
+    mm::free(classes);
 
     classes = nullptr;
 }
 
 // sub_97AAB0
 void slc_manager::setup() {
-    void* allocation = memory::heap::allocate(sizeof(slc_manager));
+    void* allocation = mm::allocate(sizeof(slc_manager));
 
     instance() = allocation ? new (allocation) slc_manager() : nullptr;
 
@@ -73,7 +73,7 @@ void slc_manager::destroy() {
 
     if (manager) {
         manager->~slc_manager();
-        memory::heap::free(manager);
+        mm::free(manager);
     }
 
     instance() = nullptr;

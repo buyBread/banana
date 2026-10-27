@@ -5,7 +5,7 @@
 #include "game/color.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/po.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -54,11 +54,11 @@ namespace treyarch {
         light_source(const light_properties &properties, const po* the_po, const string_hash &id);
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

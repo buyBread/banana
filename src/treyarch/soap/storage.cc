@@ -1,5 +1,5 @@
 #include "retail.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/soap/storage.hh"
 
 using namespace treyarch;
@@ -7,7 +7,7 @@ using namespace treyarch;
 // sub_9EDA50
 soap::storage* soap::storage::inst() {
     if (!references::storage.read()) {
-        void* allocation = memory::heap::allocate(sizeof(storage));
+        void* allocation = mm::allocate(sizeof(storage));
 
         references::storage.write(allocation ? (storage*)retail::sub_9F0950((i32)allocation) : nullptr);
     }

@@ -4,7 +4,7 @@
 
 #include "game/amalga/resource_directory.hh"
 #include "game/amalga/resource_types.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/timing/limited_timer.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -47,12 +47,12 @@ namespace treyarch { namespace amalga {
         bool handle(e_behavior behavior, limited_timer* time_limit);
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         // inlined into the deleting destructors
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

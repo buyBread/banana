@@ -23,7 +23,7 @@
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/gpu/d3d9/display.hh"
 #include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/os_file.hh"
 #include "game/timing/hires_clock.hh"
 
@@ -95,7 +95,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
 
     references::application_instance.write(instance);
 
-    windows_app* application = (windows_app*)memory::heap::allocate(sizeof(windows_app));
+    windows_app* application = (windows_app*)mm::allocate(sizeof(windows_app));
 
     if (application) {
         application->vtable = &references::windows_app_vtable.get();
@@ -140,7 +140,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
 
     const nfl::init_params nfl_params { references::pack_mode.read() ? 1024 : 128, 64, 64, 3, 1 };
     references::nfl_work_space_size.write(nfl::init(&nfl_params));
-    references::nfl_work_space.write(memory::heap::allocate(references::nfl_work_space_size.read()));
+    references::nfl_work_space.write(mm::allocate(references::nfl_work_space_size.read()));
     nfl::start(references::nfl_work_space.read());
 
     std::srand(_time32(nullptr));

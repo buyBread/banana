@@ -9,7 +9,7 @@
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -120,14 +120,14 @@ void als::animation_logic_system_interface::add_to_als_list(animation_logic_syst
 
     // both lists of a pair exist while either has an als in it
     if (!*the_list) {
-        als_list* list = (als_list*)memory::heap::allocate(sizeof(als_list));
+        als_list* list = (als_list*)mm::allocate(sizeof(als_list));
 
         if (list)
             new (list) als_list();
 
         *the_list = list;
 
-        als_list* advance_list = (als_list*)memory::heap::allocate(sizeof(als_list));
+        als_list* advance_list = (als_list*)mm::allocate(sizeof(als_list));
 
         if (advance_list)
             new (advance_list) als_list();
@@ -164,13 +164,13 @@ void als::animation_logic_system_interface::remove_from_als_list(animation_logic
 
         if (!(*the_list)->size()) {
             (*the_list)->~als_list();
-            memory::heap::free(*the_list);
+            mm::free(*the_list);
 
             *the_list = nullptr;
 
             if (*the_advance_list) {
                 (*the_advance_list)->~als_list();
-                memory::heap::free(*the_advance_list);
+                mm::free(*the_advance_list);
             }
 
             *the_advance_list = nullptr;

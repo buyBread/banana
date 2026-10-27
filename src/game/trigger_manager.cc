@@ -1,7 +1,7 @@
 #include <new>
 
 #include "game/trigger_manager.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -27,7 +27,7 @@ trigger_manager::trigger_manager() {
 
 // sub_428A10
 void trigger_manager::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(trigger_manager));
+    void* allocation = mm::allocate(sizeof(trigger_manager));
 
     trigger_manager::instance() = allocation ? new (allocation) trigger_manager() : nullptr;
 

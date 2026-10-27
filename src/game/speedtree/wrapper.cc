@@ -10,7 +10,7 @@
 #include "game/hash/algo.hh"
 #include "game/light/references.hh"
 #include "game/math/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -186,7 +186,7 @@ void speed_tree_wrapper::find_technique(u32                 &guard,
     technique = ngl::fx::find_technique(effect, technique_name);
 
     if (technique_name.text)
-        memory::heap::free(technique_name.text);
+        mm::free(technique_name.text);
 }
 
 // sub_7BFAD0

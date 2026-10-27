@@ -5,7 +5,7 @@
 
 #include "treyarch/apk/file.hh"
 #include "treyarch/base/tl_skip_list.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/fixed_string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -282,11 +282,11 @@ namespace treyarch { namespace ngl { namespace fx {
         technique_batch() : head(nullptr), count(0) {}
 
         void* operator new[](std::size_t size) noexcept {
-            return memory::heap::allocate((u32)size);
+            return mm::allocate((u32)size);
         }
 
         void operator delete[](void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 
@@ -305,11 +305,11 @@ namespace treyarch { namespace ngl { namespace fx {
         ~effect_runtime();
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate((u32)size);
+            return mm::allocate((u32)size);
         }
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
 
         effect* queue(effect* head);

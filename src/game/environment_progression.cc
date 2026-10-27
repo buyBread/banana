@@ -2,7 +2,7 @@
 
 #include "game/environment_progression.hh"
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -45,7 +45,7 @@ environment_progression_state::environment_progression_state() : progression(nul
 
 // sub_428F60
 void environment_progression_state::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(environment_progression_state));
+    void* allocation = mm::allocate(sizeof(environment_progression_state));
 
     references::environment_progression_state.write
         (allocation ? new (allocation) environment_progression_state() : nullptr);

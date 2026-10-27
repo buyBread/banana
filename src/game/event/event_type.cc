@@ -5,7 +5,7 @@
 #include "game/event/event_recipient_entry.hh"
 #include "game/event/event_type.hh"
 #include "treyarch/ae_base/fixed_pool.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -185,7 +185,7 @@ u32 event_type::add_default_callback(code_event_callback_function function,
                                      void*                        parameters,
                                      bool                         one_shot) {
 
-    auto* allocation = memory::heap::allocate(sizeof(code_event_callback));
+    auto* allocation = mm::allocate(sizeof(code_event_callback));
     auto* callback   = new (allocation) code_event_callback(function, parameters, one_shot);
 
     engine_lock_scope scope(&lock);

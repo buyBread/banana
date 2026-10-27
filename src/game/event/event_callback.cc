@@ -7,7 +7,7 @@
 #include "game/event/event.hh"
 #include "game/event/event_callback.hh"
 #include "game/wds/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace references {
@@ -33,7 +33,7 @@ event_callback::event_callback(void* requested_parameters,
 
 // inlined into the deleting destructors (sub_683DC0, sub_683EF0)
 void event_callback::operator delete(void* allocation) noexcept {
-    memory::heap::free(allocation);
+    mm::free(allocation);
 }
 
 // sub_683980
@@ -58,7 +58,7 @@ script_event_callback::script_event_callback(      chuck::vm::script_instance* r
     u32 size = function->parms_stacksize;
 
     if (size) {
-        parameters = memory::heap::allocate(size);
+        parameters = mm::allocate(size);
         std::memcpy(parameters, requested_parameters, size);
         function->add_references(nullptr, parameters, size, true, false);
     } else
@@ -77,7 +77,7 @@ script_event_callback::~script_event_callback() {
     }
 
     if (parameters)
-        memory::heap::free(parameters);
+        mm::free(parameters);
 }
 
 // sub_683DE0

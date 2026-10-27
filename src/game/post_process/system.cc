@@ -4,7 +4,7 @@
 #include "game/shader_resource_manager.hh"
 #include "treyarch/ngl/display.hh"
 #include "treyarch/ngl/timing/frame_timer.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -128,35 +128,35 @@ post_process::system::system() {
     queue                             = nullptr;
     damage_texture                    = nullptr;
 
-    void* allocation = memory::heap::allocate(sizeof(treyarch::blitter));
+    void* allocation = mm::allocate(sizeof(treyarch::blitter));
     blitter = allocation ? new (allocation) treyarch::blitter() : nullptr;
 
     if (!blitter)
         return;
 
-    allocation  = memory::heap::allocate(sizeof(mipmap_texture_array));
+    allocation  = mm::allocate(sizeof(mipmap_texture_array));
     hdr_targets = allocation ? new (allocation) mipmap_texture_array() : nullptr;
-    allocation  = memory::heap::allocate(sizeof(mipmap_texture_array));
+    allocation  = mm::allocate(sizeof(mipmap_texture_array));
     ldr_targets = allocation ? new (allocation) mipmap_texture_array() : nullptr;
 
     if (!hdr_targets || !ldr_targets)
         return;
 
-    allocation              = memory::heap::allocate(sizeof(mipmap_texture_array));
+    allocation              = mm::allocate(sizeof(mipmap_texture_array));
     secondary_ldr_targets_0 = allocation ? new (allocation) mipmap_texture_array() : nullptr;
-    allocation              = memory::heap::allocate(sizeof(mipmap_texture_array));
+    allocation              = mm::allocate(sizeof(mipmap_texture_array));
     secondary_ldr_targets_1 = allocation ? new (allocation) mipmap_texture_array() : nullptr;
 
     if (!secondary_ldr_targets_0 || !secondary_ldr_targets_1)
         return;
 
-    allocation        = memory::heap::allocate(sizeof(filter));
+    allocation        = mm::allocate(sizeof(filter));
     luminosity_filter = allocation ? new (allocation) filter(blitter) : nullptr;
 
     if (!luminosity_filter)
         return;
 
-    allocation  = memory::heap::allocate(sizeof(down_sample_filter));
+    allocation  = mm::allocate(sizeof(down_sample_filter));
     down_sample = allocation ? new (allocation) down_sample_filter(blitter) : nullptr;
 
     if (!down_sample)
@@ -181,14 +181,14 @@ post_process::system::system() {
                          &color_adjust_filter };
 
     for (filter** slot : filters) {
-        allocation = memory::heap::allocate(sizeof(filter));
+        allocation = mm::allocate(sizeof(filter));
         *slot      = allocation ? new (allocation) filter(blitter) : nullptr;
 
         if (!*slot)
             return;
     }
 
-    queue = (filter_queue*)memory::heap::allocate(sizeof(filter_queue));
+    queue = (filter_queue*)mm::allocate(sizeof(filter_queue));
 
     if (queue) {
         queue->head       = nullptr;
@@ -257,7 +257,7 @@ u32 post_process::system::create_render_targets(u8* work_buffer) {
 
         return 0;
 
-    void* allocation   = memory::heap::allocate(sizeof(surface_texture));
+    void* allocation   = mm::allocate(sizeof(surface_texture));
     average_luminosity = allocation ? new (allocation) surface_texture() : nullptr;
 
     if (!average_luminosity->create(1, 1, 1, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, 0))
@@ -265,7 +265,7 @@ u32 post_process::system::create_render_targets(u8* work_buffer) {
 
     average_luminosity->clear(0);
 
-    allocation         = memory::heap::allocate(sizeof(surface_texture));
+    allocation         = mm::allocate(sizeof(surface_texture));
     adapted_luminosity = allocation ? new (allocation) surface_texture() : nullptr;
 
     if (!adapted_luminosity->create(1, 1, 1, D3DFMT_R32F, D3DFMT_R32F, 0))
@@ -273,7 +273,7 @@ u32 post_process::system::create_render_targets(u8* work_buffer) {
 
     adapted_luminosity->clear(0);
 
-    allocation              = memory::heap::allocate(sizeof(surface_texture));
+    allocation              = mm::allocate(sizeof(surface_texture));
     adapted_luminosity_next = allocation ? new (allocation) surface_texture() : nullptr;
 
     if (!adapted_luminosity_next->create(1, 1, 1, D3DFMT_R32F, D3DFMT_R32F, 0))
@@ -350,13 +350,13 @@ void post_process::system::release() {
 
     if (average_luminosity) {
         average_luminosity->~surface_texture();
-        memory::heap::free(average_luminosity);
+        mm::free(average_luminosity);
         average_luminosity = nullptr;
     }
 
     if (adapted_luminosity) {
         adapted_luminosity->~surface_texture();
-        memory::heap::free(adapted_luminosity);
+        mm::free(adapted_luminosity);
         adapted_luminosity = nullptr;
     }
 
@@ -372,7 +372,7 @@ void post_process::system::release() {
 
     if (adapted_luminosity_next) {
         adapted_luminosity_next->~surface_texture();
-        memory::heap::free(adapted_luminosity_next);
+        mm::free(adapted_luminosity_next);
         adapted_luminosity_next = nullptr;
     }
 
@@ -412,7 +412,7 @@ void post_process::system::release() {
     if (queue) {
         filter_queue* released = queue;
         released->clear();
-        memory::heap::free(released);
+        mm::free(released);
         queue = nullptr;
     }
 }

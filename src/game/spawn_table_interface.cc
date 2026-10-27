@@ -1,6 +1,6 @@
 #include "game/spawn_table_interface.hh"
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -121,18 +121,18 @@ void spawn_table_interface::finalize(mash::allocation_scope) {
     if (spawn_items_by_name) {
         spawn_items_by_name->~map();
 
-        memory::heap::free(spawn_items_by_name);
+        mm::free(spawn_items_by_name);
     }
 
     if (spawn_point_lists_by_name) {
         spawn_point_lists_by_name->~map();
 
-        memory::heap::free(spawn_point_lists_by_name);
+        mm::free(spawn_point_lists_by_name);
     }
 
     if (flag_collections_by_name) {
         flag_collections_by_name->~map();
 
-        memory::heap::free(flag_collections_by_name);
+        mm::free(flag_collections_by_name);
     }
 }

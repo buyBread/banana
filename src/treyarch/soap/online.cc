@@ -1,5 +1,5 @@
 #include "retail.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/soap/online.hh"
 
 using namespace treyarch;
@@ -7,7 +7,7 @@ using namespace treyarch;
 // sub_9ED060
 soap::online* soap::online::inst() {
     if (!references::online.read()) {
-        void*   allocation = memory::heap::allocate(sizeof(online));
+        void*   allocation = mm::allocate(sizeof(online));
         online* instance   = nullptr;
 
         // online_pc's constructor, inlined

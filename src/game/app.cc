@@ -15,7 +15,7 @@
 #include "game/region_spawn_manager.hh"
 #include "game/trigger_manager.hh"
 #include "treyarch/mash/string.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/os_file.hh"
 #include "game/platform.hh"
 
@@ -31,7 +31,7 @@ using namespace treyarch;
 
 // sub_9C98B0
 void app::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(app));
+    void* allocation = mm::allocate(sizeof(app));
 
     instance() = allocation ? new (allocation) app() : nullptr;
 }
@@ -66,7 +66,7 @@ app::app() {
         retail::sub_429020(); // region_spawn_manager::create_inst
 
     retail::sub_429090(); // zombie_manager::create_inst
-    references::unk_010fa26c.write(memory::heap::allocate(8));
+    references::unk_010fa26c.write(mm::allocate(8));
     environment_progression_state::create_inst();
     retail::sub_42A700();
     mission_manager::create_inst();
@@ -103,7 +103,7 @@ app::app() {
     retail::sub_42A6A0(); // navmesh_obstacle_manager::create_inst
     retail::sub_823280();
 
-    void* allocation = memory::heap::allocate(sizeof(game));
+    void* allocation = mm::allocate(sizeof(game));
     the_game = allocation ? new (allocation) game() : nullptr;
     references::game.write(the_game);
 }

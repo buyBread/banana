@@ -30,7 +30,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/algebra.hh"
 #include "game/math/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/soap/online.hh"
 #include "banana/util/memory_reference.hh"
 
@@ -84,7 +84,7 @@ void mission_manager::process_state_initial_startup(f32 time_inc) {
                                                                           false);
 
     if (!selected_poi_icon) {
-        void* allocation = memory::heap::allocate(0x40);
+        void* allocation = mm::allocate(0x40);
         selected_poi_icon = allocation ? retail::sub_70C4A0((u8*)allocation, 6) : nullptr;
     }
 }

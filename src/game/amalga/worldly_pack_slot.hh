@@ -6,7 +6,7 @@
 #include "game/amalga/resource_pack_slot.hh"
 #include "game/amalga/resource_types.hh"
 #include "treyarch/mash/string_hash.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/timing/limited_timer.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -21,11 +21,11 @@ namespace treyarch { namespace amalga {
         worldly_entity_instances() : instances(nullptr) {}
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

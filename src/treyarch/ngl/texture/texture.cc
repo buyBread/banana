@@ -3,7 +3,7 @@
 #include "treyarch/ngl/texture/texture.hh"
 #include "treyarch/apk/file.hh"
 #include "treyarch/base/tl_system.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/four_cc.hh"
 
 using namespace treyarch;
@@ -81,7 +81,7 @@ void ngl::destroy_texture(texture* value) {
 
     if (owned) {
         if (value->name.text)
-            memory::heap::free(value->name.text);
+            mm::free(value->name.text);
 
         tl_mem_free(value);
     }

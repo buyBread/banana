@@ -3,7 +3,7 @@
 
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -13,7 +13,7 @@ vm_dynamic_array_manager::vm_dynamic_array_manager() : array_pool(nullptr),
                                                        slot_buckets(nullptr),
                                                        unk_08(false) {
 
-    auto* lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (lock) {
         lock->owner = 0;
@@ -33,14 +33,14 @@ vm_dynamic_array_manager::~vm_dynamic_array_manager() {
     destroy_array_pool();
 
     if (references::dynamic_array_lock.read())
-        memory::heap::free(references::dynamic_array_lock.read());
+        mm::free(references::dynamic_array_lock.read());
 
     references::dynamic_array_lock.write(nullptr);
 }
 
 // sub_A20E10
 void vm_dynamic_array_manager::setup() {
-    void* allocation = memory::heap::allocate(sizeof(vm_dynamic_array_manager));
+    void* allocation = mm::allocate(sizeof(vm_dynamic_array_manager));
 
     instance() = allocation ? new (allocation) vm_dynamic_array_manager() : nullptr;
 
@@ -53,7 +53,7 @@ void vm_dynamic_array_manager::destroy() {
 
     if (manager) {
         manager->~vm_dynamic_array_manager();
-        memory::heap::free(manager);
+        mm::free(manager);
     }
 
     instance() = nullptr;
@@ -62,7 +62,7 @@ void vm_dynamic_array_manager::destroy() {
 // sub_A191A0
 // sub_A19580
 void vm_dynamic_array_manager::setup_array_pool() {
-    void* pool_allocation = memory::heap::allocate(sizeof(vc8::vector<vm_dynamic_array_slot>));
+    void* pool_allocation = mm::allocate(sizeof(vc8::vector<vm_dynamic_array_slot>));
 
     array_pool = pool_allocation ?
         new (pool_allocation) vc8::vector<vm_dynamic_array_slot>() : nullptr;
@@ -70,13 +70,13 @@ void vm_dynamic_array_manager::setup_array_pool() {
     array_pool->resize(0x200, vm_dynamic_array_slot {});
 
     for (u32 slot = 0; slot < array_pool->size(); ++slot) {
-        void* memory = memory::heap::allocate(sizeof(chuck_dynamic_array_t));
+        void* memory = mm::allocate(sizeof(chuck_dynamic_array_t));
 
         (*array_pool)[slot].array = memory ? new (memory) chuck_dynamic_array_t() : nullptr;
         (*array_pool)[slot].array->reserve(10);
     }
 
-    void* bucket_allocation = memory::heap::allocate(sizeof(vc8::vector<u16>));
+    void* bucket_allocation = mm::allocate(sizeof(vc8::vector<u16>));
 
     slot_buckets = bucket_allocation ?
         new (bucket_allocation) vc8::vector<u16>() : nullptr;
@@ -94,13 +94,13 @@ void vm_dynamic_array_manager::destroy_array_pool() {
 
         if (array) {
             array->~vector();
-            memory::heap::free(array);
+            mm::free(array);
         }
     }
 
     if (array_pool) {
         array_pool->~vector();
-        memory::heap::free(array_pool);
+        mm::free(array_pool);
     }
 
     vc8::vector<u16>* buckets = slot_buckets;
@@ -109,7 +109,7 @@ void vm_dynamic_array_manager::destroy_array_pool() {
 
     if (buckets) {
         buckets->~vector();
-        memory::heap::free(buckets);
+        mm::free(buckets);
     }
 
     slot_buckets = nullptr;
@@ -142,7 +142,7 @@ void vm_dynamic_array_manager::expand_array_pool() {
     u32 grown_slot_count = array_pool->size();
 
     for (u32 slot = slot_count; slot < grown_slot_count; ++slot) {
-        void* memory = memory::heap::allocate(sizeof(chuck_dynamic_array_t));
+        void* memory = mm::allocate(sizeof(chuck_dynamic_array_t));
 
         (*array_pool)[slot].array = memory ? new (memory) chuck_dynamic_array_t() : nullptr;
         (*array_pool)[slot].array->reserve(10);

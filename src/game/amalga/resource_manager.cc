@@ -11,7 +11,7 @@
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/four_cc.hh"
 #include "treyarch/mash/unmash.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/os_file.hh"
 #include "game/platform.hh"
 
@@ -19,7 +19,7 @@ using namespace treyarch;
 
 // sub_770160
 void amalga::resource_manager::create_inst() {
-    void* partitions_allocation = memory::heap::allocate(sizeof(vc8::vector<resource_partition*>));
+    void* partitions_allocation = mm::allocate(sizeof(vc8::vector<resource_partition*>));
 
     auto partitions = partitions_allocation ?
         new (partitions_allocation) vc8::vector<resource_partition*>() : nullptr;
@@ -27,7 +27,7 @@ void amalga::resource_manager::create_inst() {
     references::partitions.write(partitions);
     partitions->reserve(8);
 
-    auto mutex = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto mutex = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (mutex) {
         mutex->owner = 0;
@@ -69,12 +69,12 @@ void amalga::resource_manager::create_inst() {
         references::resource_buffer_used.get()[buffer_location_main] = 0;
         references::resource_buffer_used.get()[buffer_location_vram] = 0;
 
-        if (!memory::heap::references::heap_default.read())
+        if (!mm::references::default_space.read())
             retail::sub_5FB3D0(); // create the default heap
 
         // pc only ever gets the main buffer
         references::resource_buffer.get()[buffer_location_main] = (u8*)retail::sub_5FAF00
-            ((i32)memory::heap::references::heap_default.read(), buffer_size[buffer_location_main], 0x1000);
+            ((i32)mm::references::default_space.read(), buffer_size[buffer_location_main], 0x1000);
 
         retail::sub_76FB40(0); // configure_packs_by_memory_map
     }
@@ -103,11 +103,11 @@ amalga::resource_amalgatoc* amalga::resource_manager::load_amalgapak() {
 
     u32 toc_size = file.get_size();
 
-    if (!memory::heap::references::heap_default.read())
+    if (!mm::references::default_space.read())
         retail::sub_5FB3D0(); // create the default heap
 
     // the toc is unmashed in place, so this allocation is the toc for the rest of the process
-    u8* toc = (u8*)retail::sub_5FBD20((u32*)memory::heap::references::heap_default.read(), toc_size, 0);
+    u8* toc = (u8*)retail::sub_5FBD20((u32*)mm::references::default_space.read(), toc_size, 0);
 
     file.read(toc, toc_size);
 

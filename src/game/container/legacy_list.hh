@@ -1,6 +1,6 @@
 #pragma once
 
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -31,7 +31,7 @@ namespace treyarch { namespace container {
         while (node != head) {
             legacy_list_node<T>* next = node->next;
 
-            memory::heap::free_small_block(node);
+            mm::free(node);
             node = next;
         }
     }

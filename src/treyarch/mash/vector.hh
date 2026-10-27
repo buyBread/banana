@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #include "treyarch/mash/container_base.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -256,7 +256,7 @@ namespace treyarch { namespace mash {
             }
 
             if (!is_pointer_in_mash_image(data))
-                memory::heap::free(data);
+                mm::free(data);
 
             data     = nullptr;
             capacity = 0;
@@ -284,7 +284,7 @@ namespace treyarch { namespace mash {
                     delete element;
                 else {
                     element->~T();
-                    memory::heap::free(element);
+                    mm::free(element);
                 }
             }
 

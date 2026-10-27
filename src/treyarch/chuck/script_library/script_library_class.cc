@@ -2,7 +2,7 @@
 
 #include "treyarch/chuck/script_library/script_library_class.hh"
 #include "treyarch/chuck/script_library/slc_manager.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::script_library;
@@ -20,7 +20,7 @@ script_library_class::script_library_class(const char*,
     if (is_dummy)
         return;
 
-    void* allocation = memory::heap::allocate(sizeof(vc8::vector<script_library_function*>));
+    void* allocation = mm::allocate(sizeof(vc8::vector<script_library_function*>));
 
     functions = allocation ?
         new (allocation) vc8::vector<script_library_function*>() : nullptr;
@@ -51,7 +51,7 @@ script_library_class::~script_library_class() {
     functions->erase(functions->begin(), functions->end());
 
     functions->~vector();
-    memory::heap::free(functions);
+    mm::free(functions);
 }
 
 // sub_A90D90

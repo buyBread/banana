@@ -32,7 +32,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/algebra.hh"
 #include "game/math/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/resource_key.hh"
 #include "treyarch/soap/message_box_manager.hh"
 #include "treyarch/soap/online.hh"
@@ -73,13 +73,13 @@ game::game() {
     mash::string level_name(references::default_level_name.get());
     strcpy(&references::level_name_buffer.get(), level_name.c_str());
 
-    void* world_allocation = memory::heap::allocate(sizeof(world_dynamics_system));
+    void* world_allocation = mm::allocate(sizeof(world_dynamics_system));
     the_world = world_allocation ? new (world_allocation) world_dynamics_system() : nullptr;
     references::g_world_ptr.write(the_world);
 
     mb = nullptr;
 
-    void* data_allocation = memory::heap::allocate(8);
+    void* data_allocation = mm::allocate(8);
     game_data* constructed_data = data_allocation ?
         (game_data*)retail::sub_7A4FB0((u32*)data_allocation) : nullptr;
 
@@ -237,7 +237,7 @@ void game::unload_current_level() {
 
     if (world) {
         retail::sub_97A400(world); // ~world_dynamics_system
-        memory::heap::free(world);
+        mm::free(world);
     }
 
     the_world = nullptr;
@@ -264,7 +264,7 @@ void game::unload_current_level() {
     input_mgr::inst()->unk_80c = 0;
 
     // the next level gets a fresh world
-    void* world_allocation = memory::heap::allocate(sizeof(world_dynamics_system));
+    void* world_allocation = mm::allocate(sizeof(world_dynamics_system));
     the_world = world_allocation ? new (world_allocation) world_dynamics_system() : nullptr;
     references::g_world_ptr.write(the_world);
 

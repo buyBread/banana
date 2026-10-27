@@ -5,7 +5,7 @@
 #include "treyarch/mash/container_base.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/types.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -290,7 +290,7 @@ namespace treyarch { namespace mash {
                     element->destruct_mashed_class();
                 else if (element) {
                     element->~T();
-                    memory::heap::free(element);
+                    mm::free(element);
                 }
             }
 
@@ -299,7 +299,7 @@ namespace treyarch { namespace mash {
             if (is_pointer_in_mash_image(node))
                 node->destruct_mashed_class();
             else if (node)
-                memory::heap::free(node);
+                mm::free(node);
 
             node = nullptr;
         }

@@ -44,7 +44,7 @@ als::als_meta_linear_blend_instance::als_meta_linear_blend_instance(als_meta_lin
                                                                                                      the_layer(layer),
                                                                                                      meta_anim(the_meta_anim) {
 
-    instances     = (nal::anim_instance**)memory::heap::allocate(meta_anim->key_anims.size * sizeof(nal::anim_instance*));
+    instances     = (nal::anim_instance**)mm::allocate(meta_anim->key_anims.size * sizeof(nal::anim_instance*));
     follows_param = true;
 
     for (u32 index = 0; index < meta_anim->key_anims.size; ++index) {
@@ -66,7 +66,7 @@ als::als_meta_linear_blend_instance::~als_meta_linear_blend_instance() {
     }
 
     if (instances)
-        memory::heap::free(instances);
+        mm::free(instances);
 }
 
 // sub_5B1570

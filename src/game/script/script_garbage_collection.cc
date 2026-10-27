@@ -4,7 +4,7 @@
 #include "game/frontend/ui_frontend.hh"
 #include "game/script/script_garbage_collection.hh"
 #include "game/wds/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -22,7 +22,7 @@ void script_garbage_collection::line_infos(script_instance*, stuff_to_delete_lis
 
         if (line_info) {
             retail::sub_798F10(line_info);
-            memory::heap::free(line_info);
+            mm::free(line_info);
         }
     }
 }
@@ -55,7 +55,7 @@ void script_garbage_collection::sound_responses(script_instance*, stuff_to_delet
 
         if (sound_response) {
             retail::sub_8FFA10(sound_response, 0);
-            memory::heap::free(sound_response);
+            mm::free(sound_response);
         }
     }
 }
@@ -67,7 +67,7 @@ void script_garbage_collection::generic_event_callbacks(script_instance*, stuff_
 
         if (callback) {
             retail::sub_83F9E0(callback);
-            memory::heap::free(callback);
+            mm::free(callback);
         }
     }
 }
@@ -84,7 +84,7 @@ void script_garbage_collection::mutexes(script_instance*, stuff_to_delete_list_t
         void* mutex = (void*)stuff->element;
 
         if (mutex)
-            memory::heap::free(mutex);
+            mm::free(mutex);
     }
 }
 

@@ -2,7 +2,7 @@
 #include "game/frontend/igo/igo_3d_widget_parameters.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "game/math/references.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -18,7 +18,7 @@ void igo_3d_widget_parameters::construct_mashed_class() {
     unk_98.construct_mashed_class();
     unk_ac.construct_mashed_class();
 
-    matrix  = (matrix4x4*)memory::heap::allocate(sizeof(matrix4x4));
+    matrix  = (matrix4x4*)mm::allocate(sizeof(matrix4x4));
     *matrix = treyarch::references::identity_matrix.get();
 
     retail::sub_69B8F0((i32)this); // builds matrix from the placement
@@ -29,7 +29,7 @@ void igo_3d_widget_parameters::construct_mashed_class() {
 // sub_6E7D30
 void igo_3d_widget_parameters::destruct_mashed_class() {
     if (matrix) {
-        memory::heap::free(matrix);
+        mm::free(matrix);
         matrix = nullptr;
     }
 

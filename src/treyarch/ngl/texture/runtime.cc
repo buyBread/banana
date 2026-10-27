@@ -6,7 +6,7 @@
 #include "treyarch/ngl/gpu/d3d9/texture.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/hash/algo.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
@@ -176,7 +176,7 @@ void ngl::release_created_texture_name() {
     fixed_string &name = references::created_texture_name.get();
 
     if (name.text)
-        memory::heap::free(name.text);
+        mm::free(name.text);
 }
 
 // inlined into sub_9E85D0

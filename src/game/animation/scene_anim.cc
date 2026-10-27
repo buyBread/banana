@@ -121,7 +121,7 @@ void scene_anim::play(scene_anim_handle_t handle, u16 flags, f32 offset) {
     the_scene_anim = nal::get_scene_anim(&scene_anim_name);
 
     if (scene_anim_name.text)
-        memory::heap::free(scene_anim_name.text);
+        mm::free(scene_anim_name.text);
 
     // the assert that showed it is gone
     if (!the_scene_anim) {

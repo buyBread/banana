@@ -8,7 +8,7 @@
 #include "treyarch/nal/nal.hh"
 #include "game/fixed_string.hh"
 #include "game/hash/algo.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -43,7 +43,7 @@ void als::meta_key_anim::lookup_nal_animation() {
     nal::anim* anim = nal::get_anim(&name);
 
     if (name.text)
-        memory::heap::free(name.text);
+        mm::free(name.text);
 
     the_anim_ptr = anim;
 }
@@ -119,21 +119,21 @@ als::als_nal_meta_anim::als_nal_meta_anim() : als_meta_anim_base(),
                                               unk_2c(0) {}
 
 void* als::als_nal_meta_anim::operator new(std::size_t size) noexcept {
-    return memory::heap::allocate((u32)size);
+    return mm::allocate((u32)size);
 }
 
 void* als::als_nal_meta_anim::operator new[](std::size_t size) noexcept {
-    return memory::heap::allocate((u32)size);
+    return mm::allocate((u32)size);
 }
 
 // inlined into the deleting destructor
 void als::als_nal_meta_anim::operator delete(void* allocation) noexcept {
-    memory::heap::free(allocation);
+    mm::free(allocation);
 }
 
 // inlined into the deleting destructor
 void als::als_nal_meta_anim::operator delete[](void* allocation) noexcept {
-    memory::heap::free(allocation);
+    mm::free(allocation);
 }
 
 // sub_5B1510
@@ -295,7 +295,7 @@ void als::als_meta_anim_by_filename::delay_create(actor* the_actor) {
     nal::anim* anim = nal::get_anim(&name);
 
     if (name.text)
-        memory::heap::free(name.text);
+        mm::free(name.text);
 
     // the current context's, then the packs that may hold it
     if (!anim &&
@@ -376,7 +376,7 @@ nal::anim* als::find_anim_in_pack(amalga::resource_pack_slot* slot, bool* found,
     nal::anim* anim = nal::get_anim(&name);
 
     if (name.text)
-        memory::heap::free(name.text);
+        mm::free(name.text);
 
     return anim;
 }
@@ -425,7 +425,7 @@ als::nal_als_anim_bridge als::get_anim_bridge(const als_meta_anim_table_shared* 
     nal::anim* anim = nal::get_anim(&name);
 
     if (name.text)
-        memory::heap::free(name.text);
+        mm::free(name.text);
 
     // a plain animation from the current context, then the packs that may hold it
     if (anim ||

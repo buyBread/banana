@@ -1,7 +1,7 @@
 #include "retail.hh"
 #include "game/wds/ai/param_block.hh"
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -10,7 +10,7 @@ param_block::~param_block() {
     if (params && owns_params) {
         params->~vector();
 
-        memory::heap::free(params);
+        mm::free(params);
 
         params = nullptr;
     }
@@ -35,7 +35,7 @@ void param_block::destruct_mashed_class() {
     if (params && owns_params) {
         params->~vector();
 
-        memory::heap::free(params);
+        mm::free(params);
 
         params = nullptr;
     }

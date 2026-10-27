@@ -9,7 +9,7 @@
 #include "game/wds/entity/scene_entity_container.hh"
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -35,7 +35,7 @@ i32 amalga::scene_entity_container_resource_handler::handle_resource(e_behavior 
         else {
             u8* payload = descriptor->raw_payload;
 
-            void* allocation = memory::heap::allocate(sizeof(mash::mash_info_struct));
+            void* allocation = mm::allocate(sizeof(mash::mash_info_struct));
 
             mash_info = allocation ?
                 new (allocation) mash::mash_info_struct(mash::UNMASH_MODE, payload, (i32)descriptor->payload_size, true) : nullptr;
@@ -90,7 +90,7 @@ i32 amalga::scene_entity_container_resource_handler::handle_resource(e_behavior 
             if (finished) {
                 finished->~mash_info_struct();
 
-                memory::heap::free(finished);
+                mm::free(finished);
             }
 
             mash_info  = nullptr;

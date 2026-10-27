@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -28,7 +28,7 @@ namespace treyarch { namespace vc8 {
         using node = list_node<T>;
 
         // sub_79B510
-        list() : sentinel((node*)memory::heap::allocate(sizeof(node))),
+        list() : sentinel((node*)mm::allocate(sizeof(node))),
                  count(0) {
                     
             sentinel->next     = sentinel;
@@ -39,7 +39,7 @@ namespace treyarch { namespace vc8 {
         ~list() {
             clear();
             
-            memory::heap::free(sentinel);
+            mm::free(sentinel);
 
             sentinel = nullptr;
         }
@@ -60,7 +60,7 @@ namespace treyarch { namespace vc8 {
         bool empty() const noexcept { return count == 0; }
 
         node* insert_before(node* before, const T &value) {
-            node* position = (node*)memory::heap::allocate(sizeof(node));
+            node* position = (node*)mm::allocate(sizeof(node));
 
             position->next     = before;
             position->previous = before->previous;
@@ -94,7 +94,7 @@ namespace treyarch { namespace vc8 {
             position->previous->next = position->next;
             position->next->previous = position->previous;
             position->value.~T();
-            memory::heap::free(position);
+            mm::free(position);
             --count;
 
             return next;
@@ -112,7 +112,7 @@ namespace treyarch { namespace vc8 {
                 node* next = position->next;
 
                 position->value.~T();
-                memory::heap::free(position);
+                mm::free(position);
                 position = next;
             }
         }

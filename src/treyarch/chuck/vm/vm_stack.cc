@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "treyarch/chuck/vm/vm_stack.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -32,7 +32,7 @@ vm_stack::~vm_stack() {
 
 // sub_A196D0
 void vm_stack::create_push_staging_lock() {
-    auto* lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (lock) {
         lock->owner = 0;
@@ -113,10 +113,10 @@ void vm_stack::push(const void* source, i32 size) {
 
         if ((u32)size > references::push_staging_size.read()) {
             if (references::push_staging_buffer.read())
-                memory::heap::free(references::push_staging_buffer.read());
+                mm::free(references::push_staging_buffer.read());
 
             references::push_staging_size.write(size <= 12 ? 12 : size);
-            references::push_staging_buffer.write(memory::heap::allocate(references::push_staging_size.read()));
+            references::push_staging_buffer.write(mm::allocate(references::push_staging_size.read()));
         }
 
         std::memcpy(references::push_staging_buffer.read(), source, size);

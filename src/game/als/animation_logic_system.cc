@@ -41,14 +41,14 @@ als::animation_logic_system::animation_logic_system(actor* _the_actor) : als_sha
 
     force_updated = false;
 
-    access_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    access_lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (access_lock)
         access_lock->reset();
 
     access_lock->reset();
 
-    the_mocomp_data = (motion_compensator*)memory::heap::allocate(0x100);
+    the_mocomp_data = (motion_compensator*)mm::allocate(0x100);
     actor_position  = the_actor->my_abs_po->get_position();
 
     add_to_als_list(this);
@@ -73,7 +73,7 @@ als::animation_logic_system::~animation_logic_system() {
     while (coordinated.size())
         coordinated[0]->set_coordinator(nullptr, 0);
 
-    memory::heap::free(the_mocomp_data);
+    mm::free(the_mocomp_data);
     the_mocomp_data = nullptr;
 
     remove_from_als_list(this);
@@ -81,7 +81,7 @@ als::animation_logic_system::~animation_logic_system() {
     curr_expression = nullptr;
 
     if (access_lock)
-        memory::heap::free(access_lock);
+        mm::free(access_lock);
 }
 
 // sub_5D4C70

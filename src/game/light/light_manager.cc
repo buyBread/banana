@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "game/light/light_manager.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -12,7 +12,7 @@ light_manager::light_manager() : reserved_000{},
 
 // sub_7C88F0
 point_light_node* light_manager::add_point(const ngl::lighting::point_light_data &data) {
-    point_light_node* node = (point_light_node*)memory::heap::allocate(sizeof(point_light_node));
+    point_light_node* node = (point_light_node*)mm::allocate(sizeof(point_light_node));
 
     if (node) {
         std::memcpy(&node->data, &data, sizeof(data));
@@ -32,7 +32,7 @@ point_light_node* light_manager::add_point(const ngl::lighting::point_light_data
 
 // sub_7D6330
 spot_light_node* light_manager::add_spot(const ngl::lighting::spot_light_data &data) {
-    spot_light_node* node = (spot_light_node*)memory::heap::allocate(sizeof(spot_light_node));
+    spot_light_node* node = (spot_light_node*)mm::allocate(sizeof(spot_light_node));
 
     if (node) {
         std::memcpy(&node->data, &data, sizeof(data));
@@ -68,7 +68,7 @@ bool light_manager::remove_point(point_light_node* node) {
         if (previous)
             previous->next = current->next;
 
-        memory::heap::free(current);
+        mm::free(current);
         --point_count;
 
         return true;
@@ -95,7 +95,7 @@ bool light_manager::remove_spot(spot_light_node* node) {
         if (previous)
             previous->next = current->next;
 
-        memory::heap::free(current);
+        mm::free(current);
         --spot_count;
 
         return true;

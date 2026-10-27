@@ -5,7 +5,7 @@
 
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/string.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -23,7 +23,7 @@ void mash::string::destroy_guts() {
         return;
 
     if (m_source_slab != references::string_source_slab.read())
-        memory::heap::free(m_data);
+        mm::free(m_data);
 
     m_data = &references::null_string_guts.get();
 }
@@ -167,7 +167,7 @@ void mash::string::update_guts(const char* source, i32 source_length) {
     if (source_length > m_size || m_source_slab == references::string_source_slab.read()) {
         destroy_guts();
 
-        m_data = (char*)memory::heap::allocate(source_length + 1);
+        m_data = (char*)mm::allocate(source_length + 1);
     }
 
     if (source_length <= 0) {
@@ -193,7 +193,7 @@ void mash::string::append(const char* source, i32 source_length) {
         return;
 
     i32   new_size = m_size + source_length;
-    char* joined   = (char*)memory::heap::allocate(new_size + 1);
+    char* joined   = (char*)mm::allocate(new_size + 1);
 
     if (m_size > 0) {
         strncpy(joined, m_data, m_size);

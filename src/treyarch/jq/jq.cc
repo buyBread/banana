@@ -15,7 +15,7 @@
 #include "treyarch/jq/jq.hh"
 #include "treyarch/jq/native_locks.hh"
 #include "game/arch_base_vhandle.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/mutex.hh"
 
 using namespace treyarch;
@@ -45,7 +45,7 @@ void jq::jobqueue_init() {
     references::unk_01076aa8.get().reset();
     references::unk_00fc46d8.get().reset();
 
-    auto* arch_handle_manager_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* arch_handle_manager_lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (arch_handle_manager_lock)
         arch_handle_manager_lock->reset();
@@ -128,7 +128,7 @@ void jq::jobqueue_init() {
     for (engine_recursive_lock &lock : references::unk_01076a38.get())
         lock.reset();
 
-    auto* debug_message_send_mutex = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* debug_message_send_mutex = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (debug_message_send_mutex)
         debug_message_send_mutex->reset();
@@ -136,7 +136,7 @@ void jq::jobqueue_init() {
     references::debug_message_send_mutex.write(debug_message_send_mutex);
     debug_message_send_mutex->reset();
 
-    auto* entity_id_manager_allocation_lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto* entity_id_manager_allocation_lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (entity_id_manager_allocation_lock)
         entity_id_manager_allocation_lock->reset();

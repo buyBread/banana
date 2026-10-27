@@ -3,7 +3,7 @@
 #include "retail.hh"
 #include "game/als/script_state.hh"
 #include "game/als/state_machine.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -18,7 +18,7 @@ als::basic_rule_list::~basic_rule_list() {
         for (u32 index = 0; index < num_rules; ++index)
             delete rules[index];
 
-        memory::heap::free(rules);
+        mm::free(rules);
 
         rules = nullptr;
     }

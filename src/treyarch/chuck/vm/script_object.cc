@@ -4,7 +4,7 @@
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -296,7 +296,7 @@ void script_object::delete_all_instances() {
 
 // sub_A1C6E0
 void script_object::create_function_cache_lock() {
-    auto lock = (engine_recursive_lock*)memory::heap::allocate(sizeof(engine_recursive_lock));
+    auto lock = (engine_recursive_lock*)mm::allocate(sizeof(engine_recursive_lock));
 
     if (lock) {
         lock->owner = 0;

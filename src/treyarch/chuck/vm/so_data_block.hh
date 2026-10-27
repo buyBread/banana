@@ -5,7 +5,7 @@
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/types.hh"
 #include "treyarch/ae_base/fixed_pool.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -31,7 +31,7 @@ namespace treyarch { namespace chuck { namespace vm {
         virtual ~fixed_so_data_block_base() {}
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
     };
 

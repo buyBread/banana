@@ -6,7 +6,7 @@
 #include "treyarch/ngl/gpu/d3d9/framebuffer.hh"
 #include "treyarch/ngl/gpu/d3d9/work_buffers.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -196,7 +196,7 @@ void post_process::create_device_resources() {
     }
 
     if (!state.system) {
-        void* allocation = memory::heap::allocate(sizeof(post_process::system));
+        void* allocation = mm::allocate(sizeof(post_process::system));
 
         state.system = allocation ? new (allocation) post_process::system() : nullptr;
         state.system->create_render_targets((u8*)ngl::d3d9::references::platform_work_buffer.read());
@@ -243,7 +243,7 @@ void post_process::release_device_resources() {
         post_process::system* released = state.system;
 
         released->release();
-        memory::heap::free(released);
+        mm::free(released);
         state.system = nullptr;
     }
 }

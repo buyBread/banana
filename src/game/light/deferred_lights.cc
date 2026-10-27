@@ -3,7 +3,7 @@
 #include "game/light/deferred_lights.hh"
 #include "game/light/references.hh"
 #include "vc8/vector.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 namespace treyarch { namespace deferred_lights {
     // sub_7A77F0
@@ -11,7 +11,7 @@ namespace treyarch { namespace deferred_lights {
         auto* queue = references::deferred_point_lights.read();
 
         if (!queue) {
-            queue = (vc8::vector<point_light_node*>*)memory::heap::allocate(sizeof(*queue));
+            queue = (vc8::vector<point_light_node*>*)mm::allocate(sizeof(*queue));
 
             if (queue)
                 new (queue) vc8::vector<point_light_node*>();
@@ -28,7 +28,7 @@ namespace treyarch { namespace deferred_lights {
         auto* queue = references::deferred_spot_lights.read();
 
         if (!queue) {
-            queue = (vc8::vector<spot_light_node*>*)memory::heap::allocate(sizeof(*queue));
+            queue = (vc8::vector<spot_light_node*>*)mm::allocate(sizeof(*queue));
 
             if (queue)
                 new (queue) vc8::vector<spot_light_node*>();

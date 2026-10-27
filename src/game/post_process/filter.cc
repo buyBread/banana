@@ -1,6 +1,6 @@
 #include "game/post_process/blitter.hh"
 #include "game/post_process/filter.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -58,7 +58,7 @@ void post_process::filter_queue::clear() {
         node = node->next;
 
         released->~filter_queue_node();
-        memory::heap::free(released);
+        mm::free(released);
     }
 
     free_nodes = nullptr;

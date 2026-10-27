@@ -5,7 +5,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/virtual_base.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -159,7 +159,7 @@ namespace treyarch { namespace als {
 
         // inlined into the deleting destructors
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
 
         static string_hash my_type_key;

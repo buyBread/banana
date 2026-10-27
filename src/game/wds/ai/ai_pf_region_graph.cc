@@ -2,7 +2,7 @@
 
 #include "retail.hh"
 #include "game/wds/ai/ai_pf_region_graph.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -31,7 +31,7 @@ void ai_quad_path::construct_mashed_class() {
     unk_6c          .construct_mashed_class();
     unk_7c          .construct_mashed_class();
 
-    void* allocation = memory::heap::allocate(sizeof(vc8::vector<void*>));
+    void* allocation = mm::allocate(sizeof(vc8::vector<void*>));
 
     obstacles = allocation ?
         new (allocation) vc8::vector<void*>() : nullptr;
@@ -64,7 +64,7 @@ void ai_quad_path::finalize(mash::allocation_scope) {
     if (obstacles) {
         obstacles->~vector();
 
-        memory::heap::free(obstacles);
+        mm::free(obstacles);
     }
 }
 
@@ -80,7 +80,7 @@ void ai_pf_region_graph::construct_mashed_class() {
     quad_path_table.construct_mashed_class();
     region_points  .construct_mashed_class();
 
-    void* allocation = memory::heap::allocate(sizeof(vc8::vector<ai_quad_path_connection*>));
+    void* allocation = mm::allocate(sizeof(vc8::vector<ai_quad_path_connection*>));
 
     unk_18 = 0;
     unk_64 = allocation ?
@@ -92,7 +92,7 @@ void ai_pf_region_graph::destruct_mashed_class() {
     if (unk_64) {
         unk_64->~vector();
 
-        memory::heap::free(unk_64);
+        mm::free(unk_64);
     }
 
     unk_64 = nullptr;

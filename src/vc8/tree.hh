@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -129,7 +129,7 @@ namespace treyarch { namespace vc8 {
         ~tree() {
             erase(begin(), end());
 
-            memory::heap::free(head_node);
+            mm::free(head_node);
 
             head_node = nullptr;
             count     = 0;
@@ -395,7 +395,7 @@ namespace treyarch { namespace vc8 {
             }
 
             erased_node->value.~T();
-            memory::heap::free(erased_node);
+            mm::free(erased_node);
 
             if (count > 0)
                 --count;
@@ -433,7 +433,7 @@ namespace treyarch { namespace vc8 {
         // sub_9285E0
         // sub_928C40
         static node* buy_head_node() {
-            node* result = (node*)memory::heap::allocate(sizeof(node));
+            node* result = (node*)mm::allocate(sizeof(node));
 
             result->left   = nullptr;
             result->parent = nullptr;
@@ -454,7 +454,7 @@ namespace treyarch { namespace vc8 {
                 position = position->left;
 
                 root->value.~T();
-                memory::heap::free(root);
+                mm::free(root);
             }
         }
 
@@ -462,7 +462,7 @@ namespace treyarch { namespace vc8 {
         // sub_79B4D0
         // sub_9716F0
         node* buy_node(node* left, node* parent, node* right, const T &value, e_tree_color color) {
-            node* result = (node*)memory::heap::allocate(sizeof(node));
+            node* result = (node*)mm::allocate(sizeof(node));
 
             if (result) {
                 result->left   = left;

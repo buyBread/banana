@@ -13,7 +13,7 @@
 #include "game/fixed_string.hh"
 #include "game/hash/algo.hh"
 #include "treyarch/mash/string_hash.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -113,7 +113,7 @@ void mission_manager::apply_sky_pack() {
     ngl::fx::references::environment_texture.write((ngl::texture*)retail::sub_9E45A0(&texture_name.text));
 
     if (texture_name.text)
-        memory::heap::free(texture_name.text);
+        mm::free(texture_name.text);
 
     sky_swap_state = 0;
 }

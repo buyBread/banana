@@ -6749,7 +6749,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
         auto* body  = (conglomerate*)the_actor;
         u32   count = body->unk_128;
 
-        saved_matrices = (po*)memory::heap::allocate(count >> 26 ? 0xFFFFFFFF : count << 6);
+        saved_matrices = (po*)mm::allocate(count >> 26 ? 0xFFFFFFFF : count << 6);
 
         if (saved_matrices) {
             for (u32 index = 0; index < count; ++index)
@@ -6773,7 +6773,7 @@ void als::biped_physics_mocomp::deactivate() {
         retail::sub_80ECA0((u8*)retail::sub_600680((u32*)the_actor->physical_ifc())); // biped physics: lets the actor go
 
     if (saved_matrices)
-        memory::heap::free(saved_matrices);
+        mm::free(saved_matrices);
 
     saved_matrices = nullptr;
 }

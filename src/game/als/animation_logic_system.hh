@@ -10,7 +10,7 @@
 #include "game/als/state_machine.hh"
 #include "game/hash/algo.hh"
 #include "game/math/algebra/vector3d.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/mutex.hh"
 #include "game/resource_key.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -53,11 +53,11 @@ namespace treyarch { namespace als {
         ~animation_logic_system() override;
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
 
         void operator delete(void* allocation) noexcept {
-            memory::heap::free(allocation);
+            mm::free(allocation);
         }
 
         state_machine_interface* get_als_layer(layer_id the_layer) override;

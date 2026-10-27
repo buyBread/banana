@@ -8,7 +8,7 @@
 #include "treyarch/nal/scene_anim.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/math/algebra.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -123,7 +123,7 @@ namespace treyarch {
         f32 get_time() const;
 
         void* operator new(std::size_t size) noexcept {
-            return memory::heap::allocate(size);
+            return mm::allocate(size);
         }
     };
 

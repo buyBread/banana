@@ -7,7 +7,7 @@
 #include "game/frontend/ui_frontend.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/script/script_access.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
@@ -120,29 +120,29 @@ mission_manager::mission_manager() {
 
     script_globals_initialized = 0;
 
-    void* allocation = memory::heap::allocate(0x0C);
+    void* allocation = mm::allocate(0x0C);
     saved_checkpoint_registry = allocation ? retail::sub_804D60((u32*)allocation) : nullptr;
 
-    allocation = memory::heap::allocate(0x0C);
+    allocation = mm::allocate(0x0C);
     working_checkpoint_registry = allocation ? retail::sub_804D60((u32*)allocation) : nullptr;
 
-    allocation = memory::heap::allocate(sizeof(*mission_icons));
+    allocation = mm::allocate(sizeof(*mission_icons));
     mission_icons = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_icons->reserve(20);
 
-    allocation = memory::heap::allocate(sizeof(*mission_triggers));
+    allocation = mm::allocate(sizeof(*mission_triggers));
     mission_triggers = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_triggers->reserve(20);
 
-    allocation = memory::heap::allocate(sizeof(*mission_ped_triggers));
+    allocation = mm::allocate(sizeof(*mission_ped_triggers));
     mission_ped_triggers = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
     mission_ped_triggers->reserve(20);
 
-    allocation = memory::heap::allocate(sizeof(*eligible_mission_instances));
+    allocation = mm::allocate(sizeof(*eligible_mission_instances));
     eligible_mission_instances = allocation ? new (allocation) vc8::vector<const chuck::vm::script_instance*>() : nullptr;
     eligible_mission_instances->reserve(40);
 
-    allocation = memory::heap::allocate(sizeof(*auto_launch_instances));
+    allocation = mm::allocate(sizeof(*auto_launch_instances));
     auto_launch_instances = allocation ? new (allocation) vc8::list<const chuck::vm::script_instance*>() : nullptr;
 
     unk_0d8[0] = 0;
@@ -151,17 +151,17 @@ mission_manager::mission_manager() {
 
     hero_reference_position = references::unk_011117a0.read();
 
-    allocation = memory::heap::allocate(0x40);
+    allocation = mm::allocate(0x40);
     icon_entity_pool = allocation ? retail::sub_804870((u32*)allocation) : nullptr;
 
-    allocation = memory::heap::allocate(sizeof(*poi_locations));
+    allocation = mm::allocate(sizeof(*poi_locations));
     poi_locations = allocation ? new (allocation) vc8::vector<mission_poi_location_t>() : nullptr;
     selected_poi_location_key = -1;
 }
 
 // sub_428AA0
 void mission_manager::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(mission_manager));
+    void* allocation = mm::allocate(sizeof(mission_manager));
 
     mission_manager::instance() = allocation ? new (allocation) mission_manager() : nullptr;
 }

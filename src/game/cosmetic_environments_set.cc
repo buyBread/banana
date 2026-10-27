@@ -1,5 +1,5 @@
 #include "game/cosmetic_environments_set.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -15,7 +15,7 @@ void cosmetic_environments_set::destruct_mashed_class() {
     if (environments) {
         environments->~vector();
 
-        memory::heap::free(environments);
+        mm::free(environments);
     }
 
     environment_names.destruct_mashed_class();

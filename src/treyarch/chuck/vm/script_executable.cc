@@ -4,7 +4,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -441,7 +441,7 @@ void script_executable::finalize(mash::allocation_scope scope) {
     permanent_string_table.clear();
 
     if (exe_image) {
-        memory::heap::free(exe_image);
+        mm::free(exe_image);
 
         exe_image      = nullptr;
         exe_image_size = 0;

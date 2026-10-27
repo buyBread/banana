@@ -3,7 +3,7 @@
 #include "vendor/bink/bink.hh"
 #include "game/movie_manager.hh"
 #include "treyarch/ngl/texture/texture.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -16,7 +16,7 @@ movie_manager::movie_manager() {
 
 // sub_429150
 void movie_manager::create_inst() {
-    void* allocation = memory::heap::allocate(sizeof(movie_manager));
+    void* allocation = mm::allocate(sizeof(movie_manager));
 
     movie_manager::instance() = allocation ? new (allocation) movie_manager() : nullptr;
 }

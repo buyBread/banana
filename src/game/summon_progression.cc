@@ -1,6 +1,6 @@
 #include "game/summon_progression.hh"
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -33,7 +33,7 @@ void summon_progression::destruct_mashed_class() {
     if (summons_by_name) {
         summons_by_name->~map();
 
-        memory::heap::free(summons_by_name);
+        mm::free(summons_by_name);
     }
 
     changes.destruct_mashed_class();

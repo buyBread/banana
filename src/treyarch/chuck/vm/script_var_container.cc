@@ -1,6 +1,6 @@
 #include "treyarch/chuck/vm/script_var_container.hh"
 #include "treyarch/mash/string_hash.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -105,10 +105,10 @@ void script_var_container::destroy() {
         if (debug_info->var_to_offset) {
             debug_info->var_to_offset->~map();
 
-            memory::heap::free(debug_info->var_to_offset);
+            mm::free(debug_info->var_to_offset);
         }
 
-        memory::heap::free(debug_info);
+        mm::free(debug_info);
 
         debug_info = nullptr;
     }

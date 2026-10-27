@@ -13,7 +13,7 @@
 #include "game/wds/world_dynamics_system.hh"
 #include "game/development_options.hh"
 #include "treyarch/mash/string.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/soap/online.hh"
 #include "treyarch/soap/profile.hh"
 #include "treyarch/soap/storage.hh"
@@ -377,7 +377,7 @@ void game::advance_state_legal(f32) {
 
         if (previous) {
             retail::sub_5416B0((u32*)previous); // its destructor
-            memory::heap::free(previous);
+            mm::free(previous);
         }
 
         references::unk_00fc64ec.write(nullptr);

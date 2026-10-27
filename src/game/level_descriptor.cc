@@ -2,7 +2,7 @@
 #include "game/app.hh"
 #include "game/level_descriptor.hh"
 #include "treyarch/mash/mash_info.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -21,7 +21,7 @@ level_descriptor::~level_descriptor() {
     if (sounds_by_mission) {
         sounds_by_mission->~map();
 
-        memory::heap::free(sounds_by_mission);
+        mm::free(sounds_by_mission);
     }
 }
 

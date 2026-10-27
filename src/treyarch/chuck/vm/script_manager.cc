@@ -8,7 +8,7 @@
 #include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "game/script/script_garbage_collection.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 using namespace treyarch::chuck::vm;
@@ -47,13 +47,13 @@ script_manager::script_manager() : flags(0),
     vm_thread::create_locks();
     script_object::create_function_cache_lock();
 
-    void* pending_allocation = memory::heap::allocate(sizeof(vc8::list<script_executable*>));
+    void* pending_allocation = mm::allocate(sizeof(vc8::list<script_executable*>));
 
     execs_pending_first_run = pending_allocation ?
         new (pending_allocation) vc8::list<script_executable*>() : nullptr;
 
     if (!exec_set) {
-        void* set_allocation = memory::heap::allocate(sizeof(script_executable_entry_set_t));
+        void* set_allocation = mm::allocate(sizeof(script_executable_entry_set_t));
 
         exec_set = set_allocation ? new (set_allocation) script_executable_entry_set_t() : nullptr;
     }
@@ -77,7 +77,7 @@ script_manager::script_manager() : flags(0),
 
 // sub_97AB10
 void script_manager::setup() {
-    void* allocation = memory::heap::allocate(sizeof(script_manager));
+    void* allocation = mm::allocate(sizeof(script_manager));
 
     instance() = allocation ? new (allocation) script_manager() : nullptr;
 }
@@ -231,7 +231,7 @@ void script_manager::un_load(const string_hash &filename, bool call_all_destruct
         exec->flags = (e_script_executable_flags)(exec->flags & ~script_executable_flag_first_run_called);
     else if (exec) {
         exec->~script_executable();
-        memory::heap::free(exec);
+        mm::free(exec);
     }
 
     exec_set->erase(node);
@@ -256,7 +256,7 @@ void script_manager::clear() {
 
         if (!(exec->flags & script_executable_flag_from_mash)) {
             exec->~script_executable();
-            memory::heap::free(exec);
+            mm::free(exec);
         }
 
         exec_set->erase(node);
@@ -477,7 +477,7 @@ void script_manager::destroy_game_var() {
     if (game_var_container) {
         if (!(game_var_container->flags & script_var_container_flag_from_mash)) {
             game_var_container->~script_var_container();
-            memory::heap::free(game_var_container);
+            mm::free(game_var_container);
         }
 
         game_var_container = nullptr;
@@ -486,7 +486,7 @@ void script_manager::destroy_game_var() {
     if (shared_var_container) {
         if (!(shared_var_container->flags & script_var_container_flag_from_mash)) {
             shared_var_container->~script_var_container();
-            memory::heap::free(shared_var_container);
+            mm::free(shared_var_container);
         }
 
         shared_var_container = nullptr;
