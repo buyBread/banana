@@ -11,12 +11,40 @@
 #include "game/event/event_manager.hh"
 #include "game/game.hh"
 #include "game/input/input_mgr.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "banana/util/redirect_rel32.hh"
 #include "banana/util/thunks.hh"
 #include "banana/util/macros/debug.hh"
 
 namespace treyarch {
+    // before the exe's CRT init, so the first operator new already creates the default space in source
+    inline void _redirect_mm() {
+        banana::log.msg("redirecting mm entries");
+
+        using memory_space_ctor = util::thunk::ctor<mm::memory_space, const char*, mm::e_space_type, u32, u32, void*>;
+        using memory_space_dtor = util::thunk::dtor<mm::memory_space>;
+
+        void* (*allocate)(u32)                  = &mm::allocate;
+        void* (*allocate_aligned)(u32, u32)     = &mm::allocate;
+        void* (*reallocate)(void*, u32, u32)    = &mm::reallocate;
+
+        if (!util::redirect_entry(0x005F8870, { 0x8B, 0x0D, 0x5C, 0xDA, 0xFF, 0x00 },                         &mm::memory_space::report_usage)     ||
+            !util::redirect_entry(0x005FABD0, { 0x56, 0x8B, 0xF1, 0x8B, 0x46, 0x48 },                         &memory_space_dtor::invoke)          ||
+            !util::redirect_entry(0x005FAF00, { 0x53, 0x56, 0x8B, 0xD9, 0xE8, 0xF7, 0xDB, 0xFF, 0xFF },       &mm::memory_space::allocate_general) ||
+            !util::redirect_entry(0x005FB270, { 0x6A, 0xFF, 0x68, 0x91, 0x11, 0xAF, 0x00 },                   &memory_space_ctor::invoke)          ||
+            !util::redirect_entry(0x005FB3D0, { 0x6A, 0xFF, 0x68, 0xB3, 0x11, 0xAF, 0x00 },                   &mm::init)                           ||
+            !util::redirect_entry(0x005FB7A0, { 0x83, 0x3D, 0x58, 0xDA, 0xFF, 0x00, 0x00 },                   &mm::allocate_general)               ||
+            !util::redirect_entry(0x005FBD20, { 0x53, 0x55, 0x8B, 0x6C, 0x24, 0x0C },                         &mm::memory_space::allocate)         ||
+            !util::redirect_entry(0x005FBD70, { 0x8B, 0x54, 0x24, 0x04, 0x85, 0xD2 },                         &mm::memory_space::deallocate)       ||
+            !util::redirect_entry(0x005FBDD0, { 0x53, 0x55, 0x56, 0x57, 0x8B, 0x3D, 0x58, 0xDA, 0xFF, 0x00 }, allocate)                            ||
+            !util::redirect_entry(0x005FBE30, { 0x53, 0x55, 0x8B, 0x2D, 0x58, 0xDA, 0xFF, 0x00 },             allocate_aligned)                    ||
+            !util::redirect_entry(0x005FBFD0, { 0x83, 0x3D, 0x58, 0xDA, 0xFF, 0x00, 0x00 },                   reallocate)                          ||
+            !util::redirect_entry(0x008597E0, { 0x83, 0x3D, 0x58, 0xDA, 0xFF, 0x00, 0x00 },                   &mm::free))
+
+            FATAL_BREAKPOINT();
+    }
+
     inline void _redirect_event_manager() {
         banana::log.msg("redirecting event_manager callsites");
 
@@ -233,6 +261,8 @@ namespace treyarch {
     }
 
     inline void redirect_game_calls() {
+        _redirect_mm();
+
         banana::log.msg("redirecting WinMain");
 
         if (!util::redirect_rel32(0x00ADE9F8, { 0xE8, 0x83, 0xD1, 0xEE, 0xFF }, &WinMain))
