@@ -14,6 +14,7 @@
 #include "game/spawn_table_manager.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/cpu_combat_inode.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
@@ -525,17 +526,15 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return -1.0f;
 
-            info_node* combat = core->get_info_node(info_node_type_cpu_combat);
+            auto* combat = (cpu_combat_inode*)core->get_info_node(info_node_type_cpu_combat);
 
             if (!combat)
                 return -1.0f;
 
-            u8* slice = (u8*)combat + 0x60;
-
-            if (!retail::sub_4E38A0((u32*)slice) || retail::sub_4E7640((f32*)slice))
+            if (!combat->pie_slice.is_valid() || combat->pie_slice.is_stale())
                 return -1.0f;
 
-            return (f32)*(i32*)(slice + 0x0C);
+            return (f32)combat->pie_slice.ring;
         }
 
         case param_ai_idle_type: {
