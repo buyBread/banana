@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/frontend/igo/igo_3d_poi_simple_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -9,23 +10,23 @@ namespace treyarch {
     class poi_icon_widget {
 
     public:
-        i32            kind;
-        u32            mode;        // set_poi_icon carries modes 1 and 2 across a kind change
-        u32            state;       // the +0x24 widget shows in states 1 and 2
-        f32            unk_0c;
-        f32            unk_10;
-        u8             reserved_014[0x09];
-        bool           is_shown;
-        u8             reserved_01e;
-        u8             unk_1f;
-        bool           dot_visible;
-        u8             reserved_021[0x03];
-        igo_3d_widget* unk_24;
-        igo_3d_widget* unk_28;      // a second life bar
-        igo_3d_widget* unk_2c;      // the distance text and life bar
-        u8             reserved_030[0x0C];
-        bool           unk_3c;      // follows is_shown
-        u8             reserved_03d[0x03];
+        i32                       kind;
+        u32                       mode;        // set_poi_icon carries modes 1 and 2 across a kind change
+        u32                       state;       // the +0x24 widget shows in states 1 and 2
+        f32                       unk_0c;
+        f32                       unk_10;
+        u8                        reserved_014[0x09];
+        bool                      is_shown;
+        u8                        reserved_01e;
+        u8                        unk_1f;
+        bool                      dot_visible;
+        u8                        reserved_021[0x03];
+        igo_3d_widget*            unk_24;
+        igo_3d_widget*            unk_28;      // a second life bar
+        igo_3d_poi_simple_widget* unk_2c;
+        u8                        reserved_030[0x0C];
+        bool                      unk_3c;      // follows is_shown
+        u8                        reserved_03d[0x03];
 
         ~poi_icon_widget();
 

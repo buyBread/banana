@@ -68,6 +68,25 @@ namespace treyarch {
         entity_tracker(entity_tracker_manager* parent, arch_base_vhandle ent);
         virtual ~entity_tracker();
 
+        void set_mini_map_active(bool active);
+        bool get_mini_map_active();
+
+        void set_poi_icon(i32 kind);
+        void set_poi_icon_offset(vector3d offset);
+        void set_poi_show_distance_info(bool show);
+        void set_poi_range(f32 near_clip, f32 far_clip);
+        void set_poi_active(bool active);
+        bool get_poi_active();
+        void set_poi_urgent(bool urgent);
+        void set_dot_visible(bool visible);
+
+        void set_poi_shows_in_spidey_sense(bool shows);
+        void set_poi_shows_out_of_spidey_sense(bool shows);
+
+        void set_poi_is_life_bar(bool is_life_bar, i32 health, i32 unk);
+        void set_poi_life_bar_values(i32 health, i32 unk);
+        i32  get_poi_curr_life_bar_health();
+
         void* operator new(std::size_t size) noexcept {
             return mm::allocate(size);
         }
@@ -89,8 +108,8 @@ namespace treyarch {
         entity_tracker_slot_pool          tracker_slot_pool;
         u32                               unk_60;
         entity_tracker_id                 hero_tracker_id;           // -1 for none
-        vc8::map<i32, city_life_tracker*> city_life_trackers;
-        i32                               next_city_life_tracker_id;
+        vc8::map<u32, city_life_tracker*> city_life_trackers;
+        u32                               next_city_life_tracker_id;
         ngl::quad*                        quad;
         bool                              poi_urgent;                // while set, only urgent trackers draw their poi icon
 
@@ -103,6 +122,12 @@ namespace treyarch {
         void              destroy_entity_tracker(entity_tracker_id id);
 
         void set_hero_tracker(arch_base_vhandle hero);
+
+        city_life_tracker* find_city_life_tracker(u32 id);
+        u32                create_city_life_tracker(i32 kind, i32 unk_14);
+        void               destroy_city_life_tracker(u32 id);
+
+        static void register_entity(arch_base_vhandle ent, city_life_tracker* tracker);
     };
 
     ASSERT_OFFSETOF(stealth_widget_t, meter,     0x08);

@@ -97,7 +97,7 @@ void script_garbage_collection::widgets_3d(script_instance*, stuff_to_delete_lis
 // sub_85CCD0
 void script_garbage_collection::city_life_trackers(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next)
-        retail::sub_6E0020((i32)references::frontend.get().igo->entity_tracker_mgr, (i32)stuff->element);
+        references::frontend.get().igo->entity_tracker_mgr->destroy_city_life_tracker(stuff->element);
 }
 
 // sub_862400

@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "game/frontend/city_life_tracker.hh"
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
@@ -130,6 +131,184 @@ entity_tracker::~entity_tracker() {
         retail::sub_6D9260((i32)igo, ent.value);
 }
 
+// sub_692450
+void entity_tracker::set_mini_map_active(bool active) {
+    mm_icon->is_shown = active;
+}
+
+// sub_692470
+bool entity_tracker::get_mini_map_active() {
+    return mm_icon->is_shown;
+}
+
+// sub_70EB80
+void entity_tracker::set_poi_icon(i32 kind) {
+    u32 mode           = 0;
+    f32 carried_health = 0.0f;
+    f32 carried_unk    = 0.0f;
+
+    if (poi_icon && kind != poi_icon->kind && kind != 11) {
+        mode = poi_icon->mode;
+
+        if (mode == 1) {
+            carried_health = -1.0f;
+            carried_unk    = -1.0f;
+        } else if (mode == 2) {
+            carried_health = (f32)retail::sub_68C490((u32*)poi_icon); // poi_icon_widget::get_life_bar_health
+            carried_unk    = -1.0f;
+        }
+
+        retail::sub_6923F0((u32*)poi_icon, 1); // poi_icon_widget scalar deleting destructor
+        poi_icon = nullptr;
+    }
+
+    if (mm_icon && kind != mm_icon->kind) {
+        retail::sub_6DFB50((u32*)references::frontend.get().igo->radar_widget, (i32)mm_icon); // remove_icon
+        delete mm_icon;
+        mm_icon = nullptr;
+    }
+
+    if (!poi_icon) {
+        if (kind != 11) {
+            void* allocation = mm::allocate(sizeof(poi_icon_widget));
+            poi_icon = allocation ? (poi_icon_widget*)retail::sub_70C4A0((u8*)allocation, kind) : nullptr;
+        }
+
+        poi_icon->mode = mode;
+
+        if (mode == 2)
+            retail::sub_68C450((u32*)poi_icon, (i32)carried_health, (i32)carried_unk); // poi_icon_widget::set_life_bar_values
+    }
+
+    if (!mm_icon) {
+        arch_base* tracked = ent.resolve();
+
+        mm_icon = new igo_map_poi(kind,
+                                  31,
+                                  tracked ? ((entity*)tracked)->my_abs_po->get_position() : vector3d(0.0f, 0.0f, 0.0f));
+    }
+
+    if (kind == 3)
+        retail::sub_6C71F0((i32)this, kind); // set_fog_obj
+    else if (kind == 0x11 || kind == 2) {
+        if (gta_widget) {
+            gta_widget->active = false;
+
+            if (gta_widget->unk_19 && !gta_widget->unk_20 && !gta_widget->unk_21 &&
+                gta_widget->target_ring.resolve()) {
+
+                gta_widget->target_ring.resolve();
+                gta_widget->unk_1c = 0.0f;
+                gta_widget->unk_21 = 1;
+                gta_widget->unk_20 = 0;
+            }
+        }
+
+        gta_widget_active = false;
+        unk_41            = false;
+    }
+}
+
+// sub_692480
+void entity_tracker::set_poi_icon_offset(vector3d offset) {
+    poi_icon_offset = offset;
+}
+
+// sub_6924B0
+void entity_tracker::set_poi_show_distance_info(bool show) {
+    poi_show_distance_info = show;
+}
+
+// sub_6AAD00
+void entity_tracker::set_poi_range(f32 near_clip, f32 far_clip) {
+    auto* record = (u8*)retail::sub_92BB10(ent.value); // tracker record lookup
+
+    if (record)
+        ((void (__thiscall*)(u8*, f32, f32))retail::sub_905FE0)(record, near_clip, far_clip); // set_clip_range
+}
+
+// sub_6C7130
+void entity_tracker::set_poi_active(bool active) {
+    if (poi_icon) {
+        retail::sub_68C3F0((i32)poi_icon, active); // poi_icon_widget::turn_on
+
+        if (stealth_widget && active)
+            retail::sub_68FB00((i32)stealth_widget, false); // stealth widget set_active
+
+        if (mm_icon) {
+            if (active != mm_icon->unk_3c) {
+                mm_icon->unk_3c = active;
+                mm_icon->unk_38 = 0.0f;
+            }
+
+            mm_icon->unk_44 = 2;
+        }
+
+        if (poi_icon->kind != 0x11 && poi_icon->kind != 2)
+            retail::sub_6AAC90((u32*)this, active ? 0.0f : -1.0f); // enable_zlock
+    }
+
+    if (!unk_41 && poi_icon->kind != 0x11 && poi_icon->kind != 2)
+        retail::sub_692670((i32)this, active, false); // set_gta_widget_active
+
+    if (fog_obj) {
+        if (auto* fog = (entity*)fog_obj->fog_vh.resolve())
+            fog->set_visible(active, false);
+
+        fog_obj->active = active;
+    }
+}
+
+// sub_6924E0
+bool entity_tracker::get_poi_active() {
+    return poi_icon && poi_icon->is_shown;
+}
+
+// sub_692860
+void entity_tracker::set_poi_urgent(bool urgent) {
+    if (urgent != this->urgent)
+        parent->poi_urgent = urgent;
+
+    this->urgent = urgent;
+}
+
+// sub_6924C0
+void entity_tracker::set_dot_visible(bool visible) {
+    if (poi_icon)
+        poi_icon->dot_visible = visible;
+}
+
+// sub_692500
+void entity_tracker::set_poi_shows_in_spidey_sense(bool shows) {
+    shows_in_spidey_sense = shows;
+}
+
+// sub_692510
+void entity_tracker::set_poi_shows_out_of_spidey_sense(bool shows) {
+    shows_out_of_spidey_sense = shows;
+}
+
+// sub_692520
+void entity_tracker::set_poi_is_life_bar(bool is_life_bar, i32 health, i32 unk) {
+    if (poi_icon->unk_2c)
+        poi_icon->unk_2c->is_life_bar = is_life_bar;
+
+    if (poi_icon->unk_28)
+        poi_icon->unk_28->set_visible(is_life_bar);
+
+    set_poi_life_bar_values(health, unk);
+}
+
+// sub_692590
+void entity_tracker::set_poi_life_bar_values(i32 health, i32 unk) {
+    retail::sub_68C450((u32*)poi_icon, health, unk); // poi_icon_widget::set_life_bar_values
+}
+
+// sub_6925D0
+i32 entity_tracker::get_poi_curr_life_bar_health() {
+    return retail::sub_68C490((u32*)poi_icon); // poi_icon_widget::get_life_bar_health
+}
+
 // sub_6D2710
 void entity_tracker_manager::render() {
     bool spidey_sense = references::frontend.get().igo->background_effect_mode == 4;
@@ -234,8 +413,47 @@ void entity_tracker_manager::set_hero_tracker(arch_base_vhandle hero) {
     }
 
     if (entity_tracker* tracker = id_to_ptr(hero_tracker_id)) {
-        retail::sub_70EB80((i32)tracker, 11); // entity_tracker::set_poi_icon
+        tracker->set_poi_icon(11);
         tracker->mm_icon->is_shown = true;
-        retail::sub_6C7130((i32)tracker, 0); // entity_tracker::set_poi_active
+        tracker->set_poi_active(false);
     }
+}
+
+// sub_6E0070
+city_life_tracker* entity_tracker_manager::find_city_life_tracker(u32 id) {
+    auto* found = city_life_trackers.find(id);
+
+    return found != city_life_trackers.end() ? found->value.second : nullptr;
+}
+
+// sub_708230
+u32 entity_tracker_manager::create_city_life_tracker(i32 kind, i32 unk_14) {
+    void* allocation = mm::allocate(sizeof(city_life_tracker));
+    auto* tracker    = allocation ? (city_life_tracker*)retail::sub_7000C0((u32*)allocation, kind, unk_14) : nullptr;
+    u32   id         = next_city_life_tracker_id;
+
+    city_life_trackers[id] = tracker;
+    ++next_city_life_tracker_id;
+
+    return id;
+}
+
+// sub_6E0020
+void entity_tracker_manager::destroy_city_life_tracker(u32 id) {
+    auto* found = city_life_trackers.find(id);
+
+    if (found == city_life_trackers.end())
+        return;
+
+    // slot 0
+    if (city_life_tracker* tracker = found->value.second)
+        ((void (__thiscall*)(city_life_tracker*, u32))tracker->vtable[0])(tracker, 1);
+
+    city_life_trackers.erase(found);
+}
+
+// sub_700070
+void entity_tracker_manager::register_entity(arch_base_vhandle ent, city_life_tracker* tracker) {
+    if (ent.resolve() && tracker)
+        tracker->entities.push_back(ent);
 }
