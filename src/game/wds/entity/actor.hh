@@ -53,7 +53,7 @@ namespace treyarch {
         animation_controller*       anim_ctrl;
         actor_unk_0b0*              unk_0b0;
         u8                          reserved_0b4[0x0C];
-        amalga::resource_pack_slot* pack_slot; // the one the actor came from; script threads take it as unk_60
+        amalga::resource_pack_slot* pack_slot; // the one the actor came from; its script threads take it as their resource context
         u8                          reserved_0c4[0x0C];
         base_ai_data*               my_base_ai_data;
         capsule_alter_sys*          capsule_alter;

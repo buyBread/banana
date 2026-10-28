@@ -169,7 +169,7 @@ namespace treyarch { namespace chuck { namespace vm {
 
     public:
         script_instance*                 inst;
-        const script_function*           ex;      // entry function, never changes; derive the running one from `pc`
+        const script_function*           ex;               // entry function, never changes; derive the running one from `pc`
         vm_thread*                       creator;
         vm_stack                         dstack;
         u16*                             pc;
@@ -182,14 +182,14 @@ namespace treyarch { namespace chuck { namespace vm {
         argument_t                       current_arg;
         u32                              current_dsize;
         script_instance*                 current_instance;
-        u32                              entry;           // native recall state for a BSL that returned false
+        u32                              entry;            // native recall state for a BSL that returned false
         void*                            user_data;
-        u32                              unk_60;
-        f32                              camera_priority; // inherited by BST/BTH children
+        u32                              resource_context; // the pack slot natives load resources from
+        f32                              camera_priority;  // inherited by BST/BTH children
         u32                              thread_id;
         vm_simple_list
             <vm_thread_local_reference*> local_references;
-        vm_simple_list<vm_thread*>*      list;            // the owning instance's `threads`
+        vm_simple_list<vm_thread*>*      list;             // the owning instance's `threads`
         vm_thread*                       vm_simple_list_previous;
         vm_thread*                       vm_simple_list_next;
 

@@ -62,8 +62,8 @@ namespace treyarch {
         static i32 find_instance_function(string_hash fullname, chuck::vm::script_instance* inst);
 
         // a thread on inst, ready to be run; the instance goes on its stack first unless it's the master global instance
-        static chuck::vm::vm_thread* create_thread(i32         function_index, chuck::vm::script_instance* inst, u32 unk_60);
-        static chuck::vm::vm_thread* create_thread(string_hash fullname,       chuck::vm::script_instance* inst, u32 unk_60);
+        static chuck::vm::vm_thread* create_thread(i32         function_index, chuck::vm::script_instance* inst, u32 resource_context);
+        static chuck::vm::vm_thread* create_thread(string_hash fullname,       chuck::vm::script_instance* inst, u32 resource_context);
         static chuck::vm::vm_thread* create_thread(i32         function_index, chuck::vm::script_instance* inst, actor* owner);
 
         // looks on the owner's "__enx" instance, then its executable's global instance, then the master global instance
@@ -100,7 +100,7 @@ namespace treyarch {
         static chuck::vm::script_instance* add_instance(const mash::string                            &name,
                                                               chuck::vm::script_object*                object,
                                                               chuck::vm::vm_thread**                   constructor_thread,
-                                                              u32                                      unk_60,
+                                                              u32                                      resource_context,
                                                               chuck::vm::e_script_instance_stack_size  stack_size);
 
         static chuck::vm::script_instance* add_instance(const mash::string                            &name,

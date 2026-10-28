@@ -54,14 +54,14 @@ i32 script::find_instance_function(string_hash fullname, chuck::vm::script_insta
 }
 
 // sub_842C00
-chuck::vm::vm_thread* script::create_thread(i32 function_index, chuck::vm::script_instance* inst, u32 unk_60) {
+chuck::vm::vm_thread* script::create_thread(i32 function_index, chuck::vm::script_instance* inst, u32 resource_context) {
     if (!inst || function_index < 0)
         return nullptr;
 
     chuck::vm::vm_thread* thread = inst->add_thread(inst->parent->get_function_ptr(function_index), nullptr, 0);
 
     if (thread)
-        thread->unk_60 = unk_60;
+        thread->resource_context = resource_context;
 
     // global functions take no instance
     if (inst != references::master_global_instance.read())
@@ -71,13 +71,13 @@ chuck::vm::vm_thread* script::create_thread(i32 function_index, chuck::vm::scrip
 }
 
 // sub_842DD0
-chuck::vm::vm_thread* script::create_thread(string_hash fullname, chuck::vm::script_instance* inst, u32 unk_60) {
+chuck::vm::vm_thread* script::create_thread(string_hash fullname, chuck::vm::script_instance* inst, u32 resource_context) {
     i32 function_index = find_function(fullname, inst->parent);
 
     if (function_index < 0)
         return nullptr;
 
-    return create_thread(function_index, inst, unk_60);
+    return create_thread(function_index, inst, resource_context);
 }
 
 // sub_842C80
@@ -172,7 +172,7 @@ bool script::push_uint(chuck::vm::vm_thread* thread, u32 value) {
 chuck::vm::script_instance* script::add_instance(const mash::string                            &name,
                                                        chuck::vm::script_object*                object,
                                                        chuck::vm::vm_thread**                   constructor_thread,
-                                                       u32                                      unk_60,
+                                                       u32                                      resource_context,
                                                        chuck::vm::e_script_instance_stack_size  stack_size) {
 
     *constructor_thread = nullptr;
@@ -183,7 +183,7 @@ chuck::vm::script_instance* script::add_instance(const mash::string             
     chuck::vm::script_instance* inst = object->add_instance(mash::string(name.c_str()), nullptr, constructor_thread, stack_size);
 
     if (*constructor_thread)
-        (*constructor_thread)->unk_60 = unk_60;
+        (*constructor_thread)->resource_context = resource_context;
 
     return inst;
 }
