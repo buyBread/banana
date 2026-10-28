@@ -61,6 +61,11 @@ namespace treyarch {
         ai_core*                               get_ai_core() const;
         als::animation_logic_system_interface* get_als() const;
 
+        // slot 136
+        bool is_a_rocket() const {
+            return ((bool (__thiscall*)(const actor*))vtable[136])(this);
+        }
+
         // slot 137
         void allocate_anim_controller() {
             ((void (__thiscall*)(actor*))vtable[137])(this);

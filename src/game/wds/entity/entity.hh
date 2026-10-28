@@ -18,6 +18,32 @@
 namespace treyarch {
     struct region;
 
+    // SM3's entflavors.h order
+    enum e_entity_flavor : i32 {
+        entity_flavor_actor,
+        entity_flavor_camera,
+        entity_flavor_base,
+        entity_flavor_entity,
+        entity_flavor_marker,
+        entity_flavor_mic,
+        entity_flavor_light_source,
+        entity_flavor_particle_generator,
+        entity_flavor_item,
+        entity_flavor_conglomerate,
+        entity_flavor_conglomerate_clone
+    };
+
+    // SM3's EFLAG_*
+    enum e_entity_flags : u32 {
+        entity_flag_graphics_visible = 0x00000200,
+        entity_flag_suspended        = 0x40000000
+    };
+
+    // SM3's EFLAG_EXT_*
+    enum e_entity_ext_flags : u32 {
+        entity_ext_flag_invulnerable = 0x00004000
+    };
+
     class entity : public arch_base {
 
     public:
@@ -27,7 +53,8 @@ namespace treyarch {
         u32                                 flags;
         u32                                 ext_flags;
         interface_storage*                  my_ifc_storage;
-        u8                                  reserved_020[0x1A];
+        entity*                             my_parent;
+        u8                                  reserved_024[0x16];
         u8                                  unk_03a; // cleared as scene entities are loaded
         u8                                  reserved_03b[0x15];
         container::fixed_vector<region*, 8> regions;
@@ -66,9 +93,14 @@ namespace treyarch {
             return (switch_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_switch_obj);
         }
 
-        // SM3's EFLAG_GRAPHICS_VISIBLE, unless ext flag 0x1000 vetoes it
+        // unless ext flag 0x1000 vetoes it
         bool is_visible() const {
-            return (flags & 0x200) && !(ext_flags & 0x1000);
+            return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
+        }
+
+        // slot 77
+        e_entity_flavor get_flavor() const {
+            return ((e_entity_flavor (__thiscall*)(const entity*))vtable[77])(this);
         }
 
         // slot 67
@@ -89,6 +121,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity, flags,          0x14);
     ASSERT_OFFSETOF(entity, ext_flags,      0x18);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
+    ASSERT_OFFSETOF(entity, my_parent,      0x20);
     ASSERT_OFFSETOF(entity, unk_03a,        0x3A);
     ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch
