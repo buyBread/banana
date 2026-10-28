@@ -453,84 +453,349 @@ bool slf__entity__set_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_86B180
 bool slf__player_entity__get_player_num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B180)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_player)) {
+        auto ifc = self->player_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        f32 value;
+        result = ifc->get_ifc_num(hash, &value, false) ? value : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86B240
 bool slf__player_entity__set_player_num__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B240)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = stack.local_num(0x08);
+
+    if (self && self->has_ifc(entity_ifc_player)) {
+        auto ifc = self->player_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        ifc->set_ifc_num(hash, value, false);
+    }
+
+    return true;
 }
 
+// sub_86B2A0
 bool slf__player_entity__get_player_vec__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B2A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    vector3d result;
+
+    if (self && self->has_ifc(entity_ifc_player)) {
+        auto ifc = self->player_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        vector3d value;
+        result = ifc->get_ifc_vec(hash, &value, false) ? value : references::unk_010f7140.get();
+    } else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86B360
 bool slf__player_entity__is_button_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B360)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto button = (i32)stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    // the range test passes every button
+    if (self && self->has_ifc(entity_ifc_player) && (button > 0 || button < 25))
+        result = self->player_ifc()->get_button(button)->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86B400
 bool slf__player_entity__set_button_enabled__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B400)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto button = (i32)stack.local_num(0x04);
+    auto on     = stack.local_num(0x08);
+
+    if (self && self->has_ifc(entity_ifc_player) && button > 0 && button < 25 && button < 13)
+        self->player_ifc()->enable_button(button, on != 0.0f);
+
+    return true;
 }
 
+// sub_86B470
 bool slf__player_entity__set_buttons_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B470)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_player))
+        return true;
+
+    for (i32 button = 1; button < 25; ++button)
+        self->player_ifc()->enable_button(button, on != 0.0f);
+
+    return true;
 }
 
+// sub_86B4F0
 bool slf__player_entity__set_swing_override_anchor__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B4F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto anchor = arch_base_vhandle(stack.local_uint(0x04));
+
+    if (self && self->has_ifc(entity_ifc_player))
+        self->player_ifc()->set_swing_override_anchor(anchor);
+
+    return true;
 }
 
+// sub_86B540
 bool slf__player_entity__set_zip_override_anchor__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B540)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto anchor = arch_base_vhandle(stack.local_uint(0x04));
+    auto num    = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_player))
+        return true;
+
+    self->player_ifc()->set_zip_override_anchor(anchor);
+    self->player_ifc()->set_zip_override_anchor_num(num);
+
+    return true;
 }
 
+// sub_86B5B0
 bool slf__player_entity__clear_buttons__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B5B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->has_ifc(entity_ifc_player))
+        return true;
+
+    // the whole controller gets cleared 24 times over
+    for (i32 count = 24; count; --count)
+        self->player_ifc()->clear_buttons();
+
+    return true;
 }
 
+// sub_86B600
 bool slf__player_entity__clear_controller__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B600)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->has_ifc(entity_ifc_player))
+        self->player_ifc()->clear_controller(false);
+
+    return true;
 }
 
+// sub_86B640
 bool slf__player_entity__set_override_mode__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B640)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_player))
+        return true;
+
+    auto ifc = self->player_ifc();
+
+    ifc->clear_buttons();
+    ifc->override_mode = on != 0.0f;
+
+    return true;
 }
 
+// sub_86B6B0
 bool slf__player_entity__override_button__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B6B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto button = (i32)stack.local_num(0x04);
+    auto value  = stack.local_num(0x08);
+    auto t      = stack.local_num(0x0C);
+
+    if (self && self->has_ifc(entity_ifc_player) && button > 0 && button < 25 && button < 13)
+        self->player_ifc()->override_button(button, value, t);
+
+    return true;
 }
 
+// sub_86B710
 bool slf__player_entity__override_command__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B710)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto command = (i32)stack.local_num(0x04);
+    auto value   = stack.local_num(0x08);
+    auto t       = stack.local_num(0x0C);
+
+    if (self && self->has_ifc(entity_ifc_player) && command >= 0 && command < 89)
+        self->player_ifc()->override_command(command, value, t);
+
+    return true;
 }
 
+// sub_86B770
 bool slf__player_entity__set_button__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B770)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto button = (i32)stack.local_num(0x04);
+    auto value  = stack.local_num(0x08);
+
+    if (self && self->has_ifc(entity_ifc_player) && button > 0 && button < 25 && button < 13)
+        self->player_ifc()->set_button(button, value);
+
+    return true;
 }
 
+// sub_86B7D0
 bool slf__player_entity__set_axis__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B7D0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto axis  = (i32)stack.local_num(0x04);
+    auto ud    = stack.local_num(0x08);
+    auto value = stack.local_num(0x0C);
+
+    if (self && self->has_ifc(entity_ifc_player) && axis >= 0 && axis < 4)
+        self->player_ifc()->set_axis(axis, ud != 0.0f, value);
+
+    return true;
 }
 
+// sub_86B840
 bool slf__player_entity__set_command__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B840)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto command = (i32)stack.local_num(0x04);
+    auto value   = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_player) || command < 0 || command >= 89)
+        return true;
+
+    game_button* button = self->player_ifc()->get_command_button(command);
+
+    button->state  = value;
+    button->unk_1c = value;
+
+    return true;
 }
 
+// sub_86B8B0
 bool slf__player_entity__set_axis_enabled__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B8B0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto axis = (i32)stack.local_num(0x04);
+    auto on   = stack.local_num(0x08);
+
+    if (self && self->has_ifc(entity_ifc_player) && axis >= 0 && axis < 4)
+        self->player_ifc()->enable_axis(axis, on != 0.0f);
+
+    return true;
 }
 
+// sub_86B920
 bool slf__player_entity__set_axis_positive_enabled__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B920)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto axis = (i32)stack.local_num(0x04);
+    auto lr   = stack.local_num(0x08);
+    auto ud   = stack.local_num(0x0C);
+
+    if (!self || !self->has_ifc(entity_ifc_player) || axis < 0 || axis >= 4)
+        return true;
+
+    game_axis* control = self->player_ifc()->control_axis[axis];
+
+    control->axis_lr->set_flag(game_button::gbflag_disallow_pos_state, !(lr > 0.0001));
+    control->axis_ud->set_flag(game_button::gbflag_disallow_pos_state, !(ud > 0.0001));
+
+    return true;
 }
 
+// sub_86B9C0
 bool slf__player_entity__set_axis_negative_enabled__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86B9C0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto axis = (i32)stack.local_num(0x04);
+    auto lr   = stack.local_num(0x08);
+    auto ud   = stack.local_num(0x0C);
+
+    if (!self || !self->has_ifc(entity_ifc_player) || axis < 0 || axis >= 4)
+        return true;
+
+    game_axis* control = self->player_ifc()->control_axis[axis];
+
+    control->axis_lr->set_flag(game_button::gbflag_allow_neg_state, lr > 0.0001);
+    control->axis_ud->set_flag(game_button::gbflag_allow_neg_state, ud > 0.0001);
+
+    return true;
 }
 
+// sub_86BA60
 bool slf__player_entity__set_axis_direction_enabled__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BA60)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto axis = (i32)stack.local_num(0x04);
+    auto lr   = stack.local_num(0x08);
+    auto ud   = stack.local_num(0x0C);
+
+    if (!self || !self->has_ifc(entity_ifc_player) || axis < 0 || axis >= 4)
+        return true;
+
+    game_axis* control = self->player_ifc()->control_axis[axis];
+
+    control->axis_lr->enable(lr > 0.0001);
+    control->axis_ud->enable(ud > 0.0001);
+
+    return true;
 }
 
 // sub_86BB00

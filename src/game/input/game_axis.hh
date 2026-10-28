@@ -31,6 +31,14 @@ namespace treyarch {
         u8                        unk_54;
         u8                        pad_55;
         u16                       unk_56;
+
+        bool is_enabled() const {
+            return enabled.to_bool();
+        }
+
+        void enable(bool val) {
+            enabled = val;
+        }
     };
 
     ASSERT_SIZEOF  (game_axis,                   0x58);

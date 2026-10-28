@@ -27,3 +27,7 @@ void game_button::set_control(i32 ctrl) {
 void game_button::update(f32 t, bool unk_1, bool unk_2) {
     ((void (__thiscall*)(game_button*, f32, bool, bool))retail::sub_74A4E0)(this, t, unk_1, unk_2);
 }
+
+void game_button::update_state(f32 t, f32 state, f32 unk_state) {
+    ((void (__thiscall*)(game_button*, f32, f32, f32))retail::sub_745090)(this, t, state, unk_state);
+}

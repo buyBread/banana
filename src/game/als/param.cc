@@ -303,7 +303,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!retail::sub_402500((u32*)the_actor))
                 return -1.0f;
 
-            if (the_actor->player_ifc()->unk_244 == 21 || the_actor->player_ifc()->unk_244 == 22)
+            if (the_actor->player_ifc()->get_mode() == 21 || the_actor->player_ifc()->get_mode() == 22)
                 return 1.0f;
 
             return -1.0f;

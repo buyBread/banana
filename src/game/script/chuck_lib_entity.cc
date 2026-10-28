@@ -1084,8 +1084,25 @@ bool slf__entity__get_rel_z_facing__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_844900
 bool slf__entity__get_last_anchor__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844900)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    // the hero's last anchor, whichever actor asks
+    if (self && self->is_an_actor() && ((actor*)self)->get_ai_core()) {
+        entity* anchor = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_last_anchor();
+
+        if (anchor && anchor->is_an_entity())
+            result = anchor->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8449A0
@@ -2995,12 +3012,54 @@ bool slf__entity__apply_explosive_damage__num__vector3d__t::operator()(chuck::vm
     return true;
 }
 
+// sub_849710
 bool slf__entity__attach_to_wall__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849710)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self->has_ifc(entity_ifc_player) || !retail::sub_601C50((u32*)self))
+        return true;
+
+    retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)position, 0, 1); // world_dynamics_system::place_hero_at
+    retail::sub_77BAB0((u32*)references::g_world_ptr.read()->the_terrain);
+
+    references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_140();
+
+    self->player_ifc()->unk_486(true, 0.0f);
+
+    if (self->flags & entity_flag_suspended)
+        self->player_ifc()->set_desired_mode(2);
+    else {
+        self->suspend(true);
+        self->player_ifc()->set_desired_mode(2);
+        self->unsuspend(true);
+    }
+
+    return true;
 }
 
+// sub_849820
 bool slf__entity__attach_to_wall__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849820)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self->has_ifc(entity_ifc_player))
+        return true;
+
+    self->player_ifc()->unk_486(true, 0.0f);
+
+    if (self->flags & entity_flag_suspended)
+        self->player_ifc()->set_desired_mode(2);
+    else {
+        self->suspend(true);
+        self->player_ifc()->set_desired_mode(2);
+        self->unsuspend(true);
+    }
+
+    return true;
 }
 
 // sub_8498D0
@@ -4705,12 +4764,30 @@ bool slf__entity__begin_slingshot_point_test__entity__vector3d__entity__num__t::
     return ((invoke_t)retail::sub_84FB40)(this, stack);
 }
 
+// sub_84FCD0
 bool slf__entity__is_in_reflexes__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FCD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self->player_ifc()->get_reflexes()->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84FD20
 bool slf__entity__is_in_senses__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FD20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self->player_ifc()->get_spider_senses()->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84FD70

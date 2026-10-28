@@ -11,5 +11,12 @@ namespace treyarch {
             current  = value;
             previous = current;
         }
+
+        delta_variable &operator=(const T &value) {
+            previous = current;
+            current  = value;
+
+            return *this;
+        }
     };
 } // treyarch

@@ -24,21 +24,22 @@ namespace treyarch {
         };
 
         enum e_flags : u16 {
-            gbflag_pressed           = 0x0001,
-            gbflag_triggered         = 0x0002,
-            gbflag_released          = 0x0004,
-            gbflag_wait_for_release  = 0x0008,
-            gbflag_disabled          = 0x0010,
-            gbflag_external_primary  = 0x0020,
-            gbflag_external_modifier = 0x0040,
-            gbflag_invert_axis       = 0x0080,
-            gbflag_allow_neg_state   = 0x0100,
-            gbflag_positive_tap      = 0x0200,
-            gbflag_negative_tap      = 0x0400,
-            gbflag_suspended         = 0x0800,
-            gbflag_press_invalidated = 0x1000,
-            gbflag_missed_press      = 0x2000,
-            gbflag_non_responsive    = gbflag_disabled | gbflag_suspended
+            gbflag_pressed            = 0x0001,
+            gbflag_triggered          = 0x0002,
+            gbflag_released           = 0x0004,
+            gbflag_wait_for_release   = 0x0008,
+            gbflag_disabled           = 0x0010,
+            gbflag_external_primary   = 0x0020,
+            gbflag_external_modifier  = 0x0040,
+            gbflag_invert_axis        = 0x0080,
+            gbflag_allow_neg_state    = 0x0100,
+            gbflag_positive_tap       = 0x0200,
+            gbflag_negative_tap       = 0x0400,
+            gbflag_suspended          = 0x0800,
+            gbflag_press_invalidated  = 0x1000,
+            gbflag_missed_press       = 0x2000,
+            gbflag_disallow_pos_state = 0x8000, // the update keeps both states at or below 0
+            gbflag_non_responsive     = gbflag_disabled | gbflag_suspended
         };
 
         inline static constexpr f32 default_timeout = 0.3f;
@@ -49,8 +50,7 @@ namespace treyarch {
         game_button*        primary;
         game_button*        modifier;
         delta_variable<f32> state;
-        u32                 unk_1c;
-        u32                 unk_20;
+        delta_variable<f32> unk_1c; // a second state, set alongside state
         f32                 pressed_time;
         f32                 last_pressed_time;
         f32                 time_since_last_tap;
@@ -87,6 +87,10 @@ namespace treyarch {
 
         void enable(bool tof) {
             set_flag(gbflag_disabled, !tof);
+        }
+
+        bool is_enabled() const {
+            return !is_flagged(gbflag_disabled);
         }
 
         // sub_736050
@@ -160,6 +164,7 @@ namespace treyarch {
         }
 
         void update(f32 t, bool unk_1, bool unk_2);
+        void update_state(f32 t, f32 state, f32 unk_state); // pushes both values, then runs the press and tap logic over t
     };
 
     ASSERT_SIZEOF  (game_button,                      0x4C);
