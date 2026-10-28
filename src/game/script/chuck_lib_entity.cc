@@ -6,12 +6,14 @@
 #include "game/arch_base.hh"
 #include "game/math/references.hh"
 #include "game/script/chuck_lib_entity.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_vehicle.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/vehicle.hh"
+#include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 
 using namespace treyarch;
@@ -191,168 +193,649 @@ bool slf__crawl_attach_to_surface__entity__line_info__vector3d__t::operator()(ch
     return ((invoke_t)retail::sub_850550)(this, stack);
 }
 
+// sub_843680
 bool slf__entity__rvb_set_needs_repathfind__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843680)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        ((void (__cdecl*)(arch_base*))retail::sub_4C74D0)(self); // actor::rvb_set_needs_repathfind;
+
+    return true;
 }
 
+// sub_8436A0
 bool slf__entity__rvb_snapshot_behavior__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8436A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        ((void (__cdecl*)(arch_base*))retail::sub_4CB150)(self); // rvb_snapshot_behavior;
+
+    return true;
 }
 
+// sub_8436C0
 bool slf__entity__rvb_reset_behavior__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8436C0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        rvb_reset_behavior(self);
+
+    return true;
 }
 
+// sub_8436E0
 bool slf__entity__rvb_restart_timer__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8436E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    if (ai_core* core = ((actor*)self)->get_ai_core()) {
+        string_hash timer;
+        timer.initialize(mash::ALLOCATED, name);
+
+        ((void (__thiscall*)(ai_core*, const string_hash*, bool))retail::sub_4DF260)(core, &timer, true); // ai_core::restart_timer
+    }
+
+    return true;
 }
 
+// sub_843730
 bool slf__entity__rvb_set_target__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843730)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot   = stack.local_num(0x04);
+    auto target = arch_base_vhandle(stack.local_uint(0x08));
+
+    // the target resolves once for the test and again for the call
+    if (self && target.resolve())
+        ((void (__cdecl*)(arch_base*, i32, arch_base*))retail::sub_4CB190)(self, (i32)slot, target.resolve()); // rvb_set_target
+
+    return true;
 }
 
+// sub_843780
 bool slf__entity__rvb_set_target__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843780)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot     = stack.local_num(0x04);
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, i32, vector3d))retail::sub_4CB1C0)(self, (i32)slot, *position); // rvb_set_target
+
+    return true;
 }
 
+// sub_8437C0
 bool slf__entity__rvb_has_target__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8437C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot = stack.local_num(0x04);
+
+    // the target's type, 0 without one
+    f32 result = self ? (f32)((i32 (__cdecl*)(arch_base*, i32))retail::sub_4CB220)(self, (i32)slot) : 0.0f; // rvb_has_target
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843830
 bool slf__entity__rvb_get_target_entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843830)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot = stack.local_num(0x04);
+
+    arch_base_vhandle result;
+
+    if (self)
+        ((arch_base_vhandle* (__cdecl*)(arch_base_vhandle*, arch_base*, i32))retail::sub_4CB250)(&result, self, (i32)slot); // rvb_get_target_entity
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843890
 bool slf__entity__rvb_get_target_vector__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843890)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot = stack.local_num(0x04);
+
+    vector3d result;
+
+    if (self)
+        ((vector3d* (__cdecl*)(vector3d*, arch_base*, i32))retail::sub_4CB390)(&result, self, (i32)slot); // rvb_get_target_vector
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843910
 bool slf__entity__rvb_disable_tether__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843910)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB200)(self, 5); // rvb_clear_target, on the tether's slot;
+
+    return true;
 }
 
+// sub_843940
 bool slf__entity__rvb_clear_target__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843940)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot = stack.local_num(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB200)(self, (i32)slot); // rvb_clear_target
+
+    return true;
 }
 
+// sub_843970
 bool slf__entity__rvb_set_machine__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843970)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self    = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot    = stack.local_num(0x04);
+    auto machine = (const char*)stack.local_uint(0x08);
+
+    if (self) {
+        mash::string name(machine);
+
+        ((void (__cdecl*)(arch_base*, u32, const char*))retail::sub_4CB420)(self, (u32)(i32)slot, name.c_str()); // rvb_set_machine
+    }
+
+    return true;
 }
 
+// sub_843A00
 bool slf__entity__rvb_clear_machine__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843A00)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self    = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slot    = stack.local_num(0x04);
+    auto machine = (const char*)stack.local_uint(0x08);
+
+    if (self) {
+        // built and dropped unread
+        mash::string name(machine);
+
+        ((void (__cdecl*)(arch_base*, u32))retail::sub_4CB460)(self, (u32)(i32)slot); // rvb_clear_machine
+    }
+
+    return true;
 }
 
+// sub_843A80
 bool slf__entity__rvb_add_patrol_waypoint__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843A80)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto point = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, vector3d, f32, i32))retail::sub_4CB4A0)(self, *point, -1.0f, 0); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843AD0
 bool slf__entity__rvb_add_patrol_waypoint__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843AD0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto point = (const vector3d*)&stack.local_uint(0x04);
+    auto wait  = stack.local_num(0x10);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, vector3d, f32, i32))retail::sub_4CB4A0)(self, *point, wait, 0); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843B20
 bool slf__entity__rvb_add_patrol_waypoint__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843B20)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto point = (const vector3d*)&stack.local_uint(0x04);
+    auto wait  = stack.local_num(0x10);
+    auto unk   = stack.local_num(0x14);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, vector3d, f32, i32))retail::sub_4CB4A0)(self, *point, wait, (i32)unk); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843B70
 bool slf__entity__rvb_add_patrol_waypoint__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843B70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self      = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto waypoint = arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, arch_base*, f32, i32))retail::sub_4CB5A0)(self, waypoint, -1.0f, 0); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843BB0
 bool slf__entity__rvb_add_patrol_waypoint__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843BB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self      = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto waypoint = arch_base_vhandle(stack.local_uint(0x04)).resolve();
+    auto wait     = stack.local_num(0x08);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, arch_base*, f32, i32))retail::sub_4CB5A0)(self, waypoint, wait, 0); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843BF0
 bool slf__entity__rvb_add_patrol_waypoint__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843BF0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self      = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto waypoint = arch_base_vhandle(stack.local_uint(0x04)).resolve();
+    auto wait     = stack.local_num(0x08);
+    auto unk      = stack.local_num(0x0C);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, arch_base*, f32, i32))retail::sub_4CB5A0)(self, waypoint, wait, (i32)unk); // rvb_add_patrol_waypoint
+
+    return true;
 }
 
+// sub_843C30
 bool slf__entity__rvb_clear_patrol_waypoints__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843C30)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        ((void (__cdecl*)(arch_base*))retail::sub_4CB6A0)(self); // rvb_clear_patrol_waypoints;
+
+    return true;
 }
 
+// sub_843C50
 bool slf__entity__rvb_get_patrol_waypoint_count__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843C50)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self ? (f32)((i32 (__cdecl*)(arch_base*))retail::sub_4CB710)(self) : -1.0f; // rvb_get_patrol_waypoint_count
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843CB0
 bool slf__entity__rvb_set_flag__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843CB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    string_hash flag;
+    flag.initialize(mash::ALLOCATED, name);
+
+    rvb_set_flag(self, &flag, true);
+
+    return true;
 }
 
+// sub_843CF0
 bool slf__entity__rvb_get_flag__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843CF0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        string_hash flag;
+        flag.initialize(mash::ALLOCATED, name);
+
+        result = rvb_get_flag(self, &flag) ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843D70
 bool slf__entity__rvb_clear_flag__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843D70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    string_hash flag;
+    flag.initialize(mash::ALLOCATED, name);
+
+    rvb_set_flag(self, &flag, false);
+
+    return true;
 }
 
+// sub_843DB0
 bool slf__entity__rvb_set_var__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843DB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = stack.local_num(0x08);
+
+    if (!self)
+        return true;
+
+    string_hash var;
+    var.initialize(mash::ALLOCATED, name);
+
+    rvb_set_var(self, &var, value);
+
+    return true;
 }
 
+// sub_843E00
 bool slf__entity__rvb_get_var__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843E00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        string_hash var;
+        var.initialize(mash::ALLOCATED, name);
+
+        result = rvb_get_var(self, &var);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843E80
 bool slf__entity__rvb_set_vector__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843E80)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self) {
+        string_hash var;
+        var.initialize(mash::ALLOCATED, name);
+
+        ((void (__cdecl*)(arch_base*, const string_hash*, vector3d))retail::sub_4CB800)(self, &var, *value); // rvb_set_vector
+    }
+
+    return true;
 }
 
+// sub_843EE0
 bool slf__entity__rvb_get_vector__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843EE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    // built and dropped unread
+    mash::string unused(name);
+
+    vector3d result;
+
+    if (self) {
+        string_hash var;
+        var.initialize(mash::ALLOCATED, name);
+
+        ((vector3d* (__cdecl*)(vector3d*, arch_base*, const string_hash*))retail::sub_4CB840)(&result, self, &var); // rvb_get_vector
+    } else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_843FB0
 bool slf__entity__rvb_set_hash__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_843FB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = (const char*)stack.local_uint(0x08);
+
+    if (self) {
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, value);
+        string_hash var;
+        var.initialize(mash::ALLOCATED, name);
+
+        ((void (__cdecl*)(arch_base*, const string_hash*, const string_hash*))retail::sub_4CB8A0)(self, &var, &hash); // rvb_set_hash
+    }
+
+    return true;
 }
 
+// sub_844010
 bool slf__entity__is_rvb_character__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844010)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && ((ai_basic_inode* (__cdecl*)(arch_base*))retail::sub_4C77B0)(self) ? 1.0f : 0.0f; // get_ai_basic_inode_if_slim_actor
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_844070
 bool slf__entity__rvb_is_crawling__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844070)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && ((bool (__cdecl*)(arch_base*))retail::sub_4C7590)(self) ? 1.0f : 0.0f; // rvb_is_crawling
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8440D0
 bool slf__entity__rvb_set_blocked_attack_types__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8440D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto types = stack.local_num(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB8D0)(self, (i32)types); // rvb_set_blocked_attack_types
+
+    return true;
 }
 
+// sub_844100
 bool slf__entity__rvb_set_dodged_attack_types__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844100)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto types = stack.local_num(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB910)(self, (i32)types); // rvb_set_dodged_attack_types
+
+    return true;
 }
 
+// sub_844130
 bool slf__entity__rvb_enter_car__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844130)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self    = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto car     = arch_base_vhandle(stack.local_uint(0x04));
+    auto seat    = stack.local_num(0x08);
+    auto animate = stack.local_num(0x0C);
+
+    // the car resolves once for the test and again for the call
+    if (self && car.resolve())
+        ((void (__cdecl*)(arch_base*, arch_base*, f32, bool))retail::sub_4CBA00)(self, car.resolve(), seat, animate != 0.0f); // rvb_enter_car
+
+    return true;
 }
 
+// sub_8441A0
 bool slf__entity__rvb_exit_car__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8441A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self    = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto animate = stack.local_num(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, bool))retail::sub_4CBB70)(self, animate != 0.0f); // rvb_exit_car
+
+    return true;
 }
 
+// sub_8441F0
 bool slf__entity__rvb_enable_tether__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8441F0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto center = (const vector3d*)&stack.local_uint(0x04);
+    auto radius = stack.local_num(0x10);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, vector3d, f32))retail::sub_4CBC00)(self, *center, radius); // rvb_enable_tether
+
+    return true;
 }
 
+// sub_844230
 bool slf__entity__rvb_enable_combat_tether__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844230)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto center = (const vector3d*)&stack.local_uint(0x04);
+    auto radius = stack.local_num(0x10);
+
+    if (self) {
+        ((void (__cdecl*)(arch_base*, vector3d, f32))retail::sub_4CBC00)(self, *center, radius); // rvb_enable_tether
+
+        string_hash flag;
+        flag.initialize(mash::ALLOCATED, "tether_maneuver_flag");
+
+        rvb_set_flag(self, &flag, true);
+    }
+
+    return true;
 }
 
+// sub_8442A0
 bool slf__entity__rvb_enable_tether__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8442A0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = arch_base_vhandle(stack.local_uint(0x04));
+    auto radius = stack.local_num(0x08);
+
+    // the target resolves once for the test and again for the call
+    if (self && target.resolve())
+        ((void (__cdecl*)(arch_base*, arch_base*, f32))retail::sub_4CBC90)(self, target.resolve(), radius); // rvb_enable_tether
+
+    return true;
 }
 
+// sub_8442F0
 bool slf__entity__rvb_enable_combat_tether__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8442F0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = arch_base_vhandle(stack.local_uint(0x04));
+    auto radius = stack.local_num(0x08);
+
+    // same
+    if (self && target.resolve()) {
+        ((void (__cdecl*)(arch_base*, arch_base*, f32))retail::sub_4CBC90)(self, target.resolve(), radius); // rvb_enable_tether
+
+        string_hash flag;
+        flag.initialize(mash::ALLOCATED, "tether_maneuver_flag");
+
+        rvb_set_flag(self, &flag, true);
+    }
+
+    return true;
 }
 
+// sub_844360
 bool slf__entity__rvb_set_speed_modifier__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844360)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto modifier = stack.local_num(0x04);
+
+    if (self)
+        ((void (__cdecl*)(arch_base*, f32))retail::sub_4C4B30)(self, modifier); // rvb_set_speed_modifier
+
+    return true;
 }
 
+// sub_844390
 bool slf__entity__rvb_get_animation_coordinator__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844390)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (self)
+        ((arch_base_vhandle* (__cdecl*)(arch_base_vhandle*, arch_base*))retail::sub_4C77E0)(&result, self); // rvb_get_animation_coordinator
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__get_visual_center__t::operator()(chuck::vm::vm_stack &stack) {
