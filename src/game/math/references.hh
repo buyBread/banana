@@ -19,9 +19,13 @@ namespace treyarch { namespace references {
     inline util::memory_reference<vector3d> unk_00e68098 { 0x00E68098 };
     inline util::memory_reference<vector3d> unk_00e771dc { 0x00E771DC };
     inline util::memory_reference<vector3d> unk_00e771e8 { 0x00E771E8 };
+    inline util::memory_reference<vector3d> unk_00e60268 { 0x00E60268 };
 
     // (0, 0, 0); read by box triggers and other entity setup
     inline util::memory_reference<vector3d> unk_0102ff40 { 0x0102FF40 };
+
+    // (0, 0, 0); what line_info::clear resets the hit points to
+    inline util::memory_reference<vector3d> unk_00fc1b20 { 0x00FC1B20 };
 
     // (0, 0, 0); read by animation and scene anim code
     inline util::memory_reference<vector3d> unk_00fd4370 { 0x00FD4370 };

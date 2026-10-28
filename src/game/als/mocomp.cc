@@ -7007,7 +7007,7 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
     retail::sub_798F50((char*)&probe, (i32)treyarch::references::unk_00e7b2a0.read(), (i32)treyarch::references::unk_00e7b2d0.read(), nullptr, 0); // line_info::check_collision
 
     if (probe.collision) {
-        ahead = ahead - probe.hit_normal * (f32)(ahead * probe.hit_normal);
+        ahead = ahead - probe.hit_norm * (f32)(ahead * probe.hit_norm);
 
         retail::sub_402050((f32*)&ahead);
 
@@ -7592,7 +7592,7 @@ vector3d als::momentum_combat_move_and_face::get_move_position(f32 delta_t) {
         line_info probe(old_position, position);
 
         if (retail::sub_798F50((char*)&probe, (i32)treyarch::references::unk_00e7b2a0.read(), (i32)treyarch::references::unk_00e7b2d0.read(), nullptr, 0)) { // line_info::check_collision
-            position = probe.hit_point;
+            position = probe.hit_pos;
 
             collided         = true;
             target_speed     = 0.0f;
