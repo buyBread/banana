@@ -119,6 +119,39 @@ namespace treyarch {
             set_flag(gbflag_negative_tap, false);
         }
 
+        // inlined @ sub_72C9C0
+        // inlined @ sub_72C9F0
+        // inlined @ sub_737300
+        bool suppressed(bool ignore_disabled) const {
+            return !ignore_disabled && is_flagged(gbflag_non_responsive | gbflag_press_invalidated);
+        }
+
+        // sub_72C9C0
+        bool pressed(bool ignore_disabled = false) const {
+            return !suppressed(ignore_disabled) && is_flagged(gbflag_pressed);
+        }
+
+        // sub_72C9F0
+        f32 get_pressed_time(bool ignore_disabled = false) const {
+            return suppressed(ignore_disabled) ? 0.0f : pressed_time;
+        }
+
+        // sub_737300
+        f32 normalized_state(bool ignore_disabled = false) const { // the state rescaled past the dead zone either way
+            const f32 value = suppressed(ignore_disabled) ? 0.0f : state.current;
+
+            if (!(dead_zone > 0.0001))
+                return value;
+
+            if (value > dead_zone)
+                return (value - dead_zone) / (1.0f - dead_zone);
+
+            if (-0.0f - dead_zone > value)
+                return (dead_zone + value) / (1.0f - dead_zone);
+
+            return 0.0f;
+        }
+
         bool triggered(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;
