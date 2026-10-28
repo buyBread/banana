@@ -3813,7 +3813,7 @@ bool slf__entity__drop_manip_obj__t::operator()(chuck::vm::vm_stack &stack) {
 
     auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    if (!self || !self->is_an_actor() || !retail::sub_602850((u32*)self))
+    if (!self || !self->is_an_actor() || !self->has_base_ai_data())
         return true;
 
     if (self->has_ifc(entity_ifc_player)) {
@@ -3907,24 +3907,131 @@ bool slf__entity__orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_871300
 bool slf__entity__set_puppet_goto_destination__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871300)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self        = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto destination = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet))
+        puppet->set_puppet_goto_destination(*destination);
+
+    return true;
 }
 
+// sub_87A810
 bool slf__entity__set_puppet_goto_destinations__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87A810)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto points = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+    mash::vector_basic<vector3d> destinations;
+    destinations.data     = nullptr;
+    destinations.capacity = 0;
+
+    // the script's points go in back to front
+    for (i32 index = (i32)points->size() - 1; index >= 0; --index)
+        destinations.push_back(*(const vector3d*)(*points)[index].stuff);
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        if (auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet))
+            puppet->set_puppet_goto_destinations(&destinations);
+    }
+
+    return true;
 }
 
+// sub_871390
 bool slf__entity__puppet_set_movement_info__dynamic_array__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871390)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self              = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto points            = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+    auto goto_radius       = stack.local_num(0x08);
+    auto goto_speed        = stack.local_num(0x0C);
+    auto force_non_pathed  = stack.local_num(0x10);
+    auto disable_avoidance = stack.local_num(0x14);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet);
+
+    if (!puppet)
+        return true;
+
+    chuck::vm::script_dynamic_array<vector3d> destinations(points);
+
+    vector3d fill;
+
+    puppet->goto_destinations.resize(destinations.size(), fill);
+
+    u32 count = destinations.size();
+
+    for (u32 index = 0; index < count; ++index)
+        puppet->goto_destinations.data[index] = destinations[index];
+
+    param_block &params = puppet->my_param_block;
+
+    params.set_pb_float(goto_radius_key,            goto_radius);
+    params.set_pb_float(goto_speed_key,             goto_speed);
+    params.set_pb_int  (goto_allow_facing_key,      0);
+    params.set_pb_int  (goto_allow_nonpathed_key,   0);
+    params.set_pb_float(turn_speed_deg_key,         -1.0f);
+    params.set_pb_int  (goto_force_non_pathed_key,  force_non_pathed > 0.0001f);
+    params.set_pb_int  (goto_disable_avoidance_key, disable_avoidance > 0.0001f);
+    params.set_pb_int  (movement_info_updated_key,  1);
+
+    return true;
 }
 
+// sub_871890
 bool slf__entity__puppet_setup_for_goto_complex__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871890)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet);
+
+    if (!puppet)
+        return true;
+
+    param_block &params = puppet->my_param_block;
+
+    params.set_pb_entity(interact_slave_key,           arch_base_vhandle());
+    params.set_pb_entity(interact_master_key,          arch_base_vhandle());
+    params.set_pb_int   (ignore_same_state_switch_key, 1);
+    params.set_pb_hash  (switch_state_key,             generic_goto_key);
+
+    return true;
 }
 
+// sub_871AF0
 bool slf__entity__puppet_clear_callbacks__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871AF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    self->clear_script_callback(puppet_success_stop_key);
+    self->clear_script_callback(puppet_failure_stop_key);
+    self->clear_script_callback(puppet_dead_stop_key);
+    self->clear_script_callback(puppet_damage_stop_key);
+    self->clear_script_callback(puppet_threat_stop_key);
+    self->clear_script_callback(puppet_stop_key);
+    self->clear_script_callback(puppet_external_stop_key);
+
+    return true;
 }
 
 // sub_871D90

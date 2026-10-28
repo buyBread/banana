@@ -4940,7 +4940,7 @@ void als::combat_pole_swing_attach::activate(animation_logic_system* the_als_cor
         vector3d along = unitized(pole_end - pole_start);
 
         side = unitized(cross(along, treyarch::references::unk_00e6808c.get()));
-    } else if (retail::sub_602850((u32*)the_actor)) {
+    } else if (the_actor->has_base_ai_data()) {
         auto* teleport = (teleporting_layer_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_teleporting_layer);
 
         if (teleport) {

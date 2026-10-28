@@ -545,7 +545,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            return (f32)(i32)core->unk_5bc;
+            return (f32)core->idle_type;
         }
 
         case param_ai_walk_run_cycle: {
@@ -554,7 +554,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            return (f32)(i32)core->unk_5c0;
+            return (f32)core->walk_run_cycle;
         }
 
         case param_ai_walk_item: {
@@ -563,7 +563,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            return (f32)(i32)core->unk_5c4;
+            return (f32)core->walk_item;
         }
 
         // the basic node's seat, else the car node's
@@ -986,8 +986,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             treyarch::base_state* current = core->my_base_machine->my_curr_state;
 
-            // slot 15, true only for combat_state
-            if (!((bool (__thiscall*)(treyarch::base_state*))(*(void***)current)[15])(current))
+            if (!current->is_combat_state())
                 return 0.0f;
 
             if (retail::sub_83D760((void*)retail::sub_A1D180((u32*)current)) <= 0)

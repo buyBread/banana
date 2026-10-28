@@ -7,8 +7,10 @@
 #include "game/arch_base_vhandle.hh"
 #include "game/hash/algo.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/vector_basic.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "game/math/po.hh"
+#include "game/mutex.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -16,6 +18,7 @@
 namespace treyarch {
     class actor;
     class ai_core;
+    class line_info;
     class manip_obj_interface;
 
     // baked into each node by its .BAI
@@ -121,10 +124,17 @@ namespace treyarch {
     class loco_inode : public info_node {
 
     public:
-        u8   reserved_030[0x5C];
-        bool unk_08c;           // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
-        u8   reserved_08d[0x1F];
-        u32  unk_0ac;           // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
+        u8          reserved_030[0x54];
+        string_hash loco_als_category;
+        u8          reserved_088[0x04];
+        bool        unk_08c;            // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
+        u8          reserved_08d[0x1F];
+        u32         unk_0ac;            // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
+
+        // inlined @ sub_84EBB0
+        void set_loco_als_category(string_hash cat) {
+            loco_als_category = cat;
+        }
     };
 
     // flight_mocomp flies the actor through it; swift_flight_layer_inode derives from it
@@ -142,6 +152,103 @@ namespace treyarch {
         u8       reserved_11c[0x0C];
         f32      unk_128;            // the als's ai_flight_pitch
         u8       reserved_12c[0x24];
+    };
+
+    // named after the look-at natives that set them
+    enum e_aim_util_flags : u32 {
+        aim_util_flag_aim_head                       = 0x00020000,
+        aim_util_flag_aim_head_direct                = 0x00040000,
+        aim_util_flag_aim_head_and_eyes              = 0x00080000,
+        aim_util_flag_aim_head_eyes_and_upper_body   = 0x00100000,
+        aim_util_flag_aim_head_and_upper_body        = 0x00200000,
+        aim_util_flag_aim_head_and_upper_body_direct = 0x00400000,
+        aim_util_flag_aim_left_arm                   = 0x00800000,
+        aim_util_flag_aim_right_arm                  = 0x01000000
+    };
+
+    class aim_util_inode : public info_node {
+
+    public:
+        u32      flags;
+        u8       reserved_034[0x58C];
+        vector3d target_to_look_at;
+        u8       reserved_5cc[0x1C];
+
+        // inlined @ sub_853120
+        // inlined @ sub_8531B0
+        // inlined @ sub_853240
+        // inlined @ sub_8532D0
+        // inlined @ sub_853360
+        // inlined @ sub_8533F0
+        // inlined @ sub_853480
+        // inlined @ sub_853510
+        void set_flag(e_aim_util_flags flag, bool enable) {
+            if (enable)
+                flags |= flag;
+            else
+                flags &= ~flag;
+        }
+    };
+
+    class ai_car_inode : public info_node {
+
+    public:
+        u8 reserved_030[0x70];
+
+        bool force_enter_car(arch_base_vhandle car, i32 seat, bool animate);
+        bool force_exit_car (bool animate);
+    };
+
+    inline const string_hash goto_radius_key              = string_hash(hash::djb2("goto_radius"));
+    inline const string_hash goto_speed_key               = string_hash(hash::djb2("goto_speed"));
+    inline const string_hash goto_allow_facing_key        = string_hash(hash::djb2("goto_allow_facing"));
+    inline const string_hash goto_allow_nonpathed_key     = string_hash(hash::djb2("goto_allow_nonpathed"));
+    inline const string_hash turn_speed_deg_key           = string_hash(hash::djb2("turn_speed_deg"));
+    inline const string_hash goto_force_non_pathed_key    = string_hash(hash::djb2("goto_force_non_pathed"));
+    inline const string_hash goto_disable_avoidance_key   = string_hash(hash::djb2("goto_disable_avoidance"));
+    inline const string_hash movement_info_updated_key    = string_hash(hash::djb2("movement_info_updated"));
+    inline const string_hash interact_slave_key           = string_hash(hash::djb2("interact_slave"));
+    inline const string_hash interact_master_key          = string_hash(hash::djb2("interact_master"));
+    inline const string_hash ignore_same_state_switch_key = string_hash(hash::djb2("ignore_same_state_switch"));
+    inline const string_hash switch_state_key             = string_hash(hash::djb2("switch_state"));
+    inline const string_hash generic_goto_key             = string_hash(hash::djb2("generic_goto"));
+
+    // the script callbacks a puppet raises when it stops
+    inline const string_hash puppet_success_stop_key  = string_hash(hash::djb2("puppet_success_stop(entity)"));
+    inline const string_hash puppet_failure_stop_key  = string_hash(hash::djb2("puppet_failure_stop(entity)"));
+    inline const string_hash puppet_dead_stop_key     = string_hash(hash::djb2("puppet_dead_stop(entity)"));
+    inline const string_hash puppet_damage_stop_key   = string_hash(hash::djb2("puppet_damage_stop(entity)"));
+    inline const string_hash puppet_threat_stop_key   = string_hash(hash::djb2("puppet_threat_stop(entity)"));
+    inline const string_hash puppet_stop_key          = string_hash(hash::djb2("puppet_stop(entity)"));
+    inline const string_hash puppet_external_stop_key = string_hash(hash::djb2("puppet_external_stop(entity)"));
+
+    class std_puppet_inode : public info_node {
+
+    public:
+        mash::vector_basic<arch_base_vhandle> slaves;
+        mash::vector_basic<vector3d>          goto_destinations;
+        engine_recursive_lock                 access_lock;
+
+        // sub_4910A0
+        void lock_access() {
+            access_lock.acquire();
+        }
+
+        // sub_4910B0
+        void unlock_access() {
+            access_lock.release();
+        }
+
+        // sub_4B3300
+        void set_puppet_goto_destination(vector3d destination) {
+            goto_destinations.clear();
+            goto_destinations.push_back(destination);
+        }
+
+        // sub_4B3340
+        void set_puppet_goto_destinations(const mash::vector_basic<vector3d>* destinations) {
+            goto_destinations = *destinations;
+        }
     };
 
     inline const string_hash biped_layer_inode_key            = string_hash(hash::djb2("biped_layer_inode"));
@@ -207,17 +314,30 @@ namespace treyarch {
         }
     };
 
+    class crawl_layer_inode : public loco_inode {
+
+    public:
+        u8 reserved_0b0[0xC8];
+
+        void attach_to_surface   (const line_info &lif, const vector3d &desired_forward);
+        void release_from_surface(const vector3d &desired_forward);
+    };
+
     class swift_stationary_layer_inode : public loco_inode {
 
     public:
         u8 reserved_0b0[0x08];
     };
 
+    inline const string_hash teleport_target_pos_key = string_hash(hash::djb2("teleport_target_pos"));
+
     class teleporting_layer_inode : public swift_stationary_layer_inode {
 
     public:
         arch_base_vhandle unk_0b8;           // als::combat_pole_swing_attach swings the ai round it
         u8                reserved_0bc[0x1C];
+
+        vector3d get_teleport_target_pos() const;
     };
 
     // the hero's; wall_po is the wall's facing (z) and up (y) that wallsprint_mocomp runs along
@@ -243,9 +363,10 @@ namespace treyarch {
     ASSERT_SIZEOF  (als_inode,         0x38);
     ASSERT_OFFSETOF(als_inode, my_als, 0x30);
 
-    ASSERT_SIZEOF  (loco_inode,          0xB0);
-    ASSERT_OFFSETOF(loco_inode, unk_08c, 0x8C);
-    ASSERT_OFFSETOF(loco_inode, unk_0ac, 0xAC);
+    ASSERT_SIZEOF  (loco_inode,                    0xB0);
+    ASSERT_OFFSETOF(loco_inode, loco_als_category, 0x84);
+    ASSERT_OFFSETOF(loco_inode, unk_08c,           0x8C);
+    ASSERT_OFFSETOF(loco_inode, unk_0ac,           0xAC);
 
     ASSERT_SIZEOF  (flight_layer_inode,          0x150);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);
@@ -253,6 +374,19 @@ namespace treyarch {
     ASSERT_OFFSETOF(flight_layer_inode, unk_115, 0x115);
     ASSERT_OFFSETOF(flight_layer_inode, unk_118, 0x118);
     ASSERT_OFFSETOF(flight_layer_inode, unk_128, 0x128);
+
+    ASSERT_SIZEOF  (aim_util_inode,                    0x5E8);
+    ASSERT_OFFSETOF(aim_util_inode, flags,             0x030);
+    ASSERT_OFFSETOF(aim_util_inode, target_to_look_at, 0x5C0);
+
+    ASSERT_SIZEOF(ai_car_inode, 0xA0);
+
+    ASSERT_SIZEOF  (std_puppet_inode,                    0x60);
+    ASSERT_OFFSETOF(std_puppet_inode, slaves,            0x30);
+    ASSERT_OFFSETOF(std_puppet_inode, goto_destinations, 0x40);
+    ASSERT_OFFSETOF(std_puppet_inode, access_lock,       0x50);
+
+    ASSERT_SIZEOF(crawl_layer_inode, 0x178);
 
     ASSERT_SIZEOF  (std_carry_inode,                0x68);
     ASSERT_OFFSETOF(std_carry_inode, carry_master,  0x30);

@@ -29,7 +29,10 @@ namespace treyarch {
         boolx             queued_for_collision_check;
         u8                pad_05b[0x01];
 
-        line_info() = default;
+        // sub_79E910
+        line_info() : start(references::unk_01073f40.get()), end(references::unk_01073f40.get()), hit_entity(), collision(false), checked_collision(false), queued_for_collision_check(false) {
+            clear();
+        }
 
         // sub_4030F0
         // inlined @ sub_5C00F0

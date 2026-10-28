@@ -115,6 +115,7 @@ namespace treyarch { namespace chuck { namespace vm {
             allocated = false;
         }
 
+        // sub_83D760
         i32 size() const {
             return (i32)array->size();
         }

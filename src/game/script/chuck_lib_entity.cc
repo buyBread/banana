@@ -5,11 +5,13 @@
 #include "retail.hh"
 #include "game/als/als.hh"
 #include "game/als/param.hh"
+#include "game/amalga/resource_types.hh"
 #include "game/arch_base.hh"
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/global.hh"
+#include "game/line_info.hh"
 #include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/physics/physics_system.hh"
@@ -19,6 +21,8 @@
 #include "game/trigger.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/ai_vehicle.hh"
 #include "game/wds/ai/info_node.hh"
@@ -40,6 +44,7 @@
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/jq/native_locks.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
@@ -641,8 +646,29 @@ bool slf__script_get_sorted_entities_of_type__num__dynamic_array__t::operator()(
     return true;
 }
 
+// sub_850550
 bool slf__crawl_attach_to_surface__entity__line_info__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850550)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self            = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto lif             = (const line_info*)stack.local_uint(0x04);
+    auto desired_forward = (const vector3d*)&stack.local_uint(0x08);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    ai_core* core = self->get_ai_core();
+
+    if (!core)
+        return true;
+
+    auto* crawl = (crawl_layer_inode*)core->get_info_node(info_node_type_crawl_layer);
+
+    // only while crawling is the actor's locomotion
+    if (crawl && core->my_loco_inode == crawl)
+        crawl->attach_to_surface(*lif, *desired_forward);
+
+    return true;
 }
 
 // sub_843680
@@ -4774,16 +4800,68 @@ bool slf__entity__set_ai_param_vector3d__str__vector3d__t::operator()(chuck::vm:
     return true;
 }
 
+// sub_84D9B0
 bool slf__entity__get_ai_idle_type__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D9B0)(this, stack);
+    stack.sp -= 0x04;
+
+    // the receiver resolves twice, the second answer is used
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = core ? (f32)core->idle_type : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DA10
 bool slf__entity__set_ai_idle_type__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DA10)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self      = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto idle_type = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (ai_core* core = self->get_ai_core())
+        core->idle_type = (i32)idle_type;
+
+    return true;
 }
 
+// sub_84DA50
 bool slf__entity__has_inode__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DA50)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        string_hash inode_name;
+        inode_name.initialize(mash::ALLOCATED, name);
+
+        if (core->get_info_node(get_info_node_type(inode_name)))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84DAE0
@@ -5228,20 +5306,161 @@ bool slf__entity__set_inode_param_vector3d__str__str__vector3d__t::operator()(ch
     return true;
 }
 
+// sub_84E6C0
 bool slf__entity__push_ai_base_machine_immediately__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E6C0)(this, stack);
+    stack.sp -= 0x0C;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // the script's instance lock and the machine lock are let go while the machine changes
+    ref_unlock_scope instance_unlock(stack.thread->inst->parent->instance_lock);
+    ref_unlock_scope machine_unlock(&jq::references::unk_010f7748.get());
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other      = arch_base_vhandle(stack.local_uint(0x04));
+    auto graph_name = (const char*)stack.local_uint(0x08);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, graph_name);
+
+        resource_key graph;
+        graph.set(name, (u32)amalga::e_resource_type::ai_state_graph);
+
+        // the other entity's core, or this one's
+        auto*    other_actor = (actor*)other.resolve();
+        ai_core* other_core  = other_actor ? other_actor->get_ai_core() : nullptr;
+
+        if (!other_core)
+            other_core = core;
+
+        if (core->push_base_machine(other_core, graph, true))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E840
 bool slf__entity__pop_ai_base_machine_immediately__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E840)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // same
+    ref_unlock_scope instance_unlock(stack.thread->inst->parent->instance_lock);
+    ref_unlock_scope machine_unlock(&jq::references::unk_010f7748.get());
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto graph_name = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, graph_name);
+
+        resource_key graph;
+        graph.set(name, (u32)amalga::e_resource_type::ai_state_graph);
+
+        if (core->pop_base_machine(graph, true))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E9A0
 bool slf__entity__change_locomotion_machine__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E9A0)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // same
+    ref_unlock_scope instance_unlock(stack.thread->inst->parent->instance_lock);
+    ref_unlock_scope machine_unlock(&jq::references::unk_010f7748.get());
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto inode_name = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (!core) {
+        stack.push(&result, sizeof(result));
+
+        return true;
+    }
+
+    auto target = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // the entity stays suspended until the machine has changed, which the recall reports
+    if (stack.thread->entry) {
+        target->unsuspend(true);
+
+        result = 1.0f;
+        stack.push(&result, sizeof(result));
+
+        return true;
+    }
+
+    target->suspend(true);
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, inode_name);
+
+    if (core->change_locomotion_machine(name))
+        return false;
+
+    target->unsuspend(true);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84EBB0
 bool slf__entity__change_locomotion_category__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84EBB0)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // same
+    ref_unlock_scope instance_unlock(stack.thread->inst->parent->instance_lock);
+    ref_unlock_scope machine_unlock(&jq::references::unk_010f7748.get());
+
+    auto self     = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto category = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+        string_hash name;
+        name.initialize(mash::ALLOCATED, category);
+
+        core->my_loco_inode->set_loco_als_category(name);
+
+        result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84ECF0
@@ -5316,28 +5535,190 @@ bool slf__entity__ai_break_morale_force_flee__entity__num__t::operator()(chuck::
     return true;
 }
 
+// sub_84EEB0
 bool slf__entity__get_ai_base_machine_state_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84EEB0)(this, stack);
+    stack.sp -= 0x04;
+
+    // the receiver resolves twice, the second answer is used
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // neither the entity nor its core is tested
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    string_hash result = core->my_base_machine->get_curr_state_name();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84EF10
 bool slf__entity__is_enemy__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84EF10)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self  = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other = arch_base_vhandle(stack.local_uint(0x04));
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        auto other_actor = (actor*)other.resolve();
+
+        if (other_actor && other_actor->is_an_actor() && other_actor->has_base_ai_data() &&
+            ai_team::is_enemy(core->my_team, other_actor->get_ai_core()->my_team))
+
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84EFC0
 bool slf__entity__is_enemy_of_team__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84EFC0)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self      = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto team_name = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        string_hash team;
+        team.initialize(mash::ALLOCATED, team_name);
+
+        if (ai_team::is_enemy(core->my_team, ai_team::get_enum_by_hash(team)))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F060
 bool slf__entity__is_friend__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F060)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self  = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other = arch_base_vhandle(stack.local_uint(0x04));
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        auto other_actor = (actor*)other.resolve();
+
+        if (other_actor && other_actor->is_an_actor() && other_actor->has_base_ai_data() &&
+            ai_team::is_friend(core->my_team, other_actor->get_ai_core()->my_team))
+
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F110
 bool slf__entity__is_friend_of_team__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F110)(this, stack);
+    stack.sp -= 0x08;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self      = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto team_name = (const char*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        string_hash team;
+        team.initialize(mash::ALLOCATED, team_name);
+
+        if (ai_team::is_friend(core->my_team, ai_team::get_enum_by_hash(team)))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F1B0
 bool slf__entity__ai_has_clear_line_of_fire__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F1B0)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 radius = count - 1 > 0 ? stack.local_num(0x08) : 1.0f;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    bool clear = true;
+
+    if (core) {
+        auto target = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+        const vector3d* start = &core->get_actor()->my_abs_po->get_position();
+
+        vector3d end;
+
+        // without a target the line runs 50 units along the actor's facing
+        if (target)
+            end = target->my_abs_po->get_position();
+        else
+            end = *start + core->get_actor()->my_abs_po->get_z_facing() * 50.0f;
+
+        line_info line(*start, end);
+
+        // the world cuts it short, just off the hit
+        if (retail::sub_798F50((char*)&line, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) // line_info::check_collision
+            end = line.hit_pos + line.hit_norm * 0.01f;
+
+        // any core that isn't an enemy standing in the way blocks it
+        for (ai_core_list* list : { &references::ai_core_list_high.get(), &references::ai_core_list_low.get() }) {
+            for (ai_core_list_node* node = list->head; node && clear; node = node->next) {
+                if (ai_team::is_enemy(core->my_team, node->core->my_team))
+                    continue;
+
+                if (retail::sub_823A00((i32*)node->core->get_actor(), (f32*)start, (f32*)&end, radius))
+                    clear = false;
+            }
+        }
+
+        retail::sub_798F10((u8*)&line); // line_info::~line_info
+    }
+
+    f32 result = clear ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__has_als_category__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -5518,12 +5899,87 @@ bool slf__entity__has_ai_core__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_8505E0
 bool slf__entity__crawl_attach_to_surface__vector3d__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8505E0)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self            = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto position        = (const vector3d*)&stack.local_uint(0x04);
+    auto desired_forward = (const vector3d*)&stack.local_uint(0x10);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    ai_core* core = self->get_ai_core();
+
+    if (!core)
+        return true;
+
+    auto* crawl = (crawl_layer_inode*)core->get_info_node(info_node_type_crawl_layer);
+
+    // only while crawling is the actor's locomotion
+    if (!crawl || core->my_loco_inode != crawl)
+        return true;
+
+    line_info surface;
+    vector3d  up(0.0f, 1.0f, 0.0f);
+
+    if (retail::sub_42EFF0((f32*)position, 5.0f, (f32*)&surface, (i32*)&up, true, false)) { // get_best_surface_pos
+        // a second look straight into the surface from just off it; the nearer hit wins
+        line_info probe;
+        probe.start = *position + surface.hit_norm * 0.1f;
+        probe.end   = probe.start - surface.hit_norm * 5.25f;
+
+        if (retail::sub_798F50((char*)&probe, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) { // line_info::check_collision
+            vector3d to_probe   = probe.hit_pos - *position;
+            vector3d to_surface = surface.hit_pos - *position;
+
+            f64 probe_distance   = retail::sub_582FC0((f32*)&to_probe);
+            f64 surface_distance = retail::sub_582FC0((f32*)&to_surface);
+
+            if (surface_distance > probe_distance)
+                crawl->attach_to_surface(probe, *desired_forward);
+            else
+                crawl->attach_to_surface(surface, *desired_forward);
+        } else
+            crawl->attach_to_surface(surface, *desired_forward);
+
+        retail::sub_798F10((u8*)&probe); // line_info::~line_info
+    }
+
+    retail::sub_798F10((u8*)&surface); // line_info::~line_info
+
+    return true;
 }
 
+// sub_850990
 bool slf__entity__crawl_release_from_surface__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850990)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self            = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto desired_forward = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    ai_core* core = self->get_ai_core();
+
+    if (!core)
+        return true;
+
+    auto* crawl = (crawl_layer_inode*)core->get_info_node(info_node_type_crawl_layer);
+
+    if (!crawl)
+        return true;
+
+    // a player lets go while its interface says it's crawling, anyone else while crawling is its locomotion
+    if (self->has_ifc(entity_ifc_player)) {
+        if (self->player_ifc()->crawling())
+            crawl->release_from_surface(*desired_forward);
+    } else if (core->my_loco_inode == crawl)
+        crawl->release_from_surface(*desired_forward);
+
+    return true;
 }
 
 // sub_850A60
@@ -5931,16 +6387,74 @@ bool slf__entity__rocket_disable_guidance__t::operator()(chuck::vm::vm_stack &st
     return true;
 }
 
+// sub_8520C0
 bool slf__entity__force_ai_enter_car__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8520C0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self    = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto car     = arch_base_vhandle(stack.local_uint(0x04));
+    auto seat    = stack.local_num(0x08);
+    auto animate = stack.local_num(0x0C);
+
+    ai_core* core = self && self->is_an_actor() ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        auto vehicle = (entity*)car.resolve();
+
+        if (vehicle && vehicle->is_a_conglomerate() && vehicle->has_occupant_ifc()) {
+            auto* car_inode = (ai_car_inode*)core->get_info_node(info_node_type_ai_car);
+
+            if (car_inode && car_inode->force_enter_car(car, (i32)seat, animate > 0.5f))
+                result = 1.0f;
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8521B0
 bool slf__entity__force_ai_exit_car__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8521B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self    = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto animate = stack.local_num(0x04);
+
+    ai_core* core = self && self->is_an_actor() ? self->get_ai_core() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (core) {
+        auto* car_inode = (ai_car_inode*)core->get_info_node(info_node_type_ai_car);
+
+        if (car_inode && car_inode->force_exit_car(animate > 0.5f))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852270
 bool slf__entity__get_car_seat__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852270)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    i32 seat = -1;
+
+    if (self && self->is_an_actor())
+        seat = retail::sub_4CB950((i32)self); // get_car_seat
+
+    f32 result = (f32)seat;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__is_seat_taken__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -6335,40 +6849,149 @@ bool slf__entity__get_simple_variant__t::operator()(chuck::vm::vm_stack &stack) 
     return true;
 }
 
+// sub_853120
 bool slf__entity__aim_head__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853120)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    // the look-at natives don't test the core
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head, enable > 0.0f);
+
+    return true;
 }
 
+// sub_8531B0
 bool slf__entity__aim_head_direct__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8531B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head_direct, enable > 0.0f);
+
+    return true;
 }
 
+// sub_853240
 bool slf__entity__aim_head_and_eyes__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853240)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head_and_eyes, enable > 0.0f);
+
+    return true;
 }
 
+// sub_8532D0
 bool slf__entity__aim_head_eyes_and_upper_body__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8532D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head_eyes_and_upper_body, enable > 0.0f);
+
+    return true;
 }
 
+// sub_853360
 bool slf__entity__aim_head_and_upper_body__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853360)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head_and_upper_body, enable > 0.0f);
+
+    return true;
 }
 
+// sub_8533F0
 bool slf__entity__aim_head_and_upper_body_direct__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8533F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_head_and_upper_body_direct, enable > 0.0f);
+
+    return true;
 }
 
+// sub_853480
 bool slf__entity__aim_left_arm__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853480)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_left_arm, enable > 0.0f);
+
+    return true;
 }
 
+// sub_853510
 bool slf__entity__aim_right_arm__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853510)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->set_flag(aim_util_flag_aim_right_arm, enable > 0.0f);
+
+    return true;
 }
 
+// sub_8535A0
 bool slf__entity__update_target_to_look_at__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8535A0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !self->is_a_conglomerate())
+        return true;
+
+    if (auto* aim = (aim_util_inode*)self->get_ai_core()->get_info_node(info_node_type_aim_util))
+        aim->target_to_look_at = *target;
+
+    return true;
 }
 
 // sub_853620
@@ -6579,8 +7202,32 @@ bool slf__entity__physical_ifc_set_dynamic_pendulum_maintain_abs_orient__num__nu
     return true;
 }
 
+// sub_879DA0
 bool slf__entity__set_puppet_slave_array__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_879DA0)(this, stack);
+    stack.sp -= 0x08;
+
+    // the receiver resolves twice, the second answer is used
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto slaves = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    if (!core)
+        return true;
+
+    auto* puppet = (std_puppet_inode*)core->get_info_node(info_node_type_std_puppet);
+
+    if (!puppet)
+        return true;
+
+    puppet->slaves.clear();
+
+    for (i32 index = 0; index < (i32)slaves->size(); ++index)
+        puppet->slaves.push_back(arch_base_vhandle(*(u32*)(*slaves)[index].stuff));
+
+    return true;
 }
 
 // sub_853A20
@@ -6617,8 +7264,25 @@ bool slf__entity__set_floor_offset_override__num__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_853B00
 bool slf__entity__can_be_web_yanked__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853B00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        string_hash allow_web_yank;
+        allow_web_yank.initialize(mash::ALLOCATED, "allow_web_yank");
+
+        if (self->get_ai_core()->my_param_block.get_optional_pb_int(allow_web_yank, 1, nullptr))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_853BD0
@@ -6676,8 +7340,25 @@ bool slf__entity__set_crawlable__num__t::operator()(chuck::vm::vm_stack &stack) 
     return true;
 }
 
+// sub_853E10
 bool slf__entity__in_combat_state__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853E10)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_core* core = self && self->is_an_actor() ? self->get_ai_core() : nullptr;
+
+    f32 result = -1.0f;
+
+    if (core && core->my_base_machine) {
+        base_state* state = core->my_base_machine->my_curr_state;
+
+        result = state && state->is_combat_state() ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_tentacle_end_target__uint__entity__t::operator()(chuck::vm::vm_stack &stack) {
@@ -6720,6 +7401,21 @@ bool slf__entity__stop_all_effects__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_854410)(this, stack);
 }
 
+// sub_854450
 bool slf__entity__get_teleport_target_position__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_854450)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    // the core isn't tested
+    if (self && self->is_an_actor()) {
+        if (auto* teleport = (teleporting_layer_inode*)self->get_ai_core()->get_info_node(info_node_type_teleporting_layer))
+            result = teleport->get_teleport_target_pos();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }

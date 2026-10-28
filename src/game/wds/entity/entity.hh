@@ -92,6 +92,11 @@ namespace treyarch {
             return my_ifc_storage && my_ifc_storage->has_ifc(index);
         }
 
+        // sub_48E6E0
+        bool has_occupant_ifc() const {
+            return has_ifc(entity_ifc_occupant);
+        }
+
         // inlined; the milestone's entity_base::<name>_ifc()
         damage_interface* damage_ifc() const {
             return (damage_interface*)my_ifc_storage->get_ifc(entity_ifc_damage);

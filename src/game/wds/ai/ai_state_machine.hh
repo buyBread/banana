@@ -1,15 +1,32 @@
 #pragma once
 
 #include "vc8/vector.hh"
+#include "game/wds/ai/state_graph.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
     class ai_core;
-    class base_state;
-    class mashed_state;
     class param_block;
-    class state_graph;
+
+    // a machine's running state, made from its mashed_state
+    class base_state : public mash::mash_virtual_base {
+
+    public:
+        const mashed_state* my_mashed_state;
+
+        // sub_4C4940
+        string_hash get_name() const {
+            return my_mashed_state->get_name();
+        }
+
+        // slot 15; true only for combat_state
+        bool is_combat_state() const {
+            return ((bool (__thiscall*)(const base_state*))(*(void***)this)[15])(this);
+        }
+    };
 
     class ai_state_machine {
 
@@ -27,7 +44,20 @@ namespace treyarch {
         const mashed_state*           my_interrupted_state;
         const param_block*            my_interrupted_params;
               u32                     my_exit_status;
+
+        // sub_4C6900
+        string_hash get_curr_state_name() const { // "invalid" without a current state
+            if (my_curr_state)
+                return my_curr_state->get_name();
+
+            string_hash name;
+            name.initialize(mash::ALLOCATED, "invalid");
+
+            return name;
+        }
     };
+
+    ASSERT_OFFSETOF(base_state, my_mashed_state, 0x04);
 
     ASSERT_SIZEOF  (ai_state_machine,                        0x3C);
     ASSERT_OFFSETOF(ai_state_machine, my_core,               0x04);

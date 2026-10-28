@@ -64,6 +64,11 @@ namespace treyarch {
         ai_core*                               get_ai_core() const;
         als::animation_logic_system_interface* get_als() const;
 
+        // sub_602850
+        bool has_base_ai_data() const {
+            return my_base_ai_data != nullptr;
+        }
+
         // slot 136
         bool is_a_rocket() const {
             return ((bool (__thiscall*)(const actor*))vtable[136])(this);

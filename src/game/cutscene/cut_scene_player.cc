@@ -308,7 +308,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
             ((void (__thiscall*)(generic_interface*))((void**)ise->vtable)[21])(ise); // slot 21
         }
 
-        ((actor*)hero)->get_ai_core()->unk_5bc = 1;
+        ((actor*)hero)->get_ai_core()->idle_type = 1;
     }
 
     auto chase = (spiderman_camera*)references::g_world_ptr.read()->get_chase_cam_ptr();
@@ -626,7 +626,7 @@ void cut_scene_player::stop(cut_scene* only) {
             if (hero->has_ifc(entity_ifc_standing))
                 hero->standing_ifc()->enable(true);
 
-            ((actor*)references::g_world_ptr.read()->get_hero_ptr())->get_ai_core()->unk_5bc = 0;
+            ((actor*)references::g_world_ptr.read()->get_hero_ptr())->get_ai_core()->idle_type = 0;
 
             player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
 

@@ -109,9 +109,9 @@ namespace treyarch {
         u32                             record_slot_mask;     // bit n is set while records[n] is in use
         u8                              records[32][0x2C];
         vc8::list<void*>                active_records;       // entries point into records
-        u32                             unk_5bc;              // the als's ai_idle_type; the cut scene player sets it while it has the hero
-        u32                             unk_5c0;              // the als's ai_walk_run_cycle
-        u32                             unk_5c4;              // the als's ai_walk_item
+        i32                             idle_type;            // the cut scene player sets it while it has the hero
+        i32                             walk_run_cycle;
+        i32                             walk_item;
         u8                              reserved_5c8[0x0C];
         ai_state_machine*               my_base_machine;
         ai_state_machine*               my_locomotion_machine;
@@ -170,6 +170,10 @@ namespace treyarch {
         bool     set_facing_point(const vector3d &point, f32 rot_speed_deg);
         bool     stop_movement();
 
+        bool push_base_machine(ai_core* other_core, const resource_key &the_state_graph, bool do_it_now); // other_core null means this one
+        bool pop_base_machine (const resource_key &the_state_graph, bool do_it_now);
+        bool change_locomotion_machine(string_hash the_loco_inode);
+
         void enter_limbo();
         void exit_limbo();
 
@@ -189,8 +193,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, record_slot_mask,       0x02C);
     ASSERT_OFFSETOF(ai_core, records,                0x030);
     ASSERT_OFFSETOF(ai_core, active_records,         0x5B0);
-    ASSERT_OFFSETOF(ai_core, unk_5bc,                0x5BC);
-    ASSERT_OFFSETOF(ai_core, unk_5c4,                0x5C4);
+    ASSERT_OFFSETOF(ai_core, idle_type,              0x5BC);
+    ASSERT_OFFSETOF(ai_core, walk_item,              0x5C4);
     ASSERT_OFFSETOF(ai_core, my_base_machine,        0x5D4);
     ASSERT_OFFSETOF(ai_core, my_machine_list,        0x5DC);
     ASSERT_OFFSETOF(ai_core, my_mode,                0x5F4);

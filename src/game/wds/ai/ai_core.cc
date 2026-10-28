@@ -2,6 +2,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/core_ai_resource.hh"
 #include "game/wds/ai/fight_director.hh"
+#include "game/math/references.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
@@ -135,6 +136,27 @@ void std_fear_inode::break_morale_force_flee(vector3d position, f32 unk) {
 
 void std_fear_inode::break_morale_force_flee(arch_base_vhandle target, f32 unk) {
     ((void (__thiscall*)(std_fear_inode*, arch_base_vhandle, f32))retail::sub_457650)(this, target, unk);
+}
+
+bool ai_car_inode::force_enter_car(arch_base_vhandle car, i32 seat, bool animate) {
+    return ((bool (__thiscall*)(ai_car_inode*, arch_base_vhandle, i32, bool))retail::sub_4C15F0)(this, car, seat, animate);
+}
+
+bool ai_car_inode::force_exit_car(bool animate) {
+    return retail::sub_4BFA10((i32)this, animate);
+}
+
+void crawl_layer_inode::attach_to_surface(const line_info &lif, const vector3d &desired_forward) {
+    retail::sub_45AC10((u8*)this, (i32)&lif, (f32*)&desired_forward);
+}
+
+void crawl_layer_inode::release_from_surface(const vector3d &desired_forward) {
+    retail::sub_45B250(this, (i32)&desired_forward);
+}
+
+// sub_452D60
+vector3d teleporting_layer_inode::get_teleport_target_pos() const {
+    return my_param_block.get_optional_pb_vector3d(teleport_target_pos_key, references::unk_00fc3d70.get(), nullptr);
 }
 
 // sub_4C2EA0
@@ -280,6 +302,18 @@ bool ai_core::stop_movement() {
     lock->release();
 
     return stopped;
+}
+
+bool ai_core::push_base_machine(ai_core* other_core, const resource_key &the_state_graph, bool do_it_now) {
+    return retail::sub_4DE730((i32*)this, (i32*)other_core, (u32*)&the_state_graph, do_it_now);
+}
+
+bool ai_core::pop_base_machine(const resource_key &the_state_graph, bool do_it_now) {
+    return retail::sub_4DE570((i32)this, (u32*)&the_state_graph, do_it_now);
+}
+
+bool ai_core::change_locomotion_machine(string_hash the_loco_inode) {
+    return retail::sub_4CC6E0((i32)this, (i32)the_loco_inode.source_hash_code);
 }
 
 // sub_4CE030

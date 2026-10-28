@@ -197,6 +197,70 @@ namespace treyarch {
                 lock.state = 0;
             }
         }
+
+        // sub_8233F0
+        void lock_refs(i32 count) { // takes the lock again until ref_count reaches count
+            if (count <= 0)
+                return;
+
+            do {
+                lock.acquire();
+
+                ++ref_count;
+            } while (ref_count < count);
+        }
+    };
+
+    // hands back every reference held on the mutex for its lifetime, then takes them all again
+    class ref_unlock_scope {
+
+        ref_counted_simple_mutex* m_lock;
+        i32                       m_count;
+
+    public:
+
+        // sub_823430
+        // sub_823500
+        explicit ref_unlock_scope(ref_counted_simple_mutex* lock) : m_lock(lock) {
+            if (!m_lock) {
+                m_count = 0;
+
+                return;
+            }
+
+            m_lock->lock_ref();
+
+            i32 count = m_lock->ref_count;
+
+            if (count > 0) {
+                u32 depth = m_lock->lock.depth;
+
+                m_lock->ref_count = 0;
+
+                for (i32 remaining = count; remaining; --remaining) {
+                    if (!--depth) {
+                        m_lock->lock.owner = 0;
+                        m_lock->lock.state = 0;
+                    }
+                }
+
+                m_lock->lock.depth = depth;
+            }
+
+            m_count = count;
+        }
+
+        // sub_823490
+        ~ref_unlock_scope() {
+            if (!m_lock)
+                return;
+
+            m_lock->lock_refs(m_count);
+            m_lock->unlock_ref();
+        }
+
+        ref_unlock_scope           (const ref_unlock_scope&) = delete;
+        ref_unlock_scope &operator=(const ref_unlock_scope&) = delete;
     };
 
     class ref_lock_scope {

@@ -5,6 +5,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/cpu_combat_inode.hh"
+#include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 
@@ -810,12 +811,34 @@ bool slf__generic_event_callback__raised__t::operator()(chuck::vm::vm_stack &sta
     return ((invoke_t)retail::sub_867F50)(this, stack);
 }
 
+// sub_868030
 bool slf__entity__ai_puppet_lock_access__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_868030)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet))
+        puppet->lock_access();
+
+    return true;
 }
 
+// sub_8680A0
 bool slf__entity__ai_puppet_unlock_access__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8680A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* puppet = (std_puppet_inode*)self->get_ai_core()->get_info_node(info_node_type_std_puppet))
+        puppet->unlock_access();
+
+    return true;
 }
 
 bool slf__entity__ai_set_mutation_scale__str__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {

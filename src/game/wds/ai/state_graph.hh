@@ -27,6 +27,11 @@ namespace treyarch {
             <mash::virtual_types_key> my_default_state_transitions;
         u8                            pad_03c[0x04];
 
+        // sub_72C640
+        string_hash get_name() const {
+            return my_name;
+        }
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,
