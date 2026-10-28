@@ -4,10 +4,21 @@
 #include "treyarch/chuck/script_library/script_library_function.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/mash/string.hh"
+#include "treyarch/mash/string_hash.hh"
+#include "game/arch_base_vhandle.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_core;
+    class info_node;
+    class param_block;
+
+    // the entity's own ai params come from its ai core, a vehicle's from its ai's inode
+    string_hash  get_ai_param_hash_and_core (arch_base_vhandle handle, const char* param_name, ai_core** core);
+    string_hash  get_ai_param_hash_and_inode(arch_base_vhandle handle, const char* param_name, const char* inode_name, info_node** node);
+    param_block* get_ai_param_block         (arch_base_vhandle handle, const char* param_name, string_hash &parameter, bool* resolved = nullptr);
+
     class slc_entity_t : public chuck::script_library::script_library_class {
 
     public:

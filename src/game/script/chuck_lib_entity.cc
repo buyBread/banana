@@ -1,11 +1,106 @@
 #include <cstring>
 
 #include "retail.hh"
+#include "game/als/als.hh"
+#include "game/als/param.hh"
 #include "game/arch_base.hh"
+#include "game/math/references.hh"
 #include "game/script/chuck_lib_entity.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_vehicle.hh"
+#include "game/wds/ai/info_node.hh"
+#include "game/wds/ai/param_block.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/vehicle.hh"
 #include "treyarch/mash/string_hash.hh"
 
 using namespace treyarch;
+
+// sub_8239C0
+string_hash treyarch::get_ai_param_hash_and_core(arch_base_vhandle handle, const char* param_name, ai_core** core) {
+    arch_base* entity = handle.resolve();
+
+    *core = entity ? ((actor*)entity)->get_ai_core() : nullptr;
+
+    string_hash parameter;
+    parameter.initialize(mash::ALLOCATED, param_name);
+
+    return parameter;
+}
+
+// sub_83DFC0
+string_hash treyarch::get_ai_param_hash_and_inode(arch_base_vhandle  handle,
+                                                  const char*        param_name,
+                                                  const char*        inode_name,
+                                                  info_node**        node) {
+
+    arch_base* entity = handle.resolve();
+    ai_core*   core   = entity ? ((actor*)entity)->get_ai_core() : nullptr;
+
+    string_hash parameter;
+    parameter.initialize(mash::ALLOCATED, param_name);
+
+    if (!core) {
+        *node = nullptr;
+
+        return parameter;
+    }
+
+    string_hash type_name;
+    type_name.initialize(mash::ALLOCATED, inode_name);
+
+    *node = core->get_info_node(get_info_node_type(type_name));
+
+    return parameter;
+}
+
+// inlined @ sub_84C540
+// inlined @ sub_84C620
+// inlined @ sub_84C740
+// inlined @ sub_84C840
+// inlined @ sub_84C910
+// inlined @ sub_84C9F0
+// inlined @ sub_84CAD0
+// inlined @ sub_84CBD0
+// inlined @ sub_84CCD0
+// inlined @ sub_84CDC0
+// inlined @ sub_84CEA0
+// inlined @ sub_84CF60
+// inlined @ sub_84D0D0
+// inlined @ sub_84D1E0
+// inlined @ sub_84D3C0
+// inlined @ sub_84D470
+// inlined @ sub_84D520
+// inlined @ sub_84D600
+// inlined @ sub_84D6B0
+// inlined @ sub_84D760
+// inlined @ sub_84D830
+// inlined @ sub_84D900
+param_block* treyarch::get_ai_param_block(arch_base_vhandle  handle,
+                                          const char*        param_name,
+                                          string_hash       &parameter,
+                                          bool*              resolved) {
+
+    arch_base* entity = handle.resolve();
+
+    if (resolved)
+        *resolved = entity != nullptr;
+
+    if (!entity)
+        return nullptr;
+
+    // a vehicle's are its ai's
+    if (entity->is_a_vehicle()) {
+        parameter.initialize(mash::ALLOCATED, param_name);
+
+        return &((vehicle*)entity)->my_ai->my_inode->my_param_block;
+    }
+
+    ai_core* core;
+    parameter = get_ai_param_hash_and_core(handle, param_name, &core);
+
+    return core ? &core->my_param_block : nullptr;
+}
 
 // sub_83DAE0
 u32 slc_entity_t::find_instance(const mash::string &name) const {
@@ -704,92 +799,409 @@ bool slf__entity__is_enx_script_related__uint__t::operator()(chuck::vm::vm_stack
     return ((invoke_t)retail::sub_84C490)(this, stack);
 }
 
+// sub_84C540
 bool slf__entity__get_ai_param_float__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C540)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    bool         resolved;
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter, &resolved);
+
+    f32 result = !resolved ? -1.0f : block ? block->get_pb_float(parameter) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C620
 bool slf__entity__get_ai_param_float_variance__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C620)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    bool         resolved;
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter, &resolved);
+
+    f32 result = !resolved ? -1.0f : block ? block->get_pb_float_variance(parameter).get_random_value() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C740
 bool slf__entity__get_ai_param_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C740)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    arch_base_vhandle result = block ? block->get_pb_entity(parameter) : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C840
 bool slf__entity__get_ai_param_int__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C840)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    bool         resolved;
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter, &resolved);
+
+    f32 result = !resolved ? -1.0f : block ? (f32)block->get_pb_int(parameter) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C910
 bool slf__entity__get_ai_param_str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C910)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    const char* result = block ? block->get_pb_fixedstring(parameter) : "";
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C9F0
 bool slf__entity__get_ai_param_hash__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C9F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    string_hash result = block ? block->get_pb_hash(parameter) : string_hash();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CAD0
 bool slf__entity__get_ai_param_vector3d__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CAD0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    vector3d result = block ? block->get_pb_vector3d(parameter) : references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CBD0
 bool slf__entity__get_optional_ai_param_entity__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CBD0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_value = arch_base_vhandle(stack.local_uint(0x08));
+
+    bool         resolved;
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter, &resolved);
+
+    arch_base_vhandle result = !resolved ? arch_base_vhandle() :
+        block ? block->get_optional_pb_entity(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CCD0
 bool slf__entity__get_optional_ai_param_float__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CCD0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_value = stack.local_num(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    f32 result = block ? block->get_optional_pb_float(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CDC0
 bool slf__entity__get_optional_ai_param_int__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CDC0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_value = stack.local_num(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    f32 result = block ? (f32)block->get_optional_pb_int(parameter, (i32)default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CEA0
 bool slf__entity__get_optional_ai_param_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CEA0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_value = (const char*)stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    const char* result = block ? block->get_optional_pb_fixedstring(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84CF60
 bool slf__entity__get_optional_ai_param_hash__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84CF60)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_name  = (const char*)stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    string_hash default_value;
+    default_value.initialize(mash::ALLOCATED, default_name);
+
+    string_hash result = block ? block->get_optional_pb_hash(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84D0D0
 bool slf__entity__get_optional_ai_param_vector3d__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D0D0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto default_value = (const vector3d*)&stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    vector3d result = block ? block->get_optional_pb_vector3d(parameter, *default_value, nullptr) : *default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84D1E0
 bool slf__entity__get_optional_ai_param_float_variance__str__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D1E0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    variance_variable<f32> default_value = { stack.local_num(0x08), stack.local_num(0x0C) };
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    f32 result = block ?
+        block->get_optional_pb_float_variance(parameter, default_value, nullptr).get_random_value() :
+        default_value.get_random_value_inline();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84D3C0
 bool slf__entity__set_ai_param_entity__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D3C0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = arch_base_vhandle(stack.local_uint(0x08));
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (block)
+        block->set_pb_entity(parameter, value);
+
+    return true;
 }
 
+// sub_84D470
 bool slf__entity__set_ai_param_float__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D470)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = stack.local_num(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (block)
+        block->set_pb_float(parameter, value);
+
+    return true;
 }
 
+// sub_84D520
 bool slf__entity__set_ai_param_float_variance__str__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D520)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (!block)
+        return true;
+
+    variance_variable<f32> value = { stack.local_num(0x08), stack.local_num(0x0C) };
+
+    block->set_pb_float_variance(parameter, value);
+
+    return true;
 }
 
+// sub_84D600
 bool slf__entity__set_ai_param_int__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D600)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = stack.local_num(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (block)
+        block->set_pb_int(parameter, (i32)value);
+
+    return true;
 }
 
+// sub_84D6B0
 bool slf__entity__set_ai_param_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D6B0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = (const char*)stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (block)
+        block->set_pb_fixedstring(parameter, value);
+
+    return true;
 }
 
+// sub_84D760
 bool slf__entity__set_ai_param_hash__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D760)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = (const char*)stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (!block)
+        return true;
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, value);
+
+    block->set_pb_hash(parameter, hash);
+
+    return true;
 }
 
+// sub_84D830
 bool slf__entity__set_ai_param_hash__str__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D830)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (!block)
+        return true;
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, nullptr, value);
+
+    block->set_pb_hash(parameter, hash);
+
+    return true;
 }
 
+// sub_84D900
 bool slf__entity__set_ai_param_vector3d__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84D900)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto param_name = (const char*)stack.local_uint(0x04);
+    auto value      = (const vector3d*)&stack.local_uint(0x08);
+
+    string_hash  parameter;
+    param_block* block = get_ai_param_block(self, param_name, parameter);
+
+    if (block)
+        block->set_pb_vector3d(parameter, *value);
+
+    return true;
 }
 
 bool slf__entity__get_ai_idle_type__t::operator()(chuck::vm::vm_stack &stack) {
@@ -804,96 +1216,446 @@ bool slf__entity__has_inode__str__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_84DA50)(this, stack);
 }
 
+// sub_84DAE0
 bool slf__entity__get_inode_param_float__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DAE0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? node->my_param_block.get_pb_float(parameter) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DB60
 bool slf__entity__get_inode_param_float_variance__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DB60)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? node->my_param_block.get_pb_float_variance(parameter).get_random_value_inline() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DC30
 bool slf__entity__get_inode_param_int__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DC30)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? (f32)node->my_param_block.get_pb_int(parameter) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DCB0
 bool slf__entity__get_inode_param_entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DCB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    arch_base_vhandle result = node ? node->my_param_block.get_pb_entity(parameter) : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DD30
 bool slf__entity__get_inode_param_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DD30)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    const char* result = node ? node->my_param_block.get_pb_fixedstring(parameter) : "";
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DDB0
 bool slf__entity__get_inode_param_hash__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DDB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? (f32)node->my_param_block.get_pb_hash(parameter).source_hash_code : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DE40
 bool slf__entity__get_inode_param_string_hash__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DE40)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    string_hash result = node ? node->my_param_block.get_pb_hash(parameter) : string_hash();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DEC0
 bool slf__entity__get_inode_param_vector3d__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DEC0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    vector3d result = node ? node->my_param_block.get_pb_vector3d(parameter) : references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DF50
 bool slf__entity__get_optional_inode_param_float__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DF50)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_value = stack.local_num(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? node->my_param_block.get_optional_pb_float(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84DFE0
 bool slf__entity__get_optional_inode_param_int__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84DFE0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_value = stack.local_num(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    f32 result = node ? (f32)node->my_param_block.get_optional_pb_int(parameter, (i32)default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E060
 bool slf__entity__get_optional_inode_param_entity__str__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E060)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_value = arch_base_vhandle(stack.local_uint(0x0C));
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    arch_base_vhandle result = node ? node->my_param_block.get_optional_pb_entity(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E0E0
 bool slf__entity__get_optional_inode_param_str__str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E0E0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_value = (const char*)stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    const char* result = node ? node->my_param_block.get_optional_pb_fixedstring(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E160
 bool slf__entity__get_optional_inode_param_hash__str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E160)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_name  = (const char*)stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    string_hash default_value;
+    default_value.initialize(mash::ALLOCATED, default_name);
+
+    string_hash hash = node ? node->my_param_block.get_optional_pb_hash(parameter, default_value, nullptr) : default_value;
+
+    f32 result = (f32)hash.source_hash_code;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E220
 bool slf__entity__get_optional_inode_param_string_hash__str__str__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E220)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_hash  = stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    string_hash default_value;
+    default_value.initialize(mash::ALLOCATED, nullptr, default_hash);
+
+    string_hash result = node ? node->my_param_block.get_optional_pb_hash(parameter, default_value, nullptr) : default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E2D0
 bool slf__entity__get_optional_inode_param_vector3d__str__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E2D0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto default_value = (const vector3d*)&stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    vector3d result = node ? node->my_param_block.get_optional_pb_vector3d(parameter, *default_value, nullptr) : *default_value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84E360
 bool slf__entity__set_inode_param_float__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E360)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = stack.local_num(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (node)
+        node->my_param_block.set_pb_float(parameter, value);
+
+    return true;
 }
 
+// sub_84E3C0
 bool slf__entity__set_inode_param_float_variance__str__str__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E3C0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (!node)
+        return true;
+
+    variance_variable<f32> value = { stack.local_num(0x0C), stack.local_num(0x10) };
+
+    node->my_param_block.set_pb_float_variance(parameter, value);
+
+    return true;
 }
 
+// sub_84E440
 bool slf__entity__set_inode_param_int__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E440)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = stack.local_num(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (node)
+        node->my_param_block.set_pb_int(parameter, (i32)value);
+
+    return true;
 }
 
+// sub_84E4A0
 bool slf__entity__set_inode_param_entity__str__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E4A0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = arch_base_vhandle(stack.local_uint(0x0C));
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (node)
+        node->my_param_block.set_pb_entity(parameter, value);
+
+    return true;
 }
 
+// sub_84E500
 bool slf__entity__set_inode_param_str__str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E500)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = (const char*)stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (node)
+        node->my_param_block.set_pb_fixedstring(parameter, value);
+
+    return true;
 }
 
+// sub_84E560
 bool slf__entity__set_inode_param_hash__str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E560)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = (const char*)stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (!node)
+        return true;
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, value);
+
+    node->my_param_block.set_pb_hash(parameter, hash);
+
+    return true;
 }
 
+// sub_84E5E0
 bool slf__entity__set_inode_param_hash__str__str__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E5E0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (!node)
+        return true;
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, nullptr, value);
+
+    node->my_param_block.set_pb_hash(parameter, hash);
+
+    return true;
 }
 
+// sub_84E660
 bool slf__entity__set_inode_param_vector3d__str__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84E660)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self       = arch_base_vhandle(stack.local_uint(0x00));
+    auto inode_name = (const char*)stack.local_uint(0x04);
+    auto param_name = (const char*)stack.local_uint(0x08);
+    auto value      = (const vector3d*)&stack.local_uint(0x0C);
+
+    info_node*  node;
+    string_hash parameter = get_ai_param_hash_and_inode(self, param_name, inode_name, &node);
+
+    if (node)
+        node->my_param_block.set_pb_vector3d(parameter, *value);
+
+    return true;
 }
 
 bool slf__entity__push_ai_base_machine_immediately__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1008,12 +1770,66 @@ bool slf__entity__get_als_current_normalized_time__t::operator()(chuck::vm::vm_s
     return ((invoke_t)retail::sub_84FED0)(this, stack);
 }
 
+// sub_84FF50
 bool slf__entity__set_als_param_float__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FF50)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00));
+    auto param = (const char*)stack.local_uint(0x04);
+    auto value = stack.local_num(0x08);
+
+    arch_base* entity = self.resolve();
+
+    if (!entity || !entity->is_an_actor())
+        return true;
+
+    als::animation_logic_system_interface* als = ((actor*)entity)->get_als();
+
+    if (!als)
+        return true;
+
+    als::state_machine_interface* layer = als->get_als_layer(als::base_layer);
+
+    if (!layer)
+        return true;
+
+    string_hash parameter;
+    parameter.initialize(mash::ALLOCATED, param);
+
+    layer->set_desired_param((als::external_float_parameter_types)als::find_param_id(parameter), value);
+
+    return true;
 }
 
+// sub_84FFD0
 bool slf__entity__set_als_param_vector3d__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FFD0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00));
+    auto param = (const char*)stack.local_uint(0x04);
+    auto value = (const vector3d*)&stack.local_uint(0x08);
+
+    arch_base* entity = self.resolve();
+
+    if (!entity || !entity->is_an_actor())
+        return true;
+
+    als::animation_logic_system_interface* als = ((actor*)entity)->get_als();
+
+    if (!als)
+        return true;
+
+    als::state_machine_interface* layer = als->get_als_layer(als::base_layer);
+
+    if (!layer)
+        return true;
+
+    string_hash parameter;
+    parameter.initialize(mash::ALLOCATED, param);
+
+    layer->set_desired_param((als::external_vector_parameter_types)als::find_param_id(parameter), *value);
+
+    return true;
 }
 
 bool slf__entity__get_als_data_float__str__t::operator()(chuck::vm::vm_stack &stack) {
