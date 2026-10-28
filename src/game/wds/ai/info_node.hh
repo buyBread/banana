@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "game/wds/ai/param_block.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/hash/algo.hh"
@@ -7,18 +9,20 @@
 #include "treyarch/mash/virtual_base.hh"
 #include "game/math/po.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
     class ai_core;
 
-    // baked into each node by its .BAI; only the indices shipped data uses
+    // baked into each node by its .BAI
     enum e_info_node_type : u32 {
         info_node_type_ai_action_processor     = 0,
         info_node_type_aim_util                = 1,
         info_node_type_aim_mech                = 2,
         info_node_type_cpu_combat              = 3,
         info_node_type_ai_item_holder          = 4,
+        info_node_type_ai_mutation             = 5,
         info_node_type_wall_sprint             = 6,
         info_node_type_ai_car                  = 7,
         info_node_type_ai_wander               = 8,
@@ -29,24 +33,52 @@ namespace treyarch {
         info_node_type_unmoving_layer          = 13,
         info_node_type_quad_path               = 14,
         info_node_type_std_carry               = 15,
+        info_node_type_ai_civilian_agressor    = 16,
         info_node_type_ai_civilian             = 17,
         info_node_type_ai_cover                = 18,
         info_node_type_crawl_layer             = 19,
         info_node_type_std_fear                = 20,
         info_node_type_flight_layer            = 21,
         info_node_type_jump_layer              = 22,
+        info_node_type_loco                    = 23,
+        info_node_type_path_graph              = 24,
         info_node_type_ai_rappel               = 25,
+        info_node_type_search                  = 26,
         info_node_type_slave                   = 27,
+        info_node_type_ai_switch               = 28,
+        info_node_type_target_search           = 29,
         info_node_type_combat_target           = 30,
         info_node_type_voice_box               = 31,
         info_node_type_ai_weapon               = 32,
+        info_node_type_hybrid_layer            = 33,
+        info_node_type_ai_root                 = 34,
+        info_node_type_ai_fd                   = 35,
         info_node_type_ai_basic                = 36,
         info_node_type_swift_surface_layer     = 37,
         info_node_type_manip_watch             = 38,
         info_node_type_swift_stationary_layer  = 39,
         info_node_type_swift_flight_layer      = 40,
-        info_node_type_teleporting_layer       = 42
+        info_node_type_path_location           = 41,
+        info_node_type_teleporting_layer       = 42,
+        info_node_type_count
     };
+
+    namespace references {
+        // each type's name ("ai_action_processor", "puppet_inode", "carry" ...), hashed by the CRT initializers
+        inline util::memory_reference<std::array<string_hash, info_node_type_count>> info_node_type_names { 0x00FC5500 };
+    } // references
+
+    // sub_4C3380
+    inline e_info_node_type get_info_node_type(string_hash name) { // info_node_type_count when nothing has the name
+        u32 type = 0;
+
+        while (references::info_node_type_names.get()[type] != name) {
+            if (++type >= info_node_type_count)
+                return info_node_type_count;
+        }
+
+        return (e_info_node_type)type;
+    }
 
     class info_node : public mash::mash_virtual_base {
 
