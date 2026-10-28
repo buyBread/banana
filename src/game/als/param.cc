@@ -13,6 +13,7 @@
 #include "game/game.hh"
 #include "game/spawn_table_manager.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/ai_state_machine.hh"
 #include "game/wds/ai/cpu_combat_inode.hh"
 #include "game/wds/ai/info_node.hh"
@@ -602,9 +603,9 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* rappel = core->get_info_node(info_node_type_ai_rappel);
+            auto rappel = (ai_rappel_inode*)core->get_info_node(info_node_type_ai_rappel);
 
-            return rappel && retail::sub_424DC0((u32*)rappel) ? 1.0f : 0.0f;
+            return rappel && rappel->is_engaged() ? 1.0f : 0.0f;
         }
 
         case param_ai_rappel_speed: {
@@ -613,12 +614,12 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* rappel = core->get_info_node(info_node_type_ai_rappel);
+            auto rappel = (ai_rappel_inode*)core->get_info_node(info_node_type_ai_rappel);
 
             if (!rappel)
                 return 0.0f;
 
-            return *(f32*)((u8*)rappel + 0x48);
+            return rappel->speed;
         }
 
         case param_random_zero_to_one:

@@ -35,6 +35,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); what a parameter without a vector and a missing vector parameter read
     inline util::memory_reference<vector3d> unk_00fc3440 { 0x00FC3440 };
 
+    // (0, 0, 0); what the ai info nodes' optional vector params default to
+    inline util::memory_reference<vector3d> unk_00fc3d70 { 0x00FC3D70 };
+
     // (0, 0, 0); what an entity's vector param reads to a script when the entity has none
     inline util::memory_reference<vector3d> unk_010f7140 { 0x010F7140 };
 
