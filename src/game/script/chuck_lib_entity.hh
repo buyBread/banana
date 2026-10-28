@@ -12,10 +12,12 @@
 
 namespace treyarch {
     class ai_core;
+    class ai_vehicle_state_script;
     class arch_base;
     class entity;
     class info_node;
     class param_block;
+    class vehicle;
 
     // the entity's own ai params come from its ai core, a vehicle's from its ai's inode
     string_hash  get_ai_param_hash_and_core (arch_base_vhandle handle, const char* param_name, ai_core** core);
@@ -54,6 +56,9 @@ namespace treyarch {
 
     // set (or, without set, move) the rel position as a script thread of the given camera priority would
     void set_or_move_rel_position(entity* self, const vector3d* position, bool set, f32 camera_priority);
+
+    // the vehicle ai's running state, while it's the script's own and the ai still obeys the script
+    ai_vehicle_state_script* get_script_controlled_state(vehicle* self);
 
     // the next "SCRIPT_ENT" instance name from a native's own name pool, made on first use
     string_hash next_script_ent_name(const util::memory_reference<void*> &pool, const util::memory_reference<u32> &guard);
@@ -3146,6 +3151,10 @@ namespace treyarch {
         inline util::memory_reference<u32>   debug_obstacle_script_ent_pool_guard { 0x010F77FC };
         inline util::memory_reference<void*> devopt_entity_script_ent_pool        { 0x010F7874 }; // create_devopt_entity
         inline util::memory_reference<u32>   devopt_entity_script_ent_pool_guard  { 0x010F7878 };
+
+        // set_vehicle_purpose(num, entity, num)'s name; bit 0 of the guard once it's made
+        inline util::memory_reference<string_hash> set_vehicle_purpose_name       { 0x010F7894 };
+        inline util::memory_reference<u32>         set_vehicle_purpose_name_guard { 0x010F7898 };
 
         // create_devopt_entity's four entity names; empty strings that nothing writes
         inline util::memory_reference<mash::string> devopt_entity_name_1 { 0x010F7288 };

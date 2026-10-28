@@ -132,7 +132,7 @@ param_block* treyarch::get_ai_param_block(arch_base_vhandle  handle,
     if (entity->is_a_vehicle()) {
         parameter.initialize(mash::ALLOCATED, param_name);
 
-        return &((vehicle*)entity)->my_ai->my_inode->my_param_block;
+        return &((vehicle*)entity)->my_ai->m_inode->my_param_block;
     }
 
     ai_core* core;
@@ -148,6 +148,29 @@ bool treyarch::marky_camera_allows(const arch_base* self, const chuck::vm::vm_st
     auto* marky = (marky_camera*)references::g_world_ptr.read()->camera_mgr.marky_camera;
 
     return self != marky || stack.thread->camera_priority == marky->current_priority;
+}
+
+// inlined @ sub_87C190
+// inlined @ sub_87C220
+// inlined @ sub_87C2D0
+// inlined @ sub_87C360
+// inlined @ sub_87C410
+// inlined @ sub_87C4A0
+// inlined @ sub_87C550
+// inlined @ sub_87C5F0
+// inlined @ sub_87C6A0
+// inlined @ sub_87C740
+ai_vehicle_state_script* treyarch::get_script_controlled_state(vehicle* self) {
+    ai_vehicle_state* state = self->my_ai->m_machine->get_state();
+
+    // an empty machine is asked through null
+    if (state->get_type() != ai_vehicle_state::type_script)
+        return nullptr;
+
+    if (self->my_ai->m_inode->get_purpose() != ai_vehicle_purpose_script_controlled)
+        return nullptr;
+
+    return (ai_vehicle_state_script*)state;
 }
 
 // inlined @ sub_84BE70
@@ -6750,20 +6773,56 @@ bool slf__entity__get_vehicle_angular_velocity__t::operator()(chuck::vm::vm_stac
     return true;
 }
 
+// sub_8512E0
 bool slf__entity__set_max_vehicle_speed__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8512E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto speed = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->my_ai->m_inode->set_max_speed(speed);
+
+    return true;
 }
 
+// sub_851320
 bool slf__entity__get_max_vehicle_speed__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851320)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_vehicle() ? ((vehicle*)self)->my_ai->m_inode->get_max_speed() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851390
 bool slf__entity__set_vehicle_flags__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851390)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto flags = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->my_ai->set_flags((u32)(i64)flags);
+
+    return true;
 }
 
+// sub_851400
 bool slf__entity__get_vehicle_flags__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851400)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_vehicle() ? (f32)((vehicle*)self)->my_ai->get_flags() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_851480
@@ -6780,88 +6839,373 @@ bool slf__entity__make_vehicle_clown_car__num__t::operator()(chuck::vm::vm_stack
     return true;
 }
 
+// sub_8514E0
 bool slf__entity__set_vehicle_purpose__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8514E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose);
+
+    return true;
 }
 
+// sub_851520
 bool slf__entity__set_vehicle_purpose__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851520)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose = stack.local_num(0x04);
+    auto target  = arch_base_vhandle(stack.local_uint(0x08));
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose, target);
+
+    return true;
 }
 
+// sub_851570
 bool slf__entity__set_vehicle_purpose__num__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851570)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose   = stack.local_num(0x04);
+    auto target    = arch_base_vhandle(stack.local_uint(0x08));
+    auto near_only = stack.local_num(0x0C);
+
+    // made once and never read
+    if (!(references::set_vehicle_purpose_name_guard.read() & 1)) {
+        references::set_vehicle_purpose_name_guard.write(references::set_vehicle_purpose_name_guard.read() | 1);
+        references::set_vehicle_purpose_name.get().initialize(mash::ALLOCATED, "set_vehicle_purpose");
+    }
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    // only a target within 200
+    if (near_only != 0.0f) {
+        auto target_entity = (entity*)target.resolve();
+
+        if (!target_entity)
+            return true;
+
+        vector3d delta = self->my_abs_po->get_position() - target_entity->my_abs_po->get_position();
+
+        if (delta.length2() > 40000.0f)
+            return true;
+    }
+
+    ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose, target);
+
+    return true;
 }
 
+// sub_8516F0
 bool slf__entity__set_vehicle_purpose__num__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8516F0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose  = stack.local_num(0x04);
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+    auto radius   = stack.local_num(0x14);
+
+    bool taken = false;
+
+    if (self && self->is_a_vehicle())
+        taken = ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose, *position, radius);
+
+    f32 result = taken ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851790
 bool slf__entity__set_vehicle_purpose__num__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851790)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose   = stack.local_num(0x04);
+    auto position  = (const vector3d*)&stack.local_uint(0x08);
+    auto radius    = stack.local_num(0x14);
+    auto near_only = stack.local_num(0x18);
+
+    bool taken = false;
+
+    if (self && self->is_a_vehicle()) {
+        // only a position within 200
+        bool too_far = near_only != 0.0f && (self->my_abs_po->get_position() - *position).length2() > 40000.0f;
+
+        if (!too_far)
+            taken = ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose, *position, radius);
+    }
+
+    f32 result = taken ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87EA20
 bool slf__entity__set_vehicle_purpose__num__dynamic_array__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87EA20)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto purpose = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x08));
+    chuck::vm::script_dynamic_array<f32>      radii ((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x0C));
+
+    if (!points.array->size())
+        return true;
+
+    if (!radii.array->size() || radii.size() != points.size())
+        return true;
+
+    vc8::vector<vector3d> positions;
+    vc8::vector<f32>      radius_list;
+
+    for (i32 i = 0; i < points.size(); i++) {
+        positions  .push_back(points[i]);
+        radius_list.push_back(radii[i]);
+    }
+
+    ((vehicle*)self)->my_ai->set_purpose((e_ai_vehicle_purpose)(i32)purpose, positions, radius_list);
+
+    return true;
 }
 
+// sub_8518F0
 bool slf__entity__get_vehicle_purpose__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8518F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_vehicle() ? (f32)((vehicle*)self)->my_ai->m_inode->get_purpose() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851990
 bool slf__entity__get_vehicle_purpose_entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851990)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result = self && self->is_a_vehicle() ? ((vehicle*)self)->my_ai->m_inode->get_purpose_entity() : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851A30
 bool slf__entity__get_vehicle_purpose_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851A30)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result = self && self->is_a_vehicle() ?
+        ((vehicle*)self)->my_ai->m_inode->get_purpose_pos() :
+        references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851AC0
 bool slf__entity__get_vehicle_purpose_radius__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851AC0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_vehicle() ? ((vehicle*)self)->my_ai->m_inode->get_purpose_radius() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851B60
 bool slf__entity__is_vehicle_purpose_done__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851B60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    // the only purpose native that minds a missing ai
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_ai)
+        result = (f32)((vehicle*)self)->my_ai->m_inode->is_purpose_done();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87C190
 bool slf__entity__set_vehicle_steering__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C190)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    if (auto* state = get_script_controlled_state((vehicle*)self))
+        state->set_steer_angle(value);
+
+    return true;
 }
 
+// sub_87C220
 bool slf__entity__get_vehicle_steering__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C220)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_vehicle_state_script* state = self && self->is_a_vehicle() ? get_script_controlled_state((vehicle*)self) : nullptr;
+
+    f32 result = state ? state->my_steer_angle : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87C2D0
 bool slf__entity__set_vehicle_gas_pedal__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C2D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    if (auto* state = get_script_controlled_state((vehicle*)self))
+        state->set_gas_pedal(value);
+
+    return true;
 }
 
+// sub_87C360
 bool slf__entity__get_vehicle_gas_pedal__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C360)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_vehicle_state_script* state = self && self->is_a_vehicle() ? get_script_controlled_state((vehicle*)self) : nullptr;
+
+    f32 result = state ? state->my_gas_pedal : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87C410
 bool slf__entity__set_vehicle_brake_pedal__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C410)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    if (auto* state = get_script_controlled_state((vehicle*)self))
+        state->set_brake_pedal(value);
+
+    return true;
 }
 
+// sub_87C4A0
 bool slf__entity__get_vehicle_brake_pedal__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C4A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_vehicle_state_script* state = self && self->is_a_vehicle() ? get_script_controlled_state((vehicle*)self) : nullptr;
+
+    f32 result = state ? state->my_brake_pedal : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87C550
 bool slf__entity__set_vehicle_power_brake__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C550)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    if (auto* state = get_script_controlled_state((vehicle*)self))
+        state->power_brake = value != 0.0f;
+
+    return true;
 }
 
+// sub_87C5F0
 bool slf__entity__get_vehicle_power_brake__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C5F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_vehicle_state_script* state = self && self->is_a_vehicle() ? get_script_controlled_state((vehicle*)self) : nullptr;
+
+    f32 result = state ? (f32)state->power_brake : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_87C6A0
 bool slf__entity__set_vehicle_reverse__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C6A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->is_a_vehicle())
+        return true;
+
+    if (auto* state = get_script_controlled_state((vehicle*)self))
+        state->reverse = value != 0.0f;
+
+    return true;
 }
 
+// sub_87C740
 bool slf__entity__get_vehicle_reverse__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C740)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    ai_vehicle_state_script* state = self && self->is_a_vehicle() ? get_script_controlled_state((vehicle*)self) : nullptr;
+
+    f32 result = state ? (f32)state->reverse : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_851C10
@@ -6920,16 +7264,46 @@ bool slf__entity__get_vehicle_condition__t::operator()(chuck::vm::vm_stack &stac
     return true;
 }
 
+// sub_851D60
 bool slf__entity__can_vehicle_be_stolen__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851D60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_ai)
+        result = ((vehicle*)self)->my_ai->can_be_stolen ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851E00
 bool slf__entity__set_vehicle_can_be_stolen__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851E00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_ai)
+        ((vehicle*)self)->my_ai->can_be_stolen = on > 0.0001f;
+
+    return true;
 }
 
+// sub_851E60
 bool slf__entity__set_vehicle_sleeps_on_stop__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851E60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_ai)
+        ((vehicle*)self)->my_ai->set_sleeps_on_stop(on > 0.0001f);
+
+    return true;
 }
 
 // sub_851ED0
