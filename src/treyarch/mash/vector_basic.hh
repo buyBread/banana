@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include "treyarch/mash/container_base.hh"
 #include "treyarch/base/tl_system.hh"
 #include "banana/util/types.hh"
@@ -79,6 +81,63 @@ namespace treyarch { namespace mash {
             capacity = 0;
 
             container_base::clear();
+        }
+
+        // sub_588AA0
+        // sub_6063B0
+        // inlined @ sub_87A810
+        void reserve(u32 new_capacity) {
+            if (new_capacity <= capacity)
+                return;
+
+            auto grown = (T*)tl_mem_alloc(new_capacity * sizeof(T), 4, 0);
+
+            if (data) {
+                if (size)
+                    std::memcpy(grown, data, size * sizeof(T));
+
+                if (!is_pointer_in_mash_image(data))
+                    tl_mem_free(data);
+            }
+
+            data     = grown;
+            capacity = new_capacity;
+        }
+
+        // sub_4397F0
+        // inlined @ sub_879DA0
+        // inlined @ sub_87A810
+        void push_back(const T &value) {
+            // an array still in the mash image can't grow in place
+            if (size == capacity || is_pointer_in_mash_image(data))
+                reserve((size / 8 + 1) * 8);
+
+            ++size;
+            data[size - 1] = value;
+        }
+
+        // sub_8434C0
+        void resize(u32 count, const T &value) {
+            reserve(count);
+
+            for (; size < count; ++size)
+                data[size] = value;
+
+            size = count;
+        }
+
+        // sub_473630
+        vector_basic &operator=(const vector_basic &other) {
+            clear();
+
+            if (other.size) {
+                reserve(other.size);
+
+                size = other.size;
+                std::memcpy(data, other.data, size * sizeof(T));
+            }
+
+            return *this;
         }
     };
 
