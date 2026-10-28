@@ -1410,3 +1410,13 @@ f32 als::get_vector_component(const vector3d &vec, e_vector_component component)
             return 0.0f;
     }
 }
+
+// sub_5B00F0
+als::param_id als::find_param_id(string_hash name) {
+    for (param_id param = 0; param < num_internal_hash_params; ++param) {
+        if (references::parameter_names.get()[param] == name)
+            return param;
+    }
+
+    return 0;
+}

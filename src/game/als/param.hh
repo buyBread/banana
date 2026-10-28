@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -332,7 +334,12 @@ namespace treyarch { namespace als {
     // dir's angle round from forward toward side, in degrees within 180 either way
     f32 compute_angle_between_vectors(const vector3d &forward, const vector3d &side, const vector3d &dir);
 
+    param_id find_param_id(string_hash name); // the first id when nothing has the name
+
     namespace references {
+        // every parameter's name by id, hashed by the CRT initializers
+        inline util::memory_reference<std::array<string_hash, num_internal_hash_params>> parameter_names { 0x00FF90F0 };
+
         // "BIP01 PELVIS" and "BIP01 HEAD", hashed by the CRT initializers
         inline util::memory_reference<string_hash> bip01_pelvis { 0x010034A8 };
         inline util::memory_reference<string_hash> bip01_head   { 0x01003A40 };
