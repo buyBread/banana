@@ -6452,7 +6452,7 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 
     path = new spline;
 
-    path->set_type(2);
+    path->set_type(spline_catmull_rom);
     path->clear_control_pts();
     path->add_control_pt(abs_po.get_position());
     path->add_control_pt(middle);
