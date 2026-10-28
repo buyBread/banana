@@ -45,6 +45,7 @@ namespace treyarch {
         entity_flag_graphics_visible  = 0x00000200,
         entity_flag_special_target    = 0x00001000,
         entity_flag_collisions_active = 0x00004000,
+        entity_flag_member            = 0x00008000,
         entity_flag_nontarget         = 0x00020000,
         entity_flag_beamable          = 0x00080000,
         entity_flag_detectable        = 0x00800000, // SM3's GLOWABLE
@@ -54,6 +55,7 @@ namespace treyarch {
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
+        entity_ext_flag_spawned                = 0x00000100,
         entity_ext_flag_is_auto_activate_prop  = 0x00000800,
         entity_ext_flag_invulnerable           = 0x00004000,
         entity_ext_flag_noncrawlable           = 0x00008000,

@@ -9,6 +9,8 @@
 #include "game/frontend/ui_frontend.hh"
 #include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/physics/physics_system.hh"
+#include "game/physics/rigid_body_prop_system.hh"
 #include "game/script/chuck_lib_entity.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
@@ -19,6 +21,7 @@
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
@@ -1096,12 +1099,40 @@ bool slf__entity__move_rel_position__vector3d__t::operator()(chuck::vm::vm_stack
     return ((invoke_t)retail::sub_879D10)(this, stack);
 }
 
+// sub_844CD0
 bool slf__entity__set_velocity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844CD0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto velocity = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !marky_camera_allows(self, stack))
+        return true;
+
+    // the velocity is in the entity's own frame
+    vector3d world_velocity = self->my_abs_po->non_affine_slow_xform(*velocity);
+
+    if (self->is_an_actor() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_velocity(world_velocity);
+
+    return true;
 }
 
+// sub_844E70
 bool slf__entity__set_abs_velocity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844E70)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto velocity = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self &&
+        marky_camera_allows(self, stack) &&
+        self->is_an_actor() &&
+        self->has_ifc(entity_ifc_physical))
+
+        self->physical_ifc()->set_velocity(*velocity);
+
+    return true;
 }
 
 bool slf__entity__look_at__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1152,8 +1183,26 @@ bool slf__entity__wait_translate_abs__vector3d__num__t::operator()(chuck::vm::vm
     return ((invoke_t)retail::sub_846AA0)(this, stack);
 }
 
+// sub_846EE0
 bool slf__entity__get_rel_velocity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_846EE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto frame = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    // the velocity turned by the other entity's frame
+    if (self && frame) {
+        if (self->has_ifc(entity_ifc_physical))
+            result = self->physical_ifc()->get_velocity();
+
+        result = frame->my_abs_po->non_affine_slow_xform(result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8470B0
@@ -1477,7 +1526,7 @@ bool slf__entity__set_physical__num__t::operator()(chuck::vm::vm_stack &stack) {
     auto on   = stack.local_num(0x04);
 
     if (self && self->has_ifc(entity_ifc_physical))
-        retail::sub_6007A0((u32*)self->physical_ifc(), on != 0.0f); // physical_interface::enable
+        self->physical_ifc()->enable(on != 0.0f);
 
     return true;
 }
@@ -3776,8 +3825,46 @@ bool slf__entity__can_be_web_yanked__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_853B00)(this, stack);
 }
 
+// sub_853BD0
 bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853BD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    // the physics' while they move the entity, else the body its prop keeps, a player's own or the actor's
+    if (self) {
+        if (self->has_ifc(entity_ifc_physical)) {
+            if (self->physical_ifc()->is_prop_physics_running() ||
+                self->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
+                (self->physical_ifc()->is_enabled() && !self->physical_ifc()->is_suspended() &&
+                 (!retail::sub_4024E0((u32*)self) || // has_standing_ifc
+                  !(((standing_interface*)self->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 1) ||
+                  !(((standing_interface*)self->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2))))
+
+                result = self->physical_ifc()->get_velocity();
+            else if (retail::sub_402500((u32*)self)) // has_player_ifc
+                result = *self->player_ifc()->unk_095();
+            else
+                retail::sub_614190((u32*)self, (f32*)&result);
+        } else if (self->is_an_actor()) {
+            if (rigid_body_prop_head* head = prop_system::find_rigid_body_prop_head(self)) {
+                if (head->m_first_rbpi) {
+                    const vector4d &t_vel = head->m_first_rbpi->m_rb->m_t_vel;
+
+                    result = vector3d(t_vel.x, t_vel.y, t_vel.z);
+                }
+            } else if (self->has_ifc(entity_ifc_player))
+                result = *self->player_ifc()->unk_095();
+            else
+                retail::sub_614190((u32*)self, (f32*)&result);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_853DC0

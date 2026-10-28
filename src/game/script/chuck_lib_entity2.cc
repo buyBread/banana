@@ -2,6 +2,9 @@
 
 #include "retail.hh"
 #include "game/arch_base.hh"
+#include "game/colgeom.hh"
+#include "game/physics/physics_system.hh"
+#include "game/physics/rigid_body_prop_system.hh"
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
@@ -1183,60 +1186,186 @@ bool slf__entity__set_allow_swimming__num__t::operator()(chuck::vm::vm_stack &st
     return ((invoke_t)retail::sub_86E310)(this, stack);
 }
 
+// sub_86E390
 bool slf__entity__set_mass__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E390)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto mass = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_mass(mass);
+
+    return true;
 }
 
+// sub_86E3E0
 bool slf__entity__set_slide_factor__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E3E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto factor = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_slide_factor(factor);
+
+    return true;
 }
 
+// sub_86E430
 bool slf__entity__set_bounce_factor__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E430)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto factor = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_bounce_factor(factor);
+
+    return true;
 }
 
+// sub_86E480
 bool slf__entity__set_bouncy__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E480)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_bouncy(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E500
 bool slf__entity__set_sticky__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E500)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_sticky(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E580
 bool slf__entity__is_physics_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E580)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86E600
 bool slf__entity__set_physics_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E600)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->enable(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E670
 bool slf__entity__is_physics_suspended__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E670)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_suspended() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86E700
 bool slf__entity__set_physics_suspended__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E700)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->suspend(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E770
 bool slf__entity__set_gravity_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E770)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_gravity(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E7E0
 bool slf__entity__get_gravity_multiplier__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E7E0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_physical) ? self->physical_ifc()->get_gravity_multiplier() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86E870
 bool slf__entity__set_gravity_multiplier__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E870)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto multiplier = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_gravity_multiplier(multiplier);
+
+    return true;
 }
 
+// sub_86E8C0
 bool slf__entity__set_allow_biped_physics__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E8C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_allow_biped_physics(on != 0.0f);
+
+    return true;
 }
 
+// sub_86E940
 bool slf__entity__set_angular_velocity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E940)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto velocity = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_angular_velocity(*velocity);
+
+    return true;
 }
 
 bool slf__entity__set_time_dilation__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1328,12 +1457,130 @@ bool slf__entity__has_player_interface__t::operator()(chuck::vm::vm_stack &stack
     return true;
 }
 
+// sub_86ED40
 bool slf__entity__physical_ifc_apply_force__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86ED40)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto direction = (const vector3d*)&stack.local_uint(0x04);
+    auto magnitude = stack.local_num(0x10);
+
+    if (!self)
+        return true;
+
+    math::vector4 direction_4(direction->x, direction->y, direction->z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&direction_4);
+
+    vector3d force((f32)((f64)unit[0] * magnitude),
+                   (f32)((f64)unit[1] * magnitude),
+                   (f32)((f64)unit[2] * magnitude));
+
+    if (self->has_ifc(entity_ifc_physical) && !self->is_a_vehicle()) {
+        self->physical_ifc()->add_velocity_increment(force);
+
+        return true;
+    }
+
+    if (!self->is_a_vehicle()) {
+        if (!self->is_an_actor())
+            return true;
+
+        if (!(self->ext_flags & entity_ext_flag_spawned) && !(self->ext_flags & entity_ext_flag_is_auto_activate_prop))
+            return true;
+    }
+
+    // vehicles and spawned props already have one
+    rigid_body_prop_head* head = !self->is_a_vehicle() && !(self->ext_flags & entity_ext_flag_spawned) ?
+        prop_system::create_prop(self,
+                                 rigid_body_prop_flag_auto_remove_stable_prop_pieces |
+                                 rigid_body_prop_flag_auto_remove_empty_prop_head    |
+                                 rigid_body_prop_flag_do_not_traverse_children,
+                                 references::unk_010f7140.get(),
+                                 0.0f,
+                                 false,
+                                 nullptr) :
+        prop_system::find_rigid_body_prop_head(self);
+
+    if (!head)
+        return true;
+
+    rigid_body* body = head->m_first_rbpi->m_rb;
+
+    if (!body)
+        return true;
+
+    body->add_force(vector4d(force.x, force.y, force.z, 0.0f));
+
+    return true;
 }
 
+// sub_86EF80
 bool slf__entity__physical_ifc_apply_force_at_pos__vector3d__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EF80)(this, stack);
+    // the count word covers every argument after self, each vector3d once
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 5));
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto direction = (const vector3d*)&stack.local_uint(0x04);
+    auto magnitude = stack.local_num(0x10);
+    auto position  = (const vector3d*)&stack.local_uint(0x14);
+
+    if (!self)
+        return true;
+
+    math::vector4 direction_4(direction->x, direction->y, direction->z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&direction_4);
+
+    vector3d force((f32)((f64)unit[0] * magnitude),
+                   (f32)((f64)unit[1] * magnitude),
+                   (f32)((f64)unit[2] * magnitude));
+
+    f32 torque_mult = count - 3 > 0 ? stack.local_num(0x20) : 1.0f;
+
+    if (self->has_ifc(entity_ifc_physical) && !self->is_a_vehicle()) {
+        self->physical_ifc()->add_velocity_increment_at_pos(force, *position, torque_mult);
+
+        return true;
+    }
+
+    if (!self->is_a_vehicle()) {
+        if (!self->is_an_actor())
+            return true;
+
+        if (!(self->ext_flags & entity_ext_flag_spawned) && !(self->ext_flags & entity_ext_flag_is_auto_activate_prop))
+            return true;
+    }
+
+    // vehicles and spawned props already have one
+    rigid_body_prop_head* head = !self->is_a_vehicle() && !(self->ext_flags & entity_ext_flag_spawned) ?
+        prop_system::create_prop(self,
+                                 rigid_body_prop_flag_auto_remove_stable_prop_pieces |
+                                 rigid_body_prop_flag_auto_remove_empty_prop_head    |
+                                 rigid_body_prop_flag_do_not_traverse_children,
+                                 references::unk_010f7140.get(),
+                                 0.0f,
+                                 false,
+                                 nullptr) :
+        prop_system::find_rigid_body_prop_head(self);
+
+    if (!head)
+        return true;
+
+    rigid_body* body = head->m_first_rbpi->m_rb;
+
+    if (!body)
+        return true;
+
+    body->add_force(vector4d(force.x,     force.y,     force.z,     0.0f),
+                    vector4d(position->x, position->y, position->z, 0.0f),
+                    torque_mult);
+
+    return true;
 }
 
 bool slf__entity__physical_ifc_is_effectively_standing__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1344,28 +1591,104 @@ bool slf__entity__physical_ifc_manage_standing__num__t::operator()(chuck::vm::vm
     return ((invoke_t)retail::sub_86F280)(this, stack);
 }
 
+// sub_86F2F0
 bool slf__entity__physical_ifc_cancel_all_velocity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F2F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->cancel_all_velocity(references::unk_010f7140.get(), true);
+
+    return true;
 }
 
+// sub_86F330
 bool slf__entity__physical_ifc_is_biped_physics_running__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F330)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F3D0
 bool slf__entity__physical_ifc_is_prop_physics_running__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F3D0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    // without a physical interface, whether it's a spawned prop
+    if (self) {
+        if (self->has_ifc(entity_ifc_physical))
+            result = self->physical_ifc()->is_prop_physics_running() ? 1.0f : 0.0f;
+        else if (self->ext_flags & entity_ext_flag_spawned)
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F440
 bool slf__entity__physical_ifc_is_prop_physics_stable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F440)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto full_stable = stack.local_num(0x04);
+
+    f32 result = self && self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_prop_physics_stable((f64)full_stable > 0.0001) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F500
 bool slf__entity__physical_ifc_stop_biped_physics__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F500)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self &&
+        self->has_ifc(entity_ifc_physical) &&
+        self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+        self->physical_ifc()->stop_biped_physics(false);
+
+    return true;
 }
 
+// sub_86F550
 bool slf__entity__physical_ifc_set_biped_physics_is_weapon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F550)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self ||
+        !self->has_ifc(entity_ifc_physical) ||
+        !self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+
+        return true;
+
+    i32 optional_count = count - 1;
+
+    f32 unk_1 = optional_count > 0 ? stack.local_num(0x08) : 2.5f;
+    f32 unk_2 = optional_count > 1 ? stack.local_num(0x0C) : 5.0f;
+
+    self->physical_ifc()->set_biped_physics_is_weapon(stack.local_num(0x04) != 0.0f, unk_1, unk_2);
+
+    return true;
 }
 
 bool slf__entity__physical_ifc_set_pendulum__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1515,8 +1838,17 @@ bool slf__entity__is_alive__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_86FA60
 bool slf__entity__set_immobile__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FA60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_immobile(on != 0.0f);
+
+    return true;
 }
 
 // sub_86FAD0
@@ -1534,8 +1866,31 @@ bool slf__entity__set_really_immobile__num__t::operator()(chuck::vm::vm_stack &s
     return true;
 }
 
+// sub_86FB30
 bool slf__entity__set_auto_prop_physics_activate__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FB30)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    // only a standalone mesh-like colgeom can become a prop
+    if ((f64)on > 0.0001 &&
+        !(self->flags & entity_flag_member) &&
+        !self->is_a_conglomerate() &&
+        self->get_colgeom() &&
+        (self->get_colgeom()->get_type() == collision_geometry_type_mesh || self->get_colgeom()->get_type() == 3))
+
+        self->ext_flags |= entity_ext_flag_is_auto_activate_prop;
+    else
+        self->ext_flags &= ~entity_ext_flag_is_auto_activate_prop;
+
+    if (self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_auto_prop_physics((self->ext_flags & entity_ext_flag_is_auto_activate_prop) != 0);
+
+    return true;
 }
 
 // sub_86FC10
@@ -1562,16 +1917,70 @@ bool slf__entity__set_actor_debug_text__str__num__vector3d__t::operator()(chuck:
     return true;
 }
 
+// sub_86FD40
 bool slf__entity__physical_ifc_start_prop_physics__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FD40)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto force  = (const vector3d*)&stack.local_uint(0x04);
+    auto random = stack.local_num(0x10);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    // a new interface starts disabled and suspended, with gravity doubled
+    if (!self->has_ifc(entity_ifc_physical)) {
+        self->create_physical_ifc();
+        self->physical_ifc()->enable(false);
+        self->physical_ifc()->suspend(true);
+        self->physical_ifc()->set_gravity(true);
+        self->physical_ifc()->set_gravity_multiplier(2.0f);
+    }
+
+    self->physical_ifc()->start_prop_physics(*force, random);
+
+    return true;
 }
 
+// sub_86FE10
 bool slf__entity__physical_ifc_start_prop_physics__vector3d__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FE10)(this, stack);
+    stack.sp -= 0x20;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto force  = (const vector3d*)&stack.local_uint(0x04);
+    auto random = stack.local_num(0x10);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    // a new interface starts disabled and suspended, with gravity doubled
+    if (!self->has_ifc(entity_ifc_physical)) {
+        self->create_physical_ifc();
+        self->physical_ifc()->enable(false);
+        self->physical_ifc()->suspend(true);
+        self->physical_ifc()->set_gravity(true);
+        self->physical_ifc()->set_gravity_multiplier(2.0f);
+    }
+
+    bool traverse_children = (f64)stack.local_num(0x1C) > 0.0001;
+    bool kill_when_stable  = (f64)stack.local_num(0x18) > 0.0001;
+    bool lightweight       = (f64)stack.local_num(0x14) > 0.0001;
+
+    self->physical_ifc()->start_prop_physics(*force, random, lightweight, kill_when_stable, traverse_children);
+
+    return true;
 }
 
+// sub_86FF30
 bool slf__entity__physical_ifc_stop_prop_physics__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FF30)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor() && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->stop_prop_physics(false);
+
+    return true;
 }
 
 // sub_86FF80
@@ -1662,8 +2071,17 @@ bool slf__entity__set_walkable__num__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_870B80
 bool slf__entity__physical_ifc_set_ballistic_target__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870B80)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self && self->has_ifc(entity_ifc_physical))
+        self->physical_ifc()->set_physics_ballistic_target(*target);
+
+    return true;
 }
 
 bool slf__entity__manip_obj_ifc_throw_it__entity__vector3d__entity__t::operator()(chuck::vm::vm_stack &stack) {

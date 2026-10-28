@@ -708,8 +708,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!physical)
                 return 0.0f;
 
-            vector3d velocity;
-            retail::sub_60F130((i32)physical, (i32)&velocity); // physical_interface::get_velocity
+            vector3d velocity = ((physical_interface*)physical)->get_velocity();
 
             using get_member_abs_position_t = bool (__thiscall*)(actor*, const string_hash*, vector3d*, i32);
 
@@ -1050,17 +1049,14 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
         case param_current_velocity_vector: {
             // the physics' while they move the actor, else the body it's kept in, a player's own or the entity's
             if (the_actor->has_ifc(entity_ifc_physical)) {
-                if (retail::sub_6005E0((u32*)the_actor->physical_ifc()) ||
+                if (the_actor->physical_ifc()->is_prop_physics_running() ||
                     the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
                     ((the_actor->physical_ifc()->flags & 1) && !(the_actor->physical_ifc()->flags & 2) &&
                      (!retail::sub_4024E0((u32*)the_actor) || // has_standing_ifc
                       !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 1) ||
                       !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2)))) {
 
-                    vector3d velocity;
-                    retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
-
-                    return velocity;
+                    return the_actor->physical_ifc()->get_velocity();
                 }
             } else if (u32* entry = retail::sub_811DA0((u32*)the_actor)) {
                 u8* body = (u8*)entry[2];

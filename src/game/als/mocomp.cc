@@ -1585,8 +1585,7 @@ i32 als::velocity_orientation::get_mash_sizeof() const {
 void als::velocity_orientation::get_directions(animation_logic_system*, state_machine* base, vector3d* desired_dir, vector3d* desired_up) const {
     // the actor's ground velocity, unless disable_mocomp_facing says otherwise
     if (the_actor->has_ifc(entity_ifc_physical) && (!base->has_ext_param_been_set(param_disable_mocomp_facing) || base->get_external_float(param_disable_mocomp_facing) == 0.0f)) {
-        vector3d velocity;
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+        vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
         *desired_dir = vector3d(velocity.x, 0.0f, velocity.z);
     } else if (base->has_ext_param_been_set(param_desired_forward_vector))
@@ -1690,7 +1689,7 @@ void als::momentum_grapple_unsynched::activate(animation_logic_system* the_als_c
         ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 &= ~1;
 
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_6007A0((u32*)the_actor->physical_ifc(), false); // physical_interface: flags bit 0
+        the_actor->physical_ifc()->enable(false);
 }
 
 // sub_5DAC50
@@ -1701,7 +1700,7 @@ void als::momentum_grapple_unsynched::deactivate() {
         ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 1;
 
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_6007A0((u32*)the_actor->physical_ifc(), true);
+        the_actor->physical_ifc()->enable(true);
 }
 
 // sub_5AEC70
@@ -1743,7 +1742,7 @@ void als::initial_velocity_orientation::activate(animation_logic_system* the_als
 
     // the actor's velocity, the direction param, or its facing; along the ground
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&initial_dir); // physical_interface::get_velocity
+        initial_dir = the_actor->physical_ifc()->get_velocity();
     else if (the_base->has_ext_param_been_set(param_desired_forward_vector))
         initial_dir = the_base->get_external_vector(param_desired_forward_vector);
     else
@@ -1832,7 +1831,7 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
 
     // the actor's velocity, the direction param, or its facing; along the ground
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&initial_dir); // physical_interface::get_velocity
+        initial_dir = the_actor->physical_ifc()->get_velocity();
     else if (the_base->has_ext_param_been_set(param_desired_forward_vector))
         initial_dir = the_base->get_external_vector(param_desired_forward_vector);
     else
@@ -1872,8 +1871,7 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
 
     // and the up the velocity leans to
     if (the_actor->has_ifc(entity_ifc_physical)) {
-        vector3d velocity;
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity);
+        vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
         vector3d heading = unitized(velocity);
         vector3d side    = unitized(cross(heading, treyarch::references::unk_00e6808c.get()));
@@ -2650,7 +2648,7 @@ void flight_mocomp::activate(als::animation_logic_system* the_als_core, als::lay
     flight_inode = nullptr;
 
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_5FFD60((u32*)the_actor->physical_ifc(), false); // physical_interface: flags bit 2
+        the_actor->physical_ifc()->set_gravity(false);
 }
 
 // sub_47D5B0
@@ -2679,7 +2677,7 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
     }
 
     if (the_actor->has_ifc(entity_ifc_physical))
-        retail::sub_5FFD60((u32*)the_actor->physical_ifc(), false);
+        the_actor->physical_ifc()->set_gravity(false);
 
     vector3d move;
 
@@ -6736,7 +6734,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
     use_internal_force_params = the_base->get_optional_pb_int(use_internal_force_params_id, 0, nullptr) != 0;
 
     if (the_actor->has_ifc(entity_ifc_physical) && the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running)) {
-        auto* biped = (u32*)retail::sub_600680((u32*)the_actor->physical_ifc()); // physical_interface: its biped physics
+        auto* biped = (u32*)the_actor->physical_ifc()->get_biped_system();
 
         if (biped && !include_trajectory)
             push(biped);
@@ -6770,7 +6768,7 @@ void als::biped_physics_mocomp::deactivate() {
     capture_callback.remove(the_actor->my_handle, references::capture_frame.read());
 
     if (the_actor->has_ifc(entity_ifc_physical) && the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
-        retail::sub_80ECA0((u8*)retail::sub_600680((u32*)the_actor->physical_ifc())); // biped physics: lets the actor go
+        retail::sub_80ECA0((u8*)the_actor->physical_ifc()->get_biped_system()); // biped_system: lets the actor go
 
     if (saved_matrices)
         mm::free(saved_matrices);
@@ -6808,7 +6806,7 @@ void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
             if (the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running)) {
                 f32 step = capture_elapsed > 0.0f ? capture_elapsed : delta_t;
 
-                ((capture_pose_t)retail::sub_817330)((u32*)retail::sub_600680((u32*)the_actor->physical_ifc()), pose_blend_weight, step);
+                ((capture_pose_t)retail::sub_817330)((u32*)the_actor->physical_ifc()->get_biped_system(), pose_blend_weight, step);
             }
         }
 
@@ -6992,8 +6990,7 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
     if (!(anim_time >= rotate_begin_time) || !(rotate_end_time > anim_time))
         return;
 
-    vector3d velocity;
-    retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+    vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
     f32      speed = (f32)retail::sub_402020((f32*)&velocity);
     vector3d ahead = the_actor->my_abs_po->get_z_facing();
@@ -7014,8 +7011,8 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
         velocity = ahead * speed;
     }
 
-    retail::sub_6006A0((u32**)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::set_velocity
-    retail::sub_798F10((u8*)&probe);                                     // line_info::~line_info
+    the_actor->physical_ifc()->set_velocity(velocity);
+    retail::sub_798F10((u8*)&probe); // line_info::~line_info
 }
 
 // sub_5C0A70
@@ -7171,9 +7168,8 @@ void als::momentum_combat_move_and_face::activate(animation_logic_system*, layer
 void als::momentum_combat_move_and_face::deactivate() {
     // the velocity set back to itself
     if (the_actor->has_ifc(entity_ifc_physical)) {
-        vector3d velocity;
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
-        retail::sub_6006A0((u32**)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::set_velocity
+        vector3d velocity = the_actor->physical_ifc()->get_velocity();
+        the_actor->physical_ifc()->set_velocity(velocity);
     }
 }
 
@@ -7216,8 +7212,7 @@ void als::momentum_combat_move_and_face::read_params(f32 delta_t) {
     read_signal_times();
 
     if (the_actor->has_ifc(entity_ifc_physical)) {
-        vector3d velocity;
-        retail::sub_60F130((i32)the_actor->physical_ifc(), (i32)&velocity); // physical_interface::get_velocity
+        vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
         initial_velocity = velocity;
         initial_speed    = initial_velocity.length();

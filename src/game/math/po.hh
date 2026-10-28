@@ -30,6 +30,14 @@ namespace treyarch {
                             (f32)((f64)point.x * m.x.z + (f64)point.y * m.y.z + (f64)point.z * m.z.z + m.w.z));
         }
 
+        // inlined @ sub_844CD0
+        // inlined @ sub_846EE0
+        vector3d non_affine_slow_xform(const vector3d &v) const { // a direction out of this po's frame
+            return vector3d((f32)((f64)m.y.x * v.y + (f64)v.x * m.x.x + (f64)m.z.x * v.z + (f64)m.w.x * 0.0),
+                            (f32)((f64)m.y.y * v.y + (f64)m.x.y * v.x + (f64)m.z.y * v.z + (f64)m.w.y * 0.0),
+                            (f32)((f64)m.y.z * v.y + (f64)m.x.z * v.x + (f64)m.z.z * v.z + (f64)m.w.z * 0.0));
+        }
+
         // inlined @ sub_8637C0
         // inlined @ sub_8639F0
         vector3d inverse_xform(const vector3d &point) const { // a point into this po's frame, the rotation taken as orthonormal
