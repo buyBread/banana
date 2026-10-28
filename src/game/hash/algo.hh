@@ -10,7 +10,18 @@ namespace treyarch { namespace hash {
         for (u8 c = (u8)*string; c; c = (u8)*++string) {
             const u32 x = c - 'A';
 
-            hash = hash * 33u + (u8)(c + ((x <= ('Z' - 'A')) << 5));
+            hash = hash * 33u + (i8)(c + ((x <= ('Z' - 'A')) << 5)); // characters past 0x7F add as negative
+        }
+
+        return hash;
+    }
+
+    // sub_4FAB30
+    inline u32 djb2(u32 hash, const char* string) { // carries on from an existing hash
+        for (u8 c = (u8)*string; c; c = (u8)*++string) {
+            const u32 x = c - 'A';
+
+            hash = hash * 33u + (i8)(c + ((x <= ('Z' - 'A')) << 5)); // characters past 0x7F add as negative
         }
 
         return hash;
