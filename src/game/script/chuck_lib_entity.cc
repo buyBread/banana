@@ -2490,10 +2490,10 @@ bool slf__entity__set_invulnerable__num__t::operator()(chuck::vm::vm_stack &stac
 
         if (on != 0.0f) {
             if (car->condition != 1)
-                retail::sub_6048C0((i32)car, 3); // vehicle_set_condition
+                car->set_condition(3);
         }
         else if (car->condition == 3)
-            retail::sub_6048C0((i32)car, 0); // vehicle_set_condition
+            car->set_condition(0);
     }
 
     // the hero's are counted, so clearing can't go past them
@@ -6569,24 +6569,79 @@ bool slf__entity__is_a_placeholder_vehicle__t::operator()(chuck::vm::vm_stack &s
     return true;
 }
 
+// sub_850E10
 bool slf__entity__set_vehicle_model__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850E10)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto model_name = (const char*)stack.local_uint(0x04);
+
+    if (self && self->is_a_vehicle()) {
+        string_hash model;
+        model.initialize(mash::ALLOCATED, model_name);
+
+        ((vehicle*)self)->set_model(model);
+    }
+
+    return true;
 }
 
+// sub_850E60
 bool slf__entity__damage_vehicle_part__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850E60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto part = stack.local_uint(0x04);
+
+    if (self && self->is_a_vehicle()) {
+        string_hash member_id;
+        member_id.initialize(mash::ALLOCATED, nullptr, part);
+
+        ((vehicle*)self)->damage_member(member_id);
+    }
+
+    return true;
 }
 
+// sub_850EC0
 bool slf__entity__damage_all_vehicle_parts__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850EC0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->damage_all_members();
+
+    return true;
 }
 
+// sub_850F00
 bool slf__entity__repair_vehicle_part__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850F00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto part = stack.local_uint(0x04);
+
+    if (self && self->is_a_vehicle()) {
+        string_hash member_id;
+        member_id.initialize(mash::ALLOCATED, nullptr, part);
+
+        ((vehicle*)self)->repair_member(member_id);
+    }
+
+    return true;
 }
 
+// sub_850F60
 bool slf__entity__repair_all_vehicle_parts__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850F60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->repair_all_members();
+
+    return true;
 }
 
 // sub_86FF80
@@ -6598,32 +6653,101 @@ bool slf__entity__get_vehicle_parts__dynamic_array__t::operator()(chuck::vm::vm_
     return true;
 }
 
+// sub_850FA0
 bool slf__entity__set_vehicle_mass__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850FA0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto mass = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->set_mass(mass);
+
+    return true;
 }
 
+// sub_850FE0
 bool slf__entity__set_vehicle_self_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850FE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->set_self_damage(damage, -1.0f, -1.0f, -1.0f);
+
+    return true;
 }
 
+// sub_851040
 bool slf__entity__set_vehicle_other_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851040)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->set_other_damage(damage, -1.0f, -1.0f, -1.0f);
+
+    return true;
 }
 
+// sub_8510A0
 bool slf__entity__get_vehicle_mass__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8510A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_vehicle() ? ((vehicle*)self)->my_mass : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851110
 bool slf__entity__get_vehicle_dimensions__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851110)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result = self && self->is_a_vehicle() ? ((vehicle*)self)->my_dimensions : vector3d(0.0f, 0.0f, 0.0f);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8511A0
 bool slf__entity__get_vehicle_velocity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8511A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_rb)
+        result = ((vehicle*)self)->my_rb->m_t_vel.get_xyz();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851240
 bool slf__entity__get_vehicle_angular_velocity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851240)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    if (self && self->is_a_vehicle() && ((vehicle*)self)->my_rb)
+        result = ((vehicle*)self)->my_rb->m_a_vel.get_xyz();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_max_vehicle_speed__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -6642,8 +6766,18 @@ bool slf__entity__get_vehicle_flags__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_851400)(this, stack);
 }
 
+// sub_851480
 bool slf__entity__make_vehicle_clown_car__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851480)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    // the only occupant native that doesn't ask for a conglomerate
+    if (self && self->has_occupant_ifc())
+        self->occupant_ifc()->clown_car = on != 0.0f;
+
+    return true;
 }
 
 bool slf__entity__set_vehicle_purpose__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -6730,20 +6864,60 @@ bool slf__entity__get_vehicle_reverse__t::operator()(chuck::vm::vm_stack &stack)
     return ((invoke_t)retail::sub_87C740)(this, stack);
 }
 
+// sub_851C10
 bool slf__entity__enable_vehicle_physics__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851C10)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->enable_physics(enable != 0.0f);
+
+    return true;
 }
 
+// sub_851C70
 bool slf__entity__is_vehicle_physics_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851C70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    bool enabled = self && self->is_a_vehicle() && ((vehicle*)self)->physics_enabled;
+
+    f32 result = (f32)enabled;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_851CD0
 bool slf__entity__set_vehicle_condition__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851CD0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto condition = stack.local_num(0x04);
+
+    if (self && self->is_a_vehicle())
+        ((vehicle*)self)->set_condition((i32)condition);
+
+    return true;
 }
 
+// sub_851D10
 bool slf__entity__get_vehicle_condition__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851D10)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    i32 condition = self && self->is_a_vehicle() ? ((vehicle*)self)->condition : 0;
+
+    f32 result = (f32)condition;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__can_vehicle_be_stolen__t::operator()(chuck::vm::vm_stack &stack) {
@@ -6913,28 +7087,114 @@ bool slf__entity__get_car_seat__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_8522D0
 bool slf__entity__is_seat_taken__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8522D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    // -1 for anything without seats
+    if (self) {
+        result = -1.0f;
+
+        if (self->is_a_conglomerate() && self->has_occupant_ifc()) {
+            auto seat = (i32)stack.local_num(0x04);
+
+            result = self->occupant_ifc()->m_seat_occupants[seat].resolve() ? 1.0f : 0.0f;
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852380
 bool slf__entity__is_car_occupied__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852380)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    bool occupied = self &&
+                    self->is_a_conglomerate() &&
+                    self->has_occupant_ifc() &&
+                    self->occupant_ifc()->m_vehicle_occupant_count > 0;
+
+    f32 result = (f32)occupied;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852410
 bool slf__entity__vehicle_disabled_escape_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852410)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_a_conglomerate() && self->has_occupant_ifc())
+        self->occupant_ifc()->disabled_escape_enabled = on != 0.0f;
+
+    return true;
 }
 
+// sub_852480
 bool slf__entity__vehicle_eject_kills_occupants__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852480)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_a_conglomerate() && self->has_occupant_ifc())
+        self->occupant_ifc()->eject_kills_occupants = on != 0.0f;
+
+    return true;
 }
 
+// sub_8524F0
 bool slf__entity__set_vehicle_occupant_damage_tolerance_percentage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8524F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto percentage = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    // anything over 1 counts as out of 100
+    if (percentage > 1.0f)
+        percentage = (f32)((f64)percentage / 100.0);
+
+    if (self->is_a_conglomerate() && self->has_occupant_ifc())
+        self->occupant_ifc()->occupant_damage_tolerance_percentage = percentage;
+
+    return true;
 }
 
+// sub_852560
 bool slf__entity__get_actor_in_seat__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852560)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto seat = stack.local_num(0x04);
+
+    u32 result = 0;
+
+    // the interface is asked for twice
+    if (self &&
+        self->is_a_conglomerate() &&
+        self->has_occupant_ifc() &&
+        self->occupant_ifc()->m_seat_occupants[(i32)seat].resolve())
+
+        result = self->occupant_ifc()->m_seat_occupants[(i32)seat].value;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8525E0

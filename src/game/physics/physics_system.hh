@@ -10,7 +10,8 @@ namespace treyarch {
     public:
         u8       reserved_000[0xD0];
         vector4d m_t_vel;
-        u8       reserved_0e0[0x30];
+        vector4d m_a_vel;
+        u8       reserved_0f0[0x20];
         vector4d m_force_sum;
 
         // inlined @ sub_86ED40
@@ -34,5 +35,6 @@ namespace treyarch {
     };
 
     ASSERT_OFFSETOF(rigid_body, m_t_vel,     0x0D0);
+    ASSERT_OFFSETOF(rigid_body, m_a_vel,     0x0E0);
     ASSERT_OFFSETOF(rigid_body, m_force_sum, 0x110);
 } // treyarch

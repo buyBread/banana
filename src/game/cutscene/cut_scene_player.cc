@@ -25,6 +25,7 @@
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/morph_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
+#include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
 #include "game/wds/terrain.hh"
@@ -501,13 +502,13 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
 
     if (((bool (__thiscall*)(entity*))spawned->vtable[41])(spawned)) { // slot 41
         retail::sub_6048A0((u32*)spawned);
-        retail::sub_63BF20((i32)spawned, false);
+        ((vehicle*)spawned)->enable_physics(false);
 
         if (entry->variant.valid()) {
             auto model = (u32*)retail::sub_58EF50((u32*)references::vehicle_model_depot.read(), (i32)entry->variant.source_hash_code);
 
             if (model)
-                retail::sub_6569F0((i32)spawned, (i32)*model, (i32)*model);
+                ((vehicle*)spawned)->set_model(string_hash(*model));
         }
     } else if (((bool (__thiscall*)(entity*))spawned->vtable[13])(spawned) && entry->variant.valid()) { // slot 13
         if (retail::sub_5FCB20((u32*)spawned)) {

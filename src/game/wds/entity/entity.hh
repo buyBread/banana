@@ -5,6 +5,7 @@
 #include "game/wds/entity/interface/damage_interface.hh"
 #include "game/wds/entity/interface/ise_interface.hh"
 #include "game/wds/entity/interface/manip_obj_interface.hh"
+#include "game/wds/entity/interface/occupant_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/script_data_interface.hh"
@@ -156,6 +157,10 @@ namespace treyarch {
             return (tentacle_interface*)my_ifc_storage->get_ifc(entity_ifc_tentacle);
         }
 
+        occupant_interface* occupant_ifc() const {
+            return (occupant_interface*)my_ifc_storage->get_ifc(entity_ifc_occupant);
+        }
+
         // unless ext flag 0x1000 vetoes it
         bool is_visible() const {
             return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
@@ -211,9 +216,14 @@ namespace treyarch {
             ((void (__thiscall*)(entity*, u32, bool))vtable[65])(this, flag, on);
         }
 
+        // slot 66
+        void set_active(bool active) {
+            ((void (__thiscall*)(entity*, bool))vtable[66])(this, active);
+        }
+
         // slot 67
-        void set_visible(bool visible, bool unk) {
-            ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, unk);
+        void set_visible(bool visible, bool from_conglom) {
+            ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, from_conglom);
         }
 
         // slot 68
