@@ -752,7 +752,7 @@ bool slf__entity__cancel_web_subdue__t::operator()(chuck::vm::vm_stack &stack) {
     auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
-        retail::sub_5FE660((u32*)self->damage_ifc()); // damage_interface::cancel_web_subdue
+        self->damage_ifc()->cancel_web_subdue();
 
     return true;
 }
@@ -835,7 +835,7 @@ bool slf__entity__set_armor_points__num__t::operator()(chuck::vm::vm_stack &stac
     auto value = stack.local_num(0x04);
 
     if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
-        ((void (__thiscall*)(damage_interface*, i32))retail::sub_83D9A0)(self->damage_ifc(), (i32)value); // damage_interface::set_armor_points;
+        self->damage_ifc()->set_armor_points((i32)value);
 
     return true;
 }
@@ -848,7 +848,7 @@ bool slf__entity__set_max_armor_points__num__t::operator()(chuck::vm::vm_stack &
     auto value = stack.local_num(0x04);
 
     if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
-        ((void (__thiscall*)(damage_interface*, i32))retail::sub_636850)(self->damage_ifc(), (i32)value); // damage_interface::set_max_armor_points;
+        self->damage_ifc()->set_max_armor_points((i32)value);
 
     return true;
 }
@@ -887,7 +887,7 @@ bool slf__entity__set_max_hit_points__num__t::operator()(chuck::vm::vm_stack &st
     auto value = stack.local_num(0x04);
 
     if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
-        ((void (__thiscall*)(damage_interface*, i32))retail::sub_6367C0)(self->damage_ifc(), (i32)value); // damage_interface::set_max_hit_points;
+        self->damage_ifc()->set_max_hit_points((i32)value);
 
     return true;
 }
@@ -1104,7 +1104,7 @@ bool slf__entity__is_stunned__t::operator()(chuck::vm::vm_stack &stack) {
 
     auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_damage) ? (((bool (__thiscall*)(damage_interface*))retail::sub_40A880)(self->damage_ifc()) ? 1.0f : 0.0f) : 0.0f;
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_damage) ? (self->damage_ifc()->is_stunned() ? 1.0f : 0.0f) : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -1117,7 +1117,7 @@ bool slf__entity__is_life_bar_hidden__t::operator()(chuck::vm::vm_stack &stack) 
 
     auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_damage) ? (((bool (__thiscall*)(damage_interface*))retail::sub_5FE170)(self->damage_ifc()) ? 1.0f : 0.0f) : 0.0f;
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_damage) ? (self->damage_ifc()->is_life_bar_hidden() ? 1.0f : 0.0f) : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -1132,7 +1132,7 @@ bool slf__entity__set_life_bar_hidden__num__t::operator()(chuck::vm::vm_stack &s
     auto value = stack.local_num(0x04);
 
     if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
-        ((void (__thiscall*)(damage_interface*, bool))retail::sub_5FE190)(self->damage_ifc(), value != 0.0f); // damage_interface::set_life_bar_hidden;
+        self->damage_ifc()->set_life_bar_hidden(value != 0.0f);
 
     return true;
 }
@@ -1155,12 +1155,30 @@ bool slf__entity__set_use_distance_based_invulnerability__num__t::operator()(chu
     return true;
 }
 
+// sub_86D4F0
 bool slf__entity__set_webcast_level__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D4F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_webcast_level(value);
+
+    return true;
 }
 
+// sub_86D540
 bool slf__entity__set_webcast_style__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D540)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_webcast_style((i32)value);
+
+    return true;
 }
 
 // sub_86D590
@@ -1189,20 +1207,62 @@ bool slf__entity__get_manip_throw_velocity__t::operator()(chuck::vm::vm_stack &s
     return true;
 }
 
+// sub_86D6A0
 bool slf__entity__set_webcast_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D6A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!(self && self->is_an_entity() && self->has_ifc(entity_ifc_damage)))
+        return true;
+
+    if (value != 0.0f)
+        self->damage_ifc()->ext_flags |= damage_ifc_ext_flag_webcast_enabled;
+    else
+        self->damage_ifc()->ext_flags &= ~damage_ifc_ext_flag_webcast_enabled;
+
+    return true;
 }
 
+// sub_86D720
 bool slf__entity__set_webcast_sync_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D720)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_webcast_sync_enabled(value != 0.0f);
+
+    return true;
 }
 
+// sub_86D780
 bool slf__entity__set_webcast_counter_chance__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D780)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto chance      = stack.local_num(0x04);
+    auto is_override = stack.local_num(0x08);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_webcast_counter_chance(chance, is_override > 0.0f);
+
+    return true;
 }
 
+// sub_86D7F0
 bool slf__entity__set_webcast_counter_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D7F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_webcast_counter_scale(value);
+
+    return true;
 }
 
 // sub_86D840

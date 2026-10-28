@@ -15,6 +15,21 @@ namespace treyarch {
     class rigid_body_prop_head;
     struct physical_interface_driver;
 
+    // SM3's biped_bone_array::phys_bones
+    enum e_phys_bones : i32 {
+        rb_torso,
+        rb_head,
+        rb_left_up_arm,
+        rb_left_low_arm,
+        rb_right_up_arm,
+        rb_right_low_arm,
+        rb_left_thigh,
+        rb_left_calf,
+        rb_right_thigh,
+        rb_right_calf,
+        num_rb_phys_bones
+    };
+
     // SM3's _PHYS_*, as far as WoS's are read
     enum e_physical_interface_flags : u32 {
         physical_interface_flag_enabled           = 0x00000001,

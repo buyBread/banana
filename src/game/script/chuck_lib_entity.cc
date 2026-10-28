@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 
 #include "retail.hh"
@@ -1558,52 +1559,696 @@ bool slf__entity__is_hanging_from_pole__t::operator()(chuck::vm::vm_stack &stack
     return ((invoke_t)retail::sub_847A00)(this, stack);
 }
 
+// sub_847AB0
 bool slf__entity__enable_pain_sounds__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847AB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto value = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_damage))
+        return true;
+
+    if (std::fabs(value) > 0.0001f)
+        self->damage_ifc()->ext_flags &= ~damage_ifc_ext_flag_disable_pain_sounds;
+    else
+        self->damage_ifc()->ext_flags |= damage_ifc_ext_flag_disable_pain_sounds;
+
+    return true;
 }
 
+// sub_847B30
 bool slf__entity__apply_web_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847B30)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto web_damage = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        const vector3d &z_facing = self->my_abs_po->get_z_facing();
+
+        vector3d dir(-z_facing.x, -z_facing.y, -z_facing.z);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage(nullptr,
+                                                       nullptr,
+                                                       0,
+                                                       web_damage,
+                                                       8,
+                                                       3,
+                                                       nullptr,
+                                                       nullptr,
+                                                       &references::unk_010f7140.get(),
+                                                       &dir,
+                                                       0,
+                                                       &wounded_category,
+                                                       &references::unk_010f7140.get(),
+                                                       num_rb_phys_bones,
+                                                       nullptr,
+                                                       nullptr,
+                                                       false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_847C30
 bool slf__entity__apply_web_damage_with_directed_react__num__num__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847C30)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self               = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto web_damage         = stack.local_num(0x04);
+    auto react_level        = stack.local_num(0x08);
+    auto second_react_level = stack.local_num(0x0C);
+    auto dir                = (vector3d*)&stack.local_uint(0x10);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        math::vector4 direction(dir->x, dir->y, dir->z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        // the script's vector is normalized in place
+        dir->x = unit[0];
+        dir->y = unit[1];
+        dir->z = unit[2];
+
+        const vector3d &position = self->my_abs_po->get_position();
+
+        vector3d loc(position.x + unit[0], position.y + unit[1], position.z + unit[2]);
+
+        hit_react_record react((i32)react_level, 0.0f);
+        hit_react_record second_react((i32)second_react_level, 0.0f);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage(nullptr,
+                                                       nullptr,
+                                                       0,
+                                                       web_damage,
+                                                       8,
+                                                       3,
+                                                       &react,
+                                                       &second_react,
+                                                       &loc,
+                                                       dir,
+                                                       0,
+                                                       &wounded_category,
+                                                       &references::unk_010f7140.get(),
+                                                       num_rb_phys_bones,
+                                                       nullptr,
+                                                       nullptr,
+                                                       false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_847E20
 bool slf__entity__apply_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847E20)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_damage))
+        return true;
+
+    const vector3d &z_facing = self->my_abs_po->get_z_facing();
+
+    vector3d dir(-z_facing.x, -z_facing.y, -z_facing.z);
+
+    string_hash wounded_category;
+    wounded_category.initialize(mash::ALLOCATED);
+
+    self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                           nullptr,
+                                                           (i32)damage,
+                                                           8,
+                                                           2,
+                                                           nullptr,
+                                                           nullptr,
+                                                           &references::unk_010f7140.get(),
+                                                           &dir,
+                                                           0,
+                                                           &wounded_category,
+                                                           &references::unk_010f7140.get(),
+                                                           num_rb_phys_bones,
+                                                           nullptr,
+                                                           nullptr,
+                                                           false);
+
+    return true;
 }
 
+// sub_847F00
 bool slf__entity__apply_damage_with_directed_react__num__num__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847F00)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self               = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage             = stack.local_num(0x04);
+    auto react_level        = stack.local_num(0x08);
+    auto second_react_level = stack.local_num(0x0C);
+    auto dir                = (vector3d*)&stack.local_uint(0x10);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        math::vector4 direction(dir->x, dir->y, dir->z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        // the script's vector is normalized in place
+        dir->x = unit[0];
+        dir->y = unit[1];
+        dir->z = unit[2];
+
+        const vector3d &position = self->my_abs_po->get_position();
+
+        vector3d loc(position.x + unit[0], position.y + unit[1], position.z + unit[2]);
+
+        hit_react_record react((i32)react_level, 0.0f);
+        hit_react_record second_react((i32)second_react_level, 0.0f);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             &loc,
+                                                                             dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8480F0
 bool slf__entity__apply_damage_with_react__num__num__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8480F0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self               = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage             = stack.local_num(0x04);
+    auto react_level        = stack.local_num(0x08);
+    auto second_react_level = stack.local_num(0x0C);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x10)).resolve();
+
+        vector3d loc;
+
+        // without an attacker entity, the hit comes from one unit along the entity's z facing
+        if (attacker && attacker->is_an_entity())
+            loc = attacker->my_abs_po->get_position();
+        else {
+            attacker = nullptr;
+
+            const vector3d &position = self->my_abs_po->get_position();
+            const vector3d &z_facing = self->my_abs_po->get_z_facing();
+
+            loc = vector3d(position.x + z_facing.x, position.y + z_facing.y, position.z + z_facing.z);
+        }
+
+        const vector3d &position = self->my_abs_po->get_position();
+
+        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        hit_react_record react((i32)react_level, 0.0f);
+        hit_react_record second_react((i32)second_react_level, 0.0f);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             &loc,
+                                                                             &dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_848380
 bool slf__entity__apply_damage_with_react_and_scales__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_848380)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage = stack.local_num(0x04);
+
+    // the second react's arguments default to the first's
+    i32 optional_count = count - 2;
+
+    i32 react_level        = (i32)(optional_count > 0 ? stack.local_num(0x0C) : 0.0f);
+    f32 scale_0            = optional_count > 1 ? stack.local_num(0x10) : 1.0f;
+    f32 scale_1            = optional_count > 2 ? stack.local_num(0x14) : 1.0f;
+    f32 scale_2            = optional_count > 3 ? stack.local_num(0x18) : 1.0f;
+    f32 unk_04             = optional_count > 4 ? stack.local_num(0x1C) : 0.0f;
+    i32 second_react_level = (i32)(optional_count > 5 ? stack.local_num(0x20) : (f32)react_level);
+    f32 second_scale_0     = optional_count > 6 ? stack.local_num(0x24) : scale_0;
+    f32 second_scale_1     = optional_count > 7 ? stack.local_num(0x28) : scale_1;
+    f32 second_scale_2     = optional_count > 8 ? stack.local_num(0x2C) : scale_2;
+    f32 second_unk_04      = optional_count > 9 ? stack.local_num(0x30) : 0.0f;
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x08)).resolve();
+
+        vector3d loc;
+
+        // without an attacker entity, the hit comes from one unit along the entity's z facing
+        if (attacker && attacker->is_an_entity())
+            loc = attacker->my_abs_po->get_position();
+        else {
+            attacker = nullptr;
+
+            const vector3d &position = self->my_abs_po->get_position();
+            const vector3d &z_facing = self->my_abs_po->get_z_facing();
+
+            loc = vector3d(position.x + z_facing.x, position.y + z_facing.y, position.z + z_facing.z);
+        }
+
+        const vector3d &position = self->my_abs_po->get_position();
+
+        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
+        hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             &loc,
+                                                                             &dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_848800
 bool slf__entity__apply_damage_with_react_at_pos__num__num__num__vector3d__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_848800)(this, stack);
+    stack.sp -= 0x20;
+
+    auto self               = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage             = stack.local_num(0x04);
+    auto react_level        = stack.local_num(0x08);
+    auto second_react_level = stack.local_num(0x0C);
+    auto position           = (const vector3d*)&stack.local_uint(0x10);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x1C)).resolve();
+
+        if (attacker && !attacker->is_an_entity())
+            attacker = nullptr;
+
+        const vector3d &abs_position = self->my_abs_po->get_position();
+
+        math::vector4 direction(abs_position.x - position->x,
+                                abs_position.y - position->y,
+                                abs_position.z - position->z,
+                                0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        hit_react_record react((i32)react_level, 0.0f);
+        hit_react_record second_react((i32)second_react_level, 0.0f);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             position,
+                                                                             &dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_848A10
 bool slf__entity__apply_damage_with_react_and_scales_at_pos__num__vector3d__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_848A10)(this, stack);
+    // the count word covers every argument after self, the vector as one
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 3));
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage   = stack.local_num(0x04);
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    // the second react's arguments default to the first's
+    i32 optional_count = count - 3;
+
+    i32 react_level        = (i32)(optional_count > 0 ? stack.local_num(0x18) : 0.0f);
+    f32 scale_0            = optional_count > 1 ? stack.local_num(0x1C) : 1.0f;
+    f32 scale_1            = optional_count > 2 ? stack.local_num(0x20) : 1.0f;
+    f32 scale_2            = optional_count > 3 ? stack.local_num(0x24) : 1.0f;
+    f32 unk_04             = optional_count > 4 ? stack.local_num(0x28) : 0.0f;
+    i32 second_react_level = (i32)(optional_count > 5 ? stack.local_num(0x2C) : (f32)react_level);
+    f32 second_scale_0     = optional_count > 6 ? stack.local_num(0x30) : scale_0;
+    f32 second_scale_1     = optional_count > 7 ? stack.local_num(0x34) : scale_1;
+    f32 second_scale_2     = optional_count > 8 ? stack.local_num(0x38) : scale_2;
+    f32 second_unk_04      = optional_count > 9 ? stack.local_num(0x3C) : 0.0f;
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x14)).resolve();
+
+        if (attacker && !attacker->is_an_entity())
+            attacker = nullptr;
+
+        const vector3d &abs_position = self->my_abs_po->get_position();
+
+        math::vector4 direction(abs_position.x - position->x,
+                                abs_position.y - position->y,
+                                abs_position.z - position->z,
+                                0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
+        hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             position,
+                                                                             &dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_848E20
 bool slf__entity__apply_damage_with_react_and_scales_at_pos_no_physics__num__vector3d__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_848E20)(this, stack);
+    // the count word covers every argument after self, the vector as one
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 3));
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage   = stack.local_num(0x04);
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    // the second react's arguments default to the first's
+    i32 optional_count = count - 3;
+
+    i32 react_level        = (i32)(optional_count > 0 ? stack.local_num(0x18) : 0.0f);
+    f32 scale_0            = optional_count > 1 ? stack.local_num(0x1C) : 1.0f;
+    f32 scale_1            = optional_count > 2 ? stack.local_num(0x20) : 1.0f;
+    f32 scale_2            = optional_count > 3 ? stack.local_num(0x24) : 1.0f;
+    f32 unk_04             = optional_count > 4 ? stack.local_num(0x28) : 0.0f;
+    i32 second_react_level = (i32)(optional_count > 5 ? stack.local_num(0x2C) : (f32)react_level);
+    f32 second_scale_0     = optional_count > 6 ? stack.local_num(0x30) : scale_0;
+    f32 second_scale_1     = optional_count > 7 ? stack.local_num(0x34) : scale_1;
+    f32 second_scale_2     = optional_count > 8 ? stack.local_num(0x38) : scale_2;
+    f32 second_unk_04      = optional_count > 9 ? stack.local_num(0x3C) : 0.0f;
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x14)).resolve();
+
+        if (attacker && !attacker->is_an_entity())
+            attacker = nullptr;
+
+        const vector3d &abs_position = self->my_abs_po->get_position();
+
+        math::vector4 direction(abs_position.x - position->x,
+                                abs_position.y - position->y,
+                                abs_position.z - position->z,
+                                0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
+        hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             &react,
+                                                                             &second_react,
+                                                                             position,
+                                                                             &dir,
+                                                                             0x10,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_849230
 bool slf__entity__apply_melee_damage__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849230)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_damage)) {
+        auto attacker = (entity*)arch_base_vhandle(stack.local_uint(0x08)).resolve();
+
+        vector3d loc;
+
+        // without an attacker entity, the hit comes from one unit along the entity's z facing
+        if (attacker && attacker->is_an_entity())
+            loc = attacker->my_abs_po->get_position();
+        else {
+            attacker = nullptr;
+
+            const vector3d &position = self->my_abs_po->get_position();
+            const vector3d &z_facing = self->my_abs_po->get_z_facing();
+
+            loc = vector3d(position.x + z_facing.x, position.y + z_facing.y, position.z + z_facing.z);
+        }
+
+        const vector3d &position = self->my_abs_po->get_position();
+
+        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
+        math::vector4 unit;
+
+        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+
+        vector3d dir(unit[0], unit[1], unit[2]);
+
+        string_hash wounded_category;
+        wounded_category.initialize(mash::ALLOCATED);
+
+        result = (f32)self->damage_ifc()->apply_damage_with_combo_web_damage(attacker,
+                                                                             nullptr,
+                                                                             (i32)damage,
+                                                                             8,
+                                                                             3,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             &loc,
+                                                                             &dir,
+                                                                             0,
+                                                                             &wounded_category,
+                                                                             &references::unk_010f7140.get(),
+                                                                             num_rb_phys_bones,
+                                                                             nullptr,
+                                                                             nullptr,
+                                                                             false);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_849440
 bool slf__entity__apply_explosive_damage__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849440)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage   = stack.local_num(0x04);
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    // the hero gets a react, anyone else a plain explosive hit
+    bool hero = retail::sub_601C50((u32*)self); // entity_base::is_hero
+
+    if (!self || !self->has_ifc(entity_ifc_damage))
+        return true;
+
+    const vector3d &abs_position = self->my_abs_po->get_position();
+
+    vector3d dir(abs_position.x - position->x, abs_position.y - position->y, abs_position.z - position->z);
+
+    retail::sub_402050((f32*)&dir); // vector3d::normalize
+
+    string_hash wounded_category;
+
+    if (hero) {
+        hit_react_record react(6, 0.0f, 1.0f, 1.0f, 1.0f);
+        hit_react_record second_react(6, 0.0f, 1.0f, 1.0f, 1.0f);
+
+        wounded_category.initialize(mash::ALLOCATED);
+
+        self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                               nullptr,
+                                                               (i32)damage,
+                                                               8,
+                                                               3,
+                                                               &react,
+                                                               &second_react,
+                                                               position,
+                                                               &dir,
+                                                               0,
+                                                               &wounded_category,
+                                                               &references::unk_010f7140.get(),
+                                                               num_rb_phys_bones,
+                                                               nullptr,
+                                                               nullptr,
+                                                               false);
+    } else {
+        wounded_category.initialize(mash::ALLOCATED);
+
+        self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                               nullptr,
+                                                               (i32)damage,
+                                                               8,
+                                                               4,
+                                                               nullptr,
+                                                               nullptr,
+                                                               position,
+                                                               &dir,
+                                                               0,
+                                                               &wounded_category,
+                                                               &references::unk_010f7140.get(),
+                                                               num_rb_phys_bones,
+                                                               nullptr,
+                                                               nullptr,
+                                                               false);
+    }
+
+    return true;
 }
 
 bool slf__entity__attach_to_wall__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1614,24 +2259,131 @@ bool slf__entity__attach_to_wall__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_849820)(this, stack);
 }
 
+// sub_8498D0
 bool slf__entity__apply_explosive_damage__num__vector3d__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8498D0)(this, stack);
+    stack.sp -= 0x20;
+
+    auto self         = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto damage       = stack.local_num(0x04);
+    auto position     = (const vector3d*)&stack.local_uint(0x08);
+    auto override_dir = (const vector3d*)&stack.local_uint(0x14);
+
+    // the hero gets a react, anyone else a plain explosive hit
+    bool hero = retail::sub_601C50((u32*)self); // entity_base::is_hero
+
+    if (!self || !self->has_ifc(entity_ifc_damage))
+        return true;
+
+    const vector3d &abs_position = self->my_abs_po->get_position();
+
+    vector3d dir(abs_position.x - position->x, abs_position.y - position->y, abs_position.z - position->z);
+
+    retail::sub_402050((f32*)&dir); // vector3d::normalize
+
+    string_hash wounded_category;
+
+    if (hero) {
+        hit_react_record react(6, 0.0f, 1.0f, 1.0f, 1.0f);
+        hit_react_record second_react(6, 0.0f, 1.0f, 1.0f, 1.0f);
+
+        wounded_category.initialize(mash::ALLOCATED);
+
+        self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                               nullptr,
+                                                               (i32)damage,
+                                                               8,
+                                                               3,
+                                                               &react,
+                                                               &second_react,
+                                                               position,
+                                                               &dir,
+                                                               0,
+                                                               &wounded_category,
+                                                               &references::unk_010f7140.get(),
+                                                               num_rb_phys_bones,
+                                                               nullptr,
+                                                               nullptr,
+                                                               false);
+    } else {
+        wounded_category.initialize(mash::ALLOCATED);
+
+        self->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                               nullptr,
+                                                               (i32)damage,
+                                                               8,
+                                                               4,
+                                                               nullptr,
+                                                               nullptr,
+                                                               position,
+                                                               &dir,
+                                                               0,
+                                                               &wounded_category,
+                                                               override_dir,
+                                                               num_rb_phys_bones,
+                                                               nullptr,
+                                                               nullptr,
+                                                               false);
+    }
+
+    return true;
 }
 
+// sub_849B90
 bool slf__entity__get_last_entity_that_damaged_me__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849B90)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (self && self->has_ifc(entity_ifc_damage))
+        if (entity* attacker = self->damage_ifc()->get_damage_attacker())
+            result = attacker->my_handle;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_849C00
 bool slf__entity__set_damage_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849C00)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto type  = stack.local_num(0x04);
+    auto scale = stack.local_num(0x08);
+
+    if (self && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_damage_scale((i32)type, scale);
+
+    return true;
 }
 
+// sub_849C50
 bool slf__entity__set_damage_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849C50)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto scale = stack.local_num(0x04);
+
+    if (self && self->has_ifc(entity_ifc_damage))
+        self->damage_ifc()->set_damage_scale(scale);
+
+    return true;
 }
 
+// sub_849C90
 bool slf__entity__get_damage_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849C90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto type = stack.local_num(0x04);
+
+    f32 result = self && self->has_ifc(entity_ifc_damage) ? self->damage_ifc()->get_damage_scale((i32)type) : 1.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_849D10
