@@ -2,6 +2,7 @@
 
 #include "vc8/list.hh"
 #include "game/frontend/conversation_menu_system.hh"
+#include "game/frontend/entity_tracker.hh"
 #include "game/frontend/igo/igo_3d_agility_test.hh"
 #include "game/frontend/igo/igo_3d_boss_meter_system.hh"
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
@@ -10,7 +11,6 @@
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
 #include "game/frontend/igo/igo_widget_group.hh"
-#include "game/frontend/ui_object_manager.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "game/container/legacy_list.hh"
@@ -111,7 +111,7 @@ namespace treyarch {
         void*                               widget_owner_164;
         u8                                  conversation_state_168;
         u8                                  reserved_169[0x03];
-        treyarch::ui_object_manager*        ui_object_manager;
+        entity_tracker_manager*             entity_tracker_mgr;
         u8                                  reserved_170[0x04];
         void*                               unknown_widget_174;
         u8                                  reserved_178[0x04];
@@ -191,7 +191,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, letterbox,                     0x158);
     ASSERT_OFFSETOF(ui_frontend, button_tips,                   0x15C);
     ASSERT_OFFSETOF(ui_frontend, conversation_menu_system,      0x160);
-    ASSERT_OFFSETOF(ui_frontend, ui_object_manager,             0x16C);
+    ASSERT_OFFSETOF(ui_frontend, entity_tracker_mgr,            0x16C);
     ASSERT_OFFSETOF(ui_frontend, unknown_widget_174,            0x174);
     ASSERT_OFFSETOF(ui_frontend, startup_widget_17c,            0x17C);
     ASSERT_OFFSETOF(ui_frontend, camera_widget,                 0x18C);

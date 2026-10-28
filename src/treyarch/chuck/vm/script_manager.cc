@@ -59,7 +59,7 @@ script_manager::script_manager() : flags(0),
     }
 
     garbage_collection_callbacks[script_garbage_collection_unk_00]                 = (script_instance_garbage_collection_callback_t)retail::sub_5B4A70; // nullsub
-    garbage_collection_callbacks[script_garbage_collection_entity_tracker]         = &script_garbage_collection::entity_trackers;
+    garbage_collection_callbacks[script_garbage_collection_entity_tracker]         = &script_garbage_collection::vm_entity_tracker_garbage_collection_callback;
     garbage_collection_callbacks[script_garbage_collection_line_info]              = &script_garbage_collection::line_infos;
     garbage_collection_callbacks[script_garbage_collection_trigger]                = &script_garbage_collection::triggers;
     garbage_collection_callbacks[script_garbage_collection_entity]                 = &script_garbage_collection::entities;

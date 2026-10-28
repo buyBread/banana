@@ -154,6 +154,11 @@ namespace treyarch {
             ((void (__thiscall*)(entity*, bool))vtable[117])(this, unk);
         }
 
+        // slot 122
+        void set_render_scale(const vector3d &scale) {
+            ((void (__thiscall*)(entity*, const vector3d*))vtable[122])(this, &scale);
+        }
+
         void invoke_render_phase();
 
         generic_interface* find_ifc_by_name(string_hash name);

@@ -10,9 +10,9 @@ using namespace treyarch;
 using namespace treyarch::chuck::vm;
 
 // sub_85CCA0
-void script_garbage_collection::entity_trackers(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
+void script_garbage_collection::vm_entity_tracker_garbage_collection_callback(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next)
-        retail::sub_6DFDA0((u32*)references::frontend.get().igo->ui_object_manager, stuff->element);
+        references::frontend.get().igo->entity_tracker_mgr->destroy_entity_tracker(stuff->element);
 }
 
 // sub_85AB00
@@ -97,7 +97,7 @@ void script_garbage_collection::widgets_3d(script_instance*, stuff_to_delete_lis
 // sub_85CCD0
 void script_garbage_collection::city_life_trackers(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next)
-        retail::sub_6E0020((i32)references::frontend.get().igo->ui_object_manager, (i32)stuff->element);
+        retail::sub_6E0020((i32)references::frontend.get().igo->entity_tracker_mgr, (i32)stuff->element);
 }
 
 // sub_862400

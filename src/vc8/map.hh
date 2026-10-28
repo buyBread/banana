@@ -18,6 +18,7 @@ namespace treyarch { namespace vc8 {
     class map : public tree<K, std::pair<const K, V>, map_key<K, V>, compare_t> {
 
     public:
+        // sub_6F48E0
         // sub_764120
         // sub_764190
         // sub_979870

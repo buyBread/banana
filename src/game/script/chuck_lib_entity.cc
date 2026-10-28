@@ -4,6 +4,9 @@
 #include "game/als/als.hh"
 #include "game/als/param.hh"
 #include "game/arch_base.hh"
+#include "game/frontend/entity_tracker.hh"
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/ui_frontend.hh"
 #include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/script/chuck_lib_entity.hh"
@@ -173,12 +176,28 @@ bool slf__destroy_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_84B560)(this, stack);
 }
 
+// sub_84B8C0
 bool slf__entity_has_entity_tracker__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B8C0)(this, stack);
+    stack.sp -= 0x04;
+
+    entity_tracker_manager* trackers = references::frontend.get().igo->entity_tracker_mgr;
+
+    f32 result = trackers->get_tracker_by_entity(arch_base_vhandle(stack.local_uint(0x00))) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B910
 bool slf__entity_get_entity_tracker__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B910)(this, stack);
+    stack.sp -= 0x04;
+
+    entity_tracker_id result = references::frontend.get().igo->entity_tracker_mgr->get_tracker_by_entity(arch_base_vhandle(stack.local_uint(0x00)));
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__enable_entity_fading__num__t::operator()(chuck::vm::vm_stack &stack) {

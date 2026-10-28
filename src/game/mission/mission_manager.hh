@@ -25,6 +25,7 @@ namespace treyarch {
     }} // chuck::vm
 
     class event;
+    class poi_icon_widget;
     struct region;
 
     enum e_mission_manager_state : u32 {
@@ -244,7 +245,7 @@ namespace treyarch {
         hires_clock_t                 frame_clock;
         u32                           zoom_map_poi_selected_callback_id;
         u32                           zoom_map_poi_unselected_callback_id;
-        void*                         selected_poi_icon;
+        poi_icon_widget*              selected_poi_icon;
         mission_icon_info             selected_poi;
         void*                         icon_entity_pool;
         u8                            unk_23c; // the level is _megacity

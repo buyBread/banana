@@ -244,7 +244,7 @@ void ui_frontend::draw() {
                 text_debug_widget->draw();
 
             if (!current_igo->conversation_state_168) {
-                current_igo->ui_object_manager->draw();
+                current_igo->entity_tracker_mgr->render();
                 retail::sub_9818F0((i32)mission_manager::inst());
             }
 

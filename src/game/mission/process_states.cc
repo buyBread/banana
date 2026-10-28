@@ -85,7 +85,7 @@ void mission_manager::process_state_initial_startup(f32 time_inc) {
 
     if (!selected_poi_icon) {
         void* allocation = mm::allocate(0x40);
-        selected_poi_icon = allocation ? retail::sub_70C4A0((u8*)allocation, 6) : nullptr;
+        selected_poi_icon = allocation ? (poi_icon_widget*)retail::sub_70C4A0((u8*)allocation, 6) : nullptr;
     }
 }
 

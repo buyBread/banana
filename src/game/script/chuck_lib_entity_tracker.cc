@@ -1,14 +1,48 @@
 #include "retail.hh"
+#include "game/arch_base.hh"
+#include "game/frontend/entity_tracker.hh"
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/ui_frontend.hh"
 #include "game/script/chuck_lib_entity_tracker.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
 
 using namespace treyarch;
 
+// sub_85DA60
 bool slf__create_entity_tracker__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85DA60)(this, stack);
+    stack.sp -= 0x04;
+
+    arch_base_vhandle ent(stack.local_uint(0x00));
+    arch_base*        self   = ent.resolve();
+    entity_tracker_id result = 0;
+
+    if (self && self->is_an_entity()) {
+        bool ok = false;
+
+        result = references::frontend.get().igo->entity_tracker_mgr->create_entity_tracker(ent, &ok);
+
+        if (ok)
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity_tracker, result);
+        else
+            result = 0;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85DB00
 bool slf__destroy_entity_tracker__entity_tracker__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85DB00)(this, stack);
+    stack.sp -= 0x04;
+
+    entity_tracker_id id = stack.local_uint(0x00);
+
+    stack.thread->get_instance(-1)->remove_allocated_stuff(chuck::vm::script_garbage_collection_entity_tracker, id);
+    references::frontend.get().igo->entity_tracker_mgr->destroy_entity_tracker(id);
+
+    return true;
 }
 
 bool slf__create_city_life_tracker__num__t::operator()(chuck::vm::vm_stack &stack) {

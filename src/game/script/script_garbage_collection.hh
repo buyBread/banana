@@ -4,7 +4,8 @@
 
 // the manager's defaults per garbage-collection type; each releases what a dying instance's natives left listed
 namespace treyarch { namespace script_garbage_collection {
-    void entity_trackers        (chuck::vm::script_instance* si, chuck::vm::stuff_to_delete_list_t &stuff_to_delete);
+    void vm_entity_tracker_garbage_collection_callback(chuck::vm::script_instance* si, chuck::vm::stuff_to_delete_list_t &stuff_to_delete);
+
     void line_infos             (chuck::vm::script_instance* si, chuck::vm::stuff_to_delete_list_t &stuff_to_delete);
     void triggers               (chuck::vm::script_instance* si, chuck::vm::stuff_to_delete_list_t &stuff_to_delete);
     void entities               (chuck::vm::script_instance* si, chuck::vm::stuff_to_delete_list_t &stuff_to_delete);
