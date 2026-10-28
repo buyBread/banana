@@ -19,6 +19,7 @@ namespace treyarch {
     } // ngl
 
     namespace amalga {
+        struct resource_directory;
         struct resource_partition;
 
         // the slot, when there is one, is the current resource context for this object's lifetime
@@ -54,9 +55,14 @@ namespace treyarch {
 
             resource_amalgatoc* load_amalgapak();
 
+            resource_partition* get_partition_pointer(e_resource_partition partition);
             resource_partition* get_partition_pointer(resource_pack_slot* pack_slot);
 
+            resource_pack_slot* get_best_context(e_resource_partition partition_enum);
+
             resource_pack_slot* get_resource_context();
+            resource_pack_slot* push_resource_context(resource_pack_slot* context);
+            resource_pack_slot* pop_resource_context();
 
             u8* get_resource(const resource_key &key, u32* size, resource_pack_slot** slot);
             void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot);
@@ -75,6 +81,9 @@ namespace treyarch {
 
                 // has no name in any build; held around every resource context push and pop
                 inline util::memory_reference<engine_recursive_lock> unk_010300a8 { 0x010300A8 };
+
+                // the top context's directory, kept by every push and pop
+                inline util::memory_reference<resource_directory*> current_directory { 0x0102FE78 };
 
                 inline util::memory_reference<std::array<u8*, buffer_location_count>> resource_buffer      { 0x0102FE58 };
                 inline util::memory_reference<std::array<u32, buffer_location_count>> resource_buffer_used { 0x0102FE60 };

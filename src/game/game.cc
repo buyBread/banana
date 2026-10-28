@@ -208,12 +208,12 @@ void game::unload_current_level() {
     lock.acquire();
     amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
-    retail::sub_757240(); // pop_resource_context
+    amalga::resource_manager::pop_resource_context();
 
     amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
     lock.release();
 
-    auto* common = (amalga::resource_partition*)retail::sub_739C40(amalga::resource_partition_common);
+    auto* common = amalga::resource_manager::get_partition_pointer(amalga::resource_partition_common);
 
     common->streamer.flush((amalga::resource_pack_streamer::flush_callback)retail::sub_771950);
     common->streamer.unload_all();
@@ -402,7 +402,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
         
         chuck::script_library::slc_manager::setup();
 
-        auto* common = (amalga::resource_partition*)retail::sub_739C40(amalga::resource_partition_common);
+        auto* common = amalga::resource_manager::get_partition_pointer(amalga::resource_partition_common);
 
         references::unk_01111758.write(common);
         references::unk_01111754.write(common->pack_slots[0]);
@@ -416,14 +416,14 @@ void game::load_this_level(bool start_only, bool finish_only) {
     references::unk_01111758.read()->streamer.flush((amalga::resource_pack_streamer::flush_callback)retail::sub_771950);
 
     {
-        auto* slot = (amalga::resource_pack_slot*)retail::sub_74D900(amalga::resource_partition_common); // get_best_context
+        auto* slot = amalga::resource_manager::get_best_context(amalga::resource_partition_common);
 
         engine_recursive_lock &lock = amalga::resource_manager::references::unk_010300a8.get();
 
         lock.acquire();
         amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
-        retail::sub_767760((i32)slot); // push_resource_context
+        amalga::resource_manager::push_resource_context(slot);
 
         amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
         lock.release();
@@ -529,7 +529,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
         string_hash global_script;
         global_script.initialize(mash::ALLOCATED, references::g_world_ptr.read()->script_mgr.global_script_filename.c_str());
 
-        auto* slot = (amalga::resource_pack_slot*)retail::sub_74D900(amalga::resource_partition_common); // get_best_context
+        auto* slot = amalga::resource_manager::get_best_context(amalga::resource_partition_common);
 
         scripts.load(global_script, chuck::vm::script_manager_load_flag_master, slot, string_hash());
     }

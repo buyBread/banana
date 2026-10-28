@@ -323,7 +323,7 @@ native_resource_context::native_resource_context(const chuck::vm::vm_stack &stac
     amalga::resource_manager::references::unk_010300a8.get().acquire();
     amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
-    retail::sub_767760((i32)m_context); // push_resource_context
+    amalga::resource_manager::push_resource_context(m_context);
 }
 
 // inlined @ sub_856FB0
@@ -333,7 +333,7 @@ native_resource_context::~native_resource_context() {
     if (!m_context)
         return;
 
-    retail::sub_757240(); // pop_resource_context
+    amalga::resource_manager::pop_resource_context();
 
     amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
     amalga::resource_manager::references::unk_010300a8.get().release();

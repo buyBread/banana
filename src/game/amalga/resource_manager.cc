@@ -157,6 +157,11 @@ void amalga::resource_manager::frame_advance(f32 dt, f32 max_ms) {
     references::advancing.write(false);
 }
 
+// sub_739C40
+amalga::resource_partition* amalga::resource_manager::get_partition_pointer(e_resource_partition partition) {
+    return (*references::partitions.read())[partition];
+}
+
 // sub_739C50
 amalga::resource_partition* amalga::resource_manager::get_partition_pointer(resource_pack_slot* pack_slot) {
     vc8::vector<resource_partition*>* partitions = references::partitions.read();
@@ -185,6 +190,63 @@ amalga::resource_pack_slot* amalga::resource_manager::get_resource_context() {
     return stack.size() ? stack.back() : nullptr;
 }
 
+// sub_767760
+amalga::resource_pack_slot* amalga::resource_manager::push_resource_context(resource_pack_slot* context) { // returns the context it covers
+    engine_lock_scope lock(&references::unk_010300a8.get());
+
+    resource_pack_slot* previous = get_resource_context();
+
+    engine_lock_scope stack_lock(references::resource_context_stack_mutex.read());
+
+    references::resource_context_stack.get().push_back(context);
+
+    engine_lock_scope directory_lock(&references::unk_010300a8.get());
+
+    references::current_directory.write(context ? context->pack_directory : nullptr);
+
+    return previous;
+}
+
+// sub_757240
+amalga::resource_pack_slot* amalga::resource_manager::pop_resource_context() { // returns the context it took off
+    engine_lock_scope lock(&references::unk_010300a8.get());
+
+    resource_pack_slot* previous = get_resource_context();
+
+    engine_lock_scope stack_lock(references::resource_context_stack_mutex.read());
+
+    vc8::vector<resource_pack_slot*> &stack = references::resource_context_stack.get();
+
+    if (stack.size())
+        stack.pop_back();
+
+    resource_pack_slot* context = get_resource_context();
+
+    engine_lock_scope directory_lock(&references::unk_010300a8.get());
+
+    references::current_directory.write(context ? context->pack_directory : nullptr);
+
+    return previous;
+}
+
+// sub_74D900
+amalga::resource_pack_slot* amalga::resource_manager::get_best_context(e_resource_partition partition_enum) { // missions prefer a slot outside the sub allocators
+    engine_lock_scope lock(&references::unk_010300a8.get());
+
+    resource_partition* partition = (*references::partitions.read())[partition_enum];
+
+    if (partition_enum == resource_partition_mission) {
+        const u32 slot_count = partition->pack_slots.size();
+
+        for (u32 slot = 0; slot < slot_count; ++slot) {
+            if (retail::sub_72DE20((i32)partition, (i32)partition->pack_slots[slot]) == -1) // get_sub_allocator_index
+                return partition->pack_slots[slot];
+        }
+    }
+
+    return partition->pack_slots[0];
+}
+
 // sub_7629D0
 u8* amalga::resource_manager::get_resource(const resource_key         &key,
                                                  u32*                  size,
@@ -211,7 +273,7 @@ amalga::push_resource_context_stack_object::push_resource_context_stack_object(r
     resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
     if (slot) {
-        m_context = (resource_pack_slot*)retail::sub_767760((i32)slot); // push_resource_context
+        m_context = resource_manager::push_resource_context(slot);
         m_pushed  = true;
     } else {
         m_context = resource_manager::get_resource_context();
@@ -222,7 +284,7 @@ amalga::push_resource_context_stack_object::push_resource_context_stack_object(r
 // sub_44E6C0
 amalga::push_resource_context_stack_object::~push_resource_context_stack_object() {
     if (m_pushed)
-        retail::sub_757240(); // pop_resource_context
+        resource_manager::pop_resource_context();
 
     resource_manager::references::resource_context_stack_mutex.read()->release();
     resource_manager::references::unk_010300a8.get().release();
@@ -233,12 +295,12 @@ amalga::resource_context_stack_object::resource_context_stack_object(resource_pa
     resource_manager::references::unk_010300a8.get().acquire();
     resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
-    retail::sub_767760((i32)context); // push_resource_context
+    resource_manager::push_resource_context(context);
 }
 
 // sub_42AC40
 amalga::resource_context_stack_object::~resource_context_stack_object() {
-    retail::sub_757240(); // pop_resource_context
+    resource_manager::pop_resource_context();
 
     resource_manager::references::resource_context_stack_mutex.read()->release();
     resource_manager::references::unk_010300a8.get().release();

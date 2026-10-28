@@ -2,6 +2,7 @@
 
 #include "game/amalga/resource_memory_map.hh"
 #include "game/amalga/resource_versions.hh"
+#include "game/binary_search.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/vector.hh"
@@ -65,6 +66,20 @@ namespace treyarch { namespace amalga {
             name        .unmash(mash_info, this, buffer);
             pack_entries.unmash(mash_info, this, buffer);
             memory_maps .unmash(mash_info, this, buffer);
+        }
+
+        // sub_73A200
+        // inlined @ sub_76EEE0
+        resource_amalgatoc_pack_entry* find_pack_entry(string_hash name_hash) const {
+            i32 index = 0;
+
+            return binary_search_array_cmp(&name_hash,
+                                           pack_entries.data,
+                                           0,
+                                           (i32)pack_entries.size,
+                                           &index,
+                                           resource_amalgatoc_pack_entry::compare_name_hash) ?
+                pack_entries.data[index] : nullptr;
         }
     };
 

@@ -47,7 +47,7 @@ void mission_manager::advance_act_transition() {
             break;
 
         case 4: {
-            auto* partition = (amalga::resource_partition*)retail::sub_739C40(amalga::resource_partition_act);
+            auto* partition = amalga::resource_manager::get_partition_pointer(amalga::resource_partition_act);
 
             if (partition->pack_slots[0]->slot_state != amalga::slot_state_ready)
                 break;
@@ -126,7 +126,7 @@ void mission_manager::load_act_pack() {
     string_hash pack_hash;
     pack_hash.initialize(mash::ALLOCATED, pack_name);
 
-    if (!retail::sub_73A200((u32*)amalga::resource_manager::references::amalgatoc.read(), pack_hash.source_hash_code)) {
+    if (!amalga::resource_manager::references::amalgatoc.read()->find_pack_entry(pack_hash)) {
         event_manager::raise_event(references::current_act_post_update.read(), arch_base_vhandle());
 
         act_transition_state = 6;
@@ -152,13 +152,14 @@ i32 mission_manager::get_mission_act(const mission_info&) const {
     string_hash pack_hash;
     pack_hash.initialize(mash::ALLOCATED, current_mission.name.c_str());
 
-    auto* amalgatoc = (u32*)amalga::resource_manager::references::amalgatoc.read();
-    auto* pack      = (amalga::resource_amalgatoc_pack_entry*)retail::sub_73A200(amalgatoc, pack_hash.source_hash_code);
+    amalga::resource_amalgatoc* amalgatoc = amalga::resource_manager::references::amalgatoc.read();
+
+    amalga::resource_amalgatoc_pack_entry* pack = amalgatoc->find_pack_entry(pack_hash);
 
     if (!pack)
         return mission_act;
 
-    auto* group = (amalga::resource_amalgatoc_pack_entry*)retail::sub_73A200(amalgatoc, pack->group_hash.source_hash_code);
+    amalga::resource_amalgatoc_pack_entry* group = amalgatoc->find_pack_entry(pack->group_hash);
 
     if (!group)
         return mission_act;

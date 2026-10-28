@@ -387,13 +387,13 @@ nal::anim* als::find_anim_in_partition(amalga::e_resource_partition partition_en
                                        bool                         every_slot,
                                        bool*                        found) {
 
-    auto partition = (amalga::resource_partition*)retail::sub_739C40(partition_enum);
+    auto partition = amalga::resource_manager::get_partition_pointer(partition_enum);
 
     if (!partition || !partition->pack_slots.size())
         return nullptr;
 
     if (!every_slot)
-        return find_anim_in_pack((amalga::resource_pack_slot*)retail::sub_74D900(partition_enum), found, the_anim_name); // get_best_context
+        return find_anim_in_pack(amalga::resource_manager::get_best_context(partition_enum), found, the_anim_name);
 
     for (amalga::resource_pack_slot* slot : partition->pack_slots) {
         if (nal::anim* anim = find_anim_in_pack(slot, found, the_anim_name))

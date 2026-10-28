@@ -87,7 +87,7 @@ void game::advance_state_unk_2(f32 time_inc) {
         lock.acquire();
         amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
 
-        retail::sub_767760((i32)slot); // push_resource_context
+        amalga::resource_manager::push_resource_context(slot);
 
         level.name = &references::level_name_buffer.get();
         level.reset_level_load_data();
@@ -138,7 +138,7 @@ void game::advance_state_load_level(f32 time_inc) {
     level.name = &references::level_name_buffer.get();
 
     if (!references::unk_01036e44.read()) {
-        retail::sub_757240(); // pop_resource_context
+        amalga::resource_manager::pop_resource_context();
 
         amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
         amalga::resource_manager::references::unk_010300a8.get().release();

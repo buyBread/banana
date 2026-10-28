@@ -9,7 +9,6 @@
 #include "game/amalga/resource_partition.hh"
 #include "game/app.hh"
 #include "treyarch/nfl/nfl.hh"
-#include "game/binary_search.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "game/os_file.hh"
 #include "game/platform.hh"
@@ -174,17 +173,7 @@ void amalga::resource_pack_streamer::load_internal(const char*                 p
     curr_slot_idx  = slot_idx;
     curr_slot      = (*pack_slots)[slot_idx];
 
-    mash::vector<resource_amalgatoc_pack_entry> &pack_entries = resource_manager::references::amalgatoc.read()->pack_entries;
-
-    i32 entry_index = 0;
-
-    curr_pack_entry = binary_search_array_cmp(&name_hash,
-                                              pack_entries.data,
-                                              0,
-                                              (i32)pack_entries.size,
-                                              &entry_index,
-                                              resource_amalgatoc_pack_entry::compare_name_hash) ?
-        pack_entries.data[entry_index] : nullptr;
+    curr_pack_entry = resource_manager::references::amalgatoc.read()->find_pack_entry(name_hash);
 
     aram_buffer = nullptr;
 

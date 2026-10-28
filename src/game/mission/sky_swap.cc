@@ -77,7 +77,7 @@ void mission_manager::load_sky_pack() {
     string_hash pack_hash;
     pack_hash.initialize(mash::ALLOCATED, pack_name);
 
-    if (!retail::sub_73A200((u32*)amalga::resource_manager::references::amalgatoc.read(), pack_hash.source_hash_code)) {
+    if (!amalga::resource_manager::references::amalgatoc.read()->find_pack_entry(pack_hash)) {
         sky_swap_state = 0;
 
         return;
@@ -97,13 +97,13 @@ void mission_manager::load_sky_pack() {
 
 // sub_980950
 void mission_manager::apply_sky_pack() {
-    auto* partition = (amalga::resource_partition*)retail::sub_739C40(amalga::resource_partition_sky);
+    auto* partition = amalga::resource_manager::get_partition_pointer(amalga::resource_partition_sky);
 
     if (partition->pack_slots[0]->slot_state != amalga::slot_state_ready)
         return;
 
     amalga::push_resource_context_stack_object context(
-        (amalga::resource_pack_slot*)retail::sub_74D900(amalga::resource_partition_sky));
+        amalga::resource_manager::get_best_context(amalga::resource_partition_sky));
 
     fixed_string texture_name;
 
