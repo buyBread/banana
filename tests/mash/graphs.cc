@@ -37,7 +37,7 @@ namespace tests { namespace mash_support {
     class c_resource_fixture : public tests::c_memory_fixture {
 
     public:
-        std::array<amalga::resource_type_record, (size_t)amalga::e_resource_type::count> types {};
+        std::array<amalga::resource_type_definition_t, (size_t)amalga::e_resource_type::count> types {};
 
         trace_t                     trace;
         amalga::resource_descriptor descriptor {};
@@ -49,7 +49,7 @@ namespace tests { namespace mash_support {
 
     private:
         c_reference_binding
-            <std::array<amalga::resource_type_record, (size_t)amalga::e_resource_type::count>> m_types_binding;
+            <std::array<amalga::resource_type_definition_t, (size_t)amalga::e_resource_type::count>> m_types_binding;
     };
 }}
 
@@ -72,7 +72,7 @@ void tests::mash_support::resource_probe_t::destruct_mashed_class() {
     trace->push(event_destruct_mashed, 1, this);
 }
 
-tests::mash_support::c_resource_fixture::c_resource_fixture() : m_types_binding(amalga::references::resource_type_records, &types) {}
+tests::mash_support::c_resource_fixture::c_resource_fixture() : m_types_binding(amalga::references::resource_type_definitions, &types) {}
 
 void tests::mash_support::c_resource_fixture::put_probe(image_t<256> &image) {
     image.header(128);
