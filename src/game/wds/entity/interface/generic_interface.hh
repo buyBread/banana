@@ -10,6 +10,7 @@
 
 namespace treyarch {
     class actor; // impl?
+    class conglomerate;
     class entity;
     class generic_interface;
 
@@ -90,7 +91,14 @@ namespace treyarch {
         entity* my_entity;
     };
 
-    ASSERT_OFFSETOF(generic_interface, dynamic,   0x04);
-    ASSERT_OFFSETOF(actor_interface,   my_actor,  0x08);
-    ASSERT_OFFSETOF(entity_interface,  my_entity, 0x08);
+    class conglomerate_interface : public generic_interface {
+
+    public:
+        conglomerate* my_conglomerate;
+    };
+
+    ASSERT_OFFSETOF(generic_interface,      dynamic,         0x04);
+    ASSERT_OFFSETOF(actor_interface,        my_actor,        0x08);
+    ASSERT_OFFSETOF(entity_interface,       my_entity,       0x08);
+    ASSERT_OFFSETOF(conglomerate_interface, my_conglomerate, 0x08);
 } // treyarch

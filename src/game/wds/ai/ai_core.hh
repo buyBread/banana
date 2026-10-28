@@ -33,6 +33,8 @@ namespace treyarch {
         ai_core_flag_unk_00000008 = 0x00000008, // with the civilian team, demotes the core to the low list
         ai_core_flag_unk_00000100 = 0x00000100,
 
+        ai_core_flag_hanging_from_pole = 0x00002000,
+
         ai_core_flag_seated_in_car = 0x00010000 // the actor's base als state says so
     };
 

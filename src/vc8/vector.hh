@@ -31,6 +31,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_649B90
         // sub_75F6C0
+        // sub_87E3B0
         vector(const vector &other) : first(nullptr),
                                       last(nullptr),
                                       capacity_end(nullptr) {

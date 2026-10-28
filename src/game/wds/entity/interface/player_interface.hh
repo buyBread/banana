@@ -271,6 +271,10 @@ namespace treyarch {
             return mode.current;
         }
 
+        i32 get_prev_mode() const {
+            return mode.previous;
+        }
+
         void enable_axis(i32 ctrl, bool v) {
             control_axis[ctrl]->enable(v);
         }

@@ -7,6 +7,7 @@
 #include "game/als/param.hh"
 #include "game/amalga/resource_types.hh"
 #include "game/arch_base.hh"
+#include "game/event/event.hh"
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
@@ -16,6 +17,7 @@
 #include "game/mission/mission_manager.hh"
 #include "game/physics/physics_system.hh"
 #include "game/physics/rigid_body_prop_system.hh"
+#include "game/polytube.hh"
 #include "game/script/chuck_lib_entity.hh"
 #include "game/script/script_access.hh"
 #include "game/trigger.hh"
@@ -49,6 +51,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
 #include "vc8/list.hh"
+#include "vc8/vector.hh"
 
 using namespace treyarch;
 
@@ -2698,8 +2701,18 @@ bool slf__entity__set_distance_clip_far__num__t::operator()(chuck::vm::vm_stack 
     return true;
 }
 
+// sub_847A00
 bool slf__entity__is_hanging_from_pole__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847A00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_actor() && self->get_ai_core() &&
+                 (self->get_ai_core()->flags & ai_core_flag_hanging_from_pole) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_847AB0
@@ -4131,12 +4144,76 @@ bool slf__entity__get_district_id__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_84B950
 bool slf__entity__als_play_animation_by_category__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B950)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || self->get_ai_core())
+        return true;
+
+    als::animation_logic_system_interface* als = self->get_als();
+
+    if (!als)
+        return true;
+
+    f32 force = count - 1 > 0 ? stack.local_num(0x08) : 0.0f;
+
+    string_hash category;
+    category.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x04));
+
+    // the base layer's own category only plays again while its unk_045 allows it
+    if (force > 0.5f ||
+        !als->get_als_layer(als::base_layer) ||
+        als->get_als_layer(als::base_layer)->get_category_id() != category ||
+        (als->get_als_layer(als::base_layer)->unk_045() && als->get_als_layer(als::base_layer)->get_category_id() == category)) {
+
+        als->suspend_logic_system(false);
+        request_category_transition_helper(category, als::base_layer, als, true, false);
+    }
+
+    return true;
 }
 
+// sub_84BAB0
 bool slf__entity__als_play_animation_by_filename__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84BAB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto filename   = (const char*)stack.local_uint(0x04);
+    auto use_prefix = stack.local_num(0x08);
+
+    if (!self || !self->is_an_actor() || self->get_ai_core())
+        return true;
+
+    if (!self->has_ifc(entity_ifc_script_data))
+        self->create_script_data_ifc();
+
+    script_data_interface* script_data = self->script_data_ifc();
+
+    string_hash parameter;
+    parameter.initialize(mash::ALLOCATED, "als_anim_filename");
+
+    script_data->data.set_pb_fixedstring(parameter, filename);
+    script_data->set_als_anim_filename_use_prefix(use_prefix > 0.0f);
+
+    als::animation_logic_system_interface* als = self->get_als();
+
+    if (!als)
+        return true;
+
+    als->suspend_logic_system(false);
+
+    string_hash category;
+    category.initialize(mash::ALLOCATED, "Generic_Play_Filename");
+
+    request_category_transition_helper(category, als::base_layer, als, true, false);
+
+    return true;
 }
 
 // sub_84BBD0
@@ -5721,40 +5798,270 @@ bool slf__entity__ai_has_clear_line_of_fire__entity__t::operator()(chuck::vm::vm
     return true;
 }
 
+// sub_84F550
 bool slf__entity__has_als_category__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F550)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self          = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto category_name = (const char*)stack.local_uint(0x04);
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+
+    f32 result = 0.0f;
+
+    if (als && als->get_als_layer(als::base_layer)) {
+        string_hash category;
+        category.initialize(mash::ALLOCATED, category_name);
+
+        result = (f32)als->get_als_layer(als::base_layer)->does_category_exist(category);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F610
 bool slf__entity__get_als_category_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F610)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+
+    string_hash result;
+
+    if (als && als->get_als_layer(als::base_layer))
+        result = als->get_als_layer(als::base_layer)->get_category_id();
+    else
+        result.initialize(mash::ALLOCATED, "invalid");
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F6C0
 bool slf__entity__get_als_state_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F6C0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+
+    string_hash result;
+
+    if (als && als->get_als_layer(als::base_layer))
+        result = als->get_als_layer(als::base_layer)->get_state_id();
+    else
+        result.initialize(mash::ALLOCATED, "invalid");
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F770
 bool slf__entity__force_strength_test__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F770)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = arch_base_vhandle(stack.local_uint(0x04));
+
+    f32 result = 0.0f;
+
+    if (self && target.value) {
+        void* memory = retail::sub_823740(0x2C);                              // strength_test_event::operator new
+        auto  raised = memory ? (event*)retail::sub_92D270(memory) : nullptr; // strength_test_event::strength_test_event
+
+        retail::sub_91DF70(raised, target.value, false); // strength_test_event: test against the target
+        self->raise_event(raised);
+        delete raised;
+
+        result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F840
 bool slf__entity__begin_strength_test__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F840)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self          = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target        = arch_base_vhandle(stack.local_uint(0x04));
+    bool from_standing = stack.local_num(0x08) != 0.0f;
+    bool from_crawling = stack.local_num(0x0C) != 0.0f;
+
+    f32 result = 0.0f;
+
+    // only out of a hit switch (10) the hero entered standing (1) or crawling (2)
+    if (self && target.value &&
+        self->player_ifc()->get_mode() == 10 &&
+        ((from_standing && self->player_ifc()->get_prev_mode() == 1) ||
+         (from_crawling && self->player_ifc()->get_prev_mode() == 2))) {
+
+        void* memory = retail::sub_823740(0x2C);                              // strength_test_event::operator new
+        auto  raised = memory ? (event*)retail::sub_92D270(memory) : nullptr; // strength_test_event::strength_test_event
+
+        retail::sub_91DF70(raised, target.value, false); // strength_test_event: test against the target
+        self->raise_event(raised);
+        delete raised;
+
+        result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_880770
 bool slf__entity__begin_strength_test__entity__num__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880770)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self          = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target        = arch_base_vhandle(stack.local_uint(0x04));
+    bool from_standing = stack.local_num(0x08) != 0.0f;
+    bool from_crawling = stack.local_num(0x0C) != 0.0f;
+
+    // only out of a hit switch (10) the hero entered standing (1) or crawling (2)
+    if (!self || !target.value ||
+        self->player_ifc()->get_mode() != 10 ||
+        !((from_standing && self->player_ifc()->get_prev_mode() == 1) ||
+          (from_crawling && self->player_ifc()->get_prev_mode() == 2))) {
+
+        f32 result = 0.0f;
+
+        stack.push(&result, sizeof(result));
+
+        return true;
+    }
+
+    // the target first, then the array's entities
+    vc8::vector<arch_base_vhandle> targets;
+    targets.push_back(target);
+
+    chuck::vm::script_dynamic_array<arch_base_vhandle> entities((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x10));
+
+    for (i32 i = 0; i < entities.size(); ++i)
+        targets.push_back(entities[i]);
+
+    void* memory = retail::sub_823740(0x2C);                              // strength_test_event::operator new
+    auto  raised = memory ? (event*)retail::sub_92D270(memory) : nullptr; // strength_test_event::strength_test_event
+
+    using set_target_tests_method = void (__thiscall*)(event* self, vc8::vector<arch_base_vhandle> targets, bool trigger);
+
+    ((set_target_tests_method)retail::sub_93F7A0)(raised, targets, false); // strength_test_event: test against the targets
+    self->raise_event(raised);
+    delete raised;
+
+    f32 result = 1.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84F990
 bool slf__entity__begin_strength_test_trigger__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84F990)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto trigger = arch_base_vhandle(stack.local_uint(0x04));
+
+    f32 result = 0.0f;
+
+    if (self && trigger.value) {
+        void* memory = retail::sub_823740(0x2C);                              // strength_test_event::operator new
+        auto  raised = memory ? (event*)retail::sub_92D270(memory) : nullptr; // strength_test_event::strength_test_event
+
+        retail::sub_91DF70(raised, trigger.value, true); // strength_test_event: test against the trigger
+        self->raise_event(raised);
+        delete raised;
+
+        result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84FA60
 bool slf__entity__run_strength_test__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FA60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto test_name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        void* memory = retail::sub_823740(0x2C);                              // strength_test_event::operator new
+        auto  raised = memory ? (event*)retail::sub_92D270(memory) : nullptr; // strength_test_event::strength_test_event
+
+        string_hash test;
+        test.initialize(mash::ALLOCATED, test_name);
+
+        retail::sub_91DFC0(raised, test.source_hash_code); // strength_test_event: the named test
+        self->raise_event(raised);
+        delete raised;
+
+        result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84FB40
 bool slf__entity__begin_slingshot_point_test__entity__vector3d__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FB40)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto object     = (conglomerate*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+    auto position   = (const vector3d*)&stack.local_uint(0x08);
+    auto unk_entity = stack.local_uint(0x14);
+    auto unk_num    = stack.local_num(0x18);
+
+    if (!self || !object || !object->is_a_conglomerate())
+        return true;
+
+    // without the number, only out of a hit switch (10) the hero entered standing (1)
+    if (unk_num == 0.0f &&
+        (self->player_ifc()->get_mode() != 10 || self->player_ifc()->get_prev_mode() != 1))
+
+        return true;
+
+    string_hash point_1;
+    point_1.initialize(mash::ALLOCATED, "WEB_ATTACH_POINT1");
+
+    entity* web_attach_point_1 = object->get_member(object->get_member_index(point_1));
+
+    string_hash point_2;
+    point_2.initialize(mash::ALLOCATED, "WEB_ATTACH_POINT2");
+
+    entity* web_attach_point_2 = object->get_member(object->get_member_index(point_2));
+
+    void* memory = retail::sub_823840(0x30);                              // slingshot_point_event::operator new
+    auto  raised = memory ? (event*)retail::sub_91EE30(memory) : nullptr; // slingshot_point_event::slingshot_point_event
+
+    retail::sub_90CDF0(raised,
+                       stack.local_uint(0x04),
+                       web_attach_point_1->my_handle.value,
+                       web_attach_point_2->my_handle.value,
+                       (const f32*)position,
+                       unk_entity,
+                       unk_num > 0.0f); // slingshot_point_event: the request
+
+    self->raise_event(raised);
+    delete raised;
+
+    return true;
 }
 
 // sub_84FCD0
@@ -5796,16 +6103,52 @@ bool slf__entity__is_sync_anim__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_84FDD0
 bool slf__entity__get_als_time_to_end_of_anim__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FDD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    f32 result = sm ? sm->get_time_to_end_of_anim(false, true) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84FE50
 bool slf__entity__get_als_current_anim_time__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FE50)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    f32 result = sm ? sm->get_current_anim_time() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84FED0
 bool slf__entity__get_als_current_normalized_time__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84FED0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    f32 result = sm ? sm->get_current_normalized_time() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84FF50
@@ -5870,20 +6213,133 @@ bool slf__entity__set_als_param_vector3d__str__vector3d__t::operator()(chuck::vm
     return true;
 }
 
+// sub_850050
 bool slf__entity__get_als_data_float__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850050)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    f32 result = 0.0f;
+
+    if (sm) {
+        string_hash parameter;
+        parameter.initialize(mash::ALLOCATED, param_name);
+
+        // only a lone extra argument is taken as the default; any other count makes the parameter required
+        if (count == 2)
+            result = sm->get_optional_pb_float(parameter, stack.local_num(0x08), nullptr);
+        else
+            result = sm->get_pb_float(parameter);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_850150
 bool slf__entity__get_als_data_int__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850150)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    f32 result = 0.0f;
+
+    if (sm) {
+        string_hash parameter;
+        parameter.initialize(mash::ALLOCATED, param_name);
+
+        // only a lone extra argument is taken as the default; any other count makes the parameter required
+        if (count == 2)
+            result = (f32)sm->get_optional_pb_int(parameter, (i32)stack.local_num(0x08), nullptr);
+        else
+            result = (f32)sm->get_pb_int(parameter);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_850250
 bool slf__entity__get_als_data_vector3d__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850250)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self          = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto param_name    = (const char*)stack.local_uint(0x04);
+    auto default_value = (const vector3d*)&stack.local_uint(0x08);
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    if (sm) {
+        string_hash parameter;
+        parameter.initialize(mash::ALLOCATED, param_name);
+
+        // any extra argument makes the parameter optional, its three words the default
+        if (count - 1 > 0)
+            result = sm->get_optional_pb_vector3d(parameter, *default_value, nullptr);
+        else
+            result = sm->get_pb_vector3d(parameter);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_850390
 bool slf__entity__get_als_data_string__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850390)(this, stack);
+    // the count word covers every argument after self
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto param_name = (const char*)stack.local_uint(0x04);
+
+    als::animation_logic_system_interface* als = self && self->is_an_actor() ? self->get_als() : nullptr;
+    als::state_machine_interface*          sm  = als ? als->get_als_layer(als::base_layer) : nullptr;
+
+    const char* result = "";
+
+    if (sm) {
+        string_hash parameter;
+        parameter.initialize(mash::ALLOCATED, param_name);
+
+        bool is_string = sm->does_parameter_exist(parameter) && sm->get_parameter_data_type(parameter) == param_type_string;
+
+        // a lone extra argument answers for a missing or non-string parameter
+        if (count == 2)
+            result = is_string ? sm->get_pb_mstring(parameter) : (const char*)stack.local_uint(0x08);
+        else if (is_string)
+            result = sm->get_pb_mstring(parameter);
+    }
+
+    result = stack.thread->create_string(result);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8504E0
@@ -6481,8 +6937,30 @@ bool slf__entity__get_actor_in_seat__num__t::operator()(chuck::vm::vm_stack &sta
     return ((invoke_t)retail::sub_852560)(this, stack);
 }
 
+// sub_8525E0
 bool slf__entity__get_tentacle__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8525E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self          = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto tentacle_name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self && self->is_a_conglomerate()) {
+        string_hash id;
+        id.initialize(mash::ALLOCATED, tentacle_name);
+
+        if (self->tentacles) {
+            ai_tentacle_info* info = ai_tentacle_info::find_tentacle(id, self->tentacles->data, (i32)self->tentacles->size);
+
+            if (info && info->tentacle)
+                result = info->tentacle->my_handle;
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_852680
@@ -7361,44 +7839,177 @@ bool slf__entity__in_combat_state__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_853EC0
 bool slf__entity__set_tentacle_end_target__uint__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853EC0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto which  = stack.local_uint(0x04);
+    auto target = arch_base_vhandle(stack.local_uint(0x08));
+
+    // no tentacle interface test
+    if (self)
+        self->tentacle_ifc()->set_tentacle_end_target(which, target);
+
+    return true;
 }
 
+// sub_853F00
 bool slf__entity__set_tentacle_default_pct__uint__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853F00)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto which = stack.local_uint(0x04);
+    auto pct   = stack.local_num(0x08);
+
+    if (self)
+        self->tentacle_ifc()->set_tentacle_default_pct(which, pct);
+
+    return true;
 }
 
+// sub_853F40
 bool slf__entity__set_tentacle_effect__uint__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853F40)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto which       = stack.local_uint(0x04);
+    auto effect_name = (const char*)stack.local_uint(0x08);
+
+    if (!self)
+        return true;
+
+    string_hash effect;
+    effect.initialize(mash::ALLOCATED, effect_name);
+
+    self->tentacle_ifc()->set_tentacle_effect(which, effect);
+
+    return true;
 }
 
+// sub_853F90
 bool slf__entity__play_tentacle_effect__uint__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853F90)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto which       = stack.local_uint(0x04);
+    auto effect_name = (const char*)stack.local_uint(0x08);
+
+    if (!self)
+        return true;
+
+    string_hash effect;
+    effect.initialize(mash::ALLOCATED, effect_name);
+
+    self->tentacle_ifc()->play_tentacle_effect(which, effect);
+
+    return true;
 }
 
+// sub_853FE0
 bool slf__entity__spawn_effect__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853FE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto effect_name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    string_hash effect;
+    effect.initialize(mash::ALLOCATED, effect_name);
+
+    self->spawn_effect(effect, 0);
+
+    return true;
 }
 
+// sub_854030
 bool slf__entity__spawn_effect_at_entity_position__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_854030)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto effect_name = (const char*)stack.local_uint(0x04);
+    auto position    = (const vector3d*)&stack.local_uint(0x08);
+
+    if (!self)
+        return true;
+
+    vector3d local = self->my_abs_po->inverse_xform(*position);
+
+    string_hash effect;
+    effect.initialize(mash::ALLOCATED, effect_name);
+
+    self->spawn_effect_at_entity_position(effect, vector4d(local.x, local.y, local.z, 0.0f), 0);
+
+    return true;
 }
 
+// sub_8542E0
 bool slf__entity__spawn_effect_at_world_position__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8542E0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto effect_name = (const char*)stack.local_uint(0x04);
+    auto position    = (const vector3d*)&stack.local_uint(0x08);
+
+    if (!self)
+        return true;
+
+    vector4d position_4(position->x, position->y, position->z, 0.0f);
+
+    string_hash effect;
+    effect.initialize(mash::ALLOCATED, effect_name);
+
+    self->spawn_effect_at_world_position(effect, position_4, 0);
+
+    return true;
 }
 
+// sub_854360
 bool slf__entity__spawn_looping_effect__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_854360)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self        = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto effect_name = (const char*)stack.local_uint(0x04);
+
+    u32 result = 0;
+
+    if (self) {
+        string_hash effect;
+        effect.initialize(mash::ALLOCATED, effect_name);
+
+        result = self->spawn_looping_effect(effect, 0);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8543E0
 bool slf__entity__stop_looping_effect__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8543E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto id   = stack.local_uint(0x04);
+
+    if (self)
+        self->stop_looping_effect(id);
+
+    return true;
 }
 
+// sub_854410
 bool slf__entity__stop_all_effects__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_854410)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->has_ifc(entity_ifc_ise))
+        self->ise_ifc()->stop_all_effects();
+
+    return true;
 }
 
 // sub_854450

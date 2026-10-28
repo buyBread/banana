@@ -183,4 +183,11 @@ namespace treyarch {
             inline util::memory_reference<engine_recursive_lock> force_update_lock { 0x00FD43C0 };
         } // references
     } // als
+
+    // the layer's request, under the als's access lock
+    void request_category_transition_helper(als::category_id                       cat,
+                                            als::layer_id                          layer,
+                                            als::animation_logic_system_interface* my_als,
+                                            bool                                   should_succeed,
+                                            bool                                   unk);
 } // treyarch

@@ -75,6 +75,8 @@ namespace treyarch {
         f32 follow_drag;
     };
 
+    class polytube;
+
     // SM3's ai_tentacle_info: the simulated tentacle a polytube draws
     class ai_tentacle_info {
 
@@ -83,8 +85,14 @@ namespace treyarch {
             check_collisions = 0x04
         };
 
-        u8  reserved_000[0xDC];
-        u32 flags;
+        u8          reserved_000[0x0C];
+        string_hash id; // SM3's ai_generic_id
+        u8          reserved_010[0x04];
+        polytube*   tentacle;
+        u8          reserved_018[0xC4];
+        u32         flags;
+
+        static ai_tentacle_info* find_tentacle(const string_hash &search_id, ai_tentacle_info** array, i32 size);
     };
 
     // SM3's polytube_pt_anim
@@ -186,7 +194,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_tentacle_strike, target,      0x1C);
     ASSERT_OFFSETOF(ai_tentacle_follow, follow_drag, 0x24);
 
-    ASSERT_OFFSETOF(ai_tentacle_info, flags, 0xDC);
+    ASSERT_OFFSETOF(ai_tentacle_info, id,       0x0C);
+    ASSERT_OFFSETOF(ai_tentacle_info, tentacle, 0x14);
+    ASSERT_OFFSETOF(ai_tentacle_info, flags,    0xDC);
 
     ASSERT_SIZEOF(polytube_pt_anim, 0x2C);
 

@@ -4,6 +4,16 @@
 
 using namespace treyarch;
 
+// sub_491C90
+ai_tentacle_info* ai_tentacle_info::find_tentacle(const string_hash &search_id, ai_tentacle_info** array, i32 size) {
+    for (i32 i = 0; i < size; ++i) {
+        if (array[i]->id == search_id)
+            return array[i];
+    }
+
+    return nullptr;
+}
+
 // sub_6030E0
 void polytube::remove_from_list() {
     engine_lock_scope lock(&references::polytube_lock.get());

@@ -38,6 +38,7 @@ namespace treyarch {
                             (f32)((f64)m.y.z * v.y + (f64)m.x.z * v.x + (f64)m.z.z * v.z + (f64)m.w.z * 0.0));
         }
 
+        // inlined @ sub_854030
         // inlined @ sub_8637C0
         // inlined @ sub_8639F0
         vector3d inverse_xform(const vector3d &point) const { // a point into this po's frame, the rotation taken as orthonormal

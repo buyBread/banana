@@ -248,3 +248,16 @@ void als::multi_pre_animation_event_signal_jq_callback(jq::batch* batch) {
     for (i32 index = 0; index < batch->count; ++index)
         raise_pre_animation_event_signals(machines[index]);
 }
+
+// sub_5ADDA0
+void treyarch::request_category_transition_helper(als::category_id                       cat,
+                                                  als::layer_id                          layer,
+                                                  als::animation_logic_system_interface* my_als,
+                                                  bool,
+                                                  bool                                   unk) {
+
+    engine_lock_scope access(my_als->get_access_lock());
+
+    if (als::state_machine_interface* the_sm = my_als->get_als_layer(layer))
+        the_sm->request_category_transition(cat, my_als, unk);
+}

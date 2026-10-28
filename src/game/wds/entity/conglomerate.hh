@@ -9,6 +9,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_tentacle_info;
+
     // members first, then the bones past them
     enum e_conglom_member_index : i16 {
         invalid_conglom_member = -2,
@@ -33,7 +35,9 @@ namespace treyarch {
     public:
         u8                            reserved_0d8[0x10];
         mash::vector<entity>          members;
-        u8                            reserved_0fc[0x28];
+        mash::vector
+            <ai_tentacle_info>*       tentacles;
+        u8                            reserved_100[0x24];
         mash::vector_basic<po>        all_model_po; // als::biped_physics_mocomp saves and restores them
         u8                            reserved_134[0x1C];
         mash::vector_basic_ref_counted
@@ -54,6 +58,7 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (conglomerate,                     0x198);
     ASSERT_OFFSETOF(conglomerate, members,            0x0E8);
+    ASSERT_OFFSETOF(conglomerate, tentacles,          0x0FC);
     ASSERT_OFFSETOF(conglomerate, all_model_po,       0x124);
     ASSERT_OFFSETOF(conglomerate, bone_indices,       0x150);
     ASSERT_OFFSETOF(conglomerate, skeleton_name_hash, 0x174);

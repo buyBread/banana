@@ -3,12 +3,14 @@
 #include "game/arch_base.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
 #include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/entity/interface/ise_interface.hh"
 #include "game/wds/entity/interface/manip_obj_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/script_data_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/interface/switch_obj_interface.hh"
+#include "game/wds/entity/interface/tentacle_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/interface/towing_interface.hh"
 #include "game/wds/entity/interface/variant_interface.hh"
@@ -146,9 +148,57 @@ namespace treyarch {
             return (simple_variant_interface*)my_ifc_storage->get_ifc(entity_ifc_simple_variant);
         }
 
+        ise_interface* ise_ifc() const {
+            return (ise_interface*)my_ifc_storage->get_ifc(entity_ifc_ise);
+        }
+
+        tentacle_interface* tentacle_ifc() const {
+            return (tentacle_interface*)my_ifc_storage->get_ifc(entity_ifc_tentacle);
+        }
+
         // unless ext flag 0x1000 vetoes it
         bool is_visible() const {
             return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
+        }
+
+        // slot 56; the position is in the entity's space
+        u32 spawn_effect_at_entity_position(string_hash name, const vector4d &position, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[56])(this, name, &position, unk);
+        }
+
+        // slot 57
+        u32 spawn_effect(string_hash name, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[57])(this, name, unk);
+        }
+
+        // slot 58
+        u32 spawn_effect_at_world_position(string_hash name, const vector4d &position, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[58])(this, name, &position, unk);
+        }
+
+        // slot 59; slot 58's flags without a position
+        u32 unk_059(string_hash name, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[59])(this, name, unk);
+        }
+
+        // slot 60
+        u32 spawn_looping_effect_at_entity_position(string_hash name, const vector4d &position, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[60])(this, name, &position, unk);
+        }
+
+        // slot 61; the id is what stop_looping_effect takes
+        u32 spawn_looping_effect(string_hash name, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[61])(this, name, unk);
+        }
+
+        // slot 62
+        u32 unk_062(string_hash name, const vector4d &position, i32 unk) {
+            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[62])(this, name, &position, unk);
+        }
+
+        // slot 63; only with an ise interface
+        void stop_looping_effect(u32 effect_id) {
+            ((void (__thiscall*)(entity*, u32))vtable[63])(this, effect_id);
         }
 
         // slot 64; this and its members

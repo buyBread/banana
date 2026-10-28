@@ -46,6 +46,8 @@ namespace treyarch {
 
         arch_base_vhandle get_first_entity_from_custom_entity_list();
         i32               get_custom_entity_list_count();
+
+        void set_als_anim_filename_use_prefix(bool use_prefix);
     };
 
     ASSERT_SIZEOF  (script_data_interface_vtable, 21 * 4);
