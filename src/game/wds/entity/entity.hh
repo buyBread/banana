@@ -8,6 +8,7 @@
 #include "game/wds/entity/interface/switch_obj_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/interface/towing_interface.hh"
+#include "game/wds/entity/interface/variant_interface.hh"
 #include "game/wds/entity/interface_storage.hh"
 #include "game/container/fixed_vector.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -98,6 +99,14 @@ namespace treyarch {
 
         switch_obj_interface* switch_obj_ifc() const {
             return (switch_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_switch_obj);
+        }
+
+        variant_interface* variant_ifc() const {
+            return (variant_interface*)my_ifc_storage->get_ifc(entity_ifc_variant);
+        }
+
+        simple_variant_interface* simple_variant_ifc() const {
+            return (simple_variant_interface*)my_ifc_storage->get_ifc(entity_ifc_simple_variant);
         }
 
         // unless ext flag 0x1000 vetoes it

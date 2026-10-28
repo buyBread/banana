@@ -13,6 +13,8 @@
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/wds/entity/actor.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "treyarch/mash/string.hh"
@@ -2998,80 +3000,350 @@ bool slf__entity__set_attack_damage_locked__num__t::operator()(chuck::vm::vm_sta
     return ((invoke_t)retail::sub_852680)(this, stack);
 }
 
+// sub_8526C0
 bool slf__entity__is_a_variant__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8526C0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852740
 bool slf__entity__get_variant_name__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852740)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+
+    const char* result = "";
+
+    // the name's hash as text, in a new script string
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)) {
+        string_hash name;
+        ((string_hash* (__thiscall*)(variant_interface*, string_hash*, i32))retail::sub_6108F0)(self->variant_ifc(), &name, (i32)index); // variant_interface::get_variant_name
+
+        result = stack.thread->create_string(((const char* (__thiscall*)(string_hash*))retail::sub_A6C7C0)(&name)); // string_hash::to_string
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8527D0
 bool slf__entity__get_variant_weight__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8527D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        result = ((f32 (__thiscall*)(variant_interface*, i32))retail::sub_610930)(self->variant_ifc(), (i32)index); // variant_interface::get_weight;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852850
 bool slf__entity__get_num_variants__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852850)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        result = (f32)(i32)self->variant_ifc()->records.size;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8528C0
 bool slf__entity__get_max_variant_texture__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8528C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto part = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        result = (f32)((i32 (__thiscall*)(variant_interface*, i32))retail::sub_610290)(self->variant_ifc(), (i32)part); // variant_interface::get_max_variant_texture;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852940
 bool slf__entity__get_min_variant_texture__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852940)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto part = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        result = (f32)((i32 (__thiscall*)(variant_interface*, i32))retail::sub_610260)(self->variant_ifc(), (i32)part); // variant_interface::get_min_variant_texture;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8529C0
 bool slf__entity__has_variant__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8529C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto variant = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, variant);
+
+        result = ((i32 (__thiscall*)(variant_interface*, string_hash))retail::sub_6101A0)(self->variant_ifc(), name) > -1 ? 1.0f : 0.0f; // variant_interface::find_variant
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852A90
 bool slf__entity__find_variant__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852A90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto variant = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    // -1 when there's none
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, variant);
+
+        result = (f32)((i32 (__thiscall*)(variant_interface*, string_hash))retail::sub_6101A0)(self->variant_ifc(), name); // variant_interface::find_variant
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852B50
 bool slf__entity__prepare_change_variant__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852B50)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        ((void (__cdecl*)())retail::sub_9DCC80)(); // ngl::wait_for_rendering
+
+    return true;
 }
 
+// sub_852B90
 bool slf__entity__set_variant__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852B90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto variant = (const char*)stack.local_uint(0x04);
+
+    if (!(self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)))
+        return true;
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, variant);
+
+    ((void (__thiscall*)(variant_interface*, string_hash))retail::sub_65F730)(self->variant_ifc(), name); // variant_interface::set_variant
+    ((void (__thiscall*)(variant_interface*))retail::sub_610510)(self->variant_ifc());                    // variant_interface::set_default_variant_textures
+
+    return true;
 }
 
+// sub_852C40
 bool slf__entity__set_variant_id__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852C40)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto id   = stack.local_num(0x04);
+
+    if (!(self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)))
+        return true;
+
+    ((void (__thiscall*)(variant_interface*, i32))retail::sub_65F6F0)(self->variant_ifc(), (i32)id); // variant_interface::set_variant_id
+    ((void (__thiscall*)(variant_interface*))retail::sub_610510)(self->variant_ifc());             // variant_interface::set_default_variant_textures
+
+    return true;
 }
 
+// sub_852CB0
 bool slf__entity__set_variant_textures__num__num__num__num__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852CB0)(this, stack);
+    stack.sp -= 0x24;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto texture_0 = stack.local_num(0x04);
+    auto texture_1 = stack.local_num(0x08);
+    auto texture_2 = stack.local_num(0x0C);
+    auto texture_3 = stack.local_num(0x10);
+    auto texture_4 = stack.local_num(0x14);
+    auto texture_5 = stack.local_num(0x18);
+    auto texture_6 = stack.local_num(0x1C);
+    auto texture_7 = stack.local_num(0x20);
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        ((void (__thiscall*)(variant_interface*, i32, i32, i32, i32, i32, i32, i32, i32))retail::sub_601030) // variant_interface::set_variant_textures
+            (self->variant_ifc(), (i32)texture_0, (i32)texture_1, (i32)texture_2, (i32)texture_3, (i32)texture_4, (i32)texture_5, (i32)texture_6, (i32)texture_7);
+
+    return true;
 }
 
+// sub_852D30
 bool slf__entity__set_variant_and_textures__str__num__num__num__num__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852D30)(this, stack);
+    stack.sp -= 0x28;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto variant   = (const char*)stack.local_uint(0x04);
+    auto texture_0 = stack.local_num(0x08);
+    auto texture_1 = stack.local_num(0x0C);
+    auto texture_2 = stack.local_num(0x10);
+    auto texture_3 = stack.local_num(0x14);
+    auto texture_4 = stack.local_num(0x18);
+    auto texture_5 = stack.local_num(0x1C);
+    auto texture_6 = stack.local_num(0x20);
+    auto texture_7 = stack.local_num(0x24);
+
+    if (!(self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant)))
+        return true;
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, variant);
+
+    ((void (__thiscall*)(variant_interface*, string_hash))retail::sub_65F730)(self->variant_ifc(), name); // variant_interface::set_variant
+
+    ((void (__thiscall*)(variant_interface*, i32, i32, i32, i32, i32, i32, i32, i32))retail::sub_601030) // variant_interface::set_variant_textures
+        (self->variant_ifc(), (i32)texture_0, (i32)texture_1, (i32)texture_2, (i32)texture_3, (i32)texture_4, (i32)texture_5, (i32)texture_6, (i32)texture_7);
+
+    return true;
 }
 
+// sub_852E20
 bool slf__entity__set_random_variant__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852E20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        ((void (__thiscall*)(variant_interface*))retail::sub_666820)(self->variant_ifc()); // variant_interface::set_random_variant
+
+    return true;
 }
 
+// sub_852E70
 bool slf__entity__set_random_textures__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852E70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_conglomerate() && self->has_ifc(entity_ifc_variant))
+        ((void (__thiscall*)(variant_interface*))retail::sub_610520)(self->variant_ifc()); // variant_interface::set_random_textures
+
+    return true;
 }
 
+// sub_852EC0
 bool slf__entity__set_simple_variant_mode__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852EC0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto mode = stack.local_num(0x04);
+
+    if (!(self && self->is_an_actor() && self->has_ifc(entity_ifc_simple_variant)))
+        return true;
+
+    self->simple_variant_ifc()->simple_variant_mode = (i32)mode;
+
+    // a conglomerate's members follow
+    if (!self->is_a_conglomerate())
+        return true;
+
+    for (entity* member : ((conglomerate*)self)->members) {
+        if (member->has_ifc(entity_ifc_simple_variant))
+            member->simple_variant_ifc()->simple_variant_mode = (i32)mode;
+    }
+
+    return true;
 }
 
+// sub_852F70
 bool slf__entity__get_simple_variant_mode__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852F70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = -1.0f;
+
+    if (self && self->is_an_actor() && self->has_ifc(entity_ifc_simple_variant))
+        result = (f32)self->simple_variant_ifc()->simple_variant_mode;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_852FF0
 bool slf__entity__set_simple_variant__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852FF0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto variant = stack.local_num(0x04);
+
+    if (!(self && self->is_an_actor() && self->has_ifc(entity_ifc_simple_variant)))
+        return true;
+
+    self->simple_variant_ifc()->simple_variant = (i32)variant;
+
+    // same
+    if (!self->is_a_conglomerate())
+        return true;
+
+    for (entity* member : ((conglomerate*)self)->members) {
+        if (member->has_ifc(entity_ifc_simple_variant))
+            member->simple_variant_ifc()->simple_variant = (i32)variant;
+    }
+
+    return true;
 }
 
+// sub_8530A0
 bool slf__entity__get_simple_variant__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8530A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = -1.0f;
+
+    if (self && self->is_an_actor() && self->has_ifc(entity_ifc_simple_variant))
+        result = (f32)self->simple_variant_ifc()->simple_variant;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__aim_head__num__t::operator()(chuck::vm::vm_stack &stack) {
