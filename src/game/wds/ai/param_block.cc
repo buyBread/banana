@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <cstring>
 #include <new>
 #include <optional>
@@ -454,16 +453,9 @@ bool param_float_variance::deep_compare(const param_base* other) const {
     if (other->my_type != param_type_float_variance)
         return false;
 
-    const f32 mine = sample(value);
+    const f32 mine = value.get_random_value_inline();
 
-    return mine == sample(((const param_float_variance*)other)->value);
-}
-
-// inlined @ sub_434AD0
-f32 param_float_variance::sample(const variance_variable<f32> &value) { // variance_variable::get_random_value, in doubles
-    const f32 random = (f32)((f64)(f32)std::rand() * (f64)(1.0f / 32767.0f) * 2.0);
-
-    return (f32)(((f64)random - 1.0) * value.variance + value.base);
+    return mine == ((const param_float_variance*)other)->value.get_random_value_inline();
 }
 
 // ==== param_string ==== //

@@ -217,9 +217,6 @@ namespace treyarch {
         bool                          deep_compare(const param_base* other) const override; // rolls both values, so rarely true
 
         static string_hash my_type_key;
-
-    private:
-        static f32 sample(const variance_variable<f32> &value);
     };
 
     class param_string : public param_base {
