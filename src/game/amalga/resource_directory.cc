@@ -23,15 +23,15 @@ void amalga::resource_descriptor::unmash(mash::mash_info_struct* mash_info, void
 // sub_72DF90
 // inlined @ sub_73A130, sub_75F8D0, sub_75E2C0
 u8* amalga::resource_descriptor::calculate_adjusted_payload() const {
-    const u32 payload_mode = references::resource_type_records.get()[(u32)type].payload_mode;
+    const u32 category = references::resource_type_definitions.get()[(u32)type].category;
 
     if (!raw_payload)
         return nullptr;
 
-    if (!payload_mode)
+    if (!category)
         return raw_payload + *(u32*)(raw_payload + 4);
 
-    return payload_mode == 2 ? raw_payload + 8 : raw_payload;
+    return category == 2 ? raw_payload + 8 : raw_payload;
 }
 
 // sub_72DF30

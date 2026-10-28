@@ -127,15 +127,26 @@ namespace treyarch { namespace amalga {
         void* get_merged_resource_or_default(string_hash name, u32 type, resource_pack_slot** slot); // a missing texture comes back as the white one
     };
 
-    // filled at startup, one 0x50-byte record per resource type
-    struct resource_type_record {
-        u32 unk_00[2];
-        u32 payload_mode; // how adjusted_payload follows from raw_payload: 0 adds its +4 word, 2 adds 8, others add nothing
-        u32 unk_0c[17];
+    // resource_key::definitions, filled at startup; the arrays are per platform (ps3, pc, xenon)
+    struct resource_type_definition_t {
+        const char* singular;
+        const char* plural;
+        u32         category;          // 0 nonentity, 1 entity, 2 raw; also picks how adjusted_payload follows from raw_payload
+        u32         version;           // the category's mash version
+        u32         apk_type;          // the type's four_cc
+        u8          unk_14;
+        u8          unk_15;
+        bool        held_in_apk;       // texture through efx
+        u32         unk_18;
+        u32         unk_1c;
+        i32         alignment[3];
+        const char* extension[3];      // ".PCTEXTURE"
+        string_hash extension_hash[3]; // "PCTEXTURE"
+        const char* directory[3];      // "PCTEXTURE\\"
     };
 
     namespace references {
-        inline util::memory_reference<std::array<resource_type_record, (size_t)e_resource_type::count>> resource_type_records { 0x00E77370 };
+        inline util::memory_reference<std::array<resource_type_definition_t, (size_t)e_resource_type::count>> resource_type_definitions { 0x00E77370 };
     } // references
 
     ASSERT_SIZEOF  (resource_pack_header,                   0x20);
@@ -166,6 +177,12 @@ namespace treyarch { namespace amalga {
     ASSERT_OFFSETOF(resource_directory, pack_slot,       0x3C8);
     ASSERT_OFFSETOF(resource_directory, parent,          0x3CC);
 
-    ASSERT_SIZEOF  (resource_type_record,               0x50);
-    ASSERT_OFFSETOF(resource_type_record, payload_mode, 0x08);
+    ASSERT_SIZEOF  (resource_type_definition_t,                 0x50);
+    ASSERT_OFFSETOF(resource_type_definition_t, category,       0x08);
+    ASSERT_OFFSETOF(resource_type_definition_t, apk_type,       0x10);
+    ASSERT_OFFSETOF(resource_type_definition_t, held_in_apk,    0x16);
+    ASSERT_OFFSETOF(resource_type_definition_t, alignment,      0x20);
+    ASSERT_OFFSETOF(resource_type_definition_t, extension,      0x2C);
+    ASSERT_OFFSETOF(resource_type_definition_t, extension_hash, 0x38);
+    ASSERT_OFFSETOF(resource_type_definition_t, directory,      0x44);
 }} // treyarch::amalga
