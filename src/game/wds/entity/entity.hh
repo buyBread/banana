@@ -6,6 +6,7 @@
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/script_data_interface.hh"
+#include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/interface/switch_obj_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/interface/towing_interface.hh"
@@ -92,6 +93,10 @@ namespace treyarch {
 
         physical_interface* physical_ifc() const {
             return (physical_interface*)my_ifc_storage->get_ifc(entity_ifc_physical);
+        }
+
+        standing_interface* standing_ifc() const {
+            return (standing_interface*)my_ifc_storage->get_ifc(entity_ifc_standing);
         }
 
         script_data_interface* script_data_ifc() const {

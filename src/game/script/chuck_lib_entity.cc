@@ -22,6 +22,7 @@
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
+#include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
@@ -31,6 +32,7 @@
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -3773,52 +3775,250 @@ bool slf__entity__update_target_to_look_at__vector3d__t::operator()(chuck::vm::v
     return ((invoke_t)retail::sub_8535A0)(this, stack);
 }
 
+// sub_853620
 bool slf__entity__physical_ifc_add_dynamic_pendulum__vector3d__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853620)(this, stack);
+    stack.sp -= 0x20;
+
+    auto self         = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto pivot        = (const vector3d*)&stack.local_uint(0x04);
+    auto length       = stack.local_num(0x10);
+    auto attach_point = (const vector3d*)&stack.local_uint(0x14);
+
+    // the pendulum's index, -1 without one
+    f32 result = -1.0f;
+
+    if (self && self->has_ifc(entity_ifc_physical)) {
+        auto* the_pendulum = new (mm::allocate(sizeof(pendulum))) pendulum();
+
+        the_pendulum->set_vector3d_pivot(*pivot);
+
+        // a negative length keeps the current distance to the pivot
+        if (length < 0.0f) {
+            vector3d position  = self->my_abs_po->get_position();
+            vector3d pivot_pos = the_pendulum->get_pivot_abs_pos();
+
+            vector3d rope((f32)((f64)pivot_pos.x - position.x),
+                          (f32)((f64)pivot_pos.y - position.y),
+                          (f32)((f64)pivot_pos.z - position.z));
+
+            the_pendulum->set_constraint(rope.length());
+        } else
+            the_pendulum->set_constraint(length);
+
+        the_pendulum->attach_point = *attach_point;
+        the_pendulum->enable(true);
+
+        result = (f32)self->physical_ifc()->add_dynamic_pendulum(the_pendulum);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8537F0
 bool slf__entity__physical_ifc_add_dynamic_pendulum__entity__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8537F0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self         = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto pivot        = arch_base_vhandle(stack.local_uint(0x04));
+    auto length       = stack.local_num(0x08);
+    auto attach_point = (const vector3d*)&stack.local_uint(0x0C);
+
+    // the pendulum's index, -1 without one
+    f32 result = -1.0f;
+
+    if (self && pivot.resolve() && self->has_ifc(entity_ifc_physical)) {
+        auto* the_pendulum = new (mm::allocate(sizeof(pendulum))) pendulum();
+
+        the_pendulum->set_entity_base_pivot((entity*)pivot.resolve());
+
+        // a negative length keeps the current distance to the pivot
+        if (length < 0.0f) {
+            vector3d position  = self->my_abs_po->get_position();
+            vector3d pivot_pos = the_pendulum->get_pivot_abs_pos();
+
+            math::vector4 rope((f32)((f64)pivot_pos.x - position.x),
+                               (f32)((f64)pivot_pos.y - position.y),
+                               (f32)((f64)pivot_pos.z - position.z),
+                               0.0f - 0.0f);
+
+            the_pendulum->set_constraint((f32)retail::sub_42A9E0((f32*)&rope));
+        } else
+            the_pendulum->set_constraint(length);
+
+        the_pendulum->attach_point = *attach_point;
+        the_pendulum->enable(true);
+
+        result = (f32)self->physical_ifc()->add_dynamic_pendulum(the_pendulum);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8539C0
 bool slf__entity__physical_ifc_remove_dynamic_pendulum__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8539C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->remove_dynamic_pendulum((i32)index))
+        mm::free(the_pendulum);
+
+    return true;
 }
 
+// sub_883960
 bool slf__entity__physical_ifc_set_dynamic_pendulum_length__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883960)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index  = stack.local_num(0x04);
+    auto length = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index))
+        the_pendulum->set_constraint(length);
+
+    return true;
 }
 
+// sub_8839B0
 bool slf__entity__physical_ifc_get_dynamic_pendulum_length__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8839B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_physical)) {
+        if (pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index))
+            result = the_pendulum->constraint;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_883A20
 bool slf__entity__physical_ifc_set_dynamic_pendulum_attach_limb__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883A20)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+    auto limb  = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index))
+        the_pendulum->set_attach_limb((i32)limb);
+
+    return true;
 }
 
+// sub_883A70
 bool slf__entity__physical_ifc_get_dynamic_pendulum_attach_limb__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883A70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+
+    // -1 without an enabled pendulum
+    f32 result = -1.0f;
+
+    if (self && self->has_ifc(entity_ifc_physical)) {
+        pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index);
+
+        if (the_pendulum && the_pendulum->enabled)
+            result = (f32)the_pendulum->attach_limb;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_883AF0
 bool slf__entity__physical_ifc_set_dynamic_pendulum_maintain_rel_orient__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883AF0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+    auto on    = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index))
+        the_pendulum->set_maintain_rel_orient(on > 0.0001f);
+
+    return true;
 }
 
+// sub_883B70
 bool slf__entity__physical_ifc_set_dynamic_pendulum_maintain_abs_orient__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883B70)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto index = stack.local_num(0x04);
+    auto on    = stack.local_num(0x08);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->get_dynamic_pendulum((i32)index))
+        the_pendulum->set_maintain_abs_orient(on > 0.0001f);
+
+    return true;
 }
 
 bool slf__entity__set_puppet_slave_array__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_879DA0)(this, stack);
 }
 
+// sub_853A20
 bool slf__entity__get_floor_offset__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853A20)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self           = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow_override = stack.local_num(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->has_ifc(entity_ifc_standing)) {
+        if (allow_override > 0.0001f && !(self->standing_ifc()->floor_offset_override <= 0.0f))
+            result = self->standing_ifc()->floor_offset_override;
+        else
+            result = self->standing_ifc()->get_pure_anim_floor_offset();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_853AB0
 bool slf__entity__set_floor_offset_override__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853AB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self         = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto new_override = stack.local_num(0x04);
+
+    if (self && self->has_ifc(entity_ifc_standing))
+        self->standing_ifc()->set_floor_offset_override(new_override);
+
+    return true;
 }
 
 bool slf__entity__can_be_web_yanked__t::operator()(chuck::vm::vm_stack &stack) {
@@ -3840,8 +4040,8 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
                 self->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
                 (self->physical_ifc()->is_enabled() && !self->physical_ifc()->is_suspended() &&
                  (!retail::sub_4024E0((u32*)self) || // has_standing_ifc
-                  !(((standing_interface*)self->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 1) ||
-                  !(((standing_interface*)self->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2))))
+                  !self->standing_ifc()->is_enabled() ||
+                  !self->standing_ifc()->is_effectively_standing())))
 
                 result = self->physical_ifc()->get_velocity();
             else if (retail::sub_402500((u32*)self)) // has_player_ifc

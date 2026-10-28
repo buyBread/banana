@@ -290,7 +290,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
         if (hero->has_ifc(entity_ifc_standing)) {
             retail::sub_60CF20((u32*)hero->my_ifc_storage->get_ifc(entity_ifc_standing));
 
-            ((standing_interface*)hero->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 &= ~1;
+            hero->standing_ifc()->enable(false);
         }
 
         i32 unk_object = retail::sub_602F30((u32*)hero);
@@ -624,7 +624,7 @@ void cut_scene_player::stop(cut_scene* only) {
             entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
             if (hero->has_ifc(entity_ifc_standing))
-                ((standing_interface*)hero->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 |= 1;
+                hero->standing_ifc()->enable(true);
 
             ((actor*)references::g_world_ptr.read()->get_hero_ptr())->get_ai_core()->unk_5bc = 0;
 

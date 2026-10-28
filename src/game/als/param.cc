@@ -364,7 +364,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!retail::sub_4024E0((u32*)the_actor)) // has_standing_ifc
                 return 0.0f;
 
-            return ((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_03c;
+            return the_actor->standing_ifc()->cur_elevation;
 
         // the physics' heights, none when it reports a negative one
         case param_height_above_ground:
@@ -448,7 +448,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             return 1.0f;
 
         case param_effectively_standing:
-            if (!retail::sub_4024E0((u32*)the_actor) || !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2))
+            if (!retail::sub_4024E0((u32*)the_actor) || !the_actor->standing_ifc()->is_effectively_standing())
                 return 0.0f;
 
             return 1.0f;
@@ -1053,8 +1053,8 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                     the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
                     ((the_actor->physical_ifc()->flags & 1) && !(the_actor->physical_ifc()->flags & 2) &&
                      (!retail::sub_4024E0((u32*)the_actor) || // has_standing_ifc
-                      !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 1) ||
-                      !(((standing_interface*)the_actor->my_ifc_storage->get_ifc(entity_ifc_standing))->unk_044 & 2)))) {
+                      !the_actor->standing_ifc()->is_enabled() ||
+                      !the_actor->standing_ifc()->is_effectively_standing()))) {
 
                     return the_actor->physical_ifc()->get_velocity();
                 }

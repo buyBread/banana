@@ -1211,8 +1211,8 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         if (interface_storage* ifc_storage = the_actor->my_ifc_storage) {
             auto standing = (standing_interface*)ifc_storage->find_ifc(entity_ifc_standing);
 
-            if (standing && (standing->unk_044 & 1))
-                ((void (__thiscall*)(standing_interface*, f32, bool, f32))retail::sub_676ED0)(standing, 0.01f, true, 0.5f); // standing_interface
+            if (standing && standing->is_enabled())
+                standing->manage_standing(0.01f, true, 0.5f);
         }
     }
 

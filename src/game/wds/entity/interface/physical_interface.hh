@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/wds/entity/interface/generic_interface.hh"
+#include "game/container/multi_vector.hh"
 #include "game/timing/simple_timer.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/math/algebra.hh"
@@ -10,6 +11,7 @@
 namespace treyarch {
     class biped_system;
     class guidance_system;
+    class pendulum;
     class rigid_body_prop_head;
     struct physical_interface_driver;
 
@@ -56,7 +58,8 @@ namespace treyarch {
         simple_timer               combat_gravity_restore_timer;
         guidance_system*           guide_sys;
         physical_interface_driver* current_driver;
-        void*                      pendulums;
+        container::multi_vector
+            <pendulum*>*           pendulums;
         f32                        drag_coefficient;
         f32                        drag_coefficient_min_speed;
         f32                        drag_coefficient_horz_scale;
@@ -176,6 +179,15 @@ namespace treyarch {
 
         void set_auto_prop_physics(bool i);
         void set_physics_ballistic_target(const vector3d &pos);
+
+        pendulum* get_static_pendulum(u32 p_enum) const;
+        void      set_static_pendulum(u32 p_enum, pendulum* _pendulum); // null clears the slot
+
+        i32       add_dynamic_pendulum(pendulum* _pendulum); // answers its index
+        pendulum* get_dynamic_pendulum(u32 index) const;
+        pendulum* remove_dynamic_pendulum(i32 index);
+
+        i32 get_num_active_pendulums() const;
     };
 
     ASSERT_OFFSETOF(physical_interface, flags,                 0x0C);

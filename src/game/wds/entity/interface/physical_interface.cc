@@ -2,6 +2,7 @@
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/physics/physics_system.hh"
 #include "game/physics/rigid_body_prop_system.hh"
+#include "game/wds/entity/pendulum.hh"
 
 using namespace treyarch;
 
@@ -111,4 +112,42 @@ void physical_interface::set_physics_ballistic_target(const vector3d &pos) {
 
         retail::sub_9F0B40((i32)m_bp_info, (u64*)&target); // biped_system
     }
+}
+
+// sub_63E770
+pendulum* physical_interface::get_static_pendulum(u32 p_enum) const {
+    if (pendulums &&
+        pendulums->get_vector(1) &&
+        p_enum < pendulums->get_vector(1)->size())
+
+        return (*pendulums->get_vector(1))[p_enum];
+
+    return nullptr;
+}
+
+void physical_interface::set_static_pendulum(u32 p_enum, pendulum* _pendulum) {
+    retail::sub_66C270((u32*)this, p_enum, (i32)_pendulum);
+}
+
+i32 physical_interface::add_dynamic_pendulum(pendulum* _pendulum) {
+    return retail::sub_672440((u32*)this, (u32*)_pendulum);
+}
+
+// sub_8838D0
+pendulum* physical_interface::get_dynamic_pendulum(u32 index) const {
+    if (pendulums &&
+        pendulums->get_base_vector() &&
+        index < pendulums->get_base_vector()->size())
+
+        return (*pendulums->get_base_vector())[index];
+
+    return nullptr;
+}
+
+pendulum* physical_interface::remove_dynamic_pendulum(i32 index) {
+    return (pendulum*)retail::sub_672630((u32*)this, index);
+}
+
+i32 physical_interface::get_num_active_pendulums() const {
+    return retail::sub_63F320((u32*)this);
 }

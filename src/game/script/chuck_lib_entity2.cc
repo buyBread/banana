@@ -8,9 +8,11 @@
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/pendulum.hh"
 #include "game/math/references.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -1178,12 +1180,30 @@ bool slf__entity__get_manip_allow_auto_putdown__t::operator()(chuck::vm::vm_stac
     return ((invoke_t)retail::sub_86E1D0)(this, stack);
 }
 
+// sub_86E290
 bool slf__entity__set_allow_manage_standing__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E290)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_standing))
+        self->standing_ifc()->enable(allow != 0.0f);
+
+    return true;
 }
 
+// sub_86E310
 bool slf__entity__set_allow_swimming__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E310)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_standing))
+        self->standing_ifc()->set_swimming(allow != 0.0f);
+
+    return true;
 }
 
 // sub_86E390
@@ -1583,12 +1603,30 @@ bool slf__entity__physical_ifc_apply_force_at_pos__vector3d__num__vector3d__t::o
     return true;
 }
 
+// sub_86F1F0
 bool slf__entity__physical_ifc_is_effectively_standing__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F1F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_standing) && self->standing_ifc()->is_effectively_standing() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F280
 bool slf__entity__physical_ifc_manage_standing__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F280)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto force = stack.local_num(0x04);
+
+    if (self && self->has_ifc(entity_ifc_standing))
+        self->standing_ifc()->manage_standing(0.01f, force != 0.0f, -1.0f);
+
+    return true;
 }
 
 // sub_86F2F0
@@ -1691,24 +1729,129 @@ bool slf__entity__physical_ifc_set_biped_physics_is_weapon__num__t::operator()(c
     return true;
 }
 
+// sub_87C980
 bool slf__entity__physical_ifc_set_pendulum__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87C980)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto pivot  = (const vector3d*)&stack.local_uint(0x04);
+    auto length = stack.local_num(0x10);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    pendulum* the_pendulum = self->physical_ifc()->get_static_pendulum(0);
+
+    if (!the_pendulum)
+        the_pendulum = new (mm::allocate(sizeof(pendulum))) pendulum();
+
+    the_pendulum->set_vector3d_pivot(*pivot);
+
+    // a negative length keeps the current distance to the pivot
+    if (length < 0.0f) {
+        vector3d position  = self->my_abs_po->get_position();
+        vector3d pivot_pos = the_pendulum->get_pivot_abs_pos();
+
+        vector3d rope((f32)((f64)pivot_pos.x - position.x),
+                      (f32)((f64)pivot_pos.y - position.y),
+                      (f32)((f64)pivot_pos.z - position.z));
+
+        the_pendulum->set_constraint(rope.length());
+    } else
+        the_pendulum->set_constraint(length);
+
+    the_pendulum->enable(true);
+
+    self->physical_ifc()->set_static_pendulum(0, the_pendulum);
+
+    return true;
 }
 
+// sub_87CB40
 bool slf__entity__physical_ifc_set_pendulum__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87CB40)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto pivot  = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+    auto length = stack.local_num(0x08);
+
+    if (!self || !pivot || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    pendulum* the_pendulum = self->physical_ifc()->get_static_pendulum(0);
+
+    if (!the_pendulum)
+        the_pendulum = new (mm::allocate(sizeof(pendulum))) pendulum();
+
+    the_pendulum->set_entity_base_pivot(pivot);
+
+    // a negative length keeps the current distance to the pivot
+    if (length < 0.0f) {
+        vector3d position  = self->my_abs_po->get_position();
+        vector3d pivot_pos = the_pendulum->get_pivot_abs_pos();
+
+        math::vector4 rope((f32)((f64)pivot_pos.x - position.x),
+                           (f32)((f64)pivot_pos.y - position.y),
+                           (f32)((f64)pivot_pos.z - position.z),
+                           0.0f - 0.0f);
+
+        the_pendulum->set_constraint((f32)retail::sub_42A9E0((f32*)&rope));
+    } else
+        the_pendulum->set_constraint(length);
+
+    the_pendulum->enable(true);
+
+    self->physical_ifc()->set_static_pendulum(0, the_pendulum);
+
+    return true;
 }
 
+// sub_87CCF0
 bool slf__entity__physical_ifc_clear_pendulum__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87CCF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    pendulum* the_pendulum = self->physical_ifc()->get_static_pendulum(0);
+
+    self->physical_ifc()->set_static_pendulum(0, nullptr);
+
+    if (the_pendulum)
+        mm::free(the_pendulum);
+
+    return true;
 }
 
+// sub_87CD60
 bool slf__entity__set_pendulum_attach_limb__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87CD60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto limb = stack.local_num(0x04);
+
+    if (!self || !self->has_ifc(entity_ifc_physical))
+        return true;
+
+    if (pendulum* the_pendulum = self->physical_ifc()->get_static_pendulum(0))
+        the_pendulum->set_attach_limb((i32)limb);
+
+    return true;
 }
 
+// sub_86F640
 bool slf__entity__get_num_of_active_pendulums__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F640)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_physical) ? (f32)self->physical_ifc()->get_num_active_pendulums() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_86F6B0
