@@ -80,6 +80,24 @@ namespace treyarch {
             depth = 1;
         }
 
+        // sub_4C2B00
+        bool try_acquire_recursive() { // false while another thread holds it
+            const u32 thread_id = GetCurrentThreadId();
+
+            if (owner == thread_id && state == 0) {
+                ++depth;
+
+                return true;
+            }
+
+            if (!try_acquire((i64)thread_id))
+                return false;
+
+            depth = 1;
+
+            return true;
+        }
+
         // sub_4019B0
         void release() {
             if (!--depth) {

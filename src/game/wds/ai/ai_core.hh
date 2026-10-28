@@ -5,7 +5,10 @@
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
+#include "game/hash/algo.hh"
+#include "game/math/algebra/vector3d.hh"
 #include "game/mutex.hh"
 #include "game/resource_key.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -38,6 +41,18 @@ namespace treyarch {
         ai_core_mode_change_machines,
         ai_core_mode_killing_machines
     };
+
+    // what a state machine finished with; 106 codes in all
+    enum e_state_exit_code : u32 {
+        state_exit_code_exit_request = 0,
+        state_exit_code_success      = 1,
+        state_exit_code_failure      = 2,
+        state_exit_code_no_exit      = 106
+    };
+
+    inline const string_hash tether_active_key = string_hash(hash::djb2("TETHER_ACTIVE"));
+    inline const string_hash tether_center_key = string_hash(hash::djb2("TETHER_CENTER"));
+    inline const string_hash tether_radius_key = string_hash(hash::djb2("TETHER_RADIUS"));
 
     struct ai_core_list;
 
@@ -105,7 +120,7 @@ namespace treyarch {
         e_ai_core_mode                  my_locomotion_mode;
         loco_inode*                     my_loco_inode;
         void*                           path_location;
-        u32                             locomotion_exit_status;
+        e_state_exit_code               locomotion_exit_status;
         u32                             unk_610;
         ai_team::e_team                 my_team;              // num_teams when the "team" param is missing or unknown
         bool                            alive;
@@ -134,6 +149,24 @@ namespace treyarch {
         i32                             unk_6e4;
 
         info_node* get_info_node(e_info_node_type type) const;
+
+        // sub_4C2FA0
+        actor* get_actor(i32 actor_ix = 0) const { return my_actor; }
+
+        bool is_moving() const { return locomotion_exit_status == state_exit_code_no_exit; }
+
+        bool     is_tether_active() const;
+        f32      get_tether_radius() const;
+        vector3d get_tether_center() const;
+        void     enable_tether(const vector3d &center, f32 radius);
+        void     disable_tether();
+        vector3d clip_to_tether(const vector3d* pos, bool* clipped) const; // pulls pos inside the tether
+        bool     is_within_tether(const vector3d* pos, f32 margin) const;  // true without an active tether
+
+        vector3d get_movement_dest() const;
+        bool     set_facing_dir(const vector3d &dir, f32 rot_speed_deg);
+        bool     set_facing_point(const vector3d &point, f32 rot_speed_deg);
+        bool     stop_movement();
 
         void enter_limbo();
         void exit_limbo();

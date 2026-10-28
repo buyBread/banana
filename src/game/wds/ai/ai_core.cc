@@ -86,6 +86,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_5F3990
 // inlined @ sub_8068A0
 // inlined @ sub_981D50
+// inlined @ sub_4C7A40
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -100,6 +101,156 @@ info_node* ai_core::get_info_node(e_info_node_type type) const {
         position += retail::sub_401F50(info_node_mask[0]);
 
     return (*my_info_node_list)[position];
+}
+
+// sub_4C3A70
+actor* info_node::get_actor() const {
+    return my_ai_core->my_actor;
+}
+
+// sub_4C2EA0
+// inlined @ sub_4C5840
+// inlined @ sub_4C58D0
+// inlined @ sub_4C5AC0
+bool ai_core::is_tether_active() const {
+    return my_param_block.get_optional_pb_int(tether_active_key, 0, nullptr) > 0;
+}
+
+// sub_4C2E60
+// inlined @ sub_4C58D0
+// inlined @ sub_4C5AC0
+f32 ai_core::get_tether_radius() const {
+    return my_param_block.get_optional_pb_float(tether_radius_key, 1000.0f, nullptr);
+}
+
+// sub_4C5800
+vector3d ai_core::get_tether_center() const {
+    return my_param_block.get_optional_pb_vector3d(tether_center_key, my_actor->my_abs_po->get_position(), nullptr);
+}
+
+// sub_4C2ED0
+void ai_core::enable_tether(const vector3d &center, f32 radius) {
+    my_param_block.set_pb_vector3d(tether_center_key, center);
+    my_param_block.set_pb_float(tether_radius_key, radius);
+    my_param_block.set_pb_int(tether_active_key, 1);
+}
+
+// sub_4C5840
+void ai_core::disable_tether() {
+    if (is_tether_active()) {
+        my_param_block.set_pb_vector3d(tether_center_key, my_actor->my_abs_po->get_position());
+        my_param_block.set_pb_float(tether_radius_key, 1000.0f);
+    }
+
+    my_param_block.set_pb_int(tether_active_key, 0);
+}
+
+// sub_4C58D0
+vector3d ai_core::clip_to_tether(const vector3d* pos, bool* clipped) const {
+    if (is_tether_active()) {
+        f32 radius = get_tether_radius();
+
+        if (radius >= 0.0f) {
+            vector3d center   = get_tether_center();
+            vector3d offset   = *pos - center;
+            f32      distance = offset.length();
+
+            if (distance > radius) {
+                // lands just inside the sphere
+                if (radius > 0.01f)
+                    radius -= 0.01f;
+
+                f32 scale = radius / distance;
+
+                if (clipped)
+                    *clipped = true;
+
+                return vector3d(center.x + offset.x * scale,
+                                center.y + offset.y * scale,
+                                center.z + offset.z * scale);
+            }
+        }
+    }
+
+    if (clipped)
+        *clipped = false;
+
+    return *pos;
+}
+
+// sub_4C5AC0
+bool ai_core::is_within_tether(const vector3d* pos, f32 margin) const {
+    if (!is_tether_active())
+        return true;
+
+    f32 radius = get_tether_radius();
+
+    if (radius < 0.0f)
+        return true;
+
+    vector3d center = get_tether_center();
+
+    return radius >= (f64)(*pos - center).length() + margin;
+}
+
+// sub_4C63E0
+vector3d ai_core::get_movement_dest() const {
+    if (my_loco_inode && is_moving())
+        return *((const vector3d* (__thiscall*)(loco_inode*))retail::sub_458440)(my_loco_inode); // loco_inode: last goto point
+
+    return my_actor->my_abs_po->get_position();
+}
+
+// sub_4C2F30
+// inlined @ sub_4C62A0
+bool ai_core::set_facing_dir(const vector3d &dir, f32 rot_speed_deg) {
+    if (!my_loco_inode)
+        return false;
+
+    return ((bool (__thiscall*)(loco_inode*, const vector3d*, f32))retail::sub_458480)(my_loco_inode, &dir, rot_speed_deg); // loco_inode::set_facing_dir
+}
+
+// sub_4C62A0
+bool ai_core::set_facing_point(const vector3d &point, f32 rot_speed_deg) {
+    return set_facing_dir(point - my_actor->my_abs_po->get_position(), rot_speed_deg);
+}
+
+// sub_4C7A40
+bool ai_core::stop_movement() {
+    if (!my_loco_inode)
+        return true;
+
+    // a swift layer that's in use stops itself
+    for (e_info_node_type type : { info_node_type_swift_surface_layer, info_node_type_swift_flight_layer }) {
+        info_node* swift_layer = get_info_node(type);
+
+        if (swift_layer && ((bool (__thiscall*)(info_node*))retail::sub_44FAD0)(swift_layer)) { // swift layer: in use
+            ((void (__thiscall*)(info_node*, bool))retail::sub_44FAB0)(swift_layer, true); // swift layer: stop movement
+
+            return true;
+        }
+    }
+
+    if (!lock->try_acquire_recursive())
+        return false;
+
+    bool stopped = false;
+
+    if (my_locomotion_machine) {
+        if (!((bool (__thiscall*)(loco_inode*))(*(void***)my_loco_inode)[23])(my_loco_inode)) // slot 23
+            ((void (__thiscall*)(ai_state_machine*))retail::sub_4C6990)(my_locomotion_machine); // ai_state_machine: request exit
+
+        stopped = true;
+    } else if (my_locomotion_mode == ai_core_mode_killing_machines) {
+        my_locomotion_mode     = ai_core_mode_normal;
+        locomotion_exit_status = state_exit_code_failure;
+
+        stopped = true;
+    }
+
+    lock->release();
+
+    return stopped;
 }
 
 // sub_4CE030

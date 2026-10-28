@@ -9,6 +9,7 @@
 #include "game/game.hh"
 #include "game/input/input_mgr.hh"
 #include "game/light/light_source.hh"
+#include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
@@ -234,7 +235,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         bool collisions_active = (ent->flags & entity_flag_collisions_active) != 0;
 
         if (ent->get_ai_core() && !retail::sub_601C50((u32*)ent)) {
-            retail::sub_4C7A40((i32)ent->get_ai_core());
+            ent->get_ai_core()->stop_movement();
             retail::sub_4DF470((i32*)ent->get_ai_core(), 0); // ai_core::push_ai_disable
         }
 

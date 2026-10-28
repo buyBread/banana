@@ -185,10 +185,10 @@ void mission_manager::update_hero_proximity_event() {
     vector3d hero_position = hero->my_abs_po->get_position();
     bool    hero_nearby   = false;
 
-    auto* nearby = *(vc8::list<u32*>**)(owner + 0x94);
+    auto* nearby = *(vc8::list<info_node*>**)(owner + 0x94);
 
     for (auto* node = nearby->begin(); node != nearby->end(); node = node->next) {
-        const vector3d &position = ((entity*)retail::sub_4C3A70(node->value))->my_abs_po->get_position();
+        const vector3d &position = node->value->get_actor()->my_abs_po->get_position();
 
         f32 dx = (f32)((f64)position.x - (f64)hero_position.x);
         f32 dy = (f32)((f64)position.y - (f64)hero_position.y);

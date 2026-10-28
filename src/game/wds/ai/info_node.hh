@@ -13,6 +13,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class actor;
     class ai_core;
 
     // baked into each node by its .BAI
@@ -87,6 +88,11 @@ namespace treyarch {
         param_block      my_param_block;
         e_info_node_type my_type;
         ai_core*         my_ai_core;
+
+        // sub_A79D60
+        ai_core* get_core() const { return my_ai_core; }
+
+        actor* get_actor() const;
 
         virtual bool unk_024(u32);
         virtual bool unk_028();
