@@ -11,6 +11,7 @@
 #include "game/event/event_manager.hh"
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/cpu_combat_pie.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/subdivision_visitor.hh"
 #include "treyarch/jq/jq.hh"
@@ -57,7 +58,7 @@ void jq::jobqueue_init() {
     references::unk_00fc4a70.get().reset();
     references::unk_00fc60e0.get().reset();
     references::unk_00fc60e0.get().writer_depth = 0;
-    references::unk_00fc5f60.get().reset();
+    treyarch::references::cpu_combat_pie_lock.get().reset();
     references::unk_00fc4a98.get().reset();
     references::unk_00fc3c60.get().reset();
     references::unk_00fc4a38.get().reset();

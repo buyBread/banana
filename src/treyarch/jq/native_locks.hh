@@ -23,7 +23,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_00fc50c8 { 0x00FC50C8 }; // hospitals (medical emergencies)
     inline util::memory_reference<engine_recursive_lock> unk_00fc57e0 { 0x00FC57E0 }; // info_node registries
     inline util::memory_reference<engine_recursive_lock> unk_00fc59a8 { 0x00FC59A8 }; // combat states (sub_4CC650, sub_4CDEC0)
-    inline util::memory_reference<engine_recursive_lock> unk_00fc5f60 { 0x00FC5F60 }; // the list ai frame step 4 walks (sub_4F5C80)
     inline util::memory_reference<engine_recursive_lock> unk_00fd3ef8 { 0x00FD3EF8 }; // voice_box_inode
     inline util::memory_reference<engine_recursive_lock> unk_01003138 { 0x01003138 }; // getting in and out of cars
     inline util::memory_reference<engine_recursive_lock> unk_01030b90 { 0x01030B90 }; // ped states (wander, hold_abductee)
