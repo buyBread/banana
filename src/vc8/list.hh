@@ -57,6 +57,8 @@ namespace treyarch { namespace vc8 {
         node* begin() const noexcept { return sentinel->next; }
         node* end()   const noexcept { return sentinel; }
 
+        T &back() const noexcept { return sentinel->previous->value; }
+
         u32  size()  const noexcept { return count; }
         bool empty() const noexcept { return count == 0; }
 

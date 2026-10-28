@@ -81,6 +81,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_51D5F0
+        // sub_7DCA50
         void destroy() noexcept {
             clear();
 
@@ -151,6 +152,7 @@ namespace treyarch { namespace vc8 {
         // sub_5F5850
         // sub_5F6D70
         // sub_5F7130
+        // sub_650850
         // sub_685A70
         // sub_983C70
         void push_back(const T &value) {
