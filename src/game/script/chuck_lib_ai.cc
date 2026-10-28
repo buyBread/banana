@@ -194,60 +194,223 @@ bool slf__cpu_combat_movement__clip_to_tether__vector3d__t::operator()(chuck::vm
     return true;
 }
 
+// sub_866E70
 bool slf__cpu_combat_movement__get_pie_target__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866E70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    arch_base_vhandle result = self ? self->combat->pie_slice.get_pie_target() : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866EC0
 bool slf__cpu_combat_movement__get_pie_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866EC0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self)
+        result = self->combat->pie_slice.get_pie_center();
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866F30
 bool slf__cpu_combat_movement__get_pie_normal__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866F30)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self)
+        result = self->combat->pie_slice.get_pie_normal();
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866FA0
 bool slf__cpu_combat_movement__get_pie_facing__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866FA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self)
+        result = self->combat->pie_slice.get_pie_facing();
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867010
 bool slf__cpu_combat_movement__get_new_pie_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867010)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self) {
+        vector3d pos = self->combat->pie_slice.get_new_pie_pos();
+
+        result = self->core->clip_to_tether(&pos, nullptr);
+    }
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867090
 bool slf__cpu_combat_movement__pos_inside_pie_slice__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867090)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto pos  = (const vector3d*)&stack.local_uint(0x04);
+
+    f32 result = self && self->combat->pie_slice.pos_inside_slice(pos) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
-bool slf__cpu_combat_movement__inside_pie_slice__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867100)(this, stack);
+// sub_867100
+bool slf__cpu_combat_movement__inside_pie_slice__t::operator()(chuck::vm::vm_stack &stack) { // where it's headed while moving, else where it stands
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        ai_core* core = self->core;
+
+        if (core->is_moving()) {
+            vector3d dest = core->get_movement_dest();
+
+            if (self->combat->pie_slice.pos_inside_slice(&dest))
+                result = 1.0f;
+        }
+        else if (self->combat->pie_slice.pos_inside_slice(&core->get_actor(0)->my_abs_po->get_position()))
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8671A0
 bool slf__cpu_combat_movement__get_pie_min_dist__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8671A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? self->combat->pie_slice.get_pie_min_dist() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8671F0
 bool slf__cpu_combat_movement__get_pie_max_dist__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8671F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? self->combat->pie_slice.get_pie_max_dist() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867240
 bool slf__cpu_combat_movement__get_pie_ring__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867240)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? (f32)self->combat->pie_slice.ring : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867290
 bool slf__cpu_combat_movement__get_pie_num_rings__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867290)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? (f32)self->combat->pie_slice.get_pie_num_rings() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8672F0
 bool slf__cpu_combat_movement__get_pie_slice__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8672F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? (f32)self->combat->pie_slice.slice : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867340
 bool slf__cpu_combat_movement__get_pie_num_slices__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867340)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? (f32)self->combat->pie_slice.get_pie_num_slices() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8673A0
 bool slf__cpu_combat_movement__get_pie_buffer_arc_pct__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8673A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? self->combat->pie_slice.buffer_arc_pct : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8673F0
@@ -388,8 +551,16 @@ bool slf__cpu_combat_movement__set_facing_point__vector3d__t::operator()(chuck::
     return true;
 }
 
+// sub_867710
 bool slf__cpu_combat_movement__set_facing_pie_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867710)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    if (self)
+        self->core->set_facing_point(self->combat->pie_slice.get_pie_center(), 0.0f);
+
+    return true;
 }
 
 bool slf__cpu_combat_movement__rappel_allowed__t::operator()(chuck::vm::vm_stack &stack) {
