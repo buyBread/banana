@@ -9,6 +9,7 @@
 #include "game/animation/animation_controller_jq.hh"
 #include "game/animation/animation_pose_jq.hh"
 #include "game/event/event_manager.hh"
+#include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/subdivision_visitor.hh"
@@ -93,7 +94,7 @@ void jq::jobqueue_init() {
     references::unk_01003ac8.get().reset();
     references::unk_01003428.get().reset();
     references::unk_01003478.get().reset();
-    references::unk_00ffedd8.get().reset();
+    treyarch::references::polytube_lock.get().reset();
     treyarch::references::subdivision_query_lock.get().reset();
     treyarch::references::render_lock.get().reset();
     references::unk_01076a98.get().reset();

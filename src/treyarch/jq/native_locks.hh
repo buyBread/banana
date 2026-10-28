@@ -42,7 +42,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_00ffed00 { 0x00FFED00 }; // damage_interface registry
     inline util::memory_reference<engine_recursive_lock> unk_00ffed20 { 0x00FFED20 }; // ise_interface registry
     inline util::memory_reference<engine_recursive_lock> unk_00ffedc0 { 0x00FFEDC0 }; // weapon_interface
-    inline util::memory_reference<engine_recursive_lock> unk_00ffedd8 { 0x00FFEDD8 }; // polytube
     inline util::memory_reference<engine_recursive_lock> unk_00ffede8 { 0x00FFEDE8 }; // standing_interface
     inline util::memory_reference<engine_recursive_lock> unk_010030f0 { 0x010030F0 }; // grenade
     inline util::memory_reference<engine_recursive_lock> unk_01003148 { 0x01003148 }; // sub_63C580, sub_641650, sub_6463A0
