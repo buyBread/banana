@@ -11,6 +11,7 @@
 
 namespace treyarch {
     class ai_core;
+    class arch_base;
     class info_node;
     class param_block;
 
@@ -18,6 +19,9 @@ namespace treyarch {
     string_hash  get_ai_param_hash_and_core (arch_base_vhandle handle, const char* param_name, ai_core** core);
     string_hash  get_ai_param_hash_and_inode(arch_base_vhandle handle, const char* param_name, const char* inode_name, info_node** node);
     param_block* get_ai_param_block         (arch_base_vhandle handle, const char* param_name, string_hash &parameter, bool* resolved = nullptr);
+
+    // the marky camera only takes orders from threads at its priority
+    bool marky_camera_allows(const arch_base* self, const chuck::vm::vm_stack &stack);
 
     class slc_entity_t : public chuck::script_library::script_library_class {
 

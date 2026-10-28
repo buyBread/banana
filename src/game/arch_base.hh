@@ -40,6 +40,36 @@ namespace treyarch {
             return ((bool (__thiscall*)(const arch_base*))vtable[13])(this);
         }
 
+        // slot 14
+        bool is_a_conglomerate_clone() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[14])(this);
+        }
+
+        // slot 15
+        bool is_a_dynamic_conglomerate_clone() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[15])(this);
+        }
+
+        // slot 16
+        bool is_a_grenade() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[16])(this);
+        }
+
+        // slot 18
+        bool is_a_particle_generator() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[18])(this);
+        }
+
+        // slot 23
+        bool is_a_marker() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[23])(this);
+        }
+
+        // slot 30
+        bool is_a_marky_camera() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[30])(this);
+        }
+
         // slot 41
         bool is_a_vehicle() const {
             return ((bool (__thiscall*)(const arch_base*))vtable[41])(this);
@@ -48,6 +78,11 @@ namespace treyarch {
         // slot 45
         bool is_a_fight_group() const {
             return ((bool (__thiscall*)(const arch_base*))vtable[45])(this);
+        }
+
+        // slot 46
+        bool is_a_fakir() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[46])(this);
         }
 
         void raise_event(string_hash event_type_id);

@@ -18,6 +18,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class collision_geometry;
+    class terrain;
     struct region;
 
     // SM3's entflavors.h order
@@ -35,22 +37,28 @@ namespace treyarch {
         entity_flavor_conglomerate_clone
     };
 
-    // SM3's EFLAG_*
+    // SM3's EFLAG_*, but 0x800000 and 0x20000000
     enum e_entity_flags : u32 {
+        entity_flag_walkable          = 0x00000080,
         entity_flag_graphics_visible  = 0x00000200,
+        entity_flag_special_target    = 0x00001000,
         entity_flag_collisions_active = 0x00004000,
         entity_flag_nontarget         = 0x00020000,
         entity_flag_beamable          = 0x00080000,
+        entity_flag_detectable        = 0x00800000, // SM3's GLOWABLE
+        entity_flag_allow_lockon      = 0x20000000, // SM3's COLGEOM_INSTANCED
         entity_flag_suspended         = 0x40000000
     };
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
-        entity_ext_flag_is_auto_activate_prop = 0x00000800,
-        entity_ext_flag_invulnerable          = 0x00004000,
-        entity_ext_flag_shadow_casting        = 0x00010000, // SM3's AI_COVER
-        entity_ext_flag_sync_anim             = 0x00020000,
-        entity_ext_flag_ai_los_see_through    = 0x00100000
+        entity_ext_flag_is_auto_activate_prop  = 0x00000800,
+        entity_ext_flag_invulnerable           = 0x00004000,
+        entity_ext_flag_noncrawlable           = 0x00008000,
+        entity_ext_flag_shadow_casting         = 0x00010000, // SM3's AI_COVER
+        entity_ext_flag_sync_anim              = 0x00020000,
+        entity_ext_flag_ai_los_see_through     = 0x00100000,
+        entity_ext_flag_attack_damage_unlocked = 0x20000000
     };
 
     class entity : public arch_base {
@@ -115,11 +123,6 @@ namespace treyarch {
             return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
         }
 
-        // slot 77
-        e_entity_flavor get_flavor() const {
-            return ((e_entity_flavor (__thiscall*)(const entity*))vtable[77])(this);
-        }
-
         // slot 64; this and its members
         void set_flag_recursive(u32 flag, bool on) {
             ((void (__thiscall*)(entity*, u32, bool))vtable[64])(this, flag, on);
@@ -135,14 +138,77 @@ namespace treyarch {
             ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, unk);
         }
 
+        // slot 68
+        collision_geometry* get_colgeom() const {
+            return ((collision_geometry* (__thiscall*)(const entity*))vtable[68])(this);
+        }
+
         // slot 69; SM3's EFLAG_PHYSICS_COLLISIONS_ACTIVE (0x4000)
         void set_collisions_active(bool active, bool recursive) {
             ((void (__thiscall*)(entity*, bool, bool))vtable[69])(this, active, recursive);
         }
 
+        // slot 70
+        bool are_character_collisions_active() const {
+            return ((bool (__thiscall*)(const entity*))vtable[70])(this);
+        }
+
+        // slot 72
+        void set_character_collisions_active(bool active) {
+            ((void (__thiscall*)(entity*, bool))vtable[72])(this, active);
+        }
+
         // slot 75
         bool was_occluded_last_frame() {
             return ((bool (__thiscall*)(entity*))vtable[75])(this);
+        }
+
+        // slot 76
+        bool is_alive() const {
+            return ((bool (__thiscall*)(const entity*))vtable[76])(this);
+        }
+
+        // slot 77
+        e_entity_flavor get_flavor() const {
+            return ((e_entity_flavor (__thiscall*)(const entity*))vtable[77])(this);
+        }
+
+        // slot 78
+        bool is_a_placeholder_vehicle() const {
+            return ((bool (__thiscall*)(const entity*))vtable[78])(this);
+        }
+
+        // slot 89
+        void compute_sector(terrain* ter, bool use_high_res_intersect, entity* original) {
+            ((void (__thiscall*)(entity*, terrain*, bool, entity*))vtable[89])(this, ter, use_high_res_intersect, original);
+        }
+
+        // slot 91
+        void force_current_region() {
+            ((void (__thiscall*)(entity*))vtable[91])(this);
+        }
+
+        // slot 92
+        void unforce_regions() {
+            ((void (__thiscall*)(entity*))vtable[92])(this);
+        }
+
+        // slot 93
+        void force_regions(entity* e) {
+            ((void (__thiscall*)(entity*, entity*))vtable[93])(this, e);
+        }
+
+        // slot 113
+        f32 get_visual_radius() const {
+            return ((f32 (__thiscall*)(const entity*))vtable[113])(this);
+        }
+
+        // slot 114
+        vector3d get_visual_center() const {
+            vector3d center;
+            ((vector3d* (__thiscall*)(const entity*, vector3d*))vtable[114])(this, &center);
+
+            return center;
         }
 
         // slot 116
@@ -160,9 +226,30 @@ namespace treyarch {
             ((void (__thiscall*)(entity*, color32))vtable[118])(this, color);
         }
 
+        // slot 119
+        color32 get_render_color() const {
+            color32 color;
+            ((color32* (__thiscall*)(const entity*, color32*))vtable[119])(this, &color);
+
+            return color;
+        }
+
         // slot 122
         void set_render_scale(const vector3d &scale) {
             ((void (__thiscall*)(entity*, const vector3d*))vtable[122])(this, &scale);
+        }
+
+        // slot 123
+        vector3d get_render_scale() const {
+            vector3d scale;
+            ((vector3d* (__thiscall*)(const entity*, vector3d*))vtable[123])(this, &scale);
+
+            return scale;
+        }
+
+        // slot 134
+        bool hates_spiderman() {
+            return ((bool (__thiscall*)(entity*))vtable[134])(this);
         }
 
         void invoke_render_phase();

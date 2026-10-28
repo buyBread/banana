@@ -15,11 +15,17 @@
 #include "game/wds/ai/ai_vehicle.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
+#include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
-#include "treyarch/chuck/vm/vm_thread.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/vehicle.hh"
+#include "game/wds/references.hh"
+#include "game/wds/region.hh"
+#include "game/wds/world_dynamics_system.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/script_object.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -109,6 +115,15 @@ param_block* treyarch::get_ai_param_block(arch_base_vhandle  handle,
     parameter = get_ai_param_hash_and_core(handle, param_name, &core);
 
     return core ? &core->my_param_block : nullptr;
+}
+
+// inlined @ sub_8470B0
+// inlined @ sub_847140
+// inlined @ sub_8471B0
+bool treyarch::marky_camera_allows(const arch_base* self, const chuck::vm::vm_stack &stack) {
+    camera* marky = references::g_world_ptr.read()->camera_mgr.marky_camera;
+
+    return self != marky || stack.thread->camera_priority == marky->current_priority;
 }
 
 // sub_83DAE0
@@ -861,12 +876,34 @@ bool slf__entity__rvb_get_animation_coordinator__t::operator()(chuck::vm::vm_sta
     return true;
 }
 
+// sub_8443F0
 bool slf__entity__get_visual_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8443F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(0.0f, 0.0f, 0.0f);
+
+    // anything but an actor answers its position
+    if (self)
+        result = self->is_an_actor() ? self->get_visual_center() : self->my_abs_po->get_position();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_844490
 bool slf__entity__get_visual_radius__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844490)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_actor() ? self->get_visual_radius() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_844500
@@ -882,8 +919,16 @@ bool slf__entity__get_abs_position__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_844570
 bool slf__entity__compute_sector__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844570)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_entity())
+        self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+
+    return true;
 }
 
 // sub_8445C0
@@ -1111,16 +1156,49 @@ bool slf__entity__get_rel_velocity__entity__t::operator()(chuck::vm::vm_stack &s
     return ((invoke_t)retail::sub_846EE0)(this, stack);
 }
 
+// sub_8470B0
 bool slf__entity__force_region__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8470B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (!self || !other || !marky_camera_allows(self, stack))
+        return true;
+
+    if (self->is_an_entity() && other->is_an_entity()) {
+        self->unforce_regions();
+        self->force_regions(other);
+    }
+
+    return true;
 }
 
+// sub_847140
 bool slf__entity__force_current_region__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847140)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && marky_camera_allows(self, stack) && self->is_an_entity())
+        self->force_current_region();
+
+    return true;
 }
 
+// sub_8471B0
 bool slf__entity__unforce_regions__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8471B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !marky_camera_allows(self, stack) || !self->is_an_entity())
+        return true;
+
+    self->unforce_regions();
+    self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+
+    return true;
 }
 
 // sub_847230
@@ -1152,8 +1230,22 @@ bool slf__entity__operator_not_equals__entity__t::operator()(chuck::vm::vm_stack
     return true;
 }
 
+// sub_852680
 bool slf__entity__set_damage_locked__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852680)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto locked = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (locked <= 0.5f)
+        self->ext_flags |= entity_ext_flag_attack_damage_unlocked;
+    else
+        self->ext_flags &= ~entity_ext_flag_attack_damage_unlocked;
+
+    return true;
 }
 
 // sub_8472B0
@@ -1218,8 +1310,46 @@ bool slf__entity__enable_die_on_fall_damage__num__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_8474A0
 bool slf__entity__set_invulnerable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8474A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    // a vehicle also goes to condition 3 and back, unless it's in 1
+    if (self->is_a_vehicle()) {
+        auto* car = (vehicle*)self;
+
+        if (on != 0.0f) {
+            if (car->condition != 1)
+                retail::sub_6048C0((i32)car, 3); // vehicle_set_condition
+        }
+        else if (car->condition == 3)
+            retail::sub_6048C0((i32)car, 0); // vehicle_set_condition
+    }
+
+    // the hero's are counted, so clearing can't go past them
+    if (retail::sub_601C50((u32*)self)) { // entity_base::is_hero
+        if (on != 0.0f)
+            ++mission_manager::inst()->saved_script_hero_invulnerable_count;
+        else {
+            if (mission_manager::inst()->saved_script_hero_invulnerable_count <= 0)
+                return true;
+
+            --mission_manager::inst()->saved_script_hero_invulnerable_count;
+        }
+    }
+
+    if (on != 0.0f)
+        self->ext_flags |= entity_ext_flag_invulnerable;
+    else
+        self->ext_flags &= ~entity_ext_flag_invulnerable;
+
+    return true;
 }
 
 // sub_847570
@@ -1585,12 +1715,30 @@ bool slf__entity__enable_collisions__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_84B710
 bool slf__entity__add_collision_ignorance__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B710)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other = arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (self && other && self->is_an_actor() && other->is_an_actor())
+        retail::sub_65B290((u32**)self, (i32)other->my_handle.value); // actor::add_collision_ignorance
+
+    return true;
 }
 
+// sub_84B770
 bool slf__entity__remove_collision_ignorance__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B770)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto other = arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (self && other && self->is_an_actor() && other->is_an_actor())
+        retail::sub_64B1D0((u32*)self, (i32)other->my_handle.value); // actor::remove_collision_ignorance
+
+    return true;
 }
 
 // sub_84B7D0
@@ -1614,8 +1762,29 @@ bool slf__entity__unsuspend__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_84B830
 bool slf__entity__get_district_id__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B830)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    string_hash result;
+
+    if (self && self->is_an_actor()) {
+        using find_district_for_point_method = region* (__thiscall*)(terrain* self, const vector3d* point, region* primary);
+
+        region* primary  = self->get_primary_region();
+        region* district = ((find_district_for_point_method)retail::sub_789CC0)(references::g_world_ptr.read()->the_terrain,
+                                                                                &self->my_abs_po->get_position(),
+                                                                                primary);
+
+        if (district)
+            result = district->get_district_id();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__als_play_animation_by_category__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1638,24 +1807,95 @@ bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator
     return ((invoke_t)retail::sub_84BE70)(this, stack);
 }
 
+// sub_84C2F0
 bool slf__entity__particle_generator_set_scalar__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C2F0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // asked and ignored
+    if (self)
+        self->is_a_particle_generator();
+
+    return true;
 }
 
+// sub_84C310
 bool slf__entity__get_enx_script_instance__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C310)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    advanced_entity_ptrs*       ptrs   = self && self->is_an_actor() ? self->adv_ptrs : nullptr;
+    chuck::vm::script_instance* result = ptrs ? ptrs->my_script : nullptr;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C3A0
 bool slf__entity__get_enx_script_object_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C3A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    advanced_entity_ptrs* ptrs   = self && self->is_an_actor() ? self->adv_ptrs : nullptr;
+    string_hash           result = ptrs ? ptrs->script_obj_name : string_hash();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84C410
 bool slf__entity__get_enx_script_exec_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C410)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    advanced_entity_ptrs* ptrs = self && self->is_an_actor() ? self->adv_ptrs : nullptr;
+
+    string_hash result;
+
+    if (ptrs)
+        retail::sub_5FD120((u32*)ptrs->script_exe_name, &result.source_hash_code); // resource_key::get_hash
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
-bool slf__entity__is_enx_script_related__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84C490)(this, stack);
+// sub_84C490
+bool slf__entity__is_enx_script_related__uint__t::operator()(chuck::vm::vm_stack &stack) { // whether the enx instance's object is or derives from the named one
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto hash = stack.local_uint(0x04);
+
+    advanced_entity_ptrs*       ptrs     = self && self->is_an_actor() ? self->adv_ptrs : nullptr;
+    chuck::vm::script_instance* instance = ptrs ? ptrs->my_script : nullptr;
+
+    f32 result = 0.0f;
+
+    if (instance) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, nullptr, hash);
+
+        for (chuck::vm::script_object* object = instance->parent; object; object = object->parent_object) {
+            string_hash object_name;
+            retail::sub_5FD120((u32*)object, &object_name.source_hash_code); // script_object::get_name
+
+            if (object_name == name) {
+                result = 1.0f;
+                break;
+            }
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84C540
@@ -2737,12 +2977,30 @@ bool slf__entity__crawl_release_from_surface__vector3d__t::operator()(chuck::vm:
     return ((invoke_t)retail::sub_850990)(this, stack);
 }
 
+// sub_850A60
 bool slf__entity__hates_spiderman__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850A60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_actor() && self->hates_spiderman() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_850AE0
 bool slf__entity__set_detectable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850AE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_actor())
+        self->set_flag_recursive(entity_flag_detectable, on != 0.0f);
+
+    return true;
 }
 
 bool slf__entity__set_spidey_sense_glow_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -2800,8 +3058,17 @@ bool slf__entity__is_a_vehicle__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_850DA0
 bool slf__entity__is_a_placeholder_vehicle__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850DA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_a_placeholder_vehicle() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_vehicle_model__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -2824,8 +3091,13 @@ bool slf__entity__repair_all_vehicle_parts__t::operator()(chuck::vm::vm_stack &s
     return ((invoke_t)retail::sub_850F60)(this, stack);
 }
 
+// sub_86FF80
 bool slf__entity__get_vehicle_parts__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FF80)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    return true;
 }
 
 bool slf__entity__set_vehicle_mass__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -3052,8 +3324,22 @@ bool slf__entity__get_tentacle__str__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_8525E0)(this, stack);
 }
 
+// sub_852680
 bool slf__entity__set_attack_damage_locked__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852680)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto locked = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (locked <= 0.5f)
+        self->ext_flags |= entity_ext_flag_attack_damage_unlocked;
+    else
+        self->ext_flags &= ~entity_ext_flag_attack_damage_unlocked;
+
+    return true;
 }
 
 // sub_8526C0
@@ -3494,8 +3780,17 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_853BD0)(this, stack);
 }
 
+// sub_853DC0
 bool slf__entity__set_crawlable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_853DC0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self)
+        self->set_ext_flag_recursive(entity_ext_flag_noncrawlable, on == 0.0f);
+
+    return true;
 }
 
 bool slf__entity__in_combat_state__t::operator()(chuck::vm::vm_stack &stack) {

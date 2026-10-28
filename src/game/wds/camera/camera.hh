@@ -6,7 +6,9 @@ namespace treyarch {
     class camera : public actor {
 
     public:
-        u8   reserved_0d8[0x1A0];
+        u8   reserved_0d8[0x120];
+        f32  current_priority;
+        u8   reserved_1fc[0x7C];
         bool unk_278; // play copies the cut scene's 0x10 flag here
 
         const vector3d &get_abs_position() const {
@@ -28,6 +30,7 @@ namespace treyarch {
 
     using camera_handle = camera*;
 
-    ASSERT_OFFSETOF(camera, unk_278, 0x278);
+    ASSERT_OFFSETOF(camera, current_priority, 0x1F8);
+    ASSERT_OFFSETOF(camera, unk_278,          0x278);
 
 } // treyarch

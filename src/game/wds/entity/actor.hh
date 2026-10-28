@@ -34,14 +34,16 @@ namespace treyarch {
         ai_core* core;
     };
 
-    struct actor_unk_0b0 {
+    struct advanced_entity_ptrs {
         u8                          reserved_000[0x0C];
-        chuck::vm::script_instance* instance; // the actor's "__enx" instance
-        u8*                         unk_010;  // its script object's name hash sits at +4
-        resource_key*               unk_014;  // the script's resource; its hash is the filename
-        string_hash                 unk_018;  // key prefix
+        chuck::vm::script_instance* my_script;       // the actor's "__enx" instance
+        u8*                         unk_010;         // its script object's name hash sits at +4
+        resource_key*               script_exe_name; // its hash is the script's filename
+        string_hash                 script_obj_name;
         u8                          reserved_01c[0x04];
-        als::als_res_data*          als_data;
+        als::als_res_data*          my_als_data;
+        u8                          reserved_024[0x04];
+        i32                         unk_028;         // set_really_immobile makes it 10, or 0
     };
 
     class actor : public entity {
@@ -51,8 +53,9 @@ namespace treyarch {
         nal::transport_list*        m_skeleton;
         nal::skeleton_map*          skeleton_map;
         animation_controller*       anim_ctrl;
-        actor_unk_0b0*              unk_0b0;
-        u8                          reserved_0b4[0x0C];
+        advanced_entity_ptrs*       adv_ptrs;
+        collision_geometry*         colgeom;
+        u8                          reserved_0b8[0x08];
         amalga::resource_pack_slot* pack_slot; // the one the actor came from; its script threads take it as their resource context
         u8                          reserved_0c4[0x0C];
         base_ai_data*               my_base_ai_data;
@@ -81,14 +84,17 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
 
-    ASSERT_OFFSETOF(actor_unk_0b0, instance, 0x0C);
-    ASSERT_OFFSETOF(actor_unk_0b0, unk_018,  0x18);
-    ASSERT_OFFSETOF(actor_unk_0b0, als_data, 0x20);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, my_script,       0x0C);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, script_exe_name, 0x14);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, script_obj_name, 0x18);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, my_als_data,     0x20);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, unk_028,         0x28);
 
     ASSERT_OFFSETOF(actor, m_skeleton,      0xA4);
     ASSERT_OFFSETOF(actor, skeleton_map,    0xA8);
     ASSERT_OFFSETOF(actor, anim_ctrl,       0xAC);
-    ASSERT_OFFSETOF(actor, unk_0b0,         0xB0);
+    ASSERT_OFFSETOF(actor, adv_ptrs,        0xB0);
+    ASSERT_OFFSETOF(actor, colgeom,         0xB4);
     ASSERT_OFFSETOF(actor, pack_slot,       0xC0);
     ASSERT_OFFSETOF(actor, my_base_ai_data, 0xD0);
     ASSERT_OFFSETOF(actor, capsule_alter,   0xD4);

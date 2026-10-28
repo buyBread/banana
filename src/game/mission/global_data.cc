@@ -133,28 +133,28 @@ void mission_manager::on_icon_entity_acquired(arch_base_vhandle handle) {
 
     actor* owner = (actor*)object;
 
-    if (owner->unk_0b0->instance)
+    if (owner->adv_ptrs->my_script)
         return;
 
     string_hash object_name;
-    retail::sub_5FD120((u32*)(owner->unk_0b0->unk_010 + 4), (u32*)&object_name);
+    retail::sub_5FD120((u32*)(owner->adv_ptrs->unk_010 + 4), (u32*)&object_name);
 
     string_hash filename;
 
     chuck::vm::script_object* script_object =
-        chuck::vm::script_manager::inst()->find_object(*(string_hash*)retail::sub_5FD120((u32*)owner->unk_0b0->unk_014, (u32*)&filename),
+        chuck::vm::script_manager::inst()->find_object(*(string_hash*)retail::sub_5FD120((u32*)owner->adv_ptrs->script_exe_name, (u32*)&filename),
                                                        object_name,
-                                                       owner->unk_0b0->unk_018);
+                                                       owner->adv_ptrs->script_obj_name);
 
     chuck::vm::vm_thread* thread = nullptr;
 
     {
         mash::string enx("__enx");
 
-        owner->unk_0b0->instance = script::add_instance(enx,
-                                                        script_object,
-                                                        &thread,
-                                                        owner,
+        owner->adv_ptrs->my_script = script::add_instance(enx,
+                                                          script_object,
+                                                          &thread,
+                                                          owner,
                                                         chuck::vm::script_instance_stack_size_normal);
     }
 
@@ -170,11 +170,11 @@ void mission_manager::reset_icon_entity(arch_base_vhandle handle) {
     if (!object)
         return;
 
-    if (object->is_an_actor() && ((actor*)object)->unk_0b0) {
-        if (chuck::vm::script_instance* inst = ((actor*)object)->unk_0b0->instance) {
+    if (object->is_an_actor() && ((actor*)object)->adv_ptrs) {
+        if (chuck::vm::script_instance* inst = ((actor*)object)->adv_ptrs->my_script) {
             inst->parent->remove_instance(inst, true);
 
-            ((actor*)object)->unk_0b0->instance = nullptr;
+            ((actor*)object)->adv_ptrs->my_script = nullptr;
         }
     }
 

@@ -91,7 +91,7 @@ chuck::vm::vm_thread* script::create_thread(actor* owner, string_hash fullname) 
     i32                         function_index = -1;
     chuck::vm::script_instance* inst           = nullptr;
 
-    if (owner && owner->unk_0b0 && (inst = owner->unk_0b0->instance)) {
+    if (owner && owner->adv_ptrs && (inst = owner->adv_ptrs->my_script)) {
         function_index = find_function(fullname, inst->parent);
 
         if (function_index < 0) {

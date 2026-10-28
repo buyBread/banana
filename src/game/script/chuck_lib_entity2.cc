@@ -3,7 +3,9 @@
 #include "retail.hh"
 #include "game/arch_base.hh"
 #include "game/script/chuck_lib_entity2.hh"
+#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 
 using namespace treyarch;
@@ -1074,56 +1076,178 @@ bool slf__entity__get_num_of_active_pendulums__t::operator()(chuck::vm::vm_stack
     return ((invoke_t)retail::sub_86F640)(this, stack);
 }
 
+// sub_86F6B0
 bool slf__entity__enable_collisions__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F6B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_actor())
+        self->set_collisions_active(on != 0.0f, true);
+
+    return true;
 }
 
+// sub_86F710
 bool slf__entity__collisions_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F710)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_actor() && (self->flags & entity_flag_collisions_active) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F7A0
 bool slf__entity__enable_character_collisions__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F7A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self && self->is_an_actor())
+        self->set_character_collisions_active(on != 0.0f);
+
+    return true;
 }
 
+// sub_86F810
 bool slf__entity__character_collisions_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F810)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_actor() && self->are_character_collisions_active() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F8B0
 bool slf__entity__get_name__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F8B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    string_hash result = self ? self->id : string_hash();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86F900
 bool slf__entity__set_special_target__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F900)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (on == 0.0f)
+        self->flags &= ~entity_flag_special_target;
+    else
+        self->flags |= entity_flag_special_target;
+
+    return true;
 }
 
+// sub_86F950
 bool slf__entity__set_allow_lockon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F950)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (on == 0.0f)
+        self->flags &= ~entity_flag_allow_lockon;
+    else
+        self->flags |= entity_flag_allow_lockon;
+
+    return true;
 }
 
+// sub_86F9A0
 bool slf__entity__is_valid__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86F9A0)(this, stack);
+    stack.sp -= 0x04;
+
+    u32 &handle = stack.local_uint(0x00);
+
+    f32 result = handle && retail::sub_605320(&handle) && arch_base_vhandle(handle).resolve() ? 1.0f : 0.0f; // arch_base_vhandle::is_possibly_valid
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86FA10
 bool slf__entity__is_alive__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FA10)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_alive() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_immobile__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_86FA60)(this, stack);
 }
 
+// sub_86FAD0
 bool slf__entity__set_really_immobile__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FAD0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self || !self->is_an_actor() || !self->adv_ptrs)
+        return true;
+
+    self->adv_ptrs->unk_028 = on > 0.0001f ? 10 : 0;
+
+    return true;
 }
 
 bool slf__entity__set_auto_prop_physics_activate__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_86FB30)(this, stack);
 }
 
+// sub_86FC10
 bool slf__entity__set_actor_debug_text__str__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FC10)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto text  = (const char*)stack.local_uint(0x04);
+    auto time  = stack.local_num(0x08);
+    auto color = (const vector3d*)&stack.local_uint(0x0C);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    // each channel is 0 below 0 and 255 above 1
+    u8 red   = color->x < 0.0f ? 0 : color->x > 1.0f ? 0xFF : (u8)(i32)((f64)color->x * 255.0);
+    u8 green = color->y < 0.0f ? 0 : color->y > 1.0f ? 0xFF : (u8)(i32)((f64)color->y * 255.0);
+    u8 blue  = color->z < 0.0f ? 0 : color->z > 1.0f ? 0xFF : (u8)(i32)((f64)color->z * 255.0);
+
+    u32 packed = (u32)blue << 24 | (u32)green << 16 | (u32)red << 8 | 0xFF;
+
+    ((void (__thiscall*)(arch_base*, mash::string, i32, u32))retail::sub_601CE0)(self, mash::string(text), (i32)time, packed);
+
+    return true;
 }
 
 bool slf__entity__physical_ifc_start_prop_physics__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1138,12 +1262,22 @@ bool slf__entity__physical_ifc_stop_prop_physics__t::operator()(chuck::vm::vm_st
     return ((invoke_t)retail::sub_86FF30)(this, stack);
 }
 
+// sub_86FF80
 bool slf__entity__debug_only_disable_weapon_interface__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FF80)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    return true;
 }
 
+// sub_86FF80
 bool slf__entity__get_animation_names__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FF80)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    return true;
 }
 
 bool slf__entity__get_weapon_names__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1198,8 +1332,22 @@ bool slf__entity__ai_set_ignore_limbo__num__t::operator()(chuck::vm::vm_stack &s
     return ((invoke_t)retail::sub_870770)(this, stack);
 }
 
+// sub_8707F0
 bool slf__entity__set_walkable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8707F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (on == 0.0f)
+        self->flags &= ~entity_flag_walkable;
+    else
+        self->flags |= entity_flag_walkable;
+
+    return true;
 }
 
 bool slf__entity__physical_ifc_set_ballistic_target__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1230,16 +1378,51 @@ bool slf__entity__drop_manip_obj__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_870EF0)(this, stack);
 }
 
+// sub_870FB0
 bool slf__entity__orientation_floor__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870FB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    // the up axis decides; a missing entity counts as all three
+    f32 result = !self || self->my_abs_po->get_y_facing().y > 0.7f ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_871040
 bool slf__entity__orientation_wall__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871040)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 1.0f;
+
+    if (self) {
+        const f32 up = self->my_abs_po->get_y_facing().y;
+
+        if (up > 0.7f || -0.7f > up)
+            result = 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8710F0
 bool slf__entity__orientation_ceiling__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8710F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = !self || self->my_abs_po->get_y_facing().y < -0.7f ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
