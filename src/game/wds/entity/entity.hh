@@ -5,6 +5,7 @@
 #include "game/wds/entity/interface/damage_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/switch_obj_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/interface/towing_interface.hh"
 #include "game/wds/entity/interface_storage.hh"
@@ -59,6 +60,10 @@ namespace treyarch {
 
         towing_interface* towing_ifc() const {
             return (towing_interface*)my_ifc_storage->get_ifc(entity_ifc_towing);
+        }
+
+        switch_obj_interface* switch_obj_ifc() const {
+            return (switch_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_switch_obj);
         }
 
         // slot 67
