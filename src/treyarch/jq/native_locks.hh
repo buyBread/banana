@@ -103,9 +103,7 @@ namespace treyarch { namespace jq { namespace references {
 
     // chuck natives
     inline util::memory_reference<engine_recursive_lock> unk_010f76f0 { 0x010F76F0 }; // get_global_data_mutex
-    inline util::memory_reference<engine_recursive_lock> unk_010f7748 { 0x010F7748 }; // ai machine changes, combat dodge and block checks
-
-    inline util::memory_reference<u32> unk_010f7758 { 0x010F7758 }; // zeroed right after the lock above, nothing else touches it
+    inline util::memory_reference<ref_counted_simple_mutex> unk_010f7748 { 0x010F7748 }; // ai machine changes, combat dodge and block checks
 
     // no users
     inline util::memory_reference<engine_recursive_lock> unk_01076a98 { 0x01076A98 };

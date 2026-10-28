@@ -103,7 +103,6 @@ void jq::jobqueue_init() {
     references::unk_01075e20.get().reset();
     amalga::resource_manager::references::unk_010300a8.get().reset();
     references::unk_010f7748.get().reset();
-    references::unk_010f7758.write(0);
     references::unk_010039a8.get().reset();
     references::unk_010030f0.get().reset();
     references::unk_01003260.get().reset();
