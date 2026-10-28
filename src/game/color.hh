@@ -9,7 +9,24 @@ namespace treyarch {
         f32 r, g, b, a;
     };
 
+    struct color32 {
+        u8 b, g, r, a;
+
+        // sub_405DC0
+        color32 &set_clamped(i32 red, i32 green, i32 blue, i32 alpha) { // each channel kept within a byte
+            r = (u8)(red   < 0 ? 0 : red   > 255 ? 255 : red);
+            g = (u8)(green < 0 ? 0 : green > 255 ? 255 : green);
+            b = (u8)(blue  < 0 ? 0 : blue  > 255 ? 255 : blue);
+            a = (u8)(alpha < 0 ? 0 : alpha > 255 ? 255 : alpha);
+
+            return *this;
+        }
+    };
+
     ASSERT_SIZEOF(color, 0x10);
+
+    ASSERT_SIZEOF  (color32,    0x04);
+    ASSERT_OFFSETOF(color32, r, 0x02);
 
     inline u32 pack_color(const math::vector4 &color) {
         u32 red   = (u32)(color.get_x() * 255.0f);
