@@ -979,7 +979,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         update_seated_in_car(machine);
 
         if (!(new_state->flags & state::unk_08000000)) {
-            if ((new_state->flags & state::non_animated) || !the_actor->unk_0c0 || !the_actor->unk_0c0->is_data_ready()) {
+            if ((new_state->flags & state::non_animated) || !the_actor->pack_slot || !the_actor->pack_slot->is_data_ready()) {
                 // nothing to play; the controller rests unless something else needs it
                 if (index == 0 && the_controller && !the_controller->state->slaves.size() && the_controller->state)
                     the_controller->state->is_suspended = true;
@@ -1019,7 +1019,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
 
                 {
                     engine_lock_scope                          starting(&references::anim_start_lock.get());
-                    amalga::push_resource_context_stack_object context(the_actor->unk_0c0);
+                    amalga::push_resource_context_stack_object context(the_actor->pack_slot);
 
                     bool                found;
                     nal_als_anim_bridge bridge = get_anim_bridge(get_meta_anim_table(),

@@ -53,7 +53,7 @@ namespace treyarch {
         animation_controller*       anim_ctrl;
         actor_unk_0b0*              unk_0b0;
         u8                          reserved_0b4[0x0C];
-        amalga::resource_pack_slot* unk_0c0; // the pack slot the actor came from; script threads take it as unk_60
+        amalga::resource_pack_slot* pack_slot; // the one the actor came from; script threads take it as unk_60
         u8                          reserved_0c4[0x0C];
         base_ai_data*               my_base_ai_data;
         capsule_alter_sys*          capsule_alter;
@@ -70,6 +70,8 @@ namespace treyarch {
         void set_frame_delta_trans(const vector3d &delta, f32 delta_t) {
             ((void (__thiscall*)(actor*, const vector3d*, f32))vtable[156])(this, &delta, delta_t);
         }
+
+        static string_hash my_type_key;
     };
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
@@ -82,7 +84,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(actor, skeleton_map,    0xA8);
     ASSERT_OFFSETOF(actor, anim_ctrl,       0xAC);
     ASSERT_OFFSETOF(actor, unk_0b0,         0xB0);
-    ASSERT_OFFSETOF(actor, unk_0c0,         0xC0);
+    ASSERT_OFFSETOF(actor, pack_slot,       0xC0);
     ASSERT_OFFSETOF(actor, my_base_ai_data, 0xD0);
     ASSERT_OFFSETOF(actor, capsule_alter,   0xD4);
 } // treyarch

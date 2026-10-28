@@ -82,7 +82,7 @@ chuck::vm::vm_thread* script::create_thread(string_hash fullname, chuck::vm::scr
 
 // sub_842C80
 chuck::vm::vm_thread* script::create_thread(i32 function_index, chuck::vm::script_instance* inst, actor* owner) {
-    return create_thread(function_index, inst, owner ? (u32)owner->unk_0c0 : 0);
+    return create_thread(function_index, inst, owner ? (u32)owner->pack_slot : 0);
 }
 
 // sub_842E10
@@ -109,7 +109,7 @@ chuck::vm::vm_thread* script::create_thread(actor* owner, string_hash fullname) 
             return nullptr;
     }
 
-    return create_thread(function_index, inst, owner ? (u32)owner->unk_0c0 : 0);
+    return create_thread(function_index, inst, owner ? (u32)owner->pack_slot : 0);
 }
 
 // sub_607A60
@@ -195,7 +195,7 @@ chuck::vm::script_instance* script::add_instance(const mash::string             
                                                        actor*                                   owner,
                                                        chuck::vm::e_script_instance_stack_size  stack_size) {
 
-    return add_instance(name, object, constructor_thread, owner ? (u32)owner->unk_0c0 : 0, stack_size);
+    return add_instance(name, object, constructor_thread, owner ? (u32)owner->pack_slot : 0, stack_size);
 }
 
 // sub_842880
@@ -208,7 +208,7 @@ bool script::load_script_exec(const char* filename, resource_key* key, actor* ow
     resource_key exec_key;
     exec_key.set(name, (u32)amalga::e_resource_type::script);
 
-    return ((load_script_exec_t)retail::sub_842650)(&exec_key, key, owner ? owner->unk_0c0 : nullptr);
+    return ((load_script_exec_t)retail::sub_842650)(&exec_key, key, owner ? owner->pack_slot : nullptr);
 }
 
 // sub_842B20
@@ -221,7 +221,7 @@ bool script::unload_script_exec(const char* filename, actor* owner) {
     resource_key exec_key;
     exec_key.set(name, (u32)amalga::e_resource_type::script);
 
-    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->unk_0c0 : nullptr);
+    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->pack_slot : nullptr);
 }
 
 // sub_842B90
@@ -234,7 +234,7 @@ bool script::unload_script_exec(chuck::vm::script_object* object, actor* owner) 
     resource_key exec_key;
     exec_key.set(name, (u32)amalga::e_resource_type::script);
 
-    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->unk_0c0 : nullptr);
+    return ((unload_script_exec_t)retail::sub_8428F0)(&exec_key, owner ? owner->pack_slot : nullptr);
 }
 
 // sub_8253E0

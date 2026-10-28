@@ -3,6 +3,8 @@
 
 using namespace treyarch;
 
+string_hash actor::my_type_key { 0x07138E99 }; // "actor"
+
 // sub_602830
 ai_core* actor::get_ai_core() const {
     return my_base_ai_data ? my_base_ai_data->core : nullptr;
