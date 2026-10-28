@@ -3,8 +3,8 @@
 #include "mash/fixtures.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/vector_basic.hh"
-#include "treyarch/mm/heap.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/mm/mm.hh"
+#include "treyarch/base/tl_system.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
@@ -262,8 +262,8 @@ TEST_SUITE("mash") {
         auto*     values = image.make<mash::vector<record_t>>(16);
         record_t* first  = put_record(image, 64, 1, trace);
         record_t* last   = put_record(image, 96, 3, trace);
-        auto*     owned  = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{2, &trace};
-        auto**    table  = (record_t**)treyarch::memory::heap::allocate(4 * sizeof(record_t*));
+        auto*     owned  = ::new (treyarch::mm::allocate(sizeof(record_t))) record_t{2, &trace};
+        auto**    table  = (record_t**)treyarch::mm::allocate(4 * sizeof(record_t*));
 
         table[0]     = first;
         table[1]     = owned;
@@ -303,8 +303,8 @@ TEST_SUITE("mash") {
                       "a vector that doesn't own its elements leaves them alive, but still frees its table") {
 
         trace_t trace;
-        auto*   owned = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{1, &trace};
-        auto**  table = (record_t**)treyarch::memory::heap::allocate(sizeof(record_t*));
+        auto*   owned = ::new (treyarch::mm::allocate(sizeof(record_t))) record_t{1, &trace};
+        auto**  table = (record_t**)treyarch::mm::allocate(sizeof(record_t*));
 
         table[0] = owned;
 
@@ -330,7 +330,7 @@ TEST_SUITE("mash") {
         }
 
         owned->~record_t();
-        treyarch::memory::heap::free(owned);
+        treyarch::mm::free(owned);
 
         CHECK(free_count(tests::heap_allocator) == 2);
     }
@@ -343,7 +343,7 @@ TEST_SUITE("mash") {
 
         {
             mash::vector<mash::mash_virtual_base> values;
-            values.data    = (mash::mash_virtual_base**)treyarch::memory::heap::allocate(4);
+            values.data    = (mash::mash_virtual_base**)treyarch::mm::allocate(4);
             values.data[0] = new c_virtual_record(8, &trace);
             values.size    = values.capacity = 1;
         }
@@ -486,7 +486,7 @@ TEST_SUITE("mash") {
         // the memory fixture flags any free that goes through the wrong one.
         {
             mash::vector_basic<u32> values {};
-            values.data    = (u32*)treyarch::memory::allocate(12, 4, 0);
+            values.data    = (u32*)treyarch::tl_mem_alloc(12, 4, 0);
             values.size    = values.capacity = 3;
             values.data[0] = 10;
             values.clear();

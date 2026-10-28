@@ -6,7 +6,7 @@
 #include "mash/fixtures.hh"
 #include "treyarch/mash/avl_tree.hh"
 #include "treyarch/mash/unmash.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
@@ -101,8 +101,8 @@ namespace tests { namespace mash_support {
 
     // a node and record made on the heap, like a tree built at runtime would have.
     record_node* make_owned_node(u32 id, trace_t &trace) {
-        auto* element = ::new (treyarch::memory::heap::allocate(sizeof(record_t))) record_t{id, &trace};
-        auto* node    = (record_node*)treyarch::memory::heap::allocate(sizeof(record_node));
+        auto* element = ::new (treyarch::mm::allocate(sizeof(record_t))) record_t{id, &trace};
+        auto* node    = (record_node*)treyarch::mm::allocate(sizeof(record_node));
 
         *node = record_node{element, nullptr, nullptr, nullptr, 0, {}};
 

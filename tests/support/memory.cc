@@ -6,8 +6,8 @@
 #include <doctest/doctest.h>
 
 #include "support/memory.hh"
-#include "treyarch/mm/heap.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/mm/mm.hh"
+#include "treyarch/base/tl_system.hh"
 
 tests::c_memory_fixture* tests::current_memory_fixture = nullptr;
 
@@ -122,22 +122,22 @@ u32 tests::c_memory_fixture::live_count(e_allocator allocator) const {
 
 // the test executable links these allocator entry points in place of the game's allocators.
 // mash code still makes its usual calls; the active fixture supplies and tracks the memory.
-void* treyarch::memory::heap::allocate(u32 size) {
+void* treyarch::mm::allocate(u32 size) {
     return tests::current_memory_fixture
         ->allocate(tests::heap_allocator, size);
 }
 
-void treyarch::memory::heap::free(void* allocation) {
+void treyarch::mm::free(void* allocation) {
     tests::current_memory_fixture
         ->free(tests::heap_allocator, allocation);
 }
 
-void* treyarch::memory::allocate(u32 size, u32 alignment, u32 flags) {
+void* treyarch::tl_mem_alloc(u32 size, u32 alignment, u32 flags) {
     return tests::current_memory_fixture
         ->allocate(tests::plain_allocator, size, alignment, flags);
 }
 
-void treyarch::memory::free(void* allocation) {
+void treyarch::tl_mem_free(void* allocation) {
     tests::current_memory_fixture
         ->free(tests::plain_allocator, allocation);
 }

@@ -112,7 +112,7 @@ TEST_SUITE("mash") {
         // when c++ makes an array with new[], it stores the element count in the four bytes right before the first element.
         // that hidden count is often called an array cookie, and delete[] uses it to know how many destructors to run.
         trace_t trace;
-        void*   allocation = treyarch::memory::heap::allocate(4 + 3 * sizeof(record_t));
+        void*   allocation = treyarch::mm::allocate(4 + 3 * sizeof(record_t));
 
         *(u32*)allocation = 3;
 
@@ -141,7 +141,7 @@ TEST_SUITE("mash") {
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
                       "an owned fixed array with a cookie of 0 still frees its allocation") {
 
-        void* allocation = treyarch::memory::heap::allocate(4);
+        void* allocation = treyarch::mm::allocate(4);
 
         *(u32*)allocation = 0;
 

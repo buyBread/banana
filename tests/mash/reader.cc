@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/base/memory.hh"
+#include "treyarch/base/tl_system.hh"
 
 namespace mash = treyarch::mash;
 using namespace tests::mash_support;
@@ -320,7 +320,7 @@ TEST_SUITE("mash") {
         // the reader going away doesn't free the copy; whoever asked for it has to.
         CHECK(live_count(tests::plain_allocator) == 1);
 
-        treyarch::memory::free(copied);
+        treyarch::tl_mem_free(copied);
 
         CHECK(live_count(tests::plain_allocator) == 0);
     }

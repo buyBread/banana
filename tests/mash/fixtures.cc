@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include "mash/fixtures.hh"
-#include "treyarch/mm/heap.hh"
+#include "treyarch/mm/mm.hh"
 
 void tests::mash_support::trace_t::push(e_event                           kind,
                                         u32                               id,
@@ -86,11 +86,11 @@ i32 tests::mash_support::c_virtual_record::get_mash_sizeof() const {
 }
 
 void* tests::mash_support::c_virtual_record::operator new(size_t size) {
-    return treyarch::memory::heap::allocate((u32)size);
+    return treyarch::mm::allocate((u32)size);
 }
 
 void tests::mash_support::c_virtual_record::operator delete(void* allocation) {
-    treyarch::memory::heap::free(allocation);
+    treyarch::mm::free(allocation);
 }
 
 tests::mash_support::c_string_fixture::c_string_fixture() : m_empty_binding(treyarch::mash::references::null_string_guts, empty_string()),
