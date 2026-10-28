@@ -45,7 +45,7 @@ namespace treyarch { namespace mash {
         static bool register_class() {
             alignas(T) u8 scratch[sizeof(T)];
 
-            T* object = new (scratch) T(GENERATING_VTABLES_VERSION);
+            T* object = ::new (scratch) T(GENERATING_VTABLES_VERSION);
 
             return register_vtable_entry(T::my_type_key.source_hash_code, *(vtable_value_t*)object);
         }

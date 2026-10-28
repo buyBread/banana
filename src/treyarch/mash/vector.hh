@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
 #include <type_traits>
 
 #include "treyarch/mash/container_base.hh"
@@ -289,6 +290,41 @@ namespace treyarch { namespace mash {
             }
 
             element = nullptr;
+        }
+
+        // sub_4E4F00
+        void reserve(u32 new_capacity) {
+            if (new_capacity <= capacity)
+                return;
+
+            // new T*[n]; a byte count that overflows asks for everything
+            const u64 bytes = (u64)new_capacity * sizeof(T*);
+
+            auto grown = (T**)mm::allocate(bytes > U32_MAX ? U32_MAX : (u32)bytes);
+
+            if (data) {
+                if (size)
+                    std::memcpy(grown, data, size * sizeof(T*));
+
+                if (!is_pointer_in_mash_image(data))
+                    mm::free(data);
+            }
+
+            data     = grown;
+            capacity = new_capacity;
+        }
+
+        // sub_4B5FE0
+        u32 push_back(T* element) {
+            // an array still in the mash image can't grow in place
+            if (size == capacity || is_pointer_in_mash_image(data))
+                reserve((size / 8 + 1) * 8);
+
+            data[size] = nullptr;
+            ++size;
+            data[size - 1] = element;
+
+            return size;
         }
     };
 
