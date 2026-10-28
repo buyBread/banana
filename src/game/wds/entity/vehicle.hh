@@ -10,12 +10,17 @@ namespace treyarch {
     class vehicle : public conglomerate {
 
     public:
-        u8          reserved_198[0xFC];
+        u8          reserved_198[0xF8];
+        bool        throwable;      // answered before the manip obj interface's flag
+        bool        always_upright;
+        u8          pad_292[0x02];
         ai_vehicle* my_ai;
         u8          reserved_298[0x48];
         i32         condition;
     };
 
-    ASSERT_OFFSETOF(vehicle, my_ai,     0x294);
-    ASSERT_OFFSETOF(vehicle, condition, 0x2E0);
+    ASSERT_OFFSETOF(vehicle, throwable,      0x290);
+    ASSERT_OFFSETOF(vehicle, always_upright, 0x291);
+    ASSERT_OFFSETOF(vehicle, my_ai,          0x294);
+    ASSERT_OFFSETOF(vehicle, condition,      0x2E0);
 } // treyarch

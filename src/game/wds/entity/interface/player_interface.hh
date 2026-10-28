@@ -7,6 +7,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_core;
     class player_interface;
 
     using player_interface_method         = void (__thiscall*)(player_interface* self);
@@ -36,7 +37,9 @@ namespace treyarch {
         bool                            (__thiscall* unk_152)(player_interface* self); // the als's trick_window
         void*                           reserved_slots_153[1];
         i32                             (__thiscall* unk_154)(player_interface* self); // the als's max_trick_combo
-        void*                           reserved_slots_155[219];
+        void*                           reserved_slots_155[127];
+        bool                            (__thiscall* unk_282)(player_interface* self, ai_core* core); // drops what the core's carry inode holds
+        void*                           reserved_slots_283[91];
         f32                             (__thiscall* unk_374)(player_interface* self); // the als's swing_time
         void*                           reserved_slots_375[2];
         bool                            (__thiscall* unk_377)(player_interface* self, vector3d* point); // rvb: the anchor of whichever of its two hands (+0x638) holds one; false in player_interface
@@ -138,6 +141,10 @@ namespace treyarch {
 
         i32 unk_154() {
             return get_vtable()->unk_154(this);
+        }
+
+        bool unk_282(ai_core* core) {
+            return get_vtable()->unk_282(this, core);
         }
 
         f32 unk_374() {

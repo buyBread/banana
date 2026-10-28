@@ -3,6 +3,7 @@
 #include "game/arch_base.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
 #include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/entity/interface/manip_obj_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/script_data_interface.hh"
@@ -101,6 +102,10 @@ namespace treyarch {
 
         script_data_interface* script_data_ifc() const {
             return (script_data_interface*)my_ifc_storage->get_ifc(entity_ifc_script_data);
+        }
+
+        manip_obj_interface* manip_obj_ifc() const {
+            return (manip_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_manip_obj);
         }
 
         time_interface* time_ifc() const {

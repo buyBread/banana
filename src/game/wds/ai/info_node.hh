@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "vc8/list.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/hash/algo.hh"
@@ -15,6 +16,7 @@
 namespace treyarch {
     class actor;
     class ai_core;
+    class manip_obj_interface;
 
     // baked into each node by its .BAI
     enum e_info_node_type : u32 {
@@ -154,8 +156,25 @@ namespace treyarch {
     class std_carry_inode : public info_node {
 
     public:
-        info_node* unk_030;            // the other side's node; als::sync_move_and_face pairs the actor with its core's actor
-        u8         reserved_034[0x34];
+        std_carry_inode*                 carry_master;
+        vc8::list<std_carry_inode*>*     carry_slaves;
+        vc8::list<manip_obj_interface*>* unk_038;            // the manip objs it holds
+        std_carry_inode*                 desired_slave;
+        u8                               reserved_040[0x28];
+
+        // inlined
+        bool is_being_carried() const {
+            return carry_master != nullptr;
+        }
+
+        // sub_425020
+        // inlined @ sub_86A3B0
+        bool has_carried_objects() const { // slaves or manip objs
+            return (carry_slaves && !carry_slaves->empty()) || (unk_038 && !unk_038->empty());
+        }
+
+        bool add_slave   (std_carry_inode* slave, bool engage_slave_mode = true);
+        void remove_slave(std_carry_inode* slave, bool kill_slave_mode = true);
     };
 
     class swift_stationary_layer_inode : public loco_inode {
@@ -205,8 +224,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(flight_layer_inode, unk_118, 0x118);
     ASSERT_OFFSETOF(flight_layer_inode, unk_128, 0x128);
 
-    ASSERT_SIZEOF  (std_carry_inode,          0x68);
-    ASSERT_OFFSETOF(std_carry_inode, unk_030, 0x30);
+    ASSERT_SIZEOF  (std_carry_inode,                0x68);
+    ASSERT_OFFSETOF(std_carry_inode, carry_master,  0x30);
+    ASSERT_OFFSETOF(std_carry_inode, carry_slaves,  0x34);
+    ASSERT_OFFSETOF(std_carry_inode, unk_038,       0x38);
+    ASSERT_OFFSETOF(std_carry_inode, desired_slave, 0x3C);
 
     ASSERT_SIZEOF(swift_stationary_layer_inode, 0xB8);
 

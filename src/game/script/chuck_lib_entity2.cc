@@ -6,9 +6,12 @@
 #include "game/physics/physics_system.hh"
 #include "game/physics/rigid_body_prop_system.hh"
 #include "game/script/chuck_lib_entity2.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/pendulum.hh"
+#include "game/wds/entity/vehicle.hh"
 #include "game/math/references.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -69,24 +72,136 @@ bool slf__entity__set_path_graph__str__t::operator()(chuck::vm::vm_stack &stack)
     return ((invoke_t)retail::sub_869FC0)(this, stack);
 }
 
+// sub_86A0A0
 bool slf__entity__ai_can_carry__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A0A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (actor*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && target && self->is_an_actor() && self->get_ai_core() && target->is_an_actor() && target->get_ai_core()) {
+        auto* carrier = (std_carry_inode*)self  ->get_ai_core()->get_info_node(info_node_type_std_carry);
+        auto* slave   = (std_carry_inode*)target->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+        // neither side may carry or be carried already
+        if (carrier && slave &&
+            !carrier->is_being_carried() && !carrier->has_carried_objects() &&
+            !slave  ->is_being_carried() && !slave  ->has_carried_objects())
+
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86A1B0
 bool slf__entity__ai_carry_pickup__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A1B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (actor*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (!self || !target)
+        return true;
+
+    // the actor tests look the core up and drop it
+    if (self->is_an_actor())
+        self->get_ai_core();
+
+    if (target->is_an_actor())
+        target->get_ai_core();
+
+    auto* carrier = (std_carry_inode*)self  ->get_ai_core()->get_info_node(info_node_type_std_carry);
+    auto* slave   = (std_carry_inode*)target->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+    carrier->add_slave(slave, true);
+
+    return true;
 }
 
+// sub_86A2A0
 bool slf__entity__ai_carry_putdown__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A2A0)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle target_handle(stack.local_uint(0x04));
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (actor*)target_handle.resolve();
+
+    // a null handle puts down every slave, a stale one nothing
+    if (!self || (!target && target_handle.value))
+        return true;
+
+    // the actor tests look the core up and drop it
+    if (self->is_an_actor())
+        self->get_ai_core();
+
+    auto* carrier = (std_carry_inode*)self->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+    std_carry_inode* slave = nullptr;
+
+    if (target) {
+        if (target->is_an_actor())
+            target->get_ai_core();
+
+        slave = (std_carry_inode*)target->get_ai_core()->get_info_node(info_node_type_std_carry);
+    }
+
+    carrier->remove_slave(slave, true);
+
+    return true;
 }
 
+// sub_86A3B0
 bool slf__entity__ai_is_carrying__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A3B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self) {
+        // the actor test looks the core up and drops it
+        if (self->is_an_actor())
+            self->get_ai_core();
+
+        auto* carry = (std_carry_inode*)self->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+        if (carry && carry->has_carried_objects())
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86A470
 bool slf__entity__ai_is_carried__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A470)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self) {
+        // the actor test looks the core up and drops it
+        if (self->is_an_actor())
+            self->get_ai_core();
+
+        auto* carry = (std_carry_inode*)self->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+        if (carry && carry->is_being_carried())
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_ai_subclass__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1048,12 +1163,30 @@ bool slf__entity__set_webcast_style__num__t::operator()(chuck::vm::vm_stack &sta
     return ((invoke_t)retail::sub_86D540)(this, stack);
 }
 
+// sub_86D590
 bool slf__entity__get_manip_thrower__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D590)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result = self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj) ? self->manip_obj_ifc()->thrower : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86D610
 bool slf__entity__get_manip_throw_velocity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86D610)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj) ? self->manip_obj_ifc()->throw_velocity : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_webcast_enabled__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1124,60 +1257,223 @@ bool slf__entity__set_entity_force_react_multiplier__num__t::operator()(chuck::v
     return true;
 }
 
+// sub_86DA00
 bool slf__entity__get_manip_damage__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DA00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj) ? (f32)self->manip_obj_ifc()->damage : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86DA90
 bool slf__entity__manip_update_for_grab__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DA90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj)) {
+        auto grabber = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+        result = grabber ? self->manip_obj_ifc()->update_for_grab(grabber) : self->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86DB30
 bool slf__entity__set_throwable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DB30)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto throwable = stack.local_num(0x04);
+
+    if (!self || !self->is_an_entity())
+        return true;
+
+    if (self->is_a_vehicle())
+        ((vehicle*)self)->throwable = throwable != 0.0f;
+
+    if (self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->set_flag(manip_obj_flag_throwable, throwable != 0.0f);
+
+    return true;
 }
 
+// sub_86DBD0
 bool slf__entity__is_throwable__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DBD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_entity()) {
+        if (self->is_a_vehicle())
+            result = (f32)((vehicle*)self)->throwable;
+
+        if (result == 0.0f && self->has_ifc(entity_ifc_manip_obj))
+            result = (f32)((self->manip_obj_ifc()->flags & manip_obj_flag_throwable) != 0);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86DCB0
 bool slf__entity__set_always_upright__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DCB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto upright = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->is_a_vehicle())
+        ((vehicle*)self)->always_upright = upright != 0.0f;
+
+    return true;
 }
 
+// sub_86DD20
 bool slf__entity__is_always_upright__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DD20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_entity() && self->is_a_vehicle())
+        result = (f32)((vehicle*)self)->always_upright;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86DDD0
 bool slf__entity__set_manip_allow_pickup__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DDD0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->set_flag(manip_obj_flag_allow_pickup, allow != 0.0f);
+
+    return true;
 }
 
+// sub_86DE50
 bool slf__entity__set_manip_allow_putdown__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DE50)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->set_flag(manip_obj_flag_allow_putdown, allow != 0.0f);
+
+    return true;
 }
 
+// sub_86DED0
 bool slf__entity__get_manip_allow_pickup__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DED0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj) && self->manip_obj_ifc()->get_allow_pickup() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86DF80
 bool slf__entity__get_manip_allow_putdown__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86DF80)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj) && self->manip_obj_ifc()->get_allow_putdown() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86E030
 bool slf__entity__set_manip_allow_auto_pickup__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E030)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->set_allow_auto_pickup(allow != 0.0f);
+
+    return true;
 }
 
+// sub_86E0A0
 bool slf__entity__set_manip_allow_auto_putdown__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E0A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto allow = stack.local_num(0x04);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->set_allow_auto_putdown(allow != 0.0f);
+
+    return true;
 }
 
+// sub_86E110
 bool slf__entity__get_manip_allow_auto_pickup__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E110)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj)) {
+        manip_obj_interface* manip = self->manip_obj_ifc();
+
+        if (manip->get_allow_pickup() && manip->get_allow_auto_pickup())
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86E1D0
 bool slf__entity__get_manip_allow_auto_putdown__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E1D0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_manip_obj)) {
+        manip_obj_interface* manip = self->manip_obj_ifc();
+
+        if (manip->get_allow_putdown() && manip->get_allow_auto_putdown())
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_86E290
@@ -2227,28 +2523,126 @@ bool slf__entity__physical_ifc_set_ballistic_target__vector3d__t::operator()(chu
     return true;
 }
 
+// sub_870BC0
 bool slf__entity__manip_obj_ifc_throw_it__entity__vector3d__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870BC0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self       = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target_pos = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self && self->has_ifc(entity_ifc_manip_obj)) {
+        manip_obj_interface* manip = self->manip_obj_ifc();
+
+        auto target  = (entity*)arch_base_vhandle(stack.local_uint(0x14)).resolve();
+        auto thrower = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+        manip->throw_it(thrower, *target_pos, target, false, references::unk_00f22130.get());
+    }
+
+    return true;
 }
 
+// sub_870C30
 bool slf__entity__manip_obj_ifc_throw_it_velocity__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870C30)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto velocity = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self && self->has_ifc(entity_ifc_manip_obj)) {
+        manip_obj_interface* manip = self->manip_obj_ifc();
+
+        auto thrower = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+        manip->throw_it_velocity(thrower, *velocity, references::unk_010f7140.get(), true);
+    }
+
+    return true;
 }
 
+// sub_870C90
 bool slf__entity__manip_obj_ifc_throw_it_velocity_and_rotation__entity__vector3d__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870C90)(this, stack);
+    stack.sp -= 0x20;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto velocity = (const vector3d*)&stack.local_uint(0x08);
+    auto rotation = (vector3d*)&stack.local_uint(0x14);
+
+    if (!self || !self->has_ifc(entity_ifc_manip_obj))
+        return true;
+
+    // the rotation is in the thrower's frame, whose w column gets reset in place first
+    po* frame = ((entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve())->my_abs_po;
+
+    frame->get_matrix().x.w = 0.0f;
+    frame->get_matrix().y.w = 0.0f;
+    frame->get_matrix().z.w = 0.0f;
+    frame->get_matrix().w.w = 1.0f;
+
+    *rotation = frame->non_affine_slow_xform(*rotation);
+
+    manip_obj_interface* manip = self->manip_obj_ifc();
+
+    auto thrower = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    manip->throw_it_velocity(thrower, *velocity, *rotation, true);
+
+    return true;
 }
 
+// sub_870E30
 bool slf__entity__manip_obj_ifc_throw_it_with_speed__entity__entity__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870E30)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto rotation = (const vector3d*)&stack.local_uint(0x10);
+
+    if (self && self->has_ifc(entity_ifc_manip_obj)) {
+        manip_obj_interface* manip = self->manip_obj_ifc();
+
+        auto target  = (entity*)arch_base_vhandle(stack.local_uint(0x08)).resolve();
+        auto speed   = stack.local_num(0x0C);
+        auto thrower = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+        manip->throw_it_with_speed(thrower, speed, target, *rotation, -1.0f, 0.0f);
+    }
+
+    return true;
 }
 
+// sub_870EB0
 bool slf__entity__manip_obj_ifc_disarm__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->has_ifc(entity_ifc_manip_obj))
+        self->manip_obj_ifc()->disarm();
+
+    return true;
 }
 
+// sub_870EF0
 bool slf__entity__drop_manip_obj__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870EF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !retail::sub_602850((u32*)self))
+        return true;
+
+    if (self->has_ifc(entity_ifc_player)) {
+        self->player_ifc()->unk_282(self->get_ai_core());
+
+        return true;
+    }
+
+    auto* carry = (std_carry_inode*)self->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+    if (carry)
+        retail::sub_4BD960((u32*)carry); // std_carry_inode: lets go of every manip obj
+
+    return true;
 }
 
 // sub_870FB0

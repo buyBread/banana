@@ -315,7 +315,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-            if (!carry || !carry->unk_030)
+            if (!carry || !carry->carry_master)
                 return -1.0f;
 
             return 1.0f;
@@ -847,9 +847,9 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->get_ai_core())
                 return -1.0f;
 
-            info_node* carry = the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+            auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-            if (!carry || !retail::sub_425020((u32*)carry))
+            if (!carry || !carry->has_carried_objects())
                 return -1.0f;
 
             if (param == param_is_informant_scared ? !retail::sub_492510((u32*)carry) : !retail::sub_492540((u32*)carry))
@@ -1009,7 +1009,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!carry)
                 return 0.0f;
 
-            return (f32)(((std_carry_inode*)carry)->unk_030 != nullptr);
+            return (f32)(((std_carry_inode*)carry)->carry_master != nullptr);
         }
 
         default:
@@ -1258,7 +1258,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
                     if (other_core && other_core != core) {
                         auto* carry = (std_carry_inode*)other_core->get_info_node(info_node_type_std_carry);
 
-                        if (carry && carry->unk_030) {
+                        if (carry && carry->carry_master) {
                             retail::sub_4924A0((u32*)carry, (u32*)&result);
 
                             return result;

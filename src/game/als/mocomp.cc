@@ -5350,8 +5350,8 @@ bool als::sync_move_and_face::get_sync_actors(actor** actor_a, actor** actor_b) 
     if (!*actor_a && !*actor_b && the_actor->get_ai_core()) {
         auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-        if (carry && carry->unk_030) {
-            *actor_a = carry->unk_030->get_actor();
+        if (carry && carry->carry_master) {
+            *actor_a = carry->carry_master->get_actor();
             *actor_b = the_actor;
         }
     }
@@ -7633,8 +7633,8 @@ bool als::momentum_combat_move_and_face::get_sync_actors(actor** actor_a, actor*
     if (!*actor_a && !*actor_b && the_actor->get_ai_core()) {
         auto* carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-        if (carry && carry->unk_030) {
-            *actor_a = carry->unk_030->get_actor();
+        if (carry && carry->carry_master) {
+            *actor_a = carry->carry_master->get_actor();
             *actor_b = the_actor;
         }
     }

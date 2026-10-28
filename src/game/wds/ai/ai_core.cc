@@ -87,6 +87,11 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_8068A0
 // inlined @ sub_981D50
 // inlined @ sub_4C7A40
+// inlined @ sub_86A1B0
+// inlined @ sub_86A2A0
+// inlined @ sub_86A3B0
+// inlined @ sub_86A470
+// inlined @ sub_870EF0
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -106,6 +111,14 @@ info_node* ai_core::get_info_node(e_info_node_type type) const {
 // sub_4C3A70
 actor* info_node::get_actor() const {
     return my_ai_core->my_actor;
+}
+
+bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) {
+    return retail::sub_4BEA10((u32*)this, (i32*)slave, engage_slave_mode);
+}
+
+void std_carry_inode::remove_slave(std_carry_inode* slave, bool kill_slave_mode) {
+    retail::sub_4BA230((u32*)this, (i32)slave, kill_slave_mode);
 }
 
 // sub_4C2EA0

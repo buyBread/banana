@@ -323,10 +323,10 @@ void mission_manager::process_state_loading() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
     if (hero && ((actor*)hero)->get_ai_core()) {
-        auto* node = (u32*)((actor*)hero)->get_ai_core()->get_info_node(info_node_type_std_carry);
+        auto* node = (std_carry_inode*)((actor*)hero)->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-        if (node && retail::sub_425020(node))
-            retail::sub_4BA230(node, 0, 1);
+        if (node && node->has_carried_objects())
+            node->remove_slave(nullptr, true);
     }
 
     if (references::region_spawns_enabled.read() && (u32*)region_pack_manager::inst()) {
