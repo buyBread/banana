@@ -334,88 +334,261 @@ bool slf__entity_tracker__get_poi_active__t::operator()(chuck::vm::vm_stack &sta
     return true;
 }
 
+// sub_85D3A0
 bool slf__entity_tracker__enable_zlock__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D3A0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->enable_zlock(stack.local_num(0x04) > 0.0f ? 0.0f : -1.0f);
+
+    return true;
 }
 
+// sub_85D400
 bool slf__entity_tracker__set_gta_widget_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D400)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_active(stack.local_num(0x04) != 0.0f, true);
+
+    return true;
 }
 
+// sub_85D460
 bool slf__entity_tracker__init_gta_widget__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D460)(this, stack);
+    stack.sp -= 0x14;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker) {
+        tracker->set_gta_widget_pos_offset(*(const vector3d*)&stack.local_uint(0x04));
+        tracker->set_gta_widget_render_scale(stack.local_num(0x10));
+    }
+
+    return true;
 }
 
+// sub_85D4C0
 bool slf__entity_tracker__set_gta_widget_render_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D4C0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_render_scale(stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_85D500
 bool slf__entity_tracker__set_gta_widget_pos_offset__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D500)(this, stack);
+    stack.sp -= 0x10;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_pos_offset(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_85D550
 bool slf__entity_tracker__set_gta_widget_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D550)(this, stack);
+    stack.sp -= 0x10;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_color(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_85D5A0
 bool slf__entity_tracker__get_gta_widget_active__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D5A0)(this, stack);
+    stack.sp -= 0x04;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+    f32             result  = 0.0f;
+
+    if (tracker && tracker->gta_widget_active)
+        result = 1.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85D5F0
 bool slf__entity_tracker__set_gta_widget_outer_ring_radius__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D5F0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_outer_ring_radius(stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_85D630
 bool slf__entity_tracker__set_always_draw_up_down__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D630)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->always_draw_up_down = stack.local_num(0x04) != 0.0f;
+
+    return true;
 }
 
+// sub_85D680
 bool slf__entity_tracker__set_gta_widget_inner_ring_radius__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D680)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_gta_widget_inner_ring_radius(stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_85D6C0
 bool slf__entity_tracker__set_poi_shows_in_spidey_sense__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D6C0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_poi_shows_in_spidey_sense(stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_85D720
 bool slf__entity_tracker__set_poi_shows_out_of_spidey_sense__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D720)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_poi_shows_out_of_spidey_sense(stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_85D780
 bool slf__entity_tracker__set_fog_obj__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D780)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_fog_obj((i32)stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_85D7C0
 bool slf__entity_tracker__set_fog_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D7C0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_fog_active(stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_85D820
 bool slf__entity_tracker__set_fog_requires_senses__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D820)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_fog_requires_senses(stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_85D880
 bool slf__entity_tracker__set_fog_render_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D880)(this, stack);
+    stack.sp -= 0x10;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_fog_render_color(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_85D8D0
 bool slf__entity_tracker__set_fog_distance_clip__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D8D0)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_fog_distance_clip(stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_85D910
 bool slf__entity_tracker__set_stealth_widget_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D910)(this, stack);
+    stack.sp -= 0x08;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_stealth_widget_active(stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_85D970
 bool slf__entity_tracker__set_stealth_widget_offset__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D970)(this, stack);
+    stack.sp -= 0x10;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->stealth_widget_offset = *(const vector3d*)&stack.local_uint(0x04);
+
+    return true;
 }
 
+// sub_85D9D0
 bool slf__entity_tracker__set_stealth_widget_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85D9D0)(this, stack);
+    stack.sp -= 0x10;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_stealth_widget_color(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_85DA20
 bool slf__entity_tracker__set_stealth_timer_values__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85DA20)(this, stack);
+    stack.sp -= 0x0C;
+
+    entity_tracker* tracker = references::frontend.get().igo->entity_tracker_mgr->id_to_ptr(stack.local_uint(0x00));
+
+    if (tracker)
+        tracker->set_stealth_timer_values(stack.local_num(0x04), stack.local_num(0x08));
+
+    return true;
 }
 
 // sub_85DC40

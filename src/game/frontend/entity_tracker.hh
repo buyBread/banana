@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vc8/map.hh"
+#include "game/color.hh"
 #include "game/frontend/igo/igo_3d_gta_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_map_poi.hh"
@@ -21,15 +22,20 @@ namespace treyarch {
     class stealth_widget_t {
 
     public:
-        void**           vtable;
-        u32              state;          // the +0x0C drawable shows in states 1 and 2
-        igo_3d_drawable* meter;
-        igo_3d_drawable* unk_0c;
-        u8               reserved_010[0x0C];
-        bool             active;
-        u8               reserved_01d;
-        bool             activated;
+        void**         vtable;
+        u32            state;              // the +0x0C widget shows in states 1 and 2
+        igo_3d_widget* meter;
+        igo_3d_widget* unk_0c;
+        u8             reserved_010[0x0C];
+        bool           active;
+        u8             reserved_01d;
+        bool           activated;
+        u8             reserved_01f[0x11];
+        f32            deactivation_timer;
+        u8             reserved_034[0x08];
+        color32        color;
 
+        void set_active(bool active);
         void draw();
     };
 
@@ -87,6 +93,25 @@ namespace treyarch {
         void set_poi_life_bar_values(i32 health, i32 unk);
         i32  get_poi_curr_life_bar_health();
 
+        void enable_zlock(f32 value);
+
+        void set_gta_widget_active(bool active, bool unk_41);
+        void set_gta_widget_pos_offset(vector3d offset);
+        void set_gta_widget_render_scale(f32 scale);
+        void set_gta_widget_inner_ring_radius(f32 radius);
+        void set_gta_widget_outer_ring_radius(f32 radius);
+        void set_gta_widget_color(vector3d color);
+
+        void set_fog_obj(i32 kind);
+        void set_fog_active(bool active);
+        void set_fog_requires_senses(bool requires_senses);
+        void set_fog_render_color(vector3d color);
+        void set_fog_distance_clip(f32 fade_distance);
+
+        void set_stealth_widget_active(bool active);
+        void set_stealth_widget_color(vector3d color);
+        void set_stealth_timer_values(f32 unk_0, f32 unk_1);
+
         void* operator new(std::size_t size) noexcept {
             return mm::allocate(size);
         }
@@ -130,9 +155,11 @@ namespace treyarch {
         static void register_entity(arch_base_vhandle ent, city_life_tracker* tracker);
     };
 
-    ASSERT_OFFSETOF(stealth_widget_t, meter,     0x08);
-    ASSERT_OFFSETOF(stealth_widget_t, active,    0x1C);
-    ASSERT_OFFSETOF(stealth_widget_t, activated, 0x1E);
+    ASSERT_OFFSETOF(stealth_widget_t, meter,              0x08);
+    ASSERT_OFFSETOF(stealth_widget_t, active,             0x1C);
+    ASSERT_OFFSETOF(stealth_widget_t, activated,          0x1E);
+    ASSERT_OFFSETOF(stealth_widget_t, deactivation_timer, 0x30);
+    ASSERT_OFFSETOF(stealth_widget_t, color,              0x3C);
 
     ASSERT_SIZEOF  (entity_fog_obj,                  0x0C);
     ASSERT_OFFSETOF(entity_fog_obj, entity,          0x04);

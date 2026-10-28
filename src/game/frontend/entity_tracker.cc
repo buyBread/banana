@@ -10,6 +10,32 @@
 
 using namespace treyarch;
 
+// sub_68FB00
+void stealth_widget_t::set_active(bool active) {
+    // slot 54
+    if (!active && meter)
+        ((void (__thiscall*)(igo_3d_widget*, i32))((void**)meter->vtable)[54])(meter, 1);
+
+    if (activated == active)
+        return;
+
+    if (active) {
+        activated = true;
+
+        if (unk_0c)
+            unk_0c->set_visible(true);
+
+        if (meter)
+            meter->set_visible(true);
+
+        deactivation_timer = 0.0f;
+        this->active       = true;
+    } else if (!(deactivation_timer >= 0.0f) || this->active) {
+        deactivation_timer = 0.15f;
+        this->active       = false;
+    }
+}
+
 // sub_68FC00
 void stealth_widget_t::draw() {
     if (!activated)
@@ -189,24 +215,9 @@ void entity_tracker::set_poi_icon(i32 kind) {
     }
 
     if (kind == 3)
-        retail::sub_6C71F0((i32)this, kind); // set_fog_obj
-    else if (kind == 0x11 || kind == 2) {
-        if (gta_widget) {
-            gta_widget->active = false;
-
-            if (gta_widget->unk_19 && !gta_widget->unk_20 && !gta_widget->unk_21 &&
-                gta_widget->target_ring.resolve()) {
-
-                gta_widget->target_ring.resolve();
-                gta_widget->unk_1c = 0.0f;
-                gta_widget->unk_21 = 1;
-                gta_widget->unk_20 = 0;
-            }
-        }
-
-        gta_widget_active = false;
-        unk_41            = false;
-    }
+        set_fog_obj(kind);
+    else if (kind == 0x11 || kind == 2)
+        set_gta_widget_active(false, false);
 }
 
 // sub_692480
@@ -230,10 +241,10 @@ void entity_tracker::set_poi_range(f32 near_clip, f32 far_clip) {
 // sub_6C7130
 void entity_tracker::set_poi_active(bool active) {
     if (poi_icon) {
-        retail::sub_68C3F0((i32)poi_icon, active); // poi_icon_widget::turn_on
+        poi_icon->turn_on(active);
 
         if (stealth_widget && active)
-            retail::sub_68FB00((i32)stealth_widget, false); // stealth widget set_active
+            stealth_widget->set_active(false);
 
         if (mm_icon) {
             if (active != mm_icon->unk_3c) {
@@ -245,11 +256,11 @@ void entity_tracker::set_poi_active(bool active) {
         }
 
         if (poi_icon->kind != 0x11 && poi_icon->kind != 2)
-            retail::sub_6AAC90((u32*)this, active ? 0.0f : -1.0f); // enable_zlock
+            enable_zlock(active ? 0.0f : -1.0f);
     }
 
     if (!unk_41 && poi_icon->kind != 0x11 && poi_icon->kind != 2)
-        retail::sub_692670((i32)this, active, false); // set_gta_widget_active
+        set_gta_widget_active(active, false);
 
     if (fog_obj) {
         if (auto* fog = (entity*)fog_obj->fog_vh.resolve())
@@ -307,6 +318,195 @@ void entity_tracker::set_poi_life_bar_values(i32 health, i32 unk) {
 // sub_6925D0
 i32 entity_tracker::get_poi_curr_life_bar_health() {
     return retail::sub_68C490((u32*)poi_icon); // poi_icon_widget::get_life_bar_health
+}
+
+// sub_6AAC90
+void entity_tracker::enable_zlock(f32 value) { // a negative value turns the lock off
+    if (!(value >= 0.0f)) {
+        auto* record = (u8*)retail::sub_92BB10(ent.value); // tracker record lookup
+
+        if (record && *(i32*)(record + 0x10) == 4)
+            ((void (__thiscall*)(u8*, f32))retail::sub_90D110)(record, -1.0f);
+    } else {
+        auto* record = (u8*)retail::sub_94D720(ent.value, 4, true); // tracker record lookup, adding one when missing
+
+        if (record && *(i32*)(record + 0x10) == 4)
+            ((void (__thiscall*)(u8*, f32))retail::sub_90D110)(record, value);
+    }
+}
+
+// sub_692670
+void entity_tracker::set_gta_widget_active(bool active, bool unk_41) {
+    if (gta_widget) {
+        gta_widget->active = active;
+
+        if (!active && gta_widget->unk_19 && !gta_widget->unk_20 && !gta_widget->unk_21 &&
+            gta_widget->target_ring.resolve()) {
+
+            gta_widget->target_ring.resolve();
+            gta_widget->unk_1c = 0.0f;
+            gta_widget->unk_21 = 1;
+            gta_widget->unk_20 = 0;
+        }
+    }
+
+    gta_widget_active = active;
+    this->unk_41      = unk_41;
+}
+
+// sub_6926D0
+void entity_tracker::set_gta_widget_pos_offset(vector3d offset) {
+    if (gta_widget)
+        gta_widget->pos_offset = offset;
+}
+
+// sub_692700
+void entity_tracker::set_gta_widget_render_scale(f32 scale) {
+    if (!gta_widget)
+        return;
+
+    if (auto* ring = (entity*)gta_widget->target_ring.resolve())
+        ring->set_render_scale(vector3d(scale, scale, scale));
+
+    gta_widget->render_scale = scale;
+}
+
+// sub_692800
+void entity_tracker::set_gta_widget_inner_ring_radius(f32 radius) {
+    gta_inner_ring_radius = 0.0f > radius ? 0.0f : radius;
+}
+
+// sub_692820
+void entity_tracker::set_gta_widget_outer_ring_radius(f32 radius) { // never below the inner radius
+    if (0.0f > radius)
+        radius = 0.0f;
+
+    gta_outer_ring_radius = (f64)gta_inner_ring_radius > (f64)radius ? gta_inner_ring_radius : radius;
+}
+
+// sub_6AADD0
+void entity_tracker::set_gta_widget_color(vector3d color) {
+    if (gta_widget)
+        gta_widget->set_color(color);
+}
+
+// sub_6C71F0
+void entity_tracker::set_fog_obj(i32) { // the kind goes unused
+    if (entity_fog_obj* old = fog_obj) {
+        if (arch_base* fog = old->fog_vh.resolve())
+            retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)fog);
+
+        mm::free(old);
+        fog_obj = nullptr;
+    }
+
+    void* allocation = mm::allocate(sizeof(entity_fog_obj));
+    fog_obj = allocation ? (entity_fog_obj*)retail::sub_6AB6A0((u32*)allocation, ent.value) : nullptr;
+}
+
+// sub_6AAD30
+void entity_tracker::set_fog_active(bool active) {
+    if (!fog_obj)
+        return;
+
+    if (auto* fog = (entity*)fog_obj->fog_vh.resolve())
+        fog->set_visible(active, false);
+
+    fog_obj->active = active;
+}
+
+// sub_6AAD60
+void entity_tracker::set_fog_requires_senses(bool requires_senses) {
+    if (fog_obj)
+        fog_obj->requires_senses = requires_senses;
+}
+
+// sub_6C7280
+void entity_tracker::set_fog_render_color(vector3d color) {
+    if (!fog_obj)
+        return;
+
+    auto* fog = (entity*)fog_obj->fog_vh.resolve();
+
+    if (!fog)
+        return;
+
+    f32 red   = 0.0f > color.x ? 0.0f : color.x > 1.0f ? 1.0f : color.x;
+    f32 green = 0.0f > color.y ? 0.0f : color.y > 1.0f ? 1.0f : color.y;
+    f32 blue  = 0.0f > color.z ? 0.0f : color.z > 1.0f ? 1.0f : color.z;
+
+    color32 render_color;
+
+    render_color.set_clamped((i32)((f64)red * 255.0), (i32)((f64)green * 255.0), (i32)((f64)blue * 255.0), 0xFF);
+    fog->set_render_color(render_color);
+}
+
+// sub_6AAD80
+void entity_tracker::set_fog_distance_clip(f32 fade_distance) {
+    if (!fog_obj)
+        return;
+
+    auto* fog = (entity*)fog_obj->fog_vh.resolve();
+
+    if (!fog)
+        return;
+
+    i32 preset = retail::sub_77F090(fade_distance); // the fader preset closest to the distance
+
+    fog->ext_flags = preset | (fog->ext_flags & ~0xFu);
+    retail::sub_6123B0((u32*)fog, preset, (i32)0xCBADF00D);
+}
+
+// sub_692600
+void entity_tracker::set_stealth_widget_active(bool active) {
+    if (!stealth_widget)
+        return;
+
+    stealth_widget->set_active(active);
+
+    if (poi_icon && active)
+        poi_icon->turn_on(false);
+}
+
+// sub_6C7350
+void entity_tracker::set_stealth_widget_color(vector3d color) { // the channels are already 0..255
+    if (!stealth_widget)
+        return;
+
+    f32 red   = color.x;
+    f32 green = color.y;
+    f32 blue  = color.z;
+
+    if (0.0f > red)
+        red = 0.0f;
+
+    if ((f64)red > 255.0)
+        red = 255.0f;
+
+    if (0.0f > green)
+        green = 0.0f;
+
+    if ((f64)green > 255.0)
+        green = 255.0f;
+
+    if (0.0f > blue)
+        blue = 0.0f;
+
+    if ((f64)blue > 255.0)
+        blue = 255.0f;
+
+    stealth_widget->color.set_clamped((i32)red, (i32)green, (i32)blue, 0xFF);
+
+    // slot 62
+    if (igo_3d_widget* meter = stealth_widget->meter)
+        ((void (__thiscall*)(igo_3d_widget*, color32))((void**)meter->vtable)[62])(meter, stealth_widget->color);
+}
+
+// sub_692640
+void entity_tracker::set_stealth_timer_values(f32 unk_0, f32 unk_1) {
+    // slot 55
+    if (igo_3d_widget* meter = stealth_widget->meter)
+        ((void (__thiscall*)(igo_3d_widget*, f32, f32))((void**)meter->vtable)[55])(meter, unk_0, unk_1);
 }
 
 // sub_6D2710

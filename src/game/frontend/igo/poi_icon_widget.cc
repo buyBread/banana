@@ -4,6 +4,20 @@
 
 using namespace treyarch;
 
+// sub_68C3F0
+void poi_icon_widget::turn_on(bool on) {
+    if (is_shown == on)
+        return;
+
+    is_shown = on;
+
+    if (unk_24)
+        unk_24->set_visible(on);
+
+    unk_2c->set_visible(on);
+    unk_3c = on;
+}
+
 // sub_68C4B0
 void poi_icon_widget::draw() {
     if (!is_shown || !unk_3c)

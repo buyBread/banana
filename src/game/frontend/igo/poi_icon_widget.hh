@@ -34,6 +34,7 @@ namespace treyarch {
             mm::free(allocation);
         }
 
+        void turn_on(bool on);
         void draw();
     };
 

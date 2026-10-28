@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
+#include "game/frontend/igo/poi_icon_widget.hh"
 #include "game/mission/mission_manager.hh"
 
 using namespace treyarch;
@@ -10,7 +11,7 @@ void mission_manager::select_poi(const mission_icon_info &poi, bool) {
     selected_poi = poi;
 
     if (selected_poi_icon) {
-        retail::sub_68C3F0((i32)selected_poi_icon, 1);
+        selected_poi_icon->turn_on(true);
         retail::sub_6A1100((u32*)selected_poi_icon, 1);
     }
 
@@ -29,7 +30,7 @@ void mission_manager::clear_selected_poi(bool clear_zoom_map) {
     selected_poi.instance  = nullptr;
 
     if (selected_poi_icon) {
-        retail::sub_68C3F0((i32)selected_poi_icon, 0);
+        selected_poi_icon->turn_on(false);
         retail::sub_6A1100((u32*)selected_poi_icon, 0);
     }
 
@@ -83,7 +84,7 @@ void mission_manager::on_zoom_map_poi_selected(event*            raised_event,
             missions->selected_poi.instance = nullptr;
 
             if (missions->selected_poi_icon) {
-                retail::sub_68C3F0((i32)missions->selected_poi_icon, 1);
+                missions->selected_poi_icon->turn_on(true);
                 retail::sub_6A1100((u32*)missions->selected_poi_icon, 1);
             }
 
@@ -109,7 +110,7 @@ void mission_manager::on_zoom_map_poi_unselected(event*, arch_base_vhandle, void
     missions->selected_poi.instance  = nullptr;
 
     if (missions->selected_poi_icon) {
-        retail::sub_68C3F0((i32)missions->selected_poi_icon, 0);
+        missions->selected_poi_icon->turn_on(false);
         retail::sub_6A1100((u32*)missions->selected_poi_icon, 0);
     }
 

@@ -11,6 +11,7 @@
 #include "game/wds/entity/interface/variant_interface.hh"
 #include "game/wds/entity/interface_storage.hh"
 #include "game/container/fixed_vector.hh"
+#include "game/color.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/po.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -152,6 +153,11 @@ namespace treyarch {
         // slot 117
         void unsuspend(bool unk) {
             ((void (__thiscall*)(entity*, bool))vtable[117])(this, unk);
+        }
+
+        // slot 118
+        void set_render_color(color32 color) {
+            ((void (__thiscall*)(entity*, color32))vtable[118])(this, color);
         }
 
         // slot 122

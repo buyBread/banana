@@ -21,6 +21,8 @@ namespace treyarch {
         u8                unk_20;
         u8                unk_21;
         u8                reserved_022[0x02];
+
+        void set_color(vector3d color);
     };
 
     ASSERT_SIZEOF  (igo_3d_gta_widget,               0x24);
