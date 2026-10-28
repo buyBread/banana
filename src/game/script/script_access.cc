@@ -313,6 +313,8 @@ bool script::run_thread_until_finished(chuck::vm::vm_thread* thread) {
     return true;
 }
 
+// inlined @ sub_84ABE0
+// inlined @ sub_84AD80
 // inlined @ sub_856FB0
 // inlined @ sub_863EE0
 // inlined @ sub_878B90
@@ -326,6 +328,8 @@ native_resource_context::native_resource_context(const chuck::vm::vm_stack &stac
     amalga::resource_manager::push_resource_context(m_context);
 }
 
+// inlined @ sub_84ABE0
+// inlined @ sub_84AD80
 // inlined @ sub_856FB0
 // inlined @ sub_863EE0
 // inlined @ sub_878B90

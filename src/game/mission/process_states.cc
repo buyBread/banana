@@ -679,7 +679,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
     vector3d position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
     position.y = (f32)((f64)position.y + 2.0);
 
-    camera* view = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read());
+    camera* view = references::g_world_ptr.read()->get_chase_cam_ptr();
 
     if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
         retail::sub_9C4880((u32*)view, 11);
@@ -732,7 +732,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
     retail::sub_5FC820((u64*)&transform, (i32)&side, (i32)&up, (u32*)&facing, (u32*)&position);
     retail::sub_627180((i32)hero, (f32*)&transform);
 
-    camera* view = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read());
+    camera* view = references::g_world_ptr.read()->get_chase_cam_ptr();
 
     if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
         retail::sub_9C4880((u32*)view, 11);

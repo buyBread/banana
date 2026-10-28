@@ -1292,7 +1292,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
 
                 if (car) {
                     if (!car->is_a_vehicle()) {
-                        result.initialize(mash::ALLOCATED, nullptr, car->unk_174.source_hash_code);
+                        result.initialize(mash::ALLOCATED, nullptr, car->skeleton_name_hash.source_hash_code);
 
                         return result;
                     }
@@ -1301,7 +1301,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
                     variant.initialize(mash::ALLOCATED);
 
                     string_hash skeleton;
-                    skeleton.initialize(mash::ALLOCATED, nullptr, car->unk_174.source_hash_code);
+                    skeleton.initialize(mash::ALLOCATED, nullptr, car->skeleton_name_hash.source_hash_code);
 
                     if (u8* unk = *(u8**)((u8*)car + 0x1A0))
                         variant = *(string_hash*)(unk + 0x28);
@@ -1346,7 +1346,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
                 car = the_actor->player_ifc()->unk_061().resolve();
             }
 
-            result.initialize(mash::ALLOCATED, nullptr, ((conglomerate*)car)->unk_174.source_hash_code);
+            result.initialize(mash::ALLOCATED, nullptr, ((conglomerate*)car)->skeleton_name_hash.source_hash_code);
 
             return result;
         }

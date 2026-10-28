@@ -60,6 +60,7 @@ namespace treyarch {
             return hero_ptr;
         }
 
+        // sub_95C430
         camera_handle get_chase_cam_ptr() const {
             return chase_cam_ptr;
         }

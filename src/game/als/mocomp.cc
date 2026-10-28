@@ -1235,8 +1235,8 @@ void als::simple_orientation_on_foot::activate(animation_logic_system* the_als_c
     string_hash right_foot = the_base->get_optional_pb_hash(r_foot_id, references::bip01_r_foot.read(), nullptr);
     string_hash left_foot  = the_base->get_optional_pb_hash(l_foot_id, references::bip01_l_foot.read(), nullptr);
 
-    foot_index[0] = the_actor->is_a_conglomerate() ? retail::sub_62F880((u32*)the_actor, (u32*)&right_foot) : -2; // conglomerate::get_member_index
-    foot_index[1] = the_actor->is_a_conglomerate() ? retail::sub_62F880((u32*)the_actor, (u32*)&left_foot)  : -2;
+    foot_index[0] = the_actor->is_a_conglomerate() ? ((conglomerate*)the_actor)->get_member_index(right_foot) : invalid_conglom_member;
+    foot_index[1] = the_actor->is_a_conglomerate() ? ((conglomerate*)the_actor)->get_member_index(left_foot)  : invalid_conglom_member;
 
     po foot;
     retail::sub_4015B0((u64*)&foot);
@@ -4718,7 +4718,7 @@ void als::attach_hand_to_point::set_destination_point() {
         string_hash* hand = anchor_hand ? &references::bip01_prop_r_hand.get() : &references::bip01_prop_l_hand.get();
 
         vector3d hand_position;
-        retail::sub_62FA60((i32)body, retail::sub_62F880((u32*)body, (u32*)hand), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+        retail::sub_62FA60((i32)body, ((conglomerate*)body)->get_member_index(*hand), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
 
         destination_point = vector3d(point.x + (destination_point.x - hand_position.x),
                                      point.y + (destination_point.y - hand_position.y),
@@ -4961,7 +4961,7 @@ void als::combat_pole_swing_attach::set_destination_point() {
         actor* body = the_actor->player_ifc()->my_actor;
 
         vector3d hand_position;
-        retail::sub_62FA60((i32)body, retail::sub_62F880((u32*)body, (u32*)&references::bip01_prop_r_hand.get()), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+        retail::sub_62FA60((i32)body, ((conglomerate*)body)->get_member_index(references::bip01_prop_r_hand.get()), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
 
         destination_point = vector3d(destination_point.x + (pole_point.x - hand_position.x),
                                      destination_point.y + (pole_point.y - hand_position.y),
@@ -5573,7 +5573,7 @@ void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* act
 // inlined @ sub_5B38C0
 i16 als::sync_move_and_face::get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos) {
     if (the_actor->is_a_conglomerate()) {
-        i16 index = retail::sub_62F880((u32*)the_actor, (u32*)&bone); // conglomerate::get_member_index
+        i16 index = ((conglomerate*)the_actor)->get_member_index(bone);
 
         if (index >= 0) {
             retail::sub_62FA60((i32)the_actor, index, (f32*)pos, 0); // conglomerate::get_member_abs_position
@@ -6745,7 +6745,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
 
     if (the_actor->is_a_conglomerate()) {
         auto* body  = (conglomerate*)the_actor;
-        u32   count = body->unk_128;
+        u32   count = body->all_model_po.size;
 
         saved_matrices = (po*)mm::allocate(count >> 26 ? 0xFFFFFFFF : count << 6);
 
@@ -6754,7 +6754,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
                 retail::sub_4015B0((u64*)&saved_matrices[index]);
         }
 
-        std::memcpy(saved_matrices, body->unk_12c, body->unk_128 << 6);
+        std::memcpy(saved_matrices, body->all_model_po.data, body->all_model_po.size << 6);
     }
 
     saved_po = *the_actor->my_rel_po;
@@ -6781,7 +6781,7 @@ void als::biped_physics_mocomp::pre_anim_action(f32) {
     auto* body = (conglomerate*)the_actor;
 
     if (saved_matrices)
-        std::memcpy(saved_matrices, body->unk_12c, body->unk_128 << 6);
+        std::memcpy(saved_matrices, body->all_model_po.data, body->all_model_po.size << 6);
 
     retail::sub_583280((u64*)&saved_po, (u64*)the_actor->my_abs_po); // po copy
 }
@@ -6817,7 +6817,7 @@ void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
 
     // the anim leaves it where it was
     if (saved_matrices)
-        std::memcpy(((conglomerate*)the_actor)->unk_12c, saved_matrices, ((conglomerate*)the_actor)->unk_128 << 6);
+        std::memcpy(((conglomerate*)the_actor)->all_model_po.data, saved_matrices, ((conglomerate*)the_actor)->all_model_po.size << 6);
 
     retail::sub_583280((u64*)the_actor->my_abs_po, (u64*)&saved_po);
 }

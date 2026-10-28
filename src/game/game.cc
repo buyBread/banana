@@ -548,9 +548,9 @@ void game::load_this_level(bool start_only, bool finish_only) {
     if (i_quit)
         return;
 
-    current_game_camera = (camera*)retail::sub_95C430((u32*)the_world); // chase camera
+    current_game_camera = the_world->get_chase_cam_ptr();
 
-    auto* chase = (camera*)retail::sub_95C430((u32*)the_world);
+    auto* chase = the_world->get_chase_cam_ptr();
 
     if (chase) {
         current_view_camera = chase;

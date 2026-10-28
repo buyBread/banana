@@ -3131,5 +3131,8 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<slc_entity_t*> slc_entity { 0x010F70A4 };
+
+        inline util::memory_reference<void*> script_ent_pool       { 0x010F787C }; // entity(str)'s name pool
+        inline util::memory_reference<u32>   script_ent_pool_guard { 0x010F7880 }; // bit 0 once the pool is made
     } // references
 } // treyarch

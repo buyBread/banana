@@ -15,6 +15,8 @@
 #include "game/physics/physics_system.hh"
 #include "game/physics/rigid_body_prop_system.hh"
 #include "game/script/chuck_lib_entity.hh"
+#include "game/script/script_access.hh"
+#include "game/trigger.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_vehicle.hh"
@@ -201,12 +203,26 @@ u32 slc_entity_t::find_instance(const mash::string &name) const {
     return entity->my_handle.value;
 }
 
+// sub_83DB50
 bool slf__hero__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83DB50)(this, stack);
+    entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+    arch_base_vhandle result = hero ? hero->my_handle : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83DBA0
 bool slf__chase_cam__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83DBA0)(this, stack);
+    arch_base_vhandle result = references::g_world_ptr.read()->get_chase_cam_ptr() ?
+        references::g_world_ptr.read()->get_chase_cam_ptr()->my_handle :
+        arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__create_devopt_entity__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -233,20 +249,70 @@ bool slf__create_next_preregistered_debug_obstacle__t::operator()(chuck::vm::vm_
     return ((invoke_t)retail::sub_83DDF0)(this, stack);
 }
 
+// sub_84B420
 bool slf__find_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B420)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, name);
+
+    arch_base_vhandle result;
+
+    if (auto* found = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true)) // entity_handle_manager::find_entity
+        result = found->my_handle;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B490
 bool slf__find_entity__uint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B490)(this, stack);
+    stack.sp -= 0x04;
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, nullptr, stack.local_uint(0x00));
+
+    arch_base_vhandle result;
+
+    if (auto* found = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true)) // entity_handle_manager::find_entity
+        result = found->my_handle;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B4F0
 bool slf__entity_exists__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B4F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    string_hash hash;
+    hash.initialize(mash::ALLOCATED, name);
+
+    f32 result = retail::sub_640AE0(&hash.source_hash_code, 28, true) ? 1.0f : 0.0f; // entity_handle_manager::find_entity
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B560
 bool slf__destroy_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B560)(this, stack);
+    stack.sp -= 0x04;
+
+    arch_base_vhandle handle(stack.local_uint(0x00));
+
+    stack.thread->get_instance(-1)->remove_allocated_stuff(chuck::vm::script_garbage_collection_entity, handle.value);
+
+    if (arch_base* self = handle.resolve())
+        retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)self); // wds_entity_manager::destroy_entity
+
+    return true;
 }
 
 // sub_84B8C0
@@ -3385,40 +3451,250 @@ bool slf__entity__camera_orbit__vector3d__num__num__num__t::operator()(chuck::vm
     return true;
 }
 
+// sub_84A590
 bool slf__entity__get_member__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A590)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self) {
+        if (self->is_a_conglomerate()) {
+            string_hash member_name;
+            member_name.initialize(mash::ALLOCATED, name);
+
+            if (entity* member = self->get_member(self->get_member_index(member_name)))
+                result = member->my_handle;
+        } else
+            self->is_a_conglomerate_clone(); // the answer is dropped
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A640
 bool slf__entity__has_member__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A640)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate()) {
+        string_hash member_name;
+        member_name.initialize(mash::ALLOCATED, name);
+
+        result = self->has_member(member_name) ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A6E0
 bool slf__entity__get_member_for_linking__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A6E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self) {
+        if (self->is_a_conglomerate()) {
+            string_hash member_name;
+            member_name.initialize(mash::ALLOCATED, name);
+
+            auto member = (entity*)retail::sub_655D80((i32)self, self->get_member_index(member_name)); // conglomerate::get_member_for_linking
+
+            if (member)
+                result = member->my_handle;
+        } else
+            self->is_a_conglomerate_clone(); // the answer is dropped
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A790
 bool slf__entity__get_trigger_member_for_linking__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A790)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self) {
+        if (self->is_a_conglomerate()) {
+            string_hash member_name;
+            member_name.initialize(mash::ALLOCATED, name);
+
+            auto member = (entity*)retail::sub_655D80((i32)self, self->get_member_index(member_name)); // conglomerate::get_member_for_linking
+
+            if (member) {
+                auto found = ((trigger* (__thiscall*)(trigger_manager*, entity*))retail::sub_72D5F0)(trigger_manager::inst(), member); // trigger_manager::find_instance
+
+                if (found)
+                    result = found->my_handle;
+            }
+        } else
+            self->is_a_conglomerate_clone(); // the answer is dropped
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A850
 bool slf__entity__has_member_for_linking__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A850)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_a_conglomerate()) {
+        string_hash member_name;
+        member_name.initialize(mash::ALLOCATED, name);
+
+        result = self->has_member_for_linking(member_name) ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A8F0
 bool slf__entity__get_member_abs_position__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A8F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    vector3d result;
+
+    if (self && self->is_a_conglomerate()) {
+        string_hash member_name;
+        member_name.initialize(mash::ALLOCATED, name);
+
+        // an unknown member leaves the result unset
+        retail::sub_62FA60((i32)self, self->get_member_index(member_name), (f32*)&result, 0); // conglomerate::get_member_abs_position
+    } else {
+        if (self)
+            self->is_a_conglomerate_clone(); // the answer is dropped
+
+        result = references::unk_010f7140.read();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A9B0
 bool slf__entity__get_target_member__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A9B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self     = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self && self->is_a_conglomerate()) {
+        auto member = ((entity* (__thiscall*)(conglomerate*, vector3d, bool))retail::sub_65B8C0)(self, *position, true); // get_target_member
+
+        if (member)
+            result = member->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84ABE0
 bool slf__entity__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84ABE0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        // one name pool serves every entity this native spawns
+        if (!(references::script_ent_pool_guard.read() & 1)) {
+            references::script_ent_pool_guard.write(references::script_ent_pool_guard.read() | 1);
+
+            mash::string prefix("SCRIPT_ENT");
+            references::script_ent_pool.write(retail::sub_64CBB0((char*)&prefix)); // the name pool for a prefix
+        }
+
+        string_hash slot;
+        string_hash instance_name = *(string_hash*)retail::sub_64CCA0((u32*)&slot, (u32*)references::script_ent_pool.read(), (void*)""); // the pool's next name
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84AD80
 bool slf__entity__entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84AD80)(this, stack);
+    stack.sp -= 0x08;
+
+    auto name     = (const char*)stack.local_uint(0x00);
+    auto instance = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash  instance_name;
+        string_hash* instance_slot = &instance_name;
+
+        // a name ending in '*' takes the next name from that prefix's pool
+        __asm {
+            push instance
+            mov  esi, instance_slot
+            call retail::sub_8238E0
+            add  esp, 4
+        }
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84B5B0
@@ -3575,8 +3851,7 @@ bool slf__entity__update_member_visible__str__num__t::operator()(chuck::vm::vm_s
     } else if (self->is_a_conglomerate()) {
         member_name.initialize(mash::ALLOCATED, name);
 
-        i16  index  = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
-        auto member = (entity*)retail::sub_616950((i32)self, 0, index);           // conglomerate::get_member
+        entity* member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
         member->set_visible(visible != 0.0f, false);
     }
@@ -3607,9 +3882,7 @@ bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::
         color32 current;
         color = *(color32*)retail::sub_6399E0((u32*)self, (u8*)&current, &member_name.source_hash_code); // the clone's member colour
     } else {
-        i16 index = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
-
-        member = (entity*)retail::sub_616950((i32)self, 0, index); // conglomerate::get_member
+        member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
         if (member->is_an_actor())
             color = member->get_render_color();
@@ -3663,9 +3936,7 @@ bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator
             color32 current;
             member_color = *(color32*)retail::sub_62A580((u32*)self, (i32)&current, (i32)state->member); // the clone's member colour
         } else {
-            i16 index = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
-
-            state->member = (entity*)retail::sub_616950((i32)self, 0, index); // conglomerate::get_member
+            state->member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
             if (state->member->is_an_actor())
                 member_color = state->member->get_render_color();

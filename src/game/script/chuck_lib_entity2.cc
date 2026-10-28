@@ -11,12 +11,14 @@
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/math/references.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -3027,8 +3029,34 @@ bool slf__entity__get_weapon_names__dynamic_array__t::operator()(chuck::vm::vm_s
     return ((invoke_t)retail::sub_882E00)(this, stack);
 }
 
+// sub_882F40
 bool slf__entity__get_marker_names__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_882F40)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (conglomerate*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto names = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+    if (!self || !self->is_an_actor() || !self->is_a_conglomerate())
+        return true;
+
+    i32 count = (i32)self->members.size;
+
+    for (i32 i = 0; i < count; ++i) {
+        entity* member = self->members.data[i];
+
+        if (!member || !member->is_a_marker())
+            continue;
+
+        // the name is looked up and dropped; every entry is an empty string
+        retail::sub_62F970((i32)self, (i16)i); // conglomerate::get_member_id
+
+        chuck::vm::chuck_dynamic_array_element_t element;
+
+        names->push_back(element);
+        *(const char**)names->back().stuff = "";
+    }
+
+    return true;
 }
 
 bool slf__entity__ai_enable_weapon__str__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -3413,20 +3441,63 @@ bool slf__entity__set_entity_targeting_weight__num__t::operator()(chuck::vm::vm_
     return ((invoke_t)retail::sub_871F40)(this, stack);
 }
 
+// sub_871FC0
 bool slf__entity__add_fakir_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871FC0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_fakir())
+        retail::sub_632AF0((u32*)self, stack.local_uint(0x04)); // fakir::add_entity
+
+    return true;
 }
 
+// sub_872000
 bool slf__entity__add_fakir_array__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_872000)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_a_fakir())
+        return true;
+
+    chuck::vm::script_dynamic_array<u32> entities((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    // the count is read again before every element
+    for (i32 i = 0; i < entities.size(); ++i)
+        retail::sub_632AF0((u32*)self, entities[i]); // fakir::add_entity
+
+    return true;
 }
 
+// sub_8720B0
 bool slf__entity__remove_fakir_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8720B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_fakir())
+        retail::sub_61A620((u32*)self, stack.local_uint(0x04)); // fakir::remove_entity
+
+    return true;
 }
 
+// sub_8720F0
 bool slf__entity__remove_fakir_array__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8720F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_a_fakir())
+        return true;
+
+    chuck::vm::script_dynamic_array<u32> entities((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    for (i32 i = 0; i < entities.size(); ++i)
+        retail::sub_61A620((u32*)self, entities[i]); // fakir::remove_entity
+
+    return true;
 }
 
 bool slf__entity__get_best_turret_target__num__num__num__num__vector3d__str__t::operator()(chuck::vm::vm_stack &stack) {

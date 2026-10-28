@@ -311,7 +311,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
         ((actor*)hero)->get_ai_core()->unk_5bc = 1;
     }
 
-    auto chase = (spiderman_camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+    auto chase = (spiderman_camera*)references::g_world_ptr.read()->get_chase_cam_ptr();
 
     if (chase->is_a_spiderman_camera())
         chase->unk_278 = (current_cut_scene->flags & 0x0010) != 0;
@@ -675,7 +675,7 @@ void cut_scene_player::finish() {
 
         // slot 28
         if (target && ((bool (__thiscall*)(entity*))target->vtable[28])(target)) {
-            auto chase = (spiderman_camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+            auto chase = (spiderman_camera*)references::g_world_ptr.read()->get_chase_cam_ptr();
 
             if (chase->is_a_spiderman_camera())
                 ((void (__thiscall*)(spiderman_camera*, entity*))chase->vtable[158])(chase, target); // slot 158

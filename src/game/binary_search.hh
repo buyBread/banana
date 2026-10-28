@@ -38,4 +38,67 @@ namespace treyarch {
 
         return false;
     }
+
+    // sub_603CD0
+    template<typename K, typename T>
+    bool binary_search_array(const K &find_me, const T* the_array, i32 array_size, i32* index) {
+        i32 begin_idx = 0;
+        i32 end_idx   = array_size;
+
+        while (begin_idx < end_idx) {
+            const i32 mid_point = (begin_idx + end_idx) / 2;
+
+            if (find_me < the_array[mid_point])
+                end_idx = mid_point;
+            else if (find_me > the_array[mid_point])
+                begin_idx = mid_point + 1;
+            else {
+                if (index)
+                    *index = mid_point;
+
+                return true;
+            }
+        }
+
+        // a miss past the last element reports the end
+        if (index) {
+            if (end_idx == array_size - 1 && find_me > the_array[end_idx])
+                ++end_idx;
+
+            *index = end_idx;
+        }
+
+        return false;
+    }
+
+    // sub_603C50
+    template<typename K, typename T>
+    bool binary_search_array_deref(const K &find_me, T* const* the_array, i32 array_size, i32* index) {
+        i32 begin_idx = 0;
+        i32 end_idx   = array_size;
+
+        while (begin_idx < end_idx) {
+            const i32 mid_point = (begin_idx + end_idx) / 2;
+
+            if (find_me < *the_array[mid_point])
+                end_idx = mid_point;
+            else if (find_me > *the_array[mid_point])
+                begin_idx = mid_point + 1;
+            else {
+                if (index)
+                    *index = mid_point;
+
+                return true;
+            }
+        }
+
+        if (index) {
+            if (end_idx == array_size - 1 && find_me > *the_array[end_idx])
+                ++end_idx;
+
+            *index = end_idx;
+        }
+
+        return false;
+    }
 } // treyarch

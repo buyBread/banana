@@ -1,6 +1,7 @@
 #include "retail.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/math/references.hh"
 
 using namespace treyarch;
@@ -26,7 +27,7 @@ void ai_rappel_rope::set_rope_pivot(string_hash pivot) {
         return;
 
     if (!owner->get_actor()->is_a_conglomerate() ||
-        !((bool (__thiscall*)(actor*, string_hash*))retail::sub_40A810)(owner->get_actor(), &rope_pivot)) // conglomerate link test
+        !((conglomerate*)owner->get_actor())->has_member_for_linking(rope_pivot))
 
         rope_pivot = string_hash();
 }
