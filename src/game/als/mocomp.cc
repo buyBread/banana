@@ -5053,7 +5053,7 @@ void als::sync_move_and_face::activate(animation_logic_system* the_als_core, lay
 
     i32 disable_collision = the_base->get_optional_pb_int(sync_disable_collision_id, 0, nullptr);
 
-    ((void (__thiscall*)(entity*, bool, bool))the_actor->vtable[69])(the_actor, disable_collision == 0, true); // slot 69
+    the_actor->set_collisions_active(disable_collision == 0, true);
 
     rel_slide_a = treyarch::references::unk_00fd4370.get();
     rel_slide_b = treyarch::references::unk_00fd4370.get();
@@ -5067,7 +5067,7 @@ void als::sync_move_and_face::deactivate() {
     if (the_actor->has_ifc(entity_ifc_physical))
         the_actor->physical_ifc()->flags &= ~0x800;
 
-    ((void (__thiscall*)(entity*, bool, bool))the_actor->vtable[69])(the_actor, true, true); // slot 69
+    the_actor->set_collisions_active(true, true);
 }
 
 // sub_5EAE80

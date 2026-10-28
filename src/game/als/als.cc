@@ -75,14 +75,11 @@ void als::animation_logic_system_interface::frame_advance_als_list(als_list** th
                     unk = retail::sub_4E5470((u32*)basic_inode, (u32*)&key, nullptr) != 0;
                 }
 
-                // slot 13
-                if (((bool (__thiscall*)(actor*))the_actor->vtable[13])(the_actor) && !unk) {
-                    bool ext_flag = (the_actor->ext_flags & 0x20000) != 0;
+                if (the_actor->is_a_conglomerate() && !unk) {
+                    bool sync_anim = (the_actor->ext_flags & entity_ext_flag_sync_anim) != 0;
+                    bool occluded  = the_actor->was_occluded_last_frame();
 
-                    // slot 75
-                    bool unk_075 = ((bool (__thiscall*)(actor*))the_actor->vtable[75])(the_actor);
-
-                    ((animation_logic_system*)the_als)->update_matrix_publishing(!unk_075, ext_flag);
+                    ((animation_logic_system*)the_als)->update_matrix_publishing(!occluded, sync_anim);
                 }
 
                 the_als->cache_actor_position();

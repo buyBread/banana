@@ -235,10 +235,10 @@ bool cut_scene_player::play(cut_scene* to_play) {
 
     entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
-    if (hero->flags & 0x4000)
-        state_flags |= hero_was_hidden;
+    if (hero->flags & entity_flag_collisions_active)
+        state_flags |= hero_collisions_active;
     else
-        state_flags &= ~hero_was_hidden;
+        state_flags &= ~hero_collisions_active;
 
     player_interface* player = hero->player_ifc();
 
@@ -431,10 +431,10 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
                 retail::sub_4DF470((i32*)((actor*)found)->get_ai_core(), 0); // ai_core::push_ai_disable
 
             if (found->has_ifc(entity_ifc_physical)) {
-                if (found->flags & 0x4000)
-                    entry->flags |= entity_class_entry::was_hidden;
+                if (found->flags & entity_flag_collisions_active)
+                    entry->flags |= entity_class_entry::collisions_active;
                 else
-                    entry->flags &= ~entity_class_entry::was_hidden;
+                    entry->flags &= ~entity_class_entry::collisions_active;
             }
 
             // slot 13
@@ -655,9 +655,9 @@ void cut_scene_player::finish() {
 
     entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
-    ((void (__thiscall*)(entity*, bool, bool))hero->vtable[69])(hero, (state_flags & hero_was_hidden) != 0, true); // slot 69
+    hero->set_collisions_active((state_flags & hero_collisions_active) != 0, true);
 
-    state_flags &= ~hero_was_hidden;
+    state_flags &= ~hero_collisions_active;
 
     if (*current_segment && current_segment != current_cut_scene->segments.end())
         release_current_segment();
@@ -881,7 +881,7 @@ void cut_scene_player::restore_entities() {
         }
 
         if (restored->has_ifc(entity_ifc_physical))
-            ((void (__thiscall*)(entity*, bool, bool))restored->vtable[69])(restored, (entry->flags & entity_class_entry::was_hidden) != 0, true); // slot 69
+            restored->set_collisions_active((entry->flags & entity_class_entry::collisions_active) != 0, true);
 
         retail::sub_6299F0((u32*)restored);
 

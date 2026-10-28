@@ -41,9 +41,9 @@ namespace treyarch {
         };
 
         enum e_flags : u32 {
-            keep_spawned = 0x08, // a spawned entity stays after the cut scene
-            place_at_end = 0x10, // move the entity to end_position and end_rotation when the cut scene ends
-            was_hidden   = 0x20  // the entity's 0x4000 flag before the cut scene, restored after it
+            keep_spawned      = 0x08, // a spawned entity stays after the cut scene
+            place_at_end      = 0x10, // move the entity to end_position and end_rotation when the cut scene ends
+            collisions_active = 0x20  // the entity's before the cut scene, restored after it
         };
 
         string_hash  name;

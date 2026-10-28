@@ -35,13 +35,20 @@ namespace treyarch {
 
     // SM3's EFLAG_*
     enum e_entity_flags : u32 {
-        entity_flag_graphics_visible = 0x00000200,
-        entity_flag_suspended        = 0x40000000
+        entity_flag_graphics_visible  = 0x00000200,
+        entity_flag_collisions_active = 0x00004000,
+        entity_flag_nontarget         = 0x00020000,
+        entity_flag_beamable          = 0x00080000,
+        entity_flag_suspended         = 0x40000000
     };
 
-    // SM3's EFLAG_EXT_*
+    // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
-        entity_ext_flag_invulnerable = 0x00004000
+        entity_ext_flag_is_auto_activate_prop = 0x00000800,
+        entity_ext_flag_invulnerable          = 0x00004000,
+        entity_ext_flag_shadow_casting        = 0x00010000, // SM3's AI_COVER
+        entity_ext_flag_sync_anim             = 0x00020000,
+        entity_ext_flag_ai_los_see_through    = 0x00100000
     };
 
     class entity : public arch_base {
@@ -103,9 +110,39 @@ namespace treyarch {
             return ((e_entity_flavor (__thiscall*)(const entity*))vtable[77])(this);
         }
 
+        // slot 64; this and its members
+        void set_flag_recursive(u32 flag, bool on) {
+            ((void (__thiscall*)(entity*, u32, bool))vtable[64])(this, flag, on);
+        }
+
+        // slot 65
+        void set_ext_flag_recursive(u32 flag, bool on) {
+            ((void (__thiscall*)(entity*, u32, bool))vtable[65])(this, flag, on);
+        }
+
         // slot 67
         void set_visible(bool visible, bool unk) {
             ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, unk);
+        }
+
+        // slot 69; SM3's EFLAG_PHYSICS_COLLISIONS_ACTIVE (0x4000)
+        void set_collisions_active(bool active, bool recursive) {
+            ((void (__thiscall*)(entity*, bool, bool))vtable[69])(this, active, recursive);
+        }
+
+        // slot 75
+        bool was_occluded_last_frame() {
+            return ((bool (__thiscall*)(entity*))vtable[75])(this);
+        }
+
+        // slot 116
+        void suspend(bool unk) {
+            ((void (__thiscall*)(entity*, bool))vtable[116])(this, unk);
+        }
+
+        // slot 117
+        void unsuspend(bool unk) {
+            ((void (__thiscall*)(entity*, bool))vtable[117])(this, unk);
         }
 
         void invoke_render_phase();

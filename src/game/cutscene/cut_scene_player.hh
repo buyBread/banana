@@ -28,17 +28,17 @@ namespace treyarch {
 
     public:
         enum e_state_flags : u32 {
-            radar_was_visible = 0x00001, // take_igo hid it
-            hooked_up         = 0x00040, // the current segment's scene anim and sound run
-            playing           = 0x00080,
-            skipping          = 0x00100,
-            segment_paused    = 0x00200, // play_current_segment paused the new scene anim
-            skip_fade_in      = 0x00400, // the end fade stops on black
-            give_back_igo     = 0x01000, // stop left it to the end fade
-            toa_middle        = 0x02000, // the toa helper's: a success cut scene with more to come
-            toa_first         = 0x04000, // its first success cut scene
-            toa_last          = 0x08000, // its last success cut scene or a failure
-            hero_was_hidden   = 0x10000
+            radar_was_visible      = 0x00001, // take_igo hid it
+            hooked_up              = 0x00040, // the current segment's scene anim and sound run
+            playing                = 0x00080,
+            skipping               = 0x00100,
+            segment_paused         = 0x00200, // play_current_segment paused the new scene anim
+            skip_fade_in           = 0x00400, // the end fade stops on black
+            give_back_igo          = 0x01000, // stop left it to the end fade
+            toa_middle             = 0x02000, // the toa helper's: a success cut scene with more to come
+            toa_first              = 0x04000, // its first success cut scene
+            toa_last               = 0x08000, // its last success cut scene or a failure
+            hero_collisions_active = 0x10000
         };
 
         // SM3's ZEROVEC; every file kept its own copy

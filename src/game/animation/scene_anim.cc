@@ -58,7 +58,7 @@ scene_anim::~scene_anim() {
             if (ent->has_ifc(entity_ifc_physical)) {
                 ent->physical_ifc()->cancel_all_velocity(references::unk_00fd4370.get());
 
-                ((void (__thiscall*)(entity*, bool, bool))ent->vtable[69])(ent, info.status & 1, true); // slot 69
+                ent->set_collisions_active(info.status & 1, true);
 
                 retail::sub_6299F0((u32*)ent);
             }
@@ -231,7 +231,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
 
         instance->skeleton_map = ent->skeleton_map;
 
-        bool was_hidden = (ent->flags & 0x4000) != 0;
+        bool collisions_active = (ent->flags & entity_flag_collisions_active) != 0;
 
         if (ent->get_ai_core() && !retail::sub_601C50((u32*)ent)) {
             retail::sub_4C7A40((i32)ent->get_ai_core());
@@ -241,7 +241,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         if (ent->has_ifc(entity_ifc_physical)) {
             ent->physical_ifc()->cancel_all_velocity(references::unk_00fd4370.get());
 
-            ((void (__thiscall*)(entity*, bool, bool))ent->vtable[69])(ent, false, true); // slot 69
+            ent->set_collisions_active(false, true);
         }
 
         if (ent->has_ifc(entity_ifc_standing))
@@ -251,7 +251,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
 
         scene_anims_info info;
 
-        info.status = was_hidden;
+        info.status = collisions_active;
 
         bool driven = true;
 
