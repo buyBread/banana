@@ -70,6 +70,11 @@ namespace treyarch {
             return ((bool (__thiscall*)(const arch_base*))vtable[30])(this);
         }
 
+        // slot 31
+        bool is_a_spiderman_camera() const {
+            return ((bool (__thiscall*)(const arch_base*))vtable[31])(this);
+        }
+
         // slot 41
         bool is_a_vehicle() const {
             return ((bool (__thiscall*)(const arch_base*))vtable[41])(this);

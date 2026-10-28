@@ -49,7 +49,7 @@ scene_anim::~scene_anim() {
             continue;
 
         if (ent->is_an_actor()) {
-            ((void (__thiscall*)(entity*))ent->vtable[157])(ent);          // slot 157
+            ((actor*)ent)->invalidate_frame_delta();
             ((void (__thiscall*)(entity*, f32))ent->vtable[139])(ent, 1.0f); // slot 139
             ((void (__thiscall*)(entity*))ent->vtable[141])(ent);          // unbind_from_scene_anim
 
@@ -61,11 +61,11 @@ scene_anim::~scene_anim() {
 
                 ent->set_collisions_active(info.status & 1, true);
 
-                retail::sub_6299F0((u32*)ent);
+                ((actor*)ent)->save_last_collision_free_state();
             }
 
             if (ent->has_ifc(entity_ifc_standing))
-                retail::sub_659160((i32)ent->my_ifc_storage->get_ifc(entity_ifc_standing), 0);
+                ent->standing_ifc()->set_control_parent(nullptr);
 
             if (((actor*)ent)->get_ai_core() && !retail::sub_601C50((u32*)ent))
                 retail::sub_4DF4B0((i32*)((actor*)ent)->get_ai_core(), 0); // ai_core::pop_ai_disable
@@ -246,9 +246,9 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         }
 
         if (ent->has_ifc(entity_ifc_standing))
-            retail::sub_659160((i32)ent->my_ifc_storage->get_ifc(entity_ifc_standing), 0);
+            ent->standing_ifc()->set_control_parent(nullptr);
 
-        ((void (__thiscall*)(entity*))ent->vtable[157])(ent); // slot 157
+        ent->invalidate_frame_delta();
 
         scene_anims_info info;
 

@@ -6,6 +6,7 @@
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/math/algebra/vector3d.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
@@ -26,6 +27,7 @@ namespace treyarch {
 
     /* a wait keeps its state in the bytes just past its arguments, which a recall finds untouched;
        grows the stack first when they don't fit, then pops the arguments */
+    // inlined @ sub_84A300
     // inlined @ sub_84BE70
     // inlined @ sub_86A5A0
     // inlined @ sub_86ABF0
@@ -46,6 +48,12 @@ namespace treyarch {
 
     // a wait's step this frame: the script frame time on the entity's own clock
     f32 get_wait_time_step(const entity* self);
+
+    // an actor's als takes the entity's new facing
+    void update_als_facing(entity* self);
+
+    // set (or, without set, move) the rel position as a script thread of the given camera priority would
+    void set_or_move_rel_position(entity* self, const vector3d* position, bool set, f32 camera_priority);
 
     class slc_entity_t : public chuck::script_library::script_library_class {
 

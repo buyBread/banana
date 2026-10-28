@@ -118,7 +118,7 @@ entity_tracker::~entity_tracker() {
     auto* record = (u8*)retail::sub_92BB10(ent.value); // tracker record lookup
 
     if (record && *(i32*)(record + 0x10) == 4)
-        ((void (__thiscall*)(u8*, f32))retail::sub_90D110)(record, -1.0f); // zlock off
+        retail::sub_90D110((u32*)record, -1.0f); // zlock off
 
     if (mm_icon) {
         retail::sub_6DFB50((u32*)references::frontend.get().igo->radar_widget, (i32)mm_icon); // remove_icon
@@ -235,7 +235,7 @@ void entity_tracker::set_poi_range(f32 near_clip, f32 far_clip) {
     auto* record = (u8*)retail::sub_92BB10(ent.value); // tracker record lookup
 
     if (record)
-        ((void (__thiscall*)(u8*, f32, f32))retail::sub_905FE0)(record, near_clip, far_clip); // set_clip_range
+        retail::sub_905FE0((u32*)record, near_clip, far_clip); // set_clip_range
 }
 
 // sub_6C7130
@@ -326,12 +326,12 @@ void entity_tracker::enable_zlock(f32 value) { // a negative value turns the loc
         auto* record = (u8*)retail::sub_92BB10(ent.value); // tracker record lookup
 
         if (record && *(i32*)(record + 0x10) == 4)
-            ((void (__thiscall*)(u8*, f32))retail::sub_90D110)(record, -1.0f);
+            retail::sub_90D110((u32*)record, -1.0f);
     } else {
         auto* record = (u8*)retail::sub_94D720(ent.value, 4, true); // tracker record lookup, adding one when missing
 
         if (record && *(i32*)(record + 0x10) == 4)
-            ((void (__thiscall*)(u8*, f32))retail::sub_90D110)(record, value);
+            retail::sub_90D110((u32*)record, value);
     }
 }
 

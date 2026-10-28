@@ -130,7 +130,7 @@ param_block* treyarch::get_ai_param_block(arch_base_vhandle  handle,
 // inlined @ sub_847140
 // inlined @ sub_8471B0
 bool treyarch::marky_camera_allows(const arch_base* self, const chuck::vm::vm_stack &stack) {
-    camera* marky = references::g_world_ptr.read()->camera_mgr.marky_camera;
+    auto* marky = (marky_camera*)references::g_world_ptr.read()->camera_mgr.marky_camera;
 
     return self != marky || stack.thread->camera_priority == marky->current_priority;
 }
@@ -144,6 +144,44 @@ f32 treyarch::get_wait_time_step(const entity* self) {
         references::g_world_ptr.read()->time_mgr.get_time_dilation_factor();
 
     return chuck::vm::script_manager::inst()->get_time_inc() * dilation;
+}
+
+// inlined @ sub_844F70
+// inlined @ sub_845230
+// inlined @ sub_8454B0
+// inlined @ sub_8456D0
+// inlined @ sub_8458B0
+// inlined @ sub_845AE0
+// inlined @ sub_845EF0
+// inlined @ sub_849DB0
+// inlined @ sub_849F90
+// inlined @ sub_871190
+void treyarch::update_als_facing(entity* self) {
+    if (!self->is_an_actor() || !((actor*)self)->get_ai_core())
+        return;
+
+    auto* node = (als_inode*)((actor*)self)->get_ai_core()->get_info_node(info_node_type_als);
+
+    if (!node)
+        return;
+
+    retail::sub_4029D0((u32**)node, als::param_desired_forward_vector, (i32)&self->my_abs_po->get_z_facing(), 0); // als_inode::set_desired_param
+
+    if (node->my_als)
+        ((als::animation_logic_system_interface*)node->my_als)->force_matrix_update();
+}
+
+void treyarch::set_or_move_rel_position(entity* self, const vector3d* position, bool set, f32 camera_priority) {
+    u32 set_word = set;
+
+    __asm {
+        push camera_priority
+        push set_word
+        push position
+        mov  ecx, self
+        call retail::sub_879860
+        add  esp, 0Ch
+    }
 }
 
 // sub_83DAE0
@@ -1063,16 +1101,86 @@ bool slf__entity__get_rel_position__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_844A10
 bool slf__entity__set_parent__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844A10)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    auto parent = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    // a conglomerate member keeps its parent
+    if ((self->flags & entity_flag_member) || !marky_camera_allows(self, stack))
+        return true;
+
+    if (!parent)
+        retail::sub_640910((u32*)self); // entity_base::clear_parent
+    else {
+        retail::sub_653DA0((u32*)self, (i32*)parent);                          // entity_base::set_parent
+        retail::sub_626CA0((u32*)self, (u32*)&references::unk_010f7140.get()); // entity_base::set_rel_position
+    }
+
+    if (self->is_an_entity()) {
+        self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+    }
+
+    if (self->is_an_actor())
+        ((actor*)self)->save_last_collision_free_state();
+
+    return true;
 }
 
+// sub_844B10
 bool slf__entity__set_parent_rel__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844B10)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    auto parent = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if ((self->flags & entity_flag_member) || !marky_camera_allows(self, stack))
+        return true;
+
+    retail::sub_653EB0((u32*)self, (i32)parent); // attaches it keeping its world po
+
+    if (self->is_an_actor())
+        ((actor*)self)->save_last_collision_free_state();
+
+    return true;
 }
 
+// sub_844BA0
 bool slf__entity__get_vehicle__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844BA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    u32 result = 0;
+
+    if (self && self->my_parent) {
+        auto basic = ((ai_basic_inode* (__cdecl*)(arch_base*))retail::sub_4C77B0)(self); // get_ai_basic_inode_if_slim_actor
+
+        if (basic && basic->get_flag(963)) {
+            auto vehicle = (entity*)arch_base_vhandle(self->my_parent->my_handle.value).resolve();
+
+            if (vehicle && (vehicle->flags & entity_flag_member))
+                vehicle = (entity*)retail::sub_601910((u32*)vehicle); // entity_base::get_attach_root
+
+            if (vehicle && vehicle->is_a_vehicle())
+                result = vehicle->my_handle.value;
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_844C40
@@ -1108,12 +1216,38 @@ bool slf__entity__get_conglom_owner__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_879C80
 bool slf__entity__set_rel_position__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_879C80)(this, stack);
+    stack.sp -= 0x10;
+
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    mash::string unused; // built and dropped around the call
+
+    set_or_move_rel_position(self, position, true, stack.thread->camera_priority);
+
+    return true;
 }
 
+// sub_879D10
 bool slf__entity__move_rel_position__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_879D10)(this, stack);
+    stack.sp -= 0x10;
+
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    mash::string unused; // built and dropped around the call
+
+    set_or_move_rel_position(self, position, false, stack.thread->camera_priority);
+
+    return true;
 }
 
 // sub_844CD0
@@ -1152,52 +1286,614 @@ bool slf__entity__set_abs_velocity__vector3d__t::operator()(chuck::vm::vm_stack 
     return true;
 }
 
+// sub_844EF0
 bool slf__entity__look_at__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844EF0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    // a biped under physics isn't turned
+    if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        return true;
+
+    if (marky_camera_allows(self, stack))
+        retail::sub_626E30((u32*)self, (f32*)target);
+
+    return true;
 }
 
+// sub_844F70
 bool slf__entity__set_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_844F70)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto facing = (vector3d*)&stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    // a zero facing is replaced on the stack by the current one
+    const vector3d &zero = references::unk_010f7140.get();
+
+    if (facing->x == zero.x && facing->y == zero.y && facing->z == zero.z)
+        *facing = self->my_rel_po->get_z_facing();
+
+    if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        return true;
+
+    if (!marky_camera_allows(self, stack))
+        return true;
+
+    math::vector4 facing_4(facing->x, facing->y, facing->z, 0.0f);
+    math::vector4 unit;
+
+    retail::sub_401AA0((u64*)&unit, (f32*)&facing_4);
+
+    // too close to straight up turns nothing
+    if (!(0.95 > (f64)unit[1]))
+        return true;
+
+    vector3d z_facing(unit[0], 0.0f, unit[2]);
+    retail::sub_402050((f32*)&z_facing);
+
+    const vector3d &up = references::unk_00f2213c.get();
+
+    vector3d x_facing = math::cross(up, z_facing);
+    retail::sub_402050((f32*)&x_facing);
+
+    po rel_po;
+    retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
+    retail::sub_9595B0((i32)&rel_po);             // orthonormalize
+    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
+// sub_845230
 bool slf__entity__set_facing__vector3d__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_845230)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto facing = (const vector3d*)&stack.local_uint(0x04);
+    auto up     = (const vector3d*)&stack.local_uint(0x10);
+
+    if (!self)
+        return true;
+
+    if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        return true;
+
+    if (0.01f > facing->length2() || 0.01f > up->length2())
+        return true;
+
+    vector3d z_facing = *facing;
+    retail::sub_402050((f32*)&z_facing);
+
+    vector3d y_facing = *up;
+    retail::sub_402050((f32*)&y_facing);
+
+    vector3d x_facing = math::cross(y_facing, z_facing);
+
+    if (0.01f > x_facing.length2())
+        return true;
+
+    retail::sub_402050((f32*)&x_facing);
+
+    po rel_po;
+    retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&y_facing, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
+    retail::sub_9595B0((i32)&rel_po);             // orthonormalize
+    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
+// sub_8454B0
 bool slf__entity__set_abs_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8454B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !marky_camera_allows(self, stack))
+        return true;
+
+    const vector3d &position = self->my_abs_po->get_position();
+
+    vector3d z_facing((f32)((f64)target->x - position.x), 0.0f, (f32)((f64)target->z - position.z));
+
+    if (!((f32)std::sqrt((f64)z_facing.length2()) > 0.01f))
+        return true;
+
+    retail::sub_402050((f32*)&z_facing);
+
+    const vector3d &up = references::unk_00f2213c.get();
+
+    vector3d x_facing = math::cross(up, z_facing);
+    retail::sub_402050((f32*)&x_facing);
+
+    po abs_po;
+    retail::sub_5FC820((u64*)&abs_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&position);
+    retail::sub_627180((i32)self, (f32*)&abs_po); // entity_base::set_abs_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
+// sub_8456D0
 bool slf__entity__set_po_facing__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8456D0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto facing = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !marky_camera_allows(self, stack))
+        return true;
+
+    if (0.01f > facing->length2())
+        return true;
+
+    vector3d z_facing = *facing;
+    retail::sub_402050((f32*)&z_facing);
+
+    po       abs_po = references::unk_010f76b0.read();
+    vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
+
+    retail::sub_44DE20((f32*)&abs_po, (f32*)&z_facing_4); // turns it to look along the facing
+
+    const vector3d &position = self->my_abs_po->get_position();
+
+    abs_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_627180((i32)self, (f32*)&abs_po); // entity_base::set_abs_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
+// sub_8458B0
 bool slf__entity__set_rel_po_facing__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8458B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto facing = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !marky_camera_allows(self, stack))
+        return true;
+
+    if (0.01f > facing->length2())
+        return true;
+
+    vector3d z_facing = *facing;
+    retail::sub_402050((f32*)&z_facing);
+
+    po       rel_po = references::unk_010f76b0.read();
+    vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
+
+    retail::sub_44DE20((f32*)&rel_po, (f32*)&z_facing_4); // turns it to look along the facing
+
+    const vector3d &position = self->my_rel_po->get_position();
+
+    rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
+// sub_845A90
 bool slf__entity__apply_continuous_rotation__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_845A90)(this, stack);
+    stack.sp -= 0x18;
+
+    auto axis  = (f32*)&stack.local_uint(0x04);
+    auto speed = stack.local_num(0x10);
+
+    retail::sub_605320(&stack.local_uint(0x00)); // arch_base_vhandle::is_possibly_valid, answer unused
+
+    retail::sub_60FEB0(stack.local_uint(0x00), axis, speed, stack.local_num(0x14) > 0.0f);
+
+    return true;
 }
 
+// sub_845AE0
 bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_845AE0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto  self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto  axis     = (const vector3d*)&stack.local_uint(0x04);
+    auto &angle    = stack.local_num(0x10);
+    auto &duration = stack.local_num(0x14);
+
+    if (!self)
+        return true;
+
+    auto root = (entity*)retail::sub_601910((u32*)self); // entity_base::get_attach_root
+
+    if (root) {
+        if (root->unk_030)
+            retail::sub_796C70(root->my_handle.value); // add_moved
+    } else if (self->unk_030)
+        retail::sub_796C70(self->my_handle.value);
+
+    // a short enough turn happens at once
+    if (duration <= 0.0001) {
+        if (!marky_camera_allows(self, stack))
+            return true;
+
+        po rotation;
+        retail::sub_4015B0((u64*)&rotation);
+
+        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle);
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta(rotation, 1.0f);
+
+        retail::sub_44E230((u64*)&rotation, (f32*)&rotation, (f32*)self->my_rel_po);
+        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+
+        update_als_facing(self);
+
+        return true;
+    }
+
+    if (!stack.thread->entry)
+        return false;
+
+    // the remaining time and angle stay in the argument words
+    f32 step      = get_wait_time_step(self);
+    f32 remaining = (f32)((f64)duration - step);
+
+    if (0.0f > remaining) {
+        step      = (f32)((f64)remaining + step);
+        remaining = 0.0f;
+    }
+
+    f32 angle_step = 0.0f;
+
+    if (marky_camera_allows(self, stack)) {
+        angle_step = (f32)((f64)step / duration * angle);
+
+        po rotation;
+        retail::sub_4015B0((u64*)&rotation);
+
+        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle_step);
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta_no_update(rotation, step);
+
+        retail::sub_44E230((u64*)&rotation, (f32*)&rotation, (f32*)self->my_rel_po);
+        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+
+        update_als_facing(self);
+    }
+
+    if ((f64)remaining > 0.0001) {
+        duration = remaining;
+        angle    = (f32)((f64)angle - angle_step);
+
+        return false;
+    }
+
+    return true;
 }
 
+// sub_845EF0
 bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_845EF0)(this, stack);
+    stack.sp -= 0x24;
+
+    auto  self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto  pivot    = (const vector3d*)&stack.local_uint(0x04);
+    auto  axis     = (const vector3d*)&stack.local_uint(0x10);
+    auto &angle    = stack.local_num(0x1C);
+    auto &duration = stack.local_num(0x20);
+
+    if (!self)
+        return true;
+
+    auto root = (entity*)retail::sub_601910((u32*)self); // entity_base::get_attach_root
+
+    if (root) {
+        if (root->unk_030)
+            retail::sub_796C70(root->my_handle.value); // add_moved
+    } else if (self->unk_030)
+        retail::sub_796C70(self->my_handle.value);
+
+    // a short enough turn is over before it starts
+    if (!stack.thread->entry)
+        return duration <= 0.0001;
+
+    f32 step      = get_wait_time_step(self);
+    f32 remaining = (f32)((f64)duration - step);
+
+    if (0.0f > remaining) {
+        step      = (f32)((f64)remaining + step);
+        remaining = 0.0f;
+    }
+
+    f32 angle_step = 0.0f;
+
+    // turned about the pivot: moved to it, turned in the parent's frame and moved back
+    if (marky_camera_allows(self, stack)) {
+        angle_step = (f32)((f64)step / duration * angle);
+
+        const vector3d &position = self->my_rel_po->get_position();
+
+        vector3d offset((f32)((f64)position.x - pivot->x),
+                        (f32)((f64)position.y - pivot->y),
+                        (f32)((f64)position.z - pivot->z));
+
+        retail::sub_626CA0((u32*)self, (u32*)&offset); // entity_base::set_rel_position
+
+        po rotation;
+        retail::sub_4015B0((u64*)&rotation);
+
+        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
+        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle_step);
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta(rotation, step);
+
+        retail::sub_44E230((u64*)&rotation, (f32*)self->my_rel_po, (f32*)&rotation);
+        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+
+        const vector3d &turned = self->my_rel_po->get_position();
+
+        vector3d back((f32)((f64)turned.x + pivot->x),
+                      (f32)((f64)turned.y + pivot->y),
+                      (f32)((f64)turned.z + pivot->z));
+
+        retail::sub_626CA0((u32*)self, (u32*)&back); // entity_base::set_rel_position
+
+        update_als_facing(self);
+    }
+
+    if ((f64)remaining > 0.0001) {
+        duration = remaining;
+        angle    = (f32)((f64)angle - angle_step);
+
+        return false;
+    }
+
+    return true;
 }
 
+// sub_8462C0
 bool slf__entity__wait_translate__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8462C0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto  self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto  delta    = (vector3d*)&stack.local_uint(0x04);
+    auto &duration = stack.local_num(0x10);
+
+    if (!self)
+        return true;
+
+    // a short enough move is over before it starts
+    if (!stack.thread->entry)
+        return duration <= 0.0001;
+
+    // the remaining time and offset stay in the argument words
+    f32 step      = get_wait_time_step(self);
+    f32 remaining = (f32)((f64)duration - step);
+
+    if (0.0f > remaining) {
+        step      = (f32)((f64)remaining + step);
+        remaining = 0.0f;
+    }
+
+    vector3d move = references::unk_010f7140.read();
+
+    if (marky_camera_allows(self, stack)) {
+        if (self->has_ifc(entity_ifc_standing) && self->is_an_actor() && ((actor*)self)->get_ai_core())
+            self->standing_ifc()->set_control_parent(nullptr);
+
+        f32 fraction = (f32)((f64)step / duration);
+
+        move = vector3d((f32)((f64)delta->x * fraction),
+                        (f32)((f64)delta->y * fraction),
+                        (f32)((f64)delta->z * fraction));
+
+        po       translation = references::unk_010f76b0.read();
+        vector4d move_4(move.x, move.y, move.z, 0.0f);
+
+        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta(translation, step);
+
+        retail::sub_44E230((u64*)&translation, (f32*)self->my_rel_po, (f32*)&translation);
+        retail::sub_796C70(stack.local_uint(0x00)); // add_moved
+
+        if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+            self->physical_ifc()->get_biped_system();
+        else
+            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+
+        if (self->is_an_actor())
+            ((actor*)self)->update_colgeom();
+
+        if (self->has_ifc(entity_ifc_player))
+            self->player_ifc()->unk_140();
+    }
+
+    if ((f64)remaining > 0.0001) {
+        duration = remaining;
+        delta->x = (f32)((f64)delta->x - move.x);
+        delta->y = (f32)((f64)delta->y - move.y);
+        delta->z = (f32)((f64)delta->z - move.z);
+
+        return false;
+    }
+
+    return true;
 }
 
+// sub_8466A0
 bool slf__entity__wait_translate_with_compute_sector__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8466A0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto  self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto  delta    = (vector3d*)&stack.local_uint(0x04);
+    auto &duration = stack.local_num(0x10);
+
+    if (!self)
+        return true;
+
+    if (!stack.thread->entry)
+        return duration <= 0.0001;
+
+    f32 step      = get_wait_time_step(self);
+    f32 remaining = (f32)((f64)duration - step);
+
+    if (0.0f > remaining) {
+        step      = (f32)((f64)remaining + step);
+        remaining = 0.0f;
+    }
+
+    vector3d move = references::unk_010f7140.read();
+
+    if (marky_camera_allows(self, stack)) {
+        if (self->has_ifc(entity_ifc_standing) && self->is_an_actor() && ((actor*)self)->get_ai_core())
+            self->standing_ifc()->set_control_parent(nullptr);
+
+        f32 fraction = (f32)((f64)step / duration);
+
+        move = vector3d((f32)((f64)delta->x * fraction),
+                        (f32)((f64)delta->y * fraction),
+                        (f32)((f64)delta->z * fraction));
+
+        po       translation = references::unk_010f76b0.read();
+        vector4d move_4(move.x, move.y, move.z, 0.0f);
+
+        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta(translation, step);
+
+        retail::sub_44E230((u64*)&translation, (f32*)&translation, (f32*)self->my_rel_po);
+
+        if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+            self->physical_ifc()->get_biped_system();
+        else
+            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+
+        if (self->is_an_entity() && !(self->flags & entity_flag_member)) {
+            self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+            retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+        }
+
+        if (self->is_an_actor())
+            ((actor*)self)->update_colgeom();
+
+        if (self->has_ifc(entity_ifc_player))
+            self->player_ifc()->unk_140();
+    }
+
+    if ((f64)remaining > 0.0001) {
+        duration = remaining;
+        delta->x = (f32)((f64)delta->x - move.x);
+        delta->y = (f32)((f64)delta->y - move.y);
+        delta->z = (f32)((f64)delta->z - move.z);
+
+        return false;
+    }
+
+    return true;
 }
 
+// sub_846AA0
 bool slf__entity__wait_translate_abs__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_846AA0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto  self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto  delta    = (vector3d*)&stack.local_uint(0x04);
+    auto &duration = stack.local_num(0x10);
+
+    if (!self)
+        return true;
+
+    // the target becomes the offset from where the entity stands
+    if (!stack.thread->entry) {
+        const vector3d &position = self->my_abs_po->get_position();
+
+        delta->x = (f32)((f64)delta->x - position.x);
+        delta->y = (f32)((f64)delta->y - position.y);
+        delta->z = (f32)((f64)delta->z - position.z);
+
+        return false;
+    }
+
+    f32 step      = get_wait_time_step(self);
+    f32 remaining = (f32)((f64)duration - step);
+
+    if (0.0f > remaining) {
+        step      = (f32)((f64)remaining + step);
+        remaining = 0.0f;
+    }
+
+    vector3d move = references::unk_010f7140.read();
+
+    if (marky_camera_allows(self, stack)) {
+        if (self->has_ifc(entity_ifc_standing) && self->is_an_actor() && ((actor*)self)->get_ai_core())
+            self->standing_ifc()->set_control_parent(nullptr);
+
+        move = *delta;
+
+        if ((f64)duration > 0.0001) {
+            f32 fraction = (f32)((f64)step / duration);
+
+            move = vector3d((f32)((f64)delta->x * fraction),
+                            (f32)((f64)delta->y * fraction),
+                            (f32)((f64)delta->z * fraction));
+        }
+
+        po       translation = references::unk_010f76b0.read();
+        vector4d move_4(move.x, move.y, move.z, 0.0f);
+
+        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+
+        if (self->is_an_actor())
+            ((actor*)self)->set_frame_delta(translation, step);
+
+        retail::sub_44E230((u64*)&translation, (f32*)self->my_rel_po, (f32*)&translation);
+
+        if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+            self->physical_ifc()->get_biped_system();
+        else
+            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+
+        if (self->is_an_actor())
+            ((actor*)self)->update_colgeom();
+
+        retail::sub_796C70(stack.local_uint(0x00)); // add_moved
+
+        if (self->has_ifc(entity_ifc_player))
+            self->player_ifc()->unk_140();
+    }
+
+    if ((f64)remaining > 0.0001) {
+        duration = remaining;
+        delta->x = (f32)((f64)delta->x - move.x);
+        delta->y = (f32)((f64)delta->y - move.y);
+        delta->z = (f32)((f64)delta->z - move.z);
+
+        return false;
+    }
+
+    return true;
 }
 
 // sub_846EE0
@@ -2447,32 +3143,187 @@ bool slf__entity__was_occluded_last_frame__t::operator()(chuck::vm::vm_stack &st
     return true;
 }
 
+// sub_849DB0
 bool slf__entity__snap_to__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849DB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (!self || !target || !marky_camera_allows(self, stack))
+        return true;
+
+    if (self->has_ifc(entity_ifc_standing) && self->is_an_actor() && ((actor*)self)->get_ai_core())
+        self->standing_ifc()->set_control_parent(nullptr);
+
+    if (self->is_an_actor())
+        ((actor*)self)->invalidate_frame_delta();
+
+    // a biped under physics stays put
+    if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        self->physical_ifc()->get_biped_system();
+    else {
+        retail::sub_626BE0((i32)self, (u64*)target->my_abs_po); // entity_base::set_rel_po
+
+        update_als_facing(self);
+    }
+
+    if (self->is_an_entity()) {
+        self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+    }
+
+    if (self->is_an_actor()) {
+        ((actor*)self)->update_colgeom();
+        ((actor*)self)->save_last_collision_free_state();
+    }
+
+    if (self->has_ifc(entity_ifc_player))
+        self->player_ifc()->unk_140();
+
+    return true;
 }
 
+// sub_849F90
 bool slf__entity__abs_snap_to__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_849F90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (entity*)arch_base_vhandle(stack.local_uint(0x04)).resolve();
+
+    if (!self || !target || !marky_camera_allows(self, stack))
+        return true;
+
+    if (self->has_ifc(entity_ifc_standing) && self->is_an_actor() && ((actor*)self)->get_ai_core())
+        self->standing_ifc()->set_control_parent(nullptr);
+
+    if (self->is_an_actor())
+        ((actor*)self)->invalidate_frame_delta();
+
+    if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        self->physical_ifc()->get_biped_system();
+    else {
+        retail::sub_627180((i32)self, (f32*)target->my_abs_po); // entity_base::set_abs_po
+
+        update_als_facing(self);
+    }
+
+    if (self->is_an_entity()) {
+        self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
+        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+    }
+
+    if (self->is_an_actor()) {
+        ((actor*)self)->update_colgeom();
+        ((actor*)self)->save_last_collision_free_state();
+    }
+
+    if (self->has_ifc(entity_ifc_player))
+        self->player_ifc()->unk_140();
+
+    return true;
 }
 
+// sub_84A170
 bool slf__entity__camera_set_target__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A170)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self && self->is_a_marky_camera() && marky_camera_allows(self, stack))
+        ((marky_camera*)self)->camera_set_target(*target);
+
+    return true;
 }
 
+// sub_84A1E0
 bool slf__entity__camera_get_target__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A1E0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result = self && self->is_a_marky_camera() && marky_camera_allows(self, stack) ?
+        ((marky_camera*)self)->camera_get_target() :
+        references::unk_010f7140.read();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84A290
 bool slf__entity__camera_set_roll__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A290)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto angle = stack.local_num(0x04);
+
+    if (self && self->is_a_marky_camera() && marky_camera_allows(self, stack))
+        ((marky_camera*)self)->camera_set_roll(angle);
+
+    return true;
 }
 
+// sub_84A300
 bool slf__entity__wait_camera_set_roll__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A300)(this, stack);
+    struct wait_state {
+        f32 start;
+        f32 elapsed;
+    };
+
+    auto* state = pop_wait_arguments<wait_state>(stack, 0x0C);
+
+    // no marky camera test
+    auto self     = (marky_camera*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto angle    = stack.local_num(0x04);
+    auto duration = stack.local_num(0x08);
+
+    if (!self)
+        return true;
+
+    if (!stack.thread->entry) {
+        if (duration <= 0.0001) {
+            self->camera_set_roll(angle);
+
+            return true;
+        }
+
+        state->start   = self->roll;
+        state->elapsed = 0.0f;
+
+        return false;
+    }
+
+    state->elapsed += get_wait_time_step(self);
+
+    f32 t = (f32)((f64)state->elapsed / duration);
+
+    if (t > 1.0)
+        t = 1.0f;
+
+    self->camera_set_roll((f32)(((f64)angle - state->start) * t + state->start));
+
+    if (state->elapsed >= duration)
+        return true;
+
+    return false;
 }
 
+// sub_84A500
 bool slf__entity__camera_orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84A500)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto center = (const vector3d*)&stack.local_uint(0x04);
+    auto range  = stack.local_num(0x10);
+    auto theta  = stack.local_num(0x14);
+    auto psi    = stack.local_num(0x18);
+
+    if (self && self->is_a_marky_camera() && marky_camera_allows(self, stack))
+        ((marky_camera*)self)->camera_orbit(*center, range, theta, psi);
+
+    return true;
 }
 
 bool slf__entity__get_member__str__t::operator()(chuck::vm::vm_stack &stack) {

@@ -77,7 +77,9 @@ namespace treyarch {
         u32                                 ext_flags;
         interface_storage*                  my_ifc_storage;
         entity*                             my_parent;
-        u8                                  reserved_024[0x16];
+        u8                                  reserved_024[0x0C];
+        u32                                 unk_030; // the transform waits report a move (add_moved) only while it's set
+        u8                                  reserved_034[0x06];
         u8                                  unk_03a; // cleared as scene entities are loaded
         u8                                  reserved_03b[0x15];
         container::fixed_vector<region*, 8> regions;
@@ -290,6 +292,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity, ext_flags,      0x18);
     ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
     ASSERT_OFFSETOF(entity, my_parent,      0x20);
+    ASSERT_OFFSETOF(entity, unk_030,        0x30);
     ASSERT_OFFSETOF(entity, unk_03a,        0x3A);
     ASSERT_OFFSETOF(entity, regions,        0x50);
 } // treyarch

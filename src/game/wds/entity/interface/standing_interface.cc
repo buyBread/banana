@@ -15,3 +15,7 @@ void standing_interface::set_floor_offset_override(f32 new_override) {
 void standing_interface::manage_standing(f32 delta_t, bool force, f32 max_force_delta) {
     retail::sub_676ED0((u32*)this, delta_t, force, max_force_delta);
 }
+
+void standing_interface::set_control_parent(entity* parent) {
+    retail::sub_659160((i32)this, (i32)parent);
+}

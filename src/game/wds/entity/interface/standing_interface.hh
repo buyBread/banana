@@ -6,6 +6,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class entity;
+
     // SM3's standing_interface flags
     enum e_standing_interface_flags : u32 {
         standing_interface_flag_enabled                        = 0x00000001,
@@ -66,6 +68,8 @@ namespace treyarch {
         void set_floor_offset_override(f32 new_override);
 
         void manage_standing(f32 delta_t, bool force, f32 max_force_delta);
+
+        void set_control_parent(entity* parent); // null lets go of the current one
     };
 
     ASSERT_OFFSETOF(standing_interface, floor_offset_scale, 0x30);

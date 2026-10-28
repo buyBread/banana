@@ -311,9 +311,9 @@ bool cut_scene_player::play(cut_scene* to_play) {
         ((actor*)hero)->get_ai_core()->unk_5bc = 1;
     }
 
-    auto chase = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+    auto chase = (spiderman_camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
 
-    if (((bool (__thiscall*)(camera*))chase->vtable[31])(chase)) // slot 31
+    if (chase->is_a_spiderman_camera())
         chase->unk_278 = (current_cut_scene->flags & 0x0010) != 0;
 
     for (auto it = current_cut_scene->entity_class_entries.begin(); it.node; it.iterate()) {
@@ -675,10 +675,10 @@ void cut_scene_player::finish() {
 
         // slot 28
         if (target && ((bool (__thiscall*)(entity*))target->vtable[28])(target)) {
-            auto chase = (camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
+            auto chase = (spiderman_camera*)retail::sub_95C430((u32*)references::g_world_ptr.read()); // chase camera
 
-            if (((bool (__thiscall*)(camera*))chase->vtable[31])(chase)) // slot 31
-                ((void (__thiscall*)(camera*, entity*))chase->vtable[158])(chase, target); // slot 158
+            if (chase->is_a_spiderman_camera())
+                ((void (__thiscall*)(spiderman_camera*, entity*))chase->vtable[158])(chase, target); // slot 158
         }
     }
 
@@ -883,9 +883,8 @@ void cut_scene_player::restore_entities() {
         if (restored->has_ifc(entity_ifc_physical))
             restored->set_collisions_active((entry->flags & entity_class_entry::collisions_active) != 0, true);
 
-        retail::sub_6299F0((u32*)restored);
-
-        ((void (__thiscall*)(entity*))restored->vtable[157])(restored); // slot 157
+        ((actor*)restored)->save_last_collision_free_state();
+        ((actor*)restored)->invalidate_frame_delta();
 
         if (restored->has_ifc(entity_ifc_physical))
             restored->physical_ifc()->cancel_all_velocity(zerovec);

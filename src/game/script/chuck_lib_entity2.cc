@@ -9,6 +9,7 @@
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/info_node.hh"
+#include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/pendulum.hh"
@@ -3009,8 +3010,34 @@ bool slf__entity__orientation_ceiling__t::operator()(chuck::vm::vm_stack &stack)
     return true;
 }
 
+// sub_871190
 bool slf__entity__orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871190)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto center = (const vector3d*)&stack.local_uint(0x04);
+    auto range  = stack.local_num(0x10);
+    auto theta  = stack.local_num(0x14);
+    auto psi    = stack.local_num(0x18);
+
+    if (!self)
+        return true;
+
+    po rel_po;
+    retail::sub_4015B0((u64*)&rel_po);
+
+    vector3d position = marky_camera::get_orbit_pos(*center, range, theta, psi);
+
+    rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    vector4d center_4(center->x, center->y, center->z, 0.0f);
+    retail::sub_44DE20((f32*)&rel_po, (f32*)&center_4);
+
+    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+
+    update_als_facing(self);
+
+    return true;
 }
 
 bool slf__entity__set_puppet_goto_destination__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -3033,24 +3060,88 @@ bool slf__entity__puppet_clear_callbacks__t::operator()(chuck::vm::vm_stack &sta
     return ((invoke_t)retail::sub_871AF0)(this, stack);
 }
 
+// sub_871D90
 bool slf__entity__enable_zlock__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871D90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    // any kind of record takes it, unlike entity_tracker::enable_zlock
+    if (on > 0.0f) {
+        if (auto* record = (u32*)retail::sub_94D720(self->my_handle.value, 5, true)) // tracker record lookup, adding one when missing
+            retail::sub_90D110(record, 0.0f);
+    } else if (auto* record = (u32*)retail::sub_92BB10(self->my_handle.value)) // tracker record lookup
+        retail::sub_90D110(record, -1.0f);
+
+    return true;
 }
 
+// sub_871E10
 bool slf__entity__set_zlock_ranges__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871E10)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self      = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto near_clip = stack.local_num(0x04);
+    auto far_clip  = stack.local_num(0x08);
+
+    if (!self)
+        return true;
+
+    if (auto* record = (u32*)retail::sub_94D720(self->my_handle.value, 5, true)) // tracker record lookup, adding one when missing
+        retail::sub_905FE0(record, near_clip, far_clip); // set_clip_range
+
+    return true;
 }
 
+// sub_871E60
 bool slf__entity__reset_zlock_ranges__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871E60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    if (auto* record = (u32*)retail::sub_94D720(self->my_handle.value, 5, true)) // tracker record lookup, adding one when missing
+        retail::sub_905ED0(record, -1.0f);
+
+    return true;
 }
 
+// sub_871EA0
 bool slf__entity__zlock_ignore_los__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871EA0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto ignore = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (auto* record = (u8*)retail::sub_94D720(self->my_handle.value, 5, true)) // tracker record lookup, adding one when missing
+        record[0x1C] = ignore != 0.0f;
+
+    return true;
 }
 
+// sub_871F00
 bool slf__entity__set_camera_priority_boost__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871F00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto boost = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (auto* record = retail::sub_94D720(self->my_handle.value, 5, true)) // tracker record lookup, adding one when missing
+        retail::sub_905EA0(record, boost);
+
+    return true;
 }
 
 bool slf__entity__set_entity_targeting_weight__num__t::operator()(chuck::vm::vm_stack &stack) {

@@ -74,10 +74,28 @@ namespace treyarch {
             ((void (__thiscall*)(actor*))vtable[137])(this);
         }
 
+        // slot 144; null takes the abs po
+        void update_colgeom(po* replacement_po = nullptr) {
+            ((void (__thiscall*)(actor*, po*))vtable[144])(this, replacement_po);
+        }
+
+        // slot 155
+        void set_frame_delta(const po &bob, f32 t) {
+            ((void (__thiscall*)(actor*, const po*, f32))vtable[155])(this, &bob, t);
+        }
+
         // slot 156; adds to the movement the actor takes this frame
         void set_frame_delta_trans(const vector3d &delta, f32 delta_t) {
             ((void (__thiscall*)(actor*, const vector3d*, f32))vtable[156])(this, &delta, delta_t);
         }
+
+        // slot 157
+        void invalidate_frame_delta() {
+            ((void (__thiscall*)(actor*))vtable[157])(this);
+        }
+
+        void set_frame_delta_no_update(const po &bob, f32 t);
+        void save_last_collision_free_state();
 
         static string_hash my_type_key;
     };

@@ -29,7 +29,9 @@ namespace treyarch {
         player_interface_advance_method frame_advance_disabled; // sub_992120; clears input/swing state, ignores delta_t
         player_interface_advance_method unk_094;                // nullsub in player_interface; spiderman_rvb_player_interface overrides it
         vector3d*                       (__thiscall* unk_095)(player_interface* self); // its own +0x2F0; the als takes it as a player's velocity
-        void*                           reserved_slots_096[52];
+        void*                           reserved_slots_096[44];
+        player_interface_method         unk_140;                // the snap and translate natives call it after a move
+        void*                           reserved_slots_141[7];
         f32                             (__thiscall* unk_148)(player_interface* self); // the als's active_jump_charge
         f32                             (__thiscall* unk_149)(player_interface* self); // the als's jump_charge
         bool                            (__thiscall* unk_150)(player_interface* self); // the als's blacksuit_swing_window
@@ -121,6 +123,10 @@ namespace treyarch {
 
         vector3d* unk_095() {
             return get_vtable()->unk_095(this);
+        }
+
+        void unk_140() {
+            get_vtable()->unk_140(this);
         }
 
         f32 unk_148() {
