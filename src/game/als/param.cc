@@ -1159,7 +1159,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
             name.initialize(mash::ALLOCATED, "Variant_ID");
 
             const char* variant;
-            the_actor->my_ifc_storage->get_ifc(entity_ifc_script_data)->get_ifc_str(name, &variant, 0);
+            the_actor->script_data_ifc()->get_ifc_str(name, &variant, false);
 
             result.initialize(mash::ALLOCATED, variant);
 

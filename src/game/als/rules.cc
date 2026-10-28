@@ -320,7 +320,7 @@ f32 als::get_ifc_float_param(entity* owner, string_hash ifc, string_hash name) {
 
     f32 value = 0.0f;
 
-    if (!found->get_ifc_num(name, &value, 0))
+    if (!found->get_ifc_num(name, &value, false))
         return 0.0f;
 
     return value;
@@ -338,7 +338,7 @@ f32 als::get_ifc_vector_component_param(entity* owner, string_hash ifc, string_h
 
     vector3d value(0.0f, 0.0f, 0.0f);
 
-    if (!found->get_ifc_vec(name, &value, 0))
+    if (!found->get_ifc_vec(name, &value, false))
         return 0.0f;
 
     return get_vector_component(value, component);
@@ -352,7 +352,7 @@ string_hash als::get_ifc_hash_param(entity* owner, string_hash ifc, string_hash 
         if (generic_interface* found = owner->find_ifc_by_name(ifc)) {
             const char* value = "";
 
-            if (found->get_ifc_str(name, &value, 0)) {
+            if (found->get_ifc_str(name, &value, false)) {
                 result.initialize(mash::ALLOCATED, value);
                 return result;
             }

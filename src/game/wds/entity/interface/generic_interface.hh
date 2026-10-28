@@ -22,12 +22,12 @@ namespace treyarch {
        mash_virtual_base (0-8), generic_interface (9-17), then actor_/entity_interface::set_owner (18). */
     struct generic_interface_vtable {
         void*        mash_virtual_base_slots[9];
-        bool         (__thiscall* get_ifc_num)(generic_interface* self, const string_hash &name, f32* value, u32 unk);
-        void*        set_ifc_num;
-        bool         (__thiscall* get_ifc_vec)(generic_interface* self, const string_hash &name, vector3d* value, u32 unk);
-        void*        set_ifc_vec;
-        bool         (__thiscall* get_ifc_str)(generic_interface* self, const string_hash &name, const char** value, u32 unk);
-        void*        set_ifc_str;
+        bool         (__thiscall* get_ifc_num)(generic_interface* self, const string_hash &name, f32* value, bool document);
+        bool         (__thiscall* set_ifc_num)(generic_interface* self, const string_hash &name, f32 value, bool document);
+        bool         (__thiscall* get_ifc_vec)(generic_interface* self, const string_hash &name, vector3d* value, bool document);
+        bool         (__thiscall* set_ifc_vec)(generic_interface* self, const string_hash &name, const vector3d* value, bool document);
+        bool         (__thiscall* get_ifc_str)(generic_interface* self, const string_hash &name, const char** value, bool document);
+        bool         (__thiscall* set_ifc_str)(generic_interface* self, const string_hash &name, const char* value, bool document);
         const char*  (__thiscall* get_ifc_type_str)(const generic_interface* self);
         e_entity_ifc (__thiscall* get_ifc_id)(const generic_interface* self); // SM3 returned a generic_id
         i32          (__thiscall* get_base_type)(generic_interface* self);
@@ -53,16 +53,28 @@ namespace treyarch {
         }
 
         // false when the interface doesn't have the parameter
-        bool get_ifc_num(const string_hash &name, f32* value, u32 unk) {
-            return vtable->get_ifc_num(this, name, value, unk);
+        bool get_ifc_num(const string_hash &name, f32* value, bool document) {
+            return vtable->get_ifc_num(this, name, value, document);
         }
 
-        bool get_ifc_vec(const string_hash &name, vector3d* value, u32 unk) {
-            return vtable->get_ifc_vec(this, name, value, unk);
+        bool set_ifc_num(const string_hash &name, f32 value, bool document) {
+            return vtable->set_ifc_num(this, name, value, document);
         }
 
-        bool get_ifc_str(const string_hash &name, const char** value, u32 unk) {
-            return vtable->get_ifc_str(this, name, value, unk);
+        bool get_ifc_vec(const string_hash &name, vector3d* value, bool document) {
+            return vtable->get_ifc_vec(this, name, value, document);
+        }
+
+        bool set_ifc_vec(const string_hash &name, const vector3d &value, bool document) {
+            return vtable->set_ifc_vec(this, name, &value, document);
+        }
+
+        bool get_ifc_str(const string_hash &name, const char** value, bool document) {
+            return vtable->get_ifc_str(this, name, value, document);
+        }
+
+        bool set_ifc_str(const string_hash &name, const char* value, bool document) {
+            return vtable->set_ifc_str(this, name, value, document);
         }
     };
 

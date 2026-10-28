@@ -5,6 +5,7 @@
 #include "game/wds/entity/interface/damage_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/script_data_interface.hh"
 #include "game/wds/entity/interface/switch_obj_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/interface/towing_interface.hh"
@@ -39,6 +40,7 @@ namespace treyarch {
 
     // SM3's EFLAG_*, but 0x800000 and 0x20000000
     enum e_entity_flags : u32 {
+        entity_flag_moving            = 0x00000040,
         entity_flag_walkable          = 0x00000080,
         entity_flag_graphics_visible  = 0x00000200,
         entity_flag_special_target    = 0x00001000,
@@ -88,6 +90,10 @@ namespace treyarch {
 
         physical_interface* physical_ifc() const {
             return (physical_interface*)my_ifc_storage->get_ifc(entity_ifc_physical);
+        }
+
+        script_data_interface* script_data_ifc() const {
+            return (script_data_interface*)my_ifc_storage->get_ifc(entity_ifc_script_data);
         }
 
         time_interface* time_ifc() const {
@@ -251,6 +257,12 @@ namespace treyarch {
         bool hates_spiderman() {
             return ((bool (__thiscall*)(entity*))vtable[134])(this);
         }
+
+        // the milestone's entity_base::create_<name>_ifc(); an existing one is answered as is
+        script_data_interface* create_script_data_ifc();
+        physical_interface*    create_physical_ifc();
+        damage_interface*      create_damage_ifc();
+        time_interface*        create_time_ifc();
 
         void invoke_render_phase();
 

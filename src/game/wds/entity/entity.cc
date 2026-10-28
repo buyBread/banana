@@ -30,3 +30,19 @@ generic_interface* entity::find_ifc_by_name(string_hash name) {
 
     return my_ifc_storage->find_ifc_by_name(name);
 }
+
+script_data_interface* entity::create_script_data_ifc() {
+    return (script_data_interface*)retail::sub_64A8B0((i32*)this);
+}
+
+physical_interface* entity::create_physical_ifc() {
+    return (physical_interface*)retail::sub_660CB0((i32*)this);
+}
+
+damage_interface* entity::create_damage_ifc() {
+    return (damage_interface*)retail::sub_660B80((i32*)this);
+}
+
+time_interface* entity::create_time_ifc() {
+    return (time_interface*)retail::sub_65ABE0((i32*)this);
+}

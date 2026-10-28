@@ -5,6 +5,7 @@
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/math/references.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -203,68 +204,326 @@ bool slf__player_entity__set_axis_direction_enabled__num__num__num__t::operator(
     return ((invoke_t)retail::sub_86BA60)(this, stack);
 }
 
+// sub_86BB00
 bool slf__entity__get_custom_ent__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BB00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        arch_base_vhandle value;
+
+        if (ifc->get_custom_ent(hash, &value, false))
+            result = value;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86BBF0
 bool slf__entity__set_custom_ent__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BBF0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = arch_base_vhandle(stack.local_uint(0x08));
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        ifc->set_custom_ent(hash, value, false);
+    }
+
+    return true;
 }
 
+// sub_86BC60
 bool slf__entity__has_entity_in_custom_list__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BC60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data) ? (f32)self->script_data_ifc()->has_entity_in_custom_list() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86BCF0
 bool slf__entity__add_entity_to_custom_entity_list__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BCF0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto ent  = arch_base_vhandle(stack.local_uint(0x04));
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data))
+        self->script_data_ifc()->add_entity_to_custom_entity_list(ent);
+
+    return true;
 }
 
+// sub_86BD40
 bool slf__entity__remove_entity_from_custom_entity_list__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BD40)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto ent  = arch_base_vhandle(stack.local_uint(0x04));
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data))
+        self->script_data_ifc()->remove_entity_from_custom_entity_list(ent);
+
+    return true;
 }
 
+// sub_86BD90
 bool slf__entity__get_first_entity_from_custom_entity_list__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BD90)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data))
+        result = self->script_data_ifc()->get_first_entity_from_custom_entity_list();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86BE20
 bool slf__entity__get_custom_entity_list_count__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BE20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data) ? (f32)self->script_data_ifc()->get_custom_entity_list_count() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86BEB0
 bool slf__entity__get_custom_num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BEB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        f32 value;
+        result = ifc->get_ifc_num(hash, &value, false) ? value : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86BF60
 bool slf__entity__get_optional_custom_num__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86BF60)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name     = (const char*)stack.local_uint(0x04);
+    auto fallback = stack.local_num(0x08);
+
+    f32 result = fallback;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        f32 value;
+        result = ifc->get_ifc_num(hash, &value, false) ? value : fallback;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86C020
 bool slf__entity__set_custom_num__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C020)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = stack.local_num(0x08);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        ifc->set_ifc_num(hash, value, false);
+    }
+
+    return true;
 }
 
+// sub_86C090
 bool slf__entity__get_custom_vec__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C090)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    vector3d result;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        vector3d value;
+        result = ifc->get_ifc_vec(hash, &value, false) ? value : references::unk_010f7140.get();
+    } else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86C170
 bool slf__entity__get_optional_custom_vec__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C170)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name     = (const char*)stack.local_uint(0x04);
+    auto fallback = (const vector3d*)&stack.local_uint(0x08);
+
+    vector3d result = *fallback;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        vector3d value;
+        result = ifc->get_ifc_vec(hash, &value, false) ? value : *fallback;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86C230
 bool slf__entity__set_custom_vec__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C230)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        ifc->set_ifc_vec(hash, *value, false);
+    }
+
+    return true;
 }
 
+// sub_86C2A0
 bool slf__entity__get_custom_str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C2A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    const char* result = "";
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        const char* value;
+        result = ifc->get_ifc_str(hash, &value, false) ? value : "";
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86C380
 bool slf__entity__get_optional_custom_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C380)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name     = (const char*)stack.local_uint(0x04);
+    auto fallback = (const char*)stack.local_uint(0x08);
+
+    const char* result = fallback;
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        const char* value;
+        result = ifc->get_ifc_str(hash, &value, false) ? value : fallback;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86C450
 bool slf__entity__set_custom_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86C450)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto value = (const char*)stack.local_uint(0x08);
+
+    if (self && self->is_an_entity() && self->has_ifc(entity_ifc_script_data)) {
+        auto ifc = self->script_data_ifc();
+
+        string_hash hash;
+        hash.initialize(mash::ALLOCATED, name);
+
+        ifc->set_ifc_str(hash, value, false);
+    }
+
+    return true;
 }
 
 // sub_86C4C0
@@ -992,28 +1251,81 @@ bool slf__entity__set_time_mode__num__t::operator()(chuck::vm::vm_stack &stack) 
     return ((invoke_t)retail::sub_86EAB0)(this, stack);
 }
 
+// sub_86EB80
 bool slf__entity__create_script_data_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EB80)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor() && !self->has_ifc(entity_ifc_script_data))
+        self->create_script_data_ifc();
+
+    return true;
 }
 
+// sub_86EBC0
 bool slf__entity__has_script_data_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EBC0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_script_data) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86EC10
 bool slf__entity__create_physical_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EC10)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor() && !self->has_ifc(entity_ifc_physical)) {
+        self->create_physical_ifc();
+        self->flags |= entity_flag_moving;
+    }
+
+    return true;
 }
 
+// sub_86EC60
 bool slf__entity__create_damage_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EC60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor() && !self->has_ifc(entity_ifc_damage))
+        self->create_damage_ifc();
+
+    return true;
 }
 
+// sub_86ECA0
 bool slf__entity__has_damage_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86ECA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_damage) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86ECF0
 bool slf__entity__has_player_interface__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86ECF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_player) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__physical_ifc_apply_force__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {

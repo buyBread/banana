@@ -11,7 +11,7 @@ bool slf__entity__create_switch_obj_interface__t::operator()(chuck::vm::vm_stack
     auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self && self->is_an_entity() && !self->has_ifc(entity_ifc_switch_obj))
-        retail::sub_644DB0((i32*)self); // entity_base::get_or_create_switch_obj_interface
+        retail::sub_644DB0((i32*)self); // entity_base::create_switch_obj_ifc
 
     return true;
 }
