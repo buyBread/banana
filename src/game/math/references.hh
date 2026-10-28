@@ -24,6 +24,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); read by animation and scene anim code
     inline util::memory_reference<vector3d> unk_00fd4370 { 0x00FD4370 };
 
+    // (0, 0, 0); what a parameter without a vector and a missing vector parameter read
+    inline util::memory_reference<vector3d> unk_00fc3440 { 0x00FC3440 };
+
     // (0, 0, 0, 0); a zero up vector's normalized stand-in when a scene anim binds an entity
     inline util::memory_reference<vector4d> unk_00fd4340 { 0x00FD4340 };
 

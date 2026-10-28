@@ -7,6 +7,7 @@
 #include "game/als/script_state.hh"
 #include "game/meta_anims.hh"
 #include "game/sm_mash.hh"
+#include "game/wds/ai/param_block.hh"
 #include "treyarch/mash/virtual_base.hh"
 
 using namespace treyarch;
@@ -168,6 +169,15 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::scripted_category>();
         mash::mash_virtual_base::register_class<als::scripted_state>();
         mash::mash_virtual_base::register_class<als::scripted_trans_group>();
+        mash::mash_virtual_base::register_class<param_class>();
+        mash::mash_virtual_base::register_class<param_entity>();
+        mash::mash_virtual_base::register_class<param_float>();
+        mash::mash_virtual_base::register_class<param_float_variance>();
+        mash::mash_virtual_base::register_class<param_hash>();
+        mash::mash_virtual_base::register_class<param_int>();
+        mash::mash_virtual_base::register_class<param_pointer>();
+        mash::mash_virtual_base::register_class<param_string>();
+        mash::mash_virtual_base::register_class<param_vector3d>();
         mash::mash_virtual_base::register_class<generic_anim_by_filename>();
     }
 
