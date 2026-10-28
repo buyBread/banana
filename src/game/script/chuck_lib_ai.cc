@@ -3,6 +3,7 @@
 #include "game/math/references.hh"
 #include "game/script/chuck_lib_ai.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/cpu_combat_inode.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
@@ -563,48 +564,234 @@ bool slf__cpu_combat_movement__set_facing_pie_center__t::operator()(chuck::vm::v
     return true;
 }
 
+// sub_867750
 bool slf__cpu_combat_movement__rappel_allowed__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867750)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self && self->core->get_info_node(info_node_type_ai_rappel) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8677E0
 bool slf__cpu_combat_movement__rappel_is_firing__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8677E0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+        result = rappel && rappel->current_rope && rappel->current_rope->unk_70 ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867880
 bool slf__cpu_combat_movement__rappel_is_engaged__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867880)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+        result = rappel && rappel->is_engaged() ? 1.0f : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867920
 bool slf__cpu_combat_movement__rappel_fire__vector3d__entity__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867920)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self        = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto attach_pos  = (const vector3d*)&stack.local_uint(0x04);
+    auto attach_ent  = arch_base_vhandle(stack.local_uint(0x10));
+    auto pivot_name  = (const char*)stack.local_uint(0x14);
+    auto rope_length = stack.local_num(0x18);
+
+    if (!self)
+        return true;
+
+    auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+    if (!rappel)
+        return true;
+
+    rappel->set_desired_attach_pos(*attach_pos);
+    rappel->set_desired_attach_entity(attach_ent);
+
+    string_hash pivot;
+    pivot.initialize(mash::ALLOCATED, pivot_name);
+
+    rappel->set_desired_rope_pivot(pivot);
+    rappel->set_desired_rope_length(rope_length);
+    rappel->set_desired_rope_fire_mode(true);
+    rappel->set_desired_fire_speed(20.0f);
+    rappel->set_desired_fire_accel(10.0f);
+    rappel->set_desired_fire_curve_rad(1.0f);
+    rappel->set_should_fire_rope(true);
+
+    return true;
 }
 
+// sub_867A20
 bool slf__cpu_combat_movement__rappel_attach__vector3d__entity__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867A20)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self        = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto attach_pos  = (const vector3d*)&stack.local_uint(0x04);
+    auto attach_ent  = arch_base_vhandle(stack.local_uint(0x10));
+    auto pivot_name  = (const char*)stack.local_uint(0x14);
+    auto rope_length = stack.local_num(0x18);
+
+    if (!self)
+        return true;
+
+    auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+    if (!rappel)
+        return true;
+
+    rappel->set_desired_attach_pos(*attach_pos);
+    rappel->set_desired_attach_entity(attach_ent);
+
+    string_hash pivot;
+    pivot.initialize(mash::ALLOCATED, pivot_name);
+
+    rappel->set_desired_rope_pivot(pivot);
+    rappel->set_desired_rope_length(rope_length);
+    rappel->set_desired_rope_fire_mode(false);
+    rappel->set_should_fire_rope(true);
+
+    return true;
 }
 
+// sub_867AF0
 bool slf__cpu_combat_movement__rappel_disengage__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867AF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    if (!self)
+        return true;
+
+    if (auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel))
+        rappel->release_rope(3.0f, 1.0f);
+
+    return true;
 }
 
+// sub_867B50
 bool slf__cpu_combat_movement__rappel_set_speed__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867B50)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto speed = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel))
+        rappel->speed = speed;
+
+    return true;
 }
 
+// sub_867BA0
 bool slf__cpu_combat_movement__rappel_set_rope_length__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867BA0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto length = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+    if (rappel && rappel->current_rope)
+        rappel->current_rope->set_rope_length(length);
+
+    return true;
 }
 
+// sub_867C00
 bool slf__cpu_combat_movement__rappel_get_constraint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867C00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = -1.0f;
+
+    if (self) {
+        auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+        if (rappel && rappel->current_rope)
+            result = rappel->current_rope->get_constraint();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867CB0
 bool slf__cpu_combat_movement__rappel_get_speed__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867CB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = 0.0f;
+
+    if (self) {
+        auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+        result = rappel ? rappel->speed : 0.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867D40
 bool slf__cpu_combat_movement__rappel_set_rope_pivot__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867D40)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self       = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto pivot_name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    auto rappel = (ai_rappel_inode*)self->core->get_info_node(info_node_type_ai_rappel);
+
+    if (!rappel)
+        return true;
+
+    string_hash pivot;
+    pivot.initialize(mash::ALLOCATED, pivot_name);
+
+    if (rappel->current_rope)
+        rappel->current_rope->set_rope_pivot(pivot);
+
+    return true;
 }
 
 bool slf__generic_event_callback__add__uint__t::operator()(chuck::vm::vm_stack &stack) {
