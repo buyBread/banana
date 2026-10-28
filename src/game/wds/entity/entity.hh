@@ -66,6 +66,11 @@ namespace treyarch {
             return (switch_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_switch_obj);
         }
 
+        // SM3's EFLAG_GRAPHICS_VISIBLE, unless ext flag 0x1000 vetoes it
+        bool is_visible() const {
+            return (flags & 0x200) && !(ext_flags & 0x1000);
+        }
+
         // slot 67
         void set_visible(bool visible, bool unk) {
             ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, unk);

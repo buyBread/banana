@@ -32,12 +32,18 @@ namespace treyarch { namespace references {
     // (0, 0, 0); what an entity's vector param reads to a script when the entity has none
     inline util::memory_reference<vector3d> unk_010f7140 { 0x010F7140 };
 
+    // (0, 0, 0), in writable data; polytube point animations start from it
+    inline util::memory_reference<vector3d> unk_00ffec30 { 0x00FFEC30 };
+
     // (0, 0, 0, 0); a zero up vector's normalized stand-in when a scene anim binds an entity
     inline util::memory_reference<vector4d> unk_00fd4340 { 0x00FD4340 };
 
     // translation unit copies of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
     inline util::memory_reference<matrix4x4> unk_01031d80    { 0x01031D80 };
+
+    // 9.8, the world's gravity
+    inline util::memory_reference<f32> gravity { 0x00E6ACE8 };
 
     // one translation unit's copy of the SM3 .ii's po_identity_matrix, built by po's constructor (sub_4015B0) at startup
     inline util::memory_reference<po> po_identity_matrix { 0x00FF99A0 };

@@ -8,6 +8,13 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_tentacle_engine;
+    class ai_tentacle_info;
+    class polytube;
+
+    ai_tentacle_engine* find_tentacle_engine(polytube* self, f32 id);
+    f32                 link_tentacle_engine(ai_tentacle_info* info, ai_tentacle_engine* engine, f32 blend_time);
+
     class slc_polytube_t : public chuck::script_library::script_library_class {
 
     public:
