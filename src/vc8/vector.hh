@@ -29,6 +29,7 @@ namespace treyarch { namespace vc8 {
             destroy();
         }
 
+        // sub_649B90
         // sub_75F6C0
         vector(const vector &other) : first(nullptr),
                                       last(nullptr),
