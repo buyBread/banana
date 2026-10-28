@@ -1,5 +1,11 @@
 #include "retail.hh"
+#include "game/arch_base_vhandle.hh"
+#include "game/math/references.hh"
 #include "game/script/chuck_lib_ai.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/cpu_combat_inode.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/entity.hh"
 
 using namespace treyarch;
 
@@ -31,40 +37,161 @@ bool slf__random_attack_set___request_attack_index__random_attack_set__dynamic_a
     return ((invoke_t)retail::sub_868F40)(this, stack);
 }
 
+// sub_866A90
 bool slf__entity__enable_tether__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866A90)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto center = (const vector3d*)&stack.local_uint(0x04);
+    auto radius = stack.local_num(0x10);
+
+    if (self && self->is_an_actor()) {
+        if (ai_core* core = ((actor*)self)->get_ai_core())
+            core->enable_tether(*center, radius);
+    }
+
+    return true;
 }
 
+// sub_866AE0
 bool slf__entity__disable_tether__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866AE0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor()) {
+        if (ai_core* core = ((actor*)self)->get_ai_core())
+            core->disable_tether();
+    }
+
+    return true;
 }
 
+// sub_866B20
 bool slf__entity__get_tether_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866B20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result = references::unk_010f7140.get();
+
+    if (self) {
+        result = self->my_abs_po->get_position();
+
+        if (self->is_an_actor()) {
+            ai_core* core = ((actor*)self)->get_ai_core();
+
+            if (core && core->is_tether_active())
+                result = core->get_tether_center();
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866C00
 bool slf__entity__get_tether_radius__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866C00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_actor()) {
+        ai_core* core = ((actor*)self)->get_ai_core();
+
+        if (core && core->is_tether_active())
+            result = core->get_tether_radius();
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866C70
 bool slf__entity__is_tether_active__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866C70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_actor()) {
+        ai_core* core = ((actor*)self)->get_ai_core();
+
+        if (core && core->is_tether_active())
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866CE0
 bool slf__cpu_combat_movement__get_tether_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866CE0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self)
+        result = self->core->get_tether_center();
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866D50
 bool slf__cpu_combat_movement__get_tether_radius__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866D50)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self ? self->core->get_tether_radius() : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866DA0
 bool slf__cpu_combat_movement__is_tether_active__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866DA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self && self->core->is_tether_active() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_866E00
 bool slf__cpu_combat_movement__clip_to_tether__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_866E00)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto pos  = (const vector3d*)&stack.local_uint(0x04);
+
+    vector3d result;
+
+    if (self)
+        result = self->core->clip_to_tether(pos, nullptr);
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__cpu_combat_movement__get_pie_target__t::operator()(chuck::vm::vm_stack &stack) {
@@ -123,28 +250,142 @@ bool slf__cpu_combat_movement__get_pie_buffer_arc_pct__t::operator()(chuck::vm::
     return ((invoke_t)retail::sub_8673A0)(this, stack);
 }
 
+// sub_8673F0
 bool slf__cpu_combat_movement__is_moving__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8673F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    f32 result = self && self->core->is_moving() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_867430
 bool slf__cpu_combat_movement__get_movement_dest__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_867430)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    vector3d result;
+
+    if (self)
+        result = self->core->get_movement_dest();
+    else
+        result = references::unk_010f7140.get();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8674A0
 bool slf__cpu_combat_movement__strafe_to_position__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8674A0)(this, stack);
+    // the count word covers every argument after self, the vector3d once
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 3));
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto pos  = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    i32 optional_count = count - 3;
+
+    bool clip             = optional_count <= 0 || stack.local_num(0x18) > 0.5f;
+    bool allow_nonpathed  = optional_count > 1  && stack.local_num(0x1C) > 0.5f;
+    bool force_non_pathed = optional_count > 2  && stack.local_num(0x20) > 0.5f;
+    bool unk              = optional_count > 3  && stack.local_num(0x24) > 0.5f;
+
+    vector3d clipped;
+
+    if (clip) {
+        clipped = self->core->clip_to_tether(pos, nullptr);
+        pos     = &clipped;
+    }
+
+    auto goto_position = (bool (__thiscall*)(ai_core*, const vector3d*, f32, f32, bool, bool, bool, bool))retail::sub_4CC850; // ai_core::goto_position
+
+    goto_position(self->core,
+                  pos,
+                  stack.local_num(0x10),
+                  stack.local_num(0x14),
+                  true,
+                  allow_nonpathed,
+                  force_non_pathed,
+                  unk);
+
+    return true;
 }
 
+// sub_8675B0
 bool slf__cpu_combat_movement__goto_position__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8675B0)(this, stack);
+    // the count word covers every argument after self, the vector3d once
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 3));
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto pos  = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    i32 optional_count = count - 3;
+
+    bool clip             = optional_count <= 0 || stack.local_num(0x18) > 0.5f;
+    bool allow_nonpathed  = optional_count > 1  && stack.local_num(0x1C) > 0.5f;
+    bool force_non_pathed = optional_count > 2  && stack.local_num(0x20) > 0.5f;
+    bool unk              = optional_count > 3  && stack.local_num(0x24) > 0.5f;
+
+    vector3d clipped;
+
+    if (clip) {
+        clipped = self->core->clip_to_tether(pos, nullptr);
+        pos     = &clipped;
+    }
+
+    auto goto_position = (bool (__thiscall*)(ai_core*, const vector3d*, f32, f32, bool, bool, bool, bool))retail::sub_4CC850; // ai_core::goto_position
+
+    goto_position(self->core,
+                  pos,
+                  stack.local_num(0x10),
+                  stack.local_num(0x14),
+                  false,
+                  allow_nonpathed,
+                  force_non_pathed,
+                  unk);
+
+    return true;
 }
 
+// sub_8676C0
 bool slf__cpu_combat_movement__stop_movement__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8676C0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (cpu_combat_movement*)stack.local_uint(0x00);
+
+    if (self)
+        self->core->stop_movement();
+
+    return true;
 }
 
+// sub_8676E0
 bool slf__cpu_combat_movement__set_facing_point__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8676E0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self  = (cpu_combat_movement*)stack.local_uint(0x00);
+    auto point = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self)
+        self->core->set_facing_point(*point, 0.0f);
+
+    return true;
 }
 
 bool slf__cpu_combat_movement__set_facing_pie_center__t::operator()(chuck::vm::vm_stack &stack) {
