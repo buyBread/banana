@@ -12,6 +12,27 @@ namespace treyarch {
     struct color32 {
         u8 b, g, r, a;
 
+        color32() = default;
+
+        // sub_6B1190
+        explicit color32(const color &c) {
+            set_clamped((i32)((f64)c.r * 255.0), (i32)((f64)c.g * 255.0), (i32)((f64)c.b * 255.0), (i32)((f64)c.a * 255.0));
+        }
+
+        // inlined @ sub_6A0EE0
+        // inlined @ sub_84BCC0
+        // inlined @ sub_86A840
+        // inlined @ sub_86A930
+        // inlined @ sub_86FC10
+        static u8 adjust(const f32 value) { // 0 below 0 and 255 above 1
+            return 0.0f > value ? 0 : value > 1.0f ? 0xFF : (u8)(i32)((f64)value * 255.0);
+        }
+
+        void set_red_float  (const f32 &value) { r = adjust(value); }
+        void set_green_float(const f32 &value) { g = adjust(value); }
+        void set_blue_float (const f32 &value) { b = adjust(value); }
+        void set_alpha_float(const f32 &value) { a = adjust(value); }
+
         // sub_405DC0
         color32 &set_clamped(i32 red, i32 green, i32 blue, i32 alpha) { // each channel kept within a byte
             r = (u8)(red   < 0 ? 0 : red   > 255 ? 255 : red);

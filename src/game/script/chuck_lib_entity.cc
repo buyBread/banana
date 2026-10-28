@@ -1,3 +1,4 @@
+#include <bit>
 #include <cmath>
 #include <cstring>
 
@@ -8,6 +9,7 @@
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
+#include "game/global.hh"
 #include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/physics/physics_system.hh"
@@ -29,6 +31,7 @@
 #include "game/wds/region.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
@@ -130,6 +133,17 @@ bool treyarch::marky_camera_allows(const arch_base* self, const chuck::vm::vm_st
     camera* marky = references::g_world_ptr.read()->camera_mgr.marky_camera;
 
     return self != marky || stack.thread->camera_priority == marky->current_priority;
+}
+
+// inlined @ sub_84BE70
+// inlined @ sub_86A5A0
+// inlined @ sub_86ABF0
+f32 treyarch::get_wait_time_step(const entity* self) {
+    f32 dilation = self->has_ifc(entity_ifc_time) ?
+        self->time_ifc()->calc_time_dilation() :
+        references::g_world_ptr.read()->time_mgr.get_time_dilation_factor();
+
+    return chuck::vm::script_manager::inst()->get_time_inc() * dilation;
 }
 
 // sub_83DAE0
@@ -1547,12 +1561,46 @@ bool slf__entity__is_auto_activate_prop__t::operator()(chuck::vm::vm_stack &stac
     return true;
 }
 
+// sub_847920
 bool slf__entity__set_distance_clip__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847920)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto distance = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    i32 preset = retail::sub_77F090(distance); // the fader preset closest to the distance
+
+    self->ext_flags = preset | (self->ext_flags & ~0xFu);
+    retail::sub_6123B0((u32*)self, preset, (i32)i_am_not_sure);
+
+    if (auto* record = (u32*)retail::sub_92BB10(self->my_handle.value)) // tracker record lookup
+        retail::sub_905ED0(record, distance);
+
+    return true;
 }
 
+// sub_847990
 bool slf__entity__set_distance_clip_far__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847990)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto distance = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    i32 preset = retail::sub_77F090(distance); // the fader preset closest to the distance
+
+    self->ext_flags = preset | (self->ext_flags & ~0xFu);
+    retail::sub_6123B0((u32*)self, preset, (i32)i_know_what_i_am_doing);
+
+    if (auto* record = (u32*)retail::sub_92BB10(self->my_handle.value)) // tracker record lookup
+        retail::sub_905ED0(record, distance);
+
+    return true;
 }
 
 bool slf__entity__is_hanging_from_pole__t::operator()(chuck::vm::vm_stack &stack) {
@@ -2598,16 +2646,174 @@ bool slf__entity__als_play_animation_by_filename__str__num__t::operator()(chuck:
     return ((invoke_t)retail::sub_84BAB0)(this, stack);
 }
 
+// sub_84BBD0
 bool slf__entity__update_member_visible__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84BBD0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self    = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name    = (const char*)stack.local_uint(0x04);
+    auto visible = stack.local_num(0x08);
+
+    if (!self)
+        return true;
+
+    string_hash member_name;
+
+    if (self->is_a_dynamic_conglomerate_clone()) {
+        member_name.initialize(mash::ALLOCATED, name);
+        retail::sub_6543F0((u32*)self, &member_name.source_hash_code, visible != 0.0f); // the clone's member visibility
+    } else if (self->is_a_conglomerate()) {
+        member_name.initialize(mash::ALLOCATED, name);
+
+        i16  index  = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
+        auto member = (entity*)retail::sub_616950((i32)self, 0, index);           // conglomerate::get_member
+
+        member->set_visible(visible != 0.0f, false);
+    }
+
+    return true;
 }
 
+// sub_84BCC0
 bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84BCC0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name  = (const char*)stack.local_uint(0x04);
+    auto rgb   = (const vector3d*)&stack.local_uint(0x08);
+    auto alpha = stack.local_num(0x14);
+
+    if (!self)
+        return true;
+
+    string_hash member_name;
+    member_name.initialize(mash::ALLOCATED, name);
+
+    entity* member = nullptr;
+    color32 color;
+
+    // the current colour is read, then every channel overwritten
+    if (self->is_a_dynamic_conglomerate_clone()) {
+        color32 current;
+        color = *(color32*)retail::sub_6399E0((u32*)self, (u8*)&current, &member_name.source_hash_code); // the clone's member colour
+    } else {
+        i16 index = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
+
+        member = (entity*)retail::sub_616950((i32)self, 0, index); // conglomerate::get_member
+
+        if (member->is_an_actor())
+            color = member->get_render_color();
+    }
+
+    color.set_red_float  (rgb->x);
+    color.set_green_float(rgb->y);
+    color.set_blue_float (rgb->z);
+    color.set_alpha_float(alpha);
+
+    if (self->is_a_dynamic_conglomerate_clone())
+        retail::sub_639950((u32*)self, &member_name.source_hash_code, (u32*)&color); // the clone's member colour
+    else if (self->is_a_conglomerate() && member->is_an_actor())
+        member->set_render_color(color);
+
+    return true;
 }
 
+// sub_84BE70
 bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84BE70)(this, stack);
+    struct wait_state {
+        entity* member;
+        color   start;
+        f32     elapsed;
+    };
+
+    auto* state = pop_wait_arguments<wait_state>(stack, 0x1C);
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name     = (const char*)stack.local_uint(0x04);
+    auto target   = (const color*)&stack.local_uint(0x08);
+    auto duration = stack.local_num(0x18);
+
+    if (!self)
+        return true;
+
+    // the conglomerate test's answer is dropped
+    if (!self->is_a_dynamic_conglomerate_clone())
+        self->is_a_conglomerate();
+
+    if (!stack.thread->entry) {
+        string_hash member_name;
+        member_name.initialize(mash::ALLOCATED, name);
+
+        // a member that isn't an actor starts from the name hash's bytes
+        auto member_color = std::bit_cast<color32>(member_name);
+
+        if (self->is_a_dynamic_conglomerate_clone()) {
+            state->member = (entity*)retail::sub_639A90((u32*)self, &member_name.source_hash_code); // the clone's member
+
+            color32 current;
+            member_color = *(color32*)retail::sub_62A580((u32*)self, (i32)&current, (i32)state->member); // the clone's member colour
+        } else {
+            i16 index = retail::sub_62F880((u32*)self, &member_name.source_hash_code); // conglomerate::get_member_index
+
+            state->member = (entity*)retail::sub_616950((i32)self, 0, index); // conglomerate::get_member
+
+            if (state->member->is_an_actor())
+                member_color = state->member->get_render_color();
+        }
+
+        state->elapsed = 0.0f;
+        state->start.r = (f32)(member_color.r / 255.0);
+        state->start.g = (f32)(member_color.g / 255.0);
+        state->start.b = (f32)(member_color.b / 255.0);
+        state->start.a = (f32)(member_color.a / 255.0);
+
+        return false;
+    }
+
+    state->elapsed += get_wait_time_step(self);
+
+    if (state->elapsed > duration)
+        state->elapsed = duration;
+
+    // a negative target channel keeps its start
+    color current;
+
+    if (duration == 0.0f) {
+        current.r = target->r >= 0.0f ? target->r : state->start.r;
+        current.g = target->g >= 0.0f ? target->g : state->start.g;
+        current.b = target->b >= 0.0f ? target->b : state->start.b;
+        current.a = target->a >= 0.0f ? target->a : state->start.a;
+    } else {
+        f32 t = state->elapsed / duration;
+
+        current.r = state->start.r + (target->r >= 0.0f ? (target->r - state->start.r) * t : 0.0f);
+        current.g = state->start.g + (target->g >= 0.0f ? (target->g - state->start.g) * t : 0.0f);
+        current.b = state->start.b + (target->b >= 0.0f ? (target->b - state->start.b) * t : 0.0f);
+        current.a = state->start.a + (target->a >= 0.0f ? (target->a - state->start.a) * t : 0.0f);
+    }
+
+    if (current.r > 1.0f)
+        current.r = 1.0f;
+
+    if (current.g > 1.0f)
+        current.g = 1.0f;
+
+    if (current.b > 1.0f)
+        current.b = 1.0f;
+
+    if (current.a > 1.0f)
+        current.a = 1.0f;
+
+    if (self->is_a_dynamic_conglomerate_clone()) {
+        color32 packed(current);
+        retail::sub_6153D0((u32*)self, (i32)state->member, (u32*)&packed); // the clone's member colour
+    } else if (state->member->is_an_actor())
+        state->member->set_render_color(color32(current));
+
+    if (duration > state->elapsed)
+        return false;
+
+    return true;
 }
 
 // sub_84C2F0
@@ -3806,20 +4012,57 @@ bool slf__entity__set_detectable__num__t::operator()(chuck::vm::vm_stack &stack)
     return true;
 }
 
+// sub_850B40
 bool slf__entity__set_spidey_sense_glow_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850B40)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self  = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto color = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !self->is_an_actor())
+        return true;
+
+    retail::sub_6E7470((u32*)references::frontend.get().igo, self->my_handle.value, 4, true);               // glow mode
+    retail::sub_6F2190((u32*)references::frontend.get().igo, self->my_handle.value, (const f32*)color, true); // glow colour
+
+    return true;
 }
 
+// sub_850BA0
 bool slf__entity__clear_spidey_sense_glow_info__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850BA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_an_actor())
+        retail::sub_6D90F0((u32*)references::frontend.get().igo, self->my_handle.value); // glow record removal
+
+    return true;
 }
 
+// sub_850BE0
 bool slf__entity__set_target_icon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850BE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto icon = stack.local_num(0x04);
+
+    if (self)
+        retail::sub_6F6400((u32*)references::frontend.get().igo, self->my_handle.value, (i32)icon);
+
+    return true;
 }
 
+// sub_850C20
 bool slf__entity__clear_target_icon__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_850C20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        retail::sub_6D9260((i32)references::frontend.get().igo, self->my_handle.value);
+
+    return true;
 }
 
 // sub_850C50

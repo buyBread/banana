@@ -5,6 +5,7 @@
 #include "game/colgeom.hh"
 #include "game/physics/physics_system.hh"
 #include "game/physics/rigid_body_prop_system.hh"
+#include "game/script/chuck_lib_entity.hh"
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/info_node.hh"
@@ -12,7 +13,10 @@
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 #include "game/math/references.hh"
+#include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
@@ -208,40 +212,244 @@ bool slf__entity__set_ai_subclass__str__t::operator()(chuck::vm::vm_stack &stack
     return ((invoke_t)retail::sub_86A520)(this, stack);
 }
 
+// sub_86A560
 bool slf__entity__set_render_scale__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A560)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto scale = (const vector3d*)&stack.local_uint(0x04);
+
+    if (self && self->is_an_entity())
+        self->set_render_scale(*scale);
+
+    return true;
 }
 
+// sub_86A5A0
 bool slf__entity__wait_change_render_scale__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A5A0)(this, stack);
+    struct wait_state {
+        vector3d start;
+        f32      elapsed;
+    };
+
+    auto* state = pop_wait_arguments<wait_state>(stack, 0x14);
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target   = (const vector3d*)&stack.local_uint(0x04);
+    auto duration = stack.local_num(0x10);
+
+    if (!self)
+        return true;
+
+    if (!stack.thread->entry) {
+        state->elapsed = 0.0f;
+        state->start   = self->is_an_entity() ? self->get_render_scale() : vector3d(1.0f, 1.0f, 1.0f);
+
+        return false;
+    }
+
+    state->elapsed += get_wait_time_step(self);
+
+    if (state->elapsed > duration)
+        state->elapsed = duration;
+
+    f32 t = state->elapsed / duration;
+
+    vector3d scale(state->start.x + (target->x - state->start.x) * t,
+                   state->start.y + (target->y - state->start.y) * t,
+                   state->start.z + (target->z - state->start.z) * t);
+
+    if (self->is_an_entity())
+        self->set_render_scale(scale);
+
+    if (duration > state->elapsed)
+        return false;
+
+    return true;
 }
 
+// sub_86A840
 bool slf__entity__set_render_color__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A840)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto rgb  = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!self || !self->is_an_entity())
+        return true;
+
+    color32 color = self->get_render_color();
+
+    color.set_red_float  (rgb->x);
+    color.set_green_float(rgb->y);
+    color.set_blue_float (rgb->z);
+
+    self->set_render_color(color);
+
+    return true;
 }
 
+// sub_86A930
 bool slf__entity__set_render_alpha__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A930)(this, stack);
+    stack.sp -= 0x08;
+
+    auto  self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto &alpha = stack.local_num(0x04);
+
+    if (!self || !self->is_an_entity())
+        return true;
+
+    // clamped on the stack first
+    if (0.0f > alpha)
+        alpha = 0.0f;
+    else if (alpha > 1.0f)
+        alpha = 1.0f;
+
+    color32 color = self->get_render_color();
+
+    color.set_alpha_float(alpha);
+
+    self->set_render_color(color);
+
+    return true;
 }
 
+// sub_86A9E0
 bool slf__entity__get_render_color__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A9E0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result(1.0f, 1.0f, 1.0f);
+
+    if (self && self->is_an_entity()) {
+        color32 color = self->get_render_color();
+
+        result = vector3d((f32)(color.r / 255.0), (f32)(color.g / 255.0), (f32)(color.b / 255.0));
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86AAD0
 bool slf__entity__get_render_scale__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86AAD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    vector3d result = self && self->is_an_entity() ? self->get_render_scale() : vector3d(1.0f, 1.0f, 1.0f);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86AB60
 bool slf__entity__get_render_alpha__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86AB60)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->is_an_entity() ? (f32)(self->get_render_color().a / 255.0) : 1.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86ABF0
 bool slf__entity__wait_change_render_color__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86ABF0)(this, stack);
+    struct wait_state {
+        color start;
+        f32   elapsed;
+    };
+
+    auto* state = pop_wait_arguments<wait_state>(stack, 0x18);
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target   = (const color*)&stack.local_uint(0x04);
+    auto duration = stack.local_num(0x14);
+
+    if (!self || !self->is_an_entity())
+        return true;
+
+    if (!stack.thread->entry) {
+        state->elapsed = 0.0f;
+
+        color32 current = self->get_render_color();
+
+        state->start.r = current.r * (1.0f / 255.0f);
+        state->start.g = current.g * (1.0f / 255.0f);
+        state->start.b = current.b * (1.0f / 255.0f);
+        state->start.a = current.a * (1.0f / 255.0f);
+
+        return false;
+    }
+
+    state->elapsed += get_wait_time_step(self);
+
+    if (state->elapsed > duration)
+        state->elapsed = duration;
+
+    color current = *target;
+
+    // the alpha takes the unrounded fraction
+    if (duration > 0.0f) {
+        f64 fraction = (f64)state->elapsed / (f64)duration;
+        f32 t        = (f32)fraction;
+
+        current.r = state->start.r + (target->r - state->start.r) * t;
+        current.g = state->start.g + (target->g - state->start.g) * t;
+        current.b = state->start.b + (target->b - state->start.b) * t;
+        current.a = (f32)((f64)(target->a - state->start.a) * fraction) + state->start.a;
+    }
+
+    color32 packed;
+
+    packed.set_clamped((i32)((f64)current.r * 255.0),
+                       (i32)((f64)current.g * 255.0),
+                       (i32)((f64)current.b * 255.0),
+                       (i32)((f64)current.a * 255.0));
+
+    self->set_render_color(packed);
+
+    if (duration > state->elapsed)
+        return false;
+
+    return true;
 }
 
+// sub_86AF70
 bool slf__entity__set_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86AF70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto scale = stack.local_num(0x04);
+
+    if (!self || !(scale > 0.0f))
+        return true;
+
+    f32 factor = scale / self->my_rel_po->get_x_facing().length();
+
+    po       scaling = references::unk_010f76b0.read();
+    vector4d factors(factor, factor, factor, 0.0f);
+
+    retail::sub_48E170((u64*)&scaling, (u32*)&factors); // the scale rows
+
+    // scaled about the origin, then put back
+    po       rel_po   = *self->my_rel_po;
+    vector3d position = rel_po.get_position();
+    vector3d origin   = references::unk_010f7140.read();
+
+    rel_po.get_matrix().w = vector4d(origin.x, origin.y, origin.z, 1.0f);
+    retail::sub_44E230((u64*)&rel_po, (f32*)&rel_po, (f32*)&scaling);
+    rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
+
+    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+
+    return true;
 }
 
 bool slf__player_entity__get_player_num__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1744,16 +1952,66 @@ bool slf__entity__set_angular_velocity__vector3d__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_86E9A0
 bool slf__entity__set_time_dilation__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86E9A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto dilation = stack.local_num(0x04);
+
+    if (!self || !self->is_an_entity())
+        return true;
+
+    if (!self->has_ifc(entity_ifc_time))
+        self->create_time_ifc();
+
+    self->time_ifc()->set_time_dilation(dilation);
+
+    return true;
 }
 
+// sub_86EA20
 bool slf__entity__get_time_dilation__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EA20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result;
+
+    if (self && self->is_an_entity()) {
+        if (!self->has_ifc(entity_ifc_time))
+            self->create_time_ifc();
+
+        result = self->time_ifc()->get_time_dilation();
+    } else
+        result = references::g_world_ptr.read()->time_mgr.global_time_dilation;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86EAB0
 bool slf__entity__set_time_mode__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86EAB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto mode = stack.local_num(0x04);
+
+    if (!self || !self->is_an_entity() || (u32)(i64)mode > time_mode_relative)
+        return true;
+
+    // relative time needs an interface already
+    if (!self->has_ifc(entity_ifc_time)) {
+        if ((u32)(i64)mode == time_mode_relative)
+            return true;
+
+        self->create_time_ifc();
+    }
+
+    self->time_ifc()->set_mode((e_time_mode)(i64)mode);
+
+    return true;
 }
 
 // sub_86EB80
@@ -2404,10 +2662,9 @@ bool slf__entity__set_actor_debug_text__str__num__vector3d__t::operator()(chuck:
     if (!self || !self->is_an_actor())
         return true;
 
-    // each channel is 0 below 0 and 255 above 1
-    u8 red   = color->x < 0.0f ? 0 : color->x > 1.0f ? 0xFF : (u8)(i32)((f64)color->x * 255.0);
-    u8 green = color->y < 0.0f ? 0 : color->y > 1.0f ? 0xFF : (u8)(i32)((f64)color->y * 255.0);
-    u8 blue  = color->z < 0.0f ? 0 : color->z > 1.0f ? 0xFF : (u8)(i32)((f64)color->z * 255.0);
+    u8 red   = color32::adjust(color->x);
+    u8 green = color32::adjust(color->y);
+    u8 blue  = color32::adjust(color->z);
 
     u32 packed = (u32)blue << 24 | (u32)green << 16 | (u32)red << 8 | 0xFF;
 

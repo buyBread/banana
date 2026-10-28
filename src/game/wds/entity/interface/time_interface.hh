@@ -50,6 +50,24 @@ namespace treyarch {
 
         f32 calc_time_dilation();
 
+        // inlined @ sub_86EAB0
+        void set_mode(e_time_mode mode) {
+            time_mode = mode;
+        }
+
+        // inlined @ sub_86E9A0
+        void set_time_dilation(f32 d) {
+            time_dilation = d;
+
+            if (time_dilation < 0.0001)
+                time_dilation = 0.0001f;
+        }
+
+        // inlined @ sub_86EA20
+        f32 get_time_dilation() const {
+            return time_dilation;
+        }
+
         void frame_advance(f32 t) {
             get_vtable()->frame_advance(this, t);
         }

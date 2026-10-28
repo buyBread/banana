@@ -114,6 +114,11 @@ namespace treyarch { namespace chuck { namespace vm {
 
         void run(f32 requested_time_inc, bool ignore_suspended);
 
+        // sub_90D190
+        f32 get_time_inc() const {
+            return time_inc;
+        }
+
         vm_thread* find_thread(u32 thread_id);
         bool run_single_exec(const string_hash &filename, string_hash key_prefix, f32 requested_time_inc, bool ignore_suspended);
 

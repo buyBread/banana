@@ -12,9 +12,9 @@ void igo_3d_gta_widget::set_color(vector3d color) {
 
     color32 render_color;
 
-    render_color.r = 0.0f > color.x ? 0 : color.x > 1.0f ? 0xFF : (u8)(i32)((f64)color.x * 255.0);
-    render_color.g = 0.0f > color.y ? 0 : color.y > 1.0f ? 0xFF : (u8)(i32)((f64)color.y * 255.0);
-    render_color.b = 0.0f > color.z ? 0 : color.z > 1.0f ? 0xFF : (u8)(i32)((f64)color.z * 255.0);
+    render_color.set_red_float  (color.x);
+    render_color.set_green_float(color.y);
+    render_color.set_blue_float (color.z);
     render_color.a = 0xFF;
 
     ring->set_render_color(render_color);

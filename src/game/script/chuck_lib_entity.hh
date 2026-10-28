@@ -12,6 +12,7 @@
 namespace treyarch {
     class ai_core;
     class arch_base;
+    class entity;
     class info_node;
     class param_block;
 
@@ -22,6 +23,29 @@ namespace treyarch {
 
     // the marky camera only takes orders from threads at its priority
     bool marky_camera_allows(const arch_base* self, const chuck::vm::vm_stack &stack);
+
+    /* a wait keeps its state in the bytes just past its arguments, which a recall finds untouched;
+       grows the stack first when they don't fit, then pops the arguments */
+    // inlined @ sub_84BE70
+    // inlined @ sub_86A5A0
+    // inlined @ sub_86ABF0
+    template<typename state_t>
+    state_t* pop_wait_arguments(chuck::vm::vm_stack &stack, i32 arguments_size) {
+        i32 used   = (i32)(stack.sp - stack.buffer);
+        i32 needed = used + (i32)sizeof(state_t);
+
+        if (needed > (i32)stack.buffer_size && needed + used - (i32)stack.buffer_size > (i32)stack.buffer_size)
+            stack.grow();
+
+        auto* state = (state_t*)stack.sp;
+
+        stack.sp -= arguments_size;
+
+        return state;
+    }
+
+    // a wait's step this frame: the script frame time on the entity's own clock
+    f32 get_wait_time_step(const entity* self);
 
     class slc_entity_t : public chuck::script_library::script_library_class {
 

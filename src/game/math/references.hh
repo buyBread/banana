@@ -57,6 +57,9 @@ namespace treyarch { namespace references {
 
     // one translation unit's copy of the SM3 .ii's po_identity_matrix, built by po's constructor (sub_4015B0) at startup
     inline util::memory_reference<po> po_identity_matrix { 0x00FF99A0 };
+
+    // the entity natives' copy of po_identity_matrix, built the same way
+    inline util::memory_reference<po> unk_010f76b0 { 0x010F76B0 };
 }} // treyarch::references
 
 namespace treyarch { namespace math { namespace references {
