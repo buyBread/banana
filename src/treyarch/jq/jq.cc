@@ -12,6 +12,7 @@
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/cpu_combat_pie.hh"
+#include "game/wds/entity/entity.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/subdivision_visitor.hh"
 #include "treyarch/jq/jq.hh"
@@ -81,7 +82,7 @@ void jq::jobqueue_init() {
     references::unk_00ffed00.get().reset();
     references::unk_01003a20.get().reset();
     references::unk_00ffed20.get().reset();
-    references::unk_01003240.get().reset();
+    treyarch::references::found_entities_lock.get().reset();
     references::unk_01003998.get().reset();
     references::unk_01003458.get().reset();
     references::unk_00ffece0.get().reset();

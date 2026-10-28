@@ -46,7 +46,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_01003148 { 0x01003148 }; // sub_63C580, sub_641650, sub_6463A0
     inline util::memory_reference<engine_recursive_lock> unk_010031c8 { 0x010031C8 }; // sub_605340, sub_641B00
     inline util::memory_reference<engine_recursive_lock> unk_010031d8 { 0x010031D8 }; // switch_obj_interface
-    inline util::memory_reference<engine_recursive_lock> unk_01003240 { 0x01003240 }; // hiding entities and clearing areas
     inline util::memory_reference<engine_recursive_lock> unk_01003260 { 0x01003260 }; // grenade and thrown_weapon_interface
     inline util::memory_reference<engine_recursive_lock> unk_01003398 { 0x01003398 }; // gun_weapon_interface
     inline util::memory_reference<engine_recursive_lock> unk_01003428 { 0x01003428 }; // biped physics and physical_interface
