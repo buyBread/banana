@@ -7,6 +7,7 @@
 #include "game/math/references.hh"
 #include "game/polytube.hh"
 #include "game/script/chuck_lib_polytube.hh"
+#include "game/script/script_access.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -214,15 +215,7 @@ bool slf__polytube__set_material__str__t::operator()(chuck::vm::vm_stack &stack)
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
     auto file = (const char*)stack.local_uint(0x04);
 
-    // the material comes from the running script's pack; a waiting thread pushes nothing but still pops
-    auto context = (amalga::resource_pack_slot*)stack.thread->resource_context;
-
-    if (!stack.thread->entry && context) {
-        amalga::resource_manager::references::unk_010300a8.get().acquire();
-        amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
-
-        retail::sub_767760((i32)context); // push_resource_context
-    }
+    native_resource_context context(stack);
 
     if (self) {
         mash::string name;
@@ -230,13 +223,6 @@ bool slf__polytube__set_material__str__t::operator()(chuck::vm::vm_stack &stack)
 
         retail::sub_72DCB0(file, (i32)&name, (u32*)&type); // resource_key::calc_resource_string_and_type_from_path
         retail::sub_615760((u32*)self, (char*)name.c_str()); // set_material
-    }
-
-    if (context) {
-        retail::sub_757240(); // pop_resource_context
-
-        amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
-        amalga::resource_manager::references::unk_010300a8.get().release();
     }
 
     return true;

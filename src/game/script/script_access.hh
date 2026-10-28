@@ -31,6 +31,23 @@ namespace treyarch {
         inline util::memory_reference<u32> script_arg_sizes { 0x00BDF340 };
     } // references
 
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
+    // the running script's pack as the resource context around a native's loading; a waiting thread pushes nothing but still pops
+    class native_resource_context {
+
+        amalga::resource_pack_slot* m_context;
+
+    public:
+        explicit native_resource_context(const chuck::vm::vm_stack &stack);
+       ~native_resource_context();
+
+        native_resource_context           (const native_resource_context&) = delete;
+        native_resource_context &operator=(const native_resource_context&) = delete;
+    };
+
     class script {
 
     public:

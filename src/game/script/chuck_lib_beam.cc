@@ -1,10 +1,10 @@
 #include <cstring>
 
 #include "retail.hh"
-#include "game/amalga/resource_manager.hh"
 #include "game/arch_base.hh"
 #include "game/beam.hh"
 #include "game/script/chuck_lib_beam.hh"
+#include "game/script/script_access.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -301,25 +301,10 @@ bool slf__beam__set_material__str__t::operator()(chuck::vm::vm_stack &stack) {
     auto self = (beam*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
     auto material = (const char*)stack.local_uint(0x04);
 
-    // the texture comes from the running script's pack; a waiting thread pushes nothing but still pops
-    auto context = (amalga::resource_pack_slot*)stack.thread->resource_context;
-
-    if (!stack.thread->entry && context) {
-        amalga::resource_manager::references::unk_010300a8.get().acquire();
-        amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
-
-        retail::sub_767760((i32)context); // push_resource_context
-    }
+    native_resource_context context(stack);
 
     if (self)
         self->set_material(mash::string(material));
-
-    if (context) {
-        retail::sub_757240(); // pop_resource_context
-
-        amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
-        amalga::resource_manager::references::unk_010300a8.get().release();
-    }
 
     return true;
 }

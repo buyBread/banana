@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "game/amalga/resource_manager.hh"
 #include "game/amalga/resource_types.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
@@ -310,4 +311,30 @@ bool script::run_thread_until_finished(chuck::vm::vm_thread* thread) {
     thread->inst->run_single_thread_until_finished(thread, true, key_prefix);
 
     return true;
+}
+
+// inlined @ sub_856FB0
+// inlined @ sub_863EE0
+// inlined @ sub_878B90
+native_resource_context::native_resource_context(const chuck::vm::vm_stack &stack) : m_context((amalga::resource_pack_slot*)stack.thread->resource_context) {
+    if (stack.thread->entry || !m_context)
+        return;
+
+    amalga::resource_manager::references::unk_010300a8.get().acquire();
+    amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
+
+    retail::sub_767760((i32)m_context); // push_resource_context
+}
+
+// inlined @ sub_856FB0
+// inlined @ sub_863EE0
+// inlined @ sub_878B90
+native_resource_context::~native_resource_context() {
+    if (!m_context)
+        return;
+
+    retail::sub_757240(); // pop_resource_context
+
+    amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
+    amalga::resource_manager::references::unk_010300a8.get().release();
 }
