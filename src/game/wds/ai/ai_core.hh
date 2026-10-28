@@ -54,6 +54,8 @@ namespace treyarch {
     inline const string_hash tether_center_key = string_hash(hash::djb2("TETHER_CENTER"));
     inline const string_hash tether_radius_key = string_hash(hash::djb2("TETHER_RADIUS"));
 
+    inline const string_hash path_graph_key = string_hash(hash::djb2("PATH_GRAPH"));
+
     struct ai_core_list;
 
     // every core owns one node and sits on exactly one of the two global lists

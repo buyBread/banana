@@ -15,6 +15,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/cpu_combat_inode.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
@@ -1120,22 +1121,22 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
         if (!core)
             return false;
 
-        info_node* weapons = core->get_info_node(info_node_type_ai_weapon);
+        auto* weapons = (ai_weapon_inode*)core->get_info_node(info_node_type_ai_weapon);
 
         if (!weapons)
             return false;
 
-        i32 state = retail::sub_4E7C20((u32*)weapons, hand);
+        e_ai_weapon_state state = weapons->get_hand_state(hand);
 
-        if (state != 1 && state != 2)
+        if (state != ai_weapon_drawn && state != ai_weapon_drawing)
             return false;
 
-        u8* weapon = (u8*)retail::sub_4E7D50((u32*)weapons, hand);
+        ai_weapon* weapon = weapons->get_drawn_weapon(hand);
 
         if (!weapon)
             return false;
 
-        *weapon_hash = *(string_hash*)(weapon + 0x20);
+        *weapon_hash = weapon->name;
 
         return true;
     };

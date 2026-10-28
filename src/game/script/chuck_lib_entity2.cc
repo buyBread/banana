@@ -3,6 +3,7 @@
 
 #include "retail.hh"
 #include "game/amalga/resource_manager.hh"
+#include "game/amalga/resource_types.hh"
 #include "game/arch_base.hh"
 #include "game/colgeom.hh"
 #include "game/physics/physics_system.hh"
@@ -10,6 +11,7 @@
 #include "game/script/chuck_lib_entity.hh"
 #include "game/script/chuck_lib_entity2.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
@@ -388,8 +390,30 @@ bool slf__find_best_manip_obj__vector3d__vector3d__num__num__num__t::operator()(
     return true;
 }
 
+// sub_869FC0
 bool slf__entity__set_path_graph__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869FC0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    if (!self)
+        return true;
+
+    // an empty name clears the param, one no loaded path graph has changes nothing
+    if (!name || !std::strlen(name))
+        self->get_ai_core()->my_param_block.set_pb_fixedstring(path_graph_key, "");
+    else {
+        resource_key key;
+        retail::sub_739B10((u32*)&key, name, (i32)amalga::e_resource_type::path);
+
+        if (!references::g_world_ptr.read()->ai_mgr.path_graph_exists(key))
+            return true;
+
+        self->get_ai_core()->my_param_block.set_pb_fixedstring(path_graph_key, name);
+    }
+
+    return true;
 }
 
 // sub_86A0A0
@@ -524,8 +548,17 @@ bool slf__entity__ai_is_carried__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_86A520
 bool slf__entity__set_ai_subclass__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86A520)(this, stack);
+    stack.sp -= 0x08;
+
+    // the receiver resolves twice, the core is looked up and dropped and the name is never read
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve())
+        self->get_ai_core();
+
+    return true;
 }
 
 // sub_86A560
@@ -3338,8 +3371,35 @@ bool slf__entity__get_animation_names__dynamic_array__t::operator()(chuck::vm::v
     return true;
 }
 
+// sub_882E00
 bool slf__entity__get_weapon_names__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_882E00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon);
+
+    if (!weapons)
+        return true;
+
+    // every weapon of both hands goes in as an empty string
+    for (i32 hand = 0; hand < 2; ++hand) {
+        for (mash::vector<ai_weapon> &list : weapons->weapon_sets[hand]->lists) {
+            for (ai_weapon** it = list.begin(); it != list.end(); ++it) {
+                auto names = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+                chuck::vm::chuck_dynamic_array_element_t element;
+
+                names->push_back(element);
+                *(const char**)names->back().stuff = "";
+            }
+        }
+    }
+
+    return true;
 }
 
 // sub_882F40
@@ -3372,48 +3432,249 @@ bool slf__entity__get_marker_names__dynamic_array__t::operator()(chuck::vm::vm_s
     return true;
 }
 
+// sub_86FFE0
 bool slf__entity__ai_enable_weapon__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FFE0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name   = (const char*)stack.local_uint(0x04);
+    auto enable = stack.local_num(0x08);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+        string_hash weapon;
+        weapon.initialize(mash::ALLOCATED, name);
+
+        weapons->enable_weapon(weapon, enable != 0.0f);
+    }
+
+    return true;
 }
 
+// sub_870090
 bool slf__entity__ai_weapon_available__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870090)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+            string_hash weapon;
+            weapon.initialize(mash::ALLOCATED, name);
+
+            if (weapons->is_weapon_available(weapon))
+                result = 1.0f;
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870170
 bool slf__entity__ai_enable_all_weapons__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870170)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon))
+        weapons->enable_all_weapons(enable != 0.0f);
+
+    return true;
 }
 
+// sub_870220
 bool slf__entity__holster_weapon__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870220)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name       = (const char*)stack.local_uint(0x04);
+    auto other_name = (const char*)stack.local_uint(0x08);
+    auto immediate  = stack.local_num(0x0C);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+        string_hash other_weapon;
+        other_weapon.initialize(mash::ALLOCATED, other_name);
+
+        string_hash weapon;
+        weapon.initialize(mash::ALLOCATED, name);
+
+        weapons->holster_weapon(weapon, other_weapon, immediate > 0.5f);
+    }
+
+    return true;
 }
 
+// sub_8702E0
 bool slf__entity__draw_weapon__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8702E0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self       = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name       = (const char*)stack.local_uint(0x04);
+    auto other_name = (const char*)stack.local_uint(0x08);
+    auto immediate  = stack.local_num(0x0C);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+        string_hash other_weapon;
+        other_weapon.initialize(mash::ALLOCATED, other_name);
+
+        string_hash weapon;
+        weapon.initialize(mash::ALLOCATED, name);
+
+        weapons->draw_weapon(weapon, other_weapon, immediate > 0.5f);
+    }
+
+    return true;
 }
 
+// sub_8703A0
 bool slf__entity__ai_weapon_sys_busy__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8703A0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = 0.0f;
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon);
+
+        if (weapons && weapons->weapon_sys_busy)
+            result = 1.0f;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870460
 bool slf__entity__get_ai_weapon_state__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870460)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    f32 result = (f32)ai_num_weapon_states;
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+            string_hash weapon_name;
+            weapon_name.initialize(mash::ALLOCATED, name);
+
+            if (ai_weapon* weapon = weapons->find_weapon(weapon_name))
+                result = (f32)weapon->get_state();
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870550
 bool slf__entity__fire_weapon__str__num__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870550)(this, stack);
+    stack.sp -= 0x1C;
+
+    auto self     = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name     = (const char*)stack.local_uint(0x04);
+    auto kind     = (u32)(i32)stack.local_num(0x08);
+    auto target   = arch_base_vhandle(stack.local_uint(0x0C));
+    auto position = (const vector3d*)&stack.local_uint(0x10);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core() || kind > weapon_fire_kind_rocket)
+        return true;
+
+    auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon);
+
+    if (!weapons)
+        return true;
+
+    string_hash weapon_name;
+    weapon_name.initialize(mash::ALLOCATED, name);
+
+    ai_weapon* weapon = weapons->find_weapon(weapon_name);
+
+    if (weapon && weapon->has_weapon_entity())
+        ai_weapon::fire(self, weapon, (e_weapon_fire_kind)kind, true, target, *position);
+
+    return true;
 }
 
+// sub_870610
 bool slf__entity__get_weapon_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870610)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto name = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    if (self && self->is_an_actor() && self->get_ai_core()) {
+        if (auto* weapons = (ai_weapon_inode*)self->get_ai_core()->get_info_node(info_node_type_ai_weapon)) {
+            string_hash weapon_name;
+            weapon_name.initialize(mash::ALLOCATED, name);
+
+            ai_weapon* weapon = weapons->find_weapon(weapon_name);
+
+            if (weapon && weapon->has_weapon_entity()) {
+                if (arch_base* entity = weapon->weapon_entity.resolve())
+                    result = entity->my_handle;
+            }
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870700
 bool slf__entity__ai_reset_morale__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870700)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* fear = (std_fear_inode*)self->get_ai_core()->get_info_node(info_node_type_std_fear))
+        fear->reset_morale();
+
+    return true;
 }
 
+// sub_870770
 bool slf__entity__ai_set_ignore_limbo__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870770)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto ignore = stack.local_num(0x04);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (ignore != 0.0f)
+        self->get_ai_core()->flags |= ai_core_flag_ignore_limbo;
+    else
+        self->get_ai_core()->flags &= ~ai_core_flag_ignore_limbo;
+
+    return true;
 }
 
 // sub_8707F0
@@ -3750,8 +4011,20 @@ bool slf__entity__set_camera_priority_boost__num__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_871F40
 bool slf__entity__set_entity_targeting_weight__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_871F40)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto weight = stack.local_num(0x04);
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    if (auto* target = (combat_target_inode*)self->get_ai_core()->get_info_node(info_node_type_combat_target))
+        target->set_targeting_weight((i32)weight);
+
+    return true;
 }
 
 // sub_871FC0
@@ -3813,6 +4086,55 @@ bool slf__entity__remove_fakir_array__dynamic_array__t::operator()(chuck::vm::vm
     return true;
 }
 
+// sub_87CDB0
 bool slf__entity__get_best_turret_target__num__num__num__num__vector3d__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87CDB0)(this, stack);
+    stack.sp -= 0x24;
+
+    auto self      = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto unk_04    = stack.local_num(0x04);
+    auto spread    = stack.local_num(0x08);
+    auto unk_0c    = stack.local_num(0x0C);
+    auto unk_10    = stack.local_num(0x10);
+    auto forward   = (const vector3d*)&stack.local_uint(0x14);
+    auto team_name = (const char*)stack.local_uint(0x20);
+
+    string_hash team_hash;
+    team_hash.initialize(mash::ALLOCATED, team_name);
+
+    ai_team::e_team team = ai_team::get_enum_by_hash(team_hash);
+
+    engine_lock_scope lock(&references::ai_core_list_lock.get());
+
+    using find_best_turret_target_t = ai_core_list_node* (__cdecl*)(arch_base*, ai_core_list*,
+                                                                    f32, f32, f32, f32, f32, f32,
+                                                                    u32, u32, u32, u32,
+                                                                    const vector3d*,
+                                                                    u32, u32,
+                                                                    ai_team::e_team);
+
+    ai_core_list_node* best = ((find_best_turret_target_t)retail::sub_87BD40)(self,
+                                                                             &references::ai_core_list_high.get(),
+                                                                             unk_04,
+                                                                             spread,
+                                                                             -spread,
+                                                                             spread,
+                                                                             unk_0c,
+                                                                             unk_10,
+                                                                             0x10011,
+                                                                             0,
+                                                                             0,
+                                                                             0,
+                                                                             forward,
+                                                                             0,
+                                                                             0,
+                                                                             team);
+
+    arch_base_vhandle result;
+
+    if (best && best->core)
+        result = best->core->get_actor()->my_handle;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }

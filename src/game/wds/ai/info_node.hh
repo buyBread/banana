@@ -177,6 +177,36 @@ namespace treyarch {
         void remove_slave(std_carry_inode* slave, bool kill_slave_mode = true);
     };
 
+    class std_fear_inode : public info_node {
+
+    public:
+        u8 reserved_030[0x38];
+
+        void reset_morale();
+        void break_morale_force_cower(f32 unk);
+        void break_morale_force_flee (vector3d position, f32 unk);
+        void break_morale_force_flee (arch_base_vhandle target, f32 unk);
+    };
+
+    inline const string_hash targeting_weight_key = string_hash(hash::djb2("targeting_weight"));
+
+    class target_search_inode : public info_node {
+
+    public:
+        u8 reserved_030[0x38];
+    };
+
+    class combat_target_inode : public target_search_inode {
+
+    public:
+        u8 reserved_068[0x80];
+
+        // sub_455B60
+        void set_targeting_weight(i32 weight) {
+            my_param_block.set_pb_int(targeting_weight_key, weight);
+        }
+    };
+
     class swift_stationary_layer_inode : public loco_inode {
 
     public:
@@ -229,6 +259,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(std_carry_inode, carry_slaves,  0x34);
     ASSERT_OFFSETOF(std_carry_inode, unk_038,       0x38);
     ASSERT_OFFSETOF(std_carry_inode, desired_slave, 0x3C);
+
+    ASSERT_SIZEOF(std_fear_inode,      0x68);
+    ASSERT_SIZEOF(target_search_inode, 0x68);
+    ASSERT_SIZEOF(combat_target_inode, 0xE8);
 
     ASSERT_SIZEOF(swift_stationary_layer_inode, 0xB8);
 

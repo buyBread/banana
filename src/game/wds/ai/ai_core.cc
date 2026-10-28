@@ -121,6 +121,22 @@ void std_carry_inode::remove_slave(std_carry_inode* slave, bool kill_slave_mode)
     retail::sub_4BA230((u32*)this, (i32)slave, kill_slave_mode);
 }
 
+void std_fear_inode::reset_morale() {
+    retail::sub_44EFF0((i32)this);
+}
+
+void std_fear_inode::break_morale_force_cower(f32 unk) {
+    retail::sub_457530((i32)this, unk);
+}
+
+void std_fear_inode::break_morale_force_flee(vector3d position, f32 unk) {
+    ((void (__thiscall*)(std_fear_inode*, vector3d, f32))retail::sub_457780)(this, position, unk);
+}
+
+void std_fear_inode::break_morale_force_flee(arch_base_vhandle target, f32 unk) {
+    ((void (__thiscall*)(std_fear_inode*, arch_base_vhandle, f32))retail::sub_457650)(this, target, unk);
+}
+
 // sub_4C2EA0
 // inlined @ sub_4C5840
 // inlined @ sub_4C58D0

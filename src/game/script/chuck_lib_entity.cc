@@ -19,6 +19,7 @@
 #include "game/trigger.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/ai_vehicle.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
@@ -26,6 +27,7 @@
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/grenade.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
@@ -5242,16 +5244,76 @@ bool slf__entity__change_locomotion_category__str__t::operator()(chuck::vm::vm_s
     return ((invoke_t)retail::sub_84EBB0)(this, stack);
 }
 
+// sub_84ECF0
 bool slf__entity__ai_break_morale_force_cower__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84ECF0)(this, stack);
+    stack.sp -= 0x08;
+
+    // the receiver resolves twice, the second answer is used
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto unk  = stack.local_num(0x04);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    if (!core)
+        return true;
+
+    if (auto* fear = (std_fear_inode*)core->get_info_node(info_node_type_std_fear))
+        fear->break_morale_force_cower(unk);
+
+    return true;
 }
 
+// sub_84ED70
 bool slf__entity__ai_break_morale_force_flee__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84ED70)(this, stack);
+    stack.sp -= 0x14;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self     = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+    auto unk      = stack.local_num(0x10);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    if (!core)
+        return true;
+
+    if (auto* fear = (std_fear_inode*)core->get_info_node(info_node_type_std_fear))
+        fear->break_morale_force_flee(*position, unk);
+
+    return true;
 }
 
+// sub_84EE00
 bool slf__entity__ai_break_morale_force_flee__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84EE00)(this, stack);
+    stack.sp -= 0x0C;
+
+    // same
+    arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    auto self   = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target = arch_base_vhandle(stack.local_uint(0x04));
+    auto unk    = stack.local_num(0x08);
+
+    ai_core* core = self ? self->get_ai_core() : nullptr;
+
+    if (!core)
+        return true;
+
+    auto* fear = (std_fear_inode*)core->get_info_node(info_node_type_std_fear);
+
+    if (!fear)
+        return true;
+
+    // a stale target goes in as handle 0
+    arch_base* entity = target.resolve();
+
+    fear->break_morale_force_flee(entity ? entity->my_handle : arch_base_vhandle(), unk);
+
+    return true;
 }
 
 bool slf__entity__get_ai_base_machine_state_name__t::operator()(chuck::vm::vm_stack &stack) {
@@ -5784,28 +5846,89 @@ bool slf__entity__set_vehicle_sleeps_on_stop__num__t::operator()(chuck::vm::vm_s
     return ((invoke_t)retail::sub_851E60)(this, stack);
 }
 
+// sub_851ED0
 bool slf__entity__weapon_fire_as_gun__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851ED0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target   = arch_base_vhandle(stack.local_uint(0x04));
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    // the weapon is its own shooter
+    if (self)
+        fire_weapon_entity(self, self->my_handle, weapon_fire_kind_gun, true, target, *position);
+
+    return true;
 }
 
+// sub_851F20
 bool slf__entity__weapon_fire_as_rocket__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851F20)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target   = arch_base_vhandle(stack.local_uint(0x04));
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self)
+        fire_weapon_entity(self, self->my_handle, weapon_fire_kind_rocket, true, target, *position);
+
+    return true;
 }
 
+// sub_851F70
 bool slf__entity__weapon_fire_as_grenade__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851F70)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto target   = arch_base_vhandle(stack.local_uint(0x04));
+    auto position = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self)
+        fire_weapon_entity(self, self->my_handle, weapon_fire_kind_grenade, true, target, *position);
+
+    return true;
 }
 
+// sub_851FC0
 bool slf__entity__rocket_redirect__entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_851FC0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self       = (grenade*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto redirector = arch_base_vhandle(stack.local_uint(0x04));
+    auto target     = arch_base_vhandle(stack.local_uint(0x08));
+
+    // the redirector resolves once for the test and again for the call
+    if (self && self->is_a_grenade())
+        self->redirect(target, redirector.resolve() ? (entity*)redirector.resolve() : nullptr);
+
+    return true;
 }
 
+// sub_852020
 bool slf__entity__rocket_redirect_dir__entity__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852020)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self       = (grenade*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto redirector = arch_base_vhandle(stack.local_uint(0x04));
+    auto dir        = (const vector3d*)&stack.local_uint(0x08);
+
+    // same
+    if (self && self->is_a_grenade())
+        self->redirect(*dir, redirector.resolve() ? (entity*)redirector.resolve() : nullptr);
+
+    return true;
 }
 
+// sub_852080
 bool slf__entity__rocket_disable_guidance__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_852080)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (grenade*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self && self->is_a_grenade())
+        self->disable_guidance();
+
+    return true;
 }
 
 bool slf__entity__force_ai_enter_car__entity__num__num__t::operator()(chuck::vm::vm_stack &stack) {
