@@ -4,6 +4,7 @@
 #include "game/als/state_machine.hh"
 #include "game/game.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_simple_target.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/interface/generic_interface.hh"
@@ -365,8 +366,8 @@ string_hash als::get_ifc_hash_param(entity* owner, string_hash ifc, string_hash 
 
 // sub_5BDC00
 ai_core* als::get_target_ai_core(actor* the_actor) {
-    using has_target_t = bool  (__thiscall*)(info_node*, u32);
-    using get_target_t = void* (__thiscall*)(info_node*, u32);
+    using has_target_t = bool              (__thiscall*)(info_node*, u32);
+    using get_target_t = ai_simple_target* (__thiscall*)(info_node*, u32);
 
     if (!the_actor)
         return nullptr;
@@ -383,11 +384,10 @@ ai_core* als::get_target_ai_core(actor* the_actor) {
 
     if (info_node* basic = the_actor->get_ai_core()->get_info_node(info_node_type_ai_basic)) {
         if (((has_target_t)retail::sub_4EF830)(basic, 2)) {
-            void* record = ((get_target_t)retail::sub_4F24E0)(basic, 2);
+            ai_simple_target* record = ((get_target_t)retail::sub_4F24E0)(basic, 2);
 
-            // an entity record
-            if (record && ((i32 (__thiscall*)(void*))(*(void***)record)[2])(record) == 1) {
-                auto target = (arch_base*)((void* (__thiscall*)(void*))retail::sub_44F9D0)(record);
+            if (record && record->get_type() == simple_target_type_entity) {
+                arch_base* target = ((ai_simple_target_entity*)record)->resolve();
 
                 if (target && target->is_an_actor())
                     return ((actor*)target)->get_ai_core();

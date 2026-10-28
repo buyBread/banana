@@ -1,32 +1,11 @@
 #pragma once
 
-#include "game/arch_base.hh"
+#include "game/wds/ai/fight_group.hh"
 #include "game/singleton.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    namespace slim {
-        class slim_fight_director_controller;
-    } // slim
-
-    enum e_fight_group_flags : u32 {
-        fight_group_flag_active = 0x00000001,
-        fight_group_flag_paused = 0x00000002
-    };
-
-    class fight_group : public arch_base {
-
-    public:
-        slim::slim_fight_director_controller* controller;
-        u32                                   flags;
-        u8                                    reserved_010[0x24];
-    };
-
-    ASSERT_SIZEOF  (fight_group,             0x34);
-    ASSERT_OFFSETOF(fight_group, controller, 0x08);
-    ASSERT_OFFSETOF(fight_group, flags,      0x0C);
-
     class fight_director : public singleton<fight_director, 0x00FC5790> {
 
     public:
