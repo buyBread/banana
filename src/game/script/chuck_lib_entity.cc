@@ -30,15 +30,18 @@
 #include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
+#include "game/wds/render/references.hh"
 #include "game/wds/region.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/vm/script_object.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
+#include "vc8/list.hh"
 
 using namespace treyarch;
 
@@ -186,6 +189,24 @@ void treyarch::set_or_move_rel_position(entity* self, const vector3d* position, 
     }
 }
 
+// inlined @ sub_83DDF0
+// inlined @ sub_84AA40
+// inlined @ sub_84ABE0
+// inlined @ sub_84AEA0
+// inlined @ sub_84B160
+string_hash treyarch::next_script_ent_name(const util::memory_reference<void*> &pool, const util::memory_reference<u32> &guard) {
+    if (!(guard.read() & 1)) {
+        guard.write(guard.read() | 1);
+
+        mash::string prefix("SCRIPT_ENT");
+        pool.write(retail::sub_64CBB0((char*)&prefix)); // the name pool for a prefix
+    }
+
+    string_hash slot;
+
+    return *(string_hash*)retail::sub_64CCA0((u32*)&slot, (u32*)pool.read(), (void*)""); // the pool's next name
+}
+
 // sub_83DAE0
 u32 slc_entity_t::find_instance(const mash::string &name) const {
     if (!std::strncmp(name.c_str(), "NULL", 0xFFFF))
@@ -225,28 +246,194 @@ bool slf__chase_cam__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_84AA40
 bool slf__create_devopt_entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84AA40)(this, stack);
+    stack.sp -= 0x04;
+
+    mash::string name("");
+
+    switch ((i32)stack.local_num(0x00)) {
+        case 1: name = references::devopt_entity_name_1.get(); break;
+        case 2: name = references::devopt_entity_name_2.get(); break;
+        case 3: name = references::devopt_entity_name_3.get(); break;
+        case 4: name = references::devopt_entity_name_4.get(); break;
+    }
+
+    arch_base_vhandle result;
+
+    if (!name.empty()) {
+        string_hash instance_name = next_script_ent_name(references::devopt_entity_script_ent_pool, references::devopt_entity_script_ent_pool_guard);
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84AEA0
 bool slf__create_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84AEA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash instance_name = next_script_ent_name(references::create_entity_script_ent_pool, references::create_entity_script_ent_pool_guard);
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B040
 bool slf__create_entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B040)(this, stack);
+    stack.sp -= 0x08;
+
+    auto name     = (const char*)stack.local_uint(0x00);
+    auto instance = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash  instance_name;
+        string_hash* instance_slot = &instance_name;
+
+        // a name ending in '*' takes the next name from that prefix's pool
+        __asm {
+            push instance
+            mov  esi, instance_slot
+            call retail::sub_8238E0
+            add  esp, 4
+        }
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B160
 bool slf__create_preregistered_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B160)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash instance_name = next_script_ent_name(references::preregistered_script_ent_pool, references::preregistered_script_ent_pool_guard);
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, true); // spawn by name, preregistered
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_84B300
 bool slf__create_preregistered_entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84B300)(this, stack);
+    stack.sp -= 0x08;
+
+    auto name     = (const char*)stack.local_uint(0x00);
+    auto instance = (const char*)stack.local_uint(0x04);
+
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash  instance_name;
+        string_hash* instance_slot = &instance_name;
+
+        // a name ending in '*' takes the next name from that prefix's pool
+        __asm {
+            push instance
+            mov  esi, instance_slot
+            call retail::sub_8238E0
+            add  esp, 4
+        }
+
+        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, true); // spawn by name, preregistered
+
+        if (spawned) {
+            result = spawned->my_handle;
+
+            stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83DDF0
 bool slf__create_next_preregistered_debug_obstacle__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83DDF0)(this, stack);
+    arch_base_vhandle result;
+
+    {
+        native_resource_context context(stack);
+
+        bool spawned_one = false;
+
+        // two tries at the entity that's literally named "only use this if it is enabled."
+        for (i32 i = 0; i < 2 && !spawned_one; ++i) {
+            string_hash instance_name = next_script_ent_name(references::debug_obstacle_script_ent_pool, references::debug_obstacle_script_ent_pool_guard);
+
+            auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string("only use this if it is enabled."), instance_name, true); // spawn by name, preregistered
+
+            if (spawned) {
+                result = spawned->my_handle;
+
+                stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, result.value);
+
+                spawned_one = true;
+            }
+        }
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_84B420
@@ -339,16 +526,117 @@ bool slf__entity_get_entity_tracker__entity__t::operator()(chuck::vm::vm_stack &
     return true;
 }
 
+// sub_84BBA0
 bool slf__enable_entity_fading__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_84BBA0)(this, stack);
+    stack.sp -= 0x04;
+
+    references::entity_fading_enabled.write(stack.local_num(0x00) != 0.0f);
+
+    return true;
 }
 
+// sub_880970
 bool slf__script_get_entities_of_type__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880970)(this, stack);
+    stack.sp -= 0x08;
+
+    auto type    = (i32)stack.local_num(0x00);
+    auto results = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+    if (!results) {
+        u32 none = 0;
+        stack.push(&none, sizeof(none));
+
+        return true;
+    }
+
+    results->clear();
+
+    void* allocation = mm::allocate(sizeof(vc8::list<arch_base_vhandle>));
+
+    auto found = allocation ?
+        new (allocation) vc8::list<arch_base_vhandle>() : nullptr;
+
+    retail::sub_643290((i32)found, type); // lists the handles of every entity of the type
+
+    // the count takes in the ones that no longer resolve
+    i32 count = 0;
+
+    for (auto* node = found->begin(); node != found->end(); node = node->next) {
+        ++count;
+
+        arch_base_vhandle handle = node->value;
+
+        if (handle.resolve()) {
+            chuck::vm::chuck_dynamic_array_element_t cell;
+            results->push_back(cell);
+
+            *(arch_base_vhandle*)results->back().stuff = handle;
+        }
+    }
+
+    found->~list();
+    mm::free(found);
+
+    f32 result = (f32)count;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_880AB0
 bool slf__script_get_sorted_entities_of_type__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880AB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto results = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
+
+    if (!results) {
+        u32 none = 0;
+        stack.push(&none, sizeof(none));
+
+        return true;
+    }
+
+    results->clear();
+
+    struct sorted_entity {
+        f32               distance_squared;
+        arch_base_vhandle handle;
+    };
+
+    void* allocation = mm::allocate(sizeof(vc8::list<sorted_entity>));
+
+    auto found = allocation ?
+        new (allocation) vc8::list<sorted_entity>() : nullptr;
+
+    // lists them with their distance to the hero's rel position, sorted
+    ((void (__cdecl*)(vc8::list<sorted_entity>*, i32, vector3d))retail::sub_659020)(found,
+                                                                                   (i32)stack.local_num(0x00),
+                                                                                   references::g_world_ptr.read()->hero_ptr->my_rel_po->get_position());
+
+    i32 count = 0;
+
+    for (auto* node = found->begin(); node != found->end(); node = node->next) {
+        ++count;
+
+        arch_base_vhandle handle = node->value.handle;
+
+        if (handle.resolve()) {
+            chuck::vm::chuck_dynamic_array_element_t cell;
+            results->push_back(cell);
+
+            *(arch_base_vhandle*)results->back().stuff = handle;
+        }
+    }
+
+    found->~list();
+    mm::free(found);
+
+    f32 result = (f32)count;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__crawl_attach_to_surface__entity__line_info__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
@@ -3635,16 +3923,7 @@ bool slf__entity__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
     {
         native_resource_context context(stack);
 
-        // one name pool serves every entity this native spawns
-        if (!(references::script_ent_pool_guard.read() & 1)) {
-            references::script_ent_pool_guard.write(references::script_ent_pool_guard.read() | 1);
-
-            mash::string prefix("SCRIPT_ENT");
-            references::script_ent_pool.write(retail::sub_64CBB0((char*)&prefix)); // the name pool for a prefix
-        }
-
-        string_hash slot;
-        string_hash instance_name = *(string_hash*)retail::sub_64CCA0((u32*)&slot, (u32*)references::script_ent_pool.read(), (void*)""); // the pool's next name
+        string_hash instance_name = next_script_ent_name(references::script_ent_pool, references::script_ent_pool_guard);
 
         auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
 

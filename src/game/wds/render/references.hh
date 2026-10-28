@@ -41,9 +41,10 @@ namespace treyarch { namespace references {
     inline util::memory_reference<ngl::scene*>                 z_pre_pass_scene     { 0x010FC590 };
     inline util::memory_reference<far_away_render_list_entry*> far_away_render_list { 0x010FC50C };
 
-    inline util::memory_reference<f32> render_distance           { 0x00F4CD44 };
-    inline util::memory_reference<u8>  level_render_special_case { 0x010FB384 };
-    inline util::memory_reference<u8>  frame_state_1117194       { 0x01117194 };
+    inline util::memory_reference<f32>  render_distance           { 0x00F4CD44 };
+    inline util::memory_reference<u8>   level_render_special_case { 0x010FB384 };
+    inline util::memory_reference<u8>   frame_state_1117194       { 0x01117194 };
+    inline util::memory_reference<bool> entity_fading_enabled     { 0x00F4CD43 }; // set by script; off stops entities fading out
 
     inline util::memory_reference<u8>  z_pre_pass_enabled         { 0x00BE4B74 };
     inline util::memory_reference<u8>  auxiliary_producer_enabled { 0x00BCD137 };

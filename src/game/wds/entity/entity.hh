@@ -15,8 +15,11 @@
 #include "game/wds/entity/interface_storage.hh"
 #include "game/container/fixed_vector.hh"
 #include "game/color.hh"
+#include "game/mutex.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/po.hh"
+#include "vc8/list.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -283,7 +286,20 @@ namespace treyarch {
         generic_interface* find_ifc_by_name(string_hash name);
 
         region* get_primary_region();
+
+        using entity_search_list = vc8::list<entity*>;
+
+        // held while a script reads found_entities
+        static void lock_found_entities();
+        static void unlock_found_entities();
     };
+
+    namespace references {
+        // what the last entity search found
+        inline util::memory_reference<entity::entity_search_list*> found_entities        { 0x00FFEB2C };
+        inline util::memory_reference<bool>                        found_entities_locked { 0x00FFEB1A };
+        inline util::memory_reference<engine_recursive_lock>       found_entities_lock   { 0x01003240 };
+    } // references
 
     ASSERT_OFFSETOF(entity, id,             0x08);
     ASSERT_OFFSETOF(entity, my_rel_po,      0x0C);

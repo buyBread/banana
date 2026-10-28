@@ -1,6 +1,8 @@
+#include <cmath>
 #include <cstring>
 
 #include "retail.hh"
+#include "game/amalga/resource_manager.hh"
 #include "game/arch_base.hh"
 #include "game/colgeom.hh"
 #include "game/physics/physics_system.hh"
@@ -20,9 +22,11 @@
 #include "game/math/references.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/math/trig.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
+#include "vc8/vector.hh"
 
 using namespace treyarch;
 
@@ -43,36 +47,345 @@ u32 slc_player_entity_t::find_instance(const mash::string &name) const {
     return entity->my_handle.value;
 }
 
+// sub_882BD0
 bool slf__rvb_find_entities_in_radius__dynamic_array__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_882BD0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!(references::rtree_search_name_guard.read() & 1)) {
+        references::rtree_search_name_guard.write(references::rtree_search_name_guard.read() | 1);
+        references::rtree_search_name.get().initialize(mash::ALLOCATED, "rtree_search");
+    }
+
+    auto flags = (i32)stack.local_num(0x14);
+
+    if (!flags)
+        flags = 1;
+
+    auto results = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00);
+    results->clear();
+
+    // the radius argument itself is clamped
+    if (stack.local_num(0x10) > 200.0)
+        stack.local_num(0x10) = 200.0f;
+
+    entity::lock_found_entities();
+
+    auto count = (f32)((i32 (__cdecl*)(const vector3d*, f32, i32))retail::sub_645150)(position, stack.local_num(0x10), flags); // entity search through the rtree
+
+    if (count > 0.0f) {
+        entity::entity_search_list* found = references::found_entities.read();
+
+        for (auto* node = found->begin(); node != found->end(); node = node->next) {
+            arch_base_vhandle handle = node->value->my_handle;
+
+            chuck::vm::chuck_dynamic_array_element_t cell;
+            results->push_back(cell);
+
+            *(arch_base_vhandle*)results->back().stuff = handle;
+        }
+    }
+
+    entity::unlock_found_entities();
+
+    stack.push(&count, sizeof(count));
+
+    return true;
 }
 
+// sub_87A650
 bool slf__rvb_find_cop_patrol_dude__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_87A650)(this, stack);
+    stack.sp -= 0x18;
+
+    auto position = (const vector3d*)&stack.local_uint(0x00);
+
+    if (!(references::rvb_find_cop_patrol_dude_name_guard.read() & 1)) {
+        references::rvb_find_cop_patrol_dude_name_guard.write(references::rvb_find_cop_patrol_dude_name_guard.read() | 1);
+        references::rvb_find_cop_patrol_dude_name.get().initialize(mash::ALLOCATED, "rvb_find_cop_patrol_dude");
+    }
+
+    entity* result = nullptr;
+
+    entity::lock_found_entities();
+
+    if (((i32 (__cdecl*)(const vector3d*, f32, i32))retail::sub_645150)(position, stack.local_num(0x0C), 0x81010) > 0) { // entity search through the rtree
+        entity::entity_search_list* found = references::found_entities.read();
+
+        for (auto* node = found->begin(); node != found->end(); node = node->next) {
+            entity* candidate = node->value;
+
+            if (!candidate)
+                continue;
+
+            u32  unk_choice = stack.local_num(0x14) != 0.0f;
+            bool qualifies;
+
+            // weighs the candidate's Combat_ID
+            __asm {
+                push unk_choice
+                mov  ecx, candidate
+                call retail::sub_8401F0
+                add  esp, 4
+                mov  qualifies, al
+            }
+
+            if (!qualifies)
+                continue;
+
+            bool    in_vehicle = false;
+            entity* vehicle;
+
+            if (candidate->is_an_actor() && retail::sub_4CB950((i32)candidate) != -1) { // get_car_seat
+                in_vehicle = true;
+
+                __asm {
+                    mov  eax, candidate
+                    call retail::sub_8404F0
+                    mov  vehicle, eax
+                }
+            } else {
+                __asm {
+                    mov  eax, candidate
+                    call retail::sub_840570
+                    mov  vehicle, eax
+                }
+
+                if (vehicle)
+                    in_vehicle = true;
+            }
+
+            if (stack.local_num(0x10) == 0.0f) {
+                if (!in_vehicle) {
+                    result = candidate;
+
+                    break;
+                }
+            } else if (in_vehicle) {
+                f32 height = (f32)((f64)candidate->my_abs_po->get_position().y - position->y);
+
+                if (std::fabs(height) < 10.0f) {
+                    result = vehicle;
+
+                    break;
+                }
+            }
+        }
+    }
+
+    entity::unlock_found_entities();
+
+    arch_base_vhandle handle = result ? result->my_handle : arch_base_vhandle();
+
+    stack.push(&handle, sizeof(handle));
+
+    return true;
 }
 
+// sub_882D10
 bool slf__find_entities_in_radius_LEGACY__dynamic_array__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_882D10)(this, stack);
+    stack.sp -= 0x18;
+
+    auto results  = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00);
+    auto position = (const vector3d*)&stack.local_uint(0x04);
+
+    if (!results) {
+        f32 none = 0.0f;
+        stack.push(&none, sizeof(none));
+
+        return true;
+    }
+
+    auto flags = (u32)(i32)stack.local_num(0x14);
+
+    if (!flags)
+        flags = 1;
+
+    results->clear();
+
+    entity::lock_found_entities();
+
+    i32 count = ((i32 (__cdecl*)(u32, const vector3d*, f32, region*))retail::sub_6452A0)(flags, position, stack.local_num(0x10), nullptr); // entity::find_entities
+
+    if (count <= 0)
+        count = 0;
+    else {
+        entity::entity_search_list* found = references::found_entities.read();
+
+        for (auto* node = found->begin(); node != found->end(); node = node->next) {
+            arch_base_vhandle handle = node->value->my_handle;
+
+            chuck::vm::chuck_dynamic_array_element_t cell;
+            results->push_back(cell);
+
+            *(arch_base_vhandle*)results->back().stuff = handle;
+        }
+    }
+
+    entity::unlock_found_entities();
+
+    f32 result = (f32)count;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_86FFA0
 bool slf__get_entities_in_pack__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_86FFA0)(this, stack);
+    stack.sp -= 0x08;
+
+    amalga::e_resource_partition partitions[3] = { amalga::resource_partition_common,
+                                                   amalga::resource_partition_hero,
+                                                   amalga::resource_partition_game };
+
+    // looks the partitions up and stops there; nothing is listed or pushed
+    for (i32 i = 0; i < 3; ++i)
+        amalga::resource_manager::get_partition_pointer(partitions[i]);
+
+    return true;
 }
 
+// sub_870840
 bool slf__find_best_prop_entity__vector3d__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870840)(this, stack);
+    stack.sp -= 0x24;
+
+    f32 min_dot = math::cos((f32)(stack.local_num(0x20) * 0.01745329300562541));
+
+    auto find_best_prop_phys_target = (entity* (__cdecl*)(const vector3d*, const vector3d*, const vector3d*, f32, f32, f32, f32, f32, f32, void*, void*, void*, bool, i32))retail::sub_470ED0;
+
+    entity* target = find_best_prop_phys_target((const vector3d*)&stack.local_uint(0x00),
+                                                &references::unk_00f2213c.get(),
+                                                (const vector3d*)&stack.local_uint(0x0C),
+                                                stack.local_num(0x18),
+                                                stack.local_num(0x1C),
+                                                -100.0f,
+                                                100.0f,
+                                                min_dot,
+                                                min_dot,
+                                                nullptr,
+                                                nullptr,
+                                                nullptr,
+                                                false,
+                                                0);
+
+    arch_base_vhandle result = target ? target->my_handle : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870940
 bool slf__find_best_damageable_entity__entity__vector3d__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870940)(this, stack);
+    stack.sp -= 0x28;
+
+    auto whos_asking = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (whos_asking) {
+        f32 min_dot = math::cos((f32)(stack.local_num(0x24) * 0.01745329300562541));
+
+        auto find_best_damageable_target = (entity* (__cdecl*)(entity*, const vector3d*, const vector3d*, f32, f32, f32, f32, f32, f32, void*, void*, vc8::vector<arch_base_vhandle>*, bool, i32))retail::sub_5484B0;
+
+        entity* target = find_best_damageable_target(whos_asking,
+                                                     (const vector3d*)&stack.local_uint(0x04),
+                                                     (const vector3d*)&stack.local_uint(0x10),
+                                                     stack.local_num(0x1C),
+                                                     stack.local_num(0x20),
+                                                     -100.0f,
+                                                     100.0f,
+                                                     min_dot,
+                                                     min_dot,
+                                                     nullptr,
+                                                     nullptr,
+                                                     nullptr,
+                                                     true,
+                                                     0);
+
+        if (target)
+            result = target->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_883000
 bool slf__find_best_damageable_entity__entity__vector3d__vector3d__num__num__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_883000)(this, stack);
+    stack.sp -= 0x2C;
+
+    auto whos_asking = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    arch_base_vhandle result;
+
+    if (!whos_asking) {
+        stack.push(&result, sizeof(result));
+
+        return true;
+    }
+
+    f32 min_dot = math::cos((f32)(stack.local_num(0x24) * 0.01745329300562541));
+
+    vc8::vector<arch_base_vhandle> listed;
+
+    chuck::vm::script_dynamic_array<arch_base_vhandle> entities((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x28));
+
+    for (auto* cell = entities.array->begin(); cell != entities.array->end(); ++cell)
+        listed.push_back(*(arch_base_vhandle*)cell->stuff);
+
+    auto find_best_damageable_target = (entity* (__cdecl*)(entity*, const vector3d*, const vector3d*, f32, f32, f32, f32, f32, f32, void*, void*, vc8::vector<arch_base_vhandle>*, bool, i32))retail::sub_5484B0;
+
+    entity* target = find_best_damageable_target(whos_asking,
+                                                 (const vector3d*)&stack.local_uint(0x04),
+                                                 (const vector3d*)&stack.local_uint(0x10),
+                                                 stack.local_num(0x1C),
+                                                 stack.local_num(0x20),
+                                                 -100.0f,
+                                                 100.0f,
+                                                 min_dot,
+                                                 min_dot,
+                                                 nullptr,
+                                                 nullptr,
+                                                 &listed,
+                                                 true,
+                                                 0);
+
+    if (target)
+        result = target->my_handle;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_870A90
 bool slf__find_best_manip_obj__vector3d__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_870A90)(this, stack);
+    stack.sp -= 0x24;
+
+    f32 min_dot = math::cos((f32)(stack.local_num(0x20) * 0.01745329300562541));
+
+    auto find_best_ready_manip_obj = (manip_obj_interface* (__cdecl*)(actor*, const vector3d*, const vector3d*, f32, f32, f32, f32, f32, f32, void*, void*))retail::sub_63FAA0;
+
+    manip_obj_interface* target = find_best_ready_manip_obj(nullptr,
+                                                            (const vector3d*)&stack.local_uint(0x00),
+                                                            (const vector3d*)&stack.local_uint(0x0C),
+                                                            stack.local_num(0x18),
+                                                            stack.local_num(0x1C),
+                                                            -100.0f,
+                                                            100.0f,
+                                                            min_dot,
+                                                            min_dot,
+                                                            nullptr,
+                                                            nullptr);
+
+    arch_base_vhandle result = target ? ((entity*)target->my_actor)->my_handle : arch_base_vhandle();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__entity__set_path_graph__str__t::operator()(chuck::vm::vm_stack &stack) {

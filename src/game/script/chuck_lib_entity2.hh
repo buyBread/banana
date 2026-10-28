@@ -4,6 +4,7 @@
 #include "treyarch/chuck/script_library/script_library_function.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
 #include "treyarch/mash/string.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
@@ -1772,5 +1773,11 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<slc_player_entity_t*> slc_player_entity { 0x010F70A8 };
+
+        // names the two searches hash once and never read; bit 0 of the guard once hashed
+        inline util::memory_reference<string_hash> rtree_search_name                   { 0x010F7C40 };
+        inline util::memory_reference<u32>         rtree_search_name_guard             { 0x010F7C44 };
+        inline util::memory_reference<string_hash> rvb_find_cop_patrol_dude_name       { 0x010F7C38 };
+        inline util::memory_reference<u32>         rvb_find_cop_patrol_dude_name_guard { 0x010F7C3C };
     } // references
 } // treyarch

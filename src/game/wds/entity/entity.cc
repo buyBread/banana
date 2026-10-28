@@ -46,3 +46,17 @@ damage_interface* entity::create_damage_ifc() {
 time_interface* entity::create_time_ifc() {
     return (time_interface*)retail::sub_65ABE0((i32*)this);
 }
+
+// sub_602010
+void entity::lock_found_entities() {
+    references::found_entities_lock.get().acquire();
+
+    references::found_entities_locked.write(true);
+}
+
+// sub_602030
+void entity::unlock_found_entities() {
+    references::found_entities_locked.write(false);
+
+    references::found_entities_lock.get().release();
+}

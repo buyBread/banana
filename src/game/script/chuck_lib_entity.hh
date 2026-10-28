@@ -55,6 +55,9 @@ namespace treyarch {
     // set (or, without set, move) the rel position as a script thread of the given camera priority would
     void set_or_move_rel_position(entity* self, const vector3d* position, bool set, f32 camera_priority);
 
+    // the next "SCRIPT_ENT" instance name from a native's own name pool, made on first use
+    string_hash next_script_ent_name(const util::memory_reference<void*> &pool, const util::memory_reference<u32> &guard);
+
     class slc_entity_t : public chuck::script_library::script_library_class {
 
     public:
@@ -3132,7 +3135,22 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<slc_entity_t*> slc_entity { 0x010F70A4 };
 
-        inline util::memory_reference<void*> script_ent_pool       { 0x010F787C }; // entity(str)'s name pool
-        inline util::memory_reference<u32>   script_ent_pool_guard { 0x010F7880 }; // bit 0 once the pool is made
+        // each spawning native's name pool; bit 0 of the guard once the pool is made
+        inline util::memory_reference<void*> script_ent_pool                      { 0x010F787C }; // entity(str)
+        inline util::memory_reference<u32>   script_ent_pool_guard                { 0x010F7880 };
+        inline util::memory_reference<void*> create_entity_script_ent_pool        { 0x010F7884 }; // create_entity(str)
+        inline util::memory_reference<u32>   create_entity_script_ent_pool_guard  { 0x010F7888 };
+        inline util::memory_reference<void*> preregistered_script_ent_pool        { 0x010F788C }; // create_preregistered_entity(str)
+        inline util::memory_reference<u32>   preregistered_script_ent_pool_guard  { 0x010F7890 };
+        inline util::memory_reference<void*> debug_obstacle_script_ent_pool       { 0x010F77F8 }; // create_next_preregistered_debug_obstacle
+        inline util::memory_reference<u32>   debug_obstacle_script_ent_pool_guard { 0x010F77FC };
+        inline util::memory_reference<void*> devopt_entity_script_ent_pool        { 0x010F7874 }; // create_devopt_entity
+        inline util::memory_reference<u32>   devopt_entity_script_ent_pool_guard  { 0x010F7878 };
+
+        // create_devopt_entity's four entity names; empty strings that nothing writes
+        inline util::memory_reference<mash::string> devopt_entity_name_1 { 0x010F7288 };
+        inline util::memory_reference<mash::string> devopt_entity_name_2 { 0x010F77CC };
+        inline util::memory_reference<mash::string> devopt_entity_name_3 { 0x010F71D0 };
+        inline util::memory_reference<mash::string> devopt_entity_name_4 { 0x010F71E8 };
     } // references
 } // treyarch
