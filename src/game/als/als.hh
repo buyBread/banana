@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/als/param.hh"
+#include "game/global.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "game/mutex.hh"
@@ -23,11 +24,6 @@ namespace treyarch {
     struct anim_event_param;
 
     using nal_anim_id = tl_fixed_string;
-
-    enum only_if_you_know_what_you_are_doing : u32 {
-        i_know_what_i_am_doing = 0xDEADBEEF,
-        i_am_not_sure          = 0xCBADF00D
-    };
 
     namespace als {
         // WoS has more layers than SM3's ten, so only the base layer keeps its name
