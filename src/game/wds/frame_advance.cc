@@ -5,7 +5,7 @@
 #include "game/game.hh"
 #include "game/game_meter_manager.hh"
 #include "game/input/input_mgr.hh"
-#include "game/trigger_manager.hh"
+#include "game/trigger.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/morph_interface.hh"

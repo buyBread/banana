@@ -1,9 +1,17 @@
 #include <new>
 
-#include "game/trigger_manager.hh"
+#include "game/trigger.hh"
 #include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
+
+// sub_72CD60
+void trigger::set_uses_extended_events(bool on) {
+    if (on)
+        flags |= trigger_flag_extended_events;
+    else
+        flags &= ~trigger_flag_extended_events;
+}
 
 // sub_738F40
 trigger_manager::trigger_manager() {

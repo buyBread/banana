@@ -13,7 +13,7 @@
 #include "game/movie_manager.hh"
 #include "game/pathfinder/obstacle_manager.hh"
 #include "game/region_spawn_manager.hh"
-#include "game/trigger_manager.hh"
+#include "game/trigger.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mm/mm.hh"
 #include "game/os_file.hh"
