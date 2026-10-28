@@ -1150,16 +1150,53 @@ bool slf__entity__is_invulnerable__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_847330
 bool slf__entity__is_immune_to_death_from_damage__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847330)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    f32 result = self && self->has_ifc(entity_ifc_damage) ? (self->damage_ifc()->flags & damage_ifc_flag_immune_to_death_from_damage ? 1.0f : 0.0f) : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8473D0
 bool slf__entity__enable_push_away_force_on_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8473D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!(self && self->has_ifc(entity_ifc_damage)))
+        return true;
+
+    if (enable > 0.0f)
+        self->damage_ifc()->ext_flags &= ~damage_ifc_ext_flag_disable_push_away_force_on_damage;
+    else
+        self->damage_ifc()->ext_flags |= damage_ifc_ext_flag_disable_push_away_force_on_damage;
+
+    return true;
 }
 
+// sub_847430
 bool slf__entity__enable_die_on_fall_damage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_847430)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto enable = stack.local_num(0x04);
+
+    if (!(self && self->has_ifc(entity_ifc_damage)))
+        return true;
+
+    if (enable > 0.0f)
+        self->damage_ifc()->flags |= damage_ifc_flag_die_on_fall_damage;
+    else
+        self->damage_ifc()->flags &= ~damage_ifc_flag_die_on_fall_damage;
+
+    return true;
 }
 
 bool slf__entity__set_invulnerable__num__t::operator()(chuck::vm::vm_stack &stack) {
