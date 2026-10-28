@@ -1,5 +1,5 @@
-#include "retail.hh"
 #include "game/reference.hh"
+#include "treyarch/ngl/texture/texture.hh"
 
 using namespace treyarch;
 
@@ -15,231 +15,35 @@ void reference<ngl::texture>::initialize(mash::allocation_scope) {
         return;
     }
 
-    i32 found;
-
-    pointer = (ngl::texture*)*retail::sub_7D3800(&found, (i32)name.source_hash_code); // universal_resource::get<texture>
+    pointer = universal_resource::get<ngl::texture>(name);
 
     if (pointer)
-        retail::sub_7B7720((u32*)this);
+        calculate_size_class();
 }
 
-// inlined @ sub_7DA270
-template<> void reference<adjustment_layers_library>::initialize(mash::allocation_scope) {
-    string_hash empty;
+// sub_7B7720
+void reference<ngl::texture>::calculate_size_class() {
+    const i8 width_class  = dimension_class(pointer->gpu_texture.width);
+    const i8 height_class = dimension_class(pointer->gpu_texture.height);
 
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (adjustment_layers_library*)*retail::sub_7D38F0(&found, (i32)name.source_hash_code); // universal_resource::get<adjustment_layers_library>
+    size_class = (height_class + 12) * 13 - width_class * 12;
 }
 
-// inlined @ sub_7DA0F0
-template<> void reference<day_sky_color>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
+// inlined @ sub_7B7720
+i8 reference<ngl::texture>::dimension_class(u32 dimension) { // log2 of a power of two up to 0x1000, else 0
+    switch (dimension) {
+        case 0x0002: return 1;
+        case 0x0004: return 2;
+        case 0x0008: return 3;
+        case 0x0010: return 4;
+        case 0x0020: return 5;
+        case 0x0040: return 6;
+        case 0x0080: return 7;
+        case 0x0100: return 8;
+        case 0x0200: return 9;
+        case 0x0400: return 10;
+        case 0x0800: return 11;
+        case 0x1000: return 12;
+        default:     return 0;
     }
-
-    i32 found;
-
-    pointer = (day_sky_color*)*retail::sub_7D3950(&found, (i32)name.source_hash_code); // universal_resource::get<day_sky_color>
-}
-
-// inlined @ sub_7DA2D0
-template<> void reference<environment>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (environment*)*retail::sub_7D3860(&found, (i32)name.source_hash_code); // universal_resource::get<environment>
-}
-
-// inlined @ sub_7A08A0
-template<> void reference<light_behavior>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (light_behavior*)*retail::sub_794B20(&found, (i32)name.source_hash_code); // universal_resource::get<light_behavior>
-}
-
-// inlined @ sub_7DA210
-template<> void reference<meshmap>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (meshmap*)*retail::sub_7D38C0(&found, (i32)name.source_hash_code); // universal_resource::get<meshmap>
-}
-
-// inlined @ sub_7DA090
-template<> void reference<ngl::mesh>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (ngl::mesh*)*retail::sub_7D3830(&found, (i32)name.source_hash_code); // universal_resource::get<mesh>
-}
-
-// inlined @ sub_7DA150
-template<> void reference<night_sky_color>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (night_sky_color*)*retail::sub_7D3980(&found, (i32)name.source_hash_code); // universal_resource::get<night_sky_color>
-}
-
-// inlined @ sub_7DA1B0
-template<> void reference<outdoors>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (outdoors*)*retail::sub_7D3920(&found, (i32)name.source_hash_code); // universal_resource::get<outdoors>
-}
-
-// inlined @ sub_7F9B30
-template<> void reference<quest_descriptions>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (quest_descriptions*)*retail::sub_7F2C80(&found, (i32)name.source_hash_code); // universal_resource::get<quest_descriptions>
-}
-
-// inlined @ sub_933270
-template<> void reference<spawn_item_collection>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (spawn_item_collection*)*retail::sub_9225B0(&found, (i32)name.source_hash_code); // universal_resource::get<spawn_item_collection>
-}
-
-// inlined @ sub_9332D0
-template<> void reference<spawn_point_list_collection>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (spawn_point_list_collection*)*retail::sub_9225E0(&found, (i32)name.source_hash_code); // universal_resource::get<spawn_point_list_collection>
-}
-
-// inlined @ sub_933330
-template<> void reference<static_spawn_item_collection>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (static_spawn_item_collection*)*retail::sub_922610(&found, (i32)name.source_hash_code); // universal_resource::get<static_spawn_item_collection>
-}
-
-// inlined @ sub_7A1700
-template<> void reference<tilemap>::initialize(mash::allocation_scope) {
-    string_hash empty;
-
-    empty.initialize(mash::ALLOCATED);
-
-    if (name == empty) {
-        pointer = nullptr;
-
-        return;
-    }
-
-    i32 found;
-
-    pointer = (tilemap*)*retail::sub_794AF0(&found, (i32)name.source_hash_code); // universal_resource::get<tilemap>
 }

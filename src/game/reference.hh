@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/universal_resource.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -9,24 +10,6 @@ namespace treyarch {
     namespace mash {
         class mash_info_struct;
     } // mash
-
-    namespace ngl {
-        struct mesh;
-        struct texture;
-    } // ngl
-
-    class adjustment_layers_library;
-    class day_sky_color;
-    class environment;
-    class light_behavior;
-    class meshmap;
-    class night_sky_color;
-    class outdoors;
-    class quest_descriptions;
-    class spawn_item_collection;
-    class spawn_point_list_collection;
-    class static_spawn_item_collection;
-    class tilemap;
 
     // a named resource, looked up when the owner is constructed from mash
     template<typename T>
@@ -62,7 +45,19 @@ namespace treyarch {
         void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
 
     private:
-        void initialize(mash::allocation_scope scope);
+        void initialize(mash::allocation_scope) {
+            string_hash empty;
+
+            empty.initialize(mash::ALLOCATED);
+
+            if (name == empty) {
+                pointer = nullptr;
+
+                return;
+            }
+
+            pointer = universal_resource::get<T>(name);
+        }
 
         void finalize(mash::allocation_scope) {
             if (pointer)
@@ -70,12 +65,12 @@ namespace treyarch {
         }
     };
 
-    // texture references also keep a value derived from the texture's size
+    // texture references also keep the texture's size class
     template<>
     struct reference<ngl::texture> {
         string_hash   name;
         ngl::texture* pointer;
-        u32           unk_08;
+        i32           size_class; // indexes the texture size table
 
         ~reference() {
             finalize(mash::ALLOCATED);
@@ -100,25 +95,15 @@ namespace treyarch {
             if (pointer)
                 pointer = nullptr;
         }
-    };
 
-    template<> void reference<adjustment_layers_library>::initialize(mash::allocation_scope scope);
-    template<> void reference<day_sky_color>::initialize(mash::allocation_scope scope);
-    template<> void reference<environment>::initialize(mash::allocation_scope scope);
-    template<> void reference<light_behavior>::initialize(mash::allocation_scope scope);
-    template<> void reference<meshmap>::initialize(mash::allocation_scope scope);
-    template<> void reference<ngl::mesh>::initialize(mash::allocation_scope scope);
-    template<> void reference<night_sky_color>::initialize(mash::allocation_scope scope);
-    template<> void reference<outdoors>::initialize(mash::allocation_scope scope);
-    template<> void reference<quest_descriptions>::initialize(mash::allocation_scope scope);
-    template<> void reference<spawn_item_collection>::initialize(mash::allocation_scope scope);
-    template<> void reference<spawn_point_list_collection>::initialize(mash::allocation_scope scope);
-    template<> void reference<static_spawn_item_collection>::initialize(mash::allocation_scope scope);
-    template<> void reference<tilemap>::initialize(mash::allocation_scope scope);
+        void calculate_size_class();
+
+        static i8 dimension_class(u32 dimension);
+    };
 
     ASSERT_SIZEOF  (reference<void>,          0x08);
     ASSERT_OFFSETOF(reference<void>, pointer, 0x04);
 
-    ASSERT_SIZEOF  (reference<ngl::texture>,         0x0C);
-    ASSERT_OFFSETOF(reference<ngl::texture>, unk_08, 0x08);
+    ASSERT_SIZEOF  (reference<ngl::texture>,             0x0C);
+    ASSERT_OFFSETOF(reference<ngl::texture>, size_class, 0x08);
 } // treyarch

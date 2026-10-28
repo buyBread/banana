@@ -14,6 +14,11 @@ namespace treyarch {
         string_hash hash;
         u32         type;
 
+        // sub_5FD120
+        string_hash get_hash() const {
+            return hash;
+        }
+
         // sub_72DDE0
         void set(string_hash value, u32 resource_type) {
             hash = value;
