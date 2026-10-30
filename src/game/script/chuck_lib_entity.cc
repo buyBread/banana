@@ -7642,7 +7642,7 @@ bool slf__entity__get_variant_name__num__t::operator()(chuck::vm::vm_stack &stac
         string_hash name;
         ((string_hash* (__thiscall*)(variant_interface*, string_hash*, i32))retail::sub_6108F0)(self->variant_ifc(), &name, (i32)index); // variant_interface::get_variant_name
 
-        result = stack.thread->create_string(((const char* (__thiscall*)(string_hash*))retail::sub_A6C7C0)(&name)); // string_hash::to_string
+        result = stack.thread->create_string(name.to_string());
     }
 
     stack.push(&result, sizeof(result));
