@@ -501,4 +501,133 @@ TEST_SUITE("mash") {
         CHECK(free_count(tests::heap_allocator) == 0);
         CHECK(live_count(tests::plain_allocator) == 0);
     }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "erasing from a pointer vector destroys the element, slides the rest down and nulls the old last slot") {
+
+        image_t<256> image;
+
+        trace_t trace;
+        auto*   values = image.make<mash::vector<record_t>>(16);
+        auto**  table  = (record_t**)treyarch::mm::allocate(3 * sizeof(record_t*));
+
+        table[0] = put_record(image, 64, 1, trace);
+        table[1] = put_record(image, 72, 2, trace);
+        table[2] = put_record(image, 80, 3, trace);
+
+        values->array             = table;
+        values->size              = values->max_size = 3;
+        values->mash_image_offset = 80;
+
+        // erase hands back the spot it was given, which now holds the element that came after it.
+        auto next = values->erase(values->begin() + 1);
+
+        CHECK(next == table + 1);
+        REQUIRE(trace.events.size() == 1);
+        CHECK(trace.events[0].kind == event_destruct_mashed);
+        CHECK(trace.events[0].id == 2);
+        CHECK(values->size == 2);
+        CHECK(table[0] == image.at<record_t>(64));
+        CHECK(table[1] == image.at<record_t>(80));
+        CHECK(table[2] == nullptr);
+
+        // with destruct_contents off the element stays alive; erasing the last one has nothing to slide.
+        values->destruct_contents = false;
+        values->erase(values->begin() + 1);
+
+        CHECK(trace.events.size() == 1);
+        CHECK(values->size == 1);
+        CHECK(table[1] == image.at<record_t>(80));
+
+        values->clear();
+
+        CHECK(free_count(tests::heap_allocator) == 1);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "resizing a pointer vector down destroys what's past the new size, even when it doesn't own its elements") {
+
+        image_t<256> image;
+
+        trace_t trace;
+        auto*   values = image.make<mash::vector<record_t>>(16);
+        auto**  table  = (record_t**)treyarch::mm::allocate(3 * sizeof(record_t*));
+
+        table[0] = put_record(image, 64, 1, trace);
+        table[1] = put_record(image, 72, 2, trace);
+        table[2] = put_record(image, 80, 3, trace);
+
+        values->array             = table;
+        values->size              = values->max_size = 3;
+        values->mash_image_offset = 80;
+        values->destruct_contents = false;
+
+        record_t fill{9, &trace};
+        values->resize(1, fill);
+
+        REQUIRE(trace.events.size() == 2);
+        CHECK(trace.events[0].kind == event_destruct_mashed);
+        CHECK(trace.events[0].id == 3);
+        CHECK(trace.events[1].id == 2);
+        CHECK(values->size == 1);
+        CHECK(values->max_size == 3);
+        CHECK(table[1] == nullptr);
+        CHECK(table[2] == nullptr);
+
+        values->clear();
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "resizing a pointer vector up points every new slot at the one fill object") {
+
+        trace_t  trace;
+        record_t fill{9, &trace};
+
+        {
+            mash::vector<record_t> values;
+            values.destruct_contents = false;
+            values.resize(3, fill);
+
+            CHECK(values.size == 3);
+            CHECK(values.max_size == 3);
+            CHECK(values.array[0] == &fill);
+            CHECK(values.array[1] == &fill);
+            CHECK(values.array[2] == &fill);
+            CHECK(allocations.size() == 1);
+        }
+
+        CHECK(trace.events.empty());
+        CHECK(free_count(tests::heap_allocator) == 1);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "erasing from a basic vector slides the rest down and leaves the old last value behind") {
+
+        mash::vector_basic<u32> values {};
+        values.array = (u32*)treyarch::tl_mem_alloc(16, 4, 0);
+        values.size  = values.max_size = 4;
+
+        values.array[0] = 10;
+        values.array[1] = 20;
+        values.array[2] = 30;
+        values.array[3] = 40;
+
+        auto next = values.erase(values.begin() + 1);
+
+        CHECK(next == values.array + 1);
+        CHECK(values.size == 3);
+        CHECK(values.array[0] == 10);
+        CHECK(values.array[1] == 30);
+        CHECK(values.array[2] == 40);
+        CHECK(values.array[3] == 40);
+
+        values.erase(values.begin() + 2);
+
+        CHECK(values.size == 2);
+        CHECK(values.array[1] == 30);
+
+        values.clear();
+
+        CHECK(free_count(tests::plain_allocator) == 1);
+    }
 }

@@ -362,4 +362,31 @@ TEST_SUITE("mash") {
         CHECK(free_count(tests::heap_allocator) == 3);
         CHECK(live_count(tests::heap_allocator) == 3);
     }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "find walks down from the root comparing elements and hands back the one that matches") {
+
+        trace_t     trace;
+        record_tree tree {};
+        tree.initialize(mash::ALLOCATED);
+
+        put_owned_nodes(tree, trace);
+
+        // the key only has to compare equal; it isn't one of the tree's own records.
+        for (u32 id : {1u, 2u, 3u}) {
+            CAPTURE(id);
+
+            record_t  key{id, &trace};
+            record_t* found = tree.find(&key);
+
+            REQUIRE(found != nullptr);
+            CHECK(found->id == id);
+            CHECK(found != &key);
+        }
+
+        record_t missing{4, &trace};
+
+        CHECK(tree.find(&missing) == nullptr);
+        CHECK(tree.find(nullptr) == nullptr);
+    }
 }
