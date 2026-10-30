@@ -3,17 +3,66 @@
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector.hh"
+#include "treyarch/mash/vector_basic.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "game/math/algebra.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    // the base of every named spawn value; mashed ones get their retail vtable from the type registry
+    // the base of every named spawn value; the family is only ever mashed, so each one runs on its retail vtable from the type registry
     class spawn_data_base : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x0C];
+        mash::string name;
+
+        // sub_71F870
+        virtual bool is_array() const { return false; }
+
+        // sub_71F870
+        virtual bool is_vector() const { return false; }
+
+        // sub_71F870
+        virtual bool is_num() const { return false; }
+
+        // sub_71F870
+        virtual bool is_str() const { return false; }
+    };
+
+    class spawn_data_num : public spawn_data_base {
+
+    public:
+        f32 value;
+    };
+
+    class spawn_data_str : public spawn_data_base {
+
+    public:
+        mash::string value;
+    };
+
+    class spawn_data_vector : public spawn_data_base {
+
+    public:
+        vector3d value;
+    };
+
+    class spawn_data_array_num : public spawn_data_base {
+
+    public:
+        mash::vector_basic<f32> values;
+    };
+
+    class spawn_data_array_str : public spawn_data_base {
+
+    public:
+        mash::vector<mash::string> values;
+    };
+
+    class spawn_data_array_vector : public spawn_data_base {
+
+    public:
+        mash::vector<spawn_data_vector> values;
     };
 
     struct spawn_point {
@@ -83,7 +132,26 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    ASSERT_SIZEOF  (spawn_data_base, 0x10);
+    ASSERT_SIZEOF  (spawn_data_base,       0x10);
+    ASSERT_OFFSETOF(spawn_data_base, name, 0x04);
+
+    ASSERT_SIZEOF  (spawn_data_num,        0x14);
+    ASSERT_OFFSETOF(spawn_data_num, value, 0x10);
+
+    ASSERT_SIZEOF  (spawn_data_str,        0x1C);
+    ASSERT_OFFSETOF(spawn_data_str, value, 0x10);
+
+    ASSERT_SIZEOF  (spawn_data_vector,        0x1C);
+    ASSERT_OFFSETOF(spawn_data_vector, value, 0x10);
+
+    ASSERT_SIZEOF  (spawn_data_array_num,         0x20);
+    ASSERT_OFFSETOF(spawn_data_array_num, values, 0x10);
+
+    ASSERT_SIZEOF  (spawn_data_array_str,         0x24);
+    ASSERT_OFFSETOF(spawn_data_array_str, values, 0x10);
+
+    ASSERT_SIZEOF  (spawn_data_array_vector,         0x24);
+    ASSERT_OFFSETOF(spawn_data_array_vector, values, 0x10);
 
     ASSERT_SIZEOF  (spawn_point,         0x28);
     ASSERT_OFFSETOF(spawn_point, data,   0x0C);

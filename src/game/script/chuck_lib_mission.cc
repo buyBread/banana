@@ -28,6 +28,7 @@
 #include "game/resource_key.hh"
 #include "game/script/chuck_lib_mission.hh"
 #include "game/script/script_access.hh"
+#include "game/spawn_point_list_collection.hh"
 #include "game/spawn_table_manager.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
@@ -885,36 +886,183 @@ bool slf__get_spawn_position__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_858320
 bool slf__has_optional_data__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858320)(this, stack);
+    stack.sp -= 0x04;
+
+    bool found = false;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        found = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00))) != nullptr;
+    }
+
+    f32 result = found ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_858390
 bool slf__get_vector_data__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858390)(this, stack);
+    stack.sp -= 0x04;
+
+    vector3d value(0.0f);
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        if (data && data->is_vector())
+            value = ((spawn_data_vector*)data)->value;
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_858440
 bool slf__get_str_data__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858440)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* value = "";
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        // the data's own characters, not a thread string
+        if (data && data->is_str())
+            value = ((spawn_data_str*)data)->value.c_str();
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_8584D0
 bool slf__get_num_data__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8584D0)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 value = -1.0f;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        if (data && data->is_num())
+            value = ((spawn_data_num*)data)->value;
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_880EA0
 bool slf__get_vector_data_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880EA0)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    if (!data || !data->is_vector() || !data->is_array())
+        return true;
+
+    chuck::vm::script_dynamic_array<vector3d> vectors((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto* array = (spawn_data_array_vector*)data;
+
+    for (spawn_data_vector** it = array->values.begin(); it != array->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(vector3d*)element.stuff = (*it)->value;
+
+        vectors.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_880FB0
 bool slf__get_str_data_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880FB0)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    if (!data || !data->is_str() || !data->is_array())
+        return true;
+
+    chuck::vm::script_dynamic_array<u32> strings((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto* array = (spawn_data_array_str*)data;
+
+    // each element is the data's own characters, not a thread string
+    for (mash::string** it = array->values.begin(); it != array->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(const char**)element.stuff = (*it)->c_str();
+
+        strings.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_8810A0
 bool slf__get_num_data_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8810A0)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    if (!data || !data->is_num() || !data->is_array())
+        return true;
+
+    chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto* array = (spawn_data_array_num*)data;
+
+    for (f32* it = array->values.begin(); it != array->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(f32*)element.stuff = *it;
+
+        nums.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_83E6C0
 bool slf__has_optional_data__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E6C0)(this, stack);
+    bool found = false;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        found = retail::sub_92EEB0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+
+    f32 result = found ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__add_no_spawn_zone__str__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -957,64 +1105,266 @@ bool slf__is_point_within_arbitrary_region__str__vector3d__t::operator()(chuck::
     return ((invoke_t)retail::sub_858930)(this, stack);
 }
 
+// sub_83E730
 bool slf__has_persistence_data__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E730)(this, stack);
+    bool found = false;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        found = retail::sub_939120((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+
+    f32 result = found ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_858990
 bool slf__start_persistence_data_save__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858990)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        retail::sub_951CB0((u32*)spawn_table_manager::inst(), (u32*)stack.thread->inst, stack.local_num(0x00));
+
+    return true;
 }
 
+// sub_8589D0
 bool slf__save_persistence_vector3d__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8589D0)(this, stack);
+    stack.sp -= 0x10;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using save_vector3d_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, vector3d);
+
+        ((save_vector3d_t)retail::sub_93FB10)(spawn_table_manager::inst(),
+                                              stack.thread->inst,
+                                              mash::string((const char*)stack.local_uint(0x00)),
+                                              *(vector3d*)&stack.local_uint(0x04));
+    }
+
+    return true;
 }
 
+// sub_858A30
 bool slf__save_persistence_vector3d_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858A30)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        chuck::vm::script_dynamic_array<vector3d> vectors((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+        using save_vector3d_array_t = void (__thiscall*)(spawn_table_manager*,
+                                                         chuck::vm::script_instance*,
+                                                         mash::string,
+                                                         chuck::vm::script_dynamic_array<vector3d>*);
+
+        ((save_vector3d_array_t)retail::sub_949D40)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &vectors);
+    }
+
+    return true;
 }
 
+// sub_858AE0
 bool slf__get_persistence_vector3d__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858AE0)(this, stack);
+    stack.sp -= 0x04;
+
+    vector3d value;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        auto* record = (persistence_vector3d*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        value = record->value;
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_881190
 bool slf__get_persistence_vector3d_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_881190)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    auto* record = (persistence_vector3d_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    chuck::vm::script_dynamic_array<vector3d> vectors((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    for (vector3d* it = record->values.begin(); it != record->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(vector3d*)element.stuff = *it;
+
+        vectors.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_858B70
 bool slf__save_persistence_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858B70)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using save_str_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, mash::string);
+
+        ((save_str_t)retail::sub_93FC10)(spawn_table_manager::inst(),
+                                         stack.thread->inst,
+                                         mash::string((const char*)stack.local_uint(0x00)),
+                                         mash::string((const char*)stack.local_uint(0x04)));
+    }
+
+    return true;
 }
 
+// sub_858C00
 bool slf__save_persistence_str_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858C00)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        chuck::vm::script_dynamic_array<u32> strings((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+        using save_str_array_t = void (__thiscall*)(spawn_table_manager*,
+                                                    chuck::vm::script_instance*,
+                                                    mash::string,
+                                                    chuck::vm::script_dynamic_array<u32>*);
+
+        ((save_str_array_t)retail::sub_951D80)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &strings);
+    }
+
+    return true;
 }
 
+// sub_858CB0
 bool slf__get_persistence_str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858CB0)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* value = "";
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        auto* record = (persistence_str*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        // the record's own characters, not a thread string
+        value = record->value.c_str();
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_881250
 bool slf__get_persistence_str_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_881250)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    auto* record = (persistence_str_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    chuck::vm::script_dynamic_array<u32> strings((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    // each element is the record's own characters, not a thread string
+    for (mash::string* it = record->values.begin(); it != record->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(const char**)element.stuff = it->c_str();
+
+        strings.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_858D30
 bool slf__save_persistence_num__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858D30)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using save_num_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, f32);
+
+        ((save_num_t)retail::sub_93FCD0)(spawn_table_manager::inst(),
+                                         stack.thread->inst,
+                                         mash::string((const char*)stack.local_uint(0x00)),
+                                         stack.local_num(0x04));
+    }
+
+    return true;
 }
 
+// sub_858D80
 bool slf__save_persistence_num_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858D80)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+        using save_num_array_t = void (__thiscall*)(spawn_table_manager*,
+                                                    chuck::vm::script_instance*,
+                                                    mash::string,
+                                                    chuck::vm::script_dynamic_array<f32>*);
+
+        ((save_num_array_t)retail::sub_949E70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &nums);
+    }
+
+    return true;
 }
 
+// sub_858E30
 bool slf__get_persistence_num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858E30)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 value = -1.0f;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+        auto* record = (persistence_num*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+        value = record->value;
+    }
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_881310
 bool slf__get_persistence_num_array__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_881310)(this, stack);
+    stack.sp -= 0x08;
+
+    if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
+        return true;
+
+    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
+
+    auto* record = (persistence_num_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+
+    chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    for (f32* it = record->values.begin(); it != record->values.end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(f32*)element.stuff = *it;
+
+        nums.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_83E780
 bool slf__end_persistance_data_save__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E780)(this, stack);
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        retail::sub_9391B0((u32*)spawn_table_manager::inst(), (u32*)stack.thread->inst);
+
+    return true;
 }
 
 // sub_83E7B0

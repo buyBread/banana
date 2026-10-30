@@ -1,12 +1,67 @@
 #pragma once
 
 #include "vc8/vector.hh"
+#include "treyarch/mash/string.hh"
+#include "game/math/algebra.hh"
 #include "game/singleton.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
     class cross_neighborhood_spawn;
+
+    // a script's saved value; the records are only ever made by retail, so these never run their own vtable
+    class persistence_data_base {
+
+    public:
+        // sub_71F870
+        virtual bool is_array() const { return false; }
+
+        // sub_71F870
+        virtual bool is_vector3d() const { return false; }
+
+        // sub_71F870
+        virtual bool is_str() const { return false; }
+
+        // sub_71F870
+        virtual bool is_num() const { return false; }
+    };
+
+    class persistence_num : public persistence_data_base {
+
+    public:
+        f32 value;
+    };
+
+    class persistence_str : public persistence_data_base {
+
+    public:
+        mash::string value;
+    };
+
+    class persistence_vector3d : public persistence_data_base {
+
+    public:
+        vector3d value;
+    };
+
+    class persistence_num_array : public persistence_data_base {
+
+    public:
+        vc8::vector<f32> values;
+    };
+
+    class persistence_str_array : public persistence_data_base {
+
+    public:
+        vc8::vector<mash::string> values;
+    };
+
+    class persistence_vector3d_array : public persistence_data_base {
+
+    public:
+        vc8::vector<vector3d> values;
+    };
 
     // built by the constructor (sub_94D260)
     struct spawn_table_manager_unk_04c {
@@ -34,6 +89,24 @@ namespace treyarch {
         spawn_table_manager_unk_04c* unk_04c;
         u8                           reserved_050[0x04];
     };
+
+    ASSERT_SIZEOF  (persistence_num,        0x08);
+    ASSERT_OFFSETOF(persistence_num, value, 0x04);
+
+    ASSERT_SIZEOF  (persistence_str,        0x10);
+    ASSERT_OFFSETOF(persistence_str, value, 0x04);
+
+    ASSERT_SIZEOF  (persistence_vector3d,        0x10);
+    ASSERT_OFFSETOF(persistence_vector3d, value, 0x04);
+
+    ASSERT_SIZEOF  (persistence_num_array,         0x14);
+    ASSERT_OFFSETOF(persistence_num_array, values, 0x04);
+
+    ASSERT_SIZEOF  (persistence_str_array,         0x14);
+    ASSERT_OFFSETOF(persistence_str_array, values, 0x04);
+
+    ASSERT_SIZEOF  (persistence_vector3d_array,         0x14);
+    ASSERT_OFFSETOF(persistence_vector3d_array, values, 0x04);
 
     ASSERT_SIZEOF  (spawn_table_manager_unk_04c,                            0x198);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, cross_neighborhood_spawns, 0xD0);
