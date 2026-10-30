@@ -132,6 +132,7 @@ namespace treyarch { namespace mash {
 
         // sub_808E20
         // sub_A6F520
+        // sub_A73C10
         void custom_unmash(mash_info_struct* mash_info,
                            void*,
                            buffer_type       buffer) {
@@ -156,11 +157,23 @@ namespace treyarch { namespace mash {
             dump(root_node);
         }
 
+        // inlined @ sub_A6F310
+        // inlined @ sub_A73AB0
+        T* find(T* data) const {
+            node_type* node = find_helper(root_node, data);
+
+            if (node)
+                return node->element;
+            else
+                return nullptr;
+        }
+
     private:
         void finalize(allocation_scope) {
             clear();
         }
 
+        // sub_735EA0
         // sub_805480
         static i32 compare(const node_type* left_node, const node_type* right_node) {
             if (*right_node->element < *left_node->element)
@@ -241,6 +254,7 @@ namespace treyarch { namespace mash {
             single_rotate_right(k3);
         }
 
+        // sub_7556A0
         // sub_807170
         // sub_A6F0D0
         i32 add_helper(node_type* node, node_type* &top, node_type* parent) {
@@ -278,6 +292,25 @@ namespace treyarch { namespace mash {
             }
 
             return comp;
+        }
+
+        // sub_79B670
+        // sub_A6F010
+        static node_type* find_helper(node_type* node, T* data) {
+            if (node && data) {
+                node_type temp_node{data};
+
+                i32 comp = -compare(node, &temp_node);
+
+                if (comp == 0)
+                    return node;
+                else if (comp < 0)
+                    return find_helper(node->left, data);
+                else if (comp > 0)
+                    return find_helper(node->right, data);
+            }
+
+            return nullptr;
         }
 
         // sub_8078B0

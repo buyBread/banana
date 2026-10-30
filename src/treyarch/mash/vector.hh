@@ -14,6 +14,8 @@ namespace treyarch { namespace mash {
     class vector : public container_base {
 
     public:
+        using iterator = T**;
+
         T**  array;
         u32  max_size;
         bool destruct_contents;
@@ -27,6 +29,9 @@ namespace treyarch { namespace mash {
 
         explicit vector(generating_vtable_version so_do_nothing) : container_base(so_do_nothing) {}
 
+        // sub_6E6040
+        // sub_7F9550
+        // sub_935110
         // sub_A1BAE0
         // sub_A1BAF0
         // sub_A1C120
@@ -173,10 +178,12 @@ namespace treyarch { namespace mash {
         }
 
         // sub_5A6350
+        // sub_7DD480
         // sub_7DDD40
         // sub_7FFC70
         // sub_8085F0
         // sub_902E10
+        // sub_94CBB0
         // sub_979970
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
@@ -217,6 +224,7 @@ namespace treyarch { namespace mash {
         // sub_642780
         // sub_6CC410
         // sub_6CC4A0
+        // sub_6CC5D0
         // sub_6D7330
         // sub_6D73C0
         // sub_762770
@@ -270,6 +278,7 @@ namespace treyarch { namespace mash {
         // sub_5F5490
         // sub_5F5520
         // sub_63E130
+        // sub_66A1B0
         // sub_75CCD0
         // sub_7DA450
         // sub_7DA730
@@ -326,12 +335,46 @@ namespace treyarch { namespace mash {
 
             return size;
         }
+
+        // sub_A72A50
+        // sub_A764A0
+        void resize(u32 n, const T &fill) { // destroys what's past n even when destruct_contents is off
+            reserve(n);
+
+            while (size > n) {
+                --size;
+                destroy_element(array[size]);
+            }
+
+            // every new slot points at the same fill object
+            while (size < n)
+                push_back((T*)&fill);
+        }
+
+        // sub_A76400
+        iterator erase(const iterator &i) { // returns i, which now holds the next element
+            if (destruct_contents)
+                destroy_element(*i);
+
+            iterator next_element = i + 1;
+
+            if (next_element != end()) {
+                i32 copy_num = (i32)(end() - next_element);
+
+                std::memmove(i, next_element, copy_num * sizeof(T*));
+                array[size - 1] = nullptr;
+            }
+
+            --size;
+
+            return i;
+        }
     };
 
-    ASSERT_SIZEOF  (vector<void>,                    0x14);
-    ASSERT_OFFSETOF(vector<void>, mash_image_offset, 0x00);
-    ASSERT_OFFSETOF(vector<void>, size,              0x04);
-    ASSERT_OFFSETOF(vector<void>, array,             0x08);
-    ASSERT_OFFSETOF(vector<void>, max_size,          0x0C);
-    ASSERT_OFFSETOF(vector<void>, destruct_contents, 0x10);
+    ASSERT_SIZEOF  (vector<void*>,                    0x14);
+    ASSERT_OFFSETOF(vector<void*>, mash_image_offset, 0x00);
+    ASSERT_OFFSETOF(vector<void*>, size,              0x04);
+    ASSERT_OFFSETOF(vector<void*>, array,             0x08);
+    ASSERT_OFFSETOF(vector<void*>, max_size,          0x0C);
+    ASSERT_OFFSETOF(vector<void*>, destruct_contents, 0x10);
 }} // treyarch::mash

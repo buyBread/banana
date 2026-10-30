@@ -15,6 +15,8 @@ namespace treyarch { namespace mash {
         static const i32 block_alloc_size = 8;
 
     public:
+        using iterator = T*;
+
         T*  array;
         u32 max_size;
 
@@ -35,6 +37,8 @@ namespace treyarch { namespace mash {
         // sub_4A45B0
         // sub_5CD470
         // sub_620B30
+        // sub_620BA0
+        // sub_620D10
         // sub_7C2B00
         // sub_7C2B70
         // sub_7C2BE0
@@ -83,8 +87,13 @@ namespace treyarch { namespace mash {
             container_base::clear();
         }
 
+        // sub_455EE0
         // sub_588AA0
         // sub_6063B0
+        // sub_95D7D0
+        // sub_A700E0
+        // sub_A70150
+        // sub_A701C0
         // inlined @ sub_87A810
         void reserve(u32 new_size) {
             if (new_size <= max_size)
@@ -117,6 +126,7 @@ namespace treyarch { namespace mash {
         }
 
         // sub_8434C0
+        // sub_A756C0
         void resize(u32 count, const T &value) {
             reserve(count);
 
@@ -138,6 +148,21 @@ namespace treyarch { namespace mash {
             }
 
             return *this;
+        }
+
+        // sub_4A4320
+        iterator erase(const iterator &i) { // returns i, which now holds the next element
+            iterator next_element = i + 1;
+
+            if (next_element != end()) {
+                i32 copy_num = (i32)(end() - next_element);
+
+                std::memmove(i, next_element, copy_num * sizeof(T));
+            }
+
+            --size;
+
+            return i;
         }
     };
 

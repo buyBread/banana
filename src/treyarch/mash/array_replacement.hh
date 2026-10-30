@@ -14,6 +14,7 @@ namespace treyarch { namespace mash {
     public:
         T* array;
 
+        // sub_6429C0
         // sub_901E80
         void initialize_helper_mash(u32 n) {
             if (!array)
@@ -48,8 +49,13 @@ namespace treyarch { namespace mash {
         }
 
         // sub_5EC4F0
+        // sub_636340
+        // sub_63E470
+        // sub_649DE0
         // sub_7D90D0
         // sub_903820
+        // sub_929110
+        // sub_9BF9F0
         void custom_unmash_helper(i32              n,
                                   mash_info_struct* mash_info,
                                   void*,
