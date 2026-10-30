@@ -8,6 +8,7 @@
 
 #include "support/memory.hh"
 #include "vc8/hash_map.hh"
+#include "vc8/hash_set.hh"
 #include "vc8/list.hh"
 #include "vc8/map.hh"
 #include "vc8/set.hh"

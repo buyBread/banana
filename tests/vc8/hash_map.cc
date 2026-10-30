@@ -30,11 +30,13 @@ TEST_SUITE("vc8") {
 
         integer_hash_map values;
 
-        auto* first = values.insert(10, 100);
-        auto* same  = values.insert(10, 200);
+        auto first = values.insert({ 10, 100 });
+        auto same  = values.insert({ 10, 200 });
 
-        CHECK(same == first);
-        CHECK(same->value.value == 100);
+        CHECK(first.second);
+        CHECK_FALSE(same.second);
+        CHECK(same.first == first.first);
+        CHECK(same.first->value.value == 100);
         CHECK(check_hash(values) == std::vector<u32> { 10 });
         CHECK(allocations.size() == 3);
     }
@@ -45,7 +47,7 @@ TEST_SUITE("vc8") {
         vc8::hash_map<u32, u32, collision_hash_t> values;
 
         for (u32 key : { 0xFFFFFFFFu, 7u, 0x80000000u, 0u, 0x7FFFFFFFu, 9u })
-            values.insert(key, key ^ 0x1234);
+            values.insert({ key, key ^ 0x1234 });
 
         CHECK(check_hash(values, collision_hash_t {}) == std::vector<u32> { 0, 7, 9, 0x7FFFFFFF, 0x80000000, 0xFFFFFFFF });
 
@@ -73,7 +75,7 @@ TEST_SUITE("vc8") {
             std::vector<decltype(values.head())> nodes;
 
             for (u32 key : split.keys)
-                nodes.push_back(values.insert(key, key + 100));
+                nodes.push_back(values.insert({ key, key + 100 }).first);
 
             CHECK(hash_layout(values).bucket_count == 2);
             CHECK(check_hash(values) == split.order);
@@ -89,12 +91,12 @@ TEST_SUITE("vc8") {
         integer_hash_map values;
 
         for (u32 key = 0; key < 4; ++key)
-            values.insert(key, key + 10);
+            values.insert({ key, key + 10 });
 
         auto* original = values.find(1);
         u32   before   = allocations.size();
 
-        auto* duplicate = values.insert(1, 999);
+        auto* duplicate = values.insert({ 1, 999 }).first;
 
         CHECK(duplicate == original);
         CHECK(duplicate->value.value == 11);
@@ -111,7 +113,7 @@ TEST_SUITE("vc8") {
         for (u32 key = 0; key < 65; ++key) {
             CAPTURE(key);
 
-            values.insert(key, key + 1000);
+            values.insert({ key, key + 1000 });
 
             const auto &layout = hash_layout(values);
 
@@ -156,7 +158,7 @@ TEST_SUITE("vc8") {
             std::vector<u32> order { 0, 2, 4, 6, 1 };
 
             for (u32 key : order)
-                values.insert(key, key);
+                values.insert({ key, key });
 
             auto* node = values.find(removed);
             auto* next = node->next;
@@ -169,7 +171,7 @@ TEST_SUITE("vc8") {
 
             CHECK(check_hash(values) == remaining);
 
-            auto* replacement = values.insert(removed, 99);
+            auto* replacement = values.insert({ removed, 99 }).first;
 
             CHECK(replacement->value.value == 99);
             CHECK(check_hash(values) == order);
@@ -188,7 +190,7 @@ TEST_SUITE("vc8") {
         integer_hash_map values;
 
         for (u32 key = 0; key < 65; ++key)
-            values.insert(key, key);
+            values.insert({ key, key });
 
         const auto &layout = hash_layout(values);
         auto*       bounds = layout.bounds.begin();
@@ -209,7 +211,7 @@ TEST_SUITE("vc8") {
         CHECK(live_count(tests::heap_allocator) == 2);
 
         for (u32 key = 0; key < 65; ++key)
-            values.insert(key, key + 1);
+            values.insert({ key, key + 1 });
 
         CHECK(check_hash(values).size() == 65);
         CHECK(layout.bounds.begin() == bounds);
@@ -226,7 +228,7 @@ TEST_SUITE("vc8") {
             std::vector<decltype(values.head())>                 nodes;
 
             for (u32 key = 0; key < 40; ++key)
-                nodes.push_back(values.insert(key, seed));
+                nodes.push_back(values.insert({ key, seed }).first);
 
             for (u32 key = 0; key < 40; ++key)
                 CHECK(values.find(key) == nodes[key]);
@@ -253,7 +255,7 @@ TEST_SUITE("vc8") {
         vc8::hash_map<treyarch::arch_base_vhandle, u32> values;
 
         for (u32 key : { 0xFFFFFFFFu, 0u, 0x80000000u, 5u, 17u })
-            values.insert(treyarch::arch_base_vhandle(key), key ^ 123);
+            values.insert({ treyarch::arch_base_vhandle(key), key ^ 123 });
 
         for (u32 key : { 0xFFFFFFFFu, 0u, 0x80000000u, 5u, 17u }) {
             CAPTURE(key);
@@ -268,6 +270,17 @@ TEST_SUITE("vc8") {
         CHECK(values.size() == 5);
     }
 
+    TEST_CASE("hash compare mixes unsigned keys like vc8's integral hash") {
+        vc8::hash_compare<u32> traits;
+
+        CHECK(traits(0)          == 0x60D22BD1);
+        CHECK(traits(1)          == 0x60D1EA2A);
+        CHECK(traits(0xDEADBEEF) == 0);
+        CHECK(traits(0xFFFFFFFF) == 0x1F2D9287);
+        CHECK(traits(0x12345678) == 0x0C74F724);
+        CHECK(traits.less(1, 0xFFFFFFFF));
+    }
+
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
                       "hash map destructor frees the entries sentinel and bounds") {
 
@@ -275,7 +288,7 @@ TEST_SUITE("vc8") {
             integer_hash_map values;
 
             for (u32 key = 0; key < 50; ++key)
-                values.insert(key, key);
+                values.insert({ key, key });
 
             CHECK(check_hash(values).size() == 50);
         }
@@ -298,7 +311,7 @@ TEST_SUITE("vc8") {
             u32 key  = (roll >> 8) % 100;
 
             if (roll & 3) {
-                values.insert(key, step);
+                values.insert({ key, step });
                 expected.emplace(key, step);
             } else {
                 auto* node = values.find(key);
