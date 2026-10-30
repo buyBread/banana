@@ -256,8 +256,8 @@ void ui_frontend::draw() {
             if (conversation_menu_system)
                 ((igo_3d_widget*)((u8*)conversation_menu_system + 0x10))->draw();
 
-            if (widget_owner_164)
-                ((igo_3d_widget*)((u8*)widget_owner_164 + 0x10))->draw();
+            if (dialog)
+                dialog->widget.draw();
 
             draw_script_widgets();
 

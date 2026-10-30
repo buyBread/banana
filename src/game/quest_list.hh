@@ -37,7 +37,7 @@ namespace treyarch {
             <quest_giver_location_item> locations;
 
         mash::string name;
-        mash::string unk_20;
+        mash::string localized_name;
         u32          unk_2c;
         mash::string unk_30;
         mash::string unk_3c;

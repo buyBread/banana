@@ -47,6 +47,11 @@ namespace treyarch {
         const char* lookup_localized_string(i32 num) const {
             return strings[num]->c_str();
         }
+
+        // sub_6ABA10
+        const char* lookup_scripttext_string(i32 num) const { // script text starts after the 3526 global strings
+            return strings[num + 3526]->c_str();
+        }
     };
 
     i32 find_global_text(string_hash id);

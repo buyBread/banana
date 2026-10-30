@@ -123,7 +123,7 @@ void mission_manager::load_act_pack() {
     act         = requested_act;
     current_act = act < 2 ? act : 2;
 
-    retail::sub_7EAA10((u8*)quest_manager::inst());
+    quest_manager::inst()->update_progression();
     event_manager::raise_event(references::current_act_updated.read(), arch_base_vhandle());
 
     const char* level     = &references::level_name_buffer.get();

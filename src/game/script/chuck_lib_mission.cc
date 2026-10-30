@@ -4,14 +4,35 @@
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
+#include "treyarch/mm/mm.hh"
+#include "game/amalga/resource_manager.hh"
+#include "game/amalga/resource_types.hh"
+#include "game/app.hh"
+#include "game/color.hh"
+#include "game/environment_progression.hh"
+#include "game/frontend/dialog_box.hh"
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_message_box_widget.hh"
+#include "game/frontend/ui_frontend.hh"
+#include "game/game.hh"
+#include "game/localized_string_table.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/mission/mission_progression_data.hh"
+#include "game/quest_manager.hh"
+#include "game/region_pack_manager.hh"
+#include "game/region_spawn_manager.hh"
+#include "game/resource_key.hh"
 #include "game/script/chuck_lib_mission.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace references {
     // written here only, nothing reads it
     util::memory_reference<i32> loading_hint_stage { 0x010F7070 };
+
+    util::memory_reference<color32> city_life_message_color { 0x00F22158 };
 }} // treyarch::references
 
 using namespace treyarch;
@@ -366,84 +387,302 @@ bool slf__test__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_857840
 bool slf__register_quest_giver__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857840)(this, stack);
+    stack.sp -= 0x04;
+
+    retail::sub_801B00((u32*)quest_manager::inst(), (i32)arch_base_vhandle(stack.local_uint(0x00)).resolve(), nullptr);
+
+    return true;
 }
 
+// sub_857870
 bool slf__unregister_quest_giver__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857870)(this, stack);
+    stack.sp -= 0x04;
+
+    retail::sub_7FC070((u32*)quest_manager::inst(), (i32*)arch_base_vhandle(stack.local_uint(0x00)).resolve());
+
+    return true;
 }
 
+// sub_8578A0
 bool slf__quest_event__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8578A0)(this, stack);
+    stack.sp -= 0x04;
+
+    mash::string name((const char*)stack.local_uint(0x00));
+
+    retail::sub_800160((u32*)quest_manager::inst(), 5, (i32)&name, 0); // the quest event core, script category
+
+    return true;
 }
 
+// sub_857910
 bool slf__give_quest__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857910)(this, stack);
+    stack.sp -= 0x04;
+
+    mash::string name((const char*)stack.local_uint(0x00));
+
+    quest_manager::inst()->give_quest(name);
+
+    return true;
 }
 
+// sub_857980
 bool slf__attach_conversation__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857980)(this, stack);
+    stack.sp -= 0x08;
+
+    mash::string name((const char*)stack.local_uint(0x04));
+
+    retail::sub_7F9010((u32*)quest_manager::inst(), (i32)arch_base_vhandle(stack.local_uint(0x00)).resolve(), (i32)&name, true);
+
+    return true;
 }
 
+// sub_857A00
 bool slf__attach_quest_conversation__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857A00)(this, stack);
+    stack.sp -= 0x08;
+
+    mash::string name((const char*)stack.local_uint(0x04));
+
+    retail::sub_7FF430((u32*)quest_manager::inst(), (i32)arch_base_vhandle(stack.local_uint(0x00)).resolve(), (i32)&name, true);
+
+    return true;
 }
 
+// sub_83E3A0
 bool slf__completed_quest_count__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E3A0)(this, stack);
+    f32 result = (f32)quest_manager::inst()->completed_quest_count();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857A80
 bool slf__get_completed_quest__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857A80)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* result = stack.thread->create_string(quest_manager::inst()->get_completed_quest((i32)stack.local_num(0x00)).c_str());
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E3D0
 bool slf__available_quest_count__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E3D0)(this, stack);
+    f32 result = (f32)quest_manager::inst()->available_quest_count();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857B10
 bool slf__get_available_quest__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857B10)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* result = stack.thread->create_string(quest_manager::inst()->get_available_quest((i32)stack.local_num(0x00)).c_str());
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857BA0
 bool slf__get_questgiver_name__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857BA0)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* result;
+
+    {
+        mash::string name((const char*)stack.local_uint(0x00));
+
+        result = stack.thread->create_string(quest_manager::inst()->get_questgiver_name(name).c_str());
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857C50
 bool slf__get_questgiver_loc__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857C50)(this, stack);
+    stack.sp -= 0x04;
+
+    vector3d result;
+
+    {
+        mash::string name((const char*)stack.local_uint(0x00));
+
+        result = quest_manager::inst()->get_questgiver_loc(name);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857F60
 bool slf__city_life_failed_message__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857F60)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x00));
+
+    igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
+
+    announcement->method_0dc()(announcement,
+                               mash::string(text),
+                               10.0f,
+                               0,
+                               0,
+                               0.0f,
+                               0.0f,
+                               references::city_life_message_color.read());
+
+    return true;
 }
 
+// sub_857CD0
 bool slf__do_conversation_wait__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857CD0)(this, stack);
+    stack.sp -= 0x04;
+
+    // waits for the conversation to end
+    if (stack.thread->entry)
+        return !references::frontend.get().igo->conversation_menu_system->is_conversation_active();
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x00));
+
+    resource_key key;
+    key.set(name, (u32)amalga::e_resource_type::JSON_CONVERSATION);
+
+    if (u8* found = amalga::resource_manager::get_resource(key, nullptr, nullptr))
+        retail::sub_717CE0((i32)references::frontend.get().igo->conversation_menu_system, (i32)found, 1, 0); // start the conversation
+
+    return false;
 }
 
+// sub_83E400
 bool slf__do_dialog_wait__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E400)(this, stack);
+    if (!stack.thread->entry) {
+        void* allocation = mm::allocate(sizeof(dialog_box));
+        auto* box        = allocation ? (dialog_box*)retail::sub_70BE00((u32*)allocation) : nullptr;
+
+        references::frontend.get().igo->set_dialog_box(box, 1);
+
+        return false;
+    }
+
+    // waits for a choice, then pushes it
+    dialog_box* box = references::frontend.get().igo->dialog;
+
+    if (!box->confirmed)
+        return false;
+
+    f32 result = box->choice ? 1.0f : 0.0f;
+
+    box->hide();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_823BB0
 bool slf__update_progression__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823BB0)(this, stack);
+    quest_manager::inst()->update_progression();
+
+    return true;
 }
 
+// sub_83E4E0
 bool slf__get_progression_level__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E4E0)(this, stack);
+    f32 result = references::environment_progression_state.read()->progression_level;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857D70
 bool slf__city_life_complete_message__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857D70)(this, stack);
+    stack.sp -= 0x0C;
+
+    f32 xp = stack.local_num(0x08);
+
+    {
+        char bonus_line[256];
+
+        if (xp > 0.0f) {
+            bonus_line[0] = ' ';
+            std::sprintf(bonus_line + 1, references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x04)), (i32)xp);
+        } else
+            bonus_line[0] = '\0';
+
+        mash::string bonus(bonus_line);
+
+        const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x00));
+
+        igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
+
+        announcement->method_0dc()(announcement,
+                                   text + bonus,
+                                   10.0f,
+                                   0,
+                                   0,
+                                   0.0f,
+                                   0.0f,
+                                   references::city_life_message_color.read());
+    }
+
+    entity* hero = references::g_world_ptr.read()->hero_ptr;
+
+    retail::sub_636E00(hero->my_ifc_storage->get_ifc(entity_ifc_rpg), xp, 0); // award the xp
+    quest_manager::inst()->set_completed_quest_timers();
+
+    return true;
 }
 
+// sub_857EC0
 bool slf__city_life_xp_message__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857EC0)(this, stack);
+    stack.sp -= 0x08;
+
+    char text[260];
+    std::sprintf(text, references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x00)), (i32)stack.local_num(0x04));
+
+    igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
+
+    announcement->method_0dc()(announcement,
+                               mash::string(text),
+                               10.0f,
+                               0,
+                               0,
+                               0.0f,
+                               0.0f,
+                               references::city_life_message_color.read());
+
+    return true;
 }
 
+// sub_857F60
 bool slf__city_life_in_progress_message__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857F60)(this, stack);
+    stack.sp -= 0x04;
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x00));
+
+    igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
+
+    announcement->method_0dc()(announcement,
+                               mash::string(text),
+                               10.0f,
+                               0,
+                               0,
+                               0.0f,
+                               0.0f,
+                               references::city_life_message_color.read());
+
+    return true;
 }
 
 bool slf__has_succeeded_city_life__t::operator()(chuck::vm::vm_stack &stack) {
@@ -746,8 +985,12 @@ bool slf__set_current_stored_summon_actor__entity__t::operator()(chuck::vm::vm_s
     return ((invoke_t)retail::sub_8596B0)(this, stack);
 }
 
+// sub_83EA80
 bool slf__despawn_and_lock_quest_giver_in_mission__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EA80)(this, stack);
+    if (references::region_spawns_enabled.read() && region_pack_manager::inst())
+        region_pack_manager::inst()->despawn_and_lock_quest_giver_in_mission(true);
+
+    return true;
 }
 
 bool slf__set_collectibles_disabled__num__t::operator()(chuck::vm::vm_stack &stack) {

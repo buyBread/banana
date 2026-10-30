@@ -2,10 +2,12 @@
 
 #include "vc8/list.hh"
 #include "game/frontend/conversation_menu_system.hh"
+#include "game/frontend/dialog_box.hh"
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/igo/igo_3d_agility_test.hh"
 #include "game/frontend/igo/igo_3d_boss_meter_system.hh"
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
+#include "game/frontend/igo/igo_3d_message_box_widget.hh"
 #include "game/frontend/igo/igo_3d_ped_warning_widget.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
@@ -100,15 +102,15 @@ namespace treyarch {
         igo_3d_drawable*                    unknown_widget_138;
         igo_3d_drawable*                    unknown_widget_13c;
         igo_3d_drawable*                    unknown_widget_140;
-        igo_3d_widget*                      unified_announcement;
-        igo_3d_widget*                      unified_announcement_alias;
+        igo_3d_message_box_widget*          unified_announcement;
+        igo_3d_message_box_widget*          unified_announcement_alias;
         igo_3d_drawable*                    unknown_widget_14c;
         igo_3d_widget*                      objective_text;
         igo_3d_widget*                      hint_text;
         igo_3d_widget*                      letterbox;
         igo_3d_widget*                      button_tips;
         treyarch::conversation_menu_system* conversation_menu_system;
-        void*                               widget_owner_164;
+        dialog_box*                         dialog;
         u8                                  conversation_state_168;
         u8                                  reserved_169[0x03];
         entity_tracker_manager*             entity_tracker_mgr;
@@ -165,6 +167,8 @@ namespace treyarch {
         void draw_hint_text_widget();
         void draw_interface_disabled_script_widgets(bool interface_disabled);
 
+        void set_dialog_box(dialog_box* box, u32 unk);
+
         void render_background_effects();
         void draw_background_texture(f32 strength);
 
@@ -190,7 +194,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, loading_screen,                0x130);
     ASSERT_OFFSETOF(ui_frontend, letterbox,                     0x158);
     ASSERT_OFFSETOF(ui_frontend, button_tips,                   0x15C);
+    ASSERT_OFFSETOF(ui_frontend, unified_announcement,          0x144);
     ASSERT_OFFSETOF(ui_frontend, conversation_menu_system,      0x160);
+    ASSERT_OFFSETOF(ui_frontend, dialog,                        0x164);
     ASSERT_OFFSETOF(ui_frontend, entity_tracker_mgr,            0x16C);
     ASSERT_OFFSETOF(ui_frontend, unknown_widget_174,            0x174);
     ASSERT_OFFSETOF(ui_frontend, startup_widget_17c,            0x17C);

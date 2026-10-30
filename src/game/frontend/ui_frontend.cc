@@ -46,3 +46,12 @@ i32 ui_frontend::update_widget_suppression_conditions() {
 
     return visible;
 }
+
+// sub_698E90
+void ui_frontend::set_dialog_box(dialog_box* box, u32 unk) { // deletes the one before and shows the new one
+    if (dialog)
+        dialog->destroy();
+
+    dialog = box;
+    box->show(unk);
+}

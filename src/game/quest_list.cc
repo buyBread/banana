@@ -42,46 +42,46 @@ void quest_unlock::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer
 
 // sub_7FE270
 void quest_giver::construct_mashed_class() {
-    locations.construct_mashed_class();
-    name     .construct_mashed_class();
-    unk_20   .construct_mashed_class();
-    unk_30   .construct_mashed_class();
-    unk_3c   .construct_mashed_class();
-    unk_48   .construct_mashed_class();
-    unk_58   .construct_mashed_class();
-    greeting .construct_mashed_class();
-    unk_70   .construct_mashed_class();
-    unk_7c   .construct_mashed_class();
+    locations     .construct_mashed_class();
+    name          .construct_mashed_class();
+    localized_name.construct_mashed_class();
+    unk_30        .construct_mashed_class();
+    unk_3c        .construct_mashed_class();
+    unk_48        .construct_mashed_class();
+    unk_58        .construct_mashed_class();
+    greeting      .construct_mashed_class();
+    unk_70        .construct_mashed_class();
+    unk_7c        .construct_mashed_class();
 
     unk_94 = 0;
 }
 
 // inlined @ sub_8011A0
 void quest_giver::destruct_mashed_class() {
-    locations.destruct_mashed_class();
-    name     .destruct_mashed_class();
-    unk_20   .destruct_mashed_class();
-    unk_30   .destruct_mashed_class();
-    unk_3c   .destruct_mashed_class();
-    unk_48   .destruct_mashed_class();
-    unk_58   .destruct_mashed_class();
-    greeting .destruct_mashed_class();
-    unk_70   .destruct_mashed_class();
-    unk_7c   .destruct_mashed_class();
+    locations     .destruct_mashed_class();
+    name          .destruct_mashed_class();
+    localized_name.destruct_mashed_class();
+    unk_30        .destruct_mashed_class();
+    unk_3c        .destruct_mashed_class();
+    unk_48        .destruct_mashed_class();
+    unk_58        .destruct_mashed_class();
+    greeting      .destruct_mashed_class();
+    unk_70        .destruct_mashed_class();
+    unk_7c        .destruct_mashed_class();
 }
 
 // sub_7FF5B0
 void quest_giver::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    locations.unmash(mash_info, this, buffer);
-    name     .unmash(mash_info, this, buffer);
-    unk_20   .unmash(mash_info, this, buffer);
-    unk_30   .unmash(mash_info, this, buffer);
-    unk_3c   .unmash(mash_info, this, buffer);
-    unk_48   .unmash(mash_info, this, buffer);
-    unk_58   .unmash(mash_info, this, buffer);
-    greeting .unmash(mash_info, this, buffer);
-    unk_70   .unmash(mash_info, this, buffer);
-    unk_7c   .unmash(mash_info, this, buffer);
+    locations     .unmash(mash_info, this, buffer);
+    name          .unmash(mash_info, this, buffer);
+    localized_name.unmash(mash_info, this, buffer);
+    unk_30        .unmash(mash_info, this, buffer);
+    unk_3c        .unmash(mash_info, this, buffer);
+    unk_48        .unmash(mash_info, this, buffer);
+    unk_58        .unmash(mash_info, this, buffer);
+    greeting      .unmash(mash_info, this, buffer);
+    unk_70        .unmash(mash_info, this, buffer);
+    unk_7c        .unmash(mash_info, this, buffer);
 }
 
 // sub_802410
