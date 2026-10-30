@@ -89,10 +89,6 @@ void* tests::mash_support::c_virtual_record::operator new(size_t size) {
     return treyarch::mm::allocate((u32)size);
 }
 
-void tests::mash_support::c_virtual_record::operator delete(void* allocation) {
-    treyarch::mm::free(allocation);
-}
-
 tests::mash_support::c_string_fixture::c_string_fixture() : m_empty_binding(treyarch::mash::references::null_string_guts, empty_string()),
                                                             m_count_binding(treyarch::mash::references::string_count, &string_count),
                                                             m_slab_binding (treyarch::mash::references::string_source_slab, &source_slab),

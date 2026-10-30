@@ -203,7 +203,6 @@ namespace tests { namespace mash_support {
         i32 get_mash_sizeof() const override;
 
         void* operator new(size_t size);
-        void  operator delete(void* allocation);
     };
 
     // writes a saved virtual record into the image, with its type key where the vtable pointer goes.
