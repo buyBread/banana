@@ -43,8 +43,8 @@ namespace treyarch {
         void destruct_mashed_class() {}
         void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
 
-        // sub_A6C7C0; retail keeps no names, so every hash prints as hex into one shared buffer
-        const char* to_string() const {
+        // sub_A6C7C0
+        const char* to_string() const { // prints the hash as hex into one shared buffer
             char* buffer = &hash::references::string_buffer.get();
 
             std::sprintf(buffer, "0x%08x", source_hash_code);

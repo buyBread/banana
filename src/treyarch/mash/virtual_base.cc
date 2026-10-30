@@ -75,31 +75,16 @@ namespace treyarch { namespace mash { namespace detail {
     }
 }}} // treyarch::mash::detail
 
+mash::virtual_types_key mash::mash_virtual_base::type_key = 0x0668FEE9; // "mash_virtual_base"
+
 // sub_A6B730
 mash::virtual_types_key mash::mash_virtual_base::get_virtual_type_key() const {
-    return generate_virtual_types_key_from_string("mash_virtual_base");
+    return type_key;
 }
 
 void mash::mash_virtual_base::copy_values(const mash_virtual_base* other) {
     assert(other != nullptr);
     assert(get_virtual_type_key() == other->get_virtual_type_key());
-}
-
-bool mash::mash_virtual_base::verify_valid_vtable_map(void* what_class) {
-    detail::vtable_registry &registry = detail::references::vtable_registry.get();
-
-    vtable_value_t vtable = *(vtable_value_t*)what_class;
-
-    for (detail::vtable_registry_node* node = registry.head->next; node != registry.head; node = node->next) {
-        if (node->value == vtable)
-            return true;
-    }
-
-    return false;
-}
-
-bool mash::mash_virtual_base::verify_valid_vtable(void* what_class) {
-    return verify_valid_vtable_map(what_class);
 }
 
 mash::virtual_types_key mash::mash_virtual_base::generate_virtual_types_key_from_string(const char* string) {
@@ -109,16 +94,6 @@ mash::virtual_types_key mash::mash_virtual_base::generate_virtual_types_key_from
 // sub_A6B740
 bool mash::mash_virtual_base::is_or_is_subclass_of(virtual_types_key parent_class) const {
     return get_virtual_type_key() == parent_class || is_subclass_of(parent_class);
-}
-
-mash::mash_virtual_base* mash::mash_virtual_base::create_subclass_in_place(virtual_types_key  class_to_make,
-                                                                           mash_virtual_base* memory_buffer) {
-
-    *(virtual_types_key*)memory_buffer = class_to_make;
-
-    fixup_vtable(memory_buffer);
-
-    return construct_class_helper(memory_buffer);
 }
 
 // sub_A6B9D0

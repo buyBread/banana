@@ -16,9 +16,7 @@ namespace treyarch { namespace mash {
             u32 unk_04;
             u32 shared_offset;
             u8  in_use;
-            u8  unk_0d;
-            u8  unk_0e;
-            u8  unk_0f;
+            u8  pad[0x3];
         };
 
         io_mode      mode;

@@ -20,8 +20,7 @@ namespace treyarch { namespace mash {
         virtual virtual_types_key get_virtual_type_key() const;
         virtual void copy_values(const mash_virtual_base* other);
 
-        static bool verify_valid_vtable_map(void* what_class);
-        static bool verify_valid_vtable(void* what_class);
+        static bool verify_valid_vtable(void*) { return true; }
 
         static virtual_types_key generate_virtual_types_key_from_string(const char* string);
 
@@ -29,9 +28,6 @@ namespace treyarch { namespace mash {
         virtual bool is_or_is_subclass_of(virtual_types_key parent_class) const;
 
         virtual i32 get_mash_sizeof() const { return sizeof(*this); }
-
-        static mash_virtual_base* create_subclass_in_place(virtual_types_key  class_to_make,
-                                                           mash_virtual_base* memory_buffer);
 
         static void fixup_vtable(void* what_class_to_fixup);
 
@@ -51,6 +47,9 @@ namespace treyarch { namespace mash {
         }
 
         static vtable_value_t lookup_vtable_entry(const vtable_key_t &key);
+
+    private:
+        static virtual_types_key type_key;
     };
 
     ASSERT_SIZEOF(mash_virtual_base, 0x04);
