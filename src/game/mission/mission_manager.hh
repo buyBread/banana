@@ -7,6 +7,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/string.hh"
 #include "game/math/algebra.hh"
+#include "game/mission/script_registry.hh"
 #include "game/singleton.hh"
 #include "game/timing/hires_clock.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -56,21 +57,21 @@ namespace treyarch {
         mission_manager_flag_need_to_malor  = 0x00000020,
 
         // no milestone names past this point
-        mission_manager_flag_unk_00001000 = 0x00001000,
-        mission_manager_flag_unk_00002000 = 0x00002000,
-        mission_manager_flag_unk_00004000 = 0x00004000,
-        mission_manager_flag_unk_00008000 = 0x00008000,
-        mission_manager_flag_unk_00010000 = 0x00010000,
-        mission_manager_flag_unk_00020000 = 0x00020000,
-        mission_manager_flag_unk_00040000 = 0x00040000,
-        mission_manager_flag_unk_00200000 = 0x00200000,
-        mission_manager_flag_unk_00400000 = 0x00400000,
-        mission_manager_flag_unk_00800000 = 0x00800000,
-        mission_manager_flag_unk_02000000 = 0x02000000,
-        mission_manager_flag_unk_04000000 = 0x04000000,
-        mission_manager_flag_unk_08000000 = 0x08000000,
-        mission_manager_flag_unk_10000000 = 0x10000000,
-        mission_manager_flag_unk_20000000 = 0x20000000
+        mission_manager_flag_terminating           = 0x00001000,
+        mission_manager_flag_show_failed_dialog    = 0x00002000,
+        mission_manager_flag_unk_00004000          = 0x00004000,
+        mission_manager_flag_unk_00008000          = 0x00008000,
+        mission_manager_flag_unk_00010000          = 0x00010000,
+        mission_manager_flag_unk_00020000          = 0x00020000,
+        mission_manager_flag_auto_launched         = 0x00040000,
+        mission_manager_flag_unk_00200000          = 0x00200000,
+        mission_manager_flag_unk_00400000          = 0x00400000,
+        mission_manager_flag_show_succeeded_dialog = 0x00800000,
+        mission_manager_flag_unk_02000000          = 0x02000000,
+        mission_manager_flag_unk_04000000          = 0x04000000,
+        mission_manager_flag_unk_08000000          = 0x08000000,
+        mission_manager_flag_unk_10000000          = 0x10000000,
+        mission_manager_flag_unk_20000000          = 0x20000000
     };
 
     enum e_mission_header_flags : u32 {
@@ -79,6 +80,8 @@ namespace treyarch {
         mission_header_flag_uses_trigger      = 0x00000010,
 
         // no sm3 names past this point
+        mission_header_flag_unk_00000004                  = 0x00000004,
+        mission_header_flag_unk_00000080                  = 0x00000080,
         mission_header_flag_unk_00004000                  = 0x00004000,
         mission_header_flag_unk_00008000                  = 0x00008000,
         mission_header_flag_unk_00010000                  = 0x00010000,
@@ -221,8 +224,8 @@ namespace treyarch {
         u32                           reserved_1b4;
         u32                           unk_1b8;
         u32                           unk_1bc;
-        void*                         saved_checkpoint_registry;
-        void*                         working_checkpoint_registry;
+        script_registry*              saved_checkpoint_registry;
+        script_registry*              working_checkpoint_registry;
         f32                           state_timer;
         f32                           idle_event_cooldown;
         vector3d                      player_restart_position;
@@ -370,7 +373,15 @@ namespace treyarch {
         static void on_zoom_map_poi_selected  (event* raised_event, arch_base_vhandle recipient, void* parameters);
         static void on_zoom_map_poi_unselected(event* raised_event, arch_base_vhandle recipient, void* parameters);
 
+        void script_registry_insert_rational_key(string_hash the_entity, string_hash key, f32      default_value, f32*      value, bool set_value);
+        void script_registry_insert_vector3d_key(string_hash the_entity, string_hash key, vector3d default_value, vector3d* value, bool set_value);
+
         void save_player_restart(const vector3d &position, vector3d xz_facing);
+        void save_checkpoint    (const vector3d &position, vector3d xz_facing, f32 new_checkpoint_value);
+
+        void terminate_script(bool was_completed_successfully, bool suppress_dialogs);
+
+        mission_icon_info* find_mission_icon(const chuck::vm::script_instance* instance) const;
 
         void set_mission_finished_screen_has_appeared(bool appeared, bool despawn_quest_giver);
         void handle_finished_dialog_selection();
@@ -415,6 +426,10 @@ namespace treyarch {
         inline util::memory_reference<string_hash> registry_player_restart_xzfacing  { 0x0111187C };
         inline util::memory_reference<string_hash> mission_header_instance_base_name { 0x011117C4 };
         inline util::memory_reference<string_hash> internal_generated_script_header  { 0x01111880 };
+
+        inline util::memory_reference<string_hash> mission_launched        { 0x0102CC20 };
+        inline util::memory_reference<string_hash> mission_terminated      { 0x0102C498 };
+        inline util::memory_reference<string_hash> terminate_script_called { 0x0102CC78 };
 
         inline util::memory_reference<string_hash> mission_manager_get_restart_position { 0x011117C8 };
         inline util::memory_reference<string_hash> mission_manager_get_failed_music     { 0x01111BA4 };

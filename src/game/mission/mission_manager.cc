@@ -4,11 +4,21 @@
 #include "game/app.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
+#include "treyarch/chuck/vm/script_executable.hh"
+#include "game/event/event_manager.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
+#include "game/game.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/quest_manager.hh"
 #include "game/script/script_access.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "treyarch/mm/mm.hh"
+#include "treyarch/soap/online.hh"
 #include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
@@ -121,11 +131,11 @@ mission_manager::mission_manager() {
 
     script_globals_initialized = 0;
 
-    void* allocation = mm::allocate(0x0C);
-    saved_checkpoint_registry = allocation ? retail::sub_804D60((u32*)allocation) : nullptr;
+    void* allocation = mm::allocate(sizeof(*saved_checkpoint_registry));
+    saved_checkpoint_registry = allocation ? new (allocation) script_registry() : nullptr;
 
-    allocation = mm::allocate(0x0C);
-    working_checkpoint_registry = allocation ? retail::sub_804D60((u32*)allocation) : nullptr;
+    allocation = mm::allocate(sizeof(*working_checkpoint_registry));
+    working_checkpoint_registry = allocation ? new (allocation) script_registry() : nullptr;
 
     allocation = mm::allocate(sizeof(*mission_icons));
     mission_icons = allocation ? new (allocation) vc8::vector<mission_icon_info>() : nullptr;
@@ -310,6 +320,143 @@ i32 mission_manager::get_total_times_script_has_been_successfully_completed() co
         return (i32)mission_vars[current_mission.mission_index];
 
     return -1;
+}
+
+// sub_982220
+mission_icon_info* mission_manager::find_mission_icon(const chuck::vm::script_instance* instance) const {
+    for (mission_icon_info* icon = mission_icons->begin(); icon != mission_icons->end(); ++icon) {
+        if (icon->instance == instance)
+            return icon;
+    }
+
+    return nullptr;
+}
+
+// sub_9855F0
+void mission_manager::terminate_script(bool was_completed_successfully, bool suppress_dialogs) {
+    if (state != mission_manager_state_running_mission)
+        return;
+
+    if (flags & mission_manager_flag_need_to_unload || flags & mission_manager_flag_terminating)
+        return;
+
+    i32 mission_index = current_mission.mission_index;
+
+    flags |= mission_manager_flag_terminating;
+
+    event_manager::raise_event(references::terminate_script_called.read(), arch_base_vhandle());
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        if (igo->objective_text)
+            retail::sub_6E7A00((u32*)igo->objective_text);
+
+        if (igo->hint_text)
+            retail::sub_6E7A00((u32*)igo->hint_text);
+
+        if (igo->enemy_health_manager)
+            retail::sub_68D020((u8*)igo->enemy_health_manager, 0);
+
+        retail::sub_6E7000((u32*)igo, 0.0f, 0.0f); // letterbox
+        retail::sub_689500((u32**)igo, 0);
+    }
+
+    string_hash stop_voice_bus;
+    stop_voice_bus.initialize(mash::ALLOCATED, "stop_voice_bus");
+
+    retail::sub_900D60(stop_voice_bus.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
+
+    if (was_completed_successfully && !suppress_dialogs) {
+        saved_checkpoint_registry->clear();
+        working_checkpoint_registry->clear();
+
+        retail::sub_76E110((u32*)retail::sub_734220(), current_mission.mission_index);
+        retail::sub_75F100(retail::sub_7685B0());
+        retail::sub_9218C0((u32*)references::upgrade_manager.read()); // reverts the temporary upgrades
+
+        if (state == mission_manager_state_running_mission) {
+            entity* hero = references::g_world_ptr.read()->hero_ptr;
+
+            if (hero && hero->damage_ifc())
+                hero->damage_ifc()->set_hit_points(references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points());
+
+            last_successful_mission_time = real_time;
+
+            mission_vars[current_mission.mission_index] = (f32)((f64)mission_vars[current_mission.mission_index] + 1.0);
+
+            auto* header = (mission_header_instance_base*)current_mission.mission_header_instance->data.buffer;
+
+            flags |= mission_manager_flag_show_succeeded_dialog;
+
+            if (!(flags & mission_manager_flag_auto_launched)) {
+                if (flags & mission_manager_flag_using_icon) {
+                    flags &= ~mission_manager_flag_using_icon;
+
+                    if (header->flags & mission_header_flag_unk_00000004) {
+                        retail::sub_982590((u32*)this);
+
+                        header->flags &= ~mission_header_flag_eligible;
+                    } else {
+                        igo_3d_zoom_map* zoom_map = nullptr;
+
+                        if (references::frontend.get().igo)
+                            zoom_map = references::frontend.get().igo->zoom_map;
+
+                        mission_icon_info* icon = find_mission_icon(current_mission.mission_header_instance);
+
+                        if (zoom_map && icon && icon->poi_index != -1 && retail::sub_690AB0((u32*)zoom_map, icon->poi_index)) {
+                            retail::sub_6DFAC0((u32*)zoom_map, icon->poi_index);
+
+                            icon->poi_index = -1;
+                        }
+                    }
+                } else if (flags & mission_manager_flag_using_trigger) {
+                    flags &= ~mission_manager_flag_using_trigger;
+
+                    if (header->flags & mission_header_flag_unk_00000080)
+                        retail::sub_982720((u32*)this);
+                }
+            }
+
+            // enables the child mission
+            if (header->child_inst)
+                retail::sub_984750((u32*)this, 1);
+
+            update_eligible_missions();
+        }
+
+        retail::sub_97FB10((u32*)this); // the all-missions achievement
+
+        if (mission_index == 302)
+            unk_295 = 1;
+
+        if (!(flags & mission_manager_flag_show_succeeded_dialog) && !mission_finished_screen_has_appeared)
+            retail::sub_7FEF20((u32*)quest_manager::inst(), (i32)&current_mission);
+    } else if (!references::game.read()->game_paused && !suppress_dialogs && state == mission_manager_state_running_mission)
+        flags |= mission_manager_flag_show_failed_dialog;
+    else {
+        if (!suppress_dialogs)
+            retail::sub_7FFF00((i32*)quest_manager::inst(), (i32)&current_mission);
+
+        retail::sub_76E110((u32*)retail::sub_734220(), current_mission.mission_index);
+        retail::sub_75F100(retail::sub_7685B0());
+        retail::sub_9218C0((u32*)references::upgrade_manager.read()); // reverts the temporary upgrades
+    }
+
+    retail::sub_9EB5D0((u32*)soap::online::inst(), 1, 4); // online::set_context
+    soap::online::inst()->method_024(0);
+
+    if (state == mission_manager_state_running_mission) {
+        flags                        |= mission_manager_flag_need_to_unload;
+        last_zoom_map_selection_time  = real_time;
+        last_mission_time             = real_time;
+
+        ++current_mission.exec->suspend_count;
+    }
+
+    if (!(flags & mission_manager_flag_show_failed_dialog))
+        flags &= ~mission_manager_flag_terminating;
 }
 
 // sub_97FA30

@@ -40,8 +40,6 @@ namespace treyarch { namespace references {
     util::memory_reference<string_hash> last_mission_long_time_ago              { 0x0102C368 };
     util::memory_reference<string_hash> last_successful_mission_long_time_ago   { 0x0102C5E8 };
     util::memory_reference<string_hash> last_selected_zoom_map_destination_long { 0x0102CC10 };
-    util::memory_reference<string_hash> unk_0102c498                            { 0x0102C498 };
-    util::memory_reference<string_hash> unk_0102cc20                            { 0x0102CC20 };
 
     util::memory_reference<u8> unk_00be7455 { 0x00BE7455 };
     util::memory_reference<u8> unk_0102fed8 { 0x0102FED8 };
@@ -265,7 +263,7 @@ void mission_manager::process_state_start_loading() {
     }
 
     if (flags & mission_manager_flag_mission_ready)
-        event_manager::raise_event(references::unk_0102cc20.read(), arch_base_vhandle());
+        event_manager::raise_event(references::mission_launched.read(), arch_base_vhandle());
 
     retail::sub_7F09B0((u32*)quest_manager::inst(), (i32)&current_mission);
 
@@ -371,15 +369,15 @@ void mission_manager::process_state_loading() {
 
 // sub_97EF50
 void mission_manager::process_state_running_mission() {
-    if (flags & mission_manager_flag_unk_00002000) {
-        flags &= ~mission_manager_flag_unk_00002000;
+    if (flags & mission_manager_flag_show_failed_dialog) {
+        flags &= ~mission_manager_flag_show_failed_dialog;
         state  = mission_manager_state_start_mission_failed_dialog;
 
         return;
     }
 
-    if (flags & mission_manager_flag_unk_00800000) {
-        flags &= ~mission_manager_flag_unk_00800000;
+    if (flags & mission_manager_flag_show_succeeded_dialog) {
+        flags &= ~mission_manager_flag_show_succeeded_dialog;
         state  = mission_manager_state_start_mission_succeeded_dialog;
 
         return;
@@ -395,7 +393,7 @@ void mission_manager::process_state_running_mission() {
 
     flags &= ~mission_manager_flag_need_to_unload;
 
-    event_manager::raise_event(references::unk_0102c498.read(), arch_base_vhandle());
+    event_manager::raise_event(references::mission_terminated.read(), arch_base_vhandle());
 
     unk_0fc[0] = real_time;
     unk_0fc[3] = unk_0fc[1] + std::rand() % (i32)(unk_0fc[2] - unk_0fc[1]);
@@ -555,7 +553,7 @@ void mission_manager::process_state_start_unloading() {
     saved_script_hero_invulnerable_count = 0;
 
     if (!(flags & mission_manager_flag_mission_ready)) {
-        flags &= ~mission_manager_flag_unk_00040000;
+        flags &= ~mission_manager_flag_auto_launched;
 
         if (hero) {
             hero_reference_position = hero->my_abs_po->get_position();
@@ -814,7 +812,7 @@ void mission_manager::process_state_running_mission_failed_dialog() {
     else
         retry_failed_mission();
 
-    flags &= ~mission_manager_flag_unk_00001000;
+    flags &= ~mission_manager_flag_terminating;
     state  = mission_manager_state_running_mission;
 }
 
@@ -823,7 +821,7 @@ void mission_manager::process_state_running_mission_succeeded_dialog() {
     if (!mission_finished_screen_has_appeared)
         retail::sub_7FEF20((u32*)quest_manager::inst(), (i32)&current_mission);
 
-    flags &= ~mission_manager_flag_unk_00001000;
+    flags &= ~mission_manager_flag_terminating;
     state  = mission_manager_state_running_mission;
 }
 

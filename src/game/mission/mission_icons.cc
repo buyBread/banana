@@ -158,7 +158,7 @@ void mission_manager::check_mission_triggers() {
         f32 distance_squared = (f32)((f64)dx * (f64)dx + (f64)dy * (f64)dy + (f64)dz * (f64)dz);
 
         if ((f64)header->trigger_radius * (f64)header->trigger_radius > (f64)distance_squared) {
-            retail::sub_9855F0((i32)this, 0, 1); // terminate_script
+            terminate_script(false, true);
 
             // get_mission_info
             ((void (__thiscall*)(mission_manager*, const chuck::vm::script_instance*, mission_info*))
@@ -174,7 +174,7 @@ void mission_manager::check_mission_triggers() {
 
 // sub_9821E0
 void mission_manager::launch_auto_launch_instance(const chuck::vm::script_instance* instance) {
-    flags |= mission_manager_flag_unk_00040000;
+    flags |= mission_manager_flag_auto_launched;
 
     // get_mission_info
     ((void (__thiscall*)(mission_manager*, const chuck::vm::script_instance*, mission_info*))

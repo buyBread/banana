@@ -20,7 +20,7 @@ using namespace treyarch;
 bool slf__terminate_script__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    retail::sub_9855F0((i32)mission_manager::inst(), stack.local_num(0x00) != 0.0f, 0); // mission_manager::terminate_script
+    mission_manager::inst()->terminate_script(stack.local_num(0x00) != 0.0f, false);
 
     return false;
 }
@@ -122,24 +122,85 @@ bool slf__is_mission_running__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_8572C0
 bool slf__get_registry_value__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8572C0)(this, stack);
+    stack.sp -= 0x0C;
+
+    string_hash key;
+    key.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x04));
+
+    string_hash entity;
+    entity.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x00));
+
+    f32 value;
+    mission_manager::inst()->script_registry_insert_rational_key(entity, key, stack.local_num(0x08), &value, false);
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_857370
 bool slf__get_registry_value__uint__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857370)(this, stack);
+    stack.sp -= 0x0C;
+
+    string_hash key;
+    key.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x04));
+
+    string_hash entity;
+    entity.initialize(mash::ALLOCATED, nullptr, stack.local_uint(0x00));
+
+    f32 value;
+    mission_manager::inst()->script_registry_insert_rational_key(entity, key, stack.local_num(0x08), &value, false);
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_857420
 bool slf__set_registry_value__uint__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857420)(this, stack);
+    stack.sp -= 0x0C;
+
+    string_hash key;
+    key.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x04));
+
+    string_hash entity;
+    entity.initialize(mash::ALLOCATED, nullptr, stack.local_uint(0x00));
+
+    f32 value;
+    mission_manager::inst()->script_registry_insert_rational_key(entity, key, stack.local_num(0x08), &value, true);
+
+    return true;
 }
 
+// sub_8574B0
 bool slf__get_registry_value__uint__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8574B0)(this, stack);
+    stack.sp -= 0x14;
+
+    string_hash key;
+    key.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x04));
+
+    string_hash entity;
+    entity.initialize(mash::ALLOCATED, nullptr, stack.local_uint(0x00));
+
+    vector3d value;
+    mission_manager::inst()->script_registry_insert_vector3d_key(entity, key, *(vector3d*)&stack.local_uint(0x08), &value, false);
+
+    stack.push(&value, sizeof(value));
+
+    return true;
 }
 
+// sub_857570
 bool slf__save_checkpoint__vector3d__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857570)(this, stack);
+    stack.sp -= 0x1C;
+
+    mission_manager::inst()->save_checkpoint(*(vector3d*)&stack.local_uint(0x00),
+                                             *(vector3d*)&stack.local_uint(0x0C),
+                                             stack.local_num(0x18));
+
+    return true;
 }
 
 // sub_83E1F0

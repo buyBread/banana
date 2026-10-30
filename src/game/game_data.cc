@@ -114,7 +114,7 @@ void game_data::frame_advance() {
                 mission_manager* missions = mission_manager::inst();
 
                 if (missions->is_mission_running()) {
-                    retail::sub_9855F0((i32)missions, 0, 1); // mission_manager::terminate_script
+                    missions->terminate_script(false, true);
 
                     return;
                 }

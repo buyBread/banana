@@ -19,30 +19,47 @@ void mission_manager::save_player_restart(const vector3d &position, vector3d xz_
         xz_facing.z = 0.0f;
     }
 
-    using insert_vector3_key = void (__thiscall*)(void*       registry,
-                                                  string_hash entity,
-                                                  string_hash key,
-                                                  vector3d    default_value,
-                                                  vector3d*   value,
-                                                  bool        set_value);
-
     vector3d value;
 
-    // script_registry_insert_vector3d_key
-    ((insert_vector3_key)retail::sub_803800)(working_checkpoint_registry,
-                                             references::registry_mission_manager.read(),
-                                             references::registry_player_restart_position.read(),
-                                             position,
-                                             &value,
-                                             true);
+    working_checkpoint_registry->insert_vector3d_key(references::registry_mission_manager.read(),
+                                                     references::registry_player_restart_position.read(),
+                                                     position,
+                                                     &value,
+                                                     true);
 
-    ((insert_vector3_key)retail::sub_803800)(working_checkpoint_registry,
-                                             references::registry_mission_manager.read(),
-                                             references::registry_player_restart_xzfacing.read(),
-                                             xz_facing,
-                                             &value,
-                                             true);
+    working_checkpoint_registry->insert_vector3d_key(references::registry_mission_manager.read(),
+                                                     references::registry_player_restart_xzfacing.read(),
+                                                     xz_facing,
+                                                     &value,
+                                                     true);
 
-    // copies the working registry into the saved one
-    retail::sub_804DF0((i32)saved_checkpoint_registry, (i32)working_checkpoint_registry);
+    *saved_checkpoint_registry = *working_checkpoint_registry;
+}
+
+// sub_97EBC0
+void mission_manager::save_checkpoint(const vector3d &position, vector3d xz_facing, f32 new_checkpoint_value) {
+    save_player_restart(position, xz_facing);
+
+    current_mission.unk_03c = 0;
+    checkpoint              = (u32)(i64)new_checkpoint_value;
+}
+
+// sub_97E9C0
+void mission_manager::script_registry_insert_rational_key(string_hash the_entity,
+                                                          string_hash key,
+                                                          f32         default_value,
+                                                          f32*        value,
+                                                          bool        set_value) {
+
+    working_checkpoint_registry->insert_rational_key(the_entity, key, default_value, value, set_value);
+}
+
+// sub_97EA00
+void mission_manager::script_registry_insert_vector3d_key(string_hash the_entity,
+                                                          string_hash key,
+                                                          vector3d    default_value,
+                                                          vector3d*   value,
+                                                          bool        set_value) {
+
+    working_checkpoint_registry->insert_vector3d_key(the_entity, key, default_value, value, set_value);
 }
