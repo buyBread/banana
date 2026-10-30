@@ -45,11 +45,6 @@ namespace treyarch {
             return mm::allocate(size);
         }
 
-        // inlined into the deleting destructors
-        void operator delete(void* allocation) noexcept {
-            mm::free(allocation);
-        }
-
         // sub_5FD110
         string_hash get_name() const {
             return my_name;

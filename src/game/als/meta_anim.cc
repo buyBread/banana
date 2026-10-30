@@ -127,11 +127,6 @@ void* als::als_nal_meta_anim::operator new[](std::size_t size) noexcept {
 }
 
 // inlined into the deleting destructor
-void als::als_nal_meta_anim::operator delete(void* allocation) noexcept {
-    mm::free(allocation);
-}
-
-// inlined into the deleting destructor
 void als::als_nal_meta_anim::operator delete[](void* allocation) noexcept {
     mm::free(allocation);
 }

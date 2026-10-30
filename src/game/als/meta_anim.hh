@@ -118,7 +118,6 @@ namespace treyarch {
 
             void* operator new  (std::size_t size) noexcept;
             void* operator new[](std::size_t size) noexcept;
-            void  operator delete  (void* allocation) noexcept;
             void  operator delete[](void* allocation) noexcept;
 
             void construct_mashed_class() override;

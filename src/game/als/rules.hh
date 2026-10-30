@@ -5,7 +5,6 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/virtual_base.hh"
-#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -156,11 +155,6 @@ namespace treyarch { namespace als {
 
         // retail passes this on the stack, so every override keeps the convention
         virtual bool __stdcall evaluate(const rule_context &context) const;
-
-        // inlined into the deleting destructors
-        void operator delete(void* allocation) noexcept {
-            mm::free(allocation);
-        }
 
         static string_hash my_type_key;
     };
