@@ -3,6 +3,7 @@
 #include "mash/fixtures.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/vector_basic.hh"
+#include "treyarch/mash/vector_basic_ref_counted.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/base/tl_system.hh"
 
@@ -629,5 +630,163 @@ TEST_SUITE("mash") {
         values.clear();
 
         CHECK(free_count(tests::plain_allocator) == 1);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "a ref-counted vector reads its internals and their vector from shared, then tears them down in place") {
+
+        bool reset_ref_count = false;
+        c_reference_binding<bool> binding(mash::references::unk_01126c84, &reset_ref_count);
+
+        // only the four byte pointer sits in normal; the presence byte, the internals, the vector body, its count and its values are all in shared.
+        // 128 is the presence byte, the internals are 132 to 139, the vector body 140 to 155, the count 156 and the values 160 to 167.
+        image_t<256> image;
+        image.header(128);
+        image.put(128, mash::member_class_mashed);
+        image.put(136, u16{0});
+        image.put(138, u16{7});
+        image.put(156, u32{2});
+        image.put(160, u32{10});
+        image.put(164, u32{20});
+
+        auto* values = image.make<mash::vector_basic_ref_counted<u32>>(16);
+
+        mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 256);
+        values->unmash(&reader, nullptr, mash::NORMAL_BUFFER);
+
+        auto* internals = image.at<mash::vector_basic_ref_count_internals<u32>>(132);
+        auto* data      = image.at<mash::vector_basic<u32>>(140);
+
+        REQUIRE(values->internals == internals);
+        REQUIRE(internals->data == data);
+        CHECK(data->array == image.at<u32>(160));
+        CHECK(data->mash_image_offset == 28);
+        CHECK(values->size() == 2);
+        CHECK((*values)[1] == 20);
+        CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 16);
+        CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 40);
+
+        // constructing counts one more owner and marks the internals as not allocated.
+        values->construct_mashed_class();
+
+        CHECK(internals->ref_count == 1);
+        CHECK(internals->dynamic == 0);
+
+        // the last owner tears the vector down, but its values lie inside the image, so nothing is freed.
+        values->destruct_mashed_class();
+
+        CHECK(values->internals == nullptr);
+        CHECK(internals->ref_count == 0);
+        CHECK(internals->data == nullptr);
+        CHECK(data->array == nullptr);
+        CHECK(data->size == 0);
+        CHECK(data->mash_image_offset == 0);
+        CHECK(frees.empty());
+    }
+
+    TEST_CASE("a ref-counted vector with no presence byte has no internals") {
+        image_t<128> image;
+        image.header(64);
+
+        auto* values      = image.make<mash::vector_basic_ref_counted<u32>>(16);
+        values->internals = image.at<mash::vector_basic_ref_count_internals<u32>>(32);
+
+        mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128);
+        values->unmash(&reader, nullptr, mash::NORMAL_BUFFER);
+
+        CHECK(values->internals == nullptr);
+        CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 1);
+
+        values->construct_mashed_class();
+
+        CHECK(values->internals == nullptr);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "owners sharing ref-counted internals only tear them down when the last one lets go") {
+
+        bool reset_ref_count = false;
+        c_reference_binding<bool> binding(mash::references::unk_01126c84, &reset_ref_count);
+
+        image_t<128> image;
+
+        auto* internals = image.at<mash::vector_basic_ref_count_internals<u32>>(32);
+        auto* data      = image.make<mash::vector_basic<u32>>(48);
+
+        internals->data      = data;
+        internals->ref_count = 0;
+        internals->dynamic   = 0;
+
+        auto* first  = image.make<mash::vector_basic_ref_counted<u32>>(16);
+        auto* second = image.make<mash::vector_basic_ref_counted<u32>>(20);
+
+        first ->internals = internals;
+        second->internals = internals;
+
+        first ->construct_mashed_class();
+        second->construct_mashed_class();
+
+        CHECK(internals->ref_count == 2);
+
+        first->destruct_mashed_class();
+
+        CHECK(first->internals == nullptr);
+        CHECK(internals->ref_count == 1);
+        CHECK(internals->data == data);
+
+        second->destruct_mashed_class();
+
+        CHECK(second->internals == nullptr);
+        CHECK(internals->ref_count == 0);
+        CHECK(internals->data == nullptr);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "allocated ref-counted internals free their values, their vector and themselves") {
+
+        bool reset_ref_count = false;
+        c_reference_binding<bool> binding(mash::references::unk_01126c84, &reset_ref_count);
+
+        // the values go back through the plain allocator like any basic vector's; the vector and the internals through the heap.
+        auto* data = (mash::vector_basic<u32>*)treyarch::mm::allocate(sizeof(mash::vector_basic<u32>));
+        std::memset(data, 0, sizeof(*data));
+        data->array = (u32*)treyarch::tl_mem_alloc(8, 4, 0);
+        data->size  = data->max_size = 2;
+
+        auto* internals = (mash::vector_basic_ref_count_internals<u32>*)treyarch::mm::allocate(sizeof(mash::vector_basic_ref_count_internals<u32>));
+        internals->data      = data;
+        internals->ref_count = 1;
+        internals->dynamic   = 1;
+
+        {
+            mash::vector_basic_ref_counted<u32> values {};
+            values.internals = internals;
+        }
+
+        CHECK(free_count(tests::plain_allocator) == 1);
+        CHECK(free_count(tests::heap_allocator) == 2);
+        CHECK(live_count(tests::heap_allocator) == 0);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "with the reset flag set, the internals forget their other owners before tearing down") {
+
+        bool reset_ref_count = true;
+        c_reference_binding<bool> binding(mash::references::unk_01126c84, &reset_ref_count);
+
+        image_t<128> image;
+
+        auto* internals = image.at<mash::vector_basic_ref_count_internals<u32>>(32);
+        auto* data      = image.make<mash::vector_basic<u32>>(48);
+
+        internals->data      = data;
+        internals->ref_count = 3;
+        internals->dynamic   = 0;
+
+        // destruct_mashed_class on the internals is what the owner's own teardown calls once the count reaches zero.
+        internals->destruct_mashed_class();
+
+        CHECK(internals->ref_count == 0);
+        CHECK(internals->data == nullptr);
     }
 }
