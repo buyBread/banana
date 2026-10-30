@@ -118,8 +118,8 @@ void tests::mash_support::c_string_fixture::borrow(treyarch::mash::string &value
     value.m_source_slab = source_slab;
 }
 
-tests::mash_support::c_registry_fixture::c_registry_fixture() : m_binding(treyarch::mash::detail::references::vtable_registry,
-                                                                          (treyarch::mash::detail::vtable_registry*)&m_registry) {
+tests::mash_support::c_registry_fixture::c_registry_fixture() : m_binding(treyarch::mash::references::vtable_map,
+                                                                          (treyarch::vc8::hash_map<u32, u32>*)&m_registry) {
 
     set({});
 }
@@ -161,10 +161,13 @@ void tests::mash_support::c_registry_fixture::set(std::initializer_list<registry
         m_bounds[bucket] = index < sorted.size() ? &m_nodes[index] : &m_head;
     }
 
-    m_registry.head          = &m_head;
-    m_registry.bucket_bounds = m_bounds.data();
-    m_registry.bucket_mask   = mask;
-    m_registry.bucket_count  = count;
+    m_registry.entries_head = &m_head;
+    m_registry.entries_size = (u32)m_nodes.size();
+    m_registry.bounds_first = m_bounds.data();
+    m_registry.bounds_last  = m_bounds.data() + count + 1;
+    m_registry.bounds_end   = m_bounds.data() + m_bounds.size();
+    m_registry.mask         = mask;
+    m_registry.bucket_count = count;
 }
 
 void tests::mash_support::c_registry_fixture::register_virtual_record() {

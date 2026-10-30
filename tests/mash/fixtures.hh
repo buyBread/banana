@@ -15,13 +15,6 @@
 #include "treyarch/mash/virtual_base.hh"
 #include "banana/util/memory_reference.hh"
 
-namespace treyarch { namespace mash { namespace detail {
-    struct vtable_registry;
-    namespace references {
-        extern util::memory_reference<vtable_registry> vtable_registry;
-    }
-}}}
-
 // lets doctest print a mash string's text when a check on it fails.
 namespace doctest {
     template<>
@@ -296,17 +289,19 @@ namespace tests { namespace mash_support {
     };
 
     struct registry_layout_t {
-        u32               unk_00;
-        u32               unk_04;
-        registry_node_t*  head;
-        u32               unk_0c;
-        u32               unk_10;
-        registry_node_t** bucket_bounds;
-        u32               unk_18;
-        u32               unk_1c;
-        u32               bucket_mask;
+        u32               traits;
+        u32               entries_allocator;
+        registry_node_t*  entries_head;
+        u32               entries_size;
+        u32               bounds_allocator;
+        registry_node_t** bounds_first;
+        registry_node_t** bounds_last;
+        registry_node_t** bounds_end;
+        u32               mask;
         u32               bucket_count;
     };
+
+    static_assert(sizeof(registry_layout_t) == sizeof(treyarch::vc8::hash_map<u32, u32>));
 
     struct registry_entry_t {
         // the bucket is spelled out rather than computed, so the test can't share a mistake with the lookup it's testing.
@@ -322,7 +317,7 @@ namespace tests { namespace mash_support {
         registry_layout_t               m_registry {};
 
         c_reference_binding
-            <treyarch::mash::detail::vtable_registry> m_binding;
+            <treyarch::vc8::hash_map<u32, u32>> m_binding;
 
     public:
         u32 virtual_record_vtable = 0;
