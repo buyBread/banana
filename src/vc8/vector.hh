@@ -25,6 +25,27 @@ namespace treyarch { namespace vc8 {
                             last(nullptr),
                             capacity_end(nullptr) {}
 
+        // sub_685770
+        // sub_A6BA10
+        // sub_A6BAC0
+        vector(u32 count, const T &value) : first(nullptr),
+                                            last(nullptr),
+                                            capacity_end(nullptr) {
+
+            if (!count)
+                return;
+
+            if (count > 0xFFFFFFFF / sizeof(T))
+                throw_length_error();
+
+            first        = (T*)mm::allocate(count * sizeof(T));
+            last         = first;
+            capacity_end = first + count;
+
+            for (; last != capacity_end; ++last)
+                new (last) T(value);
+        }
+
         ~vector() {
             destroy();
         }
@@ -42,7 +63,7 @@ namespace treyarch { namespace vc8 {
                 return;
 
             if (count > 0xFFFFFFFF / sizeof(T))
-                throw std::length_error("vector<T> too long");
+                throw_length_error();
 
             first        = (T*)mm::allocate(count * sizeof(T));
             last         = first;
@@ -118,7 +139,7 @@ namespace treyarch { namespace vc8 {
         // sub_A21510
         void reserve(u32 count) {
             if (count > 0xFFFFFFFF / sizeof(T))
-                throw std::length_error("vector<T> too long");
+                throw_length_error();
 
             if (capacity() >= count)
                 return;
@@ -175,6 +196,8 @@ namespace treyarch { namespace vc8 {
         // sub_9DD8D0
         // sub_A18CE0
         // sub_A18D70
+        // sub_A6C0C0
+        // sub_A6C1B0
         void resize(u32 count, const T &value) {
             if (size() > count)
                 erase(first + count, last);
@@ -224,6 +247,13 @@ namespace treyarch { namespace vc8 {
         }
 
     private:
+        // sub_683B70
+        // sub_A6B770
+        // sub_A6B7F0
+        [[noreturn]] static void throw_length_error() {
+            throw std::length_error("vector<T> too long");
+        }
+
         void reserve_for_size(u32 requested_size) {
             u32 old_size     = size();
             u32 old_capacity = capacity();

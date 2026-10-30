@@ -1,5 +1,3 @@
-#include <cstdlib>
-
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/shader_program_cache.hh"
 #include "game/hash/algo.hh"
@@ -27,17 +25,6 @@ u32 shader_bytecode_size(const DWORD* bytecode) {
     return (u32)(instruction - bytecode + 1) * sizeof(DWORD);
 }
 
-u32 d3d9::shader_program_cache::shader_crc_traits::operator()(const u32 &crc) const noexcept {
-    div_t division = std::div((i32)(crc ^ 0xDEADBEEFu), 127773);
-
-    i32 mixed = 16807 * division.rem - 2836 * division.quot;
-
-    if (mixed < 0)
-        mixed += I32_MAX;
-
-    return (u32)mixed;
-}
-
 template<typename T, typename create_program_t>
 HRESULT create_shader_program(      d3d9::shader_program_cache::program_cache<T> &cache,
                               const DWORD*                                        bytecode,
@@ -59,7 +46,7 @@ HRESULT create_shader_program(      d3d9::shader_program_cache::program_cache<T>
     HRESULT result = create_program(bytecode, output);
 
     // yes, retail caches it even when creation fails
-    cache.insert(crc, *output);
+    cache.insert({ crc, *output });
 
     return result;
 }

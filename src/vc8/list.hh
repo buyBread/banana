@@ -80,7 +80,9 @@ namespace treyarch { namespace vc8 {
 
         // sub_5CD230
         // sub_635E30
+        // sub_749E80
         // sub_A1AB20
+        // sub_A6B870
         void increment_size(u32 added) {
             if (0xFFFFFFFF / sizeof(T) - count < added)
                 throw std::length_error("list<T> too long");

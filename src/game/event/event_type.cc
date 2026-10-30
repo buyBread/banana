@@ -128,7 +128,7 @@ event_recipient_entry* event_type::create_recipient_entry(arch_base_vhandle reci
         return entry;
 
     entry = new event_recipient_entry(recipient);
-    recipients.insert(recipient, entry);
+    recipients.insert({ recipient, entry });
 
     return entry;
 }
