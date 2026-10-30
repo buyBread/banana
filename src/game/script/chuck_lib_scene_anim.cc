@@ -32,7 +32,7 @@ bool slf__wait_play__cut_scene__t::operator()(chuck::vm::vm_stack &stack) {
     }
 
     if (references::summon_state.read() && region_pack_manager::inst())
-        retail::sub_90FC00(references::summon_state.read()); // end the summon
+        references::summon_state.read()->end_requested = true;
 
     if (!to_play) {
         stack.push(&result, sizeof(result));

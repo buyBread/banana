@@ -13,19 +13,19 @@ namespace treyarch {
 
     public:
         u32                             unk_00;
-        vc8::map<i32, game_meter_base*> game_meters;
+        vc8::map<i32, game_meter_base*> meter_dict;
         meter_data_file*                meter_data;
 
         // inlined @ sub_93D010
         void unregister_game_meters() {
-            game_meters.clear();
+            meter_dict.clear();
 
             meter_data = nullptr;
         }
     };
 
-    ASSERT_OFFSETOF(game_meter_manager, game_meters, 0x04);
-    ASSERT_OFFSETOF(game_meter_manager, meter_data,  0x10);
+    ASSERT_OFFSETOF(game_meter_manager, meter_dict, 0x04);
+    ASSERT_OFFSETOF(game_meter_manager, meter_data, 0x10);
 
     namespace references {
         inline util::memory_reference<game_meter_manager*> game_meter_manager { 0x010F9BD4 };

@@ -11,7 +11,11 @@ namespace treyarch {
     class game_meter_base : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x38];
+        u8  unk_04[0x20];
+        f32 level;
+        f32 min_level;
+        f32 max_level;
+        u8  unk_30[0x0C];
     };
 
     // the base of every meter behavior; mashed ones get their retail vtable from the type registry
@@ -51,8 +55,12 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    ASSERT_SIZEOF  (game_meter_base, 0x3C);
-    ASSERT_SIZEOF  (meter_behavior,  0x08);
+    ASSERT_SIZEOF  (game_meter_base,            0x3C);
+    ASSERT_OFFSETOF(game_meter_base, level,     0x24);
+    ASSERT_OFFSETOF(game_meter_base, min_level, 0x28);
+    ASSERT_OFFSETOF(game_meter_base, max_level, 0x2C);
+
+    ASSERT_SIZEOF  (meter_behavior, 0x08);
 
     ASSERT_SIZEOF  (meter_data_file,              0x18);
     ASSERT_OFFSETOF(meter_data_file, game_meters, 0x04);

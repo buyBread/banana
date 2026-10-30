@@ -103,7 +103,7 @@ void game_data::frame_advance() {
                 summon_state* summons = references::summon_state.read();
 
                 if (summons->active_summon) {
-                    retail::sub_90FC00(summons); // end the summon
+                    summons->end_requested = true;
 
                     return;
                 }

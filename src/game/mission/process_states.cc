@@ -42,7 +42,6 @@ namespace treyarch { namespace references {
     util::memory_reference<string_hash> last_successful_mission_long_time_ago   { 0x0102C5E8 };
     util::memory_reference<string_hash> last_selected_zoom_map_destination_long { 0x0102CC10 };
 
-    util::memory_reference<u8> unk_00be7455 { 0x00BE7455 };
     util::memory_reference<u8> unk_0102fed8 { 0x0102FED8 };
     util::memory_reference<u8> unk_00e67164 { 0x00E67164 };
 
@@ -209,7 +208,7 @@ void mission_manager::process_state_start_loading() {
     update_mission_icons();
 
     if (references::summon_state.read()) {
-        retail::sub_90FC00(references::summon_state.read());
+        references::summon_state.read()->end_requested = true;
 
         if (retail::sub_920420((u32*)region_pack_manager::inst()))
             return;
@@ -589,7 +588,7 @@ void mission_manager::process_state_unloading() {
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read()) {
-        retail::sub_90FC00(references::summon_state.read());
+        references::summon_state.read()->end_requested = true;
 
         if (retail::sub_920420((u32*)region_pack_manager::inst()))
             return;
