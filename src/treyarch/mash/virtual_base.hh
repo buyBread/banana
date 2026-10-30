@@ -3,6 +3,7 @@
 #include <new>
 
 #include "treyarch/mash/types.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch { namespace mash {
@@ -13,7 +14,15 @@ namespace treyarch { namespace mash {
     public:
                  mash_virtual_base() = default;
         explicit mash_virtual_base(generating_vtable_version) {}
+
+        // sub_42AAF0
         virtual ~mash_virtual_base() = default;
+
+        // inlined into the deleting destructors
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
         virtual void construct_mashed_class() {}
         virtual void destruct_mashed_class() {}
         virtual void unmash(mash_info_struct*, void*, buffer_type) {}
