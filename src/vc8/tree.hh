@@ -24,6 +24,7 @@ namespace treyarch { namespace vc8 {
         bool         is_nil;
 
         // sub_7EB870
+        // sub_9220A0
         // sub_95D780
         tree_node* next() noexcept { // in-order successor; the end (head) node maps to itself
             if (is_nil)
@@ -50,6 +51,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_620600
+        // sub_7EB7F0
         // sub_910B40
         // sub_A76160
         tree_node* previous() noexcept { // in-order predecessor; the end (head) node maps to the rightmost node
@@ -81,6 +83,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_588520
         // sub_781850
+        // sub_7EB7D0
         // sub_910AC0
         static tree_node* minimum(tree_node* node) noexcept {
             while (!node->left->is_nil)
@@ -91,6 +94,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_428E70
         // sub_6970B0
+        // sub_7EB7B0
         // sub_910B20
         static tree_node* maximum(tree_node* node) noexcept {
             while (!node->right->is_nil)
@@ -125,6 +129,20 @@ namespace treyarch { namespace vc8 {
             head_node->right  = head_node;
         }
 
+        // sub_800C90
+        // sub_800D20
+        tree(const tree &right) : compare(right.compare),
+                                  head_node(buy_head_node()),
+                                  count(0) {
+
+            head_node->is_nil = true;
+            head_node->parent = head_node;
+            head_node->left   = head_node;
+            head_node->right  = head_node;
+
+            copy(right);
+        }
+
         // inlined @ sub_A20D60
         ~tree() {
             erase(begin(), end());
@@ -135,21 +153,33 @@ namespace treyarch { namespace vc8 {
             count     = 0;
         }
 
-        tree(const tree&) = delete;
-        tree &operator=(const tree&) = delete;
+        // sub_804DF0
+        tree &operator=(const tree &right) {
+            if (this != &right) {
+                erase(begin(), end());
+
+                compare = right.compare;
+
+                copy(right);
+            }
+
+            return *this;
+        }
 
         node* head()  const noexcept { return head_node; }
         node* begin() const noexcept { return head_node->left; }
         node* end()   const noexcept { return head_node; }
 
-        u32  size()  const noexcept { return count; }
-        bool empty() const noexcept { return count == 0; }
+        u32  size()     const noexcept { return count; }
+        u32  max_size() const noexcept { return 0xFFFFFFFF / sizeof(T); }
+        bool empty()    const noexcept { return count == 0; }
 
         // inlined @ sub_93D010
         void clear() {
             erase(begin(), end());
         }
 
+        // sub_802590
         // sub_921FD0
         node* lower_bound(const K &key) const { // first node whose key is not less than `key`
             node* result   = head_node;
@@ -167,7 +197,41 @@ namespace treyarch { namespace vc8 {
             return result;
         }
 
+        node* upper_bound(const K &key) const { // first node whose key is greater than `key`
+            node* result   = head_node;
+            node* position = head_node->parent;
+
+            while (!position->is_nil) {
+                if (compare(key, key_of_t()(position->value))) {
+                    result   = position;
+                    position = position->left;
+                } else
+                    position = position->right;
+            }
+
+            return result;
+        }
+
+        // sub_7F9760
+        // sub_930810
+        std::pair<node*, node*> equal_range(const K &key) const {
+            return std::pair<node*, node*>(lower_bound(key), upper_bound(key));
+        }
+
+        // sub_7F9470
+        // sub_7F94E0
+        // sub_802CD0
+        node* find(const K &key) {
+            node* position = lower_bound(key);
+
+            if (position == head_node || compare(key, key_of_t()(position->value)))
+                return head_node;
+
+            return position;
+        }
+
         // sub_63CE50
+        // sub_802D70
         // inlined @ sub_977170
         // inlined @ sub_979BB0
         node* find(const K &key) const {
@@ -181,6 +245,9 @@ namespace treyarch { namespace vc8 {
 
         // sub_759870
         // sub_759930
+        // sub_7FB1B0
+        // sub_7FB250
+        // sub_802AF0
         // sub_975FD0
         // sub_976090
         // sub_A1BB00
@@ -253,6 +320,9 @@ namespace treyarch { namespace vc8 {
 
         // sub_6D57A0
         // sub_6D5A60
+        // sub_7FB330
+        // sub_7FB5F0
+        // sub_803AB0
         // sub_8030D0
         // sub_973A40
         // sub_975D10
@@ -405,6 +475,9 @@ namespace treyarch { namespace vc8 {
             return next_node;
         }
 
+        // sub_7FF640
+        // sub_7FF730
+        // sub_8041A0
         // sub_8042E0
         // sub_A20CA0
         node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing
@@ -430,9 +503,65 @@ namespace treyarch { namespace vc8 {
             return first;
         }
 
+        // sub_800B00
+        // sub_800B60
+        u32 erase(const K &key) { // returns how many nodes went
+            std::pair<node*, node*> where = equal_range(key);
+
+            u32 erased = 0;
+            distance(where.first, where.second, erased);
+
+            erase(where.first, where.second);
+
+            return erased;
+        }
+
     private:
+        // sub_7F8BA0
+        // sub_7F8C00
+        static void distance(node* first, node* last, u32 &result) noexcept {
+            for (; first != last; first = first->next())
+                ++result;
+        }
+
+        // sub_7FFA70
+        // sub_7FFAF0
+        // sub_804260
+        void copy(const tree &right) {
+            head_node->parent = copy(right.head_node->parent, head_node);
+            count             = right.count;
+
+            if (!head_node->parent->is_nil) {
+                head_node->left  = node::minimum(head_node->parent);
+                head_node->right = node::maximum(head_node->parent);
+            } else {
+                head_node->left  = head_node;
+                head_node->right = head_node;
+            }
+        }
+
+        // sub_7FE700
+        // sub_7FE7B0
+        // sub_803D70
+        node* copy(node* root, node* where_node) { // copies the subtree under `root`, hanging it off `where_node`
+            node* new_root = head_node;
+
+            if (!root->is_nil) {
+                node* new_node = buy_node(head_node, where_node, head_node, root->value, root->color);
+
+                if (new_root->is_nil)
+                    new_root = new_node;
+
+                new_node->left  = copy(root->left,  new_node);
+                new_node->right = copy(root->right, new_node);
+            }
+
+            return new_root;
+        }
+
         // sub_42A1C0
         // sub_9285E0
+        // sub_9288A0
         // sub_928C40
         static node* buy_head_node() {
             node* result = (node*)mm::allocate(sizeof(node));
@@ -447,7 +576,9 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_79B580
+        // sub_7FB8B0
         // sub_803390
+        // sub_803A70
         // sub_937860
         void erase_subtree(node* root) {
             for (node* position = root; !position->is_nil; root = position) {
@@ -462,6 +593,8 @@ namespace treyarch { namespace vc8 {
 
         // sub_58F9C0
         // sub_79B4D0
+        // sub_7F85B0
+        // sub_802690
         // sub_9716F0
         node* buy_node(node* left, node* parent, node* right, const T &value, e_tree_color color) {
             node* result = (node*)mm::allocate(sizeof(node));
@@ -482,11 +615,14 @@ namespace treyarch { namespace vc8 {
 
         // sub_7549C0
         // sub_754BC0
+        // sub_7F9560
+        // sub_7F97C0
+        // sub_8028C0
         // sub_973D00
         // sub_973FC0
         // sub_A1B4B0
         node* insert_at(bool add_left, node* where_node, const T &value) {
-            if (count >= 0x3FFFFFFE)
+            if (max_size() - 1 <= count)
                 throw std::length_error("map/set<T> too long");
 
             node* new_node = buy_node(head_node, where_node, head_node, value, tree_color_red);
@@ -558,6 +694,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_428E20
         // sub_6B0CF0
+        // sub_7F2AF0
         // sub_9220F0
         void rotate_left(node* where_node) noexcept {
             node* position = where_node->right;
@@ -583,6 +720,7 @@ namespace treyarch { namespace vc8 {
         // sub_743F20
         // sub_781870
         // sub_7F2A90
+        // sub_7F2B40
         void rotate_right(node* where_node) noexcept {
             node* position = where_node->left;
 
