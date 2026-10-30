@@ -54,7 +54,7 @@ i32 als::als_meta_linear_blend::get_mash_sizeof() const {
 
 // sub_5BEEE0
 nal::anim* als::als_meta_linear_blend::get_anim_proxy() const {
-    return key_anims.data[0]->the_anim_ptr;
+    return key_anims.array[0]->the_anim_ptr;
 }
 
 // sub_5D87B0

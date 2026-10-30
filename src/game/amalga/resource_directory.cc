@@ -68,7 +68,7 @@ void amalga::resource_directory::constructor_common(resource_pack_slot* slot) {
     u8* base = slot->header_mem_addr[buffer_location_main];
 
     for (u32 index = 0; index < descriptors.size; ++index) {
-        resource_descriptor* descriptor = descriptors.data[index];
+        resource_descriptor* descriptor = descriptors.array[index];
 
         descriptor->raw_payload      = base + descriptor->payload_offset;
         descriptor->adjusted_payload = descriptor->calculate_adjusted_payload();
@@ -82,10 +82,10 @@ amalga::resource_descriptor* amalga::resource_directory::find_local_resource(con
 
     i32 index = 0;
 
-    if (!binary_search_array_cmp(&key, descriptors.data, begin_idx, end_idx, &index, resource_descriptor::compare_name_hash))
+    if (!binary_search_array_cmp(&key, descriptors.array, begin_idx, end_idx, &index, resource_descriptor::compare_name_hash))
         return nullptr;
 
-    return descriptors.data[index];
+    return descriptors.array[index];
 }
 
 // sub_74DC80

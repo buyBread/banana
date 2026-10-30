@@ -9,8 +9,7 @@ namespace treyarch { namespace mash {
     struct vector_basic_ref_count_internals {
         vector_basic<T>* data;
         u16              ref_count;
-        bool             dynamic;
-        u8               pad_07;
+        u16              dynamic;
     };
 
     // several owners share one vector through the internals
@@ -28,8 +27,8 @@ namespace treyarch { namespace mash {
             return internals->data->empty();
         }
 
-              T &operator[](u16 index)       { return internals->data->data[index]; }
-        const T &operator[](u16 index) const { return internals->data->data[index]; }
+              T &operator[](u16 index)       { return internals->data->array[index]; }
+        const T &operator[](u16 index) const { return internals->data->array[index]; }
 
               vector_basic<T> &get_vector()       { return *internals->data; }
         const vector_basic<T> &get_vector() const { return *internals->data; }
@@ -37,5 +36,6 @@ namespace treyarch { namespace mash {
 
     ASSERT_SIZEOF  (vector_basic_ref_count_internals<u32>,            0x08);
     ASSERT_OFFSETOF(vector_basic_ref_count_internals<u32>, ref_count, 0x04);
+    ASSERT_OFFSETOF(vector_basic_ref_count_internals<u32>, dynamic,   0x06);
     ASSERT_SIZEOF  (vector_basic_ref_counted<u32>,                    0x04);
 }} // treyarch::mash

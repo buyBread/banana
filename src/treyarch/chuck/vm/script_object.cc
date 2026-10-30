@@ -169,7 +169,7 @@ void script_object::reconstruct_instance(script_instance* inst, const void* cons
     script_instance_lock_scope scope(inst);
 
     if (destructor_index >= 0) {
-        vm_thread* thread = inst->add_thread(funcs.data[destructor_index], nullptr, 0);
+        vm_thread* thread = inst->add_thread(funcs.array[destructor_index], nullptr, 0);
 
         thread->dstack.push(&inst, sizeof(inst));
 
@@ -178,7 +178,7 @@ void script_object::reconstruct_instance(script_instance* inst, const void* cons
 
     inst->reset();
 
-    const script_function* constructor = funcs.data[constructor_index];
+    const script_function* constructor = funcs.array[constructor_index];
 
     vm_thread* thread = inst->add_thread(constructor, nullptr, 0);
 
@@ -214,7 +214,7 @@ script_instance* script_object::find_instance(string_hash instance_name) {
 script_instance* script_object::create_auto_instance(f32 argument) {
     ref_lock_scope scope(instance_lock);
 
-    const script_function* constructor = funcs.data[constructor_index];
+    const script_function* constructor = funcs.array[constructor_index];
 
     if (constructor->parms_stacksize != 4)
         return nullptr;
@@ -387,7 +387,7 @@ void script_object::post_un_mash_fixup(script_executable* requested_parent) {
     i32 count = (i32)funcs.size;
 
     for (i32 index = 0; index < count; ++index)
-        funcs.data[index]->post_un_mash_fixup(this);
+        funcs.array[index]->post_un_mash_fixup(this);
 
     if (flags & script_object_flag_global_object)
         create_auto_instance(0.0f);
@@ -475,9 +475,9 @@ i32 script_object::find_func(string_hash func_fullname) const {
     i32 found = -1;
 
     if (flags & script_object_flag_sorted_funcs) {
-        if (constructor_index >= 0 && funcs.data[constructor_index]->fullname == func_fullname)
+        if (constructor_index >= 0 && funcs.array[constructor_index]->fullname == func_fullname)
             found = constructor_index;
-        else if (destructor_index >= 0 && funcs.data[destructor_index]->fullname == func_fullname)
+        else if (destructor_index >= 0 && funcs.array[destructor_index]->fullname == func_fullname)
             found = destructor_index;
         else {
             i32 low = 0;
@@ -491,7 +491,7 @@ i32 script_object::find_func(string_hash func_fullname) const {
             i32 high = (i32)funcs.size - 1;
             i32 mid  = (low + high) >> 1;
 
-            script_function* function = funcs.data[mid];
+            script_function* function = funcs.array[mid];
 
             if (function->fullname == func_fullname)
                 found = mid;
@@ -519,7 +519,7 @@ i32 script_object::find_func(string_hash func_fullname) const {
                 if (previous == mid)
                     break;
 
-                function = funcs.data[mid];
+                function = funcs.array[mid];
 
                 if (function->fullname == func_fullname)
                     found = mid;
@@ -527,7 +527,7 @@ i32 script_object::find_func(string_hash func_fullname) const {
         }
     } else {
         for (i32 index = 0; index < (i32)funcs.size; ++index) {
-            if (funcs.data[index]->fullname == func_fullname) {
+            if (funcs.array[index]->fullname == func_fullname) {
                 found = index;
 
                 break;
@@ -567,7 +567,7 @@ script_function* script_object::get_function_ptr(u32 index) const {
         object  = object->parent_object;
     }
 
-    return object->funcs.data[index];
+    return object->funcs.array[index];
 }
 
 // sub_A1D180

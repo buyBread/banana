@@ -14,15 +14,15 @@ namespace treyarch { namespace mash {
     class vector : public container_base {
 
     public:
-        T**  data;
-        u32  capacity;
-        bool destroy_elements;
+        T**  array;
+        u32  max_size;
+        bool destruct_contents;
         u8   pad[3];
 
         vector() : container_base(),
-                   data(nullptr),
-                   capacity(0),
-                   destroy_elements(true),
+                   array(nullptr),
+                   max_size(0),
+                   destruct_contents(true),
                    pad{} {}
 
         explicit vector(generating_vtable_version so_do_nothing) : container_base(so_do_nothing) {}
@@ -37,23 +37,23 @@ namespace treyarch { namespace mash {
 
         T* &operator[](u32 index) {
             assert(index < size);
-            assert(data != nullptr);
+            assert(array != nullptr);
 
-            return data[index];
+            return array[index];
         }
 
         T* const &operator[](u32 index) const {
             assert(index < size);
-            assert(data != nullptr);
+            assert(array != nullptr);
 
-            return data[index];
+            return array[index];
         }
 
-              T** begin()       { return data; }
-        T* const* begin() const { return data; }
+              T** begin()       { return array; }
+        T* const* begin() const { return array; }
 
-              T** end()       { return data ? data + size : nullptr; }
-        T* const* end() const { return data ? data + size : nullptr; }
+              T** end()       { return array ? array + size : nullptr; }
+        T* const* end() const { return array ? array + size : nullptr; }
 
         // sub_43B260
         // sub_43E330
@@ -123,25 +123,25 @@ namespace treyarch { namespace mash {
                            void*             containing_class_ptr,
                            buffer_type       buffer) {
 
-            capacity = size;
+            max_size = size;
 
             if (size) {
                 // serialized pointers are garbage until every table slot is replaced with its object address
-                data = (T**)mash_info
+                array = (T**)mash_info
                     ->read_from_buffer(buffer,
                                        (i32)(size * sizeof(T*)),
                                        (i32)alignof(T*));
 
                 for (u32 index = 0; index < size; ++index) {
-                    mash_info->unmash_class(data[index],
+                    mash_info->unmash_class(array[index],
                                             containing_class_ptr,
                                             buffer);
 
                     assert(!std::is_polymorphic_v<T> ||
-                        mash_virtual_base::verify_valid_vtable(data[index]));
+                        mash_virtual_base::verify_valid_vtable(array[index]));
                 }
             } else
-                data = nullptr;
+                array = nullptr;
 
             container_base::custom_unmash_base(mash_info, buffer);
         }
@@ -180,18 +180,18 @@ namespace treyarch { namespace mash {
         // sub_979970
         void initialize(allocation_scope scope) {
             if (scope == ALLOCATED) {
-                data             = nullptr;
-                capacity         = 0;
-                destroy_elements = true;
+                array             = nullptr;
+                max_size          = 0;
+                destruct_contents = true;
 
                 return;
             }
 
-            if (!data)
+            if (!array)
                 return;
 
             for (u32 index = 0; index < size; ++index)
-                mash_info_struct::construct_class(data[index]);
+                mash_info_struct::construct_class(array[index]);
         }
 
         void destruct_mashed_class() {
@@ -248,19 +248,19 @@ namespace treyarch { namespace mash {
         // sub_A1BEA0
         // sub_A1C1B0
         void clear() {
-            if (destroy_elements) {
+            if (destruct_contents) {
                 while (size) {
-                    destroy_element(data[size - 1]);
+                    destroy_element(array[size - 1]);
 
                     --size;
                 }
             }
 
-            if (!is_pointer_in_mash_image(data))
-                mm::free(data);
+            if (!is_pointer_in_mash_image(array))
+                mm::free(array);
 
-            data     = nullptr;
-            capacity = 0;
+            array    = nullptr;
+            max_size = 0;
 
             container_base::clear();
         }
@@ -293,36 +293,36 @@ namespace treyarch { namespace mash {
         }
 
         // sub_4E4F00
-        void reserve(u32 new_capacity) {
-            if (new_capacity <= capacity)
+        void reserve(u32 new_size) {
+            if (new_size <= max_size)
                 return;
 
             // new T*[n]; a byte count that overflows asks for everything
-            const u64 bytes = (u64)new_capacity * sizeof(T*);
+            const u64 bytes = (u64)new_size * sizeof(T*);
 
-            auto grown = (T**)mm::allocate(bytes > U32_MAX ? U32_MAX : (u32)bytes);
+            auto new_array = (T**)mm::allocate(bytes > U32_MAX ? U32_MAX : (u32)bytes);
 
-            if (data) {
+            if (array) {
                 if (size)
-                    std::memcpy(grown, data, size * sizeof(T*));
+                    std::memcpy(new_array, array, size * sizeof(T*));
 
-                if (!is_pointer_in_mash_image(data))
-                    mm::free(data);
+                if (!is_pointer_in_mash_image(array))
+                    mm::free(array);
             }
 
-            data     = grown;
-            capacity = new_capacity;
+            array    = new_array;
+            max_size = new_size;
         }
 
         // sub_4B5FE0
         u32 push_back(T* element) {
             // an array still in the mash image can't grow in place
-            if (size == capacity || is_pointer_in_mash_image(data))
+            if (size == max_size || is_pointer_in_mash_image(array))
                 reserve((size / 8 + 1) * 8);
 
-            data[size] = nullptr;
+            array[size] = nullptr;
             ++size;
-            data[size - 1] = element;
+            array[size - 1] = element;
 
             return size;
         }
@@ -331,7 +331,7 @@ namespace treyarch { namespace mash {
     ASSERT_SIZEOF  (vector<void>,                    0x14);
     ASSERT_OFFSETOF(vector<void>, mash_image_offset, 0x00);
     ASSERT_OFFSETOF(vector<void>, size,              0x04);
-    ASSERT_OFFSETOF(vector<void>, data,              0x08);
-    ASSERT_OFFSETOF(vector<void>, capacity,          0x0C);
-    ASSERT_OFFSETOF(vector<void>, destroy_elements,  0x10);
+    ASSERT_OFFSETOF(vector<void>, array,             0x08);
+    ASSERT_OFFSETOF(vector<void>, max_size,          0x0C);
+    ASSERT_OFFSETOF(vector<void>, destruct_contents, 0x10);
 }} // treyarch::mash

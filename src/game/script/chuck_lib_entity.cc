@@ -7585,7 +7585,7 @@ bool slf__entity__get_tentacle__str__t::operator()(chuck::vm::vm_stack &stack) {
         id.initialize(mash::ALLOCATED, tentacle_name);
 
         if (self->tentacles) {
-            ai_tentacle_info* info = ai_tentacle_info::find_tentacle(id, self->tentacles->data, (i32)self->tentacles->size);
+            ai_tentacle_info* info = ai_tentacle_info::find_tentacle(id, self->tentacles->array, (i32)self->tentacles->size);
 
             if (info && info->tentacle)
                 result = info->tentacle->my_handle;

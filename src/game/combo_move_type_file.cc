@@ -24,13 +24,13 @@ void combo_move_type_file::construct_mashed_class() {
     trick_move_info_array.construct_mashed_class();
 
     if (combo_move_info_array.size)
-        std::qsort(combo_move_info_array.data,
+        std::qsort(combo_move_info_array.array,
                    combo_move_info_array.size,
                    sizeof(combat_move_track_info*),
                    combo_move_track_info::compare_move_id);
 
     if (trick_move_info_array.size)
-        std::qsort(trick_move_info_array.data,
+        std::qsort(trick_move_info_array.array,
                    trick_move_info_array.size,
                    sizeof(combo_move_track_info*),
                    combo_move_track_info::compare_move_id);

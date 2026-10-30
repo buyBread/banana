@@ -40,16 +40,16 @@ void vehicle::damage_member(i32 member_idx) {
     if (!is_visible())
         return;
 
-    my_undamaged_members.data[member_idx]->set_visible(false, false);
-    my_undamaged_members.data[member_idx]->set_active(false);
-    my_damaged_members  .data[member_idx]->set_visible(true, false);
-    my_damaged_members  .data[member_idx]->set_active(true);
+    my_undamaged_members.array[member_idx]->set_visible(false, false);
+    my_undamaged_members.array[member_idx]->set_active(false);
+    my_damaged_members  .array[member_idx]->set_visible(true, false);
+    my_damaged_members  .array[member_idx]->set_active(true);
 }
 
 // sub_619B10
 void vehicle::damage_member(string_hash member_id) {
     for (u32 i = 0; i < my_undamaged_members.size; i++) {
-        if (my_undamaged_members.data[i]->id == member_id) {
+        if (my_undamaged_members.array[i]->id == member_id) {
             damage_member((i32)i);
             return;
         }
@@ -64,16 +64,16 @@ void vehicle::damage_all_members() {
 
 // sub_619B90
 void vehicle::repair_member(i32 member_idx) {
-    my_undamaged_members.data[member_idx]->set_visible(true, false);
-    my_undamaged_members.data[member_idx]->set_active(true);
-    my_damaged_members  .data[member_idx]->set_visible(false, false);
-    my_damaged_members  .data[member_idx]->set_active(false);
+    my_undamaged_members.array[member_idx]->set_visible(true, false);
+    my_undamaged_members.array[member_idx]->set_active(true);
+    my_damaged_members  .array[member_idx]->set_visible(false, false);
+    my_damaged_members  .array[member_idx]->set_active(false);
 }
 
 // sub_619C00
 void vehicle::repair_member(string_hash member_id) {
     for (u32 i = 0; i < my_undamaged_members.size; i++) {
-        if (my_undamaged_members.data[i]->id == member_id) {
+        if (my_undamaged_members.array[i]->id == member_id) {
             repair_member((i32)i);
             return;
         }

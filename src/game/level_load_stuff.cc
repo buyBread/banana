@@ -91,14 +91,14 @@ void level_load_stuff::look_up_level_descriptor() {
     u32 index = 0;
 
     for (; index < levels->descriptors.size; ++index) {
-        if (!_stricmp(level_name.c_str(), levels->descriptors.data[index]->level_name.c_str()))
+        if (!_stricmp(level_name.c_str(), levels->descriptors.array[index]->level_name.c_str()))
             break;
     }
 
     if (index == levels->descriptors.size)
         return;
 
-    descriptor = levels->descriptors.data[index];
+    descriptor = levels->descriptors.array[index];
 
     retail::sub_76FB40(descriptor->memory_map_index); // configure_packs_by_memory_map
 }

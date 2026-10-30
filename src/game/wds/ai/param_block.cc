@@ -810,12 +810,12 @@ param_base* param_block::common_find_data(string_hash parameter) const {
     i32 middle = count >> 1;
 
     do {
-        const string_hash name = param_array->data[middle]->get_name();
+        const string_hash name = param_array->array[middle]->get_name();
 
         if (parameter < name)
             high = middle;
         else if (parameter == name)
-            return cached_param = param_array->data[middle];
+            return cached_param = param_array->array[middle];
         else
             low = middle + 1;
 
@@ -857,7 +857,7 @@ void param_block::add_param(const param_base*                   param,
         const i32 count = (i32)param_array->size;
 
         // only a name below the last one searches for its place
-        if (count > 0 && param_array->data[count - 1]->my_name.source_hash_code > copy->my_name.source_hash_code) {
+        if (count > 0 && param_array->array[count - 1]->my_name.source_hash_code > copy->my_name.source_hash_code) {
             const u32 name = copy->my_name.source_hash_code;
 
             i32 low    = 0;
@@ -867,7 +867,7 @@ void param_block::add_param(const param_base*                   param,
             do {
                 middle = (high + low) >> 1;
 
-                const u32 probe = param_array->data[middle]->my_name.source_hash_code;
+                const u32 probe = param_array->array[middle]->my_name.source_hash_code;
 
                 if (name < probe)
                     high = middle;
@@ -875,13 +875,13 @@ void param_block::add_param(const param_base*                   param,
                     low = middle + 1;
             } while (low < high);
 
-            if (param_array->data[middle]->my_name.source_hash_code < name)
+            if (param_array->array[middle]->my_name.source_hash_code < name)
                 ++middle;
 
             param_array->push_back(copy);
 
             if ((u32)middle < (u32)count) {
-                param_base** slot = param_array->data + middle;
+                param_base** slot = param_array->array + middle;
 
                 std::memmove(slot + 1,
                              slot,

@@ -74,12 +74,12 @@ namespace treyarch { namespace amalga {
             i32 index = 0;
 
             return binary_search_array_cmp(&name_hash,
-                                           pack_entries.data,
+                                           pack_entries.array,
                                            0,
                                            (i32)pack_entries.size,
                                            &index,
                                            resource_amalgatoc_pack_entry::compare_name_hash) ?
-                pack_entries.data[index] : nullptr;
+                pack_entries.array[index] : nullptr;
         }
     };
 

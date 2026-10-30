@@ -37,8 +37,8 @@ i32 als::animation_blends_list::get_mash_sizeof() const {
 // sub_5BA820
 als::animation_blend* als::animation_blends_list::find_blend(const nal_anim_id &anim_name) const { // the blend for coming from that animation
     for (u32 index = 0; index < blends.size; ++index) {
-        if (anim_name == blends.data[index]->anim)
-            return blends.data[index];
+        if (anim_name == blends.array[index]->anim)
+            return blends.array[index];
     }
 
     return nullptr;

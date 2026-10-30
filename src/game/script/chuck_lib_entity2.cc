@@ -3415,7 +3415,7 @@ bool slf__entity__get_marker_names__dynamic_array__t::operator()(chuck::vm::vm_s
     i32 count = (i32)self->members.size;
 
     for (i32 i = 0; i < count; ++i) {
-        entity* member = self->members.data[i];
+        entity* member = self->members.array[i];
 
         if (!member || !member->is_a_marker())
             continue;
@@ -3931,8 +3931,8 @@ bool slf__entity__set_puppet_goto_destinations__dynamic_array__t::operator()(chu
     auto points = (chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04);
 
     mash::vector_basic<vector3d> destinations;
-    destinations.data     = nullptr;
-    destinations.capacity = 0;
+    destinations.array    = nullptr;
+    destinations.max_size = 0;
 
     // the script's points go in back to front
     for (i32 index = (i32)points->size() - 1; index >= 0; --index)
@@ -3974,7 +3974,7 @@ bool slf__entity__puppet_set_movement_info__dynamic_array__num__num__num__num__t
     u32 count = destinations.size();
 
     for (u32 index = 0; index < count; ++index)
-        puppet->goto_destinations.data[index] = destinations[index];
+        puppet->goto_destinations.array[index] = destinations[index];
 
     param_block &params = puppet->my_param_block;
 

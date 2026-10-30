@@ -30,7 +30,7 @@ void script_function::add_references(vm_thread*  thread,
     vm_dynamic_array_manager* manager = vm_dynamic_array_manager::inst();
 
     for (u32 index = 0; index < reference_descriptors.size; ++index) {
-        const vm_reference_descriptor &descriptor = reference_descriptors.data[index];
+        const vm_reference_descriptor &descriptor = reference_descriptors.array[index];
 
         if (descriptor.offset >= block_size) {
             // retail formats "bad offset trying to add tracking info for ref-counted item in '%s'" for a stripped print (nullsub_1)
@@ -83,7 +83,7 @@ void script_function::release_references(const void* block, u32 block_size) cons
     vm_dynamic_array_manager* manager = vm_dynamic_array_manager::inst();
 
     for (u32 index = 0; index < reference_descriptors.size; ++index) {
-        const vm_reference_descriptor &descriptor = reference_descriptors.data[index];
+        const vm_reference_descriptor &descriptor = reference_descriptors.array[index];
 
         if (descriptor.offset >= block_size) {
             // retail formats "bad offset trying to remove reference for ref-counted item in '%s'" for a stripped print (nullsub_1)

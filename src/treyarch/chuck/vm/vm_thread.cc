@@ -644,7 +644,7 @@ void vm_thread::pop_flow_stack() {
 
 // sub_A22740
 void vm_thread::create_new_instance(script_object* so, const char* inst_name) {
-    const script_function* constructor = so->funcs.data[so->constructor_index];
+    const script_function* constructor = so->funcs.array[so->constructor_index];
 
     script_instance* created;
 

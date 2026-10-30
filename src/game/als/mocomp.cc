@@ -6754,7 +6754,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
                 retail::sub_4015B0((u64*)&saved_matrices[index]);
         }
 
-        std::memcpy(saved_matrices, body->all_model_po.data, body->all_model_po.size << 6);
+        std::memcpy(saved_matrices, body->all_model_po.array, body->all_model_po.size << 6);
     }
 
     saved_po = *the_actor->my_rel_po;
@@ -6781,7 +6781,7 @@ void als::biped_physics_mocomp::pre_anim_action(f32) {
     auto* body = (conglomerate*)the_actor;
 
     if (saved_matrices)
-        std::memcpy(saved_matrices, body->all_model_po.data, body->all_model_po.size << 6);
+        std::memcpy(saved_matrices, body->all_model_po.array, body->all_model_po.size << 6);
 
     retail::sub_583280((u64*)&saved_po, (u64*)the_actor->my_abs_po); // po copy
 }
@@ -6817,7 +6817,7 @@ void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
 
     // the anim leaves it where it was
     if (saved_matrices)
-        std::memcpy(((conglomerate*)the_actor)->all_model_po.data, saved_matrices, ((conglomerate*)the_actor)->all_model_po.size << 6);
+        std::memcpy(((conglomerate*)the_actor)->all_model_po.array, saved_matrices, ((conglomerate*)the_actor)->all_model_po.size << 6);
 
     retail::sub_583280((u64*)the_actor->my_abs_po, (u64*)&saved_po);
 }

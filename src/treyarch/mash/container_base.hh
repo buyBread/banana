@@ -11,8 +11,11 @@ namespace treyarch { namespace mash {
         u32 mash_image_offset;
         u32 size;
 
-        container_base() : mash_image_offset(0),
-                           size(0) {}
+        // sub_A6D3E0
+        container_base() {
+            size              = 0;
+            mash_image_offset = 0;
+        }
 
         explicit container_base(generating_vtable_version) {}
 
@@ -38,11 +41,11 @@ namespace treyarch { namespace mash {
                 the offset points from the container itself to the cursor after its last unmash allocation
             */
 
-            u32 image_begin = (u32)this;
-            u32 image_end   = image_begin + mash_image_offset;
-            u32 address     = (u32)pointer;
+            i32 image_begin = (i32)this;
+            i32 image_end   = (i32)((u32)this + mash_image_offset);
+            i32 address     = (i32)pointer;
 
-            // retail treats both ends as part of the image
+            // inclusive at both ends and signed
             return address >= image_begin && address <= image_end;
         }
 
@@ -53,8 +56,8 @@ namespace treyarch { namespace mash {
         }
 
         void clear() {
-            mash_image_offset = 0;
             size              = 0;
+            mash_image_offset = 0;
         }
 
         void construct_mashed_class() {}

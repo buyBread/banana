@@ -490,7 +490,7 @@ u32 als::state_machine::get_num_unk_44() const {
 
 // sub_5BC4D0
 als::state_unk_44* als::state_machine::get_unk_44(u32 index) const {
-    return curr_state->unk_44.data[index];
+    return curr_state->unk_44.array[index];
 }
 
 // sub_5E0980
@@ -1087,7 +1087,7 @@ const als::category* als::state_machine::get_curr_category() const {
 
 // sub_5BBA60
 const als::state* als::state_machine::find_state(state_id the_id, bool) const {
-    state** states = shared_portion->state_list.data;
+    state** states = shared_portion->state_list.array;
 
     i32 low  = 0;
     i32 high = shared_portion->state_list.size;
@@ -1116,7 +1116,7 @@ const als::state* als::state_machine::find_state(state_id the_id, bool) const {
 
 // sub_5BBAB0
 const als::category* als::state_machine::find_category(category_id the_id, bool) const {
-    category** categories = shared_portion->category_list.data;
+    category** categories = shared_portion->category_list.array;
 
     i32 low  = 0;
     i32 high = shared_portion->category_list.size;

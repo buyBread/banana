@@ -19,7 +19,7 @@ u8* script_var_container::get_address(const char* name) const {
     i32 high = count - 1;
     i32 mid  = count >> 1;
 
-    const script_var_address_entry* entry = script_var_to_address.data[mid];
+    const script_var_address_entry* entry = script_var_to_address.array[mid];
 
     while (entry->name_hash != name_hash.source_hash_code) {
         i32 previous = mid;
@@ -44,7 +44,7 @@ u8* script_var_container::get_address(const char* name) const {
         if (previous == mid)
             return nullptr;
 
-        entry = script_var_to_address.data[mid];
+        entry = script_var_to_address.array[mid];
     }
 
     return entry->address;

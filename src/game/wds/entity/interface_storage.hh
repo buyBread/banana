@@ -60,7 +60,7 @@ namespace treyarch {
         generic_interface* find_ifc(e_entity_ifc index) { // null when the entity doesn't have it
             ifc_lock.acquire();
 
-            generic_interface* ifc = has_ifc(index) ? interfaces.data[std::popcount(ifc_mask & ((1u << index) - 1))] : nullptr;
+            generic_interface* ifc = has_ifc(index) ? interfaces.array[std::popcount(ifc_mask & ((1u << index) - 1))] : nullptr;
 
             ifc_lock.release();
 

@@ -170,7 +170,7 @@ bool script_executable::has_threads() const {
 
 // sub_A1F790
 script_object* script_executable::get_object(i32 index) const {
-    return script_objects.data[index];
+    return script_objects.array[index];
 }
 
 // sub_9ED9D0
@@ -189,7 +189,7 @@ script_object* script_executable::find_object(string_hash object_name, i32* inde
     i32 high = count - 1 < 0 ? 0 : count - 1;
     i32 mid  = count / 2;
 
-    script_object* object = script_objects.data[mid];
+    script_object* object = script_objects.array[mid];
 
     while (!(object->name == object_name)) {
         i32 previous = mid;
@@ -214,7 +214,7 @@ script_object* script_executable::find_object(string_hash object_name, i32* inde
         if (previous == mid)
             return nullptr;
 
-        object = script_objects.data[mid];
+        object = script_objects.array[mid];
     }
 
     if (index)
@@ -274,7 +274,7 @@ void script_executable::link() {
                 continue;
 
             case e_opcode_arg::STR:
-                linked = (u32)permanent_string_table.data[operands[0]]->c_str();
+                linked = (u32)permanent_string_table.array[operands[0]]->c_str();
 
                 break;
 
@@ -282,7 +282,7 @@ void script_executable::link() {
             case e_opcode_arg::GSIG_SFR:
             case e_opcode_arg::ISIG_SFR:
             case e_opcode_arg::LSIG_SFR:
-                linked = (u32)script_objects.data[operands[0]]->get_function_ptr(operands[1]);
+                linked = (u32)script_objects.array[operands[0]]->get_function_ptr(operands[1]);
 
                 break;
 
@@ -295,7 +295,7 @@ void script_executable::link() {
             case e_opcode_arg::CLV: {
                 script_library::script_library_class* library_class = script_library::slc_manager::inst()->get_class(operands[0]);
 
-                mash::string instance_name(permanent_string_table.data[operands[1]]->c_str());
+                mash::string instance_name(permanent_string_table.array[operands[1]]->c_str());
 
                 linked = library_class->find_instance(instance_name);
 
@@ -310,8 +310,8 @@ void script_executable::link() {
                 break;
 
             case e_opcode_arg::EI:
-                linked = references::resolve_extern_callback.read()(permanent_string_table.data[operands[0]]->c_str(),
-                                                                    permanent_string_table.data[operands[1]]->c_str());
+                linked = references::resolve_extern_callback.read()(permanent_string_table.array[operands[0]]->c_str(),
+                                                                    permanent_string_table.array[operands[1]]->c_str());
 
                 break;
 
@@ -319,7 +319,7 @@ void script_executable::link() {
             case e_opcode_arg::OBJ_REF:
             case e_opcode_arg::UNK_34:
             case e_opcode_arg::UNK_35:
-                linked = (u32)script_objects.data[operands[0]];
+                linked = (u32)script_objects.array[operands[0]];
                 
                 break;
 
@@ -344,20 +344,20 @@ void script_executable::post_un_mash_fixup() {
         flags = (e_script_executable_flags)(flags | script_executable_flag_needs_run);
 
         for (i32 index = 0; index < count; ++index)
-            script_objects.data[index]->quick_post_un_mash_fixup();
+            script_objects.array[index]->quick_post_un_mash_fixup();
 
         return;
     }
 
-    global_script_object = script_objects.data[(u32)global_script_object];
+    global_script_object = script_objects.array[(u32)global_script_object];
 
     for (i32 index = 0; index < count; ++index)
-        script_objects.data[index]->post_un_mash_fixup(this);
+        script_objects.array[index]->post_un_mash_fixup(this);
 
     i32 instance_count = (i32)object_instances.size;
 
     for (i32 index = 0; index < instance_count; ++index) {
-        script_function* parms = object_instances.data[index]->parms;
+        script_function* parms = object_instances.array[index]->parms;
 
         if (parms)
             parms->post_un_mash_fixup(global_script_object);
@@ -385,7 +385,7 @@ void script_executable::un_load(bool call_all_destructors) {
     i32 count = (i32)script_objects.size;
 
     for (i32 index = 0; index < count; ++index) {
-        script_object* object = script_objects.data[index];
+        script_object* object = script_objects.array[index];
 
         if (object)
             object->destruct_instances(call_all_destructors);
@@ -402,7 +402,7 @@ void script_executable::un_load(bool call_all_destructors) {
                 break;
 
             for (i32 index = 0; index < count; ++index) {
-                script_object* object = script_objects.data[index];
+                script_object* object = script_objects.array[index];
 
                 if (object && object->has_threads()) {
                     object->run(true);
@@ -414,7 +414,7 @@ void script_executable::un_load(bool call_all_destructors) {
     }
 
     for (i32 index = 0; index < count; ++index) {
-        script_object* object = script_objects.data[index];
+        script_object* object = script_objects.array[index];
 
         if (object)
             object->delete_all_instances();
@@ -466,7 +466,7 @@ script_instance* script_executable::find_instance(string_hash object_name, strin
 // sub_A1F7E0
 script_instance* script_executable::find_instance(string_hash instance_name) const {
     for (u32 index = 0; index < script_objects.size; ++index) {
-        script_instance* inst = script_objects.data[index]->find_instance(instance_name);
+        script_instance* inst = script_objects.array[index]->find_instance(instance_name);
 
         if (inst)
             return inst;
@@ -480,7 +480,7 @@ vm_thread* script_executable::find_thread(u32 thread_id) const {
     i32 count = (i32)script_objects.size;
 
     for (i32 index = 0; index < count; ++index) {
-        script_object* object = script_objects.data[index];
+        script_object* object = script_objects.array[index];
 
         if (!object)
             continue;

@@ -142,7 +142,7 @@ void script_instance::release_string_members() {
         u32 count = object->reference_descriptors.size;
 
         for (u32 index = 0; index < count; ++index) {
-            const vm_reference_descriptor &descriptor = object->reference_descriptors.data[index];
+            const vm_reference_descriptor &descriptor = object->reference_descriptors.array[index];
 
             if (!descriptor.kind)
                 vm_dynamic_array_manager::inst()->remove_string_reference(*(void**)(data.buffer + descriptor.offset));

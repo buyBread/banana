@@ -30,7 +30,7 @@ resource_key als::expression_animation_entry::pick() const {
                         if (index < 0)
                             break;
 
-                        return animations.data[index]->morph;
+                        return animations.array[index]->morph;
                     }
                 }
 

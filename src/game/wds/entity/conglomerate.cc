@@ -9,11 +9,11 @@ e_conglom_member_index conglomerate::get_member_index(const string_hash &nodenam
     i32 found = -1;
 
     if (bone_indices.size() &&
-        binary_search_array(nodename, bone_indices.get_vector().data, (i32)bone_indices.size(), &found))
+        binary_search_array(nodename, bone_indices.get_vector().array, (i32)bone_indices.size(), &found))
 
         return (e_conglom_member_index)(members.size + found);
 
-    if (members.size && binary_search_array_deref(nodename, members.data, (i32)members.size, &found))
+    if (members.size && binary_search_array_deref(nodename, members.array, (i32)members.size, &found))
         return (e_conglom_member_index)found;
 
     return nodename == id ? base_conglom_index : invalid_conglom_member;
@@ -22,7 +22,7 @@ e_conglom_member_index conglomerate::get_member_index(const string_hash &nodenam
 // sub_616950
 entity* conglomerate::get_member(e_conglom_member_index index) const {
     if (index >= 0 && (u32)index < members.size)
-        return members.data[index];
+        return members.array[index];
 
     return index == base_conglom_index ? (entity*)this : nullptr;
 }
@@ -34,7 +34,7 @@ bool conglomerate::has_member(const string_hash &nodename) const {
 
     i32 index;
 
-    return binary_search_array_deref(nodename, members.data, (i32)members.size, &index);
+    return binary_search_array_deref(nodename, members.array, (i32)members.size, &index);
 }
 
 // sub_40A810

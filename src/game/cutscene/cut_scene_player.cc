@@ -1039,7 +1039,7 @@ void cut_scene_player::release_current_segment() {
             bool kept = false;
 
             for (u32 j = 0; j < next_regions.size; j++) {
-                if (next_regions.data[j] == district) {
+                if (next_regions.array[j] == district) {
                     kept = true;
 
                     break;
