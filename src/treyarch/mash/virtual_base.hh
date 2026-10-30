@@ -4,7 +4,10 @@
 
 #include "treyarch/mash/types.hh"
 #include "treyarch/mm/mm.hh"
+#include "vc8/hash_map.hh"
+#include "vc8/hash_set.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace mash {
     class mash_info_struct;
@@ -62,4 +65,11 @@ namespace treyarch { namespace mash {
     };
 
     ASSERT_SIZEOF(mash_virtual_base, 0x04);
+
+    namespace references {
+        inline util::memory_reference<vc8::hash_map<vtable_key_t, vtable_value_t>> vtable_map { 0x01126CB4 };
+
+        // every vtable ever registered, nothing reads it back
+        inline util::memory_reference<vc8::hash_set<vtable_value_t>> vtable_set { 0x01126C8C };
+    } // references
 }} // treyarch::mash

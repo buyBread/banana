@@ -1,79 +1,9 @@
 #include <cassert>
-#include <cstdlib>
 
 #include "game/hash/algo.hh"
 #include "treyarch/mash/virtual_base.hh"
-#include "banana/util/gimmie/fn.hh"
-#include "banana/util/memory_reference.hh"
 
 using namespace treyarch;
-
-namespace treyarch { namespace mash { namespace detail {
-    // overlays for the two old VC8 hash maps the executable builds during static initialization
-    struct vtable_registry_node {
-        vtable_registry_node* next;
-        vtable_registry_node* previous;
-        vtable_key_t          key;
-        vtable_value_t        value;
-    };
-
-    struct vtable_registry {
-        u32                    unk_00;
-        u32                    unk_04;
-        vtable_registry_node*  head;
-        u32                    unk_0c;
-        u32                    unk_10;
-        vtable_registry_node** bucket_bounds;
-        u32                    unk_18;
-        u32                    unk_1c;
-        u32                    bucket_mask;
-        u32                    bucket_count;
-    };
-
-    ASSERT_SIZEOF  (vtable_registry_node,           0x10);
-    ASSERT_OFFSETOF(vtable_registry_node, next,     0x00);
-    ASSERT_OFFSETOF(vtable_registry_node, previous, 0x04);
-    ASSERT_OFFSETOF(vtable_registry_node, key,      0x08);
-    ASSERT_OFFSETOF(vtable_registry_node, value,    0x0C);
-
-    ASSERT_SIZEOF  (vtable_registry,                0x28);
-    ASSERT_OFFSETOF(vtable_registry, head,          0x08);
-    ASSERT_OFFSETOF(vtable_registry, bucket_bounds, 0x14);
-    ASSERT_OFFSETOF(vtable_registry, bucket_mask,   0x20);
-    ASSERT_OFFSETOF(vtable_registry, bucket_count,  0x24);
-
-    namespace references {
-        util::memory_reference<vtable_registry> vtable_registry { 0x01126CB4 };
-    } // references
-
-    // sub_A6B910
-    static vtable_registry_node* find_vtable_entry(vtable_key_t key) {
-        vtable_registry &registry = references::vtable_registry.get();
-
-        // this ugly little park-miller mix is exactly what retail uses before applying the bucket mask
-        div_t division = std::div((i32)(key ^ 0xDEADBEEF), 127773);
-        i32 mixed_key = 16807 * division.rem - 2836 * division.quot;
-
-        if (mixed_key < 0)
-            mixed_key += I32_MAX;
-
-        u32 bucket = (u32)mixed_key & registry.bucket_mask;
-
-        if (registry.bucket_count <= bucket)
-            bucket += -1 - (registry.bucket_mask >> 1);
-
-        vtable_registry_node* node = registry.bucket_bounds[bucket];
-        vtable_registry_node* end  = registry.bucket_bounds[bucket + 1];
-
-        while (node != end && node->key < key)
-            node = node->next;
-
-        if (node == end || key < node->key)
-            return registry.head;
-
-        return node;
-    }
-}}} // treyarch::mash::detail
 
 mash::virtual_types_key mash::mash_virtual_base::type_key = 0x0668FEE9; // "mash_virtual_base"
 
@@ -114,18 +44,21 @@ mash::mash_virtual_base* mash::mash_virtual_base::construct_class_helper(void* c
     return mashed_class;
 }
 
+// sub_A6C760
 bool mash::mash_virtual_base::register_vtable_entry(const vtable_key_t   &key,
                                                     const vtable_value_t &value) {
 
-    using register_function = bool (__cdecl*)(const vtable_key_t*, const vtable_value_t*);
+    auto result = references::vtable_map.get().insert({ key, value });
 
-    // insertion mutates two process-owned STL maps; keep that allocator-sensitive mess on the retail side (for now)
-    return util::gimmie::fn<register_function>(0x00A6C760)(&key, &value);
+    references::vtable_set.get().insert(value);
+
+    // a key registered twice keeps its first vtable
+    return result.second || result.first->value.value == value;
 }
 
 mash::vtable_value_t mash::mash_virtual_base::lookup_vtable_entry(const vtable_key_t &key) {
-    detail::vtable_registry_node*  node     = detail::find_vtable_entry(key);
-    detail::vtable_registry       &registry = detail::references::vtable_registry.get();
+    auto &vtable_map = references::vtable_map.get();
+    auto* entry      = vtable_map.find(key);
 
-    return node == registry.head ? invalid_vtable_value : node->value;
+    return entry == vtable_map.head() ? invalid_vtable_value : entry->value.value;
 }
