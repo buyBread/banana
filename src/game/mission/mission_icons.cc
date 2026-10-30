@@ -183,3 +183,8 @@ void mission_manager::launch_auto_launch_instance(const chuck::vm::script_instan
     flags      |= mission_manager_flag_mission_ready;
     checkpoint  = 0;
 }
+
+// sub_985AA0
+bool mission_manager::mission_icon_punched(arch_base_vhandle, f32) {
+    return false;
+}

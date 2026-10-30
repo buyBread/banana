@@ -2,6 +2,7 @@
 
 #include "retail.hh"
 #include "game/app.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
@@ -226,10 +227,33 @@ chuck::vm::script_executable* mission_manager::get_running_mission_exec() const 
 }
 
 // sub_97E320
-bool mission_manager::get_mission_caption_index(u32, i32* index) {
+bool mission_manager::get_mission_caption_index(arch_base_vhandle, i32* index) {
     *index = -1;
 
     return false;
+}
+
+// sub_71FF20
+i32 mission_manager::get_mission_index(arch_base_vhandle) const {
+    return -1;
+}
+
+// sub_71FF10
+bool mission_manager::is_mission_eligible(arch_base_vhandle) const {
+    return false;
+}
+
+// sub_983E10
+void mission_manager::set_mission_meta_text(u32, arch_base_vhandle, i32) {}
+
+// sub_97F030
+void mission_manager::hide_blackscreen_after_unload(bool hide) {
+    auto* header = (mission_header_instance_base*)current_mission.mission_header_instance->data.buffer;
+
+    if (hide)
+        header->flags &= ~mission_header_flag_keep_blackscreen_after_unload;
+    else
+        header->flags |= mission_header_flag_keep_blackscreen_after_unload;
 }
 
 // sub_97E330

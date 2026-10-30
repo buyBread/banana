@@ -79,14 +79,14 @@ namespace treyarch {
         mission_header_flag_uses_trigger      = 0x00000010,
 
         // no sm3 names past this point
-        mission_header_flag_unk_00004000 = 0x00004000,
-        mission_header_flag_unk_00008000 = 0x00008000,
-        mission_header_flag_unk_00010000 = 0x00010000,
-        mission_header_flag_unk_00020000 = 0x00020000, // set once the instance sits in mission_icons or mission_triggers
-        mission_header_flag_unk_00800000 = 0x00800000,
-        mission_header_flag_unk_01000000 = 0x01000000,
-        mission_header_flag_unk_02000000 = 0x02000000,
-        mission_header_flag_unk_04000000 = 0x04000000
+        mission_header_flag_unk_00004000                  = 0x00004000,
+        mission_header_flag_unk_00008000                  = 0x00008000,
+        mission_header_flag_unk_00010000                  = 0x00010000,
+        mission_header_flag_unk_00020000                  = 0x00020000, // set once the instance sits in mission_icons or mission_triggers
+        mission_header_flag_unk_00800000                  = 0x00800000,
+        mission_header_flag_keep_blackscreen_after_unload = 0x01000000,
+        mission_header_flag_unk_02000000                  = 0x02000000,
+        mission_header_flag_unk_04000000                  = 0x04000000
     };
 
     // the script data of a mission header instance
@@ -317,16 +317,26 @@ namespace treyarch {
         bool                          has_auto_launch_instances() const;
         i32                           get_total_times_script_has_been_successfully_completed() const;
 
-        static bool get_mission_caption_index(u32 icon, i32* index);
+        static bool get_mission_caption_index(arch_base_vhandle icon, i32* index);
+
+        i32  get_mission_index    (arch_base_vhandle) const;
+        bool is_mission_eligible  (arch_base_vhandle) const;
+        bool mission_icon_punched (arch_base_vhandle, f32);
+        void set_mission_meta_text(u32 widget, arch_base_vhandle, i32);
+
+        void hide_blackscreen_after_unload(bool hide);
 
         i32  game_time_get_military_time_hour() const;
         u32  game_time_get_seconds_since_midnight() const;
         f32  game_time_get_full_time() const;
         bool is_daytime() const;
+        void game_time_advance(i32 military_hour, i32 military_minute);
+        void set_time_of_day_rate(i32);
         void frame_advance_game_time(f32 time_inc);
 
         void frame_advance(f32 time_inc);
 
+        void set_current_act(i32 new_act, bool force);
         void advance_act_transition();
         void begin_act_transition();
         void load_act_pack();
@@ -361,6 +371,9 @@ namespace treyarch {
         static void on_zoom_map_poi_unselected(event* raised_event, arch_base_vhandle recipient, void* parameters);
 
         void save_player_restart(const vector3d &position, vector3d xz_facing);
+
+        void set_mission_finished_screen_has_appeared(bool appeared, bool despawn_quest_giver);
+        void handle_finished_dialog_selection();
 
         void play_failed_music();
         void quit_failed_mission();

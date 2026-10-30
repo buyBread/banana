@@ -82,6 +82,26 @@ namespace treyarch {
         void set_awarded_points(f32 awarded, f32 unk_b, bool unk_c);
     };
 
+    // RTTI mission_progression_registry, built on first use by sub_7685B0
+    class mission_progression_registry {
+
+    public:
+        using stages_t     = vc8::map<i32, mission_stage_data*>;
+        using objectives_t = vc8::map<i32, mission_objective_data*>;
+
+        void**       vtable;
+        stages_t     stages;         // keyed by the stage count when each was made
+        objectives_t objectives;     // keyed by the objective count when each was made
+        u32          unk_01c;
+        mash::string mission_name;
+        mash::string description;
+        mash::string success_string;
+        mash::string failure_string;
+        mash::string unk_050;
+        mash::string unk_05c;
+        u8           reserved_068[0x04];
+    };
+
     ASSERT_SIZEOF  (mission_progression_data,              0x28);
     ASSERT_OFFSETOF(mission_progression_data, id,          0x08);
     ASSERT_OFFSETOF(mission_progression_data, description, 0x10);
@@ -95,4 +115,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(mission_objective_data, actual_score,      0x30);
     ASSERT_OFFSETOF(mission_objective_data, unk_03c,           0x3C);
     ASSERT_OFFSETOF(mission_objective_data, short_description, 0x40);
+
+    ASSERT_SIZEOF  (mission_progression_registry,                 0x6C);
+    ASSERT_OFFSETOF(mission_progression_registry, stages,         0x04);
+    ASSERT_OFFSETOF(mission_progression_registry, objectives,     0x10);
+    ASSERT_OFFSETOF(mission_progression_registry, mission_name,   0x20);
+    ASSERT_OFFSETOF(mission_progression_registry, failure_string, 0x44);
 } // treyarch

@@ -638,7 +638,7 @@ void mission_manager::process_state_unloading() {
             string_hash parent_name;
 
             if (*(string_hash*)retail::sub_5FD120((u32*)header->parent, (u32*)&parent_name) == references::mission_header_instance_base_name.read() &&
-                (((mission_header_instance_base*)header->data.buffer)->flags & mission_header_flag_unk_01000000))
+                (((mission_header_instance_base*)header->data.buffer)->flags & mission_header_flag_keep_blackscreen_after_unload))
 
                 end_fade = false;
         }

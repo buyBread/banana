@@ -31,6 +31,22 @@ bool mission_manager::is_daytime() const {
     return (u32)((i32)(game_time / 60) / 60 % 24 - 6) <= 12;
 }
 
+// sub_97E960
+void mission_manager::game_time_advance(i32 military_hour, i32 military_minute) {
+    auto minutes = (i32)(game_time / 60);
+
+    // minutes until that time of day, today or tomorrow
+    i32 delta = 60 * (military_hour + 24 * (minutes / 1440)) - minutes + military_minute;
+
+    if (delta < 0)
+        delta += 1440;
+
+    game_time += 60 * delta;
+}
+
+// sub_689610
+void mission_manager::set_time_of_day_rate(i32) {}
+
 // sub_97F340
 void mission_manager::frame_advance_game_time(f32 time_inc) {
     // retail ignores the pushed delta and times itself from frame_clock

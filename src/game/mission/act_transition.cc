@@ -25,6 +25,20 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// sub_980570
+void mission_manager::set_current_act(i32 new_act, bool force) {
+    if ((new_act != act || force) && !act_transition_state) {
+        act_transition_state = 1;
+        act_force_reload     = force;
+        requested_act        = new_act;
+
+        begin_act_transition();
+
+        if (force)
+            load_act_pack();
+    }
+}
+
 // sub_9806F0
 void mission_manager::advance_act_transition() {
     ++act_transition_frames;

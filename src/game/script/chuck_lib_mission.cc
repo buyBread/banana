@@ -1,42 +1,103 @@
+#include <cstdio>
+
 #include "retail.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/mission/mission_progression_data.hh"
 #include "game/script/chuck_lib_mission.hh"
+#include "banana/util/memory_reference.hh"
+
+namespace treyarch { namespace references {
+    // written here only, nothing reads it
+    util::memory_reference<i32> loading_hint_stage { 0x010F7070 };
+}} // treyarch::references
 
 using namespace treyarch;
 
+// sub_8570B0
 bool slf__terminate_script__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8570B0)(this, stack);
+    stack.sp -= 0x04;
+
+    retail::sub_9855F0((i32)mission_manager::inst(), stack.local_num(0x00) != 0.0f, 0); // mission_manager::terminate_script
+
+    return false;
 }
 
+// sub_857100
 bool slf__set_loading_hint_stage__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857100)(this, stack);
+    stack.sp -= 0x04;
+
+    references::loading_hint_stage.write((i32)stack.local_num(0x00));
+
+    return true;
 }
 
+// sub_83E140
 bool slf__get_running_script_index__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E140)(this, stack);
+    f32 result = (f32)mission_manager::inst()->get_running_script_index();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857120
 bool slf__get_mission_index__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857120)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 result = (f32)mission_manager::inst()->get_mission_index(arch_base_vhandle(stack.local_uint(0x00)));
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E170
 bool slf__get_total_times_script_has_been_successfully_completed__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E170)(this, stack);
+    f32 result = (f32)mission_manager::inst()->get_total_times_script_has_been_successfully_completed();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857160
 bool slf__mission_icon_punched__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857160)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 result = mission_manager::inst()->mission_icon_punched(arch_base_vhandle(stack.local_uint(0x00)), -1.0f) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8571C0
 bool slf__is_mission_eligible__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8571C0)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 result = mission_manager::inst()->is_mission_eligible(arch_base_vhandle(stack.local_uint(0x00))) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857210
 bool slf__get_mission_caption_index__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857210)(this, stack);
+    stack.sp -= 0x04;
+
+    i32 index;
+    f32 result = -1.0f;
+
+    if (mission_manager::inst()->get_mission_caption_index(arch_base_vhandle(stack.local_uint(0x00)), &index))
+        result = (f32)index;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_857280
@@ -52,8 +113,13 @@ bool slf__setup_mission_instance_parameters__mission_district_instance_base__t::
     return false;
 }
 
+// sub_83E1A0
 bool slf__is_mission_running__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E1A0)(this, stack);
+    f32 result = mission_manager::inst()->is_mission_running() || mission_manager::inst()->is_mission_ready() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__get_registry_value__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -76,76 +142,167 @@ bool slf__save_checkpoint__vector3d__vector3d__num__t::operator()(chuck::vm::vm_
     return ((invoke_t)retail::sub_857570)(this, stack);
 }
 
+// sub_83E1F0
 bool slf__get_checkpoint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E1F0)(this, stack);
+    f32 result = (f32)mission_manager::inst()->checkpoint;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E230
 bool slf__get_overrride_checkpoint__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E230)(this, stack);
+    auto* registry = (mission_progression_registry*)retail::sub_7685B0(); // mission_progression_registry::inst
+
+    auto stage_count = (i32)registry->stages.size();
+    f32  result      = stage_count > 0 ? 0.0f : (f32)(stage_count - 1);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__is_debug_force_script_running__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__is_debug_force_script_retried__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8575B0
 bool slf__game_time_advance__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8575B0)(this, stack);
+    stack.sp -= 0x08;
+
+    mission_manager::inst()->game_time_advance((i32)stack.local_num(0x00), (i32)stack.local_num(0x04));
+
+    return true;
 }
 
+// sub_8575E0
 bool slf__set_time_of_day_rate__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8575E0)(this, stack);
+    stack.sp -= 0x04;
+
+    mission_manager::inst()->set_time_of_day_rate((i32)stack.local_num(0x00));
+
+    return true;
 }
 
+// sub_83E280
 bool slf__game_time_get_seconds_since_midnight__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E280)(this, stack);
+    f32 result = (f32)(i32)mission_manager::inst()->game_time_get_seconds_since_midnight();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857620
 bool slf__internal_mission_manager_set_current_act__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857620)(this, stack);
+    stack.sp -= 0x04;
+
+    mission_manager::inst()->set_current_act((i32)stack.local_num(0x00), false);
+
+    return true;
 }
 
+// sub_857640
 bool slf__mission_manager_set_is_quitable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857640)(this, stack);
+    stack.sp -= 0x04;
+
+    mission_manager::inst()->is_quitable = stack.local_num(0x00) != 0.0f;
+
+    return true;
 }
 
+// sub_83E2B0
 bool slf__mission_manager_is_act_transitioning__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E2B0)(this, stack);
+    f32 result = mission_manager::inst()->is_act_transitioning() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E310
 bool slf__mission_manager_get_current_act__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E310)(this, stack);
+    f32 result = (f32)mission_manager::inst()->get_current_act();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E340
 bool slf__mission_manager_get_current_act_internal__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E340)(this, stack);
+    f32 result = (f32)mission_manager::inst()->get_current_act_internal();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_857680
 bool slf__set_mission_meta_text__widget_3d__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857680)(this, stack);
+    stack.sp -= 0x0C;
+
+    mission_manager::inst()->set_mission_meta_text(stack.local_uint(0x00),
+                                                   arch_base_vhandle(stack.local_uint(0x04)),
+                                                   (i32)stack.local_num(0x08));
+
+    return true;
 }
 
+// sub_8576B0
 bool slf__set_mission_finished_screen_has_appeared__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8576B0)(this, stack);
+    stack.sp -= 0x08;
+
+    mission_manager::inst()->set_mission_finished_screen_has_appeared(stack.local_num(0x00) != 0.0f, stack.local_num(0x04) != 0.0f);
+
+    return true;
 }
 
+// sub_823B80
 bool slf__handle_finished_dialog_selection__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823B80)(this, stack);
+    mission_manager::inst()->handle_finished_dialog_selection();
+
+    return true;
 }
 
+// sub_857710
 bool slf__hide_blackscreen_after_unload__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857710)(this, stack);
+    stack.sp -= 0x04;
+
+    mission_manager::inst()->hide_blackscreen_after_unload(stack.local_num(0x00) != 0.0f);
+
+    return true;
 }
 
+// sub_83E370
 bool slf__get_current_key_position__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E370)(this, stack);
+    vector3d result = mission_manager::inst()->get_mission_key_position();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_823B90
 bool slf__test__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823B90)(this, stack);
+    std::printf("test!");
+
+    return true;
 }
 
 bool slf__register_quest_giver__entity__t::operator()(chuck::vm::vm_stack &stack) {

@@ -169,7 +169,7 @@ void game::advance_state_load_level(f32 time_inc) {
     mission_manager* missions = mission_manager::inst();
 
     if (missions->first_act_request) {
-        retail::sub_980570((i32)missions, references::global_act.read(), 1); // mission_manager::set_current_act
+        missions->set_current_act(references::global_act.read(), true);
 
         missions->first_act_request = 0;
     }
