@@ -139,10 +139,10 @@ TEST_SUITE("mash") {
         CHECK(root->name.m_data == image.at<char>(104));
         CHECK(root->name.m_source_slab == source_slab);
         REQUIRE(root->pack_entries.size == 1);
-        CHECK(root->pack_entries.capacity == 1);
-        REQUIRE(root->pack_entries.data == image.at<amalga::resource_amalgatoc_pack_entry*>(112));
+        CHECK(root->pack_entries.max_size == 1);
+        REQUIRE(root->pack_entries.array == image.at<amalga::resource_amalgatoc_pack_entry*>(112));
 
-        auto* pack = root->pack_entries.data[0];
+        auto* pack = root->pack_entries.array[0];
 
         REQUIRE(pack == image.at<amalga::resource_amalgatoc_pack_entry>(116));
         CHECK(pack->name == "PACK");
@@ -152,9 +152,9 @@ TEST_SUITE("mash") {
         CHECK(pack->data_size[0] == 2000);
         CHECK(pack->data_size[1] == 3000);
         REQUIRE(root->memory_maps.size == 1);
-        REQUIRE(root->memory_maps.data == image.at<amalga::resource_memory_map*>(196));
+        REQUIRE(root->memory_maps.array == image.at<amalga::resource_memory_map*>(196));
 
-        auto* map = root->memory_maps.data[0];
+        auto* map = root->memory_maps.array[0];
 
         REQUIRE(map == image.at<amalga::resource_memory_map>(200));
         CHECK(doctest::String(map->map_name_str) == "MAIN");
@@ -198,9 +198,9 @@ TEST_SUITE("mash") {
         CHECK(root->name.empty());
         CHECK(root->name.c_str() == empty_string());
         CHECK(root->pack_entries.size == 0);
-        CHECK(root->pack_entries.data == nullptr);
+        CHECK(root->pack_entries.array == nullptr);
         CHECK(root->memory_maps.size == 0);
-        CHECK(root->memory_maps.data == nullptr);
+        CHECK(root->memory_maps.array == nullptr);
         CHECK(root->pack_entries.mash_image_offset == 52);
         CHECK(root->memory_maps.mash_image_offset == 32);
         CHECK(string_count == 1);
@@ -226,7 +226,7 @@ TEST_SUITE("mash") {
                 REQUIRE(descriptor->extension != nullptr);
                 CHECK(descriptor->extension == image.at<amalga::resource_descriptor_extension>(60));
                 CHECK(descriptor->extension->unk_0c.size == 0);
-                CHECK(descriptor->extension->unk_0c.data == nullptr);
+                CHECK(descriptor->extension->unk_0c.array == nullptr);
                 CHECK(descriptor->extension->unk_0c.mash_image_offset == 20);
             } else
                 CHECK(descriptor->extension == nullptr);
@@ -253,9 +253,9 @@ TEST_SUITE("mash") {
         const auto &entries = descriptor->extension->unk_0c;
 
         CHECK(entries.size == 1);
-        CHECK(entries.data == image.at<amalga::resource_descriptor_extension_entry*>(92));
-        CHECK(entries.data[0] == image.at<amalga::resource_descriptor_extension_entry>(96));
-        CHECK(entries.data[0]->unk_00[0] == 77);
+        CHECK(entries.array == image.at<amalga::resource_descriptor_extension_entry*>(92));
+        CHECK(entries.array[0] == image.at<amalga::resource_descriptor_extension_entry>(96));
+        CHECK(entries.array[0]->unk_00[0] == 77);
         CHECK(entries.mash_image_offset == 132 - 72);
         CHECK(allocations.empty());
     }
@@ -277,7 +277,7 @@ TEST_SUITE("mash") {
 
             CHECK(directory->handle == 0);
             CHECK(directory->descriptors.size == 0);
-            CHECK(directory->descriptors.data == nullptr);
+            CHECK(directory->descriptors.array == nullptr);
 
             if (marker == mash::member_class_mashed) {
                 REQUIRE(directory->unk_3c4 != nullptr);

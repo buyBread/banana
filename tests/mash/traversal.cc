@@ -228,9 +228,9 @@ TEST_SUITE("mash") {
         reader.advance_buffer(mash::NORMAL_BUFFER, 20);
         values->unmash(&reader, &trace, mash::NORMAL_BUFFER);
 
-        CHECK(values->data[0] == image.at<mash::mash_virtual_base>(44));
-        CHECK(values->data[1] == image.at<mash::mash_virtual_base>(56));
-        CHECK(first_word(values->data[1]) == registry.virtual_record_vtable);
+        CHECK(values->array[0] == image.at<mash::mash_virtual_base>(44));
+        CHECK(values->array[1] == image.at<mash::mash_virtual_base>(56));
+        CHECK(first_word(values->array[1]) == registry.virtual_record_vtable);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 68);
 
         values->construct_mashed_class();

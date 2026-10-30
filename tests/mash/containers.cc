@@ -94,9 +94,9 @@ TEST_SUITE("mash") {
         mash::vector<record_t> values;
 
         CHECK(values.size == 0);
-        CHECK(values.capacity == 0);
-        CHECK(values.data == nullptr);
-        CHECK(values.destroy_elements);
+        CHECK(values.max_size == 0);
+        CHECK(values.array == nullptr);
+        CHECK(values.destruct_contents);
         CHECK(values.begin() == nullptr);
         CHECK(values.end() == nullptr);
 
@@ -107,13 +107,13 @@ TEST_SUITE("mash") {
         CHECK(values.get_mash_sizeof() == 20);
 
         // initialize(ALLOCATED) is the reset for a vector that isn't from an image.
-        values.destroy_elements = false;
-        values.capacity         = 8;
+        values.destruct_contents = false;
+        values.max_size          = 8;
         values.initialize(mash::ALLOCATED);
 
-        CHECK(values.destroy_elements);
-        CHECK(values.capacity == 0);
-        CHECK(values.data == nullptr);
+        CHECK(values.destruct_contents);
+        CHECK(values.max_size == 0);
+        CHECK(values.array == nullptr);
         CHECK(allocations.empty());
     }
 
@@ -150,8 +150,8 @@ TEST_SUITE("mash") {
             values->unmash(&reader, parent, selected);
 
             CHECK(values->size == 2);
-            CHECK(values->capacity == 2);
-            CHECK(values->data == image.at<record_t*>(table));
+            CHECK(values->max_size == 2);
+            CHECK(values->array == image.at<record_t*>(table));
             CHECK((*values)[0] == first);
             CHECK((*values)[1] == second);
             CHECK(values->end() == values->begin() + 2);
@@ -189,9 +189,9 @@ TEST_SUITE("mash") {
             CHECK(*image.at<record_t*>(table)     == nullptr);
             CHECK(*image.at<record_t*>(table + 4) == nullptr);
             CHECK(values->size == 0);
-            CHECK(values->capacity == 0);
+            CHECK(values->max_size == 0);
             CHECK(values->mash_image_offset == 0);
-            CHECK(values->data == nullptr);
+            CHECK(values->array == nullptr);
             CHECK(free_count(tests::heap_allocator) == 0);
         }
     }
@@ -204,15 +204,15 @@ TEST_SUITE("mash") {
 
         auto* values = image.make<mash::vector<record_t>>(16);
 
-        values->capacity = 99;
-        values->data     = image.at<record_t*>(64);
+        values->max_size = 99;
+        values->array    = image.at<record_t*>(64);
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128);
         reader.advance_buffer(mash::NORMAL_BUFFER, 20);
         values->unmash(&reader, nullptr, mash::NORMAL_BUFFER);
 
-        CHECK(values->data == nullptr);
-        CHECK(values->capacity == 0);
+        CHECK(values->array == nullptr);
+        CHECK(values->max_size == 0);
         CHECK(values->mash_image_offset == 20);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 36);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 4);
@@ -243,9 +243,9 @@ TEST_SUITE("mash") {
         reader.advance_buffer(mash::NORMAL_BUFFER, 20);
         values->custom_unmash(&reader, &trace, mash::NORMAL_BUFFER);
 
-        REQUIRE(values->data == image.at<record_t*>(36));
-        CHECK(values->data[0] == element);
-        CHECK(values->capacity == 1);
+        REQUIRE(values->array == image.at<record_t*>(36));
+        CHECK(values->array[0] == element);
+        CHECK(values->max_size == 1);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 48);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 0);
 
@@ -269,8 +269,8 @@ TEST_SUITE("mash") {
         table[1]     = owned;
         table[2]     = nullptr;
         table[3]     = last;
-        values->data = table;
-        values->size = values->capacity = 4;
+        values->array = table;
+        values->size  = values->max_size = 4;
 
         // this range covers both image records, but neither the owned record nor the table.
         values->mash_image_offset = 96;
@@ -289,7 +289,7 @@ TEST_SUITE("mash") {
 
         // the memory fixture saves a copy of the table right before it's freed, which shows every slot was nulled first.
         CHECK(find(table)->released_bytes == std::vector<u8>(16, 0));
-        CHECK(values->data == nullptr);
+        CHECK(values->array == nullptr);
         CHECK(values->size == 0);
         CHECK(values->mash_image_offset == 0);
 
@@ -310,11 +310,11 @@ TEST_SUITE("mash") {
 
         {
             mash::vector<record_t> values;
-            values.data = table;
-            values.size = values.capacity = 1;
+            values.array = table;
+            values.size  = values.max_size = 1;
 
-            // destroy_elements only decides whether clear destroys the elements; construction still visits them.
-            values.destroy_elements = false;
+            // destruct_contents only decides whether clear destroys the elements; construction still visits them.
+            values.destruct_contents = false;
             values.construct_mashed_class();
 
             REQUIRE(trace.events.size() == 1);
@@ -322,7 +322,7 @@ TEST_SUITE("mash") {
 
             values.clear();
 
-            CHECK_FALSE(values.destroy_elements);
+            CHECK_FALSE(values.destruct_contents);
             CHECK(values.empty());
             CHECK(trace.events.size() == 1);
             CHECK_FALSE(find(owned)->released);
@@ -343,9 +343,9 @@ TEST_SUITE("mash") {
 
         {
             mash::vector<mash::mash_virtual_base> values;
-            values.data    = (mash::mash_virtual_base**)treyarch::mm::allocate(4);
-            values.data[0] = new c_virtual_record(8, &trace);
-            values.size    = values.capacity = 1;
+            values.array    = (mash::mash_virtual_base**)treyarch::mm::allocate(4);
+            values.array[0] = new c_virtual_record(8, &trace);
+            values.size     = values.max_size = 1;
         }
 
         REQUIRE(trace.events.size() == 1);
@@ -404,11 +404,11 @@ TEST_SUITE("mash") {
             values->unmash(&reader, nullptr, selected);
 
             CHECK(values->size == 2);
-            CHECK(values->capacity == 2);
-            CHECK(values->data == image.at<pair_t>(data_offset));
-            CHECK((size_t)values->data % 4 == 0);
-            CHECK(values->data[0].first == 1);
-            CHECK(values->data[1].second == 4);
+            CHECK(values->max_size == 2);
+            CHECK(values->array == image.at<pair_t>(data_offset));
+            CHECK((size_t)values->array % 4 == 0);
+            CHECK(values->array[0].first == 1);
+            CHECK(values->array[1].second == 4);
             CHECK(values->mash_image_offset == data_offset + 8 - 16);
 
             values->construct_mashed_class();
@@ -417,8 +417,8 @@ TEST_SUITE("mash") {
 
             values->destruct_mashed_class();
 
-            CHECK(values->data == nullptr);
-            CHECK(values->capacity == 0);
+            CHECK(values->array == nullptr);
+            CHECK(values->max_size == 0);
             CHECK(values->size == 0);
             CHECK(values->mash_image_offset == 0);
             CHECK(free_count(tests::plain_allocator) == 0);
@@ -434,15 +434,15 @@ TEST_SUITE("mash") {
 
         auto* values = image.make<mash::vector_basic<u32>>(16);
 
-        values->data     = image.at<u32>(64);
-        values->capacity = 12;
+        values->array    = image.at<u32>(64);
+        values->max_size = 12;
 
         mash::mash_info_struct reader(mash::UNMASH_MODE, image.bytes.data(), 128);
         reader.advance_buffer(mash::NORMAL_BUFFER, 16);
         values->unmash(&reader, nullptr, mash::NORMAL_BUFFER);
 
-        CHECK(values->data == nullptr);
-        CHECK(values->capacity == 0);
+        CHECK(values->array == nullptr);
+        CHECK(values->max_size == 0);
         CHECK(values->mash_image_offset == 16);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 32);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 4);
@@ -467,10 +467,10 @@ TEST_SUITE("mash") {
         reader.advance_buffer(mash::NORMAL_BUFFER, 17);
         values->custom_unmash(&reader, nullptr, mash::NORMAL_BUFFER);
 
-        REQUIRE(values->data == image.at<u64>(40));
-        CHECK(values->data[0] == 0x1122334455667788);
-        CHECK(values->data[1] == 0x8877665544332211);
-        CHECK(values->capacity == 2);
+        REQUIRE(values->array == image.at<u64>(40));
+        CHECK(values->array[0] == 0x1122334455667788);
+        CHECK(values->array[1] == 0x8877665544332211);
+        CHECK(values->max_size == 2);
         CHECK(reader.get_buffer_size_used(mash::NORMAL_BUFFER) == 56);
         CHECK(reader.get_buffer_size_used(mash::SHARED_BUFFER) == 0);
 
@@ -486,14 +486,14 @@ TEST_SUITE("mash") {
         // the memory fixture flags any free that goes through the wrong one.
         {
             mash::vector_basic<u32> values {};
-            values.data    = (u32*)treyarch::tl_mem_alloc(12, 4, 0);
-            values.size    = values.capacity = 3;
-            values.data[0] = 10;
+            values.array    = (u32*)treyarch::tl_mem_alloc(12, 4, 0);
+            values.size     = values.max_size = 3;
+            values.array[0] = 10;
             values.clear();
 
-            CHECK(values.data == nullptr);
+            CHECK(values.array == nullptr);
             CHECK(values.size == 0);
-            CHECK(values.capacity == 0);
+            CHECK(values.max_size == 0);
             CHECK(values.mash_image_offset == 0);
         }
 
