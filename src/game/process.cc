@@ -10,6 +10,7 @@
 #include "game/game.hh"
 #include "game/game_data.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/development_options.hh"
 #include "treyarch/mash/string.hh"
@@ -93,7 +94,7 @@ void game::advance_state_unk_2(f32 time_inc) {
         level.reset_level_load_data();
 
         level.look_up_level_descriptor();
-        retail::sub_824850((u32*)amalga::resource_manager::references::unk_010f7760.read());
+        retail::sub_824850((u32*)mission_memory_manager::inst());
         level.construct_loading_widgets();
 
         level.unk_03c = 1;

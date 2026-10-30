@@ -900,7 +900,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_is_in_stars_mode:
-            if (!spawn_table_manager::is_inst() || !*((u8*)spawn_table_manager::inst()->unk_04c + 0x144))
+            if (!spawn_table_manager::is_inst() || !spawn_table_manager::inst()->unk_04c->stars_mode)
                 return 0.0f;
 
             return 1.0f;

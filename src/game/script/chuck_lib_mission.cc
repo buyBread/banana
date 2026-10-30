@@ -1,8 +1,11 @@
 #include <cstdio>
 
 #include "retail.hh"
+#include "vc8/vector.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_object.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mm/mm.hh"
 #include "game/amalga/resource_manager.hh"
@@ -17,12 +20,15 @@
 #include "game/game.hh"
 #include "game/localized_string_table.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/mission/mission_progression_data.hh"
 #include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
 #include "game/resource_key.hh"
 #include "game/script/chuck_lib_mission.hh"
+#include "game/script/script_access.hh"
+#include "game/spawn_table_manager.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -685,60 +691,198 @@ bool slf__city_life_in_progress_message__num__t::operator()(chuck::vm::vm_stack 
     return true;
 }
 
+// sub_83E590
 bool slf__has_succeeded_city_life__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E590)(this, stack);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        retail::sub_92F170((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+
+    return true;
 }
 
+// sub_857FD0
 bool slf__set_max_active_spawn_items__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_857FD0)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        spawn_table_manager::inst()->unk_04c->max_active_spawn_items = (i32)stack.local_num(0x00);
+
+    return true;
 }
 
+// sub_858030
 bool slf__update_point_of_interest__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858030)(this, stack);
+    stack.sp -= 0x10;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        region_spawn_manager::inst()->update_point_of_interest(stack.thread->inst,
+                                                               mash::string((const char*)stack.local_uint(0x00)),
+                                                               *(vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_858090
 bool slf__set_spawn_placement_figures__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858090)(this, stack);
+    stack.sp -= 0x10;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        spawn_table_manager* manager = spawn_table_manager::inst();
+
+        manager->spawn_placement_figures[0] = stack.local_num(0x00);
+        manager->spawn_placement_figures[1] = stack.local_num(0x04);
+        manager->spawn_placement_figures[2] = stack.local_num(0x08);
+        manager->spawn_placement_figures[3] = stack.local_num(0x0C);
+    }
+
+    return true;
 }
 
+// sub_8580E0
 bool slf__push_spawn_item_during_mission__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8580E0)(this, stack);
+    stack.sp -= 0x04;
+
+    if (!references::region_spawns_enabled.read() || !region_spawn_manager::inst())
+        return true;
+
+    // tried again next frame
+    if (mission_memory_manager::inst()->packs_unloading)
+        return false;
+
+    using push_spawn_item_t = void (__thiscall*)(spawn_table_manager*, mash::string);
+
+    ((push_spawn_item_t)retail::sub_948BA0)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
+
+    return true;
 }
 
+// sub_858130
 bool slf__pop_spawn_item_during_mission__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858130)(this, stack);
+    stack.sp -= 0x04;
+
+    if (!references::region_spawns_enabled.read() || !region_spawn_manager::inst())
+        return true;
+
+    // tried again next frame
+    if (mission_memory_manager::inst()->packs_unloading)
+        return false;
+
+    using pop_spawn_item_t = void (__thiscall*)(spawn_table_manager*, mash::string);
+
+    ((pop_spawn_item_t)retail::sub_93F8D0)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
+
+    return true;
 }
 
+// sub_858180
 bool slf__register_entity_with_spawn_manager__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858180)(this, stack);
+    stack.sp -= 0x08;
+
+    native_resource_context context(stack);
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x00));
+
+        using register_entity_t = void (__thiscall*)(region_pack_manager*, string_hash, mash::string);
+
+        ((register_entity_t)retail::sub_9477A0)(region_pack_manager::inst(), name, mash::string((const char*)stack.local_uint(0x04)));
+    }
+
+    return true;
 }
 
+// sub_858280
 bool slf__unregister_entity_with_spawn_manager__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858280)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x00));
+
+        retail::sub_938D30((u32*)region_pack_manager::inst(), (i32)name.source_hash_code);
+    }
+
+    return true;
 }
 
+// sub_83E5C0
 bool slf__begin_populate_mission_with_entities__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E5C0)(this, stack);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        region_spawn_manager::inst()->populate_mission_with_entities = true;
+
+    return true;
 }
 
+// sub_83E5E0
 bool slf__end_populate_mission_with_entities__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E5E0)(this, stack);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        region_spawn_manager::inst()->populate_mission_with_entities = false;
+
+    return true;
 }
 
+// sub_83E600
 bool slf__force_populate_mission_cleanup__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E600)(this, stack);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        retail::sub_953060((u32*)spawn_table_manager::inst());
+
+    return true;
 }
 
+// sub_8582C0
 bool slf__set_street_percent_override__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8582C0)(this, stack);
+    stack.sp -= 0x08;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        spawn_table_manager* manager = spawn_table_manager::inst();
+
+        manager->street_percent          = stack.local_num(0x00);
+        manager->street_percent_override = stack.local_num(0x04) != 0.0f;
+    }
+
+    return true;
 }
 
+// sub_880D60
 bool slf__get_entities__dynamic_array__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_880D60)(this, stack);
+    stack.sp -= 0x0C;
+
+    if (!references::region_spawns_enabled.read() || !region_spawn_manager::inst())
+        return true;
+
+    chuck::vm::script_dynamic_array<u32> entities((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
+    vc8::vector<entity*>                 found;
+
+    {
+        mash::string name((const char*)stack.local_uint(0x08));
+
+        retail::sub_92ED30((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)stack.local_num(0x04), (i32)&found, (i32)&name);
+    }
+
+    for (entity** it = found.begin(); it != found.end(); ++it) {
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, (*it)->my_handle.value);
+
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(u32*)element.stuff = (*it)->my_handle.value;
+
+        entities.array->push_back(element);
+    }
+
+    return true;
 }
 
+// sub_83E630
 bool slf__get_spawn_position__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E630)(this, stack);
+    vector3d position;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        retail::sub_92ED90((u32*)spawn_table_manager::inst(), (f32*)&position, (i32)stack.thread->inst);
+    else
+        position = vector3d(0.0f);
+
+    stack.push(&position, sizeof(position));
+
+    return true;
 }
 
 bool slf__has_optional_data__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -873,16 +1017,36 @@ bool slf__end_persistance_data_save__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_83E780)(this, stack);
 }
 
+// sub_83E7B0
 bool slf__force_despawn_city_life__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E7B0)(this, stack);
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        retail::sub_92F290((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+
+    return true;
 }
 
+// sub_8622F0
 bool slf__toggle_override_spawn_distance_in_mission__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_858EB0
 bool slf__toggle_override_spawn_pacing_in_mission__num__num__num__num__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_858EB0)(this, stack);
+    stack.sp -= 0x1C;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        retail::sub_927A20((u32*)spawn_table_manager::inst(),
+                           stack.local_num(0x00) != 0.0f,
+                           (i32)stack.local_num(0x04),
+                           (i32)stack.local_num(0x08),
+                           stack.local_num(0x0C),
+                           stack.local_num(0x10),
+                           stack.local_num(0x14),
+                           (i32)stack.local_num(0x18));
+
+    return true;
 }
 
 bool slf__get_all_city_life_of_category__str__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
@@ -905,8 +1069,20 @@ bool slf__get_important_city_life_entity__num__str__t::operator()(chuck::vm::vm_
     return ((invoke_t)retail::sub_859180)(this, stack);
 }
 
+// sub_859210
 bool slf__is_valid_spawn__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_859210)(this, stack);
+    stack.sp -= 0x04;
+
+    bool valid = false;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        valid = retail::sub_92F2E0((u32*)spawn_table_manager::inst(), (i32)stack.local_num(0x00));
+
+    f32 result = valid ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__save_safe_zone_wall_percentages__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
@@ -953,32 +1129,107 @@ bool slf__get_is_summon_ability_script_toggled__t::operator()(chuck::vm::vm_stac
     return ((invoke_t)retail::sub_83E8C0)(this, stack);
 }
 
+// sub_8594E0
 bool slf__get_spawn_point_point_data__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8594E0)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
+        chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
+
+        retail::sub_952040((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (u32**)&points);
+    }
+
+    return true;
 }
 
+// sub_83E900
 bool slf__is_in_stars_mode__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E900)(this, stack);
+    bool stars_mode = false;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        stars_mode = spawn_table_manager::inst()->unk_04c->stars_mode;
+
+    f32 result = stars_mode ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83E950
 bool slf__get_neighborhood_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E950)(this, stack);
+    vector3d center;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        vector3d result;
+        center = *(vector3d*)retail::sub_92F4A0((u32*)spawn_table_manager::inst(), (f32*)&result, (i32)stack.thread->inst);
+    }
+
+    stack.push(&center, sizeof(center));
+
+    return true;
 }
 
+// sub_83E9D0
 bool slf__get_meta_neighborhood_center__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83E9D0)(this, stack);
+    vector3d center;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        vector3d result;
+        center = *(vector3d*)retail::sub_92F510((u32*)spawn_table_manager::inst(), (f32*)&result, (i32)stack.thread->inst);
+    }
+
+    stack.push(&center, sizeof(center));
+
+    return true;
 }
 
+// sub_859570
 bool slf__get_current_flagsets__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_859570)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        chuck::vm::script_dynamic_array<u32> flagsets((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
+
+        retail::sub_92F580((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)&flagsets);
+    }
+
+    return true;
 }
 
+// sub_83EA50
 bool slf__flag_always_on_for_despawn__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EA50)(this, stack);
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
+        retail::sub_92F5D0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+
+    return true;
 }
 
+// sub_859600
 bool slf__get_spawn_position__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_859600)(this, stack);
+    stack.sp -= 0x04;
+
+    vector3d position;
+    void*    record = nullptr;
+
+    if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
+        for (u32 attempt = 0; attempt < 4; ++attempt) {
+            retail::sub_948CC0((i32)spawn_table_manager::inst(), (i32*)&record, (i32)stack.local_num(0x00));
+
+            if (record)
+                break;
+        }
+
+        // the record starts with the position
+        if (record) {
+            position = *(vector3d*)record;
+            retail::sub_93D860((u32*)spawn_table_manager::inst(), (u32)record);
+        }
+    }
+
+    stack.push(&position, sizeof(position));
+
+    return true;
 }
 
 bool slf__set_current_stored_summon_actor__entity__t::operator()(chuck::vm::vm_stack &stack) {
@@ -993,18 +1244,45 @@ bool slf__despawn_and_lock_quest_giver_in_mission__t::operator()(chuck::vm::vm_s
     return true;
 }
 
+// sub_8596E0
 bool slf__set_collectibles_disabled__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8596E0)(this, stack);
+    stack.sp -= 0x04;
+
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->collectibles_disabled = stack.local_num(0x00) != 0.0f;
+
+    return true;
 }
 
 bool slf__is_summon_summoned__str__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_859720)(this, stack);
 }
 
+// sub_83EAA0
 bool slf__is_cross_neighborhood_spawn_active__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EAA0)(this, stack);
+    bool active = false;
+
+    if (spawn_table_manager::inst()) {
+        spawn_table_manager_unk_04c* spawns = spawn_table_manager::inst()->unk_04c;
+
+        active = spawns->unk_100.size() != 0 || spawns->cross_neighborhood_spawns.size() != 0;
+    }
+
+    f32 result = active ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83EB10
 bool slf__is_spidey_near_quest_giver__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EB10)(this, stack);
+    f32 result = 0.0f;
+
+    if (spawn_table_manager::inst())
+        result = retail::sub_920990((u32*)spawn_table_manager::inst(), 200.0f) ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }

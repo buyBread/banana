@@ -14,6 +14,7 @@
 #include "game/input/input_mgr.hh"
 #include "game/level_descriptor.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/post_process/post_process.hh"
 #include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
@@ -187,7 +188,7 @@ void game::unload_current_level() {
     if (references::region_spawns_enabled.read())
         retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
-    retail::sub_824830((u32*)amalga::resource_manager::references::unk_010f7760.read(), 0);
+    retail::sub_824830((u32*)mission_memory_manager::inst(), 0);
 
     if (the_world->the_terrain)
         retail::sub_7970F0((u32*)the_world->the_terrain);

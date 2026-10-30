@@ -16,6 +16,7 @@
 #include "game/game.hh"
 #include "game/glass_house_manager.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
@@ -248,18 +249,18 @@ void mission_manager::process_state_start_loading() {
         return;
     }
 
-    u32* unk_object = (u32*)amalga::resource_manager::references::unk_010f7760.read();
+    mission_memory_manager* memory_manager = mission_memory_manager::inst();
 
     {
         mash::string name(current_mission.name.c_str());
-        retail::sub_83F640((const char**)unk_object, (i32)&name, 3);
+        retail::sub_83F640((const char**)memory_manager, (i32)&name, 3);
     }
 
     {
         mash::string first (current_mission.name.c_str());
         mash::string second(current_mission.name.c_str());
 
-        retail::sub_87D610((i32)unk_object, (i32*)&second, (i32)&first, 3);
+        retail::sub_87D610((i32)memory_manager, (i32*)&second, (i32)&first, 3);
     }
 
     if (flags & mission_manager_flag_mission_ready)
@@ -315,7 +316,7 @@ void mission_manager::process_state_start_loading() {
 void mission_manager::process_state_loading() {
     update_mission_icons();
 
-    if (retail::sub_824870((u32*)amalga::resource_manager::references::unk_010f7760.read(), 3))
+    if (retail::sub_824870((u32*)mission_memory_manager::inst(), 3))
         return;
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
@@ -581,7 +582,7 @@ void mission_manager::process_state_unloading() {
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
         (u32*)region_pack_manager::inst() && spawn_table_manager::inst()) {
 
-        region_spawn_manager::inst()->unk_008 = 0;
+        region_spawn_manager::inst()->populate_mission_with_entities = false;
 
         retail::sub_9585E0((i32)spawn_table_manager::inst());
         zombie_manager::inst()->suspended = 0;
@@ -596,15 +597,15 @@ void mission_manager::process_state_unloading() {
         retail::sub_983D00((i32)references::summon_state.read());
     }
 
-    u32* unk_object = (u32*)amalga::resource_manager::references::unk_010f7760.read();
+    mission_memory_manager* memory_manager = mission_memory_manager::inst();
 
-    if (retail::sub_8248E0(unk_object))
+    if (retail::sub_8248E0((u32*)memory_manager))
         return;
 
     if (retail::sub_68BF20((i32)references::frontend.get().igo->conversation_menu_system))
         retail::sub_6F9250((i32)references::frontend.get().igo->conversation_menu_system);
 
-    if (retail::sub_879F10(unk_object, 3))
+    if (retail::sub_879F10((u32*)memory_manager, 3))
         return;
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
@@ -624,7 +625,7 @@ void mission_manager::process_state_unloading() {
 
     {
         mash::string name(current_mission.name.c_str());
-        retail::sub_824810(unk_object, (i32)&name, 3);
+        retail::sub_824810((u32*)memory_manager, (i32)&name, 3);
     }
 
     if (!(flags & mission_manager_flag_mission_ready) && !(flags & mission_manager_flag_need_to_malor)) {

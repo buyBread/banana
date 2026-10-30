@@ -6,6 +6,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/game.hh"
 #include "game/level_descriptor.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/filespec.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "game/resource_key.hh"
@@ -36,8 +37,8 @@ void level_load_stuff::construct_loading_widgets() {
         mash::string pack_name("spidermanlogo");
         mash::string other_name("spidermanlogo");
 
-        retail::sub_83F640((const char**)amalga::resource_manager::references::unk_010f7760.read(), (i32)&pack_name, 1);
-        retail::sub_87E010(amalga::resource_manager::references::unk_010f7760.read(), (i32*)&pack_name, (i32)&other_name, 1);
+        retail::sub_83F640((const char**)mission_memory_manager::inst(), (i32)&pack_name, 1);
+        retail::sub_87E010(mission_memory_manager::inst(), (i32*)&pack_name, (i32)&other_name, 1);
     }
 
     unk_03c              = 0;
@@ -60,8 +61,8 @@ void level_load_stuff::destroy_loading_widgets() {
     mash::string pack_name("spidermanlogo");
     mash::string other_name("spidermanlogo");
 
-    retail::sub_87E040(amalga::resource_manager::references::unk_010f7760.read(), (i32*)&pack_name, (i32)&other_name, 1);
-    retail::sub_824810((u32*)amalga::resource_manager::references::unk_010f7760.read(), (i32)&pack_name, 1);
+    retail::sub_87E040(mission_memory_manager::inst(), (i32*)&pack_name, (i32)&other_name, 1);
+    retail::sub_824810((u32*)mission_memory_manager::inst(), (i32)&pack_name, 1);
 }
 
 // sub_770030
