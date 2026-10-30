@@ -99,9 +99,6 @@ namespace treyarch {
                 // what VRML sections resolve to; the type-25 handler points it at the pack's vram buffer while relocating
                 inline util::memory_reference<void*> resource_context { 0x0102FE74 };
 
-                // frame_advance ticks it through sub_87EF10 before the partitions
-                inline util::memory_reference<void*> unk_010f7760 { 0x010F7760 };
-
                 // copies of ngl's textures, taken once at startup
                 inline util::memory_reference<ngl::texture*> default_texture { 0x010300B8 };
                 inline util::memory_reference<ngl::texture*> white_texture   { 0x01031D3C };

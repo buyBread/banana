@@ -8,6 +8,7 @@
 #include "game/app.hh"
 #include "game/game.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "treyarch/ngl/texture/texture.hh"
 #include "game/four_cc.hh"
 #include "treyarch/mash/unmash.hh"
@@ -147,7 +148,7 @@ void amalga::resource_manager::frame_advance(f32 dt, f32 max_ms) {
     limited_timer time_limit(limit);
     time_limit.reset();
 
-    retail::sub_87EF10((u32*)references::unk_010f7760.read(), dt);
+    retail::sub_87EF10((u32*)mission_memory_manager::inst(), dt);
 
     vc8::vector<resource_partition*>* partitions = references::partitions.read();
 
