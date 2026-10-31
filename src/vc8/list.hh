@@ -89,6 +89,7 @@ namespace treyarch { namespace vc8 {
             return position;
         }
 
+        // sub_4B5EA0
         // sub_4CC220
         // sub_5CD230
         // sub_635E30
@@ -103,6 +104,7 @@ namespace treyarch { namespace vc8 {
             count += added;
         }
 
+        // inlined @ sub_4BEA10
         node* push_back(const T &value) {
             return insert_before(sentinel, value);
         }
