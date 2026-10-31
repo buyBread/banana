@@ -141,8 +141,7 @@ void ai_tentacle_follow::set_attach_ent(arch_base_vhandle _attach_ent) { // the 
 
     const vector3d point = local_attach_end;
 
-    po inverse;
-    retail::sub_48E2C0((f32*)attached->my_abs_po, (u64*)&inverse); // po::inverse
+    po inverse = attached->my_abs_po->inverse();
 
     const matrix4x4 &m = inverse.get_matrix();
 

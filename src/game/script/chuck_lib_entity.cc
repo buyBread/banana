@@ -1769,8 +1769,8 @@ bool slf__entity__set_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
     x_facing.normalize();
 
     po rel_po;
-    retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
-    retail::sub_9595B0((i32)&rel_po);             // orthonormalize
+    rel_po.set_po(x_facing, up, z_facing, self->my_rel_po->get_position());
+    rel_po.fixup();
     retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
 
     update_als_facing(self);
@@ -1809,8 +1809,8 @@ bool slf__entity__set_facing__vector3d__vector3d__t::operator()(chuck::vm::vm_st
     x_facing.normalize();
 
     po rel_po;
-    retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&y_facing, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
-    retail::sub_9595B0((i32)&rel_po);             // orthonormalize
+    rel_po.set_po(x_facing, y_facing, z_facing, self->my_rel_po->get_position());
+    rel_po.fixup();
     retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
 
     update_als_facing(self);
@@ -1843,7 +1843,7 @@ bool slf__entity__set_abs_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack
     x_facing.normalize();
 
     po abs_po;
-    retail::sub_5FC820((u64*)&abs_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&position);
+    abs_po.set_po(x_facing, up, z_facing, position);
     retail::sub_627180((i32)self, (f32*)&abs_po); // entity_base::set_abs_po
 
     update_als_facing(self);
@@ -1867,10 +1867,10 @@ bool slf__entity__set_po_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
     vector3d z_facing = *facing;
     z_facing.normalize();
 
-    po       abs_po = references::unk_010f76b0.read();
-    vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
+    po            abs_po = references::unk_010f76b0.read();
+    math::vector4 z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
 
-    retail::sub_44DE20((f32*)&abs_po, (f32*)&z_facing_4); // turns it to look along the facing
+    abs_po.set_facing(z_facing_4);
 
     const vector3d &position = self->my_abs_po->get_position();
 
@@ -1899,10 +1899,10 @@ bool slf__entity__set_rel_po_facing__vector3d__t::operator()(chuck::vm::vm_stack
     vector3d z_facing = *facing;
     z_facing.normalize();
 
-    po       rel_po = references::unk_010f76b0.read();
-    vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
+    po            rel_po = references::unk_010f76b0.read();
+    math::vector4 z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
 
-    retail::sub_44DE20((f32*)&rel_po, (f32*)&z_facing_4); // turns it to look along the facing
+    rel_po.set_facing(z_facing_4);
 
     const vector3d &position = self->my_rel_po->get_position();
 
@@ -1955,15 +1955,15 @@ bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_s
             return true;
 
         po rotation;
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
-        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle);
+        math::vector4 axis_4(axis->x, axis->y, axis->z, 0.0f);
+        rotation.set_rot(axis_4, angle);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta(rotation, 1.0f);
 
-        retail::sub_44E230((u64*)&rotation, (f32*)&rotation, (f32*)self->my_rel_po);
+        fast_po_mul(rotation, rotation, *self->my_rel_po);
         retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
 
         update_als_facing(self);
@@ -1989,15 +1989,15 @@ bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_s
         angle_step = (f32)((f64)step / duration * angle);
 
         po rotation;
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
-        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle_step);
+        math::vector4 axis_4(axis->x, axis->y, axis->z, 0.0f);
+        rotation.set_rot(axis_4, angle_step);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta_no_update(rotation, step);
 
-        retail::sub_44E230((u64*)&rotation, (f32*)&rotation, (f32*)self->my_rel_po);
+        fast_po_mul(rotation, rotation, *self->my_rel_po);
         retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
 
         update_als_facing(self);
@@ -2061,15 +2061,15 @@ bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(c
         retail::sub_626CA0((u32*)self, (u32*)&offset); // entity_base::set_rel_position
 
         po rotation;
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
-        vector4d axis_4(axis->x, axis->y, axis->z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_4, &angle_step);
+        math::vector4 axis_4(axis->x, axis->y, axis->z, 0.0f);
+        rotation.set_rot(axis_4, angle_step);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta(rotation, step);
 
-        retail::sub_44E230((u64*)&rotation, (f32*)self->my_rel_po, (f32*)&rotation);
+        fast_po_mul(rotation, *self->my_rel_po, rotation);
         retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
 
         const vector3d &turned = self->my_rel_po->get_position();
@@ -2129,15 +2129,15 @@ bool slf__entity__wait_translate__vector3d__num__t::operator()(chuck::vm::vm_sta
                         (f32)((f64)delta->y * fraction),
                         (f32)((f64)delta->z * fraction));
 
-        po       translation = references::unk_010f76b0.read();
-        vector4d move_4(move.x, move.y, move.z, 0.0f);
+        po            translation = references::unk_010f76b0.read();
+        math::vector4 move_4(move.x, move.y, move.z, 0.0f);
 
-        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+        translation.set_translate(move_4);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta(translation, step);
 
-        retail::sub_44E230((u64*)&translation, (f32*)self->my_rel_po, (f32*)&translation);
+        fast_po_mul(translation, *self->my_rel_po, translation);
         retail::sub_796C70(stack.local_uint(0x00)); // add_moved
 
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
@@ -2198,15 +2198,15 @@ bool slf__entity__wait_translate_with_compute_sector__vector3d__num__t::operator
                         (f32)((f64)delta->y * fraction),
                         (f32)((f64)delta->z * fraction));
 
-        po       translation = references::unk_010f76b0.read();
-        vector4d move_4(move.x, move.y, move.z, 0.0f);
+        po            translation = references::unk_010f76b0.read();
+        math::vector4 move_4(move.x, move.y, move.z, 0.0f);
 
-        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+        translation.set_translate(move_4);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta(translation, step);
 
-        retail::sub_44E230((u64*)&translation, (f32*)&translation, (f32*)self->my_rel_po);
+        fast_po_mul(translation, translation, *self->my_rel_po);
 
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();
@@ -2283,15 +2283,15 @@ bool slf__entity__wait_translate_abs__vector3d__num__t::operator()(chuck::vm::vm
                             (f32)((f64)delta->z * fraction));
         }
 
-        po       translation = references::unk_010f76b0.read();
-        vector4d move_4(move.x, move.y, move.z, 0.0f);
+        po            translation = references::unk_010f76b0.read();
+        math::vector4 move_4(move.x, move.y, move.z, 0.0f);
 
-        retail::sub_686C30((u64*)&translation, (u32*)&move_4); // the translation po
+        translation.set_translate(move_4);
 
         if (self->is_an_actor())
             ((actor*)self)->set_frame_delta(translation, step);
 
-        retail::sub_44E230((u64*)&translation, (f32*)self->my_rel_po, (f32*)&translation);
+        fast_po_mul(translation, *self->my_rel_po, translation);
 
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();

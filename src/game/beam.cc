@@ -57,7 +57,7 @@ void beam::set_point_to_point(const vector3d &from, const vector3d &to) { // tur
             const vector3d direction(delta.x * inverse, delta.y * inverse, delta.z * inverse);
 
             po rotation;
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             const vector3d &z = references::unk_00e771e8.get();
 
@@ -75,7 +75,7 @@ void beam::set_point_to_point(const vector3d &from, const vector3d &to) { // tur
 
             f32 angle = (f32)(1.570796370506287 - math::asin(dot));
 
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis, &angle);
+            rotation.set_rot(axis, angle);
             retail::sub_626BE0((i32)this, (u64*)&rotation); // entity_base::set_rel_po
         } else if (delta.z > 0.0f) {
             // straight up keeps the position and drops the rotation
@@ -86,16 +86,16 @@ void beam::set_point_to_point(const vector3d &from, const vector3d &to) { // tur
         } else if (delta.z < 0.0f) {
             // straight down is a half turn about y
             po rotation;
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             const vector3d &y = references::unk_00e771dc.get();
 
             math::vector4 axis(y.x, y.y, y.z, 0.0f);
             f32           half_turn = 3.14159265f;
 
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis, &half_turn);
-            retail::sub_424900((u64*)&rotation, (u32*)&my_rel_po->get_position()); // po::set_position
-            retail::sub_626BE0((i32)this, (u64*)&rotation);                          // entity_base::set_rel_po
+            rotation.set_rot(axis, half_turn);
+            rotation.set_position(my_rel_po->get_position());
+            retail::sub_626BE0((i32)this, (u64*)&rotation); // entity_base::set_rel_po
         }
 
         retail::sub_626CA0((u32*)this, (u32*)&from); // entity_base::set_rel_position

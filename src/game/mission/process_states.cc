@@ -670,8 +670,8 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    matrix4x4 transform;
-    retail::sub_5FC820((u64*)&transform, (i32)&side, (i32)&up, (u32*)&facing, (u32*)&hero->my_abs_po->get_position());
+    po transform;
+    transform.set_po(side, up, facing, hero->my_abs_po->get_position());
     retail::sub_627180((i32)hero, (f32*)&transform);
 
     vector3d position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
@@ -726,8 +726,8 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
     hero = references::g_world_ptr.read()->hero_ptr;
 
-    matrix4x4 transform;
-    retail::sub_5FC820((u64*)&transform, (i32)&side, (i32)&up, (u32*)&facing, (u32*)&position);
+    po transform;
+    transform.set_po(side, up, facing, position);
     retail::sub_627180((i32)hero, (f32*)&transform);
 
     camera* view = references::g_world_ptr.read()->get_chase_cam_ptr();

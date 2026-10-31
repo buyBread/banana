@@ -201,10 +201,10 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
 
         light_source* light = new light_source(properties, nullptr, id);
 
-        po       light_po  = references::po_identity_matrix.get();
-        vector4d direction(data[4], data[5], data[6], 0.0f);
+        po            light_po  = references::po_identity_matrix.get();
+        math::vector4 direction(data[4], data[5], data[6], 0.0f);
 
-        retail::sub_44DE20((f32*)&light_po, (f32*)&direction);
+        light_po.set_facing(direction);
         retail::sub_626BE0((i32)light, (u64*)&light_po); // entity_base::set_rel_po
 
         lights.push_back({ (entity*)light, instance, index });
@@ -335,7 +335,7 @@ void scene_anim::frame_advance(f32 delta_t) {
 
         po light_po;
 
-        retail::sub_4015B0((u64*)&light_po);
+        light_po.identity();
 
         math::mat43 matrices[nal::max_bones];
 
@@ -353,14 +353,14 @@ void scene_anim::frame_advance(f32 delta_t) {
 
         matrix4x4 basis;
 
-        retail::sub_408B10((u64*)&basis, (i32)&rows);
+        basis.set_m33(rows);
 
         light_po.get_matrix().x = basis.x;
         light_po.get_matrix().y = basis.y;
         light_po.get_matrix().z = basis.z;
         light_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-        retail::sub_44E230((u64*)&light_po, (f32*)&matrices[fk->trajectory_bone], (f32*)&light_po);
+        fast_po_mul(light_po, *(const po*)&matrices[fk->trajectory_bone], light_po);
         retail::sub_626BE0((i32)light_entity, (u64*)&light_po); // entity_base::set_rel_po
     }
 

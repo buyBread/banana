@@ -457,7 +457,7 @@ po animation_controller::get_trajectory_po() const {
     quaternion  w_first(rotation.get_w(), rotation.get_x(), rotation.get_y(), rotation.get_z());
 
     po result;
-    retail::sub_5B74E0((i32)&result, (u32*)&trajectory.get_w(), (i32)&w_first, 1.0f);
+    result.set_po(*(const vector3d*)&trajectory.get_w(), w_first, 1.0f);
 
     return result;
 }

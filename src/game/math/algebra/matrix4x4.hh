@@ -55,6 +55,14 @@ namespace treyarch { namespace math {
         template<typename V> void set_z(const V &r) { reinterpret_cast<row_type&>(z) = r; }
         template<typename V> void set_w(const V &r) { reinterpret_cast<row_type&>(w) = r; }
 
+        // sub_408B10
+        template<typename T1, typename P1>
+        void set_m33(const mat_class<3, 3, T1, P1> &a) { // rows' fourth lanes cleared, w left alone
+            set_x(a.get_x());
+            set_y(a.get_y());
+            set_z(a.get_z());
+        }
+
         template<typename I> const row &operator[](I i) const { return (&x)[i]; }
         template<typename I>       row &operator[](I i)       { return (&x)[i]; }
 

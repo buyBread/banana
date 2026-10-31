@@ -10,6 +10,15 @@ namespace treyarch {
         matrix4x4 m;
 
     public:
+        po() = default;
+
+        po(const math::vector4 &desired_forward, const math::vector4 &normal, const math::vector4 &pos);
+
+        // sub_583280
+        po &operator=(const po&) = default;
+
+        void identity();
+
               matrix4x4 &to_mat()       { return m; }
         const matrix4x4 &to_mat() const { return m; }
 
@@ -21,6 +30,23 @@ namespace treyarch {
         const vector3d &get_x_facing() const { return m.xrow(); }
         const vector3d &get_y_facing() const { return m.yrow(); }
         const vector3d &get_z_facing() const { return m.zrow(); }
+
+        void set_position(const vector3d &v);
+        void set_translate(const math::vector4 &translation);
+        void set_scale(const math::vector4 &scale);
+        void set_rot(const math::vector4 &rot_dir, const f32 &rads);
+
+        void set_po(const vector3d &p, const quaternion &r, f32 s);
+        void set_po(const vector3d &xdest, const vector3d &ydest, const vector3d &zdest, const vector3d &pos);
+        void set_po(const vector3d &desired_forward, const vector3d &normal, const vector3d &pos);
+        void set_po(const math::vector4 &desired_forward, const math::vector4 &normal, const math::vector4 &pos);
+
+        void set_facing(const math::vector4 &point);
+        void set_facing(vector3d point);
+
+        void fixup();
+
+        po inverse() const;
 
         // inlined @ sub_863C30
         // inlined @ sub_865420
@@ -53,6 +79,8 @@ namespace treyarch {
                             (f32)((f64)m.z.x * point.x + (f64)m.z.y * point.y + (f64)m.z.z * point.z + z));
         }
     };
+
+    void fast_po_mul(po &res, const po &a, const po &b);
 
     ASSERT_SIZEOF(po, 0x40);
 } // treyarch

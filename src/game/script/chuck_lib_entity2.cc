@@ -813,10 +813,10 @@ bool slf__entity__set_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
 
     f32 factor = scale / self->my_rel_po->get_x_facing().length();
 
-    po       scaling = references::unk_010f76b0.read();
-    vector4d factors(factor, factor, factor, 0.0f);
+    po            scaling = references::unk_010f76b0.read();
+    math::vector4 factors(factor, factor, factor, 0.0f);
 
-    retail::sub_48E170((u64*)&scaling, (u32*)&factors); // the scale rows
+    scaling.set_scale(factors);
 
     // scaled about the origin, then put back
     po       rel_po   = *self->my_rel_po;
@@ -824,7 +824,7 @@ bool slf__entity__set_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
     vector3d origin   = references::unk_010f7140.read();
 
     rel_po.get_matrix().w = vector4d(origin.x, origin.y, origin.z, 1.0f);
-    retail::sub_44E230((u64*)&rel_po, (f32*)&rel_po, (f32*)&scaling);
+    fast_po_mul(rel_po, rel_po, scaling);
     rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
     retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
@@ -3916,14 +3916,14 @@ bool slf__entity__orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_st
         return true;
 
     po rel_po;
-    retail::sub_4015B0((u64*)&rel_po);
+    rel_po.identity();
 
     vector3d position = marky_camera::get_orbit_pos(*center, range, theta, psi);
 
     rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    vector4d center_4(center->x, center->y, center->z, 0.0f);
-    retail::sub_44DE20((f32*)&rel_po, (f32*)&center_4);
+    math::vector4 center_4(center->x, center->y, center->z, 0.0f);
+    rel_po.set_facing(center_4);
 
     retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
 

@@ -667,33 +667,67 @@ void ai_tentacle_info::frame_advance(f32 delta_t) { // only the first engine run
         tentacle->set_visible(get_my_entity()->is_visible(), false);
 }
 
+// sub_49FC40
+void treyarch::update_node_facing(po* node, const po &from, const vector3d &at) { // from's frame with its z turned at the point, kept where the node is
+    const vector3d &position = node->get_position();
+
+    vector3d dir(at.x - position.x, at.y - position.y, at.z - position.z);
+
+    const f32 len2 = (f32)((f64)dir.x * dir.x + (f64)dir.y * dir.y + (f64)dir.z * dir.z);
+
+    if (len2 > 0.0001f) {
+        const f32 inv_len = 1.0f / std::sqrt(len2);
+
+        dir = vector3d(dir.x * inv_len, dir.y * inv_len, dir.z * inv_len);
+
+        const vector3d &z = from.get_z_facing();
+
+        const f32 dot = z * dir;
+
+        // nearly opposite, it faces back along from's z
+        if (-0.99f > dot) {
+            node->set_po(vector3d(-0.0f - z.x, -0.0f - z.y, -0.0f - z.z), from.get_y_facing(), node->get_position());
+
+            return;
+        }
+
+        if (0.99f > dot) {
+            vector3d axis((f32)((f64)z.z * dir.y - (f64)z.y * dir.z),
+                          (f32)((f64)dir.z * z.x - (f64)z.z * dir.x),
+                          (f32)((f64)z.y * dir.x - (f64)dir.y * z.x));
+
+            axis.normalize();
+
+            po rotation = references::unk_00fc4f60.get();
+
+            const f32 angle = math::acos(dot);
+
+            rotation.set_rot(math::vector4(axis.x, axis.y, axis.z, 0.0f), angle);
+
+            const vector3d  keep = node->get_position();
+            const vector3d &zero = references::unk_00fc4a10.get();
+
+            *node = from;
+
+            node->get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
+
+            fast_po_mul(*node, *node, rotation);
+
+            node->get_matrix().w = vector4d(keep.x, keep.y, keep.z, 1.0f);
+
+            return;
+        }
+    }
+
+    const vector3d keep = node->get_position();
+
+    *node = from;
+
+    node->get_matrix().w = vector4d(keep.x, keep.y, keep.z, 1.0f);
+}
+
 // sub_4B77A0
 void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's control points follow the positions, in its parent's frame
-    // the rotation turned back and the translation undone
-    auto inverse_of = [](const po &frame) {
-        const matrix4x4 &m = frame.get_matrix();
-
-        matrix4x4 inverse;
-
-        inverse.x.x = m.x.x;
-        inverse.x.y = m.y.x;
-        inverse.x.z = m.z.x;
-        inverse.y.x = m.x.y;
-        inverse.y.y = m.y.y;
-        inverse.y.z = m.z.y;
-        inverse.z.x = m.x.z;
-        inverse.z.y = m.y.z;
-        inverse.z.z = m.z.z;
-        inverse.w.x = -0.0f - (f32)((f64)m.w.x * m.x.x + (f64)m.w.y * m.x.y + (f64)m.w.z * m.x.z);
-        inverse.w.y = -0.0f - (f32)((f64)m.w.x * m.y.x + (f64)m.w.y * m.y.y + (f64)m.w.z * m.y.z);
-        inverse.w.z = -0.0f - (f32)((f64)m.w.x * m.z.x + (f64)m.w.y * m.z.y + (f64)m.w.z * m.z.z);
-
-        po result;
-        retail::sub_44DA50((u64*)&result, (i32)&inverse); // po from the matrix's 3x4
-
-        return result;
-    };
-
     // a hidden polytube only keeps its misc render objects up
     const bool hidden = tentacle &&
                         !ignore_limbo &&
@@ -758,7 +792,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                 entity* owner = get_my_entity();
 
                 if (need_po) {
-                    retail::sub_583280((u64*)node_po_storage.array, (u64*)base_node->my_abs_po); // po copy
+                    *node_po_storage.array = *base_node->my_abs_po;
 
                     po_index = 1;
                 }
@@ -813,7 +847,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                 end_po.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
 
-                retail::sub_9595B0((i32)&end_po); // po: orthonormalize
+                end_po.fixup();
 
                 const vector3d corrected = correct();
 
@@ -844,7 +878,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                 const po &end_source = end_node ? *end_node->my_abs_po : end_po;
 
-                retail::sub_583280((u64*)&node_po_storage.array[po_index], (u64*)&end_source); // po copy
+                node_po_storage.array[po_index] = end_source;
 
                 entity* owner = get_my_entity();
 
@@ -853,12 +887,12 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                     po* node_po = &node_po_storage.array[i];
 
                     if (!i) {
-                        retail::sub_49FC40((i32)node_po, (i32)base_node->my_abs_po, (f32*)&node_po[1].get_position()); // po: z at the point
+                        update_node_facing(node_po, *base_node->my_abs_po, node_po[1].get_position());
 
                         if (update_po && !hold_nodes && base_node)
                             place(base_node, node_po);
                     } else if (i - 1 < node_indices.size) {
-                        retail::sub_49FC40((i32)node_po, (i32)&node_po[-1], (f32*)&node_po[1].get_position()); // po: z at the point
+                        update_node_facing(node_po, node_po[-1], node_po[1].get_position());
 
                         if (update_po && !hold_nodes)
                             retail::sub_6410F0((i32)owner, node_indices.array[i - 1], (f32*)node_po, 0); // conglomerate::set_member_abs_po
@@ -868,7 +902,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                         vector3d aim(at.x + reach.x, at.y + reach.y, at.z + reach.z);
 
-                        retail::sub_49FC40((i32)node_po, (i32)&node_po[-1], (f32*)&aim); // po: z at the point
+                        update_node_facing(node_po, node_po[-1], aim);
 
                         if (update_po && !hold_nodes && end_node)
                             place(end_node, &end_po);
@@ -877,9 +911,9 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                 // into the polytube's frame
                 for (u32 i = 0; i < node_po_storage.size; ++i) {
-                    po to_tube = inverse_of(*tentacle->my_abs_po);
+                    po to_tube = tentacle->my_abs_po->inverse();
 
-                    retail::sub_44E230((u64*)&node_po_storage.array[i], (f32*)&node_po_storage.array[i], (f32*)&to_tube); // po product
+                    fast_po_mul(node_po_storage.array[i], node_po_storage.array[i], to_tube);
                 }
             }
 
@@ -901,11 +935,11 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
         po to_local = references::unk_00fc4f60.get();
 
         if (tentacle && (flags & external_polytube))
-            to_local = inverse_of(*tentacle->my_abs_po);
+            to_local = tentacle->my_abs_po->inverse();
         else if (parent)
-            to_local = inverse_of(*parent->my_abs_po);
+            to_local = parent->my_abs_po->inverse();
         else if (tentacle)
-            to_local = inverse_of(*tentacle->my_abs_po);
+            to_local = tentacle->my_abs_po->inverse();
 
         const bool reverse = (flags & reverse_spline) != 0;
 

@@ -750,8 +750,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             math::vector4 up(world_up.x, world_up.y, world_up.z, 0.0f);
             math::vector4 origin(zero.x, zero.y, zero.z, 0.0f);
 
-            po basis;
-            retail::sub_402C60((u64*)&basis, (f32*)&dir, (f32*)&up, (i32)&origin);
+            po basis(dir, up, origin);
 
             f32 along  = basis.get_z_facing() * facing;
             f32 across = basis.get_x_facing() * facing;
@@ -1082,7 +1081,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                 using get_member_abs_po_t = bool (__thiscall*)(actor*, const string_hash*, po*, i32);
 
                 po pelvis;
-                retail::sub_4015B0((u64*)&pelvis);
+                pelvis.identity();
 
                 if (((get_member_abs_po_t)retail::sub_402590)(the_actor, &references::bip01_pelvis.get(), &pelvis, 0)) { // conglomerate::get_member_abs_po
                     const vector3d &z_row = pelvis.get_z_facing();

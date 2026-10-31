@@ -509,8 +509,8 @@ void als::motion_compensator::get_po_curr_offset(po &curr_offset) {
 // inlined @ sub_5BFAE0
 // inlined @ sub_5C48D0
 void als::motion_compensator::set_po_curr_offset(actor* target, po &curr_offset) {
-    retail::sub_44E230((u64*)&curr_offset, (f32*)&curr_offset, (f32*)target->my_rel_po);
-    retail::sub_9595B0((i32)&curr_offset);
+    fast_po_mul(curr_offset, curr_offset, *target->my_rel_po);
+    curr_offset.fixup();
     retail::sub_626BE0((i32)target, (u64*)&curr_offset); // entity_base::set_rel_po
 }
 
@@ -540,7 +540,7 @@ void als::use_anim_only::post_anim_action(f32 delta_t) {
     vector3d prev_position = the_actor->my_abs_po->get_position();
 
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     get_po_curr_offset(curr_offset);
 
@@ -649,7 +649,7 @@ void als::simple_orientation::post_anim_action(f32 delta_t) {
     update_movement_window();
 
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     get_po_curr_offset(curr_offset);
 
@@ -769,7 +769,7 @@ void als::simple_orientation::turn_toward_desired(po &curr_offset, f32 delta_t, 
             math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
             po basis;
-            retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+            basis.set_po(basis_dir, basis_up, basis_origin);
 
             currently_rotating = true;
 
@@ -876,7 +876,7 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -963,10 +963,10 @@ void als::simple_orientation::other_po_changes(f32, po*) {}
 void als::simple_orientation::apply_rotation(po*, f32, f32 heading_change, const vector3d &, const vector3d &curr_dir, const vector3d &desired_up, const vector3d &) {
     // turns the facing about the desired up
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
-    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &heading_change);
+    rotation.set_rot(axis, heading_change);
 
     const matrix4x4 &m = rotation.get_matrix();
 
@@ -981,7 +981,7 @@ void als::simple_orientation::apply_rotation(po*, f32, f32 heading_change, const
     math::vector4   origin(position.x, position.y, position.z, 0.0f);
 
     po facing;
-    retail::sub_402260((u64*)&facing, (f32*)&turned, (f32*)&up, (i64*)&origin);
+    facing.set_po(turned, up, origin);
     retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
 }
 
@@ -1003,7 +1003,7 @@ void als::simple_orientation::face_desired_direction() {
         math::vector4   origin(position.x, position.y, position.z, 0.0f);
 
         po facing;
-        retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+        facing.set_po(basis_dir, basis_up, origin);
         retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
     }
 }
@@ -1115,7 +1115,7 @@ void als::relative_orientation::get_directions(animation_logic_system*, state_ma
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -1174,7 +1174,7 @@ void als::relative_strafe_mocomp::get_directions(animation_logic_system*, state_
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -1227,7 +1227,7 @@ void als::simple_orientation_on_foot::activate(animation_logic_system* the_als_c
     foot_index[1] = the_actor->is_a_conglomerate() ? ((conglomerate*)the_actor)->get_member_index(left_foot)  : invalid_conglom_member;
 
     po foot;
-    retail::sub_4015B0((u64*)&foot);
+    foot.identity();
 
     for (u32 index = 0; index < 2; ++index) {
         if (foot_index[index] == -2)
@@ -1295,8 +1295,7 @@ bool als::simple_orientation_on_foot::rotate_about_foot(      po*       curr_off
         !retail::sub_62FA60((i32)target, left_foot,  (f32*)&foot_positions[1], 0))
         return false;
 
-    po inverse;
-    retail::sub_48E2C0((f32*)target->my_abs_po, (u64*)&inverse);
+    po inverse = target->my_abs_po->inverse();
 
     const matrix4x4 &m        = inverse.get_matrix();
     const vector3d  &position = target->my_abs_po->get_position();
@@ -1340,10 +1339,10 @@ void als::simple_orientation_on_foot::rotate_about_point(      po*,
                                                                f32       angle) {
 
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-    retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
+    rotation.set_rot(axis_dir, angle);
 
     const vector3d &position = target->my_abs_po->get_position();
 
@@ -1353,8 +1352,8 @@ void als::simple_orientation_on_foot::rotate_about_point(      po*,
     math::vector4 basis_origin(position.x - pivot.x, position.y - pivot.y, position.z - pivot.z, 0.0f);
 
     po turned;
-    retail::sub_402260((u64*)&turned, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
-    retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+    turned.set_po(basis_dir, basis_up, basis_origin);
+    fast_po_mul(turned, turned, rotation);
 
     const vector4d &rotated = turned.get_matrix().w;
     vector3d        moved(rotated.x + pivot.x, rotated.y + pivot.y, rotated.z + pivot.z);
@@ -1362,7 +1361,7 @@ void als::simple_orientation_on_foot::rotate_about_point(      po*,
     const vector3d &zero = treyarch::references::unk_00fd4370.get();
 
     turned.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
-    retail::sub_9595B0((i32)&turned);
+    turned.fixup();
 
     turned.get_matrix().w = vector4d(moved.x, moved.y, moved.z, 1.0f);
     retail::sub_627180((i32)target, (f32*)&turned); // entity_base::set_abs_po
@@ -1471,7 +1470,7 @@ void als::relative_orientation_on_foot::get_directions(animation_logic_system*, 
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -1533,7 +1532,7 @@ void als::relative_strafe_mocomp_on_foot::get_directions(animation_logic_system*
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -1628,7 +1627,7 @@ void als::vertical_orientation::get_directions(animation_logic_system*, state_ma
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         *desired_dir = basis.get_x_facing();
     }
@@ -1746,7 +1745,7 @@ void als::initial_velocity_orientation::activate(animation_logic_system* the_als
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         initial_dir = vector3d(-basis.get_x_facing().x, -basis.get_x_facing().y, -basis.get_x_facing().z);
     }
@@ -1826,7 +1825,7 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         initial_dir = vector3d(-basis.get_x_facing().x, -basis.get_x_facing().y, -basis.get_x_facing().z);
     }
@@ -1920,7 +1919,7 @@ void als::strict_simple_orientation::post_anim_action(f32 delta_t) {
     rotate_end_callback.times_raised   = 0;
 
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     get_po_curr_offset(curr_offset);
 
@@ -2213,7 +2212,7 @@ void als::towed_orientation::post_anim_action(f32 delta_t) {
         math::vector4 basis_origin(placed.x, placed.y, placed.z, 0.0f);
 
         po towed;
-        retail::sub_402260((u64*)&towed, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        towed.set_po(basis_dir, basis_up, basis_origin);
 
         vector3d prev_position = the_actor->my_abs_po->get_position();
 
@@ -2318,15 +2317,15 @@ void als::ikcrawl_mocomp::post_anim_action(f32 delta_t) {
     vector3d prev_position = the_actor->my_abs_po->get_position();
 
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     po moved;
-    retail::sub_4015B0((u64*)&moved);
+    moved.identity();
 
     get_po_curr_offset(curr_offset);
 
-    retail::sub_44E230((u64*)&moved, (f32*)&curr_offset, (f32*)the_actor->my_rel_po);
-    retail::sub_9595B0((i32)&moved);
+    fast_po_mul(moved, curr_offset, *the_actor->my_rel_po);
+    moved.fixup();
 
     retail::sub_5E6760((u32*)the_actor, delta_t, (f32*)&prev_position, (i32)&curr_offset, (f32*)&moved); // ikcrawl: crawls on it
 }
@@ -2365,7 +2364,7 @@ void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
     update_movement_window();
 
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     get_po_curr_offset(curr_offset);
 
@@ -2406,7 +2405,7 @@ void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
         vector3d unit_up   = math::unitize(up);
         vector3d unit_side = math::unitize(side);
 
-        retail::sub_4015B0((u64*)&placed);
+        placed.identity();
 
         placed.get_matrix().x = vector4d(unit_side.x, unit_side.y, unit_side.z, 0.0f);
         placed.get_matrix().y = vector4d(unit_up.x, unit_up.y, unit_up.z, 0.0f);
@@ -2452,7 +2451,7 @@ void als::wallsprint_mocomp::other_po_changes(f32, po* curr_offset) {
     const vector3d &zero   = treyarch::references::unk_00fd4370.get();
 
     po unturn;
-    retail::sub_4015B0((u64*)&unturn);
+    unturn.identity();
 
     matrix4x4 transposed;
     transposed.x = vector4d(x_row.x, y_row.x, z_row.x, 0.0f);
@@ -2463,7 +2462,7 @@ void als::wallsprint_mocomp::other_po_changes(f32, po* curr_offset) {
                             -(f32)((f64)z_row.y * zero.y + (f64)z_row.x * zero.x + (f64)z_row.z * zero.z),
                             0.0f);
 
-    retail::sub_44DA50((u64*)&unturn, (i32)&transposed); // po from the matrix's 3x4
+    unturn.get_matrix() = math::mat44(*(const math::mat43*)&transposed);
 
     po wall_po = *wall->get_wall_po();
 
@@ -2488,10 +2487,10 @@ void als::wallsprint_mocomp::other_po_changes(f32, po* curr_offset) {
 void als::wallsprint_mocomp::apply_rotation(po*, f32, f32 heading_change, const vector3d &, const vector3d &curr_dir, const vector3d &desired_up, const vector3d &) {
     // turns the facing about the desired up
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
-    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &heading_change);
+    rotation.set_rot(axis, heading_change);
 
     const matrix4x4 &m = rotation.get_matrix();
 
@@ -2506,7 +2505,7 @@ void als::wallsprint_mocomp::apply_rotation(po*, f32, f32 heading_change, const 
     math::vector4   origin(position.x, position.y, position.z, 0.0f);
 
     po facing;
-    retail::sub_402260((u64*)&facing, (f32*)&turned, (f32*)&up, (i64*)&origin);
+    facing.set_po(turned, up, origin);
 
     // the wall turns, the post-action brings the actor along
     wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
@@ -2530,7 +2529,7 @@ void als::wallsprint_mocomp::face_desired_direction() {
     math::vector4 origin(position.x, position.y, position.z, 0.0f);
 
     po facing;
-    retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+    facing.set_po(basis_dir, basis_up, origin);
     retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
 
     wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
@@ -3117,7 +3116,7 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
     };
 
     po result;
-    retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+    result = old_po;
 
     vector3d up  = math::unitize(desired_up);
     vector3d dir = math::unitize(desired_facing);
@@ -3147,13 +3146,13 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
                 axis = z_row;
 
             po turn;
-            retail::sub_4015B0((u64*)&turn);
+            turn.identity();
 
             step = -step;
 
             math::vector4 axis_4(axis.x, axis.y, axis.z, 0.0f);
-            retail::sub_40A750((u64*)&turn, (f32*)&axis_4, &step);
-            retail::sub_44E230((u64*)&result, (f32*)&result, (f32*)&turn);
+            turn.set_rot(axis_4, step);
+            fast_po_mul(result, result, turn);
 
             z_row = result.get_z_facing();
             back  = vector3d(-result.get_x_facing().x, -result.get_x_facing().y, -result.get_x_facing().z);
@@ -3191,11 +3190,11 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
                 f32 step = capped(heading_change * time_percentage);
 
                 po turn;
-                retail::sub_4015B0((u64*)&turn);
+                turn.identity();
 
                 math::vector4 axis(desired_up.x, desired_up.y, desired_up.z, 0.0f);
-                retail::sub_40A750((u64*)&turn, (f32*)&axis, &step);
-                retail::sub_44E230((u64*)&result, (f32*)&result, (f32*)&turn);
+                turn.set_rot(axis, step);
+                fast_po_mul(result, result, turn);
             }
         }
     }
@@ -3307,7 +3306,7 @@ po als::move_and_face::compute_orientation(f32 delta_t, const po &old_po, const 
 
     if (orientation_algorithm != mocomp_algorithm_simple_linear) {
         po result;
-        retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+        result = old_po;
 
         return result;
     }
@@ -3337,26 +3336,26 @@ po als::move_and_face::orientation_action(f32 delta_t, const po &old_po, const p
         action = mocomp_action_from_anim;
 
     po result;
-    retail::sub_4015B0((u64*)&result);
+    result.identity();
 
     switch (action) {
         case mocomp_action_none:
-            retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
+            result = old_po;
             break;
 
         case mocomp_action_procedural: {
             po computed = compute_orientation(delta_t, old_po, anim_po);
-            retail::sub_583280((u64*)&result, (u64*)&computed);
+            result = computed;
             break;
         }
 
         case mocomp_action_from_anim:
-            retail::sub_583280((u64*)&result, (u64*)&anim_po);
+            result = anim_po;
             break;
 
         case mocomp_action_hybrid: {
             po hybrid = hybrid_orientation(delta_t, old_po, anim_po);
-            retail::sub_583280((u64*)&result, (u64*)&hybrid);
+            result = hybrid;
             break;
         }
 
@@ -3370,14 +3369,14 @@ po als::move_and_face::orientation_action(f32 delta_t, const po &old_po, const p
 // sub_5BFAE0
 po als::move_and_face::calculate_anim_motion() {
     po curr_offset;
-    retail::sub_4015B0((u64*)&curr_offset);
+    curr_offset.identity();
 
     get_po_curr_offset(curr_offset);
 
     motion_compensator::set_po_curr_offset(the_actor, curr_offset);
 
     po moved;
-    retail::sub_583280((u64*)&moved, (u64*)the_actor->my_abs_po); // po copy
+    moved = *the_actor->my_abs_po;
 
     return moved;
 }
@@ -3480,7 +3479,7 @@ void als::move_and_face::face_and_arrive_by(f32 delta_t) {
             target = target - facing.get_y_facing() * dot;
 
             target.normalize();
-            retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
+            facing.set_facing(target);
         }
     }
 
@@ -3490,11 +3489,10 @@ void als::move_and_face::face_and_arrive_by(f32 delta_t) {
 
     if (use_ik_crawl && crawling) {
         po moved;
-        retail::sub_4015B0((u64*)&moved);
+        moved.identity();
 
-        po inverse;
-        retail::sub_48E2C0((f32*)&old_po, (u64*)&inverse);
-        retail::sub_44E230((u64*)&moved, (f32*)&facing, (f32*)&inverse);
+        po inverse = old_po.inverse();
+        fast_po_mul(moved, facing, inverse);
 
         retail::sub_5E6760((u32*)the_actor, delta_t, (f32*)&old_po.get_position(), (i32)&moved, (f32*)&facing); // ikcrawl: crawls on it
 
@@ -4347,7 +4345,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
         math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
 
         po basis;
-        retail::sub_402260((u64*)&basis, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&basis_origin);
+        basis.set_po(basis_dir, basis_up, basis_origin);
 
         vector3d start = the_actor->my_abs_po->get_position();
 
@@ -4385,7 +4383,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
             math::vector4 origin(position.x, position.y, position.z, 0.0f);
 
             po facing;
-            retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+            facing.set_po(basis_dir, basis_up, origin);
             retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
         }
     }
@@ -4496,7 +4494,7 @@ void als::rvb_crawl_transition::activate(animation_logic_system* the_als_core, l
         math::vector4 origin(position.x, position.y, position.z, 0.0f);
 
         po facing;
-        retail::sub_402260((u64*)&facing, (f32*)&basis_dir, (f32*)&basis_up, (i64*)&origin);
+        facing.set_po(basis_dir, basis_up, origin);
 
         const vector3d &zero = treyarch::references::unk_00fd4370.get();
 
@@ -4676,7 +4674,7 @@ void als::attach_hand_to_point::face_and_arrive_by(f32 delta_t) {
             target.y = 0.0f;
 
             target.normalize();
-            retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
+            facing.set_facing(target);
         }
     }
 
@@ -5162,21 +5160,21 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
 
     po po_a;
     po po_b;
-    retail::sub_4015B0((u64*)&po_a);
-    retail::sub_4015B0((u64*)&po_b);
+    po_a.identity();
+    po_b.identity();
 
     get_sync_bone_po(actor_a, &po_a, actor_b, &po_b);
 
     // the bones' positions, apart from their orientations
     vector3d pos_a = po_a.get_position();
 
-    retail::sub_424900((u64*)&po_a, (u32*)&treyarch::references::unk_00fd4370.get()); // po::set_position
-    retail::sub_9595B0((i32)&po_a);
+    po_a.set_position(treyarch::references::unk_00fd4370.get());
+    po_a.fixup();
 
     vector3d pos_b = po_b.get_position();
 
-    retail::sub_424900((u64*)&po_b, (u32*)&treyarch::references::unk_00fd4370.get());
-    retail::sub_9595B0((i32)&po_b);
+    po_b.set_position(treyarch::references::unk_00fd4370.get());
+    po_b.fixup();
 
     apply_sync_rotate_angles(layer_a, &po_a, layer_b, &po_b);
 
@@ -5285,12 +5283,12 @@ void als::sync_move_and_face::get_sync_bone_po(actor* actor_a, po* po_a, actor* 
     if (sync_index_a >= 0)
         retail::sub_62FC10((i32)actor_a, sync_index_a, (u64*)po_a, 0); // conglomerate::get_member_abs_po
     else
-        retail::sub_583280((u64*)po_a, (u64*)actor_a->my_abs_po); // po copy
+        *po_a = *actor_a->my_abs_po;
 
     if (sync_index_b >= 0)
         retail::sub_62FC10((i32)actor_b, sync_index_b, (u64*)po_b, 0);
     else
-        retail::sub_583280((u64*)po_b, (u64*)actor_b->my_abs_po);
+        *po_b = *actor_b->my_abs_po;
 }
 
 // sub_5C1290
@@ -5330,18 +5328,18 @@ void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine
                     axis = abs_po.get_z_facing();
 
                 po rotation;
-                retail::sub_4015B0((u64*)&rotation);
+                rotation.identity();
 
                 angle = -angle;
 
                 math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-                retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-                retail::sub_44E230((u64*)&abs_po, (f32*)&abs_po, (f32*)&rotation);
+                rotation.set_rot(axis_dir, angle);
+                fast_po_mul(abs_po, abs_po, rotation);
             }
         }
 
-        retail::sub_424900((u64*)&abs_po, (u32*)&position); // po::set_position
-        retail::sub_627180((i32)target, (f32*)&abs_po);     // entity_base::set_abs_po
+        abs_po.set_position(position);
+        retail::sub_627180((i32)target, (f32*)&abs_po); // entity_base::set_abs_po
     };
 
     // a's speed comes from b's layer, as retail has it
@@ -5526,15 +5524,14 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
             target.get_matrix().w.w = 1.0f;
 
             blended.to_matrix(&target.get_matrix());
-            retail::sub_9595B0((i32)&target);
+            target.fixup();
         }
 
         po relative;
-        retail::sub_4015B0((u64*)&relative);
+        relative.identity();
 
-        po inverse;
-        retail::sub_48E2C0((f32*)po_b, (u64*)&inverse); // po inverse
-        retail::sub_44E230((u64*)&relative, (f32*)&inverse, (f32*)&target);
+        po inverse = po_b->inverse();
+        fast_po_mul(relative, inverse, target);
 
         // b's po about its bone, turned with it
         po       moved        = *actor_b->my_abs_po;
@@ -5543,7 +5540,7 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
 
         moved.get_matrix().w = vector4d(about_bone.x, about_bone.y, about_bone.z, 1.0f);
 
-        retail::sub_44E230((u64*)&moved, (f32*)&moved, (f32*)&relative);
+        fast_po_mul(moved, moved, relative);
 
         if (lock_pos)
             moved.get_matrix().w = vector4d(old_position.x, old_position.y, old_position.z, 1.0f);
@@ -5578,8 +5575,8 @@ void als::sync_move_and_face::sync_actors(actor* actor_a,
 
     po po_a;
     po po_b;
-    retail::sub_4015B0((u64*)&po_a);
-    retail::sub_4015B0((u64*)&po_b);
+    po_a.identity();
+    po_b.identity();
 
     i16 index_a;
     i16 index_b;
@@ -5601,12 +5598,12 @@ void als::sync_move_and_face::sync_actors(actor* actor_a,
     vector3d pos_a = po_a.get_position();
 
     po_a.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
-    retail::sub_9595B0((i32)&po_a);
+    po_a.fixup();
 
     vector3d pos_b = po_b.get_position();
 
     po_b.get_matrix().w = vector4d(zero.x, zero.y, zero.z, 1.0f);
-    retail::sub_9595B0((i32)&po_b);
+    po_b.fixup();
 
     if (!lock_pos_b || !lock_orient_b) {
         f32 pos_weight    = lock_pos_b    ? 0.0f : (lock_pos_a    ? pos_tween    : pos_tween * 0.5f);
@@ -5730,7 +5727,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
 
                 vector3d position = po_a.get_position() + step;
 
-                retail::sub_424900((u64*)&po_a, (u32*)&position); // po::set_position
+                po_a.set_position(position);
                 retail::sub_627180((i32)actor_a, (f32*)&po_a);
 
                 actor_a->set_frame_delta_trans(step, delta_t);
@@ -5748,7 +5745,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
 
                 vector3d position = po_b.get_position() + step;
 
-                retail::sub_424900((u64*)&po_b, (u32*)&position);
+                po_b.set_position(position);
                 retail::sub_627180((i32)actor_b, (f32*)&po_b);
 
                 actor_b->set_frame_delta_trans(step, delta_t);
@@ -5873,7 +5870,7 @@ void als::momentum_sync_move_and_face::update_slide_axes(f32) {
 // sub_5C2490
 po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     po turned = *(target ? target : the_actor)->my_abs_po;
 
@@ -5894,13 +5891,13 @@ po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
             if (axis.length2() < 0.01f)
                 axis = facing;
 
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             angle = -angle;
 
             math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+            rotation.set_rot(axis_dir, angle);
+            fast_po_mul(turned, turned, rotation);
 
             facing  = turned.get_z_facing();
             minus_x = -turned.get_x_facing();
@@ -5968,11 +5965,11 @@ po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
         angle *= fraction;
 
     if (std::fabs(angle) > 0.01f) {
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
         math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+        rotation.set_rot(axis_dir, angle);
+        fast_po_mul(turned, turned, rotation);
     }
 
     return turned;
@@ -6036,7 +6033,7 @@ i32 als::sturn_sync_move_and_face::get_mash_sizeof() const {
 // sub_5C2CD0
 po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     po turned = *(target ? target : the_actor)->my_abs_po;
 
@@ -6058,13 +6055,13 @@ po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
             if (axis.length2() < 0.01f)
                 axis = facing;
 
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             angle = -angle;
 
             math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+            rotation.set_rot(axis_dir, angle);
+            fast_po_mul(turned, turned, rotation);
 
             facing  = turned.get_z_facing();
             minus_x = -turned.get_x_facing();
@@ -6137,11 +6134,11 @@ po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
         angle *= turn;
 
     if (std::fabs(angle) > 0.01f) {
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
         math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+        rotation.set_rot(axis_dir, angle);
+        fast_po_mul(turned, turned, rotation);
     }
 
     return turned;
@@ -6294,14 +6291,14 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 
     // back toward the actor, swung about its up by half the arc and by all of it
     po rotation;
-    retail::sub_4015B0((u64*)&rotation);
+    rotation.identity();
 
     vector3d         away = -dir;
     const matrix4x4 &m    = rotation.get_matrix();
 
     f32           half_arc = (f32)((f64)arc_degrees * 0.5 * 0.017453292519943295);
     math::vector4 axis(up.x, up.y, up.z, 0.0f);
-    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &half_arc);
+    rotation.set_rot(axis, half_arc);
 
     vector3d swung((f32)((f64)m.x.x * away.x + (f64)m.y.x * away.y + (f64)m.z.x * away.z + (f64)m.w.x * 0.0),
                    (f32)((f64)m.y.y * away.y + (f64)m.x.y * away.x + (f64)m.z.y * away.z + (f64)m.w.y * 0.0),
@@ -6311,7 +6308,7 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 
     f32 arc = (f32)((f64)arc_degrees * 0.017453292519943295);
     axis    = math::vector4(up.x, up.y, up.z, 0.0f);
-    retail::sub_40A750((u64*)&rotation, (f32*)&axis, &arc);
+    rotation.set_rot(axis, arc);
 
     swung = vector3d((f32)((f64)m.y.x * away.y + (f64)m.x.x * away.x + (f64)m.z.x * away.z + (f64)m.w.x * 0.0),
                      (f32)((f64)m.y.y * away.y + (f64)m.x.y * away.x + (f64)m.z.y * away.z + (f64)m.w.y * 0.0),
@@ -6364,11 +6361,11 @@ po als::combat_radial_move_and_face::get_facing_po(f32) {
 
             if (angle > 0.01f || angle < -0.01f) {
                 po rotation;
-                retail::sub_4015B0((u64*)&rotation);
+                rotation.identity();
 
                 math::vector4 axis(up.x, up.y, up.z, 0.0f);
-                retail::sub_40A750((u64*)&rotation, (f32*)&axis, &angle);
-                retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+                rotation.set_rot(axis, angle);
+                fast_po_mul(turned, turned, rotation);
             }
         }
     }
@@ -6410,8 +6407,8 @@ vector3d als::combat_radial_move_and_face::get_path_position(f32) {
 
 // sub_5BAC20
 als::biped_physics_mocomp::biped_physics_mocomp() : include_trajectory(false), use_internal_force_params(false) {
-    retail::sub_4015B0((u64*)&saved_po);
-    retail::sub_4015B0((u64*)&unk_050);
+    saved_po.identity();
+    unk_050.identity();
 }
 
 // sub_71BBA0
@@ -6421,8 +6418,8 @@ als::biped_physics_mocomp::biped_physics_mocomp(mash::generating_vtable_version 
                                                                                                  include_trajectory(false),
                                                                                                  use_internal_force_params(false) {
 
-    retail::sub_4015B0((u64*)&saved_po);
-    retail::sub_4015B0((u64*)&unk_050);
+    saved_po.identity();
+    unk_050.identity();
 }
 
 // sub_5BACA0
@@ -6613,7 +6610,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
 
         if (saved_matrices) {
             for (u32 index = 0; index < count; ++index)
-                retail::sub_4015B0((u64*)&saved_matrices[index]);
+                saved_matrices[index].identity();
         }
 
         std::memcpy(saved_matrices, body->all_model_po.array, body->all_model_po.size << 6);
@@ -6645,7 +6642,7 @@ void als::biped_physics_mocomp::pre_anim_action(f32) {
     if (saved_matrices)
         std::memcpy(saved_matrices, body->all_model_po.array, body->all_model_po.size << 6);
 
-    retail::sub_583280((u64*)&saved_po, (u64*)the_actor->my_abs_po); // po copy
+    saved_po = *the_actor->my_abs_po;
 }
 
 // sub_5C6720
@@ -6681,7 +6678,7 @@ void als::biped_physics_mocomp::post_anim_action(f32 delta_t) {
     if (saved_matrices)
         std::memcpy(((conglomerate*)the_actor)->all_model_po.array, saved_matrices, ((conglomerate*)the_actor)->all_model_po.size << 6);
 
-    retail::sub_583280((u64*)the_actor->my_abs_po, (u64*)&saved_po);
+    *the_actor->my_abs_po = saved_po;
 }
 
 // sub_667F80
@@ -6890,13 +6887,13 @@ po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
                 axis = z_row;
 
             po rotation;
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             angle = -angle;
 
             math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+            rotation.set_rot(axis_dir, angle);
+            fast_po_mul(turned, turned, rotation);
 
             z_row   = turned.get_z_facing();
             minus_x = -turned.get_x_facing();
@@ -6937,11 +6934,11 @@ po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
 
     if (angle > 0.01f || angle < -0.01f) {
         po rotation;
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
         math::vector4 axis_dir(up.x, up.y, up.z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+        rotation.set_rot(axis_dir, angle);
+        fast_po_mul(turned, turned, rotation);
     }
 
     return turned;
@@ -7302,13 +7299,13 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
                 axis = facing;
 
             po rotation;
-            retail::sub_4015B0((u64*)&rotation);
+            rotation.identity();
 
             angle = -angle;
 
             math::vector4 axis_dir(axis.x, axis.y, axis.z, 0.0f);
-            retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-            retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+            rotation.set_rot(axis_dir, angle);
+            fast_po_mul(turned, turned, rotation);
 
             facing  = turned.get_z_facing();
             minus_x = -turned.get_x_facing();
@@ -7343,11 +7340,11 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
 
     if (angle > 0.01f || angle < -0.01f) {
         po rotation;
-        retail::sub_4015B0((u64*)&rotation);
+        rotation.identity();
 
         math::vector4 axis_dir(up_dir.x, up_dir.y, up_dir.z, 0.0f);
-        retail::sub_40A750((u64*)&rotation, (f32*)&axis_dir, &angle);
-        retail::sub_44E230((u64*)&turned, (f32*)&turned, (f32*)&rotation);
+        rotation.set_rot(axis_dir, angle);
+        fast_po_mul(turned, turned, rotation);
     }
 
     return turned;

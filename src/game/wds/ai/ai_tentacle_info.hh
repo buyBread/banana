@@ -182,6 +182,8 @@ namespace treyarch {
         void init_code_tween(f32 time);
     };
 
+    void update_node_facing(po* node, const po &from, const vector3d &at);
+
     namespace references {
         inline util::memory_reference<container::simple_list<ai_tentacle_info*>> all_tentacles { 0x00FC508C };
 
