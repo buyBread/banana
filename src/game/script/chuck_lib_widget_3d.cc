@@ -12,18 +12,24 @@
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
+#include "game/game_data.hh"
 #include "game/geometry/geometry_manager.hh"
 #include "game/input/input_mgr.hh"
 #include "game/localized_string_table.hh"
 #include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
+#include "game/polytube.hh"
+#include "game/rpg_upgrades.hh"
 #include "game/script/chuck_lib_widget.hh"
 #include "game/script/chuck_lib_widget_3d.hh"
 #include "game/script/script_access.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 #include "treyarch/base/tl_fixed_string.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/vector.hh"
 
 using namespace treyarch;
 
@@ -903,68 +909,130 @@ bool slf__is_X_over_button_shown__num__t::operator()(chuck::vm::vm_stack &stack)
     return true;
 }
 
+// sub_869EB0
 bool slf__load_debug_3d_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_8622F0
 bool slf__set_debug_3d_widget_pos__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_x__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_y__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_widget_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_scale__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_widget_tilt__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_tilt__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_widget_spin__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_spin__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_widget_rotation__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__get_debug_3d_widget_rotation__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83F550
 bool slf__get_debug_3d_widget_entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83F550)(this, stack);
+    u32 result = 0;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__debug_3d_widget_play_anim__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__debug_3d_widget_set_cowbell_variant__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__debug_3d_widget_add_ui_parameter_files_to_menu__debug_menu__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
 // sub_83ED90
@@ -1300,24 +1368,39 @@ bool slf__set_ui_light_widget_index__num__t::operator()(chuck::vm::vm_stack &sta
     return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_text_marker__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_3d_text_str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_debug_show_3d_text_regions__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
+// sub_8622F0
 bool slf__set_debug_child_widget__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__reattach_child_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
 // sub_862040
@@ -1601,12 +1684,22 @@ bool slf__destroy_fog__finger_of_god__t::operator()(chuck::vm::vm_stack &stack) 
     return true;
 }
 
+// sub_862940
 bool slf__terminate_script__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862940)(this, stack);
+    stack.sp -= 0x08;
+
+    mission_manager::inst()->terminate_script(stack.local_num(0x00) != 0.0f, false);
+
+    return false;
 }
 
+// sub_862990
 bool slf__terminate_script__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862990)(this, stack);
+    stack.sp -= 0x0C;
+
+    mission_manager::inst()->terminate_script(stack.local_num(0x00) != 0.0f, false);
+
+    return false;
 }
 
 // sub_8629E0
@@ -1747,20 +1840,68 @@ bool slf__minimap_wallmode_disable__num__t::operator()(chuck::vm::vm_stack &stac
     return true;
 }
 
+// sub_83EED0
 bool slf__get_collectible_level__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EED0)(this, stack);
+    void* manager = references::upgrade_manager.read();
+
+    f32 result;
+
+    if (manager)
+        result = (f32)(i32)retail::sub_9216A0((u32*)manager);
+    else
+        result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_862D80
 bool slf__temporarily_purchase_upgrade__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862D80)(this, stack);
+    stack.sp -= 0x04;
+
+    void* manager = references::upgrade_manager.read();
+
+    if (manager)
+        retail::sub_921870((u32*)manager, (i32)stack.local_num(0x00));
+
+    return true;
 }
 
+// sub_824620
 bool slf__temporarily_purchase_all_upgrades__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824620)(this, stack);
+    // the manager opens with every upgrade by id
+    auto upgrades = (mash::vector<rpg_upgrade>*)references::upgrade_manager.read();
+
+    if (!upgrades)
+        return true;
+
+    i32 count = (i32)upgrades->size;
+
+    for (i32 id = 0; id < count; ++id)
+        retail::sub_921870((u32*)references::upgrade_manager.read(), id);
+
+    return true;
 }
 
+// sub_862E40
 bool slf__is_upgrade_purchased__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862E40)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 result = 0.0f;
+
+    void* manager = references::upgrade_manager.read();
+
+    if (manager) {
+        auto id = stack.local_num(0x00);
+
+        if (id >= 0.0f)
+            result = (f32)retail::sub_9219C0((u32*)manager, (i32)id);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_862E90
@@ -1797,12 +1938,35 @@ bool slf__rvb_clear_instructional_text__t::operator()(chuck::vm::vm_stack &stack
     return true;
 }
 
+// sub_862DB0
 bool slf__try_to_purchase_upgrade__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862DB0)(this, stack);
+    stack.sp -= 0x04;
+
+    void* manager = references::upgrade_manager.read();
+
+    if (manager)
+        retail::sub_9302D0((i32)manager, (i32)stack.local_num(0x00), 1); // try_to_purchase_upgrade
+
+    return true;
 }
 
+// sub_862DE0
 bool slf__get_upgrade_id__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862DE0)(this, stack);
+    stack.sp -= 0x04;
+
+    f32 result = -1.0f;
+
+    if (references::upgrade_manager.read()) {
+        string_hash name;
+
+        name.initialize(mash::ALLOCATED, (const char*)stack.local_uint(0x00));
+
+        result = (f32)retail::sub_9210B0((u32*)references::upgrade_manager.read(), (u32*)&name); // get_upgrade_id
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8632D0
@@ -1827,8 +1991,20 @@ bool slf__set_rvb_hint_text_debug__num__num__str__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_83F4F0
 bool slf__is_vibration_option_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83F4F0)(this, stack);
+    game* the_game = references::game.read();
+
+    f32 result;
+
+    if (the_game && the_game->data)
+        result = (f32)*retail::sub_77CB90((u32*)the_game->data);
+    else
+        result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_8246A0
@@ -1900,12 +2076,22 @@ bool slf__set_rvb_instructional_text__num__num__t::operator()(chuck::vm::vm_stac
     return true;
 }
 
+// sub_83F550
 bool slf__get_root_debug_menu__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83F550)(this, stack);
+    u32 result = 0;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_841EB0
 bool slf__is_motion_sensor_option_enabled__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841EB0)(this, stack);
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_824680
@@ -1933,12 +2119,28 @@ bool slf__set_rvb_instructional_text_debug__num__str__t::operator()(chuck::vm::v
     return true;
 }
 
+// sub_83F570
 bool slf__create_polytube__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83F570)(this, stack);
+    auto tube = (polytube*)retail::sub_804090((u32**)&references::g_world_ptr.read()->ent_mgr, 0x2000); // wds_entity_manager, creates a "wds_polytube"
+
+    arch_base_vhandle handle = tube->my_handle;
+
+    retail::sub_654A00((i32)tube);
+
+    tube->set_visible(true, false);
+
+    stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_entity, handle.value);
+
+    stack.push(&handle, sizeof(handle));
+
+    return true;
 }
 
+// sub_860000
 bool slf__enumerate_resources_to_debug_menu__debug_menu_entry__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860000)(this, stack);
+    stack.sp -= 0x0C;
+
+    return true;
 }
 
 // sub_8246A0
