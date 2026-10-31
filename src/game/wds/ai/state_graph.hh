@@ -40,6 +40,10 @@ namespace treyarch {
             return my_name;
         }
 
+        bool is_flag_set(e_base_state_flags the_flag) const {
+            return my_flags & (1u << the_flag);
+        }
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,
@@ -64,6 +68,8 @@ namespace treyarch {
 
             return name;
         }
+
+        const mashed_state* find_state(string_hash the_state_name) const; // null when the graph has no such state
 
         void construct_mashed_class();
         void destruct_mashed_class();

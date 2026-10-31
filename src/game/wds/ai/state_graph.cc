@@ -1,3 +1,4 @@
+#include "retail.hh"
 #include "game/wds/ai/state_graph.hh"
 
 using namespace treyarch;
@@ -54,4 +55,8 @@ void state_graph::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_
         mash_info->unmash_class(my_initial_state, this, buffer);
     else
         my_initial_state = nullptr;
+}
+
+const mashed_state* state_graph::find_state(string_hash the_state_name) const {
+    return (const mashed_state*)retail::sub_4D7010((u32*)this, (i32)the_state_name.source_hash_code);
 }

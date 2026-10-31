@@ -2,8 +2,135 @@
 #include "game/wds/ai/ai_state_machine.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/info_node.hh"
+#include "game/wds/entity/actor.hh"
 
 using namespace treyarch;
+
+string_hash launch_layer_state::my_type_key { 0x62F59477 }; // "launch_layer_state"
+
+// inlined @ sub_4C4AE0
+// inlined @ sub_4D70B0
+void base_state::initialize(mash::allocation_scope) {
+    my_state_machine = nullptr;
+    my_mashed_state  = nullptr;
+}
+
+// ==== enhanced_state ==== //
+
+// slot 0
+enhanced_state::~enhanced_state() {
+    retail::sub_486520((u32*)this);
+}
+
+// slot 1
+void enhanced_state::construct_mashed_class() {
+    ((void (__thiscall*)(enhanced_state*))retail::sub_4C4B00)(this);
+}
+
+// slot 2
+void enhanced_state::destruct_mashed_class() {
+    ((void (__thiscall*)(enhanced_state*))retail::sub_4DA200)(this);
+}
+
+// sub_7AE090
+void enhanced_state::unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
+
+// slot 4
+mash::virtual_types_key enhanced_state::get_virtual_type_key() const {
+    return ((mash::virtual_types_key (__thiscall*)(const enhanced_state*))retail::sub_486570)(this);
+}
+
+// sub_689610
+void enhanced_state::copy_values(const mash_virtual_base*) {}
+
+// slot 6
+bool enhanced_state::is_subclass_of(mash::virtual_types_key parent_class) const {
+    return ((bool (__thiscall*)(const enhanced_state*, mash::virtual_types_key))retail::sub_486580)(this, parent_class);
+}
+
+// sub_4D6250
+i32 enhanced_state::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// slot 9
+void enhanced_state::activate(      ai_state_machine* the_state_machine,
+                              const mashed_state*     the_mashed_state,
+                              const mashed_state*     prev_mashed_state,
+                              const param_block*      extra_params) {
+
+    ((void (__thiscall*)(enhanced_state*,
+                         ai_state_machine*,
+                         const mashed_state*,
+                         const mashed_state*,
+                         const param_block*))retail::sub_4DC120)(this,
+                                                                 the_state_machine,
+                                                                 the_mashed_state,
+                                                                 prev_mashed_state,
+                                                                 extra_params);
+}
+
+// slot 10
+void enhanced_state::deactivate(const mashed_state* next_mashed_state) {
+    ((void (__thiscall*)(enhanced_state*, const mashed_state*))retail::sub_4CE510)(this, next_mashed_state);
+}
+
+// slot 11
+e_state_exit_code enhanced_state::frame_advance(f32 delta_t) {
+    return ((e_state_exit_code (__thiscall*)(enhanced_state*, f32))retail::sub_4CD010)(this, delta_t);
+}
+
+// sub_689610
+void enhanced_state::get_info_node_list(info_node_desc_list&) const {}
+
+// sub_689610
+void enhanced_state::get_state_graph_list(state_graph_list&) const {}
+
+// sub_667F80
+bool enhanced_state::is_enhanced_state() const {
+    return true;
+}
+
+// sub_71F870
+bool enhanced_state::is_combat_state() const {
+    return false;
+}
+
+// sub_71F870
+bool enhanced_state::unk_016() const {
+    return false;
+}
+
+// sub_71F870
+bool enhanced_state::unk_017() const {
+    return false;
+}
+
+// slot 18
+state_trans_action enhanced_state::process_exit_code(f32 delta_t, e_state_exit_code the_exit_code) const {
+    state_trans_action action;
+
+    ((state_trans_action* (__thiscall*)(const enhanced_state*,
+                                        state_trans_action*,
+                                        f32,
+                                        e_state_exit_code))retail::sub_4CAEA0)(this,
+                                                                               &action,
+                                                                               delta_t,
+                                                                               the_exit_code);
+
+    return action;
+}
+
+// sub_A944D0
+u32 enhanced_state::unk_019() const {
+    return 0;
+}
+
+// inlined @ sub_4C4AE0
+// inlined @ sub_4D70B0
+void enhanced_state::initialize(mash::allocation_scope) {
+    default_transitions = nullptr;
+}
 
 // sub_4DAA10
 // inlined @ sub_4DF760
@@ -70,6 +197,7 @@ void ai_state_machine::request_exit() {
 }
 
 // sub_4C6990
+// inlined @ sub_4DBD60
 void ai_state_machine::external_request_exit() {
     if (my_curr_mode == blocked_on_all_children  ||
         my_curr_mode == exiting_wait_on_children ||
@@ -107,7 +235,7 @@ void ai_state_machine::process_mode(f32 delta_t) {
 
             auto sync_code = (e_state_exit_code)retail::sub_4C3AE0((u32*)&sync_code_name);
 
-            my_curr_state = (base_state*)retail::sub_4D70B0(my_graph->my_initial_state->my_state_type); // base_state::create_subclass
+            my_curr_state = base_state::create_subclass(my_graph->my_initial_state->my_state_type);
             my_curr_state->activate(this, my_graph->my_initial_state, nullptr, nullptr);
 
             my_curr_mode = state_advance;
@@ -169,6 +297,114 @@ void ai_state_machine::advance_curr_state(f32 delta_t) {
         process_exit_code(delta_t, the_exit_code);
 }
 
+// sub_4DD9D0
 void ai_state_machine::process_exit_code(f32 delta_t, e_state_exit_code the_exit_code) {
-    retail::sub_4DD9D0((i32)this, delta_t, (i32)the_exit_code);
+    state_trans_action action = my_curr_state->process_exit_code(delta_t, the_exit_code);
+
+    switch (action.the_action) {
+        case state_action_goto_state:
+            transition_state(action.dest_state_name, action.extra_params, the_exit_code);
+            break;
+
+        case state_action_return:
+            process_return();
+            break;
+
+        case state_action_machine_exit:
+            my_exit_status = action.the_exit_code;
+
+            if (my_children.size()) {
+                my_curr_mode = exiting_wait_on_children;
+
+                for (u32 index = 0; index < my_children.size(); ++index)
+                    my_children[index]->request_exit();
+            } else
+                my_core->do_machine_exit(this);
+
+            break;
+    }
+}
+
+// sub_4DBF50
+void ai_state_machine::process_return() { // back to the state the interrupt state interrupted
+    const mashed_state* returning_state = my_curr_state->my_mashed_state;
+
+    my_curr_state->deactivate(my_interrupted_state);
+    delete my_curr_state;
+
+    my_curr_state = base_state::create_subclass(my_interrupted_state->my_state_type);
+    my_curr_state->activate(this, my_interrupted_state, returning_state, my_interrupted_params);
+}
+
+// sub_4DBD60
+bool ai_state_machine::transition_state(string_hash new_state_id, const param_block* extra_params, e_state_exit_code the_exit_code) {
+    const mashed_state* new_state = my_graph->find_state(new_state_id);
+
+    if (!new_state) {
+        // a state of an ancestor's graph is taken there, but only when the ancestor launched this branch
+        ai_state_machine* child   = this;
+        ai_state_machine* machine = my_parent;
+
+        if (!machine)
+            return false;
+
+        while (!machine->my_graph->find_state(new_state_id)) {
+            child   = machine;
+            machine = machine->my_parent;
+
+            if (!machine)
+                return false;
+        }
+
+        if (!machine->my_curr_state->is_or_is_subclass_of(launch_layer_state::my_type_key.source_hash_code))
+            return false;
+
+        auto*        launcher = (launch_layer_state*)machine->my_curr_state;
+        resource_key name     = child->get_name();
+
+        if (!(launcher->get_layer_resource_key() == name))
+            return false;
+
+        child->external_request_exit();
+
+        return machine->transition_state(new_state_id);
+    }
+
+    if (my_curr_state->my_mashed_state->is_flag_set(mashed_state::is_interrupt_state)) {
+        if (!new_state->is_flag_set(mashed_state::is_interrupt_state)) {
+            my_interrupted_state  = nullptr;
+            my_interrupted_params = nullptr;
+        }
+    } else if (new_state->is_flag_set(mashed_state::is_interrupt_state)) {
+        my_interrupted_state  = my_curr_state->my_mashed_state;
+        my_interrupted_params = my_curr_state->my_extra_params;
+    }
+
+    my_prev_state = my_curr_state->my_mashed_state;
+
+    if (the_exit_code > state_exit_code_exit_request &&
+        the_exit_code < state_exit_code_no_exit      &&
+        my_curr_state->is_enhanced_state()) {
+
+        string_hash none;
+        none.initialize(mash::ALLOCATED);
+
+        string_hash event = my_curr_state->my_mashed_state->my_params.get_optional_pb_hash(references::event_hashes.get()[the_exit_code],
+                                                                                            none,
+                                                                                            nullptr);
+
+        string_hash no_event;
+        no_event.initialize(mash::ALLOCATED);
+
+        if (event != no_event)
+            my_curr_state->my_state_machine->my_core->get_actor()->raise_event(event);
+    }
+
+    my_curr_state->deactivate(new_state);
+    delete my_curr_state;
+
+    my_curr_state = base_state::create_subclass(new_state->my_state_type);
+    my_curr_state->activate(this, new_state, my_prev_state, extra_params);
+
+    return false;
 }
