@@ -88,18 +88,25 @@ namespace treyarch { namespace mash {
         }
 
         // sub_455EE0
+        // sub_4E4DC0
         // sub_588AA0
+        // sub_588B10
         // sub_6063B0
         // sub_95D7D0
+        // sub_95D840
+        // sub_95D8F0
         // sub_A700E0
         // sub_A70150
         // sub_A701C0
+        // inlined @ sub_5A0F70
+        // inlined @ sub_6569F0
         // inlined @ sub_87A810
+        // inlined @ sub_9708E0
         void reserve(u32 new_size) {
             if (new_size <= max_size)
                 return;
 
-            auto new_array = (T*)tl_mem_alloc(new_size * sizeof(T), 4, 0);
+            auto new_array = (T*)tl_mem_alloc(new_size * sizeof(T), alignof(T), 0);
 
             if (array) {
                 if (size)
@@ -113,19 +120,30 @@ namespace treyarch { namespace mash {
             max_size = new_size;
         }
 
+        // sub_95D8B0
+        void push_back() {
+            // an array still in the mash image can't grow in place
+            if (size == max_size || is_pointer_in_mash_image(array))
+                reserve((size / block_alloc_size + 1) * block_alloc_size);
+
+            ++size;
+        }
+
         // sub_4397F0
+        // sub_58FB40
+        // sub_58FBA0
+        // sub_971790
         // inlined @ sub_879DA0
         // inlined @ sub_87A810
         void push_back(const T &value) {
-            // an array still in the mash image can't grow in place
-            if (size == max_size || is_pointer_in_mash_image(array))
-                reserve((size / 8 + 1) * 8);
+            push_back();
 
-            ++size;
             array[size - 1] = value;
         }
 
+        // sub_4E4E20
         // sub_8434C0
+        // sub_A70590
         // sub_A756C0
         void resize(u32 count, const T &value) {
             reserve(count);

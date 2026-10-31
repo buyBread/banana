@@ -62,9 +62,8 @@ namespace treyarch { namespace mash {
 
         void construct_mashed_class() {}
 
-        void destruct_mashed_class() {
-            clear();
-        }
+        // sub_5B4A70
+        void destruct_mashed_class() {}
 
         // sub_A6D3F0
         void unmash(mash_info_struct* mash_info, void*, buffer_type) {
