@@ -134,6 +134,7 @@ namespace treyarch { namespace mash {
         // sub_58FBA0
         // sub_971790
         // inlined @ sub_4B3690
+        // inlined @ sub_482510
         // inlined @ sub_879DA0
         // inlined @ sub_87A810
         // inlined @ sub_9386A0
