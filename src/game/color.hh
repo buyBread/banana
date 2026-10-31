@@ -14,6 +14,19 @@ namespace treyarch {
 
         color32() = default;
 
+        // inlined @ sub_85E000
+        // inlined @ sub_85E040
+        // inlined @ sub_85E080
+        // inlined @ sub_85E0C0
+        // inlined @ sub_85E100
+        // inlined @ sub_85E140
+        color32(u8 red, u8 green, u8 blue, u8 alpha = 0xFF) {
+            b = blue;
+            g = green;
+            r = red;
+            a = alpha;
+        }
+
         // sub_6B1190
         explicit color32(const color &c) {
             set_clamped((i32)((f64)c.r * 255.0), (i32)((f64)c.g * 255.0), (i32)((f64)c.b * 255.0), (i32)((f64)c.a * 255.0));

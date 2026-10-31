@@ -14,6 +14,7 @@
 #include "game/frontend/igo/igo_3d_ped_warning_widget.hh"
 #include "game/frontend/igo/igo_3d_radar_widget.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
+#include "game/frontend/igo/igo_3d_timer_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
 #include "game/frontend/igo/igo_generic_decay_timer.hh"
@@ -103,7 +104,7 @@ namespace treyarch {
         igo_3d_widget*                      combo_counter_message;
         igo_3d_widget*                      hint_text_message;
         igo_3d_widget*                      mem_card_message;
-        igo_3d_widget*                      timer_widget;
+        igo_3d_timer_widget*                timer_widget;
         igo_3d_radar_widget*                radar_widget;
         igo_3d_nav_button_bar*              nav_button_bar;
         igo_3d_widget*                      modal_save_dialog;
