@@ -1,5 +1,9 @@
 #include "retail.hh"
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/ai/actions/pick_up_ai_action.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_weapon_inode.hh"
+#include "game/wds/ai/info_node.hh"
 
 using namespace treyarch;
 
@@ -1340,8 +1344,8 @@ i32 player_interface::unk_273(void* unk) {
 }
 
 // slot 274
-bool player_interface::unk_274(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_9923E0)(this, unk);
+bool player_interface::should_pick_up_ai(f32 delta_t) {
+    return ((bool (__thiscall*)(player_interface*, f32))retail::sub_9923E0)(this, delta_t);
 }
 
 // slot 275
@@ -1354,14 +1358,30 @@ void* player_interface::unk_276(void* unk) {
     return ((void* (__thiscall*)(player_interface*, void*))retail::sub_71FCA0)(this, unk);
 }
 
-// slot 277
-bool player_interface::unk_277(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_9925A0)(this, unk);
+// sub_9925A0
+bool player_interface::unk_277(ai_core* core) {
+    auto* action_proc = (ai_action_processor_inode*)core->get_info_node(info_node_type_ai_action_processor);
+
+    if (action_proc->has_actions())
+        return false;
+
+    auto* carry = (std_carry_inode*)core->get_info_node(info_node_type_std_carry);
+
+    if (!carry || !carry->desired_slave)
+        return false;
+
+    auto* action = new pick_up_ai_action(core);
+    action->setup(carry->desired_slave);
+
+    action_proc->add_action(action);
+    carry->desired_slave = nullptr;
+
+    return true;
 }
 
 // slot 278
-bool player_interface::unk_278(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_9926D0)(this, unk);
+bool player_interface::unk_278(f32 delta_t) {
+    return ((bool (__thiscall*)(player_interface*, f32))retail::sub_9926D0)(this, delta_t);
 }
 
 // slot 279
@@ -1375,8 +1395,8 @@ void* player_interface::unk_280(void* unk) {
 }
 
 // slot 281
-bool player_interface::unk_281(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_992800)(this, unk);
+bool player_interface::unk_281(ai_core* core) {
+    return ((bool (__thiscall*)(player_interface*, ai_core*))retail::sub_992800)(this, core);
 }
 
 // slot 282

@@ -3,6 +3,7 @@
 #include "game/wds/ai/info_node.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
+#include "treyarch/mash/vector_basic.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "game/mutex.hh"
@@ -10,6 +11,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_action_nugget;
     class entity;
 
     // SM3's eAIWeaponState
@@ -67,10 +69,16 @@ namespace treyarch {
                          vector3d           position);
     };
 
+    // runs its core's actions
     class ai_action_processor_inode : public info_node {
 
     public:
-        u8 reserved_030[0x18];
+        mash::vector_basic<ai_action_nugget*>* m_active_actions_list; // null while it has none
+        u8                                     reserved_034[0x04];
+        engine_recursive_lock                  lock;
+
+        string_hash add_action(ai_action_nugget* my_action); // returns the action's id
+        bool        has_actions() const;
     };
 
     // one hand's weapons
@@ -106,8 +114,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_weapon, name,          0x20);
     ASSERT_OFFSETOF(ai_weapon, enabled,       0x7C);
 
-    ASSERT_SIZEOF(ai_action_processor_inode, 0x48);
-    ASSERT_SIZEOF(ai_weapon_set,             0x50);
+    ASSERT_SIZEOF  (ai_action_processor_inode,                       0x48);
+    ASSERT_OFFSETOF(ai_action_processor_inode, m_active_actions_list, 0x30);
+    ASSERT_OFFSETOF(ai_action_processor_inode, lock,                  0x38);
+
+    ASSERT_SIZEOF(ai_weapon_set, 0x50);
 
     ASSERT_SIZEOF  (ai_weapon_inode,                  0xE8);
     ASSERT_OFFSETOF(ai_weapon_inode, weapon_lock,     0x48);

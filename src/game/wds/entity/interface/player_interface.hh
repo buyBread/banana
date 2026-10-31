@@ -332,14 +332,14 @@ namespace treyarch {
         virtual bool              unk_271();
         virtual bool              unk_272();
         virtual i32               unk_273(void* unk);
-        virtual bool              unk_274(i32 unk);
+        virtual bool              should_pick_up_ai(f32 delta_t);
         virtual bool              unk_275(i32 unk);
         virtual void*             unk_276(void* unk);
-        virtual bool              unk_277(i32 unk);
-        virtual bool              unk_278(i32 unk);
+        virtual bool              unk_277(ai_core* core);              // queues a pick up of the core's desired slave
+        virtual bool              unk_278(f32 delta_t);
         virtual bool              unk_279(i32 unk);
         virtual void*             unk_280(void* unk);
-        virtual bool              unk_281(i32 unk);
+        virtual bool              unk_281(ai_core* core);
         virtual bool              unk_282(ai_core* core);              // drops what the core's carry inode holds
         virtual bool              unk_283(i32 unk);
         virtual bool              unk_284();

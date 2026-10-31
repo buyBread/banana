@@ -348,8 +348,9 @@ namespace treyarch {
         // "BIP01 R CLAVICLE", where a carried actor hangs without a carry_bone
         inline util::memory_reference<string_hash> bip01_r_clavicle { 0x01003470 };
 
-        // the event a picked up actor raises
-        inline util::memory_reference<string_hash> picked_up { 0x0102CC3C };
+        // the events a picked up actor raises, as the pick up begins and once it's carried
+        inline util::memory_reference<string_hash> begin_pick_up { 0x0102CB48 };
+        inline util::memory_reference<string_hash> picked_up     { 0x0102CC3C };
     } // references
 
     class std_carry_inode : public info_node {

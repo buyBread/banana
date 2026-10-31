@@ -34,9 +34,21 @@ bool ai_weapon::fire(entity*            shooter,
     return fire_weapon_entity(shooter, weapon->weapon_entity.resolve()->my_handle, kind, if_empty, target, position);
 }
 
+string_hash ai_action_processor_inode::add_action(ai_action_nugget* my_action) {
+    string_hash id;
+
+    ((string_hash* (__thiscall*)(ai_action_processor_inode*, string_hash*, ai_action_nugget*))retail::sub_4BAAB0)(this, &id, my_action);
+
+    return id;
+}
+
+bool ai_action_processor_inode::has_actions() const {
+    return retail::sub_48E970((u32*)this);
+}
+
 // sub_4E7C20
 e_ai_weapon_state ai_weapon_inode::get_hand_state(i32 hand) {
-    engine_lock_scope lock(&weapon_lock);
+    engine_lock_scope scope(&weapon_lock);
 
     ai_weapon* weapon = drawn_weapon[hand];
 
@@ -45,7 +57,7 @@ e_ai_weapon_state ai_weapon_inode::get_hand_state(i32 hand) {
 
 // sub_4E7D50
 ai_weapon* ai_weapon_inode::get_drawn_weapon(i32 hand) {
-    engine_lock_scope lock(&weapon_lock);
+    engine_lock_scope scope(&weapon_lock);
 
     ai_weapon* weapon = drawn_weapon[hand];
 

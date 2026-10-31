@@ -195,6 +195,7 @@ namespace treyarch {
         bool attempt_to_engage_slave_mode(arch_base_vhandle new_master, als::layer_id desired_als_layer);
 
         // inlined @ sub_4BEA10
+        // inlined @ sub_4A1DA0
         bool is_in_slave_mode() const {
             return (flags & ai_core_flag_slave_mode) != 0;
         }
