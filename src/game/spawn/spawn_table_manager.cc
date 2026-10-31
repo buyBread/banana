@@ -1456,3 +1456,101 @@ bool spawn_table_manager::get_nearest_quest_giver_restart_position(vector3d* pos
 
     return true;
 }
+
+// sub_951CB0
+void spawn_table_manager::start_persistence_data_save(chuck::vm::script_instance* inst, f32 number) { // a block already open for the instance is dropped, not freed
+    void* storage = mm::allocate(sizeof(persistence_data));
+
+    unk_04c->saved_persistence_data[inst->name]         = storage ? new (storage) persistence_data : nullptr;
+    unk_04c->saved_persistence_data[inst->name]->unk_00 = number;
+}
+
+// sub_9391B0
+void spawn_table_manager::end_persistence_data_save(chuck::vm::script_instance* inst) { // the block goes to the instance's recent despawn; without one it stays open
+    for (recent_despawn** it = unk_04c->recent_despawns.begin(); it != unk_04c->recent_despawns.end(); ++it)
+        if ((*it)->instance_name == inst->name) {
+            // the find isn't checked
+            auto* saved = unk_04c->saved_persistence_data.find(inst->name);
+
+            (*it)->persistence = saved->value.second;
+
+            unk_04c->saved_persistence_data.erase(saved);
+
+            return;
+        }
+}
+
+// sub_93FB10
+void spawn_table_manager::save_persistence_vector3d(chuck::vm::script_instance* inst, mash::string name, vector3d value) {
+    auto* record = new persistence_vector3d;
+
+    record->value = value;
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_949D40
+void spawn_table_manager::save_persistence_vector3d_array(chuck::vm::script_instance*                inst,
+                                                          mash::string                               name,
+                                                          chuck::vm::script_dynamic_array<vector3d>* values) {
+
+    auto* record = new persistence_vector3d_array;
+
+    for (auto* it = values->array->begin(); it != values->array->end(); ++it)
+        record->values.push_back(*(vector3d*)it->stuff);
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_93FC10
+void spawn_table_manager::save_persistence_str(chuck::vm::script_instance* inst, mash::string name, mash::string value) {
+    auto* record = new persistence_str;
+
+    record->value = value;
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_951D80
+void spawn_table_manager::save_persistence_str_array(chuck::vm::script_instance*           inst,
+                                                     mash::string                          name,
+                                                     chuck::vm::script_dynamic_array<u32>* values) {
+
+    auto* record = new persistence_str_array;
+
+    for (auto* it = values->array->begin(); it != values->array->end(); ++it)
+        record->values.push_back(mash::string(*(const char**)it->stuff));
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_93FCD0
+void spawn_table_manager::save_persistence_num(chuck::vm::script_instance* inst, mash::string name, f32 value) {
+    auto* record = new persistence_num;
+
+    record->value = value;
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_949E70
+void spawn_table_manager::save_persistence_num_array(chuck::vm::script_instance*           inst,
+                                                     mash::string                          name,
+                                                     chuck::vm::script_dynamic_array<f32>* values) {
+
+    auto* record = new persistence_num_array;
+
+    for (auto* it = values->array->begin(); it != values->array->end(); ++it)
+        record->values.push_back(*(f32*)it->stuff);
+
+    unk_04c->saved_persistence_data[inst->name]->records[name] = record;
+}
+
+// sub_93FD70
+persistence_data_base* spawn_table_manager::find_persistence_data(chuck::vm::script_instance* inst, mash::string name) { // a name the block lacks is added to it as null
+    for (auto* node = unk_04c->active_persistence_data.begin(); node != unk_04c->active_persistence_data.end(); node = node->next())
+        if (node->value.first->has_instance(inst))
+            return node->value.second->records[name];
+
+    return nullptr;
+}

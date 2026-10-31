@@ -1,14 +1,17 @@
 #pragma once
 
+#include <cstddef>
+
 #include "vc8/map.hh"
 #include "vc8/vector.hh"
 #include "treyarch/mash/string.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/math/algebra.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    // a script's saved value; the records are only ever made by retail, so these never run their own vtable
+    // a script's saved value
     class persistence_data_base {
 
     public:
@@ -24,43 +27,95 @@ namespace treyarch {
         // sub_71F870
         virtual bool is_num() const { return false; }
 
-        virtual ~persistence_data_base();
+        // sub_920910
+        virtual ~persistence_data_base() {}
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        // inlined into the deleting destructors
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
     };
 
     class persistence_num : public persistence_data_base {
 
     public:
         f32 value;
+
+        // sub_667F80
+        bool is_num() const override { return true; }
     };
 
     class persistence_str : public persistence_data_base {
 
     public:
         mash::string value;
+
+        // sub_90F8A0
+        persistence_str() {}
+
+        // sub_920930
+        ~persistence_str() {}
+
+        // sub_667F80
+        bool is_str() const override { return true; }
     };
 
     class persistence_vector3d : public persistence_data_base {
 
     public:
         vector3d value;
+
+        // sub_667F80
+        bool is_vector3d() const override { return true; }
     };
 
     class persistence_num_array : public persistence_data_base {
 
     public:
         vc8::vector<f32> values;
+
+        // sub_93FBC0
+        ~persistence_num_array() {}
+
+        // sub_667F80
+        bool is_array() const override { return true; }
+
+        // sub_667F80
+        bool is_num() const override { return true; }
     };
 
     class persistence_str_array : public persistence_data_base {
 
     public:
         vc8::vector<mash::string> values;
+
+        // sub_949E10
+        ~persistence_str_array() {}
+
+        // sub_667F80
+        bool is_array() const override { return true; }
+
+        // sub_667F80
+        bool is_str() const override { return true; }
     };
 
     class persistence_vector3d_array : public persistence_data_base {
 
     public:
         vc8::vector<vector3d> values;
+
+        // sub_93FBC0
+        ~persistence_vector3d_array() {}
+
+        // sub_667F80
+        bool is_array() const override { return true; }
+
+        // sub_667F80
+        bool is_vector3d() const override { return true; }
     };
 
     // one script instance's saved values, by the name each was saved under

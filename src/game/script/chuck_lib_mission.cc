@@ -1222,7 +1222,7 @@ bool slf__start_persistence_data_save__num__t::operator()(chuck::vm::vm_stack &s
     stack.sp -= 0x04;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        retail::sub_951CB0((u32*)spawn_table_manager::inst(), (u32*)stack.thread->inst, stack.local_num(0x00));
+        spawn_table_manager::inst()->start_persistence_data_save(stack.thread->inst, stack.local_num(0x00));
 
     return true;
 }
@@ -1231,14 +1231,10 @@ bool slf__start_persistence_data_save__num__t::operator()(chuck::vm::vm_stack &s
 bool slf__save_persistence_vector3d__str__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x10;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using save_vector3d_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, vector3d);
-
-        ((save_vector3d_t)retail::sub_93FB10)(spawn_table_manager::inst(),
-                                              stack.thread->inst,
-                                              mash::string((const char*)stack.local_uint(0x00)),
-                                              *(vector3d*)&stack.local_uint(0x04));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->save_persistence_vector3d(stack.thread->inst,
+                                                               mash::string((const char*)stack.local_uint(0x00)),
+                                                               *(vector3d*)&stack.local_uint(0x04));
 
     return true;
 }
@@ -1250,12 +1246,7 @@ bool slf__save_persistence_vector3d_array__str__dynamic_array__t::operator()(chu
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<vector3d> vectors((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using save_vector3d_array_t = void (__thiscall*)(spawn_table_manager*,
-                                                         chuck::vm::script_instance*,
-                                                         mash::string,
-                                                         chuck::vm::script_dynamic_array<vector3d>*);
-
-        ((save_vector3d_array_t)retail::sub_949D40)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &vectors);
+        spawn_table_manager::inst()->save_persistence_vector3d_array(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &vectors);
     }
 
     return true;
@@ -1268,9 +1259,7 @@ bool slf__get_persistence_vector3d__str__t::operator()(chuck::vm::vm_stack &stac
     vector3d value;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        auto* record = (persistence_vector3d*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        auto* record = (persistence_vector3d*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         value = record->value;
     }
@@ -1287,9 +1276,7 @@ bool slf__get_persistence_vector3d_array__str__dynamic_array__t::operator()(chuc
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    auto* record = (persistence_vector3d_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    auto* record = (persistence_vector3d_array*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     chuck::vm::script_dynamic_array<vector3d> vectors((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
@@ -1307,14 +1294,10 @@ bool slf__get_persistence_vector3d_array__str__dynamic_array__t::operator()(chuc
 bool slf__save_persistence_str__str__str__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x08;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using save_str_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, mash::string);
-
-        ((save_str_t)retail::sub_93FC10)(spawn_table_manager::inst(),
-                                         stack.thread->inst,
-                                         mash::string((const char*)stack.local_uint(0x00)),
-                                         mash::string((const char*)stack.local_uint(0x04)));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->save_persistence_str(stack.thread->inst,
+                                                          mash::string((const char*)stack.local_uint(0x00)),
+                                                          mash::string((const char*)stack.local_uint(0x04)));
 
     return true;
 }
@@ -1326,12 +1309,7 @@ bool slf__save_persistence_str_array__str__dynamic_array__t::operator()(chuck::v
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<u32> strings((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using save_str_array_t = void (__thiscall*)(spawn_table_manager*,
-                                                    chuck::vm::script_instance*,
-                                                    mash::string,
-                                                    chuck::vm::script_dynamic_array<u32>*);
-
-        ((save_str_array_t)retail::sub_951D80)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &strings);
+        spawn_table_manager::inst()->save_persistence_str_array(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &strings);
     }
 
     return true;
@@ -1344,9 +1322,7 @@ bool slf__get_persistence_str__str__t::operator()(chuck::vm::vm_stack &stack) {
     const char* value = "";
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        auto* record = (persistence_str*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        auto* record = (persistence_str*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         // the record's own characters, not a thread string
         value = record->value.c_str();
@@ -1364,9 +1340,7 @@ bool slf__get_persistence_str_array__str__dynamic_array__t::operator()(chuck::vm
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    auto* record = (persistence_str_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    auto* record = (persistence_str_array*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     chuck::vm::script_dynamic_array<u32> strings((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
@@ -1385,14 +1359,10 @@ bool slf__get_persistence_str_array__str__dynamic_array__t::operator()(chuck::vm
 bool slf__save_persistence_num__str__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x08;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using save_num_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, f32);
-
-        ((save_num_t)retail::sub_93FCD0)(spawn_table_manager::inst(),
-                                         stack.thread->inst,
-                                         mash::string((const char*)stack.local_uint(0x00)),
-                                         stack.local_num(0x04));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->save_persistence_num(stack.thread->inst,
+                                                          mash::string((const char*)stack.local_uint(0x00)),
+                                                          stack.local_num(0x04));
 
     return true;
 }
@@ -1404,12 +1374,7 @@ bool slf__save_persistence_num_array__str__dynamic_array__t::operator()(chuck::v
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using save_num_array_t = void (__thiscall*)(spawn_table_manager*,
-                                                    chuck::vm::script_instance*,
-                                                    mash::string,
-                                                    chuck::vm::script_dynamic_array<f32>*);
-
-        ((save_num_array_t)retail::sub_949E70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &nums);
+        spawn_table_manager::inst()->save_persistence_num_array(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)), &nums);
     }
 
     return true;
@@ -1422,9 +1387,7 @@ bool slf__get_persistence_num__str__t::operator()(chuck::vm::vm_stack &stack) {
     f32 value = -1.0f;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        auto* record = (persistence_num*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        auto* record = (persistence_num*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         value = record->value;
     }
@@ -1441,9 +1404,7 @@ bool slf__get_persistence_num_array__str__dynamic_array__t::operator()(chuck::vm
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_persistence_data_t = persistence_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    auto* record = (persistence_num_array*)((find_persistence_data_t)retail::sub_93FD70)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    auto* record = (persistence_num_array*)spawn_table_manager::inst()->find_persistence_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
@@ -1460,7 +1421,7 @@ bool slf__get_persistence_num_array__str__dynamic_array__t::operator()(chuck::vm
 // sub_83E780
 bool slf__end_persistance_data_save__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        retail::sub_9391B0((u32*)spawn_table_manager::inst(), (u32*)stack.thread->inst);
+        spawn_table_manager::inst()->end_persistence_data_save(stack.thread->inst);
 
     return true;
 }

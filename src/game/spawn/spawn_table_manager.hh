@@ -234,6 +234,23 @@ namespace treyarch {
         bool is_spidey_near_quest_giver(f32 radius);
         bool get_nearest_quest_giver_restart_position(vector3d* position, vector3d* facing);
 
+        // the savers fill the instance's open block, the getters read the block its active got back
+        void                   start_persistence_data_save(chuck::vm::script_instance* inst, f32 number);
+        void                   end_persistence_data_save(chuck::vm::script_instance* inst);
+        void                   save_persistence_vector3d(chuck::vm::script_instance* inst, mash::string name, vector3d value);
+        void                   save_persistence_vector3d_array(chuck::vm::script_instance*                inst,
+                                                               mash::string                               name,
+                                                               chuck::vm::script_dynamic_array<vector3d>* values);
+        void                   save_persistence_str(chuck::vm::script_instance* inst, mash::string name, mash::string value);
+        void                   save_persistence_str_array(chuck::vm::script_instance*           inst,
+                                                          mash::string                          name,
+                                                          chuck::vm::script_dynamic_array<u32>* values);
+        void                   save_persistence_num(chuck::vm::script_instance* inst, mash::string name, f32 value);
+        void                   save_persistence_num_array(chuck::vm::script_instance*           inst,
+                                                          mash::string                          name,
+                                                          chuck::vm::script_dynamic_array<f32>* values);
+        persistence_data_base* find_persistence_data(chuck::vm::script_instance* inst, mash::string name);
+
     private:
         cross_neighborhood_spawn* find_cross_neighborhood_spawn(chuck::vm::script_instance* inst);
 
