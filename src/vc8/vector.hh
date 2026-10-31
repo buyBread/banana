@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstring>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #include "treyarch/mm/mm.hh"
@@ -212,11 +214,18 @@ namespace treyarch { namespace vc8 {
             }
         }
 
+        // inlined @ sub_6E77C0
         T* erase(T* position) noexcept {
             T* result = position;
 
-            for (T* next = position + 1; next != last; ++position, ++next)
-                *position = std::move(*next);
+            if constexpr (std::is_scalar_v<T>) {
+                i32 count = (i32)(last - (position + 1));
+
+                if (count > 0)
+                    memmove_s(position, count * sizeof(T), position + 1, count * sizeof(T));
+            } else
+                for (T* next = position + 1; next != last; ++position, ++next)
+                    *position = std::move(*next);
 
             --last;
             last->~T();
