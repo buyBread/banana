@@ -30,7 +30,8 @@ namespace treyarch {
         u32                  my_flags;
         u8                   reserved_01c[0x50];
         f32                  my_max_speed;
-        u8                   reserved_070[0x10];
+        f32                  speed_modifier;
+        u8                   reserved_074[0x0C];
         bool                 my_purpose_done;
         u8                   pad_081[0x03];
         e_ai_vehicle_purpose my_purpose;
@@ -162,6 +163,7 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(ai_vehicle_inode, my_flags,          0x18);
     ASSERT_OFFSETOF(ai_vehicle_inode, my_max_speed,      0x6C);
+    ASSERT_OFFSETOF(ai_vehicle_inode, speed_modifier,    0x70);
     ASSERT_OFFSETOF(ai_vehicle_inode, my_purpose_done,   0x80);
     ASSERT_OFFSETOF(ai_vehicle_inode, my_purpose,        0x84);
     ASSERT_OFFSETOF(ai_vehicle_inode, my_purpose_entity, 0x88);

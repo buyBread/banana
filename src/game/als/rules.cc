@@ -3,6 +3,7 @@
 #include "game/als/rules.hh"
 #include "game/als/state_machine.hh"
 #include "game/game.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_simple_target.hh"
 #include "game/wds/ai/info_node.hh"
@@ -366,9 +367,6 @@ string_hash als::get_ifc_hash_param(entity* owner, string_hash ifc, string_hash 
 
 // sub_5BDC00
 ai_core* als::get_target_ai_core(actor* the_actor) {
-    using has_target_t = bool              (__thiscall*)(info_node*, u32);
-    using get_target_t = ai_simple_target* (__thiscall*)(info_node*, u32);
-
     if (!the_actor)
         return nullptr;
 
@@ -382,9 +380,9 @@ ai_core* als::get_target_ai_core(actor* the_actor) {
             return ((actor*)target)->get_ai_core();
     }
 
-    if (info_node* basic = the_actor->get_ai_core()->get_info_node(info_node_type_ai_basic)) {
-        if (((has_target_t)retail::sub_4EF830)(basic, 2)) {
-            ai_simple_target* record = ((get_target_t)retail::sub_4F24E0)(basic, 2);
+    if (auto basic = (ai_basic_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_ai_basic)) {
+        if (basic->get_target_type(2)) {
+            ai_simple_target* record = basic->get_target(2);
 
             if (record && record->get_type() == simple_target_type_entity) {
                 arch_base* target = ((ai_simple_target_entity*)record)->resolve();

@@ -146,7 +146,7 @@ namespace treyarch {
         bool                         new_goto_request;
         bool                         using_pathed_goto;
         u8                           reserved_092[0x1A];
-        u32                          unk_0ac;               // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
+        u32                          unk_0ac;               // on a swift surface layer, the als's ai_locomotion_mode reads bit 1 and rvb_is_crawling 0x20
 
         // inlined @ sub_84EBB0
         void set_loco_als_category(string_hash cat) {
@@ -222,7 +222,11 @@ namespace treyarch {
     class ai_car_inode : public info_node {
 
     public:
-        u8 reserved_030[0x70];
+        u8   reserved_030[0x50];
+        i32  selected_seat;
+        u8   reserved_084[0x14];
+        bool is_in_car;
+        u8   reserved_099[0x07];
 
         bool force_enter_car(arch_base_vhandle car, i32 seat, bool animate);
         bool force_exit_car (bool animate);
@@ -436,7 +440,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(aim_util_inode, flags,             0x030);
     ASSERT_OFFSETOF(aim_util_inode, target_to_look_at, 0x5C0);
 
-    ASSERT_SIZEOF(ai_car_inode, 0xA0);
+    ASSERT_SIZEOF  (ai_car_inode,                0xA0);
+    ASSERT_OFFSETOF(ai_car_inode, selected_seat, 0x80);
+    ASSERT_OFFSETOF(ai_car_inode, is_in_car,     0x98);
 
     ASSERT_SIZEOF  (std_puppet_inode,                    0x60);
     ASSERT_OFFSETOF(std_puppet_inode, slaves,            0x30);

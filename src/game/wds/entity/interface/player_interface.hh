@@ -42,9 +42,17 @@ namespace treyarch {
         player_interface_advance_method frame_advance_disabled; // sub_992120; clears input/swing state, ignores delta_t
         player_interface_advance_method unk_094;                // nullsub in player_interface; spiderman_rvb_player_interface overrides it
         vector3d*                       (__thiscall* unk_095)(player_interface* self); // its own +0x2F0; the als takes it as a player's velocity
-        void*                           reserved_slots_096[24];
+        void*                           reserved_slots_096[6];
+        bool                            (__thiscall* unk_102)(player_interface* self); // rvb_is_crawling asks 102..106 and 138 after crawling
+        bool                            (__thiscall* unk_103)(player_interface* self);
+        bool                            (__thiscall* unk_104)(player_interface* self);
+        bool                            (__thiscall* unk_105)(player_interface* self);
+        bool                            (__thiscall* unk_106)(player_interface* self);
+        void*                           reserved_slots_107[13];
         bool                            (__thiscall* crawling)(const player_interface* self);
-        void*                           reserved_slots_121[19];
+        void*                           reserved_slots_121[17];
+        bool                            (__thiscall* unk_138)(player_interface* self);
+        void*                           reserved_slots_139[1];
         player_interface_method         unk_140;                // the snap and translate natives call it after a move
         void*                           reserved_slots_141[7];
         f32                             (__thiscall* unk_148)(player_interface* self); // the als's active_jump_charge
@@ -174,8 +182,32 @@ namespace treyarch {
             return get_vtable()->unk_095(this);
         }
 
+        bool unk_102() {
+            return get_vtable()->unk_102(this);
+        }
+
+        bool unk_103() {
+            return get_vtable()->unk_103(this);
+        }
+
+        bool unk_104() {
+            return get_vtable()->unk_104(this);
+        }
+
+        bool unk_105() {
+            return get_vtable()->unk_105(this);
+        }
+
+        bool unk_106() {
+            return get_vtable()->unk_106(this);
+        }
+
         bool crawling() const {
             return get_vtable()->crawling(this);
+        }
+
+        bool unk_138() {
+            return get_vtable()->unk_138(this);
         }
 
         void unk_140() {

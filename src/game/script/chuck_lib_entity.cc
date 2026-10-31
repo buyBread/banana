@@ -763,7 +763,7 @@ bool slf__entity__rvb_set_target__num__entity__t::operator()(chuck::vm::vm_stack
 
     // the target resolves once for the test and again for the call
     if (self && target.resolve())
-        ((void (__cdecl*)(arch_base*, i32, arch_base*))retail::sub_4CB190)(self, (i32)slot, target.resolve()); // rvb_set_target
+        rvb_set_target(self, (u32)(i32)slot, target.resolve());
 
     return true;
 }
@@ -777,7 +777,7 @@ bool slf__entity__rvb_set_target__num__vector3d__t::operator()(chuck::vm::vm_sta
     auto position = (const vector3d*)&stack.local_uint(0x08);
 
     if (self)
-        ((void (__cdecl*)(arch_base*, i32, vector3d))retail::sub_4CB1C0)(self, (i32)slot, *position); // rvb_set_target
+        rvb_set_target(self, (u32)(i32)slot, *position);
 
     return true;
 }
@@ -790,7 +790,7 @@ bool slf__entity__rvb_has_target__num__t::operator()(chuck::vm::vm_stack &stack)
     auto slot = stack.local_num(0x04);
 
     // the target's type, 0 without one
-    f32 result = self ? (f32)((i32 (__cdecl*)(arch_base*, i32))retail::sub_4CB220)(self, (i32)slot) : 0.0f; // rvb_has_target
+    f32 result = self ? (f32)rvb_has_target(self, (u32)(i32)slot) : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -840,7 +840,7 @@ bool slf__entity__rvb_disable_tether__t::operator()(chuck::vm::vm_stack &stack) 
     auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self)
-        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB200)(self, 5); // rvb_clear_target, on the tether's slot;
+        rvb_clear_target(self, 5); // the tether's slot
 
     return true;
 }
@@ -853,7 +853,7 @@ bool slf__entity__rvb_clear_target__num__t::operator()(chuck::vm::vm_stack &stac
     auto slot = stack.local_num(0x04);
 
     if (self)
-        ((void (__cdecl*)(arch_base*, i32))retail::sub_4CB200)(self, (i32)slot); // rvb_clear_target
+        rvb_clear_target(self, (i32)slot);
 
     return true;
 }
@@ -869,7 +869,7 @@ bool slf__entity__rvb_set_machine__num__str__t::operator()(chuck::vm::vm_stack &
     if (self) {
         mash::string name(machine);
 
-        ((void (__cdecl*)(arch_base*, u32, const char*))retail::sub_4CB420)(self, (u32)(i32)slot, name.c_str()); // rvb_set_machine
+        rvb_set_machine(self, (u32)(i32)slot, name.c_str());
     }
 
     return true;
@@ -887,7 +887,7 @@ bool slf__entity__rvb_clear_machine__num__str__t::operator()(chuck::vm::vm_stack
         // built and dropped unread
         mash::string name(machine);
 
-        ((void (__cdecl*)(arch_base*, u32))retail::sub_4CB460)(self, (u32)(i32)slot); // rvb_clear_machine
+        rvb_clear_machine(self, (u32)(i32)slot);
     }
 
     return true;
@@ -1181,7 +1181,7 @@ bool slf__entity__rvb_is_crawling__t::operator()(chuck::vm::vm_stack &stack) {
 
     auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    f32 result = self && ((bool (__cdecl*)(arch_base*))retail::sub_4C7590)(self) ? 1.0f : 0.0f; // rvb_is_crawling
+    f32 result = self && rvb_is_crawling(self) ? 1.0f : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -1321,7 +1321,7 @@ bool slf__entity__rvb_set_speed_modifier__num__t::operator()(chuck::vm::vm_stack
     auto modifier = stack.local_num(0x04);
 
     if (self)
-        ((void (__cdecl*)(arch_base*, f32))retail::sub_4C4B30)(self, modifier); // rvb_set_speed_modifier
+        rvb_set_speed_modifier(self, modifier);
 
     return true;
 }
@@ -1335,7 +1335,7 @@ bool slf__entity__rvb_get_animation_coordinator__t::operator()(chuck::vm::vm_sta
     arch_base_vhandle result;
 
     if (self)
-        ((arch_base_vhandle* (__cdecl*)(arch_base_vhandle*, arch_base*))retail::sub_4C77E0)(&result, self); // rvb_get_animation_coordinator
+        result = rvb_get_animation_coordinator(self);
 
     stack.push(&result, sizeof(result));
 
@@ -7452,7 +7452,7 @@ bool slf__entity__get_car_seat__t::operator()(chuck::vm::vm_stack &stack) {
     i32 seat = -1;
 
     if (self && self->is_an_actor())
-        seat = retail::sub_4CB950((i32)self); // get_car_seat
+        seat = get_car_seat(self);
 
     f32 result = (f32)seat;
 

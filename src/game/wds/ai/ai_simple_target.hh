@@ -3,15 +3,20 @@
 #include "game/arch_base_vhandle.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "vc8/vector.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
     enum e_simple_target_type : i32 {
-        simple_target_type_none     = 0, // dropped wherever an inode finds it
-        simple_target_type_entity   = 1,
-        simple_target_type_location = 2
+        simple_target_type_none              = 0, // dropped wherever an inode finds it
+        simple_target_type_entity            = 1,
+        simple_target_type_location          = 2,
+        simple_target_type_collection        = 3,
+        simple_target_type_patrol            = 4,
+        simple_target_type_waypoint_entity   = 5,
+        simple_target_type_waypoint_location = 6
     };
 
     namespace references {
@@ -56,6 +61,7 @@ namespace treyarch {
         }
 
         // sub_44F9D0
+        // inlined @ sub_4F2620
         arch_base* resolve() const { // asks the handle twice
             return target.resolve() ? target.resolve() : nullptr;
         }
@@ -72,8 +78,23 @@ namespace treyarch {
         }
     };
 
+    // ai_basic_inode's is an ai_simple_target_patrol
+    class ai_simple_target_collection : public ai_simple_target {
+
+    public:
+        vc8::vector<ai_simple_target*> targets;
+        u32                            unk_014;
+        i32                            current; // below 0 with none current
+
+        i32  prune(); // drops every none target, answers how many are left
+        void clear();
+    };
+
     ASSERT_SIZEOF  (ai_simple_target_entity,           0x08);
     ASSERT_OFFSETOF(ai_simple_target_entity, target,   0x04);
     ASSERT_SIZEOF  (ai_simple_target_location,         0x10);
     ASSERT_OFFSETOF(ai_simple_target_location, point,  0x04);
+
+    ASSERT_OFFSETOF(ai_simple_target_collection, targets, 0x04);
+    ASSERT_OFFSETOF(ai_simple_target_collection, current, 0x18);
 } // treyarch

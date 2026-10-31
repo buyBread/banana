@@ -10,6 +10,7 @@
 #include "game/physics/rigid_body_prop_system.hh"
 #include "game/script/chuck_lib_entity.hh"
 #include "game/script/chuck_lib_entity2.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/info_node.hh"
@@ -96,6 +97,45 @@ bool slf__rvb_find_entities_in_radius__dynamic_array__vector3d__num__num__t::ope
     return true;
 }
 
+// sub_8404F0
+entity* treyarch::get_vehicle_of_seated_actor(entity* the_entity) {
+    if (!the_entity || !the_entity->my_parent)
+        return nullptr;
+
+    ai_basic_inode* inode = get_ai_basic_inode_if_slim_actor(the_entity);
+
+    if (!inode || !inode->get_flag(ai_flag_currently_in_car))
+        return nullptr;
+
+    auto vehicle = (entity*)the_entity->my_parent->my_handle.resolve();
+
+    if (!vehicle)
+        return nullptr;
+
+    if (vehicle->flags & entity_flag_member)
+        vehicle = (entity*)retail::sub_601910((u32*)vehicle); // entity_base::get_attach_root
+
+    if (!vehicle || !vehicle->is_a_vehicle())
+        return nullptr;
+
+    return vehicle;
+}
+
+// sub_840570
+entity* treyarch::get_vehicle_of_ai_target(entity* the_entity) {
+    if (!the_entity || !the_entity->is_an_actor() || !((actor*)the_entity)->get_ai_core())
+        return nullptr;
+
+    auto inode = (ai_basic_inode*)((actor*)the_entity)->get_ai_core()->get_info_node(info_node_type_ai_basic);
+
+    if (inode->get_target_type(23) != simple_target_type_entity)
+        return nullptr;
+
+    auto vehicle = (entity*)inode->get_target_entity(23);
+
+    return vehicle->is_a_vehicle() ? vehicle : nullptr;
+}
+
 // sub_87A650
 bool slf__rvb_find_cop_patrol_dude__vector3d__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x18;
@@ -138,20 +178,11 @@ bool slf__rvb_find_cop_patrol_dude__vector3d__num__num__num__t::operator()(chuck
             bool    in_vehicle = false;
             entity* vehicle;
 
-            if (candidate->is_an_actor() && retail::sub_4CB950((i32)candidate) != -1) { // get_car_seat
+            if (candidate->is_an_actor() && get_car_seat(candidate) != -1) {
                 in_vehicle = true;
-
-                __asm {
-                    mov  eax, candidate
-                    call retail::sub_8404F0
-                    mov  vehicle, eax
-                }
+                vehicle    = get_vehicle_of_seated_actor(candidate);
             } else {
-                __asm {
-                    mov  eax, candidate
-                    call retail::sub_840570
-                    mov  vehicle, eax
-                }
+                vehicle = get_vehicle_of_ai_target(candidate);
 
                 if (vehicle)
                     in_vehicle = true;

@@ -9,6 +9,12 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class entity;
+
+    // what rvb_find_cop_patrol_dude asks of each candidate
+    entity* get_vehicle_of_seated_actor(entity* the_entity); // a slim actor's parent while it's in a car
+    entity* get_vehicle_of_ai_target   (entity* the_entity); // an actor's slot 23 target
+
     class slc_player_entity_t : public chuck::script_library::script_library_class {
 
     public:
