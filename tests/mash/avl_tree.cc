@@ -170,7 +170,7 @@ TEST_SUITE("mash") {
         }
 
         // teardown clears out each node's children before the node itself, so 1 and 3 go before 2.
-        // everything lives in the image, so nothing is freed.
+        // everything lives in the image, so nothing is freed; the image offset is left as it was.
         tree->destruct_mashed_class();
 
         REQUIRE(trace.events.size() == 9);
@@ -180,7 +180,7 @@ TEST_SUITE("mash") {
         CHECK(trace.events[8].id == 2);
         CHECK(tree->root_node == nullptr);
         CHECK(tree->size == 0);
-        CHECK(tree->mash_image_offset == 0);
+        CHECK(tree->mash_image_offset == element_offset(2) + 8 - tree_offset);
         CHECK(root->element == nullptr);
         CHECK(allocations.empty());
         CHECK(frees.empty());
