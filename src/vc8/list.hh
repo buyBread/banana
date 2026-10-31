@@ -104,14 +104,16 @@ namespace treyarch { namespace vc8 {
             return insert_before(sentinel, value);
         }
 
-        node* erase(node* position) noexcept {
+        node* erase(node* position) noexcept { // the sentinel is left alone
             node* next = position->next;
 
-            position->previous->next = position->next;
-            position->next->previous = position->previous;
-            position->value.~T();
-            mm::free(position);
-            --count;
+            if (position != sentinel) {
+                position->previous->next = position->next;
+                position->next->previous = position->previous;
+                position->value.~T();
+                mm::free(position);
+                --count;
+            }
 
             return next;
         }
