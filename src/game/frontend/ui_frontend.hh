@@ -6,6 +6,7 @@
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/igo/igo_3d_agility_test.hh"
 #include "game/frontend/igo/igo_3d_boss_meter_system.hh"
+#include "game/frontend/igo/igo_3d_buddy_summon_widget.hh"
 #include "game/frontend/igo/igo_3d_button_tips.hh"
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
 #include "game/frontend/igo/igo_3d_generic_meter_widget.hh"
@@ -92,6 +93,23 @@ namespace treyarch {
         inline util::memory_reference<string_hash> senses_exited { 0x0102C48C };
     } // references
 
+    // the ally meter at ui_frontend +0x1ac
+    class ally_health_widget_t : public igo_3d_widget {
+
+    public:
+        u8                reserved_150[0x48];
+        f32               value;
+        f32               drop_from;          // the value a drop started from
+        bool              dropping;           // a drop latches drop_from, a rise or a drop to 0 resets it
+        u8                reserved_1a1[0x1F];
+        arch_base_vhandle entity;
+    };
+
+    ASSERT_OFFSETOF(ally_health_widget_t, value,     0x198);
+    ASSERT_OFFSETOF(ally_health_widget_t, drop_from, 0x19C);
+    ASSERT_OFFSETOF(ally_health_widget_t, dropping,  0x1A0);
+    ASSERT_OFFSETOF(ally_health_widget_t, entity,    0x1C0);
+
     class ui_frontend {
 
     public:
@@ -103,7 +121,7 @@ namespace treyarch {
         igo_3d_ped_warning_widget*          ped_warning;
         igo_3d_drawable*                    unknown_widget_0c8;
         igo_3d_drawable*                    unknown_widget_0cc;
-        igo_3d_widget*                      buddy_summon;
+        igo_3d_buddy_summon_widget*         buddy_summon;
         igo_3d_widget*                      combo_meter;
         igo_3d_widget*                      hero_health;
         igo_3d_widget*                      hero_portrait;
@@ -159,7 +177,7 @@ namespace treyarch {
         igo_3d_drawable*                    optional_widget;
         igo_widget_group*                   widget_group_1a4;
         igo_3d_drawable*                    unknown_widget_1a8;
-        igo_3d_drawable*                    unknown_widget_1ac;
+        ally_health_widget_t*               ally_health_widget;     // only ever null on pc
         igo_3d_enemy_health_manager*        enemy_health_manager;
         igo_3d_generic_meter_widget*        mission_specific_meter;
         void*                               ui_lights[4][3];
@@ -206,6 +224,19 @@ namespace treyarch {
         void destroy_fog(finger_of_god* fog); // deletes it and drops it from the radar
 
         void letterbox(f32 time, f32 height); // leaves the senses first when the height is above 0.0001
+
+        void slide_in_ally_health_widget();
+        void slide_out_ally_health_widget();
+        void set_ally_health_meter_value(f32 value);
+        void set_ally_health_icon(i32 icon);
+        void set_ally_entity(arch_base_vhandle entity);
+
+        void set_boss_enabled(bool enabled);
+        void slide_in_boss_health_widget();
+        void slide_out_boss_health_widget();
+        void set_boss_health_icon(i32 icon); // also marks the manager's icon as set
+        void set_boss_entity(arch_base_vhandle entity);
+        void set_grunt_enabled(bool enabled);
 
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);

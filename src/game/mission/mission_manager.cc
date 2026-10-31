@@ -356,7 +356,7 @@ void mission_manager::terminate_script(bool was_completed_successfully, bool sup
             retail::sub_6E7A00((u32*)igo->hint_text);
 
         if (igo->enemy_health_manager)
-            retail::sub_68D020((u8*)igo->enemy_health_manager, 0);
+            igo->enemy_health_manager->set_boss_enabled(false);
 
         igo->letterbox(0.0f, 0.0f);
         igo->set_generic_meter_visible(false);

@@ -71,6 +71,7 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<game_process> start_process { 0x00E77250 };
         inline util::memory_reference<game_process> main_process  { 0x00E77268 };
+        inline util::memory_reference<game_process> movie_process { 0x00E77298 };
 
         // static string initialized to "megacity"
         inline util::memory_reference<mash::string> default_level_name { 0x01111434 };
@@ -160,6 +161,8 @@ namespace treyarch {
 
         void push_process(const game_process &process);
         void pop_process();
+
+        void begin_movie(const char* name); // plays it and pushes the movie process unless it failed to open
 
         void handle_game_states(f32* time_inc);
         void advance_state_legal(f32 time_inc);

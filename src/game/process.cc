@@ -11,6 +11,7 @@
 #include "game/game_data.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/mission/mission_memory_manager.hh"
+#include "game/movie_manager.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/development_options.hh"
 #include "treyarch/mash/string.hh"
@@ -38,6 +39,12 @@ namespace treyarch { namespace references {
 
     // .rdata 0
     util::memory_reference<u8> unk_00be9c9f { 0x00BE9C9F };
+
+    // .rdata 0; while set, begin_movie does nothing
+    util::memory_reference<u8> unk_00bb9e2d { 0x00BB9E2D };
+
+    // only begin_movie touches it
+    util::memory_reference<const char*> last_movie_name { 0x0102FD68 };
 }} // treyarch::references
 
 using namespace treyarch;
@@ -48,6 +55,7 @@ game_state_e game::get_cur_state() {
 }
 
 // sub_76BA50
+// inlined @ sub_76BA90
 void game::push_process(const game_process &process) {
     process_stack.push_back(process);
     process_stack.back().index = 0;
@@ -58,6 +66,22 @@ void game::push_process(const game_process &process) {
 void game::pop_process() {
     if (process_stack.size())
         process_stack.pop_back();
+}
+
+// sub_76BA90
+void game::begin_movie(const char* name) {
+    if (references::unk_00bb9e2d.read())
+        return;
+
+    retail::sub_6D3400((u32*)movie_manager::inst(), name, 1); // movie_manager::play
+
+    // 4 when the movie didn't open
+    if (movie_manager::inst()->state == 4)
+        return;
+
+    references::last_movie_name.write(name);
+
+    push_process(references::movie_process.get());
 }
 
 // sub_76BC30
@@ -258,7 +282,7 @@ void game::advance_state_credits(f32) {
 
     clear_screen();
 
-    retail::sub_76BA90((u32*)this, "credits"); // push movie process
+    begin_movie("credits");
 }
 
 // sub_770480
@@ -297,7 +321,7 @@ void game::handle_game_states(f32* time_inc) {
             process_stack.back().go_next_state();
 
             if (!references::restart_skip_the_title.read())
-                retail::sub_76BA90((u32*)this, "aspyr");
+                begin_movie("aspyr");
 
             return;
 

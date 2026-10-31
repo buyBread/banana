@@ -169,8 +169,8 @@ void ui_frontend::draw() {
 
                         if (unknown_widget_1a8)
                             unknown_widget_1a8->render();
-                        if (unknown_widget_1ac)
-                            unknown_widget_1ac->render();
+                        if (ally_health_widget)
+                            ally_health_widget->render();
 
                         if (references::optional_widget_group_enabled.read()) {
                             if (optional_widgets_begin) {

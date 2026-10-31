@@ -390,16 +390,101 @@ bool slf__reset_distance_bar_tints__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_8622F0
 bool slf__start_exitable_state__num__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_85E630
 bool slf__set_mission_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E630)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    const f32* nums = &stack.local_num(0x04);
+
+    // every temporary dies through finalize, the destructor's twin
+    alignas(mash::string) u8 text_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* format = references::game.read()->string_localizer->lookup_scripttext_string((i32)stack.local_num(0x00));
+
+    auto* text   = new (text_storage) mash::string(format);
+    auto* result = new (result_storage) mash::string();
+
+    i32 mark     = text->find("%", 0);
+    i32 previous = mark == mash::string::npos ? -1 : -2;
+
+    while (mark != mash::string::npos) {
+        auto* piece = new (storage) mash::string(text->substr(previous + 2, mark - previous - 2));
+        *result += *piece;
+        piece->finalize(mash::ALLOCATED);
+
+        switch (text->data()[mark + 1]) {
+            case '%':
+                *result += "%";
+                break;
+
+            case 'd': {
+                auto* number = new (storage) mash::string(mash::string::from_int((i32)*nums));
+                *result += *number;
+                number->finalize(mash::ALLOCATED);
+
+                ++nums;
+                break;
+            }
+
+            case 'f': {
+                auto* number = new (storage) mash::string(mash::string::from_float(*nums));
+                *result += *number;
+                number->finalize(mash::ALLOCATED);
+
+                ++nums;
+                break;
+            }
+
+            case 's':
+                *result += references::game.read()->string_localizer->lookup_scripttext_string((i32)*nums);
+
+                ++nums;
+                break;
+
+            default:
+                break;
+        }
+
+        previous = mark;
+
+        if (mark + 2 >= text->size())
+            break;
+
+        mark = text->find("%", mark + 2);
+    }
+
+    if (previous == -1)
+        *result = *text;
+    else if (previous + 2 < text->size()) {
+        auto* rest = new (storage) mash::string(text->substr(previous + 2, mash::string::npos));
+        *result += *rest;
+        rest->finalize(mash::ALLOCATED);
+    }
+
+    // nothing gets the text on pc
+    result->finalize(mash::ALLOCATED);
+    text->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_mission_text_debug__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
 // sub_85E910
@@ -637,16 +722,37 @@ bool slf__disable_zoom_map_movement__num__t::operator()(chuck::vm::vm_stack &sta
     return true;
 }
 
+// sub_85EDF0
 bool slf__bring_up_dialog_box_debug__str__num__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EDF0)(this, stack);
+    stack.sp -= 0x10;
+
+    u32 result = 0;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85EE20
 bool slf__begin_movie__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EE20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    references::game.read()->begin_movie(name);
+
+    return true;
 }
 
+// sub_85EE40
 bool slf__offscreen_indicator_add__entity__num__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EE40)(this, stack);
+    stack.sp -= 0x18;
+
+    u32 result = 0;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_85EE60
@@ -702,60 +808,184 @@ bool slf__set_zoom_map_poi_meta_text__num__num__t::operator()(chuck::vm::vm_stac
     return true;
 }
 
+// sub_824100
 bool slf__slide_in_ally_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824100)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->slide_in_ally_health_widget();
+
+    return true;
 }
 
+// sub_824120
 bool slf__slide_out_ally_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824120)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->slide_out_ally_health_widget();
+
+    return true;
 }
 
+// sub_85F010
 bool slf__set_ally_health_icon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F010)(this, stack);
+    stack.sp -= 0x04;
+
+    auto icon = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->set_ally_health_icon((i32)icon);
+
+    return true;
 }
 
+// sub_85F040
 bool slf__set_ally_health_meter_value__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F040)(this, stack);
+    stack.sp -= 0x04;
+
+    auto value = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->set_ally_health_meter_value(value);
+
+    return true;
 }
 
+// sub_85F070
 bool slf__set_ally_health_icon__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F070)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle ent(stack.local_uint(0x00));
+
+    auto icon = stack.local_num(0x04);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_ally_health_icon((i32)icon);
+        igo->set_ally_entity(ent);
+    }
+
+    return true;
 }
 
+// sub_83ED30
 bool slf__clear_ally_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83ED30)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_ally_health_icon(-1);
+        igo->set_ally_entity(arch_base_vhandle());
+    }
+
+    return true;
 }
 
+// sub_824140
 bool slf__slide_in_boss_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824140)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_boss_enabled(true);
+        igo->slide_in_boss_health_widget();
+    }
+
+    return true;
 }
 
+// sub_824170
 bool slf__slide_out_boss_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824170)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_boss_enabled(false);
+        igo->slide_out_boss_health_widget();
+    }
+
+    return true;
 }
 
+// sub_85F0B0
 bool slf__set_boss_health_icon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F0B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto icon = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->set_boss_health_icon((i32)icon);
+
+    return true;
 }
 
+// sub_85F0E0
 bool slf__set_boss_health_icon__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F0E0)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base_vhandle ent(stack.local_uint(0x00));
+
+    auto icon = stack.local_num(0x04);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_boss_health_icon((i32)icon);
+        igo->set_boss_entity(ent);
+    }
+
+    return true;
 }
 
+// sub_83ED60
 bool slf__clear_boss_health_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83ED60)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo) {
+        igo->set_boss_health_icon(-1);
+        igo->set_boss_entity(arch_base_vhandle());
+    }
+
+    return true;
 }
 
+// sub_8241A0
 bool slf__disable_grunt_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8241A0)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->set_grunt_enabled(false);
+
+    return true;
 }
 
+// sub_8241C0
 bool slf__enable_grunt_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8241C0)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo)
+        igo->set_grunt_enabled(true);
+
+    return true;
 }
 
+// sub_85F120
 bool slf__enable_summon_power_mode__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85F120)(this, stack);
+    stack.sp -= 0x04;
+
+    auto enabled = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->buddy_summon)
+        igo->buddy_summon->summon_power_mode = enabled != 0.0f;
+
+    return true;
 }
 
 // sub_85DD30

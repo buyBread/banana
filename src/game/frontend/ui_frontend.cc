@@ -4,6 +4,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
+#include "game/ui_character_info_list.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -128,4 +129,108 @@ void ui_frontend::letterbox(f32 time, f32 height) {
         height = (f32)(height * 0.5);
 
     letterbox_widget->letterbox(time, height);
+}
+
+// sub_6990D0
+void ui_frontend::slide_in_ally_health_widget() {
+    if (ally_health_widget)
+        retail::sub_68CE10((u32*)ally_health_widget);
+}
+
+// sub_6990E0
+void ui_frontend::slide_out_ally_health_widget() {
+    if (ally_health_widget)
+        retail::sub_68CEB0((u32*)ally_health_widget);
+}
+
+// sub_6990F0
+void ui_frontend::set_ally_health_meter_value(f32 value) {
+    ally_health_widget_t* widget = ally_health_widget;
+
+    if (!widget)
+        return;
+
+    f32 previous = widget->value;
+
+    widget->value = value;
+
+    if (previous > value) {
+        if (value != 0.0f) {
+            if (!widget->dropping) {
+                widget->dropping  = true;
+                widget->drop_from = previous;
+            }
+
+            return;
+        }
+    } else if (!(value > previous))
+        return;
+
+    widget->dropping  = false;
+    widget->drop_from = widget->value;
+}
+
+// sub_699170
+void ui_frontend::set_ally_entity(arch_base_vhandle entity) {
+    if (ally_health_widget)
+        ally_health_widget->entity = entity;
+}
+
+// sub_6F21F0
+void ui_frontend::set_ally_health_icon(i32 icon) {
+    string_hash key;
+
+    retail::sub_6EFF40((u32*)references::ui_character_info_map.read(), (u32*)&key, icon); // the key for the icon
+
+    if (ally_health_widget)
+        ((void (__thiscall*)(ally_health_widget_t*, string_hash))retail::sub_6EC1F0)(ally_health_widget, key); // set_icon
+}
+
+// sub_6991F0
+void ui_frontend::set_boss_enabled(bool enabled) {
+    if (enemy_health_manager)
+        enemy_health_manager->set_boss_enabled(enabled);
+}
+
+// sub_699190
+void ui_frontend::slide_in_boss_health_widget() {
+    if (enemy_health_manager && enemy_health_manager->boss_widget) {
+        enemy_health_manager->boss_widget->set_unk_1c0(true);
+        enemy_health_manager->boss_widget->slide_in();
+    }
+}
+
+// sub_6991C0
+void ui_frontend::slide_out_boss_health_widget() {
+    if (enemy_health_manager && enemy_health_manager->boss_widget) {
+        enemy_health_manager->boss_widget->set_unk_1c0(false);
+        enemy_health_manager->boss_widget->slide_out();
+    }
+}
+
+// sub_6F2230
+void ui_frontend::set_boss_health_icon(i32 icon) {
+    string_hash key;
+
+    retail::sub_6EFF40((u32*)references::ui_character_info_map.read(), (u32*)&key, icon); // the key for the icon
+
+    igo_3d_enemy_health_manager* manager = enemy_health_manager;
+
+    if (manager && manager->boss_widget) {
+        ((void (__thiscall*)(igo_3d_enemy_health_widget*, string_hash))retail::sub_6EC1F0)(manager->boss_widget, key); // set_icon
+
+        manager->boss_icon_set = true;
+    }
+}
+
+// sub_6894C0
+void ui_frontend::set_boss_entity(arch_base_vhandle entity) {
+    if (enemy_health_manager)
+        enemy_health_manager->boss_entity = entity;
+}
+
+// sub_6894E0
+void ui_frontend::set_grunt_enabled(bool enabled) {
+    if (enemy_health_manager)
+        enemy_health_manager->grunt_enabled = enabled;
 }
