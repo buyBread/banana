@@ -6,28 +6,323 @@
 #include "vc8/vector.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/mm/mm.hh"
+#include "game/amalga/resource_manager.hh"
+#include "game/app.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/event/chuck_library_parameter_event.hh"
 #include "game/event/event_manager.hh"
+#include "game/game.hh"
+#include "game/game_meter.hh"
+#include "game/game_meter_manager.hh"
 #include "game/math/po.hh"
+#include "game/math/references.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/mission/mission_memory_manager.hh"
+#include "game/progression_change.hh"
 #include "game/quest_list.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
+#include "game/resource_key.hh"
 #include "game/spawn/active_spawn_item.hh"
 #include "game/spawn/quest_giver_spawn.hh"
+#include "game/spawn/recent_despawn.hh"
 #include "game/spawn/spawn_table_manager.hh"
 #include "game/spawn_item_collection.hh"
 #include "game/spawn_table_interface.hh"
 #include "game/spawn_point_list_collection.hh"
 #include "game/static_spawn_item_collection.hh"
+#include "game/summon_state.hh"
+#include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_pf_region_graph.hh"
+#include "game/wds/ai/info_node.hh"
+#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/entity/interface/physical_interface.hh"
+#include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 
 using namespace treyarch;
+
+// sub_94D560
+spawn_table_manager* spawn_table_manager::create() {
+    spawn_table_manager* manager = new spawn_table_manager();
+
+    instance() = manager;
+
+    return manager;
+}
+
+// sub_94D460
+spawn_table_manager::spawn_table_manager() : unk_004(80),
+                                             spawn_placement_figures{ 90.0f, 200.0f, 300.0f, 24.0f },
+                                             street_percent_override(false),
+                                             street_percent(0.2f),
+                                             unk_020(0.2f),
+                                             unk_044(0),
+                                             unk_048(false),
+                                             unk_049(false),
+                                             collectibles_disabled(false),
+                                             unk_050(false) {
+
+    void* storage = mm::allocate(sizeof(spawn_table_manager_unk_04c));
+
+    unk_04c = storage ? new (storage) spawn_table_manager_unk_04c() : nullptr;
+}
+
+// sub_94D260
+spawn_table_manager_unk_04c::spawn_table_manager_unk_04c() : max_active_spawn_items(5), // unk_138 and the fixed entities stay as allocated
+                                                             quest_spawn_count(0),
+                                                             unk_008(0),
+                                                             city_spawn_count(5),
+                                                             unk_010(0),
+                                                             chosen_quest_giver_spawn(nullptr),
+                                                             table_interface(nullptr),
+                                                             no_spawn_zones(nullptr),
+                                                             arbitrary_regions(nullptr),
+                                                             no_spawn_zone_set(nullptr),
+                                                             pacing(nullptr),
+                                                             mission_pacing_override(nullptr),
+                                                             city_life_categories(nullptr),
+                                                             quest_spawn_uncapped(false),
+                                                             quest_spawn_cap(0),
+                                                             unk_124(0.0f),
+                                                             unk_128(0.0f),
+                                                             quest_spawn_share(0.0f),
+                                                             unk_130(0.0f),
+                                                             spawn_count(0),
+                                                             pacing_phase(2),
+                                                             unk_140(0.0f),
+                                                             stars_mode(false),
+                                                             stars_level(0),
+                                                             stars_mode_effects{ -1, -1 },
+                                                             engagement_capacity(0),
+                                                             threat_capacity(0) {}
+
+// sub_958A90
+spawn_table_manager::~spawn_table_manager() { // without a world the tables are left behind
+    if (references::g_world_ptr.read()) {
+        if (unk_04c)
+            for (i32 index = 0; index < 15; ++index)
+                if (unk_04c->fixed_entities[index]) {
+                    retail::sub_7FBE10((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)unk_04c->fixed_entities[index]); // wds_entity_manager destroy
+
+                    unk_04c->fixed_entities[index] = nullptr;
+                }
+
+        if (unk_04c) {
+            unk_04c->~spawn_table_manager_unk_04c();
+
+            mm::free(unk_04c);
+        }
+    }
+
+    // back to singleton's vtable
+    *(void**)this = &references::singleton_vtable.get();
+}
+
+// sub_958750
+spawn_table_manager_unk_04c::~spawn_table_manager_unk_04c() { // the interface came from the resource lookup, yet it's destroyed and freed like a heap one
+    chosen_quest_giver_spawn = nullptr;
+
+    if (table_interface) {
+        retail::sub_9568C0((u32*)table_interface); // spawn_table_interface's destructor
+
+        mm::free(table_interface);
+
+        table_interface = nullptr;
+    }
+
+    if (no_spawn_zones) {
+        no_spawn_zones->~map();
+
+        mm::free(no_spawn_zones);
+
+        no_spawn_zones = nullptr;
+    }
+
+    if (arbitrary_regions) {
+        arbitrary_regions->~map();
+
+        mm::free(arbitrary_regions);
+
+        arbitrary_regions = nullptr;
+    }
+
+    no_spawn_zone_set = nullptr;
+    pacing            = nullptr;
+
+    if (mission_pacing_override) {
+        mission_pacing_override->~spawn_item_collection_unk_38();
+
+        mm::free(mission_pacing_override);
+
+        mission_pacing_override = nullptr;
+    }
+
+    if (city_life_categories) {
+        city_life_categories->~map();
+
+        mm::free(city_life_categories);
+
+        city_life_categories = nullptr;
+    }
+}
+
+// sub_952F20
+void spawn_table_manager::load(const char*, amalga::resource_pack_slot*) { // also makes the fixed entities, hidden
+    string_hash name;
+    name.initialize(mash::ALLOCATED, "global");
+
+    resource_key key;
+    key.hash = string_hash();
+    key.set(name, 60);
+
+    unk_04c->table_interface = (spawn_table_interface*)amalga::resource_manager::get_resource(key, nullptr, nullptr);
+
+    if (unk_04c->table_interface)
+        unk_04c->table_interface->build_name_maps();
+
+    auto* common = (amalga::resource_pack_slot*)retail::sub_739BC0((i32)amalga::resource_manager::get_best_context(amalga::resource_partition_common));
+
+    amalga::resource_context_stack_object context(common);
+
+    for (i32 index = 0; index < 15; ++index) {
+        string_hash collectible;
+        collectible.initialize(mash::ALLOCATED, "ui_game_collectible");
+
+        unk_04c->fixed_entities[index] = (entity*)retail::sub_804740((u32*)&references::g_world_ptr.read()->ent_mgr,
+                                                                     (i32)collectible.source_hash_code,
+                                                                     (i32*)1); // wds_entity_manager::spawn_entity_autoname
+
+        if (unk_04c->fixed_entities[index])
+            unk_04c->fixed_entities[index]->set_visible(false, false);
+    }
+}
+
+// sub_9562C0
+void spawn_table_manager::update(f32 dt) { // the spawning steps wait while a mission is running, unless it asks for city life
+    retail::sub_948890(this);       // reposition_fixed_entities
+    retail::sub_92E970((u32*)this); // destroy_despawned
+
+    if (unk_04c->stars_mode && !references::game.read()->game_paused)
+        stars_mode_damage_tick(dt);
+
+    region_spawn_manager* spawns = region_spawn_manager::inst();
+
+    references::updating_spawn_table_manager.write(this);
+
+    if (!mission_manager::inst()->is_idle() && !spawns->populate_mission_with_entities)
+        return;
+
+    unk_04c->pacing_tick(dt);
+
+    retail::sub_9533D0((i32)this);     // despawn_out_of_range
+    retail::sub_954BC0((i32)this, dt); // activate_items
+
+    start_ready_actives();
+}
+
+// sub_920810
+void spawn_table_manager::stars_mode_damage_tick(f32 dt) { // hurts the hero once a second
+    if (!unk_050)
+        return;
+
+    f32 timer = (f32)((f64)references::stars_mode_damage_timer.read() + (f64)dt);
+
+    references::stars_mode_damage_timer.write(timer);
+
+    if (!(timer >= 1.0f))
+        return;
+
+    const vector3d &facing = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();
+
+    vector3d direction(-0.0f - facing.x, -0.0f - facing.y, -0.0f - facing.z);
+
+    string_hash wounded_category;
+    wounded_category.initialize(mash::ALLOCATED);
+
+    references::g_world_ptr.read()->hero_ptr->damage_ifc()->apply_damage_with_combo_web_damage(nullptr,
+                                                                                              nullptr,
+                                                                                              references::stars_mode_damage.read(),
+                                                                                              8,
+                                                                                              2,
+                                                                                              nullptr,
+                                                                                              nullptr,
+                                                                                              &references::unk_010f9c30.get(),
+                                                                                              &direction,
+                                                                                              0,
+                                                                                              &wounded_category,
+                                                                                              &references::unk_010f9c30.get(),
+                                                                                              num_rb_phys_bones,
+                                                                                              nullptr,
+                                                                                              nullptr,
+                                                                                              false);
+
+    references::stars_mode_damage_timer.write(0.0f);
+}
+
+// sub_938DB0
+void spawn_table_manager::end_stars_mode() {
+    for (i32 index = 0; index < 2; ++index)
+        if (unk_04c->stars_mode_effects[index] >= 0) {
+            references::g_world_ptr.read()->hero_ptr->stop_looping_effect(unk_04c->stars_mode_effects[index]);
+
+            unk_04c->stars_mode_effects[index] = -1;
+        }
+
+    player_interface* player = references::g_world_ptr.read()->hero_ptr->player_ifc();
+
+    if (player)
+        ((void (__thiscall*)(player_interface*, bool, bool))((void**)player->vtable)[523])(player, false, unk_050); // slot 523, lock_suit
+
+    region_pack_manager::inst()->despawn_and_lock_quest_giver_in_mission(false);
+
+    summon_state* summons = references::summon_state.read();
+
+    summons->end_requested = true;
+    summons->unk_098       = false;
+    summons->unk_099       = unk_050;
+
+    {
+        i32 max_hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points();
+
+        references::g_world_ptr.read()->hero_ptr->damage_ifc()->set_hit_points(max_hit_points);
+    }
+
+    // the RVB meter; a missing one isn't caught
+    game_meter_base* meter = references::game_meter_manager.read()->meter_dict.find(1)->value.second;
+
+    ((void (__thiscall*)(game_meter_base*, f32))(*(void***)meter)[13])(meter, -1.0f); // slot 13
+
+    retail::sub_42E750(0); // team_relations_reset_to_default
+
+    unk_04c->stars_mode = false;
+    unk_04c->stars_mode_spawn_items.clear();
+
+    auto* hero   = (actor*)references::g_world_ptr.read()->hero_ptr;
+    auto* target = (combat_target_inode*)hero->get_ai_core()->get_info_node(info_node_type_combat_target);
+
+    if (target) {
+        target->set_threat_capacity(unk_04c->threat_capacity);
+        target->set_engagement_capacity(unk_04c->engagement_capacity);
+    }
+}
+
+// sub_9484B0
+void spawn_table_manager::start_ready_actives() {
+    for (active_spawn_item** it = unk_04c->pending_active_spawn_items.begin(); it != unk_04c->pending_active_spawn_items.end();) {
+        if (!(*it)->ready_to_start()) {
+            ++it;
+            continue;
+        }
+
+        unk_04c->active_spawn_items.push_back(*it);
+
+        it = unk_04c->pending_active_spawn_items.erase(it);
+    }
+}
 
 // sub_92EFC0
 spawn_item_collection* spawn_table_manager::find_neighborhood_set() {
@@ -278,6 +573,235 @@ void spawn_table_manager_unk_04c::update_quest_spawn_counts() {
 
     if (!quest_spawn_items.size())
         quest_spawn_share = 0.0f;
+}
+
+// inlined @ sub_9547F0
+bool spawn_table_manager_unk_04c::apply_progression_changes(spawn_item_collection* collection) { // true when any change applied
+    bool applied = false;
+
+    for (progression_change** change = collection->changes.begin(); change != collection->changes.end(); ++change) {
+        if (!retail::sub_7F84B0((u32*)(*change)->condition)) // quest_condition::evaluate
+            continue;
+
+        remove_spawn_items_by_name(&(*change)->removed);
+        add_spawn_items_by_name(&(*change)->added);
+
+        applied = true;
+    }
+
+    return applied;
+}
+
+// sub_9547F0
+void spawn_table_manager_unk_04c::rebuild_spawn_tables() {
+    if (!table_interface)
+        return;
+
+    for (quest_giver_spawn** it = quest_giver_spawns.begin(); it != quest_giver_spawns.end(); ++it)
+        (*it)->reselect_location();
+
+    if (!mission_manager::inst()->is_idle())
+        return;
+
+    spawn_table_manager::inst()->clear_spawn_item_lists();
+
+    mash::string name = region_spawn_manager::inst()->get_neighborhood_name();
+
+    if (!std::strncmp(name.c_str(), "", mash::string::max_length)) {
+        region_pack_manager* packs = region_pack_manager::inst();
+
+        // the held packs go
+        retail::sub_947590((i32)packs, 1, 0);
+        retail::sub_938C60((u32*)packs, 1);
+
+        return;
+    }
+
+    retail::sub_94F010((i32)region_pack_manager::inst()); // region_pack_manager::update_pack_selection
+
+    bool applied = false;
+
+    spawn_item_collection* neighborhood_set = table_interface->find_spawn_item_collection(name);
+
+    if (neighborhood_set) {
+        if (apply_progression_changes(neighborhood_set))
+            applied = true;
+
+        for (spawn_item_collection_unk_38** it = neighborhood_set->pacings.begin(); it != neighborhood_set->pacings.end(); ++it)
+            if (retail::sub_7F84B0((u32*)(*it)->condition)) { // quest_condition::evaluate
+                pacing  = *it;
+                applied = true;
+            }
+
+        for (spawn_item_collection_unk_4c** it = neighborhood_set->no_spawn_zone_sets.begin(); it != neighborhood_set->no_spawn_zone_sets.end(); ++it)
+            if (retail::sub_7F84B0((u32*)(*it)->condition)) { // quest_condition::evaluate
+                no_spawn_zone_set = *it;
+                applied           = true;
+            }
+    }
+
+    spawn_item_collection* city_wide_set = spawn_table_manager::inst()->find_city_wide_set();
+
+    if (city_wide_set && apply_progression_changes(city_wide_set))
+        applied = true;
+
+    spawn_item_collection* meta_set = spawn_table_manager::inst()->find_meta_set();
+
+    if (meta_set && apply_progression_changes(meta_set))
+        applied = true;
+
+    // the recent despawns no longer match the tables
+    if (applied) {
+        while (recent_despawns.begin() != recent_despawns.end()) {
+            recent_despawn* despawn = *recent_despawns.begin();
+
+            spawn_table_manager::inst()->free_spawn_record(despawn->record);
+
+            despawn->record = nullptr;
+            despawn->item   = nullptr;
+
+            recent_despawns.erase(recent_despawns.begin());
+
+            if (despawn)
+                mm::free(despawn);
+        }
+    }
+
+    spawn_item_collection* hard_coded_set = table_interface->find_spawn_item_collection("cross_neighborhood_hard_coded");
+
+    if (hard_coded_set)
+        apply_progression_changes(hard_coded_set);
+
+    if (stars_mode) {
+        spawn_table_unk_7c* act   = table_interface->unk_7c[mission_manager::inst()->get_current_act()];
+        i32                 level = stars_level;
+
+        stars_mode_spawn_items.clear();
+
+        for (mash::string** it = act->spawn_items[level]->begin(); it != act->spawn_items[level]->end(); ++it) {
+            static_spawn_item* item = table_interface->find_spawn_item(**it);
+
+            if (item)
+                stars_mode_spawn_items.push_back(item);
+        }
+    }
+}
+
+// inlined @ sub_947CC0
+void spawn_table_manager_unk_04c::split_spawn_count() { // the quest items' share and the rest
+    f32 share = quest_spawn_share;
+    u32 quest = (u32)(i64)((f32)spawn_count * share);
+
+    if (!quest_spawn_uncapped && (u32)quest_spawn_cap < quest)
+        quest = quest_spawn_cap;
+
+    quest_spawn_count = quest;
+
+    if (quest < 1 && share != 0.0f)
+        quest = 1;
+
+    quest_spawn_count = quest;
+    city_spawn_count  = spawn_count - quest;
+}
+
+// sub_947CC0
+void spawn_table_manager_unk_04c::pacing_tick(f32 dt) { // climbs to the high count, steps down to the low one, holds, over and over
+    if (!table_interface)
+        return;
+
+    for (static_spawn_item** it = random_spawn_items.begin(); it != random_spawn_items.end(); ++it)
+        if ((*it)->tick(dt))
+            spawn_items.push_back(*it);
+
+    for (static_spawn_item** it = always_on_spawn_items.begin(); it != always_on_spawn_items.end(); ++it)
+        (*it)->tick(dt);
+
+    spawn_item_collection_unk_38* current = pacing;
+
+    if ((current || mission_pacing_override) && !references::game.read()->game_paused) {
+        if (mission_pacing_override)
+            current = mission_pacing_override;
+
+        unk_140 = (f32)((f64)unk_140 + (f64)dt);
+
+        if (unk_140 >= 75.0f && !mission_manager::inst()->is_mission_running()) {
+            event_manager::raise_event(references::long_time_last_city_life.read(), arch_base_vhandle());
+
+            unk_140 = 0.0f;
+        }
+
+        unk_128 = (f32)((f64)unk_128 + (f64)dt);
+
+        if (pacing_phase == 0) {
+            unk_130 = (f32)((f64)unk_130 + (f64)dt);
+
+            u32 low   = current->low_spawn_count;
+            u32 climb = (u32)(i64)(unk_130 / current->ramp_seconds * (f32)(current->high_spawn_count - low));
+
+            spawn_count = climb + low;
+
+            if (spawn_count > current->high_spawn_count)
+                spawn_count = current->high_spawn_count;
+
+            split_spawn_count();
+
+            f32 ramp_seconds = current->ramp_seconds;
+
+            if (unk_130 >= ramp_seconds || unk_138) {
+                u32 steps   = current->step_count;
+                u32 climbed = (u32)(i64)(unk_130 / ramp_seconds * (f32)steps);
+
+                unk_130      = 0.0f;
+                pacing_phase = 1;
+                unk_138      = steps - climbed;
+            }
+        } else {
+            unk_124 = (f32)((f64)unk_124 + (f64)dt);
+
+            if (pacing_phase == 1) {
+                u32 high    = current->high_spawn_count;
+                u32 descent = (u32)(i64)((f32)unk_138 / (f32)current->step_count * (f32)(high - current->low_spawn_count));
+
+                spawn_count = high - descent;
+
+                if (spawn_count > current->high_spawn_count)
+                    spawn_count = current->high_spawn_count;
+
+                split_spawn_count();
+
+                if (spawn_count == current->low_spawn_count) {
+                    unk_138      = 0;
+                    unk_124      = 0.0f;
+                    pacing_phase = 2;
+                }
+
+                if (unk_124 >= current->give_up_seconds &&
+                    spawn_count < current->high_spawn_count) {
+
+                    u32 steps_back = unk_138 / current->step_count;
+
+                    unk_138      = 0;
+                    unk_124      = 0.0f;
+                    pacing_phase = 0;
+                    unk_130      = (f32)steps_back * current->ramp_seconds;
+                }
+            } else {
+                spawn_count = current->low_spawn_count;
+
+                split_spawn_count();
+
+                if (unk_124 >= current->hold_seconds) {
+                    unk_124      = 0.0f;
+                    pacing_phase = 0;
+                }
+            }
+        }
+    }
+
+    if (spawn_table_manager::inst()->unk_04c->stars_mode) {
+        quest_spawn_count >>= 1;
+        city_spawn_count  >>= 1;
+    }
 }
 
 // sub_948560

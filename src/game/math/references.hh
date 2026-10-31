@@ -52,6 +52,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); what an entity's vector param reads to a script when the entity has none
     inline util::memory_reference<vector3d> unk_010f7140 { 0x010F7140 };
 
+    // (0, 0, 0), copied in at startup; stars mode's damage hits from it
+    inline util::memory_reference<vector3d> unk_010f9c30 { 0x010F9C30 };
+
     // (0, 0, 0), in writable data; polytube point animations start from it
     inline util::memory_reference<vector3d> unk_00ffec30 { 0x00FFEC30 };
 

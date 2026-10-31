@@ -11,6 +11,7 @@
 #include "game/event/event_manager.hh"
 #include "game/game.hh"
 #include "game/input/input_mgr.hh"
+#include "game/spawn/spawn_table_manager.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "banana/util/redirect_rel32.hh"
@@ -305,6 +306,11 @@ namespace treyarch {
         banana::log.msg("redirecting script_instance::run_single_thread_until_finished");
 
         if (!util::redirect_rel32(0x00A1CE06, { 0xE8, 0xF5, 0x1D, 0x00, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished))
+            FATAL_BREAKPOINT();
+
+        banana::log.msg("redirecting spawn_table_manager creation (region_spawn_manager)");
+
+        if (!util::redirect_rel32(0x00951B04, { 0xE8, 0x57, 0xBA, 0xFF, 0xFF }, &spawn_table_manager::create))
             FATAL_BREAKPOINT();
 
         _redirect_event_manager();

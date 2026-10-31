@@ -125,9 +125,9 @@ namespace treyarch {
         mash::vector
             <spawn_table_unk_68>           unk_24;
         mash::vector
-            <spawn_item_collection_unk_38> unk_38;
+            <spawn_item_collection_unk_38> pacings;
         mash::vector
-            <spawn_item_collection_unk_4c> unk_4c;
+            <spawn_item_collection_unk_4c> no_spawn_zone_sets;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -159,10 +159,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(spawn_item_collection_unk_4c, no_spawn_areas, 0x18);
     ASSERT_OFFSETOF(spawn_item_collection_unk_4c, condition,      0x2C);
 
-    ASSERT_SIZEOF  (spawn_item_collection,          0x60);
-    ASSERT_OFFSETOF(spawn_item_collection, name,    0x04);
-    ASSERT_OFFSETOF(spawn_item_collection, changes, 0x10);
-    ASSERT_OFFSETOF(spawn_item_collection, unk_24,  0x24);
-    ASSERT_OFFSETOF(spawn_item_collection, unk_38,  0x38);
-    ASSERT_OFFSETOF(spawn_item_collection, unk_4c,  0x4C);
+    ASSERT_SIZEOF  (spawn_item_collection,                     0x60);
+    ASSERT_OFFSETOF(spawn_item_collection, name,               0x04);
+    ASSERT_OFFSETOF(spawn_item_collection, changes,            0x10);
+    ASSERT_OFFSETOF(spawn_item_collection, unk_24,             0x24);
+    ASSERT_OFFSETOF(spawn_item_collection, pacings,            0x38);
+    ASSERT_OFFSETOF(spawn_item_collection, no_spawn_zone_sets, 0x4C);
 } // treyarch

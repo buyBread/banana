@@ -1,7 +1,10 @@
 #include <cstring>
+#include <new>
 
 #include "game/spawn_item_collection.hh"
+#include "game/spawn_point_list_collection.hh"
 #include "game/spawn_table_interface.hh"
+#include "game/static_spawn_item_collection.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
 
@@ -138,6 +141,32 @@ void spawn_table_interface::finalize(mash::allocation_scope) {
 
         mm::free(flag_collections_by_name);
     }
+}
+
+// sub_952120
+void spawn_table_interface::build_name_maps() {
+    void* storage = mm::allocate(sizeof(vc8::map<mash::string, static_spawn_item*>));
+
+    spawn_items_by_name = storage ? new (storage) vc8::map<mash::string, static_spawn_item*>() : nullptr;
+
+    storage = mm::allocate(sizeof(vc8::map<mash::string, spawn_point_list*>));
+
+    spawn_point_lists_by_name = storage ? new (storage) vc8::map<mash::string, spawn_point_list*>() : nullptr;
+
+    storage = mm::allocate(sizeof(vc8::map<mash::string, flag_collection_base*>));
+
+    flag_collections_by_name = storage ? new (storage) vc8::map<mash::string, flag_collection_base*>() : nullptr;
+
+    for (reference<static_spawn_item_collection>** collection = static_spawn_item_collections.begin(); collection != static_spawn_item_collections.end(); ++collection)
+        for (static_spawn_item** item = (*collection)->pointer->spawn_items.begin(); item != (*collection)->pointer->spawn_items.end(); ++item)
+            (*spawn_items_by_name)[(*item)->name] = *item;
+
+    for (reference<spawn_point_list_collection>** collection = spawn_point_list_collections.begin(); collection != spawn_point_list_collections.end(); ++collection)
+        for (spawn_point_list** list = (*collection)->pointer->lists.begin(); list != (*collection)->pointer->lists.end(); ++list)
+            (*spawn_point_lists_by_name)[(*list)->name] = *list;
+
+    for (flag_collection_base** collection = flag_collections.begin(); collection != flag_collections.end(); ++collection)
+        (*flag_collections_by_name)[(*collection)->name] = *collection;
 }
 
 // sub_93F3F0

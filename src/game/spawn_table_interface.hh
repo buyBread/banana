@@ -18,7 +18,7 @@ namespace treyarch {
     class flag_collection_base : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x0C];
+        mash::string name;
     };
 
     struct spawn_table_unk_68_entry {
@@ -111,11 +111,14 @@ namespace treyarch {
 
         void finalize(mash::allocation_scope scope);
 
+        void build_name_maps();
+
         static_spawn_item*     find_spawn_item(mash::string name);
         spawn_item_collection* find_spawn_item_collection(mash::string name);
     };
 
-    ASSERT_SIZEOF  (flag_collection_base, 0x10);
+    ASSERT_SIZEOF  (flag_collection_base,       0x10);
+    ASSERT_OFFSETOF(flag_collection_base, name, 0x04);
 
     ASSERT_SIZEOF  (spawn_table_unk_68_entry, 0x24);
 

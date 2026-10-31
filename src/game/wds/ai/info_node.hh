@@ -347,7 +347,9 @@ namespace treyarch {
         void break_morale_force_flee (arch_base_vhandle target, f32 unk);
     };
 
-    inline const string_hash targeting_weight_key = string_hash(hash::djb2("targeting_weight"));
+    inline const string_hash targeting_weight_key    = string_hash(hash::djb2("targeting_weight"));
+    inline const string_hash threat_capacity_key     = string_hash(hash::djb2("threat_capacity"));
+    inline const string_hash engagement_capacity_key = string_hash(hash::djb2("engagement_capacity"));
 
     class target_search_inode : public info_node {
 
@@ -359,6 +361,16 @@ namespace treyarch {
 
     public:
         u8 reserved_068[0x80];
+
+        // sub_455AE0
+        void set_threat_capacity(i32 capacity) {
+            my_param_block.set_pb_int(threat_capacity_key, capacity);
+        }
+
+        // sub_455B20
+        void set_engagement_capacity(i32 capacity) {
+            my_param_block.set_pb_int(engagement_capacity_key, capacity);
+        }
 
         // sub_455B60
         void set_targeting_weight(i32 weight) {

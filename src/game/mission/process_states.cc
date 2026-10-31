@@ -103,7 +103,7 @@ void mission_manager::process_state_idle(f32 time_inc) {
         if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
             spawn_table_manager::inst()) {
 
-            retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
+            spawn_table_manager::inst()->unk_04c->rebuild_spawn_tables();
             retail::sub_94F010((i32)region_pack_manager::inst());
         }
     }
@@ -616,7 +616,7 @@ void mission_manager::process_state_unloading() {
             retail::sub_951C40((i32)region_pack_manager::inst(), 1);
 
         retail::sub_92E640((u32*)region_spawn_manager::inst());
-        retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
+        spawn_table_manager::inst()->unk_04c->rebuild_spawn_tables();
     }
 
     if (references::unk_00be7455.read() && references::summon_state.read())
@@ -752,7 +752,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
     if (region_spawn_manager::inst() && spawn_table_manager::inst()) {
         retail::sub_92E640((u32*)region_spawn_manager::inst());
-        retail::sub_9547F0((i32)spawn_table_manager::inst()->unk_04c);
+        spawn_table_manager::inst()->unk_04c->rebuild_spawn_tables();
     }
 }
 

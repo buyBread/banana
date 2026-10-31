@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstddef>
+
 #include "vc8/map.hh"
 #include "vc8/vector.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/math/algebra.hh"
 #include "game/spawn/persistence_data.hh"
 #include "game/singleton.hh"
@@ -13,6 +16,10 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
     namespace chuck { namespace vm {
         class script_instance;
 
@@ -40,7 +47,7 @@ namespace treyarch {
         vc8::map<mash::string, u32> unk_08;
     };
 
-    // every run-time list of city life; built by the constructor (sub_94D260)
+    // every run-time list of city life
     struct spawn_table_manager_unk_04c {
         i32 max_active_spawn_items;
         u32 quest_spawn_count;      // the quest items' share of spawn_count
@@ -108,19 +115,28 @@ namespace treyarch {
         u8   pad_145[0x03];
         i32  stars_level;
         i32  stars_mode_effects[2];  // looping effects on the hero, -1 for none
-        i32  unk_154;
-        i32  unk_158;
+        i32  engagement_capacity;    // what the hero's combat target gets back when stars mode ends
+        i32  threat_capacity;        // same
 
         entity* fixed_entities[15];
+
+        spawn_table_manager_unk_04c();
+       ~spawn_table_manager_unk_04c();
+
+        void rebuild_spawn_tables();
+        void pacing_tick(f32 dt);
 
         void add_spawn_items_by_name(mash::vector<mash::string>* names);
         void remove_spawn_items_by_name(mash::vector<mash::string>* names);
         void update_quest_spawn_counts();
 
+        bool apply_progression_changes(spawn_item_collection* collection);
+        void split_spawn_count();
+
         void destroy_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item);
     };
 
-    class spawn_table_manager : public singleton<spawn_table_manager, 0x010FB2B4> {
+    class spawn_table_manager : public singleton_instance<spawn_table_manager, 0x010FB2B4> {
 
     public:
         i32                          unk_004;
@@ -141,6 +157,27 @@ namespace treyarch {
         spawn_table_manager_unk_04c* unk_04c;
         bool                         unk_050;
         u8                           pad_051[0x03];
+
+        spawn_table_manager();
+        virtual ~spawn_table_manager();
+
+        virtual void update(f32 dt);
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
+        static spawn_table_manager* create();
+
+        void load(const char* level_name, amalga::resource_pack_slot* slot);
+
+        void stars_mode_damage_tick(f32 dt);
+        void end_stars_mode();
+        void start_ready_actives();
 
         spawn_item_collection* find_neighborhood_set();
         spawn_item_collection* find_city_wide_set();
@@ -209,6 +246,14 @@ namespace treyarch {
 
         // null until the first debris zone is added
         inline util::memory_reference<mash::vector<no_spawn_base>*> debris_no_spawn_zones { 0x010F9BDC };
+
+        // every update stores its manager here; nothing reads it
+        inline util::memory_reference<spawn_table_manager*> updating_spawn_table_manager { 0x010F9BC0 };
+
+        inline util::memory_reference<f32> stars_mode_damage_timer { 0x010FB300 };
+        inline util::memory_reference<i32> stars_mode_damage       { 0x00F4CA08 }; // a second's worth
+
+        inline util::memory_reference<string_hash> long_time_last_city_life { 0x0102C5CC };
     } // references
 
     ASSERT_SIZEOF  (city_life_category_entry,         0x14);
@@ -246,7 +291,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, stars_mode,                      0x144);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, stars_level,                     0x148);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, stars_mode_effects,              0x14C);
-    ASSERT_OFFSETOF(spawn_table_manager_unk_04c, unk_154,                         0x154);
+    ASSERT_OFFSETOF(spawn_table_manager_unk_04c, engagement_capacity,             0x154);
+    ASSERT_OFFSETOF(spawn_table_manager_unk_04c, threat_capacity,                 0x158);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, fixed_entities,                  0x15C);
 
     ASSERT_SIZEOF  (spawn_table_manager,                          0x54);

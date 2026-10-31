@@ -1,7 +1,11 @@
+#include "retail.hh"
+#include "game/amalga/resource_manager.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/neighborhood_interface.hh"
 #include "game/region_spawn_manager.hh"
+#include "game/resource_key.hh"
 #include "game/spawn/spawn_table_manager.hh"
+#include "game/summon_state.hh"
 
 using namespace treyarch;
 
@@ -11,6 +15,31 @@ void region_spawn_manager::draw_text() {
 
     if (text)
         text->render();
+}
+
+// sub_954750
+void region_spawn_manager::load(const char* level_name, amalga::resource_pack_slot* slot) {
+    spawn_table_manager::inst()->load(level_name, slot);
+
+    if (references::summon_state.read())
+        retail::sub_9525D0((u32*)references::summon_state.read(), (i32)level_name, (i32)slot); // summon_state load
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, "neighborhoods");
+
+    resource_key key;
+    key.hash = string_hash();
+    key.set(name, 63);
+
+    neighborhoods = (neighborhood_interface*)amalga::resource_manager::get_resource(key, nullptr, nullptr);
+
+    unk_00c = 0;
+
+    for (i32 index = 0; index < 8; ++index) {
+        region_spawn_interfaces[index] = nullptr;
+        region_names[index]            = string_hash();
+        regions[index]                 = nullptr;
+    }
 }
 
 // sub_90F470

@@ -508,7 +508,7 @@ void game::load_this_level(bool start_only, bool finish_only) {
     retail::sub_7EB4D0((i32*)references::environment_progression_state.read(), (i32)level_name, (i32)references::unk_01111754.read());
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
-        retail::sub_954750((u32*)region_spawn_manager::inst(), (i32)level_name, (i32)references::unk_01111754.read());
+        region_spawn_manager::inst()->load(level_name, references::unk_01111754.read());
 
     {
         string_hash vehicles_hash;

@@ -18,6 +18,8 @@ namespace treyarch {
         bool    summon_ability_script_toggled;
         u8      reserved_04a[0x4A];
         entity* current_stored_summon_actor;
+        bool    unk_098;
+        bool    unk_099;
 
         void deduct_meter_for_special_attack();
     };
@@ -34,4 +36,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(summon_state, unk_048,                       0x48);
     ASSERT_OFFSETOF(summon_state, summon_ability_script_toggled, 0x49);
     ASSERT_OFFSETOF(summon_state, current_stored_summon_actor,   0x94);
+    ASSERT_OFFSETOF(summon_state, unk_098,                       0x98);
+    ASSERT_OFFSETOF(summon_state, unk_099,                       0x99);
 } // treyarch
