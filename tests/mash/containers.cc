@@ -52,10 +52,11 @@ TEST_SUITE("mash") {
         CHECK(value->get_mash_sizeof() == 8);
         CHECK(value->get_mash_image_offset() == 64);
 
+        // the base's own unload does nothing; the vectors clear themselves before they call it.
         value->destruct_mashed_class();
 
-        CHECK(value->empty());
-        CHECK_FALSE(value->from_mash());
+        CHECK(value->size == 3);
+        CHECK(value->mash_image_offset == 64);
     }
 
     TEST_CASE("a container's count comes from the shared stream, aligned to four") {
@@ -501,6 +502,59 @@ TEST_SUITE("mash") {
         CHECK(free_count(tests::plain_allocator) == 1);
         CHECK(free_count(tests::heap_allocator) == 0);
         CHECK(live_count(tests::plain_allocator) == 0);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "a basic vector asks for its value type's own alignment when it grows") {
+
+        // a u8 gets 1, a u16 gets 2 and a u64 gets 8; nothing rounds them up to four.
+        mash::vector_basic<u8>  bytes {};
+        mash::vector_basic<u16> shorts {};
+        mash::vector_basic<u64> longs {};
+
+        bytes.reserve(3);
+        shorts.reserve(3);
+        longs.reserve(3);
+
+        REQUIRE(allocations.size() == 3);
+        CHECK(allocations[0].size == 3);
+        CHECK(allocations[0].alignment == 1);
+        CHECK(allocations[1].size == 6);
+        CHECK(allocations[1].alignment == 2);
+        CHECK(allocations[2].size == 24);
+        CHECK(allocations[2].alignment == 8);
+
+        // asking for less than it already has does nothing.
+        longs.reserve(2);
+
+        CHECK(allocations.size() == 3);
+        CHECK(longs.max_size == 3);
+    }
+
+    TEST_CASE_FIXTURE(tests::c_memory_fixture,
+                      "pushing onto a full basic vector grows it to the next multiple of eight first") {
+
+        mash::vector_basic<u32> values {};
+
+        // the empty push just makes room for one more slot and leaves it as it was.
+        values.push_back();
+
+        CHECK(values.size == 1);
+        CHECK(values.max_size == 8);
+
+        for (u32 index = 1; index < 8; ++index)
+            values.push_back(index * 10);
+
+        CHECK(allocations.size() == 1);
+
+        values.push_back(80);
+
+        REQUIRE(allocations.size() == 2);
+        CHECK(values.size == 9);
+        CHECK(values.max_size == 16);
+        CHECK(values.array[1] == 10);
+        CHECK(values.array[8] == 80);
+        CHECK(free_count(tests::plain_allocator) == 1);
     }
 
     TEST_CASE_FIXTURE(tests::c_memory_fixture,
