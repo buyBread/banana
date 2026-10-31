@@ -22,7 +22,7 @@
 #include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
-#include "game/spawn_table_manager.hh"
+#include "game/spawn/spawn_table_manager.hh"
 #include "game/summon_state.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/camera/camera.hh"

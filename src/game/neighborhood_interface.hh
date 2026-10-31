@@ -5,6 +5,7 @@
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/virtual_base.hh"
+#include "game/math/algebra.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -13,7 +14,9 @@ namespace treyarch {
     class neighborhood_definition : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x1C];
+        mash::string name;
+        u32          unk_10;
+        vector3d     center; // what the city-life actives call the neighborhood center
     };
 
     // the spawn table manager keeps the last one whose condition holds
@@ -23,7 +26,7 @@ namespace treyarch {
         u32                           unk_10;
         u32                           unk_14;
         u32                           unk_18;
-        mash::string                  unk_1c;
+        mash::string                  city_wide_set_name; // names the city-wide spawn item collection
         mash::vector
             <neighborhood_definition> meta_neighborhoods;
         mash::vector
@@ -52,11 +55,13 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    ASSERT_SIZEOF  (neighborhood_definition, 0x20);
+    ASSERT_SIZEOF  (neighborhood_definition,         0x20);
+    ASSERT_OFFSETOF(neighborhood_definition, name,   0x04);
+    ASSERT_OFFSETOF(neighborhood_definition, center, 0x14);
 
     ASSERT_SIZEOF  (neighborhood_interface_unk_04,                     0x54);
     ASSERT_OFFSETOF(neighborhood_interface_unk_04, unk_0c,             0x0C);
-    ASSERT_OFFSETOF(neighborhood_interface_unk_04, unk_1c,             0x1C);
+    ASSERT_OFFSETOF(neighborhood_interface_unk_04, city_wide_set_name, 0x1C);
     ASSERT_OFFSETOF(neighborhood_interface_unk_04, meta_neighborhoods, 0x28);
     ASSERT_OFFSETOF(neighborhood_interface_unk_04, neighborhoods,      0x3C);
     ASSERT_OFFSETOF(neighborhood_interface_unk_04, condition,          0x50);

@@ -11,7 +11,7 @@
 #include "game/app.hh"
 #include "game/animation/animation_controller.hh"
 #include "game/game.hh"
-#include "game/spawn_table_manager.hh"
+#include "game/spawn/spawn_table_manager.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"

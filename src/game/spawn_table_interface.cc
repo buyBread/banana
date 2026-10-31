@@ -1,3 +1,6 @@
+#include <cstring>
+
+#include "game/spawn_item_collection.hh"
 #include "game/spawn_table_interface.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
@@ -135,4 +138,18 @@ void spawn_table_interface::finalize(mash::allocation_scope) {
 
         mm::free(flag_collections_by_name);
     }
+}
+
+// sub_93F3F0
+static_spawn_item* spawn_table_interface::find_spawn_item(mash::string name) { // a miss leaves a null entry behind
+    return (*spawn_items_by_name)[name];
+}
+
+// sub_927B50
+spawn_item_collection* spawn_table_interface::find_spawn_item_collection(mash::string name) {
+    for (reference<spawn_item_collection>** it = spawn_item_collections.begin(); it != spawn_item_collections.end(); ++it)
+        if (!std::strncmp((*it)->pointer->name.c_str(), name.c_str(), mash::string::max_length))
+            return (*it)->pointer;
+
+    return nullptr;
 }

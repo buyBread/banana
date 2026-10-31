@@ -10,6 +10,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class base_region_point;
+
     // the base of every named spawn value; the family is only ever mashed, so each one runs on its retail vtable from the type registry
     class spawn_data_base : public mash::mash_virtual_base {
 
@@ -70,16 +72,16 @@ namespace treyarch {
         mash::vector
             <spawn_data_base> data;
         bool                  unk_20;
-        bool                  unk_21; // spawn picks skip points with it set
+        bool                  unk_21;       // spawn picks skip points with it set
         u8                    pad_22[2];
-        u32                   unk_24;
+        base_region_point*    region_point; // a heap copy of the picked region point on spawn records; null in the mash
 
         // inlined @ sub_94CB10
         void construct_mashed_class() {
             data.construct_mashed_class();
 
-            unk_24 = 0;
-            unk_21 = false;
+            region_point = nullptr;
+            unk_21       = false;
         }
 
         // inlined @ sub_93EED0
@@ -153,11 +155,11 @@ namespace treyarch {
     ASSERT_SIZEOF  (spawn_data_array_vector,         0x24);
     ASSERT_OFFSETOF(spawn_data_array_vector, values, 0x10);
 
-    ASSERT_SIZEOF  (spawn_point,         0x28);
-    ASSERT_OFFSETOF(spawn_point, data,   0x0C);
-    ASSERT_OFFSETOF(spawn_point, unk_20, 0x20);
-    ASSERT_OFFSETOF(spawn_point, unk_21, 0x21);
-    ASSERT_OFFSETOF(spawn_point, unk_24, 0x24);
+    ASSERT_SIZEOF  (spawn_point,               0x28);
+    ASSERT_OFFSETOF(spawn_point, data,         0x0C);
+    ASSERT_OFFSETOF(spawn_point, unk_20,       0x20);
+    ASSERT_OFFSETOF(spawn_point, unk_21,       0x21);
+    ASSERT_OFFSETOF(spawn_point, region_point, 0x24);
 
     ASSERT_SIZEOF  (spawn_point_list,         0x20);
     ASSERT_OFFSETOF(spawn_point_list, points, 0x0C);

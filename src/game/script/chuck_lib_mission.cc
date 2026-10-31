@@ -29,8 +29,8 @@
 #include "game/resource_key.hh"
 #include "game/script/chuck_lib_mission.hh"
 #include "game/script/script_access.hh"
+#include "game/spawn/spawn_table_manager.hh"
 #include "game/spawn_point_list_collection.hh"
-#include "game/spawn_table_manager.hh"
 #include "game/summon_progression.hh"
 #include "game/summon_state.hh"
 #include "game/wds/entity/entity.hh"
@@ -1826,8 +1826,8 @@ bool slf__flag_always_on_for_despawn__t::operator()(chuck::vm::vm_stack &stack) 
 bool slf__get_spawn_position__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    vector3d position;
-    void*    record = nullptr;
+    vector3d     position;
+    spawn_point* record = nullptr;
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
         for (u32 attempt = 0; attempt < 4; ++attempt) {
@@ -1837,10 +1837,9 @@ bool slf__get_spawn_position__num__t::operator()(chuck::vm::vm_stack &stack) {
                 break;
         }
 
-        // the record starts with the position
         if (record) {
-            position = *(vector3d*)record;
-            retail::sub_93D860((u32*)spawn_table_manager::inst(), (u32)record);
+            position = record->position;
+            spawn_table_manager::inst()->free_spawn_record(record);
         }
     }
 
@@ -1905,7 +1904,7 @@ bool slf__is_cross_neighborhood_spawn_active__t::operator()(chuck::vm::vm_stack 
     if (spawn_table_manager::inst()) {
         spawn_table_manager_unk_04c* spawns = spawn_table_manager::inst()->unk_04c;
 
-        active = spawns->unk_100.size() != 0 || spawns->cross_neighborhood_spawns.size() != 0;
+        active = spawns->quest_cross_neighborhood_spawns.size() != 0 || spawns->cross_neighborhood_spawns.size() != 0;
     }
 
     f32 result = active ? 1.0f : 0.0f;

@@ -1,7 +1,8 @@
 #include "retail.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
+#include "game/neighborhood_interface.hh"
 #include "game/region_spawn_manager.hh"
-#include "game/spawn_table_manager.hh"
+#include "game/spawn/spawn_table_manager.hh"
 
 using namespace treyarch;
 
@@ -11,6 +12,36 @@ void region_spawn_manager::draw_text() {
 
     if (text)
         text->render();
+}
+
+// sub_90F470
+mash::string region_spawn_manager::get_neighborhood_name() {
+    mash::string name;
+
+    if (neighborhood)
+        name = neighborhood->name;
+
+    return name;
+}
+
+// sub_90F4E0
+mash::string region_spawn_manager::get_meta_neighborhood_name() {
+    mash::string name;
+
+    if (meta_neighborhood)
+        name = meta_neighborhood->name;
+
+    return name;
+}
+
+// sub_90F550
+mash::string region_spawn_manager::get_city_wide_set_name() {
+    mash::string name;
+
+    if (unk_09c)
+        name = unk_09c->city_wide_set_name;
+
+    return name;
 }
 
 // sub_83E510

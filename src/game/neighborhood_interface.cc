@@ -6,7 +6,7 @@ using namespace treyarch;
 // inlined @ sub_94CD50
 void neighborhood_interface_unk_04::construct_mashed_class() {
     expression        .construct_mashed_class();
-    unk_1c            .construct_mashed_class();
+    city_wide_set_name.construct_mashed_class();
     meta_neighborhoods.construct_mashed_class();
     neighborhoods     .construct_mashed_class();
 
@@ -17,7 +17,7 @@ void neighborhood_interface_unk_04::construct_mashed_class() {
 // inlined @ sub_941400
 void neighborhood_interface_unk_04::destruct_mashed_class() {
     expression        .destruct_mashed_class();
-    unk_1c            .destruct_mashed_class();
+    city_wide_set_name.destruct_mashed_class();
     meta_neighborhoods.destruct_mashed_class();
     neighborhoods     .destruct_mashed_class();
 
@@ -30,7 +30,7 @@ void neighborhood_interface_unk_04::destruct_mashed_class() {
 // sub_93DB00
 void neighborhood_interface_unk_04::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
     expression        .unmash(mash_info, this, buffer);
-    unk_1c            .unmash(mash_info, this, buffer);
+    city_wide_set_name.unmash(mash_info, this, buffer);
     meta_neighborhoods.unmash(mash_info, this, buffer);
     neighborhoods     .unmash(mash_info, this, buffer);
 

@@ -110,6 +110,9 @@ namespace treyarch {
                     mash::buffer_type       buffer);
 
         void finalize(mash::allocation_scope scope);
+
+        static_spawn_item*     find_spawn_item(mash::string name);
+        spawn_item_collection* find_spawn_item_collection(mash::string name);
     };
 
     ASSERT_SIZEOF  (flag_collection_base, 0x10);

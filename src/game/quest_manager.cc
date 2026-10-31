@@ -5,6 +5,7 @@
 #include "game/quest_descriptions.hh"
 #include "game/quest_list.hh"
 #include "game/quest_manager.hh"
+#include "game/spawn/quest_giver_spawn.hh"
 
 using namespace treyarch;
 
@@ -156,14 +157,9 @@ vector3d quest_manager::get_questgiver_loc(const mash::string &name) { // where 
     if (index > -1) {
         mash::string turn_in(quests[index]->turn_in);
 
-        for (i32 giver = 0; giver < giver_count; ++giver) {
-            if (givers[giver]->name.is_equal(turn_in.c_str())) {
-                vector3d position;
-                retail::sub_90F780((i32)givers[giver]->unk_98, (i32)&position);
-
-                return position;
-            }
-        }
+        for (i32 giver = 0; giver < giver_count; ++giver)
+            if (givers[giver]->name.is_equal(turn_in.c_str()))
+                return givers[giver]->spawn->get_position();
     }
 
     return vector3d(0.0f, 0.0f, 0.0f);

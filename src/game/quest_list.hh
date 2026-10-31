@@ -12,6 +12,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    struct quest_giver_spawn;
+
     struct quest_unlock {
         mash::string     expression;
         mash::string     quest;
@@ -29,27 +31,36 @@ namespace treyarch {
     class quest_giver_location_item : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x20];
+        mash::string     expression;
+        mash::string     name;
+        bool             unk_1c;
+        u8               pad_1d[0x03];
+        quest_condition* condition;
+
+        virtual void     unk_024(quest_giver_spawn* spawn, bool unk);
+        virtual void     unk_028(quest_giver_spawn* spawn);
+        virtual vector3d get_position();
+        virtual vector3d get_facing();
     };
 
     struct quest_giver {
         mash::vector
             <quest_giver_location_item> locations;
 
-        mash::string name;
-        mash::string localized_name;
-        u32          unk_2c;
-        mash::string unk_30;
-        mash::string unk_3c;
-        mash::string unk_48;
-        i32          unk_54;
-        mash::string unk_58;
-        mash::string greeting;
-        mash::string unk_70;
-        mash::string unk_7c;
-        u32          unk_88[3];
-        u32          unk_94;
-        u32          unk_98;
+        mash::string       name;
+        mash::string       localized_name;
+        u32                unk_2c;
+        mash::string       unk_30;
+        mash::string       unk_3c;
+        mash::string       unk_48;
+        i32                unk_54;
+        mash::string       unk_58;
+        mash::string       greeting;
+        mash::string       unk_70;
+        mash::string       unk_7c;
+        vector3d           marker_offset;
+        u32                unk_94;
+        quest_giver_spawn* spawn;
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -104,15 +115,19 @@ namespace treyarch {
     ASSERT_SIZEOF  (quest_unlock,            0x28);
     ASSERT_OFFSETOF(quest_unlock, condition, 0x24);
 
-    ASSERT_SIZEOF  (quest_giver_location_item, 0x24);
+    ASSERT_SIZEOF  (quest_giver_location_item,            0x24);
+    ASSERT_OFFSETOF(quest_giver_location_item, name,      0x10);
+    ASSERT_OFFSETOF(quest_giver_location_item, unk_1c,    0x1C);
+    ASSERT_OFFSETOF(quest_giver_location_item, condition, 0x20);
 
-    ASSERT_SIZEOF  (quest_giver,           0x9C);
-    ASSERT_OFFSETOF(quest_giver, name,     0x14);
-    ASSERT_OFFSETOF(quest_giver, unk_2c,   0x2C);
-    ASSERT_OFFSETOF(quest_giver, unk_54,   0x54);
-    ASSERT_OFFSETOF(quest_giver, greeting, 0x64);
-    ASSERT_OFFSETOF(quest_giver, unk_88,   0x88);
-    ASSERT_OFFSETOF(quest_giver, unk_94,   0x94);
+    ASSERT_SIZEOF  (quest_giver,                0x9C);
+    ASSERT_OFFSETOF(quest_giver, name,          0x14);
+    ASSERT_OFFSETOF(quest_giver, unk_2c,        0x2C);
+    ASSERT_OFFSETOF(quest_giver, unk_54,        0x54);
+    ASSERT_OFFSETOF(quest_giver, greeting,      0x64);
+    ASSERT_OFFSETOF(quest_giver, marker_offset, 0x88);
+    ASSERT_OFFSETOF(quest_giver, unk_94,        0x94);
+    ASSERT_OFFSETOF(quest_giver, spawn,         0x98);
 
     ASSERT_SIZEOF  (quest_list_unk_50, 0x24);
 
