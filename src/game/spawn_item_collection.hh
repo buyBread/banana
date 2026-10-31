@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "game/math/algebra.hh"
 #include "game/progression_change.hh"
 #include "game/quest_descriptions.hh"
@@ -9,15 +11,20 @@
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/vector_basic.hh"
 #include "treyarch/mash/virtual_base.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    // the base of every no-spawn area; mashed ones get their retail vtable from the type registry
+    // the base of every no-spawn area; mashed ones get their retail vtable from the type registry, the spawn table manager builds its own
     class no_spawn_base : public mash::mash_virtual_base {
 
     public:
         mash::string name;
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
 
         // sub_71FF10
         virtual bool contains_point(const vector3d*) { return false; }
@@ -28,6 +35,9 @@ namespace treyarch {
     public:
         vector3d center;
         f32      radius;
+
+        // sub_905AB0
+        no_spawn_point() {} // the centre and radius stay as allocated
 
         // sub_90F940
         bool contains_point(const vector3d* point) override {
@@ -47,6 +57,12 @@ namespace treyarch {
 
     public:
         mash::vector_basic<vector3d> points;
+
+        // sub_929930
+        no_spawn_quad() {
+            points.array    = nullptr;
+            points.max_size = 0;
+        }
 
         // sub_920B40
         bool contains_point(const vector3d* point) override { // even-odd crossings of the edges

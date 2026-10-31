@@ -1051,14 +1051,10 @@ bool slf__has_optional_data__t::operator()(chuck::vm::vm_stack &stack) {
 bool slf__add_no_spawn_zone__str__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x14;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using add_no_spawn_zone_t = void (__thiscall*)(spawn_table_manager*, mash::string, vector3d, f32);
-
-        ((add_no_spawn_zone_t)retail::sub_94F970)(spawn_table_manager::inst(),
-                                                  mash::string((const char*)stack.local_uint(0x00)),
-                                                  *(vector3d*)&stack.local_uint(0x04),
-                                                  stack.local_num(0x10));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->add_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)),
+                                                       *(vector3d*)&stack.local_uint(0x04),
+                                                       stack.local_num(0x10));
 
     return true;
 }
@@ -1070,9 +1066,7 @@ bool slf__add_no_spawn_zone__str__dynamic_array__t::operator()(chuck::vm::vm_sta
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using add_no_spawn_zone_t = void (__thiscall*)(spawn_table_manager*, mash::string, chuck::vm::script_dynamic_array<vector3d>*);
-
-        ((add_no_spawn_zone_t)retail::sub_94FA90)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)), &points);
+        spawn_table_manager::inst()->add_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)), &points);
     }
 
     return true;
@@ -1082,11 +1076,8 @@ bool slf__add_no_spawn_zone__str__dynamic_array__t::operator()(chuck::vm::vm_sta
 bool slf__remove_no_spawn_zone__str__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using remove_no_spawn_zone_t = void (__thiscall*)(spawn_table_manager*, mash::string);
-
-        ((remove_no_spawn_zone_t)retail::sub_94FC70)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->remove_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)));
 
     return true;
 }
@@ -1097,13 +1088,9 @@ bool slf__is_point_within_no_spawn_zone__str__vector3d__t::operator()(chuck::vm:
 
     bool within = false;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using is_point_within_no_spawn_zone_t = bool (__thiscall*)(spawn_table_manager*, mash::string, const vector3d*);
-
-        within = ((is_point_within_no_spawn_zone_t)retail::sub_93F9F0)(spawn_table_manager::inst(),
-                                                                       mash::string((const char*)stack.local_uint(0x00)),
-                                                                       (const vector3d*)&stack.local_uint(0x04));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        within = spawn_table_manager::inst()->is_point_within_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)),
+                                                                            (const vector3d*)&stack.local_uint(0x04));
 
     f32 result = within ? 1.0f : 0.0f;
 
@@ -1116,11 +1103,9 @@ bool slf__is_point_within_no_spawn_zone__str__vector3d__t::operator()(chuck::vm:
 bool slf__add_debris_no_spawn_zone__str__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x14;
 
-    using add_debris_no_spawn_zone_t = void (*)(mash::string, vector3d, f32);
-
-    ((add_debris_no_spawn_zone_t)retail::sub_9385A0)(mash::string((const char*)stack.local_uint(0x00)),
-                                                     *(vector3d*)&stack.local_uint(0x04),
-                                                     stack.local_num(0x10));
+    spawn_table_manager::add_debris_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)),
+                                                  *(vector3d*)&stack.local_uint(0x04),
+                                                  stack.local_num(0x10));
 
     return true;
 }
@@ -1131,9 +1116,7 @@ bool slf__add_debris_no_spawn_zone__str__dynamic_array__t::operator()(chuck::vm:
 
     chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-    using add_debris_no_spawn_zone_t = void (*)(mash::string, chuck::vm::script_dynamic_array<vector3d>*);
-
-    ((add_debris_no_spawn_zone_t)retail::sub_9386A0)(mash::string((const char*)stack.local_uint(0x00)), &points);
+    spawn_table_manager::add_debris_no_spawn_zone(mash::string((const char*)stack.local_uint(0x00)), &points);
 
     return true;
 }
@@ -1142,14 +1125,10 @@ bool slf__add_debris_no_spawn_zone__str__dynamic_array__t::operator()(chuck::vm:
 bool slf__add_arbitrary_region__str__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x14;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using add_arbitrary_region_t = void (__thiscall*)(spawn_table_manager*, mash::string, vector3d, f32);
-
-        ((add_arbitrary_region_t)retail::sub_94FD40)(spawn_table_manager::inst(),
-                                                     mash::string((const char*)stack.local_uint(0x00)),
-                                                     *(vector3d*)&stack.local_uint(0x04),
-                                                     stack.local_num(0x10));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->add_arbitrary_region(mash::string((const char*)stack.local_uint(0x00)),
+                                                          *(vector3d*)&stack.local_uint(0x04),
+                                                          stack.local_num(0x10));
 
     return true;
 }
@@ -1161,9 +1140,7 @@ bool slf__add_arbitrary_region__str__dynamic_array__t::operator()(chuck::vm::vm_
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using add_arbitrary_region_t = void (__thiscall*)(spawn_table_manager*, mash::string, chuck::vm::script_dynamic_array<vector3d>*);
-
-        ((add_arbitrary_region_t)retail::sub_94FE60)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)), &points);
+        spawn_table_manager::inst()->add_arbitrary_region(mash::string((const char*)stack.local_uint(0x00)), &points);
     }
 
     return true;
@@ -1173,11 +1150,8 @@ bool slf__add_arbitrary_region__str__dynamic_array__t::operator()(chuck::vm::vm_
 bool slf__remove_arbitrary_region__str__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using remove_arbitrary_region_t = void (__thiscall*)(spawn_table_manager*, mash::string);
-
-        ((remove_arbitrary_region_t)retail::sub_950040)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->remove_arbitrary_region(mash::string((const char*)stack.local_uint(0x00)));
 
     return true;
 }
@@ -1188,13 +1162,9 @@ bool slf__is_point_within_arbitrary_region__str__vector3d__t::operator()(chuck::
 
     bool within = false;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using is_point_within_arbitrary_region_t = bool (__thiscall*)(spawn_table_manager*, mash::string, const vector3d*);
-
-        within = ((is_point_within_arbitrary_region_t)retail::sub_93FA80)(spawn_table_manager::inst(),
-                                                                          mash::string((const char*)stack.local_uint(0x00)),
-                                                                          (const vector3d*)&stack.local_uint(0x04));
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        within = spawn_table_manager::inst()->is_point_within_arbitrary_region(mash::string((const char*)stack.local_uint(0x00)),
+                                                                               (const vector3d*)&stack.local_uint(0x04));
 
     f32 result = within ? 1.0f : 0.0f;
 
@@ -1464,9 +1434,7 @@ bool slf__get_all_city_life_of_category__str__dynamic_array__t::operator()(chuck
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<f32> spawns((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        using get_all_city_life_of_category_t = void (__thiscall*)(spawn_table_manager*, mash::string, chuck::vm::script_dynamic_array<f32>*);
-
-        ((get_all_city_life_of_category_t)retail::sub_9581E0)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)), &spawns);
+        spawn_table_manager::inst()->get_all_city_life_of_category(mash::string((const char*)stack.local_uint(0x00)), &spawns);
     }
 
     return true;
@@ -1489,11 +1457,8 @@ bool slf__get_all_categories_on_city_life__num__dynamic_array__t::operator()(chu
 bool slf__create_category_for_mission__str__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using create_category_for_mission_t = void (__thiscall*)(spawn_table_manager*, mash::string, chuck::vm::script_instance*);
-
-        ((create_category_for_mission_t)retail::sub_958440)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)), stack.thread->inst);
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->create_category_for_mission(mash::string((const char*)stack.local_uint(0x00)), stack.thread->inst);
 
     return true;
 }
@@ -1502,17 +1467,10 @@ bool slf__create_category_for_mission__str__t::operator()(chuck::vm::vm_stack &s
 bool slf__register_important_city_life_entity__str__entity__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x08;
 
-    if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using register_important_city_life_entity_t = void (__thiscall*)(spawn_table_manager*,
-                                                                         mash::string,
-                                                                         arch_base_vhandle,
-                                                                         chuck::vm::script_instance*);
-
-        ((register_important_city_life_entity_t)retail::sub_93FE70)(spawn_table_manager::inst(),
-                                                                    mash::string((const char*)stack.local_uint(0x00)),
-                                                                    arch_base_vhandle(stack.local_uint(0x04)),
-                                                                    stack.thread->inst);
-    }
+    if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
+        spawn_table_manager::inst()->register_important_city_life_entity(mash::string((const char*)stack.local_uint(0x00)),
+                                                                         arch_base_vhandle(stack.local_uint(0x04)),
+                                                                         stack.thread->inst);
 
     return true;
 }
@@ -1524,13 +1482,10 @@ bool slf__get_important_city_life_entity__num__str__t::operator()(chuck::vm::vm_
     arch_base_vhandle handle;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using get_important_city_life_entity_t = arch_base_vhandle* (__thiscall*)(spawn_table_manager*, arch_base_vhandle*, i32, mash::string);
-
         arch_base_vhandle found;
-        handle = *((get_important_city_life_entity_t)retail::sub_93FFB0)(spawn_table_manager::inst(),
-                                                                         &found,
-                                                                         (i32)stack.local_num(0x00),
-                                                                         mash::string((const char*)stack.local_uint(0x04)));
+        handle = *spawn_table_manager::inst()->get_important_city_life_entity(&found,
+                                                                              (i32)stack.local_num(0x00),
+                                                                              mash::string((const char*)stack.local_uint(0x04)));
     }
 
     stack.push(&handle, sizeof(handle));
@@ -1561,7 +1516,7 @@ bool slf__save_safe_zone_wall_percentages__dynamic_array__t::operator()(chuck::v
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<f32> percentages((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
 
-        retail::sub_9502B0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)&percentages);
+        spawn_table_manager::inst()->save_safe_zone_wall_percentages(stack.thread->inst, &percentages);
     }
 
     return true;
@@ -1574,7 +1529,7 @@ bool slf__get_safe_zone_wall_percentages__dynamic_array__t::operator()(chuck::vm
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<f32> percentages((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
 
-        retail::sub_953BB0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (u32**)&percentages);
+        spawn_table_manager::inst()->get_safe_zone_wall_percentages(stack.thread->inst, &percentages);
     }
 
     return true;

@@ -122,7 +122,7 @@ namespace treyarch {
         vc8::vector<u32>            unk_04;
         vc8::vector<finger_of_god*> radar_markers;
         vc8::vector<u32>            zoom_map_markers;
-        vc8::vector<u32>            unk_34;
+        vc8::vector<f32>            safe_zone_wall_percentages; // the script's percentages times the spawn's unk_98
         bool                        quest_event_raised;
         u8                          pad_45[0x03];
         i32                         safe_zone_wall_index;
@@ -132,7 +132,8 @@ namespace treyarch {
 
     public:
         u32                              unk_94; // an event callback id
-        u8                               unk_98[0x0C];
+        f32                              unk_98;
+        u8                               unk_9c[0x08];
         mash::vector
             <mash::vector<mash::string>> unk_a4;
         mash::string                     quest_event;
@@ -190,16 +191,17 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (always_on_scripted_spawn_item, 0xA0);
 
-    ASSERT_SIZEOF  (cross_neighborhood_spawn_unk_d8,                       0x4C);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, unk_04,               0x04);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, radar_markers,        0x14);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, zoom_map_markers,     0x24);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, unk_34,               0x34);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, quest_event_raised,   0x44);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_index, 0x48);
+    ASSERT_SIZEOF  (cross_neighborhood_spawn_unk_d8,                             0x4C);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, unk_04,                     0x04);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, radar_markers,              0x14);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, zoom_map_markers,           0x24);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_percentages, 0x34);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, quest_event_raised,         0x44);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_index,       0x48);
 
     ASSERT_SIZEOF  (cross_neighborhood_spawn,              0xDC);
     ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_94,      0x94);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_98,      0x98);
     ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_a4,      0xA4);
     ASSERT_OFFSETOF(cross_neighborhood_spawn, quest_event, 0xB8);
     ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_c4,      0xC4);

@@ -3,6 +3,7 @@
 #include "vc8/map.hh"
 #include "vc8/vector.hh"
 #include "treyarch/mash/string.hh"
+#include "game/arch_base_vhandle.hh"
 #include "game/math/algebra.hh"
 #include "game/spawn_point_list_collection.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -24,20 +25,20 @@ namespace treyarch {
     class active_spawn_item {
 
     public:
-        spawn_point*                    record;
-        static_spawn_item*              item;
-        chuck::vm::vm_thread*           constructor_thread;
-        chuck::vm::script_instance*     instance;           // made from the item's CITY_LIFE_OBJECT
-        vc8::map<mash::string, u32>     unk_14;
-        i32                             spawn_id;           // what the script natives call a spawn's number
-        bool                            unk_24;             // set once the instance is made
-        bool                            unk_25;
-        bool                            unk_26;
-        bool                            forced_despawn;
-        bool                            unk_28;
-        u8                              pad_29[0x03];
-        vector3d*                       neighborhood_center;
-        vector3d*                       meta_neighborhood_center;
+        spawn_point*                              record;
+        static_spawn_item*                        item;
+        chuck::vm::vm_thread*                     constructor_thread;
+        chuck::vm::script_instance*               instance;           // made from the item's CITY_LIFE_OBJECT
+        vc8::map<mash::string, arch_base_vhandle> important_entities;
+        i32                                       spawn_id;           // what the script natives call a spawn's number
+        bool                                      unk_24;             // set once the instance is made
+        bool                                      unk_25;
+        bool                                      unk_26;
+        bool                                      forced_despawn;
+        bool                                      unk_28;
+        u8                                        pad_29[0x03];
+        vector3d*                                 neighborhood_center;
+        vector3d*                                 meta_neighborhood_center;
 
         virtual ~active_spawn_item();
 
@@ -91,7 +92,7 @@ namespace treyarch {
     ASSERT_SIZEOF  (active_spawn_item,                           0x34);
     ASSERT_OFFSETOF(active_spawn_item, record,                   0x04);
     ASSERT_OFFSETOF(active_spawn_item, instance,                 0x10);
-    ASSERT_OFFSETOF(active_spawn_item, unk_14,                   0x14);
+    ASSERT_OFFSETOF(active_spawn_item, important_entities,       0x14);
     ASSERT_OFFSETOF(active_spawn_item, spawn_id,                 0x20);
     ASSERT_OFFSETOF(active_spawn_item, unk_24,                   0x24);
     ASSERT_OFFSETOF(active_spawn_item, forced_despawn,           0x27);

@@ -1045,6 +1045,222 @@ void spawn_table_manager::clear_debris_no_spawn_zones() {
     references::debris_no_spawn_zones.write(nullptr);
 }
 
+// sub_94F970
+void spawn_table_manager::add_no_spawn_zone(mash::string name, vector3d center, f32 radius) { // a name already taken drops its old zone without freeing it
+    if (!unk_04c->no_spawn_zones) {
+        void* storage = mm::allocate(sizeof(vc8::map<mash::string, no_spawn_base*>));
+
+        unk_04c->no_spawn_zones = storage ? new (storage) vc8::map<mash::string, no_spawn_base*>() : nullptr;
+    }
+
+    (*unk_04c->no_spawn_zones)[name];
+
+    auto* zone = new no_spawn_point;
+
+    zone->center = center;
+    zone->radius = radius;
+    zone->name   = name;
+
+    (*unk_04c->no_spawn_zones)[name] = zone;
+}
+
+// sub_94FA90
+void spawn_table_manager::add_no_spawn_zone(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points) { // a name already taken drops its old zone without freeing it
+    if (!unk_04c->no_spawn_zones) {
+        void* storage = mm::allocate(sizeof(vc8::map<mash::string, no_spawn_base*>));
+
+        unk_04c->no_spawn_zones = storage ? new (storage) vc8::map<mash::string, no_spawn_base*>() : nullptr;
+    }
+
+    (*unk_04c->no_spawn_zones)[name];
+
+    auto* zone = new no_spawn_quad;
+
+    zone->name = name;
+
+    for (auto* it = points->array->begin(); it != points->array->end(); ++it)
+        zone->points.push_back(*(vector3d*)it->stuff);
+
+    (*unk_04c->no_spawn_zones)[name] = zone;
+}
+
+// sub_94FC70
+void spawn_table_manager::remove_no_spawn_zone(mash::string name) { // the map goes with its last zone
+    if (!unk_04c->no_spawn_zones)
+        return;
+
+    auto* found = unk_04c->no_spawn_zones->find(name);
+
+    if (found != unk_04c->no_spawn_zones->end()) {
+        no_spawn_base* zone = found->value.second;
+
+        unk_04c->no_spawn_zones->erase(found);
+
+        delete zone;
+    }
+
+    if (unk_04c->no_spawn_zones->size())
+        return;
+
+    if (unk_04c->no_spawn_zones) {
+        unk_04c->no_spawn_zones->~map();
+
+        mm::free(unk_04c->no_spawn_zones);
+    }
+
+    unk_04c->no_spawn_zones = nullptr;
+}
+
+// sub_93F9F0
+bool spawn_table_manager::is_point_within_no_spawn_zone(mash::string name, const vector3d* point) {
+    if (!unk_04c->no_spawn_zones)
+        return false;
+
+    if (unk_04c->no_spawn_zones->find(name) == unk_04c->no_spawn_zones->end())
+        return false;
+
+    return (*unk_04c->no_spawn_zones)[name]->contains_point(point);
+}
+
+// sub_94FD40
+void spawn_table_manager::add_arbitrary_region(mash::string name, vector3d center, f32 radius) { // a name already taken drops its old region without freeing it
+    if (!unk_04c->arbitrary_regions) {
+        void* storage = mm::allocate(sizeof(vc8::map<mash::string, no_spawn_base*>));
+
+        unk_04c->arbitrary_regions = storage ? new (storage) vc8::map<mash::string, no_spawn_base*>() : nullptr;
+    }
+
+    (*unk_04c->arbitrary_regions)[name];
+
+    auto* region = new no_spawn_point;
+
+    region->center = center;
+    region->radius = radius;
+    region->name   = name;
+
+    (*unk_04c->arbitrary_regions)[name] = region;
+}
+
+// sub_94FE60
+void spawn_table_manager::add_arbitrary_region(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points) { // a name already taken drops its old region without freeing it
+    if (!unk_04c->arbitrary_regions) {
+        void* storage = mm::allocate(sizeof(vc8::map<mash::string, no_spawn_base*>));
+
+        unk_04c->arbitrary_regions = storage ? new (storage) vc8::map<mash::string, no_spawn_base*>() : nullptr;
+    }
+
+    (*unk_04c->arbitrary_regions)[name];
+
+    auto* region = new no_spawn_quad;
+
+    region->name = name;
+
+    for (auto* it = points->array->begin(); it != points->array->end(); ++it)
+        region->points.push_back(*(vector3d*)it->stuff);
+
+    (*unk_04c->arbitrary_regions)[name] = region;
+}
+
+// sub_950040
+void spawn_table_manager::remove_arbitrary_region(mash::string name) { // the map goes with its last region
+    if (!unk_04c->arbitrary_regions)
+        return;
+
+    auto* found = unk_04c->arbitrary_regions->find(name);
+
+    if (found != unk_04c->arbitrary_regions->end()) {
+        no_spawn_base* region = found->value.second;
+
+        unk_04c->arbitrary_regions->erase(found);
+
+        delete region;
+    }
+
+    if (unk_04c->arbitrary_regions->size())
+        return;
+
+    if (unk_04c->arbitrary_regions) {
+        unk_04c->arbitrary_regions->~map();
+
+        mm::free(unk_04c->arbitrary_regions);
+    }
+
+    unk_04c->arbitrary_regions = nullptr;
+}
+
+// sub_93FA80
+bool spawn_table_manager::is_point_within_arbitrary_region(mash::string name, const vector3d* point) {
+    if (!unk_04c->arbitrary_regions)
+        return false;
+
+    if (unk_04c->arbitrary_regions->find(name) == unk_04c->arbitrary_regions->end())
+        return false;
+
+    return (*unk_04c->arbitrary_regions)[name]->contains_point(point);
+}
+
+// sub_9340A0
+void spawn_table_manager::destroy_debris_inside(no_spawn_base* zone) {
+    vc8::vector<debris_entity_list*> &lists = references::debris_entity_lists.get();
+
+    for (u32 index = 0; lists.begin() && index < lists.size(); ++index) {
+        debris_entity_list* list = lists[index];
+
+        if (!list || !list->entities)
+            continue;
+
+        for (entity** it = list->entities->begin(); it != list->entities->end();) {
+            if (!zone->contains_point(&(*it)->my_abs_po->get_position())) {
+                ++it;
+                continue;
+            }
+
+            retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)*it); // wds_entity_manager::destroy_entity
+
+            it = list->entities->erase(it);
+        }
+    }
+}
+
+// sub_9385A0
+void spawn_table_manager::add_debris_no_spawn_zone(mash::string name, vector3d center, f32 radius) { // the debris already inside goes
+    if (!references::debris_no_spawn_zones.read()) {
+        void* storage = mm::allocate(sizeof(mash::vector<no_spawn_base>));
+
+        references::debris_no_spawn_zones.write(storage ? new (storage) mash::vector<no_spawn_base>() : nullptr);
+    }
+
+    auto* zone = new no_spawn_point;
+
+    zone->center = center;
+    zone->radius = radius;
+    zone->name   = name;
+
+    references::debris_no_spawn_zones.read()->push_back(zone);
+
+    destroy_debris_inside(zone);
+}
+
+// sub_9386A0
+void spawn_table_manager::add_debris_no_spawn_zone(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points) { // the debris already inside goes
+    if (!references::debris_no_spawn_zones.read()) {
+        void* storage = mm::allocate(sizeof(mash::vector<no_spawn_base>));
+
+        references::debris_no_spawn_zones.write(storage ? new (storage) mash::vector<no_spawn_base>() : nullptr);
+    }
+
+    auto* zone = new no_spawn_quad;
+
+    zone->name = name;
+
+    for (auto* it = points->array->begin(); it != points->array->end(); ++it)
+        zone->points.push_back(*(vector3d*)it->stuff);
+
+    references::debris_no_spawn_zones.read()->push_back(zone);
+
+    destroy_debris_inside(zone);
+}
+
 // sub_9585E0
 void spawn_table_manager::reset_city_life() {
     for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end(); ++it)
@@ -1240,6 +1456,7 @@ bool spawn_table_manager::is_valid_spawn(i32 spawn_id) {
 
 // inlined @ sub_92F340
 // inlined @ sub_92F3F0
+// inlined @ sub_9502B0
 cross_neighborhood_spawn* spawn_table_manager::find_cross_neighborhood_spawn(chuck::vm::script_instance* inst) { // the plain list first, then the quest one
     for (cross_neighborhood_spawn** it = unk_04c->cross_neighborhood_spawns.begin(); it != unk_04c->cross_neighborhood_spawns.end(); ++it)
         if ((*it)->unk_d8->active && (*it)->unk_d8->active->has_instance(inst))
@@ -1268,6 +1485,36 @@ i32 spawn_table_manager::get_safe_zone_wall_index(chuck::vm::script_instance* in
         return spawn->unk_d8->safe_zone_wall_index;
 
     return -1;
+}
+
+// sub_9502B0
+void spawn_table_manager::save_safe_zone_wall_percentages(chuck::vm::script_instance* inst, chuck::vm::script_dynamic_array<f32>* percentages) {
+    cross_neighborhood_spawn* spawn = find_cross_neighborhood_spawn(inst);
+
+    if (spawn)
+        retail::sub_94B920((i32)spawn, (i32)percentages); // cross_neighborhood_spawn::save_safe_zone_wall_percentages
+}
+
+// sub_953BB0
+void spawn_table_manager::get_safe_zone_wall_percentages(chuck::vm::script_instance* inst, chuck::vm::script_dynamic_array<f32>* percentages) {
+    cross_neighborhood_spawn* spawn = nullptr;
+
+    for (cross_neighborhood_spawn** it = unk_04c->cross_neighborhood_spawns.begin(); it != unk_04c->cross_neighborhood_spawns.end(); ++it)
+        if ((*it)->unk_d8->active && (*it)->unk_d8->active->has_instance(inst)) {
+            spawn = *it;
+            break;
+        }
+
+    // the quest list's search never steps past its first spawn, so a miss there never returns
+    if (!spawn)
+        for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end();)
+            if ((*it)->unk_d8->active && (*it)->unk_d8->active->has_instance(inst)) {
+                spawn = *it;
+                break;
+            }
+
+    if (spawn)
+        retail::sub_952440((i32)spawn, (u32**)percentages); // cross_neighborhood_spawn::get_safe_zone_wall_percentages
 }
 
 // sub_92F4A0
@@ -1343,6 +1590,110 @@ void spawn_table_manager::get_all_categories_on_city_life(i32 spawn_id, chuck::v
 
         categories->array->push_back(element);
     }
+}
+
+// sub_9581E0
+void spawn_table_manager::get_all_city_life_of_category(mash::string name, chuck::vm::script_dynamic_array<f32>* spawns) { // the actives carrying it, then the mission's entries under it
+    for (active_spawn_item** it = unk_04c->active_spawn_items.begin(); it != unk_04c->active_spawn_items.end(); ++it) {
+        mash::vector<mash::string> &categories = (*it)->item->categories;
+
+        mash::string** found = std::find_if(categories.begin(),
+                                            categories.end(),
+                                            [&name](mash::string* category) { return !std::strncmp(category->c_str(), name.c_str(), mash::string::max_length); });
+
+        if (found == categories.end())
+            continue;
+
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(f32*)element.stuff = (f32)(u32)(*it)->spawn_id;
+
+        spawns->array->push_back(element);
+    }
+
+    if (!unk_04c->city_life_categories)
+        return;
+
+    if (unk_04c->city_life_categories->find(name) == unk_04c->city_life_categories->end())
+        return;
+
+    for (city_life_category_entry* it = (*unk_04c->city_life_categories)[name].begin(); it != (*unk_04c->city_life_categories)[name].end(); ++it) {
+        chuck::vm::chuck_dynamic_array_element_t element;
+        *(f32*)element.stuff = (f32)(u32)it->spawn_id;
+
+        spawns->array->push_back(element);
+    }
+}
+
+// sub_958440
+void spawn_table_manager::create_category_for_mission(mash::string name, chuck::vm::script_instance* inst) { // one entry per instance under each name
+    if (!unk_04c->city_life_categories) {
+        void* storage = mm::allocate(sizeof(vc8::map<mash::string, vc8::vector<city_life_category_entry>>));
+
+        unk_04c->city_life_categories = storage ? new (storage) vc8::map<mash::string, vc8::vector<city_life_category_entry>>() : nullptr;
+    }
+
+    bool found = false;
+
+    for (city_life_category_entry* it = (*unk_04c->city_life_categories)[name].begin(); it != (*unk_04c->city_life_categories)[name].end(); ++it)
+        if (it->instance == inst)
+            found = true;
+
+    if (found)
+        return;
+
+    city_life_category_entry entry;
+    entry.spawn_id = references::next_spawn_id.get()++;
+    entry.instance = inst;
+
+    (*unk_04c->city_life_categories)[name].push_back(entry);
+}
+
+// sub_93FE70
+void spawn_table_manager::register_important_city_life_entity(mash::string                name,
+                                                              arch_base_vhandle           handle,
+                                                              chuck::vm::script_instance* inst) {
+
+    for (active_spawn_item** it = unk_04c->active_spawn_items.begin(); it != unk_04c->active_spawn_items.end(); ++it)
+        if ((*it)->has_instance(inst)) {
+            (*it)->important_entities[name] = handle;
+
+            return;
+        }
+
+    // a mission instance files it under each of its categories
+    if (!unk_04c->city_life_categories)
+        return;
+
+    for (auto* node = unk_04c->city_life_categories->begin(); node != unk_04c->city_life_categories->end(); node = node->next())
+        for (city_life_category_entry* entry = node->value.second.begin(); entry != node->value.second.end(); ++entry)
+            if (entry->instance == inst)
+                entry->important_entities[name] = handle;
+}
+
+// sub_93FFB0
+arch_base_vhandle* spawn_table_manager::get_important_city_life_entity(arch_base_vhandle* out, i32 spawn_id, mash::string name) { // a null handle when nothing has it
+    *out = arch_base_vhandle();
+
+    active_spawn_item** found = std::find_if(unk_04c->active_spawn_items.begin(),
+                                             unk_04c->active_spawn_items.end(),
+                                             [spawn_id](active_spawn_item* active) { return active->spawn_id == spawn_id; });
+
+    if (found != unk_04c->active_spawn_items.end()) {
+        *out = (*found)->important_entities[name];
+
+        return out;
+    }
+
+    if (!unk_04c->city_life_categories)
+        return out;
+
+    // the last matching entry wins
+    for (auto* node = unk_04c->city_life_categories->begin(); node != unk_04c->city_life_categories->end(); node = node->next())
+        for (city_life_category_entry* entry = node->value.second.begin(); entry != node->value.second.end(); ++entry)
+            if (entry->spawn_id == spawn_id)
+                *out = entry->important_entities[name];
+
+    return out;
 }
 
 // sub_952040

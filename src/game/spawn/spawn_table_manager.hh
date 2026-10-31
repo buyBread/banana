@@ -8,6 +8,7 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mm/mm.hh"
+#include "game/arch_base_vhandle.hh"
 #include "game/math/algebra.hh"
 #include "game/spawn/persistence_data.hh"
 #include "game/singleton.hh"
@@ -42,9 +43,15 @@ namespace treyarch {
     struct spawn_point;
 
     struct city_life_category_entry {
-        u32                         unk_00;
-        u32                         unk_04;
-        vc8::map<mash::string, u32> unk_08;
+        i32                                       spawn_id;           // from the actives' counter
+        chuck::vm::script_instance*               instance;           // the mission instance that made it
+        vc8::map<mash::string, arch_base_vhandle> important_entities;
+    };
+
+    // what the debris spawner made; a debris zone added later destroys the ones inside it
+    struct debris_entity_list {
+        string_hash           unk_00;
+        vc8::vector<entity*>* entities;
     };
 
     // every run-time list of city life
@@ -208,6 +215,26 @@ namespace treyarch {
 
         static void clear_debris_no_spawn_zones();
 
+        // the named areas; each map is made with its first area and freed with its last
+        void add_no_spawn_zone(mash::string name, vector3d center, f32 radius);
+        void add_no_spawn_zone(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points);
+        void remove_no_spawn_zone(mash::string name);
+        bool is_point_within_no_spawn_zone(mash::string name, const vector3d* point);
+        void add_arbitrary_region(mash::string name, vector3d center, f32 radius);
+        void add_arbitrary_region(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points);
+        void remove_arbitrary_region(mash::string name);
+        bool is_point_within_arbitrary_region(mash::string name, const vector3d* point);
+
+        static void add_debris_no_spawn_zone(mash::string name, vector3d center, f32 radius);
+        static void add_debris_no_spawn_zone(mash::string name, chuck::vm::script_dynamic_array<vector3d>* points);
+
+        void               get_all_city_life_of_category(mash::string name, chuck::vm::script_dynamic_array<f32>* spawns);
+        void               create_category_for_mission(mash::string name, chuck::vm::script_instance* inst);
+        void               register_important_city_life_entity(mash::string                name,
+                                                               arch_base_vhandle           handle,
+                                                               chuck::vm::script_instance* inst);
+        arch_base_vhandle* get_important_city_life_entity(arch_base_vhandle* out, i32 spawn_id, mash::string name);
+
         // the script queries; `inst` is the calling script instance, matched through each active's has_instance
         void             get_entities(chuck::vm::script_instance* inst,
                                       i32                         number,
@@ -230,6 +257,9 @@ namespace treyarch {
         void             get_all_categories_on_city_life(i32 spawn_id, chuck::vm::script_dynamic_array<u32>* categories);
         void             get_spawn_point_point_data(chuck::vm::script_instance*                inst,
                                                     chuck::vm::script_dynamic_array<vector3d>* points);
+
+        void save_safe_zone_wall_percentages(chuck::vm::script_instance* inst, chuck::vm::script_dynamic_array<f32>* percentages);
+        void get_safe_zone_wall_percentages(chuck::vm::script_instance* inst, chuck::vm::script_dynamic_array<f32>* percentages);
 
         bool is_spidey_near_quest_giver(f32 radius);
         bool get_nearest_quest_giver_restart_position(vector3d* position, vector3d* facing);
@@ -255,6 +285,8 @@ namespace treyarch {
         cross_neighborhood_spawn* find_cross_neighborhood_spawn(chuck::vm::script_instance* inst);
 
         void deactivate_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item);
+
+        static void destroy_debris_inside(no_spawn_base* zone);
     };
 
     namespace references {
@@ -263,6 +295,8 @@ namespace treyarch {
 
         // null until the first debris zone is added
         inline util::memory_reference<mash::vector<no_spawn_base>*> debris_no_spawn_zones { 0x010F9BDC };
+
+        inline util::memory_reference<vc8::vector<debris_entity_list*>> debris_entity_lists { 0x010FB050 };
 
         // every update stores its manager here; nothing reads it
         inline util::memory_reference<spawn_table_manager*> updating_spawn_table_manager { 0x010F9BC0 };
@@ -273,8 +307,12 @@ namespace treyarch {
         inline util::memory_reference<string_hash> long_time_last_city_life { 0x0102C5CC };
     } // references
 
-    ASSERT_SIZEOF  (city_life_category_entry,         0x14);
-    ASSERT_OFFSETOF(city_life_category_entry, unk_08, 0x08);
+    ASSERT_SIZEOF  (city_life_category_entry,                     0x14);
+    ASSERT_OFFSETOF(city_life_category_entry, instance,           0x04);
+    ASSERT_OFFSETOF(city_life_category_entry, important_entities, 0x08);
+
+    ASSERT_SIZEOF  (debris_entity_list,           0x08);
+    ASSERT_OFFSETOF(debris_entity_list, entities, 0x04);
 
     ASSERT_SIZEOF  (spawn_table_manager_unk_04c,                                  0x198);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, quest_giver_spawns,              0x14);
