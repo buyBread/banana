@@ -49,7 +49,8 @@ namespace treyarch {
 
         mash::string       name;
         mash::string       localized_name;
-        u32                unk_2c;
+        bool               unk_2c;
+        u8                 pad_2d[0x03];
         mash::string       unk_30;
         mash::string       unk_3c;
         mash::string       unk_48;

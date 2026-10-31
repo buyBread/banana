@@ -1,4 +1,3 @@
-#include "retail.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/neighborhood_interface.hh"
 #include "game/region_spawn_manager.hh"
@@ -46,7 +45,5 @@ mash::string region_spawn_manager::get_city_wide_set_name() {
 
 // sub_83E510
 void region_spawn_manager::update_point_of_interest(chuck::vm::script_instance* inst, mash::string name, vector3d position) {
-    using update_point_of_interest_t = void (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string, vector3d);
-
-    ((update_point_of_interest_t)retail::sub_92EF10)(spawn_table_manager::inst(), inst, name, position);
+    spawn_table_manager::inst()->update_point_of_interest(inst, name, position);
 }

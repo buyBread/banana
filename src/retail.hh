@@ -25873,7 +25873,7 @@ namespace retail {
     inline auto const sub_ADE82C = (u32 (__cdecl*)(...))0x00ADE82C; // prototype unavailable
     inline auto const sub_ADE840 = (void* (__cdecl*)(i32, i32))0x00ADE840; // __usercall
     inline auto const sub_ADE856 = (void* (__cdecl*)(i32, i32))0x00ADE856; // __usercall
-    inline auto const sub_ADE86C = (i32 (__cdecl*)(i32, i32, i32, i32, i32))0x00ADE86C;
+    inline auto const sub_ADE86C = (void* (__cdecl*)(void*, i32, void*, void*, i32))0x00ADE86C; // manual
     inline auto const sub_ADE872 = (i32 (__cdecl*)())0x00ADE872;
     inline auto const sub_ADE8BD = (i32 (__cdecl*)())0x00ADE8BD;
     inline auto const sub_ADEA9C = (u32 (__cdecl*)(...))0x00ADEA9C; // prototype unavailable

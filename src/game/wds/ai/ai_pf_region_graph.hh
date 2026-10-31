@@ -1,5 +1,7 @@
 #pragma once
 
+#include <typeinfo>
+
 #include "vc8/vector.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/mash_info.hh"
@@ -11,6 +13,7 @@
 #include "game/math/bound.hh"
 #include "game/mutex.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
@@ -94,11 +97,30 @@ namespace treyarch {
         void finalize(mash::allocation_scope scope);
     };
 
+    // what each region point class's constructor stores
+    enum e_region_point_kind : i32 {
+        region_point_kind_road               = 0,
+        region_point_kind_roof               = 1,
+        region_point_kind_wall               = 2,
+        region_point_kind_hand_selected_roof = 4,
+        region_point_kind_hand_selected_wall = 5
+    };
+
     // the base of every region point; mashed ones get their retail vtable from the type registry
     class base_region_point : public mash::mash_virtual_base {
 
     public:
-        u8 unk_04[0x10];
+        u8                  unk_04[0x0C];
+        e_region_point_kind kind;
+    };
+
+    // hand_selected_region_wall_point derives from it
+    class region_wall_point : public base_region_point {
+
+    public:
+        vector3d unk_14;
+        vector3d unk_20;
+        vector3d unk_2c;
     };
 
     // each region's navmeshes for pathfinding, keyed by region
@@ -126,6 +148,11 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
+    namespace references {
+        inline util::memory_reference<std::type_info> base_region_point_type_descriptor { 0x00E60F78 };
+        inline util::memory_reference<std::type_info> region_wall_point_type_descriptor { 0x00E61008 };
+    } // references
+
     ASSERT_SIZEOF  (ai_path_id,          0x08);
 
     ASSERT_SIZEOF  (ai_quad_path_connection,                   0x10);
@@ -148,7 +175,12 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_quad_path, unk_6c,           0x6C);
     ASSERT_OFFSETOF(ai_quad_path, unk_7c,           0x7C);
 
-    ASSERT_SIZEOF  (base_region_point, 0x14);
+    ASSERT_SIZEOF  (base_region_point,       0x14);
+    ASSERT_OFFSETOF(base_region_point, kind, 0x10);
+
+    ASSERT_SIZEOF  (region_wall_point,         0x38);
+    ASSERT_OFFSETOF(region_wall_point, unk_14, 0x14);
+    ASSERT_OFFSETOF(region_wall_point, unk_2c, 0x2C);
 
     ASSERT_SIZEOF  (ai_pf_region_graph,                   0x68);
     ASSERT_OFFSETOF(ai_pf_region_graph, lock,             0x08);

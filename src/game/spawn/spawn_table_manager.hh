@@ -5,6 +5,7 @@
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
+#include "game/math/algebra.hh"
 #include "game/spawn/persistence_data.hh"
 #include "game/singleton.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -12,10 +13,18 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace chuck { namespace vm {
+        class script_instance;
+
+        template<typename T>
+        class script_dynamic_array;
+    }} // chuck::vm
+
     class active_spawn_item;
     class cross_neighborhood_spawn;
     class entity;
     class no_spawn_base;
+    class spawn_data_base;
     class spawn_item_collection;
     class spawn_table_interface;
     class static_spawn_item;
@@ -127,6 +136,35 @@ namespace treyarch {
         spawn_item_collection* find_meta_set();
 
         void free_spawn_record(spawn_point* record);
+
+        // the script queries; `inst` is the calling script instance, matched through each active's has_instance
+        void             get_entities(chuck::vm::script_instance* inst,
+                                      i32                         number,
+                                      vc8::vector<entity*>*       found,
+                                      mash::string*               name);
+        vector3d*        get_spawn_position(vector3d* out, chuck::vm::script_instance* inst);
+        spawn_data_base* find_optional_data(chuck::vm::script_instance* inst, mash::string name);
+        bool             has_optional_data(chuck::vm::script_instance* inst);
+        void             update_point_of_interest(chuck::vm::script_instance* inst, mash::string name, vector3d position);
+        void             has_succeeded_city_life(chuck::vm::script_instance* inst);
+        void             force_despawn_city_life(chuck::vm::script_instance* inst);
+        bool             is_valid_spawn(i32 spawn_id);
+        void             set_safe_zone_wall_index(chuck::vm::script_instance* inst, i32 index);
+        i32              get_safe_zone_wall_index(chuck::vm::script_instance* inst);
+        vector3d*        get_neighborhood_center(vector3d* out, chuck::vm::script_instance* inst);
+        vector3d*        get_meta_neighborhood_center(vector3d* out, chuck::vm::script_instance* inst);
+        void             get_current_flagsets(chuck::vm::script_instance* inst, chuck::vm::script_dynamic_array<u32>* flagsets);
+        void             flag_always_on_for_despawn(chuck::vm::script_instance* inst);
+        bool             has_persistence_data(chuck::vm::script_instance* inst);
+        void             get_all_categories_on_city_life(i32 spawn_id, chuck::vm::script_dynamic_array<u32>* categories);
+        void             get_spawn_point_point_data(chuck::vm::script_instance*                inst,
+                                                    chuck::vm::script_dynamic_array<vector3d>* points);
+
+        bool is_spidey_near_quest_giver(f32 radius);
+        bool get_nearest_quest_giver_restart_position(vector3d* position, vector3d* facing);
+
+    private:
+        cross_neighborhood_spawn* find_cross_neighborhood_spawn(chuck::vm::script_instance* inst);
     };
 
     namespace references {

@@ -76,6 +76,8 @@ namespace treyarch {
         u8                    pad_22[2];
         base_region_point*    region_point; // a heap copy of the picked region point on spawn records; null in the mash
 
+        spawn_data_base* find_data(const mash::string &name);
+
         // inlined @ sub_94CB10
         void construct_mashed_class() {
             data.construct_mashed_class();

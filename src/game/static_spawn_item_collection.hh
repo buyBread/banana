@@ -1,5 +1,7 @@
 #pragma once
 
+#include <typeinfo>
+
 #include "vc8/vector.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/types.hh"
@@ -7,6 +9,7 @@
 #include "treyarch/mash/virtual_base.hh"
 #include "game/spawn_point_list_collection.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
@@ -31,10 +34,12 @@ namespace treyarch {
             <mash::string>            categories;        // its city-life categories
         i32                           unk_3c;            // what spawn placement looks for
         u32                           active_count;
-        bool                          unk_44;
+        bool                          always_on_for_despawn;
         u8                            pad_45[0x03];
         chuck::vm::script_executable* script_executable;
         chuck::vm::script_object*     script_object;
+
+        spawn_data_base* find_data(const mash::string &name);
 
         // sub_A90D90
         virtual active_spawn_item* create_active(u32) {
@@ -105,6 +110,12 @@ namespace treyarch {
         mash::string pack;
     };
 
+    class always_on_scripted_spawn_item : public extra_pack_optional_spawn_item {
+
+    public:
+        u8 unk_94[0x0C];
+    };
+
     // the run-time state of a cross-neighborhood spawn
     struct cross_neighborhood_spawn_unk_d8 {
         active_spawn_item*          active;
@@ -147,15 +158,20 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    ASSERT_SIZEOF  (static_spawn_item,                    0x50);
-    ASSERT_OFFSETOF(static_spawn_item, data,              0x10);
-    ASSERT_OFFSETOF(static_spawn_item, unk_24,            0x24);
-    ASSERT_OFFSETOF(static_spawn_item, categories,        0x28);
-    ASSERT_OFFSETOF(static_spawn_item, unk_3c,            0x3C);
-    ASSERT_OFFSETOF(static_spawn_item, active_count,      0x40);
-    ASSERT_OFFSETOF(static_spawn_item, unk_44,            0x44);
-    ASSERT_OFFSETOF(static_spawn_item, script_executable, 0x48);
-    ASSERT_OFFSETOF(static_spawn_item, script_object,     0x4C);
+    namespace references {
+        inline util::memory_reference<std::type_info> static_spawn_item_type_descriptor             { 0x00E76A60 };
+        inline util::memory_reference<std::type_info> always_on_scripted_spawn_item_type_descriptor { 0x00E76B54 };
+    } // references
+
+    ASSERT_SIZEOF  (static_spawn_item,                        0x50);
+    ASSERT_OFFSETOF(static_spawn_item, data,                  0x10);
+    ASSERT_OFFSETOF(static_spawn_item, unk_24,                0x24);
+    ASSERT_OFFSETOF(static_spawn_item, categories,            0x28);
+    ASSERT_OFFSETOF(static_spawn_item, unk_3c,                0x3C);
+    ASSERT_OFFSETOF(static_spawn_item, active_count,          0x40);
+    ASSERT_OFFSETOF(static_spawn_item, always_on_for_despawn, 0x44);
+    ASSERT_OFFSETOF(static_spawn_item, script_executable,     0x48);
+    ASSERT_OFFSETOF(static_spawn_item, script_object,         0x4C);
 
     ASSERT_SIZEOF  (scripted_spawn_item,              0x74);
     ASSERT_OFFSETOF(scripted_spawn_item, script_name, 0x50);
@@ -167,6 +183,8 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (extra_pack_optional_spawn_item,       0x94);
     ASSERT_OFFSETOF(extra_pack_optional_spawn_item, pack, 0x88);
+
+    ASSERT_SIZEOF  (always_on_scripted_spawn_item, 0xA0);
 
     ASSERT_SIZEOF  (cross_neighborhood_spawn_unk_d8,                       0x4C);
     ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, unk_04,               0x04);

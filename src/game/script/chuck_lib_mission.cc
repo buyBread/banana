@@ -695,7 +695,7 @@ bool slf__city_life_in_progress_message__num__t::operator()(chuck::vm::vm_stack 
 // sub_83E590
 bool slf__has_succeeded_city_life__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
-        retail::sub_92F170((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        spawn_table_manager::inst()->has_succeeded_city_life(stack.thread->inst);
 
     return true;
 }
@@ -857,7 +857,7 @@ bool slf__get_entities__dynamic_array__num__str__t::operator()(chuck::vm::vm_sta
     {
         mash::string name((const char*)stack.local_uint(0x08));
 
-        retail::sub_92ED30((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)stack.local_num(0x04), (i32)&found, (i32)&name);
+        spawn_table_manager::inst()->get_entities(stack.thread->inst, (i32)stack.local_num(0x04), &found, &name);
     }
 
     for (entity** it = found.begin(); it != found.end(); ++it) {
@@ -877,7 +877,7 @@ bool slf__get_spawn_position__t::operator()(chuck::vm::vm_stack &stack) {
     vector3d position;
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
-        retail::sub_92ED90((u32*)spawn_table_manager::inst(), (f32*)&position, (i32)stack.thread->inst);
+        spawn_table_manager::inst()->get_spawn_position(&position, stack.thread->inst);
     else
         position = vector3d(0.0f);
 
@@ -893,9 +893,7 @@ bool slf__has_optional_data__str__t::operator()(chuck::vm::vm_stack &stack) {
     bool found = false;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        found = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00))) != nullptr;
+        found = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00))) != nullptr;
     }
 
     f32 result = found ? 1.0f : 0.0f;
@@ -912,9 +910,7 @@ bool slf__get_vector_data__str__t::operator()(chuck::vm::vm_stack &stack) {
     vector3d value(0.0f);
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         if (data && data->is_vector())
             value = ((spawn_data_vector*)data)->value;
@@ -932,9 +928,7 @@ bool slf__get_str_data__str__t::operator()(chuck::vm::vm_stack &stack) {
     const char* value = "";
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         // the data's own characters, not a thread string
         if (data && data->is_str())
@@ -953,9 +947,7 @@ bool slf__get_num_data__str__t::operator()(chuck::vm::vm_stack &stack) {
     f32 value = -1.0f;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
-        using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-        spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+        spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
         if (data && data->is_num())
             value = ((spawn_data_num*)data)->value;
@@ -973,9 +965,7 @@ bool slf__get_vector_data_array__str__dynamic_array__t::operator()(chuck::vm::vm
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     if (!data || !data->is_vector() || !data->is_array())
         return true;
@@ -1001,9 +991,7 @@ bool slf__get_str_data_array__str__dynamic_array__t::operator()(chuck::vm::vm_st
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     if (!data || !data->is_str() || !data->is_array())
         return true;
@@ -1030,9 +1018,7 @@ bool slf__get_num_data_array__str__dynamic_array__t::operator()(chuck::vm::vm_st
     if (!references::region_spawns_enabled.read() || !spawn_table_manager::inst())
         return true;
 
-    using find_optional_data_t = spawn_data_base* (__thiscall*)(spawn_table_manager*, chuck::vm::script_instance*, mash::string);
-
-    spawn_data_base* data = ((find_optional_data_t)retail::sub_92EE10)(spawn_table_manager::inst(), stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
+    spawn_data_base* data = spawn_table_manager::inst()->find_optional_data(stack.thread->inst, mash::string((const char*)stack.local_uint(0x00)));
 
     if (!data || !data->is_num() || !data->is_array())
         return true;
@@ -1056,7 +1042,7 @@ bool slf__has_optional_data__t::operator()(chuck::vm::vm_stack &stack) {
     bool found = false;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        found = retail::sub_92EEB0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        found = spawn_table_manager::inst()->has_optional_data(stack.thread->inst);
 
     f32 result = found ? 1.0f : 0.0f;
 
@@ -1226,7 +1212,7 @@ bool slf__has_persistence_data__t::operator()(chuck::vm::vm_stack &stack) {
     bool found = false;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        found = retail::sub_939120((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        found = spawn_table_manager::inst()->has_persistence_data(stack.thread->inst);
 
     f32 result = found ? 1.0f : 0.0f;
 
@@ -1486,7 +1472,7 @@ bool slf__end_persistance_data_save__t::operator()(chuck::vm::vm_stack &stack) {
 // sub_83E7B0
 bool slf__force_despawn_city_life__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        retail::sub_92F290((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        spawn_table_manager::inst()->force_despawn_city_life(stack.thread->inst);
 
     return true;
 }
@@ -1537,7 +1523,7 @@ bool slf__get_all_categories_on_city_life__num__dynamic_array__t::operator()(chu
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<u32> categories((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
 
-        retail::sub_951FC0((u32*)spawn_table_manager::inst(), (i32)stack.local_num(0x00), (u32**)&categories);
+        spawn_table_manager::inst()->get_all_categories_on_city_life((i32)stack.local_num(0x00), &categories);
     }
 
     return true;
@@ -1603,7 +1589,7 @@ bool slf__is_valid_spawn__num__t::operator()(chuck::vm::vm_stack &stack) {
     bool valid = false;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        valid = retail::sub_92F2E0((u32*)spawn_table_manager::inst(), (i32)stack.local_num(0x00));
+        valid = spawn_table_manager::inst()->is_valid_spawn((i32)stack.local_num(0x00));
 
     f32 result = valid ? 1.0f : 0.0f;
 
@@ -1643,7 +1629,7 @@ bool slf__set_safe_zone_wall_index__num__t::operator()(chuck::vm::vm_stack &stac
     stack.sp -= 0x04;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        retail::sub_92F340((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)stack.local_num(0x00));
+        spawn_table_manager::inst()->set_safe_zone_wall_index(stack.thread->inst, (i32)stack.local_num(0x00));
 
     return true;
 }
@@ -1653,7 +1639,7 @@ bool slf__get_safe_zone_wall_index__t::operator()(chuck::vm::vm_stack &stack) {
     i32 index = -1;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        index = retail::sub_92F3F0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        index = spawn_table_manager::inst()->get_safe_zone_wall_index(stack.thread->inst);
 
     // converted as unsigned, so -1 reaches the script as 4294967296.0
     f32 result = (f32)(u32)index;
@@ -1753,7 +1739,7 @@ bool slf__get_spawn_point_point_data__dynamic_array__t::operator()(chuck::vm::vm
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst()) {
         chuck::vm::script_dynamic_array<vector3d> points((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
 
-        retail::sub_952040((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (u32**)&points);
+        spawn_table_manager::inst()->get_spawn_point_point_data(stack.thread->inst, &points);
     }
 
     return true;
@@ -1779,7 +1765,7 @@ bool slf__get_neighborhood_center__t::operator()(chuck::vm::vm_stack &stack) {
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
         vector3d result;
-        center = *(vector3d*)retail::sub_92F4A0((u32*)spawn_table_manager::inst(), (f32*)&result, (i32)stack.thread->inst);
+        center = *spawn_table_manager::inst()->get_neighborhood_center(&result, stack.thread->inst);
     }
 
     stack.push(&center, sizeof(center));
@@ -1793,7 +1779,7 @@ bool slf__get_meta_neighborhood_center__t::operator()(chuck::vm::vm_stack &stack
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
         vector3d result;
-        center = *(vector3d*)retail::sub_92F510((u32*)spawn_table_manager::inst(), (f32*)&result, (i32)stack.thread->inst);
+        center = *spawn_table_manager::inst()->get_meta_neighborhood_center(&result, stack.thread->inst);
     }
 
     stack.push(&center, sizeof(center));
@@ -1808,7 +1794,7 @@ bool slf__get_current_flagsets__dynamic_array__t::operator()(chuck::vm::vm_stack
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst()) {
         chuck::vm::script_dynamic_array<u32> flagsets((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x00));
 
-        retail::sub_92F580((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst, (i32)&flagsets);
+        spawn_table_manager::inst()->get_current_flagsets(stack.thread->inst, &flagsets);
     }
 
     return true;
@@ -1817,7 +1803,7 @@ bool slf__get_current_flagsets__dynamic_array__t::operator()(chuck::vm::vm_stack
 // sub_83EA50
 bool slf__flag_always_on_for_despawn__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
-        retail::sub_92F5D0((u32*)spawn_table_manager::inst(), (i32)stack.thread->inst);
+        spawn_table_manager::inst()->flag_always_on_for_despawn(stack.thread->inst);
 
     return true;
 }
@@ -1919,7 +1905,7 @@ bool slf__is_spidey_near_quest_giver__t::operator()(chuck::vm::vm_stack &stack) 
     f32 result = 0.0f;
 
     if (spawn_table_manager::inst())
-        result = retail::sub_920990((u32*)spawn_table_manager::inst(), 200.0f) ? 1.0f : 0.0f;
+        result = spawn_table_manager::inst()->is_spidey_near_quest_giver(200.0f) ? 1.0f : 0.0f;
 
     stack.push(&result, sizeof(result));
 
