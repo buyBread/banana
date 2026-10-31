@@ -48,14 +48,20 @@ namespace treyarch { namespace mash {
         static bool register_vtable_entry(const vtable_key_t   &key,
                                           const vtable_value_t &value);
 
-        // what the generated registration list does per class: build a generating-version one in scratch memory (never destroyed) and register its vtable
+        // T's vtable, read off a generating-version one built in scratch memory (never destroyed)
         template<typename T>
-        static bool register_class() {
+        static vtable_value_t generate_vtable() {
             alignas(T) u8 scratch[sizeof(T)];
 
             T* object = ::new (scratch) T(GENERATING_VTABLES_VERSION);
 
-            return register_vtable_entry(T::my_type_key.source_hash_code, *(vtable_value_t*)object);
+            return *(vtable_value_t*)object;
+        }
+
+        // what the generated registration list does per class
+        template<typename T>
+        static bool register_class() {
+            return register_vtable_entry(T::my_type_key.source_hash_code, generate_vtable<T>());
         }
 
         static vtable_value_t lookup_vtable_entry(const vtable_key_t &key);
