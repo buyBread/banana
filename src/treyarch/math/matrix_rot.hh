@@ -71,6 +71,7 @@ namespace treyarch { namespace math {
             v[2] = z;
         }
 
+        // sub_48D800
         template<typename T1, typename P1>
         mat_class(const mat_class<3, 3, mat_kind_rot<T1>, P1> &a) {
             typename mat_class<3, 3, mat_kind_rot<T1>, P1>::get_x_type x1;

@@ -444,19 +444,19 @@ namespace treyarch { namespace math {
         return float1_one;
     }
 
-    inline const float4::constant float4_sin_coefs = { -0.1666667f, 8.333334e-3f, -1.917616e-4f, 0.0f };
-
+    // sub_48D240
     template<typename A1, typename R1,
              typename A2, typename R2>
-    unit_quaternion slerp(f32 t, const quat_class<A1, true, R1> &a, const quat_class<A2, true, R2> &b) {
-        float4 scale;
-        f32    c = dot4(a, b);
+    unit_quaternion slerp(f32 weight_a, f32 weight_b, const quat_class<A1, true, R1> &a, const quat_class<A2, true, R2> &b) {
+        const float4 qa = a.val();
+        const float4 qb = b.val();
+
+        f32 c        = (f32)((f64)qb.get_x() * qa.get_x() + (f64)qb.get_y() * qa.get_y() + (f64)qb.get_z() * qa.get_z() + (f64)qb.get_w() * qa.get_w());
+        f32 scale[3] = { weight_a, weight_b, 1.0f };
 
         if (c < 0.0f) {
-            scale = float4(1.0f - t, -t, 1.0f, 0.0f);
-            c     = -c;
-        } else {
-            scale = float4(1.0f - t, t, 1.0f, 0.0f);
+            scale[1] = -0.0f - weight_b;
+            c        = -0.0f - c;
         }
 
         if (c < 0.999999f) {
@@ -465,42 +465,56 @@ namespace treyarch { namespace math {
             if (c < 0.5f) {
                 f32 x2 = c  * c;
                 f32 x3 = x2 * c;
-                f32 x5 = x2 * x3;
-                f32 x7 = x2 * x5;
+                f32 x5 = x3 * x2;
+                f32 x7 = x5 * x2;
 
-                angle  = -5.398124e-2f * x7;
-                angle += -0.075f       * x5;
-                angle += -.1666667f    * x3;
+                angle = -5.398124e-2f * x7;
+                angle = (f32)((f64)angle - (f64)0.075f     * x5);
+                angle = (f32)((f64)angle - (f64).1666667f * x3);
                 angle -= c;
                 angle += 1.570796f;
             } else {
-                c = sqrt((1.0f - c) * 0.5f);
+                f32 s = sqrt((f32)((1.0 - (f64)c) * 0.5));
 
-                f32 x2 = c  * c;
-                f32 x3 = x2 * c;
+                f32 x2 = s  * s;
+                f32 x3 = x2 * s;
+                f32 x5 = x3 * x2;
+                f32 x7 = x5 * x2;
+
+                angle = .1079625f * x7;
+                angle = (f32)((f64)angle + (f64).15f      * x5);
+                angle = (f32)((f64)angle + (f64).3333333f * x3);
+                angle = (f32)((f64)angle + 2.0             * s);
+            }
+
+            for (i32 lane = 0; lane < 3; lane++) {
+                f32 x  = scale[lane] * angle;
+                f32 x2 = x  * x;
+                f32 x3 = x2 * x;
                 f32 x5 = x2 * x3;
                 f32 x7 = x2 * x5;
 
-                angle  =  .1079625f * x7;
-                angle +=  .15f      * x5;
-                angle +=  .3333333f * x3;
-                angle += 2.0f       * c;
+                f32 sine = (f32)((f64)x - (f64)1.917616e-4f * x7);
+                sine = (f32)((f64)8.333334e-3f * x5 + sine);
+                sine = (f32)((f64)sine - (f64).1666667f * x3);
+
+                scale[lane] = sine;
             }
 
-            scale *= angle;
-
-            float4 x2 = scale * scale;
-            float4 x3 = x2    * scale;
-            float4 x5 = x2    * x3;
-            float4 x7 = x2    * x5;
-
-            float4 sin_coefs = float4_sin_coefs;
-
-            scale  = madd(x7, sin_coefs.get_z(), x5, sin_coefs.get_y(), x3, sin_coefs.get_x(), scale);
-            scale /= scale.get_z();
+            scale[0] = scale[0] / scale[2];
+            scale[1] = scale[1] / scale[2];
         }
 
-        return unit_quaternion(madd(a.val(), scale.get_x(), b.val(), scale.get_y()));
+        return unit_quaternion(float4((f32)((f64)(qa.get_x() * scale[0]) + (f64)qb.get_x() * scale[1]),
+                                      (f32)((f64)(qa.get_y() * scale[0]) + (f64)qb.get_y() * scale[1]),
+                                      (f32)((f64)(qa.get_z() * scale[0]) + (f64)qb.get_z() * scale[1]),
+                                      (f32)((f64)(qa.get_w() * scale[0]) + (f64)qb.get_w() * scale[1])));
+    }
+
+    template<typename A1, typename R1,
+             typename A2, typename R2>
+    unit_quaternion slerp(f32 t, const quat_class<A1, true, R1> &a, const quat_class<A2, true, R2> &b) {
+        return slerp(1.0f - t, t, a, b);
     }
 
     ASSERT_SIZEOF(quaternion,      0x10);

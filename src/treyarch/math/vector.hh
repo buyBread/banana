@@ -943,6 +943,7 @@ namespace treyarch { namespace math {
         get_set<n, vec_class<S, L, A, U, R>>::set(a, v);
     }
 
+    // sub_401A20
     template<i32 S, i32 L, typename A, typename U, typename R>
     vec_class<S, L, A, U> operator-(const vec_class<S, L, A, U, R> &a) {
         return vec_class<S, L, A, U>(-a.baseval());
@@ -1681,9 +1682,19 @@ namespace treyarch { namespace math {
         return reinterpret_cast<const vec_class<3, 0, void, vec_unit<1>, R>&>(a);
     }
 
+    // sub_401AA0
     template<typename U, typename R>
-    vec_class<3, 0, void, vec_unit<1>, R> unitize(const vec_class<3, 0, void, U, R> &a) {
-        return declare_unit(a * rsqrt_safe(abs_squared(a)));
+    vec_class<3, 0, void, vec_unit<1>, R> unitize(const vec_class<3, 0, void, U, R> &a) { // zero when the length isn't positive
+        const float4 v    = a.val34();
+        const f32    len2 = (f32)((f64)v.get_x() * v.get_x() + (f64)v.get_y() * v.get_y() + (f64)v.get_z() * v.get_z());
+
+        if (len2 > 0.0f) {
+            const f32 recip = inv(sqrt(len2));
+
+            return unit_dir3(float4(v.get_x() * recip, v.get_y() * recip, v.get_z() * recip, recip * 0.0f));
+        }
+
+        return unit_dir3(reinterpret_cast<const float4&>(float4_zeroes));
     }
 
     template<typename U, typename R>

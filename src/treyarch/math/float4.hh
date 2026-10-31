@@ -1207,15 +1207,16 @@ namespace treyarch { namespace math {
         return float4(lane(0), lane(1), lane(2), lane(3));
     }
 
-    inline void quat_to_matrix(const float4 &q, float4 &r0, float4 &r1, float4 &r2) {
+    // inlined @ sub_48D800
+    inline void quat_to_matrix(const float4 &q, float4 &r0, float4 &r1, float4 &r2) { // each product rounds before its add
         const float4 q2   = q + q;
         const float4 wq2  = q2.get_w() * q;
-        const float4 nwq2 = -wq2;
+        const float4 nwq2 = -0.0f - wq2;
         const float1 d    = wq2.get_w() - reinterpret_cast<const float1&>(float1_one);
 
-        r0 = madd(q2, q.get_x(), float4(d,            nwq2.get_z(), wq2.get_y()));
-        r1 = madd(q2, q.get_y(), float4(wq2.get_z(),  d,            nwq2.get_x()));
-        r2 = madd(q2, q.get_z(), float4(nwq2.get_y(), wq2.get_x(),  d));
+        r0 = q2 * q.get_x() + float4(d,            nwq2.get_z(), wq2.get_y(),  0.0f);
+        r1 = q2 * q.get_y() + float4(wq2.get_z(),  d,            nwq2.get_x(), 0.0f);
+        r2 = q2 * q.get_z() + float4(nwq2.get_y(), wq2.get_x(),  d,            0.0f);
     }
 
     inline float4 quat_rotate(const float4 &q, const float4 &vec) {
@@ -1228,14 +1229,15 @@ namespace treyarch { namespace math {
         return madd(q2, qv, vec, d, c);
     }
 
+    // inlined @ sub_40A360
     inline void axis_sin_cos_to_matrix(const float4 &v, const float1 &s, const float1 &c, float4 &r0, float4 &r1, float4 &r2) {
         const float4 &tv  = v - v * c;
         const float4 &sv  = v * s;
-        const float4 &nsv = -sv;
+        const float4 &nsv = -0.0f - sv;
 
-        r0 = madd(tv, v.get_x(), float4(c,           sv.get_z(),  nsv.get_y()));
-        r1 = madd(tv, v.get_y(), float4(nsv.get_z(), c,           sv.get_x()));
-        r2 = madd(tv, v.get_z(), float4(sv.get_y(),  nsv.get_x(), c));
+        r0 = madd(tv, v.get_x(), float4(c,           sv.get_z(),  nsv.get_y(), 0.0f));
+        r1 = madd(tv, v.get_y(), float4(nsv.get_z(), c,           sv.get_x(),  0.0f));
+        r2 = madd(tv, v.get_z(), float4(sv.get_y(),  nsv.get_x(), c,           0.0f));
     }
 
     inline const float4::constant axis180_negx = { -1.0f,  0.0f,  0.0f, 0.0f };

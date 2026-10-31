@@ -111,7 +111,9 @@ namespace treyarch { namespace math {
         return tmp.get_x() / tmp.get_y();
     }
 
+    // sub_401C00
     // inlined @ sub_401DA0
+    // inlined @ sub_44D5E0
     inline f32 asin_upper(f32 y) {
         f32 a;
         f32 x1 = y;
@@ -154,24 +156,27 @@ namespace treyarch { namespace math {
         return a;
     }
 
-    inline f32 acos(f32 x)       { return (math_pi / 2.0f) - asin(x); }
+    inline f32 acos(f32 x) { return (math_pi / 2.0f) - asin(x); }
+
+    // sub_44D5E0
     inline f32 acos_upper(f32 x) { return (math_pi / 2.0f) - asin_upper(x); }
 
+    // sub_44D790
     inline f32 atan(f32 y, f32 x) {
         f32 xa = abs(x);
         f32 ya = abs(y);
 
-        if (xa + ya == 0.0)
+        if ((f64)ya + xa == 0.0)
             return 0.0f;
 
-        f32 invr = rsqrt(x * x + y * y);
+        f32 invr = rsqrt((f32)((f64)y * y + (f64)x * x));
         f32 a    = (xa < ya) ? acos_upper(xa * invr) : asin_upper(ya * invr);
 
         if (x < 0)
             a = math_pi - a;
 
         if (y < 0)
-            a = -a;
+            a = -0.0f - a;
 
         return a;
     }

@@ -11,6 +11,7 @@ namespace treyarch { namespace math {
         return rot_mat33(unit_dir3(r0), unit_dir3(r1), unit_dir3(r2));
     }
 
+    // sub_40A360
     inline rot_mat33 axis_angle_to_rot_mat(const unit_dir3 &axis, const float1 &angle) {
         const float4 &sc = sin_cos<sin_cos_sin, sin_cos_cos, sin_cos_any, sin_cos_any>(angle);
 
