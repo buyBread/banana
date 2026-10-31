@@ -13,10 +13,10 @@
 using namespace treyarch;
 
 // inlined into sub_9772D0
-void wds_render_manager::submit_light(render_region_info* entry,
-                                      light_source*       source,
-                                      entity*             selected_render_entity,
-                                      i32                 worker_index) {
+void wds_render_manager::submit_light(render_data::region_info* entry,
+                                      light_source*             source,
+                                      entity*                   selected_render_entity,
+                                      i32                       worker_index) {
 
     if (!source || !source->properties ||
         source->render_generations[worker_index] == (&references::worker_generations.get())[worker_index]) {
@@ -54,7 +54,7 @@ void wds_render_manager::submit_light(render_region_info* entry,
 // inlined into sub_9772D0
 void wds_render_manager::submit_region_renderables(render_data* frame_data) {
     for (u32 index = 0; index < frame_data->regions.size; ++index) {
-        region* reg = frame_data->regions.entries[index].reg;
+        region* reg = frame_data->regions.array[index].reg;
 
         for (u32* renderable = reg->renderables_begin; renderable != reg->renderables_end; ++renderable)
             retail::sub_798590(*renderable, 0, (i32)reg);
@@ -96,8 +96,8 @@ void wds_render_manager::submit_world(world_dynamics_system* world) {
     treyarch::render_data* frame_data = references::render_data.read();
 
     for (u32 index = 0; index < frame_data->regions.size; ++index) {
-        render_region_info* entry = &frame_data->regions.entries[index];
-        region*             reg   = entry->reg;
+        render_data::region_info* entry = &frame_data->regions.array[index];
+        region*                   reg   = entry->reg;
 
         if (!reg)
             continue;

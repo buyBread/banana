@@ -57,8 +57,7 @@ void wds_render_manager::render() {
     references::render_lock.get().acquire();
     references::render_sequence.write(references::render_sequence.read() + 1);
 
-    retail::sub_95D7D0((u32*)references::render_data.read(),
-                        world->the_terrain->generation + 1);
+    references::render_data.read()->regions.reserve(world->the_terrain->total_regions + 1);
 
     configure_game_scene();
 

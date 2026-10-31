@@ -10,9 +10,9 @@ namespace treyarch {
         u8    reserved_000[0x04];
         void* subdivision;
         u8    reserved_008[0x04];
-        u32   generation;
+        i32   total_regions;
     };
 
-    ASSERT_OFFSETOF(terrain, subdivision, 0x04);
-    ASSERT_OFFSETOF(terrain, generation,  0x0C);
+    ASSERT_OFFSETOF(terrain, subdivision,   0x04);
+    ASSERT_OFFSETOF(terrain, total_regions, 0x0C);
 } // treyarch

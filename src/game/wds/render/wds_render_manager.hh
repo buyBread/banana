@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/wds/render/render_data.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -7,8 +8,6 @@ namespace treyarch {
     class world_dynamics_system;
     class entity;
     class light_source;
-    struct render_data;
-    struct render_region_info;
 
     namespace ngl {
         struct scene;
@@ -39,10 +38,10 @@ namespace treyarch {
         void render_speedtrees();
         void submit_world(world_dynamics_system* world);
         void submit_blocked_world(world_dynamics_system* world);
-        void submit_light(render_region_info* entry,
-                          light_source* source,
-                          entity* selected_render_entity,
-                          i32 worker_index);
+        void submit_light(render_data::region_info* entry,
+                          light_source*             source,
+                          entity*                   selected_render_entity,
+                          i32                       worker_index);
         void submit_region_renderables(render_data* frame_data);
     };
 
