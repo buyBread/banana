@@ -1,4 +1,3 @@
-#include "retail.hh"
 #include "treyarch/nal/blend.hh"
 #include "treyarch/nal/field_interfaces.hh"
 #include "treyarch/math/quaternion.hh"
@@ -72,14 +71,8 @@ void nal::blend_trajectory(nal::pose* pose_r,
     // all four lanes of the translation
     *(math::vector4*)&value->get_w() = *(math::vector4*)&value_a->get_w() * one_minus + *(math::vector4*)&value_b->get_w() * alpha;
 
-    math::quaternion blended;
-
-    // quaternion blend
-    auto quaternion = (math::quaternion*)retail::sub_48D240((f32*)&blended,
-                                                             one_minus,
-                                                             alpha,
-                                                             (f32*)&value_a->get_m33().get_quaternion(),
-                                                             (f32*)&value_b->get_m33().get_quaternion());
-
-    *(math::quaternion*)&value->get_m33().get_quaternion() = *quaternion;
+    value->get_m33().get_quaternion() = math::slerp(one_minus,
+                                                    alpha,
+                                                    value_a->get_m33().get_quaternion(),
+                                                    value_b->get_m33().get_quaternion());
 }

@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "retail.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/math/quaternion.hh"
 #include "treyarch/math/vector.hh"
@@ -11,13 +10,11 @@ using namespace treyarch;
 
 // sub_9CCCC0
 nal::po nal::po_multiply(const po &a, const po &b) {
-    math::rot_mat33 scratch;
+    math::rot_mat33 rows = b.get_m33();
 
-    auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&b.get_m33().get_quaternion());
-
-    const math::unit_dir3  &x  = rows->get_x();
-    const math::unit_dir3  &y  = rows->get_y();
-    const math::unit_dir3  &z  = rows->get_z();
+    const math::unit_dir3  &x  = rows.get_x();
+    const math::unit_dir3  &y  = rows.get_y();
+    const math::unit_dir3  &z  = rows.get_z();
     const math::vector4    &ta = *(const math::vector4*)&a.get_w();
     const math::vector4    &tb = *(const math::vector4*)&b.get_w();
     const math::quaternion &qa = *(const math::quaternion*)&a.get_m33().get_quaternion();
@@ -47,13 +44,11 @@ nal::po nal::po_inverse(const po &value) {
     *(math::quaternion*)&result.get_m33().get_quaternion() = math::quaternion((~q).val() / norm);
 
     math::vector4   negated = -t;
-    math::rot_mat33 scratch;
+    math::rot_mat33 rows    = result.get_m33();
 
-    auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&result.get_m33().get_quaternion());
-
-    const math::unit_dir3 &x = rows->get_x();
-    const math::unit_dir3 &y = rows->get_y();
-    const math::unit_dir3 &z = rows->get_z();
+    const math::unit_dir3 &x = rows.get_x();
+    const math::unit_dir3 &y = rows.get_y();
+    const math::unit_dir3 &z = rows.get_z();
 
     *(math::vector4*)&result.get_w() = math::vector4((f32)((f64)negated[0] * x[0] + (f64)negated[1] * y[0] + (f64)negated[2] * z[0]),
                                                      (f32)((f64)negated[0] * x[1] + (f64)negated[1] * y[1] + (f64)negated[2] * z[1]),

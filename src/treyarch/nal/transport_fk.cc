@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "retail.hh"
 #include "treyarch/nal/pose.hh"
 #include "treyarch/nal/transport_fk.hh"
 #include "treyarch/math/matrix_rot.hh"
@@ -68,7 +67,9 @@ void nal::transport_fk::get_bone_matrices(nal::pose* pose, math::mat43* matrices
         math::unit_quaternion turn     = math::axis_angle_to_quaternion(*(math::unit_dir3*)&bones[bone].axis1, angle);
         math::quaternion      rotation = bones[bone].default_rotation * turn;
 
-        auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&rotation);
+        auto rows = (math::rot_mat33*)&scratch;
+
+        *rows = math::rot_mat33(math::quat_mat33(math::declare_unit(rotation)));
 
         *(math::rot_mat33*)&matrices[bone] = *rows;
     }
@@ -85,7 +86,9 @@ void nal::transport_fk::get_bone_matrices(nal::pose* pose, math::mat43* matrices
 
         rotation_set[bone] = true;
 
-        auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&rotation);
+        auto rows = (math::rot_mat33*)&scratch;
+
+        *rows = math::rot_mat33(math::quat_mat33(math::declare_unit(rotation)));
 
         *(math::rot_mat33*)&matrices[bone] = *rows;
     }
@@ -112,7 +115,9 @@ void nal::transport_fk::get_bone_matrices(nal::pose* pose, math::mat43* matrices
         if (!rotation_set[i]) {
             math::quaternion rotation = bones[i].default_rotation;
 
-            auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&rotation);
+            auto rows = (math::rot_mat33*)&scratch;
+
+            *rows = math::rot_mat33(math::quat_mat33(math::declare_unit(rotation)));
 
             *(math::rot_mat33*)&matrices[i] = *rows;
         }

@@ -1,7 +1,6 @@
 #include <cmath>
 #include <cstring>
 
-#include "retail.hh"
 #include "treyarch/nal/field_interfaces.hh"
 #include "treyarch/math/quaternion.hh"
 #include "treyarch/math/trig.hh"
@@ -115,12 +114,11 @@ void nal::field_quaternion_interface::blend(u32        field_type,
     f32* value_a = pose_a->get_field_data_ptr(field_type, 0);
     f32* value_b = pose_b->get_field_data_ptr(field_type, 0);
 
-    for (u32 i = 0; value < end; i++, value += values, value_a += values, value_b += values) {
-        math::quaternion blended;
-
-        // quaternion blend
-        *(math::quaternion*)value = *(math::quaternion*)retail::sub_48D240((f32*)&blended, weights_a[i], weights_b[i], value_a, value_b);
-    }
+    for (u32 i = 0; value < end; i++, value += values, value_a += values, value_b += values)
+        *(math::unit_quaternion*)value = math::slerp(weights_a[i],
+                                                     weights_b[i],
+                                                     *(math::unit_quaternion*)value_a,
+                                                     *(math::unit_quaternion*)value_b);
 }
 
 // sub_9D0640
