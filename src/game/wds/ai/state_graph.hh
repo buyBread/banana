@@ -49,6 +49,14 @@ namespace treyarch {
             <mashed_state> my_states;
         mashed_state*      my_initial_state; // mashed on its own, not one of my_states
 
+        // sub_4C2BB0
+        resource_key get_name() const {
+            resource_key name;
+            name.set(my_name);
+
+            return name;
+        }
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,

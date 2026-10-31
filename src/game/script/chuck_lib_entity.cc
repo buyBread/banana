@@ -5438,7 +5438,7 @@ bool slf__entity__push_ai_base_machine_immediately__entity__str__t::operator()(c
         if (!other_core)
             other_core = core;
 
-        if (core->push_base_machine(other_core, graph, true))
+        if (core->attempt_push_base_machine(other_core, graph, true))
             result = 1.0f;
     }
 

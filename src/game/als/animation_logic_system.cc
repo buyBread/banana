@@ -836,7 +836,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         if (!the_actor->get_ai_core())
             return;
 
-        if (retail::sub_4C53F0((u32*)the_actor->get_ai_core()))
+        if (the_actor->get_ai_core()->should_be_in_limbo())
             return;
     }
 

@@ -86,6 +86,12 @@ namespace treyarch {
         u8                pad_005[0x03];
     };
 
+    struct sm_exit_entry {
+        resource_key      machine_name;
+        e_state_exit_code machine_exit_status;
+        i32               counter_to_removal;
+    };
+
     class ai_core {
 
     public:
@@ -102,7 +108,7 @@ namespace treyarch {
             void rebuild();
         };
 
-        u32                             unk_000;
+        i32                             disable_count;
         engine_recursive_lock*          lock;
         u8                              reserved_008[0x18];
         slim::slim_actor_controller*    base_controller;
@@ -114,11 +120,11 @@ namespace treyarch {
         i32                             idle_type;            // the cut scene player sets it while it has the hero
         i32                             walk_run_cycle;
         i32                             walk_item;
-        u8                              reserved_5c8[0x0C];
+        vc8::list<resource_key>         base_machine_stack;   // the machines to return to, newest first
         ai_state_machine*               my_base_machine;
         ai_state_machine*               my_locomotion_machine;
         vc8::list<sm_list_entry>        my_machine_list;
-        u8                              reserved_5e8[0x0C];
+        vc8::list<sm_exit_entry>        my_exit_list;
         e_ai_core_mode                  my_mode;
         resource_key                    new_base_machine;
         e_ai_core_mode                  my_locomotion_mode;
@@ -131,9 +137,13 @@ namespace treyarch {
         u8                              pad_619[0x03];
         u32                             state_category;
         u32                             flags;
-        u8                              reserved_624[0x10];
+        string_hash                     pending_sound_event;
+        bool                            unk_628;
+        u8                              pad_629[0x03];
+        u32                             unk_62c;
+        u8                              reserved_630[0x04];
         u32                             lifetime_effect;
-        u32                             unk_638;
+        u32                             infected_effect;
         bool                            unk_63c;              // the als's on_fire
         u8                              pad_63d[0x07];
         u32                             unk_644;              // the als's in_water when set
@@ -173,23 +183,36 @@ namespace treyarch {
         bool     set_facing_point(const vector3d &point, f32 rot_speed_deg);
         bool     stop_movement();
 
-        bool push_base_machine(ai_core* other_core, const resource_key &the_state_graph, bool do_it_now); // other_core null means this one
-        bool pop_base_machine (const resource_key &the_state_graph, bool do_it_now);
+        void push_disable(i32 unk);
+        void pop_disable (i32 unk);
+
+        static void push_disable_all(bool ignore_low_priority);
+        static void pop_disable_all (bool ignore_low_priority);
+
+        bool change_base_machine      (const resource_key &the_state_graph, bool do_it_now);
+        bool push_base_machine        (const resource_key &the_state_graph, bool do_it_now);
+        bool pop_base_machine         (const resource_key &the_state_graph, bool do_it_now);
+        bool attempt_push_base_machine(ai_core* asker, const resource_key &the_state_graph, bool do_it_now); // a null asker means this core
+        bool restart_base_machine();
         bool change_locomotion_machine(string_hash the_loco_inode);
 
+        void stop_looping_effects();
+        void post_pending_sound_event();
+
+        bool should_be_in_limbo() const;
         void enter_limbo();
         void exit_limbo();
 
         static void frame_advance_all_core_ais(f32 delta_t);
 
     private:
-        bool should_be_in_limbo() const;
         bool wants_low_priority() const;
         void refresh_team();
         void refresh_alive();
     };
 
     ASSERT_SIZEOF  (ai_core,                         0x6E8);
+    ASSERT_OFFSETOF(ai_core, disable_count,          0x000);
     ASSERT_OFFSETOF(ai_core, lock,                   0x004);
     ASSERT_OFFSETOF(ai_core, base_controller,        0x020);
     ASSERT_OFFSETOF(ai_core, tactics_controller,     0x028);
@@ -198,8 +221,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, active_records,         0x5B0);
     ASSERT_OFFSETOF(ai_core, idle_type,              0x5BC);
     ASSERT_OFFSETOF(ai_core, walk_item,              0x5C4);
+    ASSERT_OFFSETOF(ai_core, base_machine_stack,     0x5C8);
     ASSERT_OFFSETOF(ai_core, my_base_machine,        0x5D4);
     ASSERT_OFFSETOF(ai_core, my_machine_list,        0x5DC);
+    ASSERT_OFFSETOF(ai_core, my_exit_list,           0x5E8);
     ASSERT_OFFSETOF(ai_core, my_mode,                0x5F4);
     ASSERT_OFFSETOF(ai_core, new_base_machine,       0x5F8);
     ASSERT_OFFSETOF(ai_core, my_locomotion_mode,     0x600);
@@ -212,7 +237,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, unk_654,                0x654);
     ASSERT_OFFSETOF(ai_core, state_category,         0x61C);
     ASSERT_OFFSETOF(ai_core, flags,                  0x620);
+    ASSERT_OFFSETOF(ai_core, pending_sound_event,    0x624);
+    ASSERT_OFFSETOF(ai_core, unk_628,                0x628);
+    ASSERT_OFFSETOF(ai_core, unk_62c,                0x62C);
     ASSERT_OFFSETOF(ai_core, lifetime_effect,        0x634);
+    ASSERT_OFFSETOF(ai_core, infected_effect,        0x638);
     ASSERT_OFFSETOF(ai_core, my_param_block,         0x660);
     ASSERT_OFFSETOF(ai_core, my_info_node_list,      0x684);
     ASSERT_OFFSETOF(ai_core, info_node_mask,         0x688);
@@ -220,6 +249,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, my_resource,            0x698);
     ASSERT_OFFSETOF(ai_core, list_node,              0x69C);
     ASSERT_OFFSETOF(ai_core, unk_6e4,                0x6E4);
+
+    ASSERT_SIZEOF(sm_exit_entry, 0x10);
 
     ASSERT_SIZEOF  (ai_core::team_lists,        0x14);
     ASSERT_OFFSETOF(ai_core::team_lists, teams, 0x04);
@@ -231,5 +262,10 @@ namespace treyarch {
         inline util::memory_reference<ai_core::team_lists> team_lists { 0x00FC54EC };
 
         inline util::memory_reference<engine_recursive_lock> ai_core_list_lock { 0x00FC5C60 };
+
+        inline util::memory_reference<resource_key> disabled_asg { 0x00FC54C8 };
+
+        inline util::memory_reference<string_hash> ai_disabled { 0x0102C638 };
+        inline util::memory_reference<string_hash> ai_enabled  { 0x0102C540 };
     } // references
 } // treyarch

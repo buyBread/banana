@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_state_machine.hh"
 #include "game/wds/ai/core_ai_resource.hh"
 #include "game/wds/ai/fight_director.hh"
 #include "game/math/references.hh"
@@ -247,7 +248,7 @@ bool ai_core::stop_movement() {
 
     if (my_locomotion_machine) {
         if (!((bool (__thiscall*)(loco_inode*))(*(void***)my_loco_inode)[23])(my_loco_inode)) // slot 23
-            ((void (__thiscall*)(ai_state_machine*))retail::sub_4C6990)(my_locomotion_machine); // ai_state_machine: request exit
+            my_locomotion_machine->external_request_exit();
 
         stopped = true;
     } else if (my_locomotion_mode == ai_core_mode_killing_machines) {
@@ -262,16 +263,235 @@ bool ai_core::stop_movement() {
     return stopped;
 }
 
-bool ai_core::push_base_machine(ai_core* other_core, const resource_key &the_state_graph, bool do_it_now) {
-    return retail::sub_4DE730((i32*)this, (i32*)other_core, (u32*)&the_state_graph, do_it_now);
+// sub_4DF470
+// inlined @ sub_4DF500
+void ai_core::push_disable(i32 unk) {
+    if (disable_count <= 0) {
+        push_base_machine(references::disabled_asg.get(), true);
+        stop_movement();
+        my_actor->raise_event(references::ai_disabled.read());
+    }
+
+    ++disable_count;
 }
 
+// sub_4DF4B0
+// inlined @ sub_4DF600
+void ai_core::pop_disable(i32 unk) {
+    bool was_disabled = disable_count > 0;
+
+    if (--disable_count < 0)
+        disable_count = 0;
+
+    if (was_disabled && disable_count <= 0) {
+        pop_base_machine(references::disabled_asg.get(), true);
+        my_actor->raise_event(references::ai_enabled.read());
+    }
+}
+
+// sub_4DF500
+void ai_core::push_disable_all(bool ignore_low_priority) {
+    engine_lock_scope list_lock(&references::ai_core_list_lock.get());
+
+    for (ai_core_list_node* node = references::ai_core_list_high.get().head; node; node = node->next)
+        node->core->push_disable(0);
+
+    for (ai_core_list_node* node = references::ai_core_list_low.get().head; node; node = node->next)
+        node->core->push_disable(0);
+}
+
+// sub_4DF600
+void ai_core::pop_disable_all(bool ignore_low_priority) {
+    engine_lock_scope list_lock(&references::ai_core_list_lock.get());
+
+    for (ai_core_list_node* node = references::ai_core_list_high.get().head; node; node = node->next)
+        node->core->pop_disable(0);
+
+    for (ai_core_list_node* node = references::ai_core_list_low.get().head; node; node = node->next)
+        node->core->pop_disable(0);
+}
+
+// sub_4DE2E0
+bool ai_core::change_base_machine(const resource_key &the_state_graph, bool do_it_now) {
+    engine_lock_scope core_lock(lock);
+
+    if (!retail::sub_4C7290((u32*)my_resource, the_state_graph.hash.source_hash_code, the_state_graph.type)) // core_ai_resource: lists the base graph
+        return false;
+
+    if (!retail::sub_4C7400(the_state_graph.hash.source_hash_code, the_state_graph.type, my_resource->resource_context)) // state_graph_manager::find_state_graph_from_resource
+        return false;
+
+    if (my_mode != ai_core_mode_killing_machines)
+        my_mode = ai_core_mode_change_machines;
+
+    if (&the_state_graph != &new_base_machine)
+        new_base_machine.set(the_state_graph);
+
+    if (do_it_now) {
+        if (my_base_machine) {
+            retail::sub_4CD3B0((u32*)this, (i32)my_base_machine); // ai_core: unregister machine
+
+            if (ai_state_machine* old_machine = my_base_machine) {
+                retail::sub_4CE450((u32*)old_machine); // ai_state_machine::~ai_state_machine
+                mm::free(old_machine);
+            }
+
+            my_base_machine = nullptr;
+        }
+
+        stop_movement();
+
+        retail::sub_4DD830((u32*)this, nullptr, (u32*)&new_base_machine, (char**)&my_base_machine); // ai_core::spawn_state_machine_internal
+
+        my_mode = ai_core_mode_normal;
+
+        retail::sub_4E0550((i32)this, 0.0001f); // ai_core::frame_advance
+    }
+
+    return true;
+}
+
+// sub_4DE460
+bool ai_core::push_base_machine(const resource_key &the_state_graph, bool do_it_now) {
+    engine_lock_scope core_lock(lock);
+
+    if (!my_base_machine)
+        return false;
+
+    // a pending change counts as the running machine
+    resource_key        running;
+    const resource_key* current = &new_base_machine;
+
+    if (my_mode != ai_core_mode_change_machines && my_mode != ai_core_mode_killing_machines) {
+        running = my_base_machine->get_name();
+        current = &running;
+    }
+
+    resource_key saved;
+    saved.set(*current);
+
+    if (!change_base_machine(the_state_graph, do_it_now))
+        return false;
+
+    base_machine_stack.push_front(saved);
+
+    return true;
+}
+
+// sub_4DE570
 bool ai_core::pop_base_machine(const resource_key &the_state_graph, bool do_it_now) {
-    return retail::sub_4DE570((i32)this, (u32*)&the_state_graph, do_it_now);
+    engine_lock_scope core_lock(lock);
+
+    if (base_machine_stack.empty())
+        return false;
+
+    if (my_mode == ai_core_mode_change_machines) {
+        // popping the pending machine cancels the change
+        if (the_state_graph == new_base_machine) {
+            resource_key &below = base_machine_stack.front();
+
+            if (&below != &new_base_machine)
+                new_base_machine.set(below);
+
+            base_machine_stack.pop_front();
+
+            my_mode = ai_core_mode_normal;
+
+            return true;
+        }
+    } else if (my_base_machine->get_name() == the_state_graph) {
+        resource_key below;
+        below.set(base_machine_stack.front());
+
+        base_machine_stack.pop_front();
+
+        return change_base_machine(below, do_it_now);
+    }
+
+    for (auto* position = base_machine_stack.begin(); position != base_machine_stack.end(); position = position->next) {
+        if (position->value == the_state_graph) {
+            base_machine_stack.erase(position);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// sub_4DE730
+bool ai_core::attempt_push_base_machine(ai_core* asker, const resource_key &the_state_graph, bool do_it_now) {
+    if (!asker)
+        asker = this;
+
+    if (!retail::sub_4CDEC0((i32*)asker, (i32*)this, nullptr)) // wait_for_other_ai
+        return false;
+
+    push_base_machine(the_state_graph, do_it_now);
+
+    retail::sub_4CC650((i32)asker, (u32*)this); // release_wait_for_other_ai
+
+    return true;
+}
+
+// sub_4DF720
+bool ai_core::restart_base_machine() {
+    if (!my_base_machine)
+        return false;
+
+    change_base_machine(my_base_machine->get_name(), true);
+
+    return true;
 }
 
 bool ai_core::change_locomotion_machine(string_hash the_loco_inode) {
     return retail::sub_4CC6E0((i32)this, (i32)the_loco_inode.source_hash_code);
+}
+
+// sub_4C57B0
+void ai_core::stop_looping_effects() {
+    if (lifetime_effect) {
+        my_actor->stop_looping_effect(lifetime_effect);
+        lifetime_effect = 0;
+    }
+
+    if (infected_effect) {
+        my_actor->stop_looping_effect(infected_effect);
+        infected_effect = 0;
+    }
+}
+
+// sub_4C6340
+void ai_core::post_pending_sound_event() {
+    if (pending_sound_event.valid()) {
+        if (my_actor->has_ifc(entity_ifc_sound)) {
+            string_hash event;
+            event.initialize(mash::ALLOCATED, nullptr, pending_sound_event.source_hash_code);
+
+            retail::sub_65FA00((i32)my_actor->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)event.source_hash_code, false); // sound_interface: post event
+        }
+
+        pending_sound_event = string_hash();
+        unk_62c             = 0;
+    }
+
+    unk_628 = false;
+}
+
+// sub_4C53F0
+// inlined @ sub_4E1780
+bool ai_core::should_be_in_limbo() const {
+    entity* owner = (entity*)my_actor;
+
+    if (!(flags & ai_core_flag_ignore_limbo)) {
+        if (owner->flags & 1)
+            return true;
+
+        if (!owner->get_primary_region())
+            return true;
+    }
+
+    return ((bool (__thiscall*)(entity*))owner->vtable[0x198 / 4])(owner);
 }
 
 // sub_4CE030
@@ -294,21 +514,6 @@ void ai_core::exit_limbo() {
     }
 
     flags &= ~ai_core_flag_in_limbo;
-}
-
-// inlined @ sub_4E1780
-bool ai_core::should_be_in_limbo() const {
-    entity* owner = (entity*)my_actor;
-
-    if (!(flags & ai_core_flag_ignore_limbo)) {
-        if (owner->flags & 1)
-            return true;
-
-        if (!owner->get_primary_region())
-            return true;
-    }
-
-    return ((bool (__thiscall*)(entity*))owner->vtable[0x198 / 4])(owner);
 }
 
 // inlined @ sub_4E1780

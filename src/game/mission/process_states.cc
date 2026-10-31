@@ -172,7 +172,7 @@ void mission_manager::process_state_idle(f32 time_inc) {
         if (auto_launch_instances->size()) {
             const chuck::vm::script_instance* instance = auto_launch_instances->begin()->value;
 
-            retail::sub_5A85E0((u32*)auto_launch_instances); // pop_front
+            auto_launch_instances->pop_front();
             launch_auto_launch_instance(instance);
         } else {
             update_mission_icons();
@@ -541,7 +541,7 @@ void mission_manager::process_state_start_unloading() {
 
     if (((actor*)hero)->get_ai_core()) {
         for (; saved_script_hero_ai_disable_count > 0; --saved_script_hero_ai_disable_count)
-            retail::sub_4DF4B0((i32*)((actor*)hero)->get_ai_core(), 1);
+            ((actor*)hero)->get_ai_core()->pop_disable(1);
     }
 
     for (; saved_script_hero_invulnerable_count > 0; --saved_script_hero_invulnerable_count)

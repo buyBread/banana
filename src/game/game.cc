@@ -25,6 +25,7 @@
 #include "game/shadow/shadow.hh"
 #include "game/ui_character_info_list.hh"
 #include "game/vehicle_model.hh"
+#include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
@@ -315,9 +316,9 @@ void game::freeze_hero(bool freeze) {
 
     if (((actor*)hero)->get_ai_core()) {
         if (freeze)
-            retail::sub_4DF470((i32*)((actor*)hero)->get_ai_core(), 0); // ai_core::push_ai_disable
+            ((actor*)hero)->get_ai_core()->push_disable(0);
         else
-            retail::sub_4DF4B0((i32*)((actor*)hero)->get_ai_core(), 0); // ai_core::pop_ai_disable
+            ((actor*)hero)->get_ai_core()->pop_disable(0);
     }
 }
 

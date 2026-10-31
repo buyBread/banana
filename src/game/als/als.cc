@@ -5,6 +5,7 @@
 #include "game/als/mocomp.hh"
 #include "game/als/state_machine.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
+#include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
@@ -64,7 +65,7 @@ void als::animation_logic_system_interface::frame_advance_als_list(als_list** th
             actor* the_actor = the_als->get_actor();
 
             bool advances = ((the_actor->flags & 1) == 0 && the_actor->get_primary_region()) ||
-                            (the_actor->get_ai_core() && !retail::sub_4C53F0((u32*)the_actor->get_ai_core()));
+                            (the_actor->get_ai_core() && !the_actor->get_ai_core()->should_be_in_limbo());
 
             if (advances) {
                 bool unk = false;

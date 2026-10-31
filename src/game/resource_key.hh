@@ -19,10 +19,20 @@ namespace treyarch {
             return hash;
         }
 
+        // sub_72DDC0
+        void set(const resource_key &target) {
+            hash = target.hash;
+            type = target.type;
+        }
+
         // sub_72DDE0
         void set(string_hash value, u32 resource_type) {
             hash = value;
             type = resource_type;
+        }
+
+        bool operator==(const resource_key &check_me) const {
+            return hash == check_me.hash && type == check_me.type;
         }
 
         // inlined @ sub_5D5F70

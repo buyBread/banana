@@ -429,7 +429,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
 
         if (found->is_an_actor()) {
             if (((actor*)found)->get_ai_core() && !retail::sub_601C50((u32*)found))
-                retail::sub_4DF470((i32*)((actor*)found)->get_ai_core(), 0); // ai_core::push_ai_disable
+                ((actor*)found)->get_ai_core()->push_disable(0);
 
             if (found->has_ifc(entity_ifc_physical)) {
                 if (found->flags & entity_flag_collisions_active)
@@ -480,7 +480,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
                 retail::sub_61FC80((u32*)found->my_ifc_storage->get_ifc(entity_ifc_tentacle));
 
             if (found->is_an_actor() && ((actor*)found)->get_ai_core())
-                retail::sub_4C57B0((i32)((actor*)found)->get_ai_core());
+                ((actor*)found)->get_ai_core()->stop_looping_effects();
         }
 
         entry->entity = found->my_handle;
@@ -547,7 +547,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
         spawned->physical_ifc()->cancel_all_velocity(zerovec);
 
     if (spawned->is_an_actor() && ((actor*)spawned)->get_ai_core() && !retail::sub_601C50((u32*)spawned))
-        retail::sub_4DF470((i32*)((actor*)spawned)->get_ai_core(), 0); // ai_core::push_ai_disable
+        ((actor*)spawned)->get_ai_core()->push_disable(0);
 
     if (!(entry->flags & entity_class_entry::keep_spawned))
         spawned_entities.push_back(handle);
@@ -559,7 +559,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
 void cut_scene_player::reset_interfaces(mash::avl_tree<entity_class_entry>* entries) {
     entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
-    retail::sub_4C6340((i32)((actor*)hero)->get_ai_core());
+    ((actor*)hero)->get_ai_core()->post_pending_sound_event();
     retail::sub_6566F0((i32)references::g_world_ptr.read()->get_hero_ptr()->my_ifc_storage->get_ifc(entity_ifc_ise));
     retail::sub_61F7E0((u32*)references::g_world_ptr.read()->get_hero_ptr()->my_ifc_storage->get_ifc(entity_ifc_tentacle));
 
@@ -575,7 +575,7 @@ void cut_scene_player::reset_interfaces(entity_class_entry* entry) {
         return;
 
     if (((actor*)reset)->get_ai_core())
-        retail::sub_4C6340((i32)((actor*)reset)->get_ai_core());
+        ((actor*)reset)->get_ai_core()->post_pending_sound_event();
 
     if (reset->has_ifc(entity_ifc_ise))
         retail::sub_6566F0((i32)reset->my_ifc_storage->get_ifc(entity_ifc_ise));
@@ -850,7 +850,7 @@ void cut_scene_player::restore_entities() {
         ai_core* ai = ((actor*)restored)->get_ai_core();
 
         if (ai && !retail::sub_601C50((u32*)restored))
-            retail::sub_4DF4B0((i32*)ai, 0); // ai_core::pop_ai_disable
+            ai->pop_disable(0);
 
         if (entry->flags & entity_class_entry::place_at_end) {
             if (ai) {

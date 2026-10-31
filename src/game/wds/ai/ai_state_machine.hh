@@ -55,6 +55,11 @@ namespace treyarch {
 
             return name;
         }
+
+        resource_key get_name() const;
+
+        void request_exit();
+        void external_request_exit(); // leaves a machine that's already exiting alone
     };
 
     ASSERT_OFFSETOF(base_state, my_mashed_state, 0x04);
