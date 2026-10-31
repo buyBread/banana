@@ -283,6 +283,7 @@ namespace treyarch { namespace vc8 {
         // sub_7618D0
         // sub_761A40
         // sub_939FA0
+        // sub_93A620
         // sub_9782F0
         // sub_9784A0
         node* insert(node* where, const T &value) { // unique insert next to `where` when it fits there, else a plain insert
@@ -328,6 +329,9 @@ namespace treyarch { namespace vc8 {
         // sub_7FB5F0
         // sub_803AB0
         // sub_8030D0
+        // sub_935120
+        // sub_9356A0
+        // sub_957E30
         // sub_973A40
         // sub_975D10
         // sub_A1B180
@@ -483,6 +487,9 @@ namespace treyarch { namespace vc8 {
         // sub_7FF730
         // sub_8041A0
         // sub_8042E0
+        // sub_93B7E0
+        // sub_93C220
+        // sub_958380
         // sub_A20CA0
         node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing
             if (first == begin() && last == end()) {
@@ -584,6 +591,7 @@ namespace treyarch { namespace vc8 {
         // sub_803390
         // sub_803A70
         // sub_937860
+        // sub_9580F0
         void erase_subtree(node* root) {
             for (node* position = root; !position->is_nil; root = position) {
                 erase_subtree(position->right);
