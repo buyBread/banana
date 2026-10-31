@@ -179,6 +179,9 @@ namespace treyarch { namespace math {
         f32 yz_length() const { return sqrt(yz_length2()); }
         f32 xz_length() const { return sqrt(xz_length2()); }
 
+        // inlined @ sub_5AB070
+        f32 xz_length2_float() const { return x * x + z * z; }
+
         // sub_4248B0
         f32 xz_length_float() const { return sqrt(x * x + z * z); }
 

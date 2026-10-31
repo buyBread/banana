@@ -1832,7 +1832,7 @@ bool slf__entity__set_abs_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack
 
     vector3d z_facing((f32)((f64)target->x - position.x), 0.0f, (f32)((f64)target->z - position.z));
 
-    if (!((f32)std::sqrt((f64)z_facing.length2()) > 0.01f))
+    if (!(z_facing.length() > 0.01f))
         return true;
 
     z_facing.normalize();

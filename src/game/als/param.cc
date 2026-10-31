@@ -1386,16 +1386,16 @@ f32 als::get_vector_component(const vector3d &vec, e_vector_component component)
         }
 
         case component_length:
-            return vec.length();
+            return vec.length_float();
 
         case component_length_sq:
-            return vec.length2();
+            return vec.length2_float();
 
         case component_xz_length:
-            return vec.xz_length();
+            return vec.xz_length_float();
 
         case component_xz_length_sq:
-            return vec.xz_length2();
+            return vec.xz_length2_float();
 
         case component_y_length:
             return std::fabs(vec.y);

@@ -1844,6 +1844,9 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
         initial_up = the_base->get_external_vector(param_desired_up_vector);
     else
         initial_up = treyarch::references::unk_00e6808c.get();
+
+    if (initial_up.length() < 0.01f)
+        initial_up = treyarch::references::unk_00e6808c.get();
 }
 
 // sub_667F80
@@ -5323,7 +5326,7 @@ void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine
                 axis.normalize();
 
                 // without an axis between them, about the facing
-                if (axis.length2() < 0.01f)
+                if (axis.length2_float() < 0.01f)
                     axis = abs_po.get_z_facing();
 
                 po rotation;
