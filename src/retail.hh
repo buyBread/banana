@@ -8130,7 +8130,7 @@ namespace retail {
     inline auto const sub_6037D0 = (i32 (__thiscall*)(i32 self))0x006037D0;
     inline auto const sub_603B30 = (void (__cdecl*)(f32*, i32, f32*, f32*))0x00603B30;
     inline auto const sub_603B70 = (void (__cdecl*)(f32*, i32, f32*, f32*, f32*))0x00603B70;
-    inline auto const sub_603C10 = (void (__thiscall*)(u32*self, i32))0x00603C10;
+    inline auto const sub_603C10 = (void (__thiscall*)(u32*self, f32))0x00603C10; // manual
     inline auto const sub_603C30 = (void (__thiscall*)(u32*self, i32))0x00603C30;
     inline auto const sub_603C50 = (char (__cdecl*)(u32*, i32, i32, i32*))0x00603C50;
     inline auto const sub_603CD0 = (char (__cdecl*)(u32*, i32, i32, i32*))0x00603CD0;

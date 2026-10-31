@@ -1,4 +1,7 @@
 #include "retail.hh"
+#include "game/arch_base.hh"
+#include "game/arch_base_vhandle.hh"
+#include "game/peds/ped_manager.hh"
 #include "game/script/chuck_lib_peds.hh"
 
 using namespace treyarch;
@@ -87,12 +90,34 @@ bool slf__get_max_fake_ped_height_outer__t::operator()(chuck::vm::vm_stack &stac
     return ((invoke_t)retail::sub_83EBE0)(this, stack);
 }
 
+// sub_85B840
 bool slf__peds_add_ped_entity__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85B840)(this, stack);
+    stack.sp -= 0x08;
+
+    arch_base* ped = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (ped && ped->is_an_actor()) {
+        arch_base_vhandle handle = ped->my_handle;
+
+        ped_manager::add_ped(&handle, stack.local_num(0x04) > 0.0001f);
+    }
+
+    return true;
 }
 
+// sub_85B8B0
 bool slf__peds_remove_ped_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85B8B0)(this, stack);
+    stack.sp -= 0x04;
+
+    arch_base* ped = arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (ped && ped->is_an_actor()) {
+        arch_base_vhandle handle = ped->my_handle;
+
+        ped_manager::remove_ped_entity(&handle);
+    }
+
+    return true;
 }
 
 bool slf__peds_safe_to_remove_ped_entity__entity__t::operator()(chuck::vm::vm_stack &stack) {
@@ -135,8 +160,13 @@ bool slf__peds_find_peds_near__vector3d__num__num__num__dynamic_array__t::operat
     return ((invoke_t)retail::sub_881780)(this, stack);
 }
 
+// sub_85BB00
 bool slf__peds_clear_in_radius__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85BB00)(this, stack);
+    stack.sp -= 0x10;
+
+    ped_manager::clear_in_radius((const vector3d*)&stack.local_uint(0x00), stack.local_num(0x0C));
+
+    return true;
 }
 
 bool slf__peds_find_vehicle_near__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {

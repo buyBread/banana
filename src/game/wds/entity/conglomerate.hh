@@ -30,6 +30,18 @@ namespace treyarch {
     inline bool operator<(string_hash lhs, const entity &rhs) { return lhs < rhs.id; }
     inline bool operator>(string_hash lhs, const entity &rhs) { return rhs.id < lhs; }
 
+    // SM3's conglomerate_flags_t, but 0x100
+    enum e_conglomerate_flags : u32 {
+        conglomerate_flag_visual_radius_dirty   = 0x00000001,
+        conglomerate_flag_colgeom_radius_dirty  = 0x00000002,
+        conglomerate_flag_has_colgeom_members   = 0x00000004,
+        conglomerate_flag_has_ai_members        = 0x00000008,
+        conglomerate_flag_possibly_render_valid = 0x00000010,
+        conglomerate_flag_possibly_render       = 0x00000020,
+        conglomerate_flag_is_cloned             = 0x00000040,
+        conglomerate_flag_unk_00000100          = 0x00000100 // ped_manager::add_ped sets it with the float at +0x188
+    };
+
     class conglomerate : public actor {
 
     public:
@@ -44,7 +56,9 @@ namespace treyarch {
             <conglomerate_bone_index> bone_indices;
         u8                            reserved_154[0x20];
         string_hash                   skeleton_name_hash;
-        u8                            reserved_178[0x20];
+        u8                            reserved_178[0x18];
+        u32                           conglomerate_flags;
+        u8                            reserved_194[0x04];
 
         e_conglom_member_index get_member_index(const string_hash &nodename) const;
         entity*                get_member      (e_conglom_member_index index) const;
@@ -62,4 +76,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(conglomerate, all_model_po,       0x124);
     ASSERT_OFFSETOF(conglomerate, bone_indices,       0x150);
     ASSERT_OFFSETOF(conglomerate, skeleton_name_hash, 0x174);
+    ASSERT_OFFSETOF(conglomerate, conglomerate_flags, 0x190);
 } // treyarch

@@ -237,6 +237,35 @@ namespace treyarch {
         bool force_exit_car (bool animate);
     };
 
+    enum e_ai_wander_flags : u32 {
+        ai_wander_flag_unk_00000400 = 0x00000400, // survives ped_manager::unspawn_ped
+        ai_wander_flag_available    = 0x00000800,
+        ai_wander_flag_unk_00080000 = 0x00080000,
+        ai_wander_flag_unk_00100000 = 0x00100000,
+        ai_wander_flag_unk_00200000 = 0x00200000, // the ped work set the ped up past the anim move radius
+        ai_wander_flag_unk_00400000 = 0x00400000,
+        ai_wander_flag_unk_01000000 = 0x01000000, // survives ped_manager::unspawn_ped
+        ai_wander_flag_unk_02000000 = 0x02000000
+    };
+
+    class ai_wander_inode : public info_node {
+
+    public:
+        u8  reserved_030[0x0C];
+        u8* unk_03c;            // with bit 1 of its byte 8 set, the ped work keeps the ped fully running
+        u8  reserved_040[0x24];
+        u32 flags;
+        u8  reserved_068[0x40];
+    };
+
+    class ai_civilian_inode : public info_node {
+
+    public:
+        u8   reserved_030[0x2C];
+        bool unk_05c;            // ped_manager::unspawn_ped clears it
+        u8   pad_05d[0x03];
+    };
+
     inline const string_hash goto_radius_key              = string_hash(hash::djb2("goto_radius"));
     inline const string_hash goto_speed_key               = string_hash(hash::djb2("goto_speed"));
     inline const string_hash goto_allow_facing_key        = string_hash(hash::djb2("goto_allow_facing"));
@@ -460,6 +489,13 @@ namespace treyarch {
     ASSERT_SIZEOF  (ai_car_inode,                0xA0);
     ASSERT_OFFSETOF(ai_car_inode, selected_seat, 0x80);
     ASSERT_OFFSETOF(ai_car_inode, is_in_car,     0x98);
+
+    ASSERT_SIZEOF  (ai_wander_inode,          0xA8);
+    ASSERT_OFFSETOF(ai_wander_inode, unk_03c, 0x3C);
+    ASSERT_OFFSETOF(ai_wander_inode, flags,   0x64);
+
+    ASSERT_SIZEOF  (ai_civilian_inode,          0x60);
+    ASSERT_OFFSETOF(ai_civilian_inode, unk_05c, 0x5C);
 
     ASSERT_SIZEOF  (std_puppet_inode,                    0x60);
     ASSERT_OFFSETOF(std_puppet_inode, slaves,            0x30);

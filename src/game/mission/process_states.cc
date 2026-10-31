@@ -19,6 +19,7 @@
 #include "game/glass_house_manager.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/mission/mission_memory_manager.hh"
+#include "game/peds/ped_manager.hh"
 #include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
@@ -42,7 +43,6 @@ namespace treyarch { namespace references {
     util::memory_reference<string_hash> last_successful_mission_long_time_ago   { 0x0102C5E8 };
     util::memory_reference<string_hash> last_selected_zoom_map_destination_long { 0x0102CC10 };
 
-    util::memory_reference<u8> unk_0102fed8 { 0x0102FED8 };
     util::memory_reference<u8> unk_00e67164 { 0x00E67164 };
 
     util::memory_reference<f32> unk_00fc7a38 { 0x00FC7A38 };
@@ -286,7 +286,7 @@ void mission_manager::process_state_start_loading() {
 
     soap::online::inst()->method_024(presence);
 
-    if (references::unk_0102fed8.read())
+    if (references::peds_enabled.read())
         flags |= mission_manager_flag_unk_00020000;
     else
         flags &= ~mission_manager_flag_unk_00020000;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/arch_base.hh"
+#include "game/wds/entity/interface/card_interface.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
 #include "game/wds/entity/interface/damage_interface.hh"
 #include "game/wds/entity/interface/ise_interface.hh"
@@ -107,6 +108,11 @@ namespace treyarch {
             return has_ifc(entity_ifc_sound);
         }
 
+        // sub_48E6C0
+        bool has_card_ifc() const {
+            return has_ifc(entity_ifc_card);
+        }
+
         // inlined; the milestone's entity_base::<name>_ifc()
         damage_interface* damage_ifc() const {
             return (damage_interface*)my_ifc_storage->get_ifc(entity_ifc_damage);
@@ -166,6 +172,10 @@ namespace treyarch {
 
         occupant_interface* occupant_ifc() const {
             return (occupant_interface*)my_ifc_storage->get_ifc(entity_ifc_occupant);
+        }
+
+        card_interface* card_ifc() const {
+            return (card_interface*)my_ifc_storage->get_ifc(entity_ifc_card);
         }
 
         // unless ext flag 0x1000 vetoes it

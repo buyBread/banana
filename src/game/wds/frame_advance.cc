@@ -5,6 +5,7 @@
 #include "game/game.hh"
 #include "game/game_meter_manager.hh"
 #include "game/input/input_mgr.hh"
+#include "game/peds/ped_manager.hh"
 #include "game/trigger.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
@@ -68,7 +69,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     retail::sub_96F4E0(this, time_inc); // world_dynamics_system::update_ai_and_visibility_proximity_maps_for_moved_entities
     retail::sub_7851D0();
     chuck::vm::script_manager::inst()->run(time_inc, false);
-    retail::sub_763520(time_inc); // pedestrians
+    ped_manager::frame_advance(time_inc);
 
     if (zombie_manager* zombies = zombie_manager::inst())
         retail::sub_76C610((i32)zombies, time_inc);
