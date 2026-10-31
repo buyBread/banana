@@ -13,6 +13,7 @@ namespace treyarch { namespace jq {
     struct full_queue {
         // sub_4E0D10
         // sub_5D41B0
+        // sub_75F090
         static void init() {
             i32 group = retail::sub_A144D0(); // jq_alloc_batch_group
 
@@ -109,6 +110,8 @@ namespace treyarch { namespace jq {
         // sub_5ADE90
         // sub_5AF420
         // sub_5AF6E0
+        // sub_730FC0
+        // sub_731120
         static void wait_on_threads(bool set_work, bool set_unk) {
             if (T::batches_added.read() <= 0)
                 return;
@@ -162,6 +165,8 @@ namespace treyarch { namespace jq {
         // sub_5ADF70
         // sub_5AF500
         // sub_5AF7C0
+        // sub_7310A0
+        // sub_731200
         static void finish(bool set_work) {
             unlock_batch_pool();
             wait_on_threads(set_work, false);

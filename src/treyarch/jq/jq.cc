@@ -9,6 +9,7 @@
 #include "game/animation/animation_controller_jq.hh"
 #include "game/animation/animation_pose_jq.hh"
 #include "game/event/event_manager.hh"
+#include "game/peds/ped_jq.hh"
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_core_jq.hh"
@@ -172,7 +173,7 @@ void jq::jobqueue_init() {
     retail::sub_822B70(); // prop_collisions_jq
     retail::sub_822EC0(); // ragdoll_collisions_jq
     retail::sub_683620(); // physical_interface_jq
-    retail::sub_75F090(); // ped_jq
+    ped_jq::init();
     retail::sub_746BB0(); // vendor_jq
     retail::sub_758220(); // fake_ped_jq
     retail::sub_747090(); // ped_spawn_pos_search_jq
