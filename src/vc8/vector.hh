@@ -99,6 +99,7 @@ namespace treyarch { namespace vc8 {
 
         bool empty() const noexcept { return first == last; }
 
+        // inlined @ sub_4F21E0
         void clear() noexcept {
             erase(first, last);
         }
@@ -221,6 +222,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // inlined @ sub_6E77C0
+        // inlined @ sub_4EF7C0
         T* erase(T* position) noexcept {
             T* result = position;
 
