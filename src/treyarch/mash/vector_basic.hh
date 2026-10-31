@@ -136,6 +136,9 @@ namespace treyarch { namespace mash {
         // inlined @ sub_4B3690
         // inlined @ sub_879DA0
         // inlined @ sub_87A810
+        // inlined @ sub_9386A0
+        // inlined @ sub_94FA90
+        // inlined @ sub_94FE60
         void push_back(const T &value) {
             push_back();
 
