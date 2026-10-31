@@ -182,6 +182,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_802590
         // sub_921FD0
+        // sub_922010
         node* lower_bound(const K &key) const { // first node whose key is not less than `key`
             node* result   = head_node;
             node* position = head_node->parent;
@@ -223,6 +224,8 @@ namespace treyarch { namespace vc8 {
         // sub_7F9470
         // sub_7F94E0
         // sub_802CD0
+        // sub_930490
+        // sub_9304F0
         node* find(const K &key) {
             node* position = lower_bound(key);
 
@@ -283,10 +286,13 @@ namespace treyarch { namespace vc8 {
         // sub_6F0980
         // sub_7618D0
         // sub_761A40
+        // sub_939C40
         // sub_939FA0
         // sub_93A300
         // sub_93A4B0
         // sub_93A620
+        // sub_93A790
+        // sub_957C80
         // sub_9782F0
         // sub_9784A0
         node* insert(node* where, const T &value) { // unique insert next to `where` when it fits there, else a plain insert
@@ -495,6 +501,7 @@ namespace treyarch { namespace vc8 {
         // sub_93B7E0
         // sub_93BDE0
         // sub_93C220
+        // sub_93E580
         // sub_958380
         // sub_A20CA0
         node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing

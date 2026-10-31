@@ -23,12 +23,15 @@ namespace treyarch { namespace vc8 {
         // sub_6F4950
         // sub_764120
         // sub_764190
+        // sub_93DC00
         // sub_93DDB0
         // sub_93DE40
         // sub_93DED0
         // sub_93DF60
         // sub_93DFD0
+        // sub_93E040
         // sub_93E1B0
+        // sub_958130
         // sub_979870
         // sub_979900
         V &operator[](const K &key) {
