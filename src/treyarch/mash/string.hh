@@ -207,10 +207,12 @@ namespace treyarch { namespace mash {
             // return atof(m_data);
         }
 
+        // sub_5FC000
         static string from_int(i32 value) {
             return string(value);
         }
 
+        // sub_7DF4F0
         static string from_float( f32 value) {
             return string(value);
         }
