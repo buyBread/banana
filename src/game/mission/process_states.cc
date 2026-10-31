@@ -223,7 +223,7 @@ void mission_manager::process_state_start_loading() {
         if (retail::sub_90F5E0((i32)region_pack_manager::inst()))
             return;
 
-        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        spawn_table_manager::inst()->reset_city_life();
         zombie_manager::inst()->suspended = 0;
     }
 
@@ -333,7 +333,7 @@ void mission_manager::process_state_loading() {
         if (retail::sub_90F5E0((i32)region_pack_manager::inst()))
             return;
 
-        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        spawn_table_manager::inst()->reset_city_life();
         zombie_manager::inst()->suspended = 0;
     }
 
@@ -576,14 +576,14 @@ void mission_manager::process_state_unloading() {
 
     flags |= mission_manager_flag_unk_02000000;
 
-    retail::sub_93D770();
+    spawn_table_manager::clear_debris_no_spawn_zones();
 
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst() &&
         (u32*)region_pack_manager::inst() && spawn_table_manager::inst()) {
 
         region_spawn_manager::inst()->populate_mission_with_entities = false;
 
-        retail::sub_9585E0((i32)spawn_table_manager::inst());
+        spawn_table_manager::inst()->reset_city_life();
         zombie_manager::inst()->suspended = 0;
     }
 

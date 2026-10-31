@@ -1,7 +1,19 @@
+#include "retail.hh"
 #include "game/spawn_item_collection.hh"
 #include "treyarch/mash/mash_info.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
+
+// sub_920AB0
+spawn_item_collection_unk_38::spawn_item_collection_unk_38() { // the run-time copy toggle_override_spawn_pacing_in_mission fills
+    void* storage = mm::allocate(sizeof(quest_condition));
+
+    condition = storage ? (quest_condition*)retail::sub_7F2390((f32*)storage, nullptr) : nullptr;
+}
+
+// sub_905A60
+spawn_item_collection_unk_38::~spawn_item_collection_unk_38() {} // only the strings go; the condition is left behind
 
 // inlined @ sub_93EF60
 void spawn_item_collection_unk_38::construct_mashed_class() {

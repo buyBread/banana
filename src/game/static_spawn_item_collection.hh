@@ -141,6 +141,8 @@ namespace treyarch {
         bool                             unk_d5;
         u8                               pad_d6[0x02];
         cross_neighborhood_spawn_unk_d8* unk_d8;
+
+        void remove_map_markers();
     };
 
     class static_spawn_item_collection {
@@ -160,7 +162,9 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<std::type_info> static_spawn_item_type_descriptor             { 0x00E76A60 };
+        inline util::memory_reference<std::type_info> scripted_spawn_item_type_descriptor           { 0x00E76A80 };
         inline util::memory_reference<std::type_info> always_on_scripted_spawn_item_type_descriptor { 0x00E76B54 };
+        inline util::memory_reference<std::type_info> cross_neighborhood_spawn_type_descriptor      { 0x00E76E3C };
     } // references
 
     ASSERT_SIZEOF  (static_spawn_item,                        0x50);

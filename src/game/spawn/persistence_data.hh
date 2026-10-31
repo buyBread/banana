@@ -23,6 +23,8 @@ namespace treyarch {
 
         // sub_71F870
         virtual bool is_num() const { return false; }
+
+        virtual ~persistence_data_base();
     };
 
     class persistence_num : public persistence_data_base {

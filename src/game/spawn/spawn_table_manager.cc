@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cstring>
+#include <new>
 
 #include "retail.hh"
 #include "vc8/vector.hh"
@@ -8,12 +10,15 @@
 #include "game/event/chuck_library_parameter_event.hh"
 #include "game/event/event_manager.hh"
 #include "game/math/po.hh"
+#include "game/mission/mission_manager.hh"
+#include "game/mission/mission_memory_manager.hh"
 #include "game/quest_list.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
 #include "game/spawn/active_spawn_item.hh"
 #include "game/spawn/quest_giver_spawn.hh"
 #include "game/spawn/spawn_table_manager.hh"
+#include "game/spawn_item_collection.hh"
 #include "game/spawn_table_interface.hh"
 #include "game/spawn_point_list_collection.hh"
 #include "game/static_spawn_item_collection.hh"
@@ -80,6 +85,523 @@ void spawn_table_manager::free_spawn_record(spawn_point* record) { // a borrowed
 
     if (borrowed != borrowed_spawn_records.end())
         borrowed_spawn_records.erase(borrowed);
+}
+
+// sub_938FD0
+void spawn_table_manager::clear_spawn_item_lists() {
+    unk_04c->spawn_items              .clear();
+    unk_04c->random_spawn_items       .clear();
+    unk_04c->always_on_spawn_items    .clear();
+    unk_04c->cross_neighborhood_spawns.clear();
+    unk_04c->friendly_spawn_items     .clear();
+}
+
+// sub_948280
+void spawn_table_manager_unk_04c::add_spawn_items_by_name(mash::vector<mash::string>* names) { // each item files itself by its own answers
+    for (mash::string** name = names->begin(); name != names->end(); ++name) {
+        static_spawn_item** added = std::find_if(spawn_items.begin(),
+                                                 spawn_items.end(),
+                                                 [name](static_spawn_item* item) { return !std::strncmp(item->name.c_str(), (*name)->c_str(), mash::string::max_length); });
+
+        if (added != spawn_items.end())
+            continue;
+
+        static_spawn_item* item;
+
+        {
+            mash::string key = **name;
+
+            item = (*table_interface->spawn_items_by_name)[key];
+        }
+
+        if (!item)
+            continue;
+
+        if (item->is_random())
+            random_spawn_items.push_back(item);
+        else if (item->is_cross_neighborhood()) {
+            if (std::find(cross_neighborhood_spawns.begin(), cross_neighborhood_spawns.end(), item) != cross_neighborhood_spawns.end())
+                continue;
+
+            // __RTDynamicCast
+            auto* spawn = (cross_neighborhood_spawn*)retail::sub_ADE86C(item,
+                                                                        0,
+                                                                        &references::static_spawn_item_type_descriptor.get(),
+                                                                        &references::cross_neighborhood_spawn_type_descriptor.get(),
+                                                                        false);
+
+            cross_neighborhood_spawns.push_back(spawn);
+        } else if (item->is_friendly())
+            friendly_spawn_items.push_back(item);
+        else if (item->is_always_on())
+            always_on_spawn_items.push_back(item);
+        else
+            spawn_items.push_back(item);
+    }
+}
+
+// inlined @ sub_952A80
+void spawn_table_manager_unk_04c::destroy_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item) {
+    for (active_spawn_item** it = list->begin(); it != list->end();) {
+        active_spawn_item* active = *it;
+
+        if (active->item != item) {
+            ++it;
+            continue;
+        }
+
+        it = spawn_table_manager::inst()->deactivate_item(list, active, true);
+
+        delete active;
+    }
+}
+
+// sub_952A80
+void spawn_table_manager_unk_04c::remove_spawn_items_by_name(mash::vector<mash::string>* names) { // "ALL" empties every list instead
+    for (mash::string** name = names->begin(); name != names->end(); ++name) {
+        if (!std::strncmp((*name)->c_str(), "ALL", mash::string::max_length)) {
+            spawn_table_manager::inst()->clear_spawn_item_lists();
+
+            return;
+        }
+
+        for (static_spawn_item** it = spawn_items.begin(); it != spawn_items.end();)
+            if (!std::strncmp((*it)->name.c_str(), (*name)->c_str(), mash::string::max_length))
+                it = spawn_items.erase(it);
+            else
+                ++it;
+
+        for (static_spawn_item** it = random_spawn_items.begin(); it != random_spawn_items.end();)
+            if (!std::strncmp((*it)->name.c_str(), (*name)->c_str(), mash::string::max_length))
+                it = random_spawn_items.erase(it);
+            else
+                ++it;
+
+        static_spawn_item** always_on = always_on_spawn_items.begin();
+
+        while (always_on != always_on_spawn_items.end()) {
+            if (std::strncmp((*always_on)->name.c_str(), (*name)->c_str(), mash::string::max_length)) {
+                ++always_on;
+                continue;
+            }
+
+            destroy_actives_of(&active_spawn_items,         *always_on);
+            destroy_actives_of(&pending_active_spawn_items, *always_on);
+
+            always_on = always_on_spawn_items.erase(always_on);
+        }
+
+        for (cross_neighborhood_spawn** it = cross_neighborhood_spawns.begin(); it != cross_neighborhood_spawns.end();) {
+            if (std::strncmp((*it)->name.c_str(), (*name)->c_str(), mash::string::max_length)) {
+                ++it;
+                continue;
+            }
+
+            destroy_actives_of(&active_spawn_items, *it);
+
+            // matches against whatever sits at the always-on list's end, not this spawn
+            destroy_actives_of(&pending_active_spawn_items, *always_on);
+
+            if ((*it)->unk_d8)
+                (*it)->unk_d8->quest_event_raised = false;
+
+            it = cross_neighborhood_spawns.erase(it);
+        }
+
+        for (static_spawn_item** it = friendly_spawn_items.begin(); it != friendly_spawn_items.end();) {
+            if (std::strncmp((*it)->name.c_str(), (*name)->c_str(), mash::string::max_length)) {
+                ++it;
+                continue;
+            }
+
+            destroy_actives_of(&active_spawn_items,         *it);
+            destroy_actives_of(&pending_active_spawn_items, *it);
+
+            it = friendly_spawn_items.erase(it);
+        }
+    }
+}
+
+// sub_92E7C0
+void spawn_table_manager_unk_04c::update_quest_spawn_counts() {
+    f32 share = (f32)((f64)0.05f * (f64)(u32)(quest_spawn_items.size() - 1)) + 0.5f;
+
+    if (share > 0.5f)
+        share = 0.5f;
+
+    bool uncapped = false;
+    i32  cap      = 0;
+
+    for (static_spawn_item** it = quest_spawn_items.begin(); it != quest_spawn_items.end(); ++it) {
+        if (!(*it)->is_scripted())
+            continue;
+
+        // __RTDynamicCast
+        auto* scripted = (scripted_spawn_item*)retail::sub_ADE86C(*it,
+                                                                  0,
+                                                                  &references::static_spawn_item_type_descriptor.get(),
+                                                                  &references::scripted_spawn_item_type_descriptor.get(),
+                                                                  false);
+
+        if (!scripted)
+            continue;
+
+        if (!scripted->spawn_limit)
+            uncapped = true;
+
+        cap += scripted->spawn_limit;
+    }
+
+    for (static_spawn_item** it = quest_always_on_spawn_items.begin(); it != quest_always_on_spawn_items.end(); ++it) {
+        if (!(*it)->is_scripted())
+            continue;
+
+        // __RTDynamicCast
+        auto* scripted = (scripted_spawn_item*)retail::sub_ADE86C(*it,
+                                                                  0,
+                                                                  &references::static_spawn_item_type_descriptor.get(),
+                                                                  &references::scripted_spawn_item_type_descriptor.get(),
+                                                                  false);
+
+        if (!scripted)
+            continue;
+
+        if (!scripted->spawn_limit)
+            uncapped = true;
+
+        cap += scripted->spawn_limit;
+    }
+
+    quest_spawn_uncapped = uncapped;
+    quest_spawn_cap      = cap + quest_cross_neighborhood_spawns.size();
+    quest_spawn_share    = share;
+
+    if (!quest_spawn_items.size())
+        quest_spawn_share = 0.0f;
+}
+
+// sub_948560
+void spawn_table_manager::add_quest_spawn_item(mash::string name) {
+    static_spawn_item* item = unk_04c->table_interface->find_spawn_item(name);
+
+    if (!item)
+        return;
+
+    if (item->is_cross_neighborhood()) {
+        // __RTDynamicCast
+        auto* spawn = (cross_neighborhood_spawn*)retail::sub_ADE86C(item,
+                                                                    0,
+                                                                    &references::static_spawn_item_type_descriptor.get(),
+                                                                    &references::cross_neighborhood_spawn_type_descriptor.get(),
+                                                                    false);
+
+        unk_04c->quest_cross_neighborhood_spawns.push_back(spawn);
+    } else if (item->is_friendly())
+        unk_04c->friendly_spawn_items.push_back(item);
+    else if (item->is_always_on())
+        unk_04c->quest_always_on_spawn_items.push_back(item);
+    else
+        unk_04c->quest_spawn_items.push_back(item);
+
+    unk_04c->update_quest_spawn_counts();
+}
+
+// inlined @ sub_9530D0
+void spawn_table_manager::deactivate_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item) {
+    for (active_spawn_item** it = list->begin(); it != list->end();)
+        if ((*it)->item == item)
+            it = deactivate_item(list, *it, false);
+        else
+            ++it;
+}
+
+// sub_9530D0
+void spawn_table_manager::remove_quest_spawn_item(mash::string name) { // the actives are deactivated, not destroyed
+    for (static_spawn_item** it = unk_04c->quest_spawn_items.begin(); it != unk_04c->quest_spawn_items.end(); ++it)
+        if (!std::strncmp((*it)->name.c_str(), name.c_str(), mash::string::max_length)) {
+            unk_04c->quest_spawn_items.erase(it);
+
+            break;
+        }
+
+    for (static_spawn_item** it = unk_04c->quest_always_on_spawn_items.begin(); it != unk_04c->quest_always_on_spawn_items.end();) {
+        if (std::strncmp((*it)->name.c_str(), name.c_str(), mash::string::max_length)) {
+            ++it;
+            continue;
+        }
+
+        if ((*it)->is_always_on()) {
+            deactivate_actives_of(&unk_04c->active_spawn_items,         *it);
+            deactivate_actives_of(&unk_04c->pending_active_spawn_items, *it);
+        }
+
+        it = unk_04c->quest_always_on_spawn_items.erase(it);
+    }
+
+    for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end();) {
+        if (std::strncmp((*it)->name.c_str(), name.c_str(), mash::string::max_length)) {
+            ++it;
+            continue;
+        }
+
+        deactivate_actives_of(&unk_04c->active_spawn_items,         *it);
+        deactivate_actives_of(&unk_04c->pending_active_spawn_items, *it);
+
+        if ((*it)->unk_d8)
+            (*it)->unk_d8->quest_event_raised = false;
+
+        (*it)->remove_map_markers();
+
+        it = unk_04c->quest_cross_neighborhood_spawns.erase(it);
+    }
+
+    unk_04c->update_quest_spawn_counts();
+}
+
+// sub_948BA0
+void spawn_table_manager::push_spawn_item_during_mission(mash::string name) { // a scripted item's pack is pushed for the running mission
+    static_spawn_item* item = unk_04c->table_interface->find_spawn_item(name);
+
+    unk_04c->spawn_items.push_back(item);
+
+    if (!item->is_scripted())
+        return;
+
+    mash::string* pack = &((scripted_spawn_item*)item)->script_name;
+
+    if (retail::sub_83F720((u32*)mission_memory_manager::inst(), (i32)pack))
+        return;
+
+    mash::string owner(mission_manager::inst()->get_running_mission_name());
+
+    retail::sub_87D610((i32)mission_memory_manager::inst(), (i32*)&owner, (i32)pack, 1);
+}
+
+// sub_93F8D0
+void spawn_table_manager::pop_spawn_item_during_mission(mash::string name) { // an unlisted item takes the last one with it
+    static_spawn_item* item = unk_04c->table_interface->find_spawn_item(name);
+
+    static_spawn_item** listed = std::find(unk_04c->spawn_items.begin(), unk_04c->spawn_items.end(), item);
+
+    if (item->is_scripted()) {
+        mash::string* pack = &((scripted_spawn_item*)item)->script_name;
+
+        if (retail::sub_83F720((u32*)mission_memory_manager::inst(), (i32)pack)) {
+            mash::string owner(mission_manager::inst()->get_running_mission_name());
+
+            retail::sub_87D730((i32)mission_memory_manager::inst(), (i32*)&owner, (i32)pack, 1);
+        }
+    }
+
+    unk_04c->spawn_items.erase(listed);
+}
+
+// sub_951E80
+active_spawn_item** spawn_table_manager::deactivate_item(vc8::vector<active_spawn_item*>* list, active_spawn_item* active, bool flag) { // returns the position after it; the active isn't destroyed
+    if (unk_04c->active_persistence_data[active]) {
+        persistence_data* persistence = unk_04c->active_persistence_data[active];
+
+        for (auto* node = persistence->records.begin(); node != persistence->records.end();) {
+            delete node->value.second;
+
+            node = persistence->records.erase(node);
+        }
+
+        persistence->~persistence_data();
+
+        mm::free(persistence);
+    }
+
+    active->unk_008(true);
+
+    retail::sub_934680((u32*)region_pack_manager::inst(), (i32)active, false);
+
+    if (!active->item->is_always_on() && !active->item->is_friendly()) {
+        if (active->unk_25 && flag)
+            --unk_04c->unk_008;
+        else
+            --unk_04c->unk_010;
+    }
+
+    // a miss erases at the end
+    return list->erase(std::find(list->begin(), list->end(), active));
+}
+
+// sub_953060
+void spawn_table_manager::force_populate_mission_cleanup() {
+    for (active_spawn_item** it = unk_04c->active_spawn_items.begin(); it != unk_04c->active_spawn_items.end();)
+        it = deactivate_item(&unk_04c->active_spawn_items, *it, true);
+
+    for (active_spawn_item** it = unk_04c->pending_active_spawn_items.begin(); it != unk_04c->pending_active_spawn_items.end();)
+        it = deactivate_item(&unk_04c->pending_active_spawn_items, *it, true);
+
+    unk_04c->unk_010 = 0;
+    unk_04c->unk_008 = 0;
+}
+
+// sub_939240
+void spawn_table_manager::clear_spawn_lists_and_markers() {
+    for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end();) {
+        if ((*it)->unk_d8)
+            (*it)->unk_d8->quest_event_raised = false;
+
+        (*it)->remove_map_markers();
+
+        it = unk_04c->quest_cross_neighborhood_spawns.erase(it);
+    }
+
+    for (cross_neighborhood_spawn** it = unk_04c->cross_neighborhood_spawns.begin(); it != unk_04c->cross_neighborhood_spawns.end();) {
+        if ((*it)->unk_d8)
+            (*it)->unk_d8->quest_event_raised = false;
+
+        (*it)->remove_map_markers();
+
+        it = unk_04c->cross_neighborhood_spawns.erase(it);
+    }
+
+    unk_04c->always_on_spawn_items      .clear();
+    unk_04c->random_spawn_items         .clear();
+    unk_04c->quest_spawn_items          .clear();
+    unk_04c->quest_always_on_spawn_items.clear();
+}
+
+// sub_950110
+void spawn_table_manager::delete_item_maps() { // every area goes with its map
+    if (unk_04c->no_spawn_zones) {
+        for (auto* node = unk_04c->no_spawn_zones->begin(); node != unk_04c->no_spawn_zones->end();) {
+            no_spawn_base* zone = node->value.second;
+
+            node = unk_04c->no_spawn_zones->erase(node);
+
+            delete zone;
+        }
+
+        unk_04c->no_spawn_zones->clear();
+
+        if (unk_04c->no_spawn_zones) {
+            unk_04c->no_spawn_zones->~map();
+
+            mm::free(unk_04c->no_spawn_zones);
+        }
+
+        unk_04c->no_spawn_zones = nullptr;
+    }
+
+    if (unk_04c->arbitrary_regions) {
+        for (auto* node = unk_04c->arbitrary_regions->begin(); node != unk_04c->arbitrary_regions->end();) {
+            no_spawn_base* region = node->value.second;
+
+            node = unk_04c->arbitrary_regions->erase(node);
+
+            delete region;
+        }
+
+        unk_04c->arbitrary_regions->clear();
+
+        if (unk_04c->arbitrary_regions) {
+            unk_04c->arbitrary_regions->~map();
+
+            mm::free(unk_04c->arbitrary_regions);
+        }
+
+        unk_04c->arbitrary_regions = nullptr;
+    }
+}
+
+// sub_93D770
+void spawn_table_manager::clear_debris_no_spawn_zones() {
+    mash::vector<no_spawn_base>* zones = references::debris_no_spawn_zones.read();
+
+    if (zones) {
+        zones->clear();
+
+        mm::free(zones);
+    }
+
+    references::debris_no_spawn_zones.write(nullptr);
+}
+
+// sub_9585E0
+void spawn_table_manager::reset_city_life() {
+    for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end(); ++it)
+        (*it)->remove_map_markers();
+
+    for (cross_neighborhood_spawn** it = unk_04c->cross_neighborhood_spawns.begin(); it != unk_04c->cross_neighborhood_spawns.end(); ++it)
+        (*it)->remove_map_markers();
+
+    force_populate_mission_cleanup();
+    clear_spawn_item_lists();
+    delete_item_maps();
+
+    spawn_placement_figures[0] = 90.0f;
+    spawn_placement_figures[1] = 200.0f;
+    spawn_placement_figures[2] = 300.0f;
+    spawn_placement_figures[3] = 24.0f;
+
+    collectibles_disabled = false;
+
+    if (unk_04c->city_life_categories) {
+        unk_04c->city_life_categories->~map();
+
+        mm::free(unk_04c->city_life_categories);
+
+        unk_04c->city_life_categories = nullptr;
+    }
+
+    region_pack_manager* packs = region_pack_manager::inst();
+
+    if (packs->quest_giver_locked_in_mission) {
+        packs->despawn_and_lock_quest_giver_in_mission(false);
+
+        if (!retail::sub_90F6E0((i32)region_pack_manager::inst(), (i32)unk_04c->chosen_quest_giver_spawn))
+            unk_04c->chosen_quest_giver_spawn = nullptr;
+    }
+
+    if (unk_04c->mission_pacing_override) {
+        unk_04c->mission_pacing_override->~spawn_item_collection_unk_38();
+
+        mm::free(unk_04c->mission_pacing_override);
+    }
+
+    unk_04c->mission_pacing_override = nullptr;
+
+    unk_048 = false;
+}
+
+// sub_927A20
+void spawn_table_manager::toggle_override_spawn_pacing_in_mission(bool on,
+                                                                  u32  low_spawn_count,
+                                                                  u32  high_spawn_count,
+                                                                  f32  ramp_seconds,
+                                                                  f32  hold_seconds,
+                                                                  f32  give_up_seconds,
+                                                                  u32  step_count) {
+
+    if (!on) {
+        if (unk_04c->mission_pacing_override) {
+            unk_04c->mission_pacing_override->~spawn_item_collection_unk_38();
+
+            mm::free(unk_04c->mission_pacing_override);
+        }
+
+        unk_04c->mission_pacing_override = nullptr;
+
+        return;
+    }
+
+    if (!unk_04c->mission_pacing_override) {
+        void* storage = mm::allocate(sizeof(spawn_item_collection_unk_38));
+
+        unk_04c->mission_pacing_override = storage ? new (storage) spawn_item_collection_unk_38() : nullptr;
+    }
+
+    unk_04c->mission_pacing_override->low_spawn_count  = low_spawn_count;
+    unk_04c->mission_pacing_override->high_spawn_count = high_spawn_count;
+    unk_04c->mission_pacing_override->ramp_seconds     = ramp_seconds;
+    unk_04c->mission_pacing_override->hold_seconds     = hold_seconds;
+    unk_04c->mission_pacing_override->unk_20           = 0.0f;
+    unk_04c->mission_pacing_override->give_up_seconds  = give_up_seconds;
+    unk_04c->mission_pacing_override->step_count       = step_count;
 }
 
 // sub_92ED30

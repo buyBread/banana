@@ -749,9 +749,7 @@ bool slf__push_spawn_item_during_mission__str__t::operator()(chuck::vm::vm_stack
     if (mission_memory_manager::inst()->packs_unloading)
         return false;
 
-    using push_spawn_item_t = void (__thiscall*)(spawn_table_manager*, mash::string);
-
-    ((push_spawn_item_t)retail::sub_948BA0)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
+    spawn_table_manager::inst()->push_spawn_item_during_mission(mash::string((const char*)stack.local_uint(0x00)));
 
     return true;
 }
@@ -767,9 +765,7 @@ bool slf__pop_spawn_item_during_mission__str__t::operator()(chuck::vm::vm_stack 
     if (mission_memory_manager::inst()->packs_unloading)
         return false;
 
-    using pop_spawn_item_t = void (__thiscall*)(spawn_table_manager*, mash::string);
-
-    ((pop_spawn_item_t)retail::sub_93F8D0)(spawn_table_manager::inst(), mash::string((const char*)stack.local_uint(0x00)));
+    spawn_table_manager::inst()->pop_spawn_item_during_mission(mash::string((const char*)stack.local_uint(0x00)));
 
     return true;
 }
@@ -825,7 +821,7 @@ bool slf__end_populate_mission_with_entities__t::operator()(chuck::vm::vm_stack 
 // sub_83E600
 bool slf__force_populate_mission_cleanup__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::region_spawns_enabled.read() && region_spawn_manager::inst())
-        retail::sub_953060((u32*)spawn_table_manager::inst());
+        spawn_table_manager::inst()->force_populate_mission_cleanup();
 
     return true;
 }
@@ -1489,14 +1485,13 @@ bool slf__toggle_override_spawn_pacing_in_mission__num__num__num__num__num__num_
     stack.sp -= 0x1C;
 
     if (references::region_spawns_enabled.read() && spawn_table_manager::inst())
-        retail::sub_927A20((u32*)spawn_table_manager::inst(),
-                           stack.local_num(0x00) != 0.0f,
-                           (i32)stack.local_num(0x04),
-                           (i32)stack.local_num(0x08),
-                           stack.local_num(0x0C),
-                           stack.local_num(0x10),
-                           stack.local_num(0x14),
-                           (i32)stack.local_num(0x18));
+        spawn_table_manager::inst()->toggle_override_spawn_pacing_in_mission(stack.local_num(0x00) != 0.0f,
+                                                                             (i32)stack.local_num(0x04),
+                                                                             (i32)stack.local_num(0x08),
+                                                                             stack.local_num(0x0C),
+                                                                             stack.local_num(0x10),
+                                                                             stack.local_num(0x14),
+                                                                             (i32)stack.local_num(0x18));
 
     return true;
 }

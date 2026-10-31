@@ -28,12 +28,17 @@ namespace treyarch {
     class spawn_item_collection;
     class spawn_table_interface;
     class static_spawn_item;
-    struct city_life_category_entry;
     struct quest_giver_spawn;
     struct recent_despawn;
     struct spawn_item_collection_unk_38;
     struct spawn_item_collection_unk_4c;
     struct spawn_point;
+
+    struct city_life_category_entry {
+        u32                         unk_00;
+        u32                         unk_04;
+        vc8::map<mash::string, u32> unk_08;
+    };
 
     // every run-time list of city life; built by the constructor (sub_94D260)
     struct spawn_table_manager_unk_04c {
@@ -107,6 +112,12 @@ namespace treyarch {
         i32  unk_158;
 
         entity* fixed_entities[15];
+
+        void add_spawn_items_by_name(mash::vector<mash::string>* names);
+        void remove_spawn_items_by_name(mash::vector<mash::string>* names);
+        void update_quest_spawn_counts();
+
+        void destroy_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item);
     };
 
     class spawn_table_manager : public singleton<spawn_table_manager, 0x010FB2B4> {
@@ -137,6 +148,29 @@ namespace treyarch {
 
         void free_spawn_record(spawn_point* record);
 
+        void clear_spawn_item_lists();
+        void clear_spawn_lists_and_markers();
+        void delete_item_maps();
+        void reset_city_life();
+
+        void add_quest_spawn_item(mash::string name);
+        void remove_quest_spawn_item(mash::string name);
+        void push_spawn_item_during_mission(mash::string name);
+        void pop_spawn_item_during_mission(mash::string name);
+
+        active_spawn_item** deactivate_item(vc8::vector<active_spawn_item*>* list, active_spawn_item* active, bool flag);
+        void                force_populate_mission_cleanup();
+
+        void toggle_override_spawn_pacing_in_mission(bool on,
+                                                     u32  low_spawn_count,
+                                                     u32  high_spawn_count,
+                                                     f32  ramp_seconds,
+                                                     f32  hold_seconds,
+                                                     f32  give_up_seconds,
+                                                     u32  step_count);
+
+        static void clear_debris_no_spawn_zones();
+
         // the script queries; `inst` is the calling script instance, matched through each active's has_instance
         void             get_entities(chuck::vm::script_instance* inst,
                                       i32                         number,
@@ -165,6 +199,8 @@ namespace treyarch {
 
     private:
         cross_neighborhood_spawn* find_cross_neighborhood_spawn(chuck::vm::script_instance* inst);
+
+        void deactivate_actives_of(vc8::vector<active_spawn_item*>* list, static_spawn_item* item);
     };
 
     namespace references {
@@ -174,6 +210,9 @@ namespace treyarch {
         // null until the first debris zone is added
         inline util::memory_reference<mash::vector<no_spawn_base>*> debris_no_spawn_zones { 0x010F9BDC };
     } // references
+
+    ASSERT_SIZEOF  (city_life_category_entry,         0x14);
+    ASSERT_OFFSETOF(city_life_category_entry, unk_08, 0x08);
 
     ASSERT_SIZEOF  (spawn_table_manager_unk_04c,                                  0x198);
     ASSERT_OFFSETOF(spawn_table_manager_unk_04c, quest_giver_spawns,              0x14);

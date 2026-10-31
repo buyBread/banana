@@ -1,5 +1,8 @@
 #include <cstring>
 
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_zoom_map.hh"
+#include "game/frontend/ui_frontend.hh"
 #include "game/static_spawn_item_collection.hh"
 #include "treyarch/mash/mash_info.hh"
 
@@ -29,4 +32,21 @@ spawn_data_base* static_spawn_item::find_data(const mash::string &name) {
             return *it;
 
     return nullptr;
+}
+
+// sub_934CA0
+void cross_neighborhood_spawn::remove_map_markers() {
+    while (!unk_d8->radar_markers.empty()) {
+        references::frontend.get().igo->destroy_fog(*unk_d8->radar_markers.begin());
+
+        unk_d8->radar_markers.erase(unk_d8->radar_markers.begin());
+    }
+
+    while (!unk_d8->zoom_map_markers.empty()) {
+        references::frontend.get().igo->zoom_map->remove_poi(*unk_d8->zoom_map_markers.begin());
+
+        unk_d8->zoom_map_markers.erase(unk_d8->zoom_map_markers.begin());
+    }
+
+    unk_d8->active = nullptr;
 }

@@ -80,14 +80,17 @@ namespace treyarch {
     struct spawn_item_collection_unk_38 {
         mash::string     name;
         mash::string     expression;
-        i32              unk_18;
-        i32              unk_1c;
+        u32              low_spawn_count;
+        u32              high_spawn_count;
         f32              unk_20;
-        f32              unk_24;
-        f32              unk_28;
-        f32              unk_2c;
-        i32              unk_30;
+        f32              ramp_seconds;    // to climb from the low count to the high one
+        f32              give_up_seconds; // stepping down before climbing again
+        f32              hold_seconds;    // at the low count
+        u32              step_count;      // steps down from the high count
         quest_condition* condition;
+
+        spawn_item_collection_unk_38();
+        ~spawn_item_collection_unk_38();
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -143,10 +146,14 @@ namespace treyarch {
     ASSERT_SIZEOF  (no_spawn_quad,         0x20);
     ASSERT_OFFSETOF(no_spawn_quad, points, 0x10);
 
-    ASSERT_SIZEOF  (spawn_item_collection_unk_38,            0x38);
-    ASSERT_OFFSETOF(spawn_item_collection_unk_38, unk_18,    0x18);
-    ASSERT_OFFSETOF(spawn_item_collection_unk_38, unk_30,    0x30);
-    ASSERT_OFFSETOF(spawn_item_collection_unk_38, condition, 0x34);
+    ASSERT_SIZEOF  (spawn_item_collection_unk_38,                   0x38);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, low_spawn_count,  0x18);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, high_spawn_count, 0x1C);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, ramp_seconds,     0x24);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, give_up_seconds,  0x28);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, hold_seconds,     0x2C);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, step_count,       0x30);
+    ASSERT_OFFSETOF(spawn_item_collection_unk_38, condition,        0x34);
 
     ASSERT_SIZEOF  (spawn_item_collection_unk_4c,                 0x30);
     ASSERT_OFFSETOF(spawn_item_collection_unk_4c, no_spawn_areas, 0x18);
