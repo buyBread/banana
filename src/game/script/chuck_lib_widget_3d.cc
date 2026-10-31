@@ -2,6 +2,7 @@
 
 #include "retail.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/frontend/finger_of_god.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_camera_widget.hh"
 #include "game/frontend/igo/igo_3d_face_button_system.hh"
@@ -1546,16 +1547,58 @@ bool slf__set_meter_label__num__num__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_862430
 bool slf__create_fog__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862430)(this, stack);
+    stack.sp -= 0x14;
+
+    auto position = *(const vector3d*)&stack.local_uint(0x00);
+    auto radius   = stack.local_num(0x0C);
+    auto unk_2c   = stack.local_num(0x10);
+
+    auto create_fog = (finger_of_god* (__thiscall*)(ui_frontend*, vector3d, f32, f32, bool, i32))retail::sub_7115F0;
+
+    finger_of_god*    fog = create_fog(references::frontend.get().igo, position, radius, unk_2c, true, 0);
+    arch_base_vhandle result;
+
+    if (fog) {
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_finger_of_god, (u32)fog);
+        result = fog->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_83EE60
 bool slf__create_fog__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EE60)(this, stack);
+    auto create_fog = (finger_of_god* (__thiscall*)(ui_frontend*, bool))retail::sub_7116D0;
+
+    finger_of_god*    fog = create_fog(references::frontend.get().igo, true);
+    arch_base_vhandle result;
+
+    if (fog) {
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_finger_of_god, (u32)fog);
+        result = fog->my_handle;
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8624C0
 bool slf__destroy_fog__finger_of_god__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8624C0)(this, stack);
+    stack.sp -= 0x04;
+
+    arch_base_vhandle handle(stack.local_uint(0x00));
+
+    auto fog = (u32)handle.resolve();
+
+    stack.thread->get_instance(-1)->remove_allocated_stuff(chuck::vm::script_garbage_collection_finger_of_god, fog);
+    references::frontend.get().igo->destroy_fog((finger_of_god*)handle.resolve());
+
+    return true;
 }
 
 bool slf__terminate_script__num__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -2827,70 +2870,245 @@ bool slf__widget_3d__set_persistent__num__t::operator()(chuck::vm::vm_stack &sta
     return true;
 }
 
+// sub_862510
 bool slf__finger_of_god__set_visibility__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862510)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self)
+        self->set_poi_active(on != 0.0f);
+
+    return true;
 }
 
+// sub_862560
 bool slf__finger_of_god__set_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862560)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self)
+        self->set_active(on != 0.0f);
+
+    return true;
 }
 
+// sub_8625B0
 bool slf__finger_of_god__set_pos__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8625B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        self->set_pos(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_8625F0
 bool slf__finger_of_god__set_radius__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8625F0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto radius = stack.local_num(0x04);
+
+    if (self)
+        self->set_radius(radius);
+
+    return true;
 }
 
+// sub_862620
 bool slf__finger_of_god__deactive_fog__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862620)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self)
+        self->set_active(false);
+
+    return true;
 }
 
+// sub_862640
 bool slf__finger_of_god__set_poi_icon__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862640)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto icon = stack.local_num(0x04);
+
+    if (self)
+        self->set_poi_icon((i32)icon, 1);
+
+    return true;
 }
 
+// sub_862510
 bool slf__finger_of_god__toggle_fog__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862510)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self)
+        self->set_poi_active(on != 0.0f);
+
+    return true;
 }
 
+// sub_862670
 bool slf__finger_of_god__fog_requires_senses__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862670)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (self)
+        self->fog_requires_senses(on != 0.0f);
+
+    return true;
 }
 
+// sub_8626C0
 bool slf__finger_of_god__place_fog__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8626C0)(this, stack);
+    stack.sp -= 0x18;
+
+    auto self   = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto radius = stack.local_num(0x10);
+    auto unk_2c = stack.local_num(0x14);
+
+    if (self) {
+        self->set_pos(*(const vector3d*)&stack.local_uint(0x04));
+        self->set_radius(radius);
+        self->unk_2c = unk_2c;
+    }
+
+    return true;
 }
 
+// sub_862710
 bool slf__finger_of_god__place_fog_reappear__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862710)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self   = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto radius = stack.local_num(0x10);
+
+    if (self) {
+        self->set_pos(*(const vector3d*)&stack.local_uint(0x04));
+        self->set_radius(radius);
+    }
+
+    return true;
 }
 
+// sub_862760
 bool slf__finger_of_god__arrived_at_fog__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862760)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (self) {
+        self->set_active(false);
+        self->arrived_at_fog();
+    }
+
+    return true;
 }
 
+// sub_862790
 bool slf__finger_of_god__set_poi_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862790)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_poi_active(on != 0.0f);
+
+    return true;
 }
 
+// sub_8627E0
 bool slf__finger_of_god__set_gta_widget_active__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8627E0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto on   = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_gta_widget_active(on != 0.0f, false);
+
+    return true;
 }
 
+// sub_862830
 bool slf__finger_of_god__set_gta_widget_inner_radius__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862830)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto radius = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_gta_widget_inner_ring_radius(radius);
+
+    return true;
 }
 
+// sub_862870
 bool slf__finger_of_god__set_gta_widget_outer_radius__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862870)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self   = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto radius = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_gta_widget_outer_ring_radius(radius);
+
+    return true;
 }
 
+// sub_8628B0
 bool slf__finger_of_god__set_gta_widget_pos_offset__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8628B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_gta_widget_pos_offset(*(const vector3d*)&stack.local_uint(0x04));
+
+    return true;
 }
 
+// sub_862900
 bool slf__finger_of_god__set_gta_widget_render_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862900)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self  = (finger_of_god*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+    auto scale = stack.local_num(0x04);
+
+    if (!self)
+        return true;
+
+    if (entity_tracker* tracker = self->get_tracker())
+        tracker->set_gta_widget_render_scale(scale);
+
+    return true;
 }

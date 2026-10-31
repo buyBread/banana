@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/app.hh"
+#include "game/frontend/finger_of_god.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
@@ -78,4 +79,28 @@ void ui_frontend::set_generic_meter_label(mash::string* label) {
         set_label(mission_specific_meter, mash::string(*label), false);
 
     label->finalize(mash::ALLOCATED);
+}
+
+// sub_6E77C0
+void ui_frontend::destroy_fog(finger_of_god* fog) {
+    igo_3d_radar_widget* radar = radar_widget;
+
+    if (!radar || !fog)
+        return;
+
+    finger_of_god** position = radar->fingers_of_god.begin();
+
+    while (position != radar->fingers_of_god.end() && *position != fog)
+        ++position;
+
+    if (position == radar->fingers_of_god.end())
+        return;
+
+    // slot 0
+    if (*position)
+        ((void (__thiscall*)(finger_of_god*, u32))(*position)->vtable[0])(*position, 1);
+
+    *position = nullptr;
+
+    radar->fingers_of_god.erase(position);
 }

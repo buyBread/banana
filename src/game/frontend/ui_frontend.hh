@@ -190,6 +190,8 @@ namespace treyarch {
         void set_generic_meter_value  (f32 value);
         void set_generic_meter_label  (mash::string* label); // finalizes the label
 
+        void destroy_fog(finger_of_god* fog); // deletes it and drops it from the radar
+
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);
 

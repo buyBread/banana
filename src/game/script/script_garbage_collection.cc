@@ -104,7 +104,7 @@ void script_garbage_collection::city_life_trackers(script_instance*, stuff_to_de
 void script_garbage_collection::fingers_of_god(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next) {
         if (stuff->element)
-            retail::sub_6E77C0((u32*)references::frontend.get().igo, (i32)stuff->element);
+            references::frontend.get().igo->destroy_fog((finger_of_god*)stuff->element);
     }
 }
 
