@@ -254,6 +254,8 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_952A80
         // inlined @ sub_9530D0
         // inlined @ sub_9547F0
+        // inlined @ sub_763360
+        // inlined @ sub_763520
         T* erase(T* position) noexcept {
             T* result = position;
 
