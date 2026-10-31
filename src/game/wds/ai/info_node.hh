@@ -11,6 +11,7 @@
 #include "treyarch/mash/virtual_base.hh"
 #include "game/math/po.hh"
 #include "game/mutex.hh"
+#include "game/resource_key.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -147,6 +148,10 @@ namespace treyarch {
         bool                         using_pathed_goto;
         u8                           reserved_092[0x1A];
         u32                          unk_0ac;               // on a swift surface layer, the als's ai_locomotion_mode reads bit 1 and rvb_is_crawling 0x20
+
+        virtual void                initialize_loco_inode();
+        virtual const resource_key &get_loco_graph() const;
+        virtual bool                is_player_locomotion() const;
 
         // inlined @ sub_84EBB0
         void set_loco_als_category(string_hash cat) {

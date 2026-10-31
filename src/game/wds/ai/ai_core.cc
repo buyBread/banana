@@ -1,11 +1,18 @@
 #include "retail.hh"
+#include "game/als/als.hh"
+#include "game/cutscene/cut_scene_player.hh"
+#include "game/slim/slim_controller.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_core_jq.hh"
 #include "game/wds/ai/ai_state_machine.hh"
 #include "game/wds/ai/core_ai_resource.hh"
 #include "game/wds/ai/fight_director.hh"
+#include "game/wds/camera/references.hh"
 #include "game/math/references.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/references.hh"
 
 using namespace treyarch;
@@ -247,7 +254,7 @@ bool ai_core::stop_movement() {
     bool stopped = false;
 
     if (my_locomotion_machine) {
-        if (!((bool (__thiscall*)(loco_inode*))(*(void***)my_loco_inode)[23])(my_loco_inode)) // slot 23
+        if (!my_loco_inode->is_player_locomotion())
             my_locomotion_machine->external_request_exit();
 
         stopped = true;
@@ -345,7 +352,7 @@ bool ai_core::change_base_machine(const resource_key &the_state_graph, bool do_i
 
         my_mode = ai_core_mode_normal;
 
-        retail::sub_4E0550((i32)this, 0.0001f); // ai_core::frame_advance
+        frame_advance(0.0001f);
     }
 
     return true;
@@ -435,6 +442,7 @@ bool ai_core::attempt_push_base_machine(ai_core* asker, const resource_key &the_
 }
 
 // sub_4DF720
+// inlined @ sub_4E0E00
 bool ai_core::restart_base_machine() {
     if (!my_base_machine)
         return false;
@@ -446,6 +454,193 @@ bool ai_core::restart_base_machine() {
 
 bool ai_core::change_locomotion_machine(string_hash the_loco_inode) {
     return retail::sub_4CC6E0((i32)this, (i32)the_loco_inode.source_hash_code);
+}
+
+// sub_4E03E0
+void ai_core::advance_machine_recursive(ai_state_machine* the_machine, f32 delta_t) {
+    for (i32 index = 0; index < the_machine->get_num_children(); ++index)
+        advance_machine_recursive(the_machine->my_children[index], delta_t);
+
+    the_machine->process_mode(delta_t);
+}
+
+void ai_core::do_machine_exit(ai_state_machine* the_machine) {
+    retail::sub_4CCDC0((u32*)this, (char**)the_machine);
+}
+
+// sub_4E0550
+void ai_core::frame_advance(f32 delta_t) {
+    engine_lock_scope core_lock(lock);
+
+    if (!my_actor->is_alive())
+        stop_movement();
+
+    if (!my_param_block.get_optional_pb_int(references::disable_path_location_inode_hash.read(), 0, nullptr) && path_location)
+        retail::sub_447E50((i32)path_location, delta_t);
+
+    if (flags & ai_core_flag_unk_00000100) {
+        pop_base_machine(references::slave_asg.get(), false);
+
+        flags &= ~ai_core_flag_unk_00000100;
+    }
+
+    if (my_mode == ai_core_mode_change_machines) {
+        my_base_machine->request_exit();
+
+        my_mode = ai_core_mode_killing_machines;
+    }
+
+    if (my_locomotion_mode == ai_core_mode_change_machines) {
+        if (my_locomotion_machine)
+            my_locomotion_machine->request_exit();
+
+        my_locomotion_mode = ai_core_mode_killing_machines;
+    }
+
+    if (my_locomotion_machine)
+        advance_machine_recursive(my_locomotion_machine, delta_t);
+
+    if (my_base_machine) {
+        if (slim::slim_actor_controller* tactics = tactics_controller) {
+            if (base_controller) {
+                if (base_controller->unk_04c->flags & 0x80)
+                    tactics->flags |= 0x80;
+                else
+                    tactics->flags &= ~0x80;
+            }
+
+            auto basic = (ai_basic_inode*)get_info_node(info_node_type_ai_basic);
+
+            if (!basic || basic->get_flag(ai_flag_allowed_to_tactics)) {
+                retail::sub_518380((u32*)tactics, delta_t, 0);
+                tactics->unk_002(delta_t);
+            }
+        }
+
+        advance_machine_recursive(my_base_machine, delta_t);
+    }
+
+    retail::sub_4DB360((i32)this, delta_t); // ai_core::advance_info_nodes
+    retail::sub_4D2150((u32*)this);         // ai_core::exit_pending_machines
+
+    if (my_mode == ai_core_mode_killing_machines && !my_base_machine) {
+        retail::sub_4DD830((u32*)this, nullptr, (u32*)&new_base_machine, (char**)&my_base_machine); // ai_core::spawn_state_machine_internal
+
+        my_mode = ai_core_mode_normal;
+    }
+
+    // a new locomotion machine waits until the als's base layer can be interrupted
+    if (my_locomotion_mode == ai_core_mode_killing_machines && !my_locomotion_machine) {
+        auto als_node = (als_inode*)get_info_node(info_node_type_als);
+
+        if (!als_node || ((als::animation_logic_system_interface*)als_node->my_als)->get_als_layer(als::base_layer)->is_interruptable()) {
+            retail::sub_4DD830((u32*)this, // ai_core::spawn_state_machine_internal
+                               nullptr,
+                               (u32*)&my_loco_inode->get_loco_graph(),
+                               (char**)&my_locomotion_machine);
+
+            if (!my_locomotion_machine)
+                locomotion_exit_status = state_exit_code_failure;
+
+            my_locomotion_mode = ai_core_mode_normal;
+        }
+    }
+
+    if (auto als_node = (als_inode*)get_info_node(info_node_type_als)) {
+        auto the_als = (als::animation_logic_system_interface*)als_node->my_als;
+
+        if ((the_als->get_als_layer(als::base_layer)->did_transition_succeed() || the_als->force_updated) &&
+            !references::cut_scene_player.read()->is_playing() &&
+            pending_sound_event.valid() &&
+            !unk_628 &&
+            (u32)retail::sub_4C5640((u32*)this) != unk_62c) {
+
+            if (my_actor->has_sound_ifc()) {
+                string_hash event(pending_sound_event.source_hash_code);
+
+                retail::sub_65FA00((i32)my_actor->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)event.source_hash_code, false); // sound_interface: post event
+            }
+
+            pending_sound_event = string_hash();
+            unk_62c             = 0;
+        }
+    }
+
+    if (my_actor->is_alive())
+        unk_630 = false;
+
+    // despawn_effect_distance is compared with the squared distance to the camera
+    bool far_away = false;
+
+    if (my_param_block.does_parameter_exist(references::despawn_effect_distance_hash.read())) {
+        f32 distance2 = (my_actor->my_abs_po->get_position() - references::camera_position.get().get_xyz()).length2();
+        f32 limit     = my_param_block.get_pb_float(references::despawn_effect_distance_hash.read());
+
+        if (distance2 > limit)
+            far_away = true;
+    }
+
+    if (lifetime_effect) {
+        if (unk_630 || !my_actor->is_visible() || far_away) {
+            my_actor->stop_looping_effect(lifetime_effect);
+            lifetime_effect = 0;
+        }
+    } else if (!far_away && !unk_630 && my_param_block.does_parameter_exist(references::lifetime_effect_hash.read())) {
+        string_hash none;
+        none.initialize(mash::ALLOCATED);
+
+        if (my_param_block.get_pb_hash(references::lifetime_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_visible
+            lifetime_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::lifetime_effect_hash.read()), 0);
+    }
+
+    if (infected_effect) {
+        if (unk_630 || !my_actor->is_visible() || far_away) {
+            my_actor->stop_looping_effect(infected_effect);
+            infected_effect = 0;
+        }
+    } else if (!far_away && !unk_630 && my_param_block.does_parameter_exist(references::infected_effect_hash.read())) {
+        string_hash none;
+        none.initialize(mash::ALLOCATED);
+
+        if (my_param_block.get_pb_hash(references::infected_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_visible
+            infected_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::infected_effect_hash.read()), 0);
+    }
+
+    unk_628 = false;
+
+    retail::sub_4CE090((u32*)this, delta_t); // ai_core::post_frame_advance
+}
+
+// sub_4E0E00
+void ai_core::reset() {
+    engine_lock_scope core_lock(lock);
+
+    // without a base machine, up to ten tiny frames to spawn one
+    if (!restart_base_machine()) {
+        for (i32 attempt = 0; attempt < 10; ++attempt) {
+            frame_advance(0.0001f);
+
+            if (my_base_machine) {
+                change_base_machine(my_base_machine->get_name(), true);
+                break;
+            }
+        }
+    }
+
+    for (u32 index = 0; index < my_info_node_list->size; ++index)
+        (*my_info_node_list)[index]->reset();
+}
+
+// sub_4E0C40
+void treyarch::ai_core_jq_callback(jq::batch* batch) {
+    auto    core  = (ai_core*)batch->payload[0];
+    entity* owner = core->my_actor;
+
+    f32 dilation = owner->has_ifc(entity_ifc_time) ?
+        owner->time_ifc()->calc_time_dilation() :
+        references::g_world_ptr.read()->time_mgr.get_time_dilation_factor();
+
+    core->frame_advance((f32)((f64)dilation * (f64)ai_core_jq::delta_t.read()));
 }
 
 // sub_4C57B0

@@ -11,6 +11,14 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    // what a state or a machine finished with; 106 codes in all
+    enum e_state_exit_code : u32 {
+        state_exit_code_exit_request = 0,
+        state_exit_code_success      = 1,
+        state_exit_code_failure      = 2,
+        state_exit_code_no_exit      = 106
+    };
+
     // a state's data in its graph; the running state is a base_state made from my_state_type
     class alignas(8) mashed_state {
 

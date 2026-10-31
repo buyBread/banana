@@ -5,6 +5,7 @@
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
+#include "game/wds/ai/state_graph.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector.hh"
 #include "game/hash/algo.hh"
@@ -31,7 +32,7 @@ namespace treyarch {
         ai_core_flag_in_limbo              = 0x00000004,
 
         ai_core_flag_unk_00000008 = 0x00000008, // with the civilian team, demotes the core to the low list
-        ai_core_flag_unk_00000100 = 0x00000100,
+        ai_core_flag_unk_00000100 = 0x00000100, // the next frame pops the slave graph
 
         ai_core_flag_hanging_from_pole = 0x00002000,
 
@@ -42,14 +43,6 @@ namespace treyarch {
         ai_core_mode_normal,
         ai_core_mode_change_machines,
         ai_core_mode_killing_machines
-    };
-
-    // what a state machine finished with; 106 codes in all
-    enum e_state_exit_code : u32 {
-        state_exit_code_exit_request = 0,
-        state_exit_code_success      = 1,
-        state_exit_code_failure      = 2,
-        state_exit_code_no_exit      = 106
     };
 
     inline const string_hash tether_active_key = string_hash(hash::djb2("TETHER_ACTIVE"));
@@ -141,7 +134,8 @@ namespace treyarch {
         bool                            unk_628;
         u8                              pad_629[0x03];
         u32                             unk_62c;
-        u8                              reserved_630[0x04];
+        bool                            unk_630;              // stops the looping effects; cleared while the actor is alive
+        u8                              pad_631[0x03];
         u32                             lifetime_effect;
         u32                             infected_effect;
         bool                            unk_63c;              // the als's on_fire
@@ -203,6 +197,12 @@ namespace treyarch {
         void enter_limbo();
         void exit_limbo();
 
+        void frame_advance(f32 delta_t);
+        void reset();
+
+        void advance_machine_recursive(ai_state_machine* the_machine, f32 delta_t); // its children first
+        void do_machine_exit(ai_state_machine* the_machine);
+
         static void frame_advance_all_core_ais(f32 delta_t);
 
     private:
@@ -240,6 +240,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_core, pending_sound_event,    0x624);
     ASSERT_OFFSETOF(ai_core, unk_628,                0x628);
     ASSERT_OFFSETOF(ai_core, unk_62c,                0x62C);
+    ASSERT_OFFSETOF(ai_core, unk_630,                0x630);
     ASSERT_OFFSETOF(ai_core, lifetime_effect,        0x634);
     ASSERT_OFFSETOF(ai_core, infected_effect,        0x638);
     ASSERT_OFFSETOF(ai_core, my_param_block,         0x660);
@@ -264,8 +265,15 @@ namespace treyarch {
         inline util::memory_reference<engine_recursive_lock> ai_core_list_lock { 0x00FC5C60 };
 
         inline util::memory_reference<resource_key> disabled_asg { 0x00FC54C8 };
+        inline util::memory_reference<resource_key> slave_asg    { 0x00FC4160 };
 
         inline util::memory_reference<string_hash> ai_disabled { 0x0102C638 };
         inline util::memory_reference<string_hash> ai_enabled  { 0x0102C540 };
+
+        // param names
+        inline util::memory_reference<string_hash> disable_path_location_inode_hash { 0x00FC54DC };
+        inline util::memory_reference<string_hash> lifetime_effect_hash             { 0x00FC5794 };
+        inline util::memory_reference<string_hash> infected_effect_hash             { 0x00FC579C };
+        inline util::memory_reference<string_hash> despawn_effect_distance_hash     { 0x00FC5CAC };
     } // references
 } // treyarch
