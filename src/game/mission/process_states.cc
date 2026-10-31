@@ -701,7 +701,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 void mission_manager::process_state_maloring_player_wait_for_district() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    if (!(hero->flags & 1) && hero->get_primary_region() && retail::sub_77BF80())
+    if (!(hero->flags & entity_flag_in_limbo) && hero->get_primary_region() && retail::sub_77BF80())
         ++malor_wait_frames;
     else
         malor_wait_frames = 0;

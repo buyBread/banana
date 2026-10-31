@@ -64,7 +64,7 @@ void als::animation_logic_system_interface::frame_advance_als_list(als_list** th
         if (!the_als->als_is_suspended()) {
             actor* the_actor = the_als->get_actor();
 
-            bool advances = ((the_actor->flags & 1) == 0 && the_actor->get_primary_region()) ||
+            bool advances = ((the_actor->flags & entity_flag_in_limbo) == 0 && the_actor->get_primary_region()) ||
                             (the_actor->get_ai_core() && !the_actor->get_ai_core()->should_be_in_limbo());
 
             if (advances) {

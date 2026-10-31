@@ -8,6 +8,7 @@
 #include "game/mutex.hh"
 #include "game/spline.hh"
 #include "game/wds/entity/entity.hh"
+#include "treyarch/mash/string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -19,8 +20,50 @@ namespace treyarch {
     } // ngl
 
     class ai_tentacle_info;
-    class polytube_misc_render_object;
     class polytube_widths;
+
+    // how a tentacle's own polytube is dressed
+    class polytube_render_info {
+
+    public:
+        mash::string texture_id;
+        color32      render_color;
+        f32          radius;
+        f32          tiles_per_meter;
+        i32          num_sides;
+        i32          num_subdivisions;
+        f32          pseudo_3d_offset;
+        f32          min_tiles_per_meter; // what a stretched tentacle tends to
+        f32          max_tiles_per_meter; // what a slack tentacle tends to
+
+        // sub_603080
+        void destruct_mashed_class() {
+            texture_id.destruct_mashed_class();
+        }
+    };
+
+    // an entity drawn somewhere along a polytube
+    class polytube_misc_render_object {
+
+    public:
+        container::simple_list_variables
+            <polytube_misc_render_object*> simple_list_vars;
+        arch_base_vhandle                  render_object;
+        f32                                percent_pos; // how far along the curve
+        color32                            render_color;
+        boolx                              visible;
+        u8                                 pad_019[0x03];
+    };
+
+    // a widths animation a tentacle hands its polytube
+    class polytube_widths_params {
+
+    public:
+        u8 reserved_000[0xAC];
+
+        // sub_603090
+        void destruct_mashed_class() {}
+    };
 
     // SM3's polytube_pt_anim
     struct polytube_pt_anim {
@@ -50,7 +93,7 @@ namespace treyarch {
         boolx                              pseudo_3d;
         boolx                              external_tentacle_info;
         u8                                 pad_0b5[0x03];
-        matrix4x4*                         pseudo_3d_po_array;
+        po*                                pseudo_3d_po_array;
         spline                             the_spline;
         u8                                 reserved_0fc[0x04];
         f32                                tube_radius;
@@ -110,6 +153,10 @@ namespace treyarch {
         bool has_active_anim() const;
         void v_animate();
         void add_control_pt(const vector3d &point);
+
+        void create_tentacle_info();
+        void destroy_tentacle_info();
+        void set_external_tentacle_info(ai_tentacle_info* inf);
     };
 
     namespace references {
@@ -118,6 +165,17 @@ namespace treyarch {
 
         inline util::memory_reference<engine_recursive_lock> polytube_lock { 0x00FFEDD8 };
     } // references
+
+    ASSERT_SIZEOF  (polytube_render_info,                      0x2C);
+    ASSERT_OFFSETOF(polytube_render_info, render_color,        0x0C);
+    ASSERT_OFFSETOF(polytube_render_info, tiles_per_meter,     0x14);
+    ASSERT_OFFSETOF(polytube_render_info, min_tiles_per_meter, 0x24);
+
+    ASSERT_SIZEOF  (polytube_misc_render_object,              0x1C);
+    ASSERT_OFFSETOF(polytube_misc_render_object, percent_pos, 0x10);
+    ASSERT_OFFSETOF(polytube_misc_render_object, visible,     0x18);
+
+    ASSERT_SIZEOF(polytube_widths_params, 0xAC);
 
     ASSERT_SIZEOF(polytube_pt_anim, 0x2C);
 

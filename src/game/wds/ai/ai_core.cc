@@ -484,7 +484,7 @@ bool ai_core::should_be_in_limbo() const {
     entity* owner = (entity*)my_actor;
 
     if (!(flags & ai_core_flag_ignore_limbo)) {
-        if (owner->flags & 1)
+        if (owner->flags & entity_flag_in_limbo)
             return true;
 
         if (!owner->get_primary_region())

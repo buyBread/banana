@@ -59,6 +59,23 @@ namespace treyarch {
             rebuild_control_pts_pct = true;
         }
 
+        // sub_492A10
+        // inlined @ sub_4B77A0
+        void set_control_pt(i32 index, const vector3d &point) { // an index out of range is ignored
+            if (index >= 0 && index < (i32)control_pts.size()) {
+                control_pts[index] = point;
+
+                need_rebuild            = true;
+                rebuild_control_pts_pct = true;
+            }
+        }
+
+        // inlined @ sub_4C1D80
+        void set_force_start(bool start) {
+            need_rebuild = force_start != start;
+            force_start  = start;
+        }
+
         void* operator new(std::size_t size) noexcept {
             return mm::allocate((u32)size);
         }

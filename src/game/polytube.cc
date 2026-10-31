@@ -1,6 +1,8 @@
 #include "retail.hh"
 #include "game/math/references.hh"
 #include "game/polytube.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -93,7 +95,46 @@ void polytube::add_control_pt(const vector3d &point) { // in the polytube's own 
     }
 
     if (tentacle_info && !external_tentacle_info) {
-        retail::sub_64B5C0((i32)this); // destroy_tentacle
-        retail::sub_63A590((i32)this); // create_tentacle
+        destroy_tentacle_info();
+        create_tentacle_info();
+    }
+}
+
+// sub_63A590
+void polytube::create_tentacle_info() {
+    if (external_tentacle_info || tentacle_info)
+        return;
+
+    void* memory = mm::allocate(sizeof(ai_tentacle_info));
+
+    tentacle_info = memory ? (ai_tentacle_info*)retail::sub_4BE500((i32)memory) : nullptr; // ai_tentacle_info::ai_tentacle_info
+
+    tentacle_info->create_tentacle(this);
+
+    v_animate();
+}
+
+// sub_64B5C0
+// inlined @ sub_64B600
+void polytube::destroy_tentacle_info() {
+    if (external_tentacle_info || !tentacle_info)
+        return;
+
+    delete tentacle_info;
+    tentacle_info = nullptr;
+
+    v_animate();
+}
+
+// sub_64B600
+void polytube::set_external_tentacle_info(ai_tentacle_info* inf) { // the tube's own tentacle goes first
+    if (inf) {
+        destroy_tentacle_info();
+
+        tentacle_info          = inf;
+        external_tentacle_info = true;
+    } else {
+        tentacle_info          = nullptr;
+        external_tentacle_info = false;
     }
 }

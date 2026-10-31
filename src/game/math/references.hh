@@ -71,6 +71,9 @@ namespace treyarch { namespace references {
 
     // the entity natives' copy of po_identity_matrix, built the same way
     inline util::memory_reference<po> unk_010f76b0 { 0x010F76B0 };
+
+    // the tentacle code's copy of po_identity_matrix, built the same way
+    inline util::memory_reference<po> unk_00fc4f60 { 0x00FC4F60 };
 }} // treyarch::references
 
 namespace treyarch { namespace math { namespace references {

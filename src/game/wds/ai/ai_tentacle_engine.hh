@@ -57,6 +57,11 @@ namespace treyarch {
             return ((e_tentacle_engine_type (__thiscall*)(ai_tentacle_engine*))vtable[1])(this);
         }
 
+        // slot 3
+        bool frame_advance(f32 delta_t, bool merging) { // true once the engine is done
+            return ((bool (__thiscall*)(ai_tentacle_engine*, f32, bool))vtable[3])(this, delta_t, merging);
+        }
+
         // slot 4
         void translate_engine(const vector3d &delta) {
             ((void (__thiscall*)(ai_tentacle_engine*, const vector3d*))vtable[4])(this, &delta);

@@ -150,7 +150,7 @@ bool slf__polytube__set_control_pt__num__vector3d__t::operator()(chuck::vm::vm_s
 
     vector3d local = self->my_abs_po->inverse_xform(*vec);
 
-    retail::sub_492A10((i32)&self->the_spline, index, (f32*)&local); // spline::set_control_pt
+    self->the_spline.set_control_pt(index, local);
 
     return true;
 }
@@ -341,7 +341,7 @@ bool slf__polytube__create_tentacle__t::operator()(chuck::vm::vm_stack &stack) {
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self)
-        retail::sub_63A590((i32)self); // create_tentacle
+        self->create_tentacle_info();
 
     return true;
 }
@@ -353,7 +353,7 @@ bool slf__polytube__destroy_tentacle__t::operator()(chuck::vm::vm_stack &stack) 
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self)
-        retail::sub_64B5C0((i32)self); // destroy_tentacle
+        self->destroy_tentacle_info();
 
     return true;
 }

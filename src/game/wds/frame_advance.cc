@@ -7,6 +7,7 @@
 #include "game/input/input_mgr.hh"
 #include "game/trigger.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/morph_interface.hh"
 #include "game/wds/references.hh"
@@ -134,8 +135,8 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     hero_ptr->player_ifc()->unk_094(hero_time_inc);
 
     retail::sub_63CC40(dilate_world_time(time_inc)); // tentacle_interface registry
-    retail::sub_4BC100(time_inc); // ai_tentacle_info::frame_advance_all_tentacles
-    retail::sub_4BC290();         // ai_tentacle_info::update_spline_on_all_tentacles
+    ai_tentacle_info::frame_advance_all_tentacles(time_inc);
+    ai_tentacle_info::update_spline_on_all_tentacles();
     retail::sub_639E20(time_inc); // polytube::frame_advance_all_polytubes
     retail::sub_61DDA0(time_inc); // web_wall registry
     retail::sub_6014C0(time_inc); // sound_interface registry

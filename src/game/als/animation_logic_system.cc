@@ -832,7 +832,7 @@ void als::animation_logic_system::frame_advance(f32 delta_t, bool force) {
         return;
 
     // without a region the actor only animates while its ai runs
-    if ((the_actor->flags & 1) || !the_actor->get_primary_region()) {
+    if ((the_actor->flags & entity_flag_in_limbo) || !the_actor->get_primary_region()) {
         if (!the_actor->get_ai_core())
             return;
 

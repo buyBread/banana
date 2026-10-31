@@ -59,6 +59,8 @@ namespace treyarch { namespace math {
 
         quat_class(f32 _a, f32 _b, f32 _c, f32 _d) : a(_a), b(_b), c(_c), d(_d) {}
 
+        // sub_48DF50
+        // inlined @ sub_491740
         quat_class(const matrix4x4 &m) {
             unit_quaternion tmp = get_quaternion(reinterpret_cast<const rot_mat33&>(m));
 
@@ -91,12 +93,9 @@ namespace treyarch { namespace math {
         template<typename A1, typename R1> quat_class &operator/=(const quat_class<A1, true, R1> &q) { return *this = *this / q; }
     };
 
-    inline treyarch::quaternion slerp(const treyarch::quaternion &q0,
-                                      const treyarch::quaternion &q1,
-                                            f32                   t) {
-
-        return slerp(t, q0, q1);
-    }
+    treyarch::quaternion slerp(const treyarch::quaternion &q0,
+                               const treyarch::quaternion &q1,
+                                     f32                   t);
 }} // treyarch::math
 
 namespace treyarch {

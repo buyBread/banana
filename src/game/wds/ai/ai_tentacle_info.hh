@@ -10,13 +10,16 @@
 #include "game/resource_key.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector.hh"
 #include "treyarch/mash/vector_basic.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_tentacle_dangle;
     class ai_tentacle_engine;
     class entity;
     class polytube;
@@ -37,6 +40,7 @@ namespace treyarch {
             use_polytube           = 0x00000020,
             pseudo_3d              = 0x00000040,
             update_node_po         = 0x00000080,
+            need_po_vector         = 0x00000080,
             external_polytube      = 0x00000100,
             external_base_position = 0x00000200,
             distance_lod           = 0x00000400, // handed to the polytube
@@ -95,14 +99,58 @@ namespace treyarch {
         u32                                mesh_column_index;
         u32                                mesh_row_index;
 
+        ~ai_tentacle_info();
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
+        void destruct_mashed_class();
+
         static ai_tentacle_info* find_tentacle(const string_hash &search_id, ai_tentacle_info** array, i32 size);
 
-        // SM3's inline
+        static void frame_advance_all_tentacles(f32 delta_t);
+        static void update_spline_on_all_tentacles();
+
+        // sub_48E720
+        // inlined @ sub_4B77A0
+        static vector3d compute_blend_pos(const vector3d &a_pt, const vector3d &b_pt, f32 blend) {
+            if (blend < 0.0001f)
+                return a_pt;
+
+            if (blend > 1.0f - 0.0001f)
+                return b_pt;
+
+            return vector3d((b_pt.x - a_pt.x) * blend + a_pt.x,
+                            (b_pt.y - a_pt.y) * blend + a_pt.y,
+                            (b_pt.z - a_pt.z) * blend + a_pt.z);
+        }
+
+        entity* get_my_entity() const;
+        entity* get_tentacle_parent() const;
+
+        void create_tentacle(polytube* owner);
+        void destroy_tentacle(bool keep_render_info);
+        void init_num_positions(i32 num_pos, entity* _base_node, entity* _end_node);
+        void apply_render_info();
+
+        void frame_advance(f32 delta_t);
+        void update_spline(bool ignore_limbo);
+
+        // sub_48E840
         bool under_code_control() const {
             return code_blend >= 0.0001f;
         }
 
+        bool is_tweening() const {
+            return tween_timer < tween_duration;
+        }
+
         void set_code_blend(f32 blend, f32 time);
+        void init_full_code_control();
+
+        vector3d get_base_position() const;
+        void     set_base_position(const vector3d &pos);
 
         i32             get_num_positions() const;
         const vector3d &get_position(i32 index) const;
@@ -110,16 +158,27 @@ namespace treyarch {
 
         void            set_end_position(const vector3d &pos);
         const vector3d &get_end_position() const;
+        vector3d        get_abs_end_position() const;
+
+        void set_end_po(po &the_po); // the po's fourth column is rewritten
+        po   get_end_po() const;
+        po   get_abs_end_po() const;
 
         void create_line(const vector3d &end, const vector3d* end_face);
 
-        bool is_dangling();
+        void start_dangle(f32 desired_length, const vector3d &initial_vel);
+        void stop_dangle(f32 time);
+
+        bool                is_dangling();
+        ai_tentacle_dangle* get_dangle_engine();
 
         u32                 push_engine(ai_tentacle_engine* engine); // answers the engine's id
         ai_tentacle_engine* get_engine(u32 engine_id);
         bool                kill_engine(u32 engine_id);
 
     protected:
+        void initialize(mash::allocation_scope scope);
+
         void init_code_tween(f32 time);
     };
 

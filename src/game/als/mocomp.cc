@@ -5628,8 +5628,7 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
             retail::sub_5AABF0((i32)po_b, (u64*)&rotation);
             quaternion from(rotation[3], rotation[0], rotation[1], rotation[2]);
 
-            quaternion blended;
-            retail::sub_48E070((f32*)&blended, (f32*)&from, (f32*)&to, orient_weight); // slerp
+            quaternion blended = math::slerp(from, to, orient_weight);
 
             target.get_matrix().x.w = 0.0f;
             target.get_matrix().y.w = 0.0f;

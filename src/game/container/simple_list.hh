@@ -31,6 +31,16 @@ namespace treyarch { namespace container {
         T   last_element;
         i32 size;
 
+        ~simple_list() {
+            clear();
+        }
+
+        void clear() { // the elements keep their links
+            first_element = nullptr;
+            last_element  = nullptr;
+            size          = 0;
+        }
+
         // inlined @ sub_4B4B50
         void push_front(T element) {
             element->simple_list_vars.next_element = first_element;
@@ -44,6 +54,26 @@ namespace treyarch { namespace container {
             // the tail only moves for an element that ends up alone
             if (!element->simple_list_vars.next_element)
                 last_element = element;
+
+            element->simple_list_vars.list_owner = this;
+
+            ++size;
+        }
+
+        // sub_47F6C0
+        // inlined @ sub_4B6FD0
+        void push_back(T element) {
+            if (!last_element) {
+                push_front(element);
+
+                return;
+            }
+
+            last_element->simple_list_vars.next_element = element;
+            element->simple_list_vars.prev_element      = last_element;
+            element->simple_list_vars.next_element      = nullptr;
+
+            last_element = element;
 
             element->simple_list_vars.list_owner = this;
 
