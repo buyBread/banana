@@ -91,7 +91,7 @@ namespace treyarch {
     public:
         u32              unk_004;
         param_block      my_param_block;
-        e_info_node_type my_type;
+        e_info_node_type type;
         ai_core*         my_ai_core;
 
         // sub_A79D60
@@ -121,20 +121,49 @@ namespace treyarch {
         u32   unk_034;
     };
 
+    inline const string_hash currently_using_swift_key = string_hash(hash::djb2("currently_using_swift"));
+    inline const string_hash flag_stop_movement_key    = string_hash(hash::djb2("flag_stop_movement"));
+
     class loco_inode : public info_node {
 
     public:
-        u8          reserved_030[0x54];
-        string_hash loco_als_category;
-        u8          reserved_088[0x04];
-        bool        unk_08c;            // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
-        u8          reserved_08d[0x1F];
-        u32         unk_0ac;            // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
+        u8                           reserved_030[0x24];
+        mash::vector_basic<vector3d> goto_points;
+        mash::vector_basic<vector3d> unk_064;               // goto points too; get_goto_dest_pos prefers them
+        f32                          goto_speed;
+        f32                          goto_radius;
+        i32                          stuck_count;
+        u8                           reserved_080[0x04];
+        string_hash                  loco_als_category;
+        bool                         allow_nonpath_goto;
+        bool                         needs_repathfind;
+        bool                         repathfind_latch;      // once set, set_needs_repathfind leaves it alone
+        bool                         using_xz_coords;
+        bool                         allow_facing;          // flight_mocomp: set hands the flight layer the whole move, clear only the run along the facing
+        bool                         using_explicit_speed;
+        bool                         using_explicit_radius;
+        bool                         force_non_pathed;
+        bool                         new_goto_request;
+        bool                         using_pathed_goto;
+        u8                           reserved_092[0x1A];
+        u32                          unk_0ac;               // the als's ai_locomotion_mode reads bit 1 on a swift surface layer
 
         // inlined @ sub_84EBB0
         void set_loco_als_category(string_hash cat) {
             loco_als_category = cat;
         }
+
+        // sub_44EDB0
+        string_hash get_loco_als_category() const {
+            return loco_als_category;
+        }
+
+        void            set_needs_repathfind(bool needs_it, bool latch);
+        const vector3d &get_goto_dest_pos() const; // the last goto point, else zero
+
+        // the swift layers'
+        bool is_using_swift() const;
+        void set_flag_stop_movement(bool stop);
     };
 
     // flight_mocomp flies the actor through it; swift_flight_layer_inode derives from it
@@ -222,6 +251,9 @@ namespace treyarch {
     inline const string_hash puppet_stop_key          = string_hash(hash::djb2("puppet_stop(entity)"));
     inline const string_hash puppet_external_stop_key = string_hash(hash::djb2("puppet_external_stop(entity)"));
 
+    inline const string_hash start_rhino_ride_key          = string_hash(hash::djb2("start_rhino_ride"));
+    inline const string_hash puppet_generic_in_service_key = string_hash(hash::djb2("puppet_generic_in_service"));
+
     class std_puppet_inode : public info_node {
 
     public:
@@ -249,6 +281,9 @@ namespace treyarch {
         void set_puppet_goto_destinations(const mash::vector_basic<vector3d>* destinations) {
             goto_destinations = *destinations;
         }
+
+        bool get_start_rhino_ride() const;
+        i32  get_puppet_generic_in_service() const;
     };
 
     inline const string_hash biped_layer_inode_key            = string_hash(hash::djb2("biped_layer_inode"));
@@ -259,6 +294,10 @@ namespace treyarch {
     inline const string_hash swift_surface_layer_inode_key    = string_hash(hash::djb2("swift_surface_layer_inode"));
     inline const string_hash swift_stationary_layer_inode_key = string_hash(hash::djb2("swift_stationary_layer_inode"));
     inline const string_hash teleporting_layer_inode_key      = string_hash(hash::djb2("teleporting_layer_inode"));
+
+    inline const string_hash scaring_informant_key  = string_hash(hash::djb2("scaring_informant"));
+    inline const string_hash dropping_informant_key = string_hash(hash::djb2("dropping_informant"));
+    inline const string_hash allow_web_pickup_key   = string_hash(hash::djb2("allow_web_pickup"));
 
     class std_carry_inode : public info_node {
 
@@ -280,8 +319,17 @@ namespace treyarch {
             return (carry_slaves && !carry_slaves->empty()) || (unk_038 && !unk_038->empty());
         }
 
+        // sub_50C9D0
+        bool is_carrying() const { // slaves only
+            return carry_slaves && carry_slaves->size();
+        }
+
         bool add_slave   (std_carry_inode* slave, bool engage_slave_mode = true);
         void remove_slave(std_carry_inode* slave, bool kill_slave_mode = true);
+
+        bool get_scaring_informant() const;
+        bool get_dropping_informant() const;
+        bool get_allow_web_pickup() const;
     };
 
     class std_fear_inode : public info_node {
@@ -357,16 +405,25 @@ namespace treyarch {
     ASSERT_SIZEOF  (info_node,                 0x30);
     ASSERT_OFFSETOF(info_node, unk_004,        0x04);
     ASSERT_OFFSETOF(info_node, my_param_block, 0x08);
-    ASSERT_OFFSETOF(info_node, my_type,        0x28);
+    ASSERT_OFFSETOF(info_node, type,           0x28);
     ASSERT_OFFSETOF(info_node, my_ai_core,     0x2C);
 
     ASSERT_SIZEOF  (als_inode,         0x38);
     ASSERT_OFFSETOF(als_inode, my_als, 0x30);
 
-    ASSERT_SIZEOF  (loco_inode,                    0xB0);
-    ASSERT_OFFSETOF(loco_inode, loco_als_category, 0x84);
-    ASSERT_OFFSETOF(loco_inode, unk_08c,           0x8C);
-    ASSERT_OFFSETOF(loco_inode, unk_0ac,           0xAC);
+    ASSERT_SIZEOF  (loco_inode,                        0xB0);
+    ASSERT_OFFSETOF(loco_inode, goto_points,           0x54);
+    ASSERT_OFFSETOF(loco_inode, unk_064,               0x64);
+    ASSERT_OFFSETOF(loco_inode, goto_speed,            0x74);
+    ASSERT_OFFSETOF(loco_inode, stuck_count,           0x7C);
+    ASSERT_OFFSETOF(loco_inode, loco_als_category,     0x84);
+    ASSERT_OFFSETOF(loco_inode, allow_nonpath_goto,    0x88);
+    ASSERT_OFFSETOF(loco_inode, needs_repathfind,      0x89);
+    ASSERT_OFFSETOF(loco_inode, repathfind_latch,      0x8A);
+    ASSERT_OFFSETOF(loco_inode, allow_facing,          0x8C);
+    ASSERT_OFFSETOF(loco_inode, using_explicit_radius, 0x8E);
+    ASSERT_OFFSETOF(loco_inode, using_pathed_goto,     0x91);
+    ASSERT_OFFSETOF(loco_inode, unk_0ac,               0xAC);
 
     ASSERT_SIZEOF  (flight_layer_inode,          0x150);
     ASSERT_OFFSETOF(flight_layer_inode, unk_0b4, 0xB4);

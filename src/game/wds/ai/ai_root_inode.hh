@@ -1,6 +1,6 @@
 #pragma once
 
-#include "retail.hh"
+#include "game/wds/ai/ai_flag_store.hh"
 #include "game/wds/ai/ai_simple_target.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/ai/param_block.hh"
@@ -11,30 +11,25 @@
 
 namespace treyarch {
     class arch_base;
-
-    // the ai flag a name's hash stands for, -1 when there's none
-    inline i32 find_ai_flag(u32 name_hash) {
-        auto flag_name_map = (u32*)retail::sub_42A700(); // built on first use
-
-        return ((i32 (__thiscall*)(u32*, u32, i32))retail::sub_528660)(flag_name_map, name_hash, 1);
-    }
+    class default_values;
 
     // ai_basic_inode's and ai_fd_inode's base
     class ai_root_inode : public info_node {
 
     public:
-        void*        generic_actor_defaults; // the json_def_values resource, looked up once
-        u32          unk_034;
-        param_block* var_block;              // vars live here, or in my_param_block without one
-        param_block* initial_vars;           // what reset copies into var_block
-        u8           reserved_040[0x20];
-        void*        flags;                  // an ai_flag_store
+        default_values* generic_actor_defaults; // looked up once
+        u32             unk_034;
+        param_block*    var_block;              // vars live here, or in my_param_block without one
+        param_block*    initial_vars;           // what reset copies into var_block
+        u8              reserved_040[0x20];
+        ai_flag_store*  flags;
 
         f32  get_var_float(const string_hash* key, bool* missing);
         void set_var_float(const string_hash* key, f32 value);
 
         void set_flag(i32 flag, bool value);
         bool get_flag(i32 flag);
+        bool is_inside_car();
     };
 
     // a fight group's

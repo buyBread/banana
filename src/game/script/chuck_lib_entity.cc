@@ -704,7 +704,7 @@ bool slf__entity__rvb_set_needs_repathfind__t::operator()(chuck::vm::vm_stack &s
     auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
     if (self)
-        ((void (__cdecl*)(arch_base*))retail::sub_4C74D0)(self); // actor::rvb_set_needs_repathfind;
+        rvb_set_needs_repathfind(self);
 
     return true;
 }
@@ -1168,7 +1168,7 @@ bool slf__entity__is_rvb_character__t::operator()(chuck::vm::vm_stack &stack) {
 
     auto self = arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    f32 result = self && ((ai_basic_inode* (__cdecl*)(arch_base*))retail::sub_4C77B0)(self) ? 1.0f : 0.0f; // get_ai_basic_inode_if_slim_actor
+    f32 result = self && get_ai_basic_inode_if_slim_actor(self) ? 1.0f : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -1590,9 +1590,9 @@ bool slf__entity__get_vehicle__t::operator()(chuck::vm::vm_stack &stack) {
     u32 result = 0;
 
     if (self && self->my_parent) {
-        auto basic = ((ai_basic_inode* (__cdecl*)(arch_base*))retail::sub_4C77B0)(self); // get_ai_basic_inode_if_slim_actor
+        ai_basic_inode* basic = get_ai_basic_inode_if_slim_actor(self);
 
-        if (basic && basic->get_flag(963)) {
+        if (basic && basic->get_flag(ai_flag_currently_in_car)) {
             auto vehicle = (entity*)arch_base_vhandle(self->my_parent->my_handle.value).resolve();
 
             if (vehicle && (vehicle->flags & entity_flag_member))

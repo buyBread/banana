@@ -2758,7 +2758,7 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
                     turn_scale = slowed(((f64)turn_angle - 0.2617993950843811) / range);
             }
 
-            if (flight_inode->unk_08c) {
+            if (flight_inode->allow_facing) {
                 f32 scale = step / dist;
 
                 move = vector3d(scale * move.x, scale * move.y, move.z * scale);

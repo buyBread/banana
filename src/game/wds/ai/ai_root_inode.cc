@@ -29,7 +29,7 @@ f32 ai_root_inode::get_var_float(const string_hash* key, bool* missing) { // a m
 
     auto defaults = (u32*)retail::sub_4E2550((u32*)this, 1); // get_generic_actor_defaults
 
-    return (f32)retail::sub_4C4B60(defaults, (u32*)key, nullptr); // json_def_values::get_float
+    return (f32)retail::sub_4C4B60(defaults, (u32*)key, nullptr); // default_values::get_float
 }
 
 // sub_4E2390
@@ -44,12 +44,17 @@ void ai_root_inode::set_var_float(const string_hash* key, f32 value) {
 
 // sub_4F9020
 void ai_root_inode::set_flag(i32 flag, bool value) {
-    retail::sub_4F8F10((u8*)flags, flag, value); // ai_flag_store::set
+    flags->set(flag, value);
 }
 
 // sub_4F9030
 bool ai_root_inode::get_flag(i32 flag) {
-    return retail::sub_4F8FA0((u8*)flags, flag); // ai_flag_store::get
+    return flags->get(flag);
+}
+
+// sub_4F9040
+bool ai_root_inode::is_inside_car() {
+    return flags->get(ai_flag_is_inside_car);
 }
 
 // sub_4E2670

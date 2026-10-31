@@ -1,8 +1,29 @@
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/math/references.hh"
 
 using namespace treyarch;
+
+// sub_4E2C10
+f32 ai_basic_inode::get_actual_car_seat() const {
+    return my_param_block.get_optional_pb_float(actual_car_seat_key, -1.0f, nullptr);
+}
+
+// sub_4E2E50
+f32 ai_basic_inode::get_spread_factor() const {
+    return my_param_block.get_optional_pb_float(spread_factor_key, 1.0f, nullptr);
+}
+
+// sub_4E2E80
+vector3d ai_basic_inode::get_target_offset_vector() const {
+    return my_param_block.get_optional_pb_vector3d(target_offset_vector_key, references::unk_00fc5f00.get(), nullptr);
+}
+
+// sub_4E2D30
+f32 ai_basic_inode::get_base_damage_scalar() const {
+    return my_param_block.get_optional_pb_float(base_damage_scalar_key, 1.0f, nullptr);
+}
 
 // sub_4C7740
 ai_basic_inode* treyarch::get_ai_basic_inode(arch_base* the_entity) { // asks the actor for its core twice
@@ -10,6 +31,28 @@ ai_basic_inode* treyarch::get_ai_basic_inode(arch_base* the_entity) { // asks th
         return nullptr;
 
     return (ai_basic_inode*)((actor*)the_entity)->get_ai_core()->get_info_node(info_node_type_ai_basic);
+}
+
+// sub_4C77B0
+ai_basic_inode* treyarch::get_ai_basic_inode_if_slim_actor(arch_base* the_entity) {
+    ai_basic_inode* inode = get_ai_basic_inode(the_entity);
+
+    if (inode && inode->get_flag(ai_flag_is_slim_actor))
+        return inode;
+
+    return nullptr;
+}
+
+// sub_4C74D0
+void treyarch::rvb_set_needs_repathfind(arch_base* the_entity) { // the entity is taken for an actor with a core
+    ai_core* core = ((actor*)the_entity)->get_ai_core();
+
+    for (e_info_node_type type : { info_node_type_swift_surface_layer, info_node_type_swift_flight_layer }) {
+        auto swift_layer = (loco_inode*)core->get_info_node(type);
+
+        if (swift_layer && swift_layer->is_using_swift())
+            swift_layer->set_needs_repathfind(true, true);
+    }
 }
 
 // sub_4CB170

@@ -14,6 +14,7 @@
 #include "game/pathfinder/obstacle_manager.hh"
 #include "game/region_spawn_manager.hh"
 #include "game/trigger.hh"
+#include "game/wds/ai/ai_flag_store.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mm/mm.hh"
 #include "game/os_file.hh"
@@ -68,7 +69,7 @@ app::app() {
     retail::sub_429090(); // zombie_manager::create_inst
     references::unk_010fa26c.write(mm::allocate(8));
     environment_progression_state::create_inst();
-    retail::sub_42A700();
+    get_ai_flag_name_map();
     mission_manager::create_inst();
     retail::sub_428B00(); // quest_manager::create_inst
     retail::sub_428C20(); // game_meter_manager::create_inst

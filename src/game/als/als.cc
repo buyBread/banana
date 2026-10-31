@@ -4,6 +4,7 @@
 #include "game/als/animation_logic_system.hh"
 #include "game/als/mocomp.hh"
 #include "game/als/state_machine.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
@@ -68,7 +69,7 @@ void als::animation_logic_system_interface::frame_advance_als_list(als_list** th
             if (advances) {
                 bool unk = false;
 
-                if (i32 basic_inode = retail::sub_4C77B0((i32)the_actor)) {
+                if (ai_basic_inode* basic_inode = get_ai_basic_inode_if_slim_actor(the_actor)) {
                     string_hash key;
                     key.initialize(mash::ALLOCATED, nullptr, 0x37C2EE03);
 

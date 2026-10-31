@@ -109,56 +109,6 @@ info_node* ai_core::get_info_node(e_info_node_type type) const {
     return (*my_info_node_list)[position];
 }
 
-// sub_4C3A70
-actor* info_node::get_actor() const {
-    return my_ai_core->my_actor;
-}
-
-bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) {
-    return retail::sub_4BEA10((u32*)this, (i32*)slave, engage_slave_mode);
-}
-
-void std_carry_inode::remove_slave(std_carry_inode* slave, bool kill_slave_mode) {
-    retail::sub_4BA230((u32*)this, (i32)slave, kill_slave_mode);
-}
-
-void std_fear_inode::reset_morale() {
-    retail::sub_44EFF0((i32)this);
-}
-
-void std_fear_inode::break_morale_force_cower(f32 unk) {
-    retail::sub_457530((i32)this, unk);
-}
-
-void std_fear_inode::break_morale_force_flee(vector3d position, f32 unk) {
-    ((void (__thiscall*)(std_fear_inode*, vector3d, f32))retail::sub_457780)(this, position, unk);
-}
-
-void std_fear_inode::break_morale_force_flee(arch_base_vhandle target, f32 unk) {
-    ((void (__thiscall*)(std_fear_inode*, arch_base_vhandle, f32))retail::sub_457650)(this, target, unk);
-}
-
-bool ai_car_inode::force_enter_car(arch_base_vhandle car, i32 seat, bool animate) {
-    return ((bool (__thiscall*)(ai_car_inode*, arch_base_vhandle, i32, bool))retail::sub_4C15F0)(this, car, seat, animate);
-}
-
-bool ai_car_inode::force_exit_car(bool animate) {
-    return retail::sub_4BFA10((i32)this, animate);
-}
-
-void crawl_layer_inode::attach_to_surface(const line_info &lif, const vector3d &desired_forward) {
-    retail::sub_45AC10((u8*)this, (i32)&lif, (f32*)&desired_forward);
-}
-
-void crawl_layer_inode::release_from_surface(const vector3d &desired_forward) {
-    retail::sub_45B250(this, (i32)&desired_forward);
-}
-
-// sub_452D60
-vector3d teleporting_layer_inode::get_teleport_target_pos() const {
-    return my_param_block.get_optional_pb_vector3d(teleport_target_pos_key, references::unk_00fc3d70.get(), nullptr);
-}
-
 // sub_4C2EA0
 // inlined @ sub_4C5840
 // inlined @ sub_4C58D0
@@ -247,9 +197,14 @@ bool ai_core::is_within_tether(const vector3d* pos, f32 margin) const {
 // sub_4C63E0
 vector3d ai_core::get_movement_dest() const {
     if (my_loco_inode && is_moving())
-        return *((const vector3d* (__thiscall*)(loco_inode*))retail::sub_458440)(my_loco_inode); // loco_inode: last goto point
+        return my_loco_inode->get_goto_dest_pos();
 
     return my_actor->my_abs_po->get_position();
+}
+
+// sub_4C2F60
+bool ai_core::is_strafing() const {
+    return is_moving() && my_loco_inode && my_loco_inode->allow_facing;
 }
 
 // sub_4C2F30
@@ -273,10 +228,10 @@ bool ai_core::stop_movement() {
 
     // a swift layer that's in use stops itself
     for (e_info_node_type type : { info_node_type_swift_surface_layer, info_node_type_swift_flight_layer }) {
-        info_node* swift_layer = get_info_node(type);
+        auto swift_layer = (loco_inode*)get_info_node(type);
 
-        if (swift_layer && ((bool (__thiscall*)(info_node*))retail::sub_44FAD0)(swift_layer)) { // swift layer: in use
-            ((void (__thiscall*)(info_node*, bool))retail::sub_44FAB0)(swift_layer, true); // swift layer: stop movement
+        if (swift_layer && swift_layer->is_using_swift()) {
+            swift_layer->set_flag_stop_movement(true);
 
             return true;
         }
@@ -371,13 +326,7 @@ void ai_core::refresh_team() {
     string_hash no_team;
     no_team.initialize(mash::ALLOCATED);
 
-    string_hash team;
-
-    retail::sub_435400((u32*)&my_param_block, // param_block::get_optional_pb_hash
-                       &team.source_hash_code,
-                       references::team_hash.read().source_hash_code,
-                       (i32)no_team.source_hash_code,
-                       nullptr);
+    string_hash team = my_param_block.get_optional_pb_hash(references::team_hash.read(), no_team, nullptr);
 
     my_team = ai_team::get_enum_by_hash(team);
 }

@@ -854,8 +854,8 @@ void cut_scene_player::restore_entities() {
 
         if (entry->flags & entity_class_entry::place_at_end) {
             if (ai) {
-                if (info_node* node = ai->get_info_node((e_info_node_type)23))
-                    retail::sub_450480((u8*)node, true, false);
+                if (auto node = (loco_inode*)ai->get_info_node(info_node_type_loco))
+                    node->set_needs_repathfind(true, false);
             }
 
             vector4d position(entry->end_position.x, entry->end_position.y, entry->end_position.z, 0.0f);

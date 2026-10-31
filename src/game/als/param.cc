@@ -12,6 +12,7 @@
 #include "game/animation/animation_controller.hh"
 #include "game/game.hh"
 #include "game/spawn_table_manager.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/ai_state_machine.hh"
@@ -296,9 +297,9 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->get_ai_core())
                 return -1.0f;
 
-            info_node* carry = the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+            auto carry = (std_carry_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
 
-            if (carry && retail::sub_50C9D0((u32*)carry))
+            if (carry && carry->is_carrying())
                 return 1.0f;
 
             if (!retail::sub_402500((u32*)the_actor))
@@ -355,7 +356,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         case param_strafing_mode: {
             ai_core* core = the_actor->get_ai_core();
 
-            if (!core || !retail::sub_4C2F60((u32*)core))
+            if (!core || !core->is_strafing())
                 return 0.0f;
 
             return 1.0f;
@@ -573,8 +574,8 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return -1.0f;
 
-            if (info_node* basic = core->get_info_node(info_node_type_ai_basic))
-                return (f32)retail::sub_4E2C10((u32*)basic);
+            if (auto basic = (ai_basic_inode*)core->get_info_node(info_node_type_ai_basic))
+                return basic->get_actual_car_seat();
 
             info_node* car = core->get_info_node(info_node_type_ai_car);
 
@@ -853,7 +854,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!carry || !carry->has_carried_objects())
                 return -1.0f;
 
-            if (param == param_is_informant_scared ? !retail::sub_492510((u32*)carry) : !retail::sub_492540((u32*)carry))
+            if (param == param_is_informant_scared ? !carry->get_scaring_informant() : !carry->get_dropping_informant())
                 return -1.0f;
 
             return 1.0f;
@@ -885,18 +886,18 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+            auto basic = (ai_basic_inode*)core->get_info_node(info_node_type_ai_basic);
 
             if (!basic)
                 return 0.0f;
 
             if (param == param_ai_rvb_pod_off_base)
-                return (f32)retail::sub_4F9030((u8**)basic, 649);
+                return (f32)basic->get_flag(ai_flag_pod_is_off_base);
 
             if (param == param_is_pod_converting_symbiote)
-                return (f32)!retail::sub_4F9030((u8**)basic, 963);
+                return (f32)!basic->get_flag(ai_flag_can_convert);
 
-            return (f32)retail::sub_4F9030((u8**)basic, 397);
+            return (f32)basic->get_flag(ai_flag_frenzy_mode);
         }
 
         case param_is_in_stars_mode:
@@ -911,7 +912,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+            auto basic = (ai_basic_inode*)core->get_info_node(info_node_type_ai_basic);
 
             if (!basic)
                 return 0.0f;
@@ -919,7 +920,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             string_hash name;
             name.initialize(mash::ALLOCATED, nullptr, 0x0DB63789);
 
-            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+            return basic->get_var_float(&name, nullptr);
         }
 
         // the player's unk_061 target's basic node's, which the player always has
@@ -934,7 +935,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+            auto basic = (ai_basic_inode*)core->get_info_node(info_node_type_ai_basic);
 
             if (!basic)
                 return 0.0f;
@@ -942,7 +943,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             string_hash name;
             name.initialize(mash::ALLOCATED, nullptr, 0x6698AF55);
 
-            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+            return basic->get_var_float(&name, nullptr);
         }
 
         case param_mv_mini_head_index: {
@@ -951,7 +952,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return -1.0f;
 
-            info_node* basic = core->get_info_node(info_node_type_ai_basic);
+            auto basic = (ai_basic_inode*)core->get_info_node(info_node_type_ai_basic);
 
             if (!basic)
                 return -1.0f;
@@ -959,7 +960,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             string_hash name;
             name.initialize(mash::ALLOCATED, nullptr, 0x2BBCDF37);
 
-            return (f32)retail::sub_4E53E0((u32*)basic, (u32*)&name, nullptr);
+            return basic->get_var_float(&name, nullptr);
         }
 
         case param_is_riding_rhino: {
@@ -968,12 +969,12 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!core)
                 return 0.0f;
 
-            info_node* puppet = core->get_info_node(info_node_type_std_puppet);
+            auto puppet = (std_puppet_inode*)core->get_info_node(info_node_type_std_puppet);
 
             if (!puppet)
                 return 0.0f;
 
-            return (f32)retail::sub_490FF0((u32*)puppet);
+            return (f32)puppet->get_start_rhino_ride();
         }
 
         // the base machine's combat state's first target, whether it's in a sync anim or carried

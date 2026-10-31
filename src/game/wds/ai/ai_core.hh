@@ -158,6 +158,7 @@ namespace treyarch {
         actor* get_actor(i32 actor_ix = 0) const { return my_actor; }
 
         bool is_moving() const { return locomotion_exit_status == state_exit_code_no_exit; }
+        bool is_strafing() const;
 
         bool     is_tether_active() const;
         f32      get_tether_radius() const;

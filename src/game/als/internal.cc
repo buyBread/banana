@@ -16,10 +16,8 @@ void als::request_data::correct_category_name(actor* the_actor) {
 
     ai_core* core = the_actor->get_ai_core();
 
-    if (core && core->my_loco_inode) {
-        string_hash category;
-        state_name = *((string_hash* (__thiscall*)(loco_inode*, string_hash*))retail::sub_44EDB0)(core->my_loco_inode, &category);
-    }
+    if (core && core->my_loco_inode)
+        state_name = core->my_loco_inode->get_loco_als_category();
 }
 
 string_hash als::state::my_type_key                      { 0xCE728D15 }; // "als::state"
