@@ -75,7 +75,7 @@ namespace treyarch {
         f32                spin_angle;
         f32                scale;
         e_wide_align_flags widescreen_align;
-        u32                unk_3c;
+        u32                suppression_mask; // igo_widget_suppression_condition bits
         u32                unk_40;
         mash::string       unk_44;
         mash::string       unk_50;

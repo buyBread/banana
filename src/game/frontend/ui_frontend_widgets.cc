@@ -16,13 +16,13 @@ void ui_frontend::draw_widgets() {
     for (auto* position = widgets.begin(); position != widgets.end(); position = position->next) {
         igo_3d_widget* widget = position->value;
 
-        if (!widget || !widget->is_visible())
+        if (!widget || !widget->is_shown())
             continue;
 
         u32 mask = widget->suppression_mask();
 
         if (!references::game.read()->disable_interface && !(mask & widget_suppression_conditions))
-            widget->draw();
+            widget->render();
     }
 }
 
@@ -71,11 +71,11 @@ void ui_frontend::draw_script_widgets() {
                         value->vtable->method_008(value, 1);
                 }
             } else
-                widget->set_visible(false);
+                widget->set_shown(false);
         }
 
-        if (widget && widget->is_visible() && !widget->unk_0f0())
-            widget->draw();
+        if (widget && widget->is_shown() && !widget->unk_0f0())
+            widget->render();
     }
 
     draw_mission_text_widget();
@@ -89,14 +89,14 @@ void ui_frontend::draw_mission_text_widget() {
     if (!current_igo->scrapbook->is_active() && current_igo->conversation_menu_system->active)
         return;
 
-    if (current_igo->pauseless_dialog->unk_0d8)
+    if (current_igo->pauseless_dialog->faded_in)
         return;
 
     for (auto* position = mission_text_widgets.begin(); position != mission_text_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_visible() && !widget->unk_0f0()) {
-            widget->draw();
+        if (widget && widget->is_shown() && !widget->unk_0f0()) {
+            widget->render();
 
             return;
         }
@@ -110,14 +110,14 @@ void ui_frontend::draw_hint_text_widget() {
     if (!current_igo->scrapbook->is_active() && current_igo->conversation_menu_system->active)
         return;
 
-    if (current_igo->pauseless_dialog->unk_0d8)
+    if (current_igo->pauseless_dialog->faded_in)
         return;
 
     for (auto* position = hint_text_widgets.begin(); position != hint_text_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_visible() && !widget->unk_0f0()) {
-            widget->draw();
+        if (widget && widget->is_shown() && !widget->unk_0f0()) {
+            widget->render();
 
             return;
         }
@@ -134,7 +134,7 @@ void ui_frontend::draw_interface_disabled_script_widgets(bool interface_disabled
     for (auto* position = script_widgets.begin(); position != script_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_visible() && !widget->unk_0f0() && widget->unk_17d)
-            widget->draw();
+        if (widget && widget->is_shown() && !widget->unk_0f0() && widget->persistent)
+            widget->render();
     }
 }

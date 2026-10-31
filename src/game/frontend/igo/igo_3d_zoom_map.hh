@@ -8,7 +8,7 @@ namespace treyarch {
     class igo_3d_zoom_map {
 
     public:
-        igo_3d_widget_vtable* vtable;
+        igo_3d_drawable_vtable* vtable;
 
         u8 reserved_004[0x09];
         u8 render_block_00d;

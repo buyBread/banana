@@ -182,7 +182,7 @@ void game_data::frame_advance() {
                           !retail::sub_967DF0() &&
                           !references::cut_scene_player.read()->is_playing();
 
-    bool loading_screen_visible = references::frontend.get().igo->loading_screen->is_visible();
+    bool loading_screen_visible = references::frontend.get().igo->loading_screen->is_shown();
 
     if (m->unk_0bd && interface_free && !loading_screen_visible)
         m->unk_0bd = 0;

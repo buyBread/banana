@@ -6,6 +6,6 @@ using namespace treyarch;
 void igo_widget_group::draw() {
     for (igo_3d_drawable* widget : widgets) {
         if (widget)
-            widget->draw();
+            widget->render();
     }
 }

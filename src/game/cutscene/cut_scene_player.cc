@@ -804,7 +804,7 @@ void cut_scene_player::take_igo(bool give_back) {
     ui_frontend* igo = references::frontend.get().igo;
 
     if (give_back) {
-        igo->radar_widget->set_visible((state_flags & radar_was_visible) != 0);
+        igo->radar_widget->set_shown((state_flags & radar_was_visible) != 0);
 
         igo->zoom_map->unk_8f95 = false;
         igo->zoom_map->unk_8f96 = false;
@@ -814,13 +814,13 @@ void cut_scene_player::take_igo(bool give_back) {
         return;
     }
 
-    if (igo->radar_widget->is_visible())
+    if (igo->radar_widget->is_shown())
         state_flags |= radar_was_visible;
     else
         state_flags &= ~radar_was_visible;
 
     if (state_flags & radar_was_visible)
-        igo->radar_widget->set_visible(false);
+        igo->radar_widget->set_shown(false);
 
     igo->zoom_map->unk_8f95 = true;
     igo->zoom_map->unk_8f96 = true;

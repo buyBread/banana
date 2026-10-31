@@ -169,6 +169,19 @@ namespace treyarch {
 
         void set_dialog_box(dialog_box* box, u32 unk);
 
+        // listed and its entity still there; a listed widget whose entity is gone gets destroyed
+        bool is_script_widget_valid(igo_3d_script_widget* widget);
+
+        // inlined @ sub_6D85F0
+        static igo_3d_script_widget* find_script_widget(const igo_3d_script_widget_list &list, igo_3d_script_widget* widget) {
+            for (auto* position = list.begin(); position != list.end(); position = position->next) {
+                if (position->value == widget)
+                    return position->value;
+            }
+
+            return nullptr;
+        }
+
         void render_background_effects();
         void draw_background_texture(f32 strength);
 

@@ -316,6 +316,7 @@ bool script::run_thread_until_finished(chuck::vm::vm_thread* thread) {
 // inlined @ sub_84ABE0
 // inlined @ sub_84AD80
 // inlined @ sub_856FB0
+// inlined @ sub_85F770
 // inlined @ sub_863EE0
 // inlined @ sub_878B90
 native_resource_context::native_resource_context(const chuck::vm::vm_stack &stack) : m_context((amalga::resource_pack_slot*)stack.thread->resource_context) {
@@ -331,6 +332,7 @@ native_resource_context::native_resource_context(const chuck::vm::vm_stack &stac
 // inlined @ sub_84ABE0
 // inlined @ sub_84AD80
 // inlined @ sub_856FB0
+// inlined @ sub_85F770
 // inlined @ sub_863EE0
 // inlined @ sub_878B90
 native_resource_context::~native_resource_context() {

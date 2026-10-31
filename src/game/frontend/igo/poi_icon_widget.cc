@@ -12,9 +12,9 @@ void poi_icon_widget::turn_on(bool on) {
     is_shown = on;
 
     if (unk_24)
-        unk_24->set_visible(on);
+        unk_24->set_shown(on);
 
-    unk_2c->set_visible(on);
+    unk_2c->set_shown(on);
     unk_3c = on;
 }
 
@@ -25,20 +25,20 @@ void poi_icon_widget::draw() {
 
     ui_frontend* igo = references::frontend.get().igo;
 
-    if (igo->letterbox && igo->letterbox->is_visible())
+    if (igo->letterbox && igo->letterbox->is_shown())
         return;
 
     if (igo->zoom_map->blocks_world_rendering())
         return;
 
     if (state - 1 <= 1 && unk_24)
-        unk_24->draw();
+        unk_24->render();
 
     if (unk_2c)
-        unk_2c->draw();
+        unk_2c->render();
 
     if (unk_28)
-        unk_28->draw();
+        unk_28->render();
 }
 
 // inlined @ sub_6F4440

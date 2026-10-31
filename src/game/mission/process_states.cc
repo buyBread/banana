@@ -802,7 +802,7 @@ void mission_manager::process_state_start_mission_failed_dialog() {
 
 // sub_9864B0
 void mission_manager::process_state_running_mission_failed_dialog() {
-    if (references::frontend.get().igo->pauseless_dialog->is_visible())
+    if (references::frontend.get().igo->pauseless_dialog->is_shown())
         return;
 
     i32 selection = ((igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog)->method_120();
@@ -829,7 +829,7 @@ void mission_manager::process_state_running_mission_succeeded_dialog() {
 void mission_manager::process_state_blackscreen_on() {
     if (flags & mission_manager_flag_unk_08000000)
         flags &= ~mission_manager_flag_unk_08000000;
-    else if (!references::frontend.get().igo->loading_screen->is_visible())
+    else if (!references::frontend.get().igo->loading_screen->is_shown())
         retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 1.5f, 0, 0, 0, 0, 45.0f);
 
     state_timer = 0.0f;

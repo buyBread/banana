@@ -6,6 +6,6 @@ using namespace treyarch;
 void igo_3d_boss_meter_system::draw() {
     for (auto* position = meters.begin(); position != meters.end(); position = position->next) {
         if (position->value)
-            position->value->draw();
+            position->value->render();
     }
 }

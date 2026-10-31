@@ -10,7 +10,7 @@ i32 ui_frontend::select_ui_environment_index() {
     if (scrapbook->is_active())
         return 1;
 
-    if (pauseless_dialog->is_visible())
+    if (pauseless_dialog->is_shown())
         return 3;
 
     return references::frontend.get().igo->zoom_map->blocks_world_rendering() ? 2 : 0;
@@ -33,13 +33,13 @@ i32 ui_frontend::update_widget_suppression_conditions() {
     if (current_igo->zoom_map->blocks_world_rendering())
         widget_suppression_conditions |= suppress_when_zoom_map_open;
 
-    if (current_igo->loading_screen && current_igo->loading_screen->is_visible())
+    if (current_igo->loading_screen && current_igo->loading_screen->is_shown())
         widget_suppression_conditions |= suppress_when_loading_screen;
 
-    if (current_igo->letterbox && current_igo->letterbox->is_visible())
+    if (current_igo->letterbox && current_igo->letterbox->is_shown())
         widget_suppression_conditions |= suppress_when_letterbox_visible;
 
-    u8 visible = current_igo->pauseless_dialog->is_visible();
+    u8 visible = current_igo->pauseless_dialog->is_shown();
 
     if (visible)
         widget_suppression_conditions |= suppress_when_pauseless_dialog;

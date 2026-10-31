@@ -23,10 +23,10 @@ void stealth_widget_t::set_active(bool active) {
         activated = true;
 
         if (unk_0c)
-            unk_0c->set_visible(true);
+            unk_0c->set_shown(true);
 
         if (meter)
-            meter->set_visible(true);
+            meter->set_shown(true);
 
         deactivation_timer = 0.0f;
         this->active       = true;
@@ -45,10 +45,10 @@ void stealth_widget_t::draw() {
         return;
 
     if (meter)
-        meter->draw();
+        meter->render();
 
     if (state - 1 <= 1 && unk_0c)
-        unk_0c->draw();
+        unk_0c->render();
 }
 
 // sub_70E960
@@ -76,9 +76,9 @@ entity_tracker::entity_tracker(entity_tracker_manager* parent, arch_base_vhandle
         poi_icon->is_shown = false;
 
         if (poi_icon->unk_24)
-            poi_icon->unk_24->set_visible(false);
+            poi_icon->unk_24->set_shown(false);
 
-        poi_icon->unk_2c->set_visible(false);
+        poi_icon->unk_2c->set_shown(false);
         poi_icon->unk_3c = false;
     }
 
@@ -305,7 +305,7 @@ void entity_tracker::set_poi_is_life_bar(bool is_life_bar, i32 health, i32 unk) 
         poi_icon->unk_2c->is_life_bar = is_life_bar;
 
     if (poi_icon->unk_28)
-        poi_icon->unk_28->set_visible(is_life_bar);
+        poi_icon->unk_28->set_shown(is_life_bar);
 
     set_poi_life_bar_values(health, unk);
 }

@@ -61,11 +61,11 @@ void ui_frontend::draw_startup() {
     vtable->draw_pass_1(this);
     update_widget_suppression_conditions();
 
-    startup_widget_17c->draw();
+    startup_widget_17c->render();
     if (startup_widget_180)
-        startup_widget_180->draw();
+        startup_widget_180->render();
     if (startup_widget_184)
-        startup_widget_184->draw();
+        startup_widget_184->render();
 
     ngl::list_end_scene();
     ngl::lighting::select_build_light_context(previous_context);
@@ -132,34 +132,34 @@ void ui_frontend::draw() {
     ui_frontend* current_igo  = references::frontend.get().igo;
     game*        current_game = references::game.read();
 
-    if (current_igo->loading_screen->is_visible()) {
+    if (current_igo->loading_screen->is_shown()) {
         if (loading_screen)
-            loading_screen->draw();
+            loading_screen->render();
 
         if (letterbox &&((loading_screen->color >> 24) != 0xFF ||
                           loading_screen->fade < 1.0f)) {
 
-            letterbox->draw();
+            letterbox->render();
         }
     } else {
         if (!current_game->disable_interface) {
             if (!current_game->game_paused) {
-                if (!current_igo->letterbox || !current_igo->letterbox->is_visible()) {
+                if (!current_igo->letterbox || !current_igo->letterbox->is_shown()) {
                     if (!cut_scene_toa_helper::get()->is_running()) {
                         if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0c0)
-                                unknown_widget_0c0->draw();
+                                unknown_widget_0c0->render();
                             if (button_tips)
-                                button_tips->draw();
+                                button_tips->render();
                         }
 
                         if (ped_warning)
                             ped_warning->draw();
 
                         if (unknown_widget_0c8)
-                            unknown_widget_0c8->draw();
+                            unknown_widget_0c8->render();
                         if (unknown_widget_0cc)
-                            unknown_widget_0cc->draw();
+                            unknown_widget_0cc->render();
 
                         if (widget_group_1a4)
                             widget_group_1a4->draw();
@@ -168,80 +168,80 @@ void ui_frontend::draw() {
                             enemy_health_manager->draw();
 
                         if (unknown_widget_1a8)
-                            unknown_widget_1a8->draw();
+                            unknown_widget_1a8->render();
                         if (unknown_widget_1ac)
-                            unknown_widget_1ac->draw();
+                            unknown_widget_1ac->render();
 
                         if (references::optional_widget_group_enabled.read()) {
                             if (optional_widgets_begin) {
                                 for (igo_3d_drawable** widget = optional_widgets_begin;
                                      widget != optional_widgets_end; ++widget) {
                                     if (*widget)
-                                        (*widget)->draw();
+                                        (*widget)->render();
                                 }
                             }
 
                             if (optional_widget)
-                                optional_widget->draw();
+                                optional_widget->render();
                         }
 
                         if (spidey_distance)
-                            spidey_distance->draw();
+                            spidey_distance->render();
 
                         if (boss_meter_system)
                             boss_meter_system->draw();
 
                         if (district_marker)
-                            district_marker->draw();
+                            district_marker->render();
                         if (unlock_message)
-                            unlock_message->draw();
+                            unlock_message->render();
                         if (hint_text_message)
-                            hint_text_message->draw();
+                            hint_text_message->render();
                         if (unknown_widget_138)
-                            unknown_widget_138->draw();
+                            unknown_widget_138->render();
 
                         if (unknown_widget_13c && (!current_igo->pauseless_dialog ||
-                                                   !current_igo->pauseless_dialog->is_visible())) {
+                                                   !current_igo->pauseless_dialog->is_shown())) {
                             
-                            unknown_widget_13c->draw();
+                            unknown_widget_13c->render();
                         }
 
                         if (unknown_widget_140)
-                            unknown_widget_140->draw();
+                            unknown_widget_140->render();
                         if (unknown_widget_14c)
-                            unknown_widget_14c->draw();
+                            unknown_widget_14c->render();
 
                         if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0bc)
-                                unknown_widget_0bc->draw();
+                                unknown_widget_0bc->render();
                             if (buddy_summon)
-                                buddy_summon->draw();
+                                buddy_summon->render();
                             if (combo_meter)
-                                combo_meter->draw();
+                                combo_meter->render();
                             if (hero_health)
-                                hero_health->draw();
+                                hero_health->render();
                             if (hero_portrait)
-                                hero_portrait->draw();
+                                hero_portrait->render();
                             if (special_meter)
-                                special_meter->draw();
+                                special_meter->render();
                             if (mission_specific_meter)
-                                mission_specific_meter->draw();
+                                mission_specific_meter->render();
                             if (unified_announcement)
-                                unified_announcement->draw();
+                                unified_announcement->render();
                         }
                     }
                 }
 
                 if (timer_widget)
-                    timer_widget->draw();
+                    timer_widget->render();
                 if (agility_test)
-                    agility_test->draw();
+                    agility_test->render();
             }
 
             if (unknown_widget_188)
-                unknown_widget_188->draw();
+                unknown_widget_188->render();
             if (text_debug_widget)
-                text_debug_widget->draw();
+                text_debug_widget->render();
 
             if (!current_igo->conversation_state_168) {
                 current_igo->entity_tracker_mgr->render();
@@ -254,25 +254,25 @@ void ui_frontend::draw() {
                 region_spawn_manager::draw_text();
 
             if (conversation_menu_system)
-                ((igo_3d_widget*)((u8*)conversation_menu_system + 0x10))->draw();
+                ((igo_3d_widget*)((u8*)conversation_menu_system + 0x10))->render();
 
             if (dialog)
-                dialog->widget.draw();
+                dialog->widget.render();
 
             draw_script_widgets();
 
             if (scrapbook && !scrapbook->is_active()) {
                 if (objective_text)
-                    objective_text->draw();
+                    objective_text->render();
                 if (hint_text)
-                    hint_text->draw();
+                    hint_text->render();
             }
         }
 
         draw_interface_disabled_script_widgets(current_game->disable_interface);
 
         if (letterbox && (!scrapbook || !scrapbook->is_active()))
-            letterbox->draw();
+            letterbox->render();
 
         if (zoom_map)
             zoom_map->draw_map_overlay();
@@ -281,31 +281,31 @@ void ui_frontend::draw() {
             scrapbook->draw_pages();
 
         if (pauseless_dialog && !scrapbook->is_active())
-            pauseless_dialog->draw();
+            pauseless_dialog->render();
 
         if (mem_card_message)
-            mem_card_message->draw();
+            mem_card_message->render();
 
         if (face_button_system)
             face_button_system->draw_buttons();
 
         if (saving_or_loading_screen)
-            saving_or_loading_screen->draw();
+            saving_or_loading_screen->render();
     }
 
     if (camera_widget)
-        camera_widget->draw();
+        camera_widget->render();
 
     ngl::list_end_scene();
 
-    if (!current_igo->loading_screen->is_visible() &&
+    if (!current_igo->loading_screen->is_shown() &&
         !current_game->disable_interface && !current_game->game_paused &&
         (!current_igo->letterbox ||
-         !current_igo->letterbox->is_visible())) {
+         !current_igo->letterbox->is_shown())) {
 
         if (!cut_scene_toa_helper::get()->is_running() && !conversation_menu_system->is_conversation_active())
             if (radar_widget)
-                radar_widget->draw();
+                radar_widget->render();
     }
 
     ngl::scene* pass_2 = ngl::list_begin_scene(ngl::scene_parameter_defaults);
@@ -330,13 +330,13 @@ void ui_frontend::draw() {
         nav_button_bar->draw_buttons();
 
     if (modal_save_dialog)
-        modal_save_dialog->draw();
+        modal_save_dialog->render();
     if (generic_modal_dialog)
-        generic_modal_dialog->draw();
+        generic_modal_dialog->render();
     if (controller_disconnect_dialog)
-        controller_disconnect_dialog->draw();
+        controller_disconnect_dialog->render();
     if (autosave_indicator)
-        autosave_indicator->draw();
+        autosave_indicator->render();
 
     ngl::list_end_scene();
     ngl::lighting::select_build_light_context(previous_context);
