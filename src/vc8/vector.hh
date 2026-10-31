@@ -80,6 +80,14 @@ namespace treyarch { namespace vc8 {
               T &operator[](u32 index)       noexcept { return first[index]; }
         const T &operator[](u32 index) const noexcept { return first[index]; }
 
+        // inlined @ sub_4BC580
+        T &at(u32 index) {
+            if (size() <= index)
+                throw_out_of_range();
+
+            return first[index];
+        }
+
               T* begin()       noexcept { return first; }
         const T* begin() const noexcept { return first; }
 
@@ -269,6 +277,11 @@ namespace treyarch { namespace vc8 {
         // sub_A6B7F0
         [[noreturn]] static void throw_length_error() {
             throw std::length_error("vector<T> too long");
+        }
+
+        // sub_4926E0
+        [[noreturn]] static void throw_out_of_range() {
+            throw std::out_of_range("invalid vector<T> subscript");
         }
 
         void reserve_for_size(u32 requested_size) {
