@@ -354,6 +354,7 @@ namespace treyarch { namespace math {
         // sub_5FC100
         // sub_5FC080
         // sub_7ACFF0
+        // sub_44DA50
         template<i32 R1, i32 C1, typename T1, typename P1>
         mat_class(const mat_class<R1, C1, T1, P1> &a) {
             typename mat_class<R1, C1, T1, P1>::get_x_type x1;
