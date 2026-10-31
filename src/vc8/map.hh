@@ -24,7 +24,9 @@ namespace treyarch { namespace vc8 {
         // sub_764120
         // sub_764190
         // sub_93DDB0
+        // sub_93DE40
         // sub_93DFD0
+        // sub_93E1B0
         // sub_979870
         // sub_979900
         V &operator[](const K &key) {

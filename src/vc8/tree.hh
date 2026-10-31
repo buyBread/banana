@@ -144,6 +144,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // inlined @ sub_A20D60
+        // inlined @ sub_958750
         ~tree() {
             erase(begin(), end());
 
@@ -487,7 +488,9 @@ namespace treyarch { namespace vc8 {
         // sub_7FF730
         // sub_8041A0
         // sub_8042E0
+        // sub_9361A0
         // sub_93B7E0
+        // sub_93BDE0
         // sub_93C220
         // sub_958380
         // sub_A20CA0
