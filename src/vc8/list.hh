@@ -119,6 +119,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_4ECF90
+        // sub_7FB2F0
         void clear() noexcept {
             node* position = sentinel->next;
 
