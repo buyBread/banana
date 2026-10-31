@@ -62,13 +62,22 @@ namespace treyarch { namespace vc8 {
         u32  size()  const noexcept { return count; }
         bool empty() const noexcept { return count == 0; }
 
+        // sub_4ED2B0
+        static node* buy_node(node* next, node* previous, const T &value) {
+            node* result = (node*)mm::allocate(sizeof(node));
+
+            if (result) {
+                result->next     = next;
+                result->previous = previous;
+
+                new (&result->value) T(value);
+            }
+
+            return result;
+        }
+
         node* insert_before(node* before, const T &value) {
-            node* position = (node*)mm::allocate(sizeof(node));
-
-            position->next     = before;
-            position->previous = before->previous;
-
-            new (&position->value) T(value);
+            node* position = buy_node(before, before->previous, value);
 
             increment_size(1);
 
@@ -80,6 +89,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_5CD230
         // sub_635E30
+        // sub_6CBC90
         // sub_749E80
         // sub_A1AB20
         // sub_A6B870

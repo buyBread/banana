@@ -244,6 +244,7 @@ namespace treyarch { namespace vc8 {
             return position;
         }
 
+        // sub_6E62E0
         // sub_759870
         // sub_759930
         // sub_7FB1B0
@@ -278,6 +279,7 @@ namespace treyarch { namespace vc8 {
             return { where, false };
         }
 
+        // sub_6F0980
         // sub_7618D0
         // sub_761A40
         // sub_9782F0
@@ -614,6 +616,7 @@ namespace treyarch { namespace vc8 {
             return result;
         }
 
+        // sub_6D6210
         // sub_7549C0
         // sub_754BC0
         // sub_7F9560
