@@ -16,6 +16,7 @@ namespace treyarch {
         state_exit_code_exit_request = 0,
         state_exit_code_success      = 1,
         state_exit_code_failure      = 2,
+        state_exit_code_dodge        = 84,
         state_exit_code_no_exit      = 106
     };
 

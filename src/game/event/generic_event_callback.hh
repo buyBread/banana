@@ -22,6 +22,13 @@ namespace treyarch {
         // inlined @ sub_723DA0
         explicit generic_event_callback(mash::generating_vtable_version) {}
 
+        ~generic_event_callback() {
+            finalize(mash::ALLOCATED);
+        }
+
+        // sub_689610
+        void finalize(mash::allocation_scope) {}
+
         void construct_mashed_class();
         void destruct_mashed_class() {}
         void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}

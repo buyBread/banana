@@ -15,6 +15,16 @@ void base_state::initialize(mash::allocation_scope) {
     my_mashed_state  = nullptr;
 }
 
+// sub_4C4930
+ai_core* base_state::get_core() const {
+    return my_state_machine->my_core;
+}
+
+// sub_4D2A40
+actor* base_state::get_actor() const {
+    return my_state_machine->my_core->my_actor;
+}
+
 // ==== enhanced_state ==== //
 
 // slot 0
@@ -407,4 +417,86 @@ bool ai_state_machine::transition_state(string_hash new_state_id, const param_bl
     my_curr_state->activate(this, new_state, my_prev_state, extra_params);
 
     return false;
+}
+
+// ==== attack_enabled_state ==== //
+
+// slot 1
+void attack_enabled_state::construct_mashed_class() {
+    ((void (__thiscall*)(attack_enabled_state*))retail::sub_4028C0)(this);
+}
+
+// slot 2
+void attack_enabled_state::destruct_mashed_class() {
+    ((void (__thiscall*)(attack_enabled_state*))retail::sub_4028E0)(this);
+}
+
+// slot 3
+void attack_enabled_state::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    ((void (__thiscall*)(attack_enabled_state*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_406650)(this,
+                                                                                                                       mash_info,
+                                                                                                                       containing_class_ptr,
+                                                                                                                       buffer);
+}
+
+// slot 4
+mash::virtual_types_key attack_enabled_state::get_virtual_type_key() const {
+    return ((mash::virtual_types_key (__thiscall*)(const attack_enabled_state*))retail::sub_4866A0)(this);
+}
+
+// slot 6
+bool attack_enabled_state::is_subclass_of(mash::virtual_types_key parent_class) const {
+    return ((bool (__thiscall*)(const attack_enabled_state*, mash::virtual_types_key))retail::sub_5808A0)(this, parent_class);
+}
+
+// sub_4866B0
+i32 attack_enabled_state::get_mash_sizeof() const {
+    return sizeof(*this);
+}
+
+// slot 9
+void attack_enabled_state::activate(      ai_state_machine* the_state_machine,
+                                    const mashed_state*     the_mashed_state,
+                                    const mashed_state*     prev_mashed_state,
+                                    const param_block*      extra_params) {
+
+    ((void (__thiscall*)(attack_enabled_state*,
+                         ai_state_machine*,
+                         const mashed_state*,
+                         const mashed_state*,
+                         const param_block*))retail::sub_4066F0)(this,
+                                                                 the_state_machine,
+                                                                 the_mashed_state,
+                                                                 prev_mashed_state,
+                                                                 extra_params);
+}
+
+// slot 10
+void attack_enabled_state::deactivate(const mashed_state* next_mashed_state) {
+    ((void (__thiscall*)(attack_enabled_state*, const mashed_state*))retail::sub_406CB0)(this, next_mashed_state);
+}
+
+// slot 11
+e_state_exit_code attack_enabled_state::frame_advance(f32 delta_t) {
+    return ((e_state_exit_code (__thiscall*)(attack_enabled_state*, f32))retail::sub_407F90)(this, delta_t);
+}
+
+// slot 20
+i32 attack_enabled_state::unk_020(i32 unk) {
+    return ((i32 (__thiscall*)(attack_enabled_state*, i32))retail::sub_403140)(this, unk);
+}
+
+// slot 21
+i32 attack_enabled_state::unk_021(f32 unk) {
+    return ((i32 (__thiscall*)(attack_enabled_state*, f32))retail::sub_403F10)(this, unk);
+}
+
+// slot 22
+bool attack_enabled_state::unk_022(i32 unk_1, i32 unk_2) {
+    return ((bool (__thiscall*)(attack_enabled_state*, i32, i32))retail::sub_405500)(this, unk_1, unk_2);
+}
+
+// slot 23
+bool attack_enabled_state::unk_023() {
+    return ((bool (__thiscall*)(attack_enabled_state*))retail::sub_405AD0)(this);
 }

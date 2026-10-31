@@ -106,6 +106,16 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_840570
 // inlined @ sub_73F990
 // inlined @ sub_758B90
+// inlined @ sub_4D22E0
+// inlined @ sub_4BEA10
+// inlined @ sub_4BF1F0
+// inlined @ sub_495E60
+// inlined @ sub_496EF0
+// inlined @ sub_49C200
+// inlined @ sub_4A2420
+// inlined @ sub_4BE3E0
+// inlined @ sub_4BFE10
+// inlined @ sub_4F9FD0
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -439,6 +449,39 @@ bool ai_core::attempt_push_base_machine(ai_core* asker, const resource_key &the_
     push_base_machine(the_state_graph, do_it_now);
 
     retail::sub_4CC650((i32)asker, (u32*)this); // release_wait_for_other_ai
+
+    return true;
+}
+
+// sub_4D22E0
+bool ai_core::attempt_to_engage_slave_mode(arch_base_vhandle new_master, als::layer_id desired_als_layer) {
+    auto* master = (actor*)new_master.resolve();
+
+    if (!master)
+        return false;
+
+    als::animation_logic_system_interface* als = my_actor->get_als();
+
+    if (!als)
+        return false;
+
+    // a layer that already has a master is only taken over while it can be interrupted
+    if (retail::sub_4824F0((u32*)get_info_node(info_node_type_slave), desired_als_layer) &&
+        !als->get_als_layer(desired_als_layer)->is_interruptable())
+
+        return false;
+
+    ai_core* other = master->get_ai_core();
+
+    if (!other)
+        other = this;
+
+    if (!retail::sub_4CDEC0((i32*)other, (i32*)this, nullptr)) // wait_for_other_ai
+        return false;
+
+    ((slave_inode*)get_info_node(info_node_type_slave))->internal_engage_slave_mode(new_master, desired_als_layer);
+
+    retail::sub_4CC650((i32)other, (u32*)this); // release_wait_for_other_ai
 
     return true;
 }

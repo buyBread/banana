@@ -50,6 +50,7 @@ void ai_flag_store::apply_params(param_block* params) { // every int param named
 }
 
 // sub_4F8F10
+// inlined @ sub_4F9FD0
 void ai_flag_store::set(i32 flag, bool value) {
     engine_lock_scope scope(&lock);
 

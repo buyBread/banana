@@ -3,6 +3,7 @@
 #include <array>
 
 #include "vc8/list.hh"
+#include "game/als/als.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/hash/algo.hh"
@@ -122,8 +123,9 @@ namespace treyarch {
         u32   unk_034;
     };
 
-    inline const string_hash currently_using_swift_key = string_hash(hash::djb2("currently_using_swift"));
-    inline const string_hash flag_stop_movement_key    = string_hash(hash::djb2("flag_stop_movement"));
+    inline const string_hash currently_using_swift_key      = string_hash(hash::djb2("currently_using_swift"));
+    inline const string_hash flag_stop_movement_key         = string_hash(hash::djb2("flag_stop_movement"));
+    inline const string_hash allow_als_category_request_key = string_hash(hash::djb2("allow_als_category_request"));
 
     class loco_inode : public info_node {
 
@@ -169,6 +171,8 @@ namespace treyarch {
         // the swift layers'
         bool is_using_swift() const;
         void set_flag_stop_movement(bool stop);
+
+        void set_allow_als_category_request(bool allow);
     };
 
     // flight_mocomp flies the actor through it; swift_flight_layer_inode derives from it
@@ -227,11 +231,12 @@ namespace treyarch {
     class ai_car_inode : public info_node {
 
     public:
-        u8   reserved_030[0x50];
-        i32  selected_seat;
-        u8   reserved_084[0x14];
-        bool is_in_car;
-        u8   reserved_099[0x07];
+        u8                reserved_030[0x4C];
+        arch_base_vhandle selected_car;
+        i32               selected_seat;
+        u8                reserved_084[0x14];
+        bool              is_in_car;
+        u8                reserved_099[0x07];
 
         bool force_enter_car(arch_base_vhandle car, i32 seat, bool animate);
         bool force_exit_car (bool animate);
@@ -336,6 +341,16 @@ namespace treyarch {
     inline const string_hash scaring_informant_key  = string_hash(hash::djb2("scaring_informant"));
     inline const string_hash dropping_informant_key = string_hash(hash::djb2("dropping_informant"));
     inline const string_hash allow_web_pickup_key   = string_hash(hash::djb2("allow_web_pickup"));
+    inline const string_hash carry_type_key         = string_hash(hash::djb2("carry_type"));
+    inline const string_hash carry_bone_key         = string_hash(hash::djb2("carry_bone"));
+
+    namespace references {
+        // "BIP01 R CLAVICLE", where a carried actor hangs without a carry_bone
+        inline util::memory_reference<string_hash> bip01_r_clavicle { 0x01003470 };
+
+        // the event a picked up actor raises
+        inline util::memory_reference<string_hash> picked_up { 0x0102CC3C };
+    } // references
 
     class std_carry_inode : public info_node {
 
@@ -344,7 +359,9 @@ namespace treyarch {
         vc8::list<std_carry_inode*>*     carry_slaves;
         vc8::list<manip_obj_interface*>* unk_038;            // the manip objs it holds
         std_carry_inode*                 desired_slave;
-        u8                               reserved_040[0x28];
+        u8                               reserved_040[0x08];
+        engine_recursive_lock            lock;
+        u8                               reserved_058[0x10];
 
         // inlined
         bool is_being_carried() const {
@@ -365,9 +382,13 @@ namespace treyarch {
         bool add_slave   (std_carry_inode* slave, bool engage_slave_mode = true);
         void remove_slave(std_carry_inode* slave, bool kill_slave_mode = true);
 
-        bool get_scaring_informant() const;
-        bool get_dropping_informant() const;
-        bool get_allow_web_pickup() const;
+        bool        get_scaring_informant() const;
+        bool        get_dropping_informant() const;
+        bool        get_allow_web_pickup() const;
+        string_hash get_carry_type() const;
+
+    private:
+        void attach_slave(std_carry_inode* slave, const string_hash &bone);
     };
 
     class std_fear_inode : public info_node {
@@ -388,7 +409,38 @@ namespace treyarch {
     class target_search_inode : public info_node {
 
     public:
-        u8 reserved_030[0x38];
+        u8                    reserved_030[0x20];
+        engine_recursive_lock lock;
+        u8                    reserved_060[0x08];
+
+        // slot 26; the target, resolved under the lock
+        arch_base* unk_026() {
+            return ((arch_base* (__thiscall*)(target_search_inode*))(*(void***)this)[26])(this);
+        }
+    };
+
+    // the civilian attacker's; its target is the victim
+    class ai_civilian_agressor_inode : public target_search_inode {
+
+    public:
+        u8   reserved_068[0x14];
+        bool unk_07c;            // hold_hostage_state clears it
+        u8   pad_07d[0x03];
+    };
+
+    // an actor another one drives through a synced anim; each master holds one als layer
+    class slave_inode : public info_node {
+
+    public:
+        struct master_t {
+            arch_base_vhandle master;
+            als::layer_id     layer;
+        };
+
+        engine_recursive_lock        lock;
+        mash::vector_basic<master_t> masters;
+
+        void internal_engage_slave_mode(arch_base_vhandle new_master, als::layer_id desired_als_layer);
     };
 
     class combat_target_inode : public target_search_inode {
@@ -487,6 +539,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(aim_util_inode, target_to_look_at, 0x5C0);
 
     ASSERT_SIZEOF  (ai_car_inode,                0xA0);
+    ASSERT_OFFSETOF(ai_car_inode, selected_car,  0x7C);
     ASSERT_OFFSETOF(ai_car_inode, selected_seat, 0x80);
     ASSERT_OFFSETOF(ai_car_inode, is_in_car,     0x98);
 
@@ -510,9 +563,21 @@ namespace treyarch {
     ASSERT_OFFSETOF(std_carry_inode, unk_038,       0x38);
     ASSERT_OFFSETOF(std_carry_inode, desired_slave, 0x3C);
 
-    ASSERT_SIZEOF(std_fear_inode,      0x68);
-    ASSERT_SIZEOF(target_search_inode, 0x68);
+    ASSERT_OFFSETOF(std_carry_inode, lock,          0x48);
+
+    ASSERT_SIZEOF(std_fear_inode, 0x68);
+
+    ASSERT_SIZEOF  (target_search_inode,       0x68);
+    ASSERT_OFFSETOF(target_search_inode, lock, 0x50);
+
     ASSERT_SIZEOF(combat_target_inode, 0xE8);
+
+    ASSERT_SIZEOF  (ai_civilian_agressor_inode,          0x80);
+    ASSERT_OFFSETOF(ai_civilian_agressor_inode, unk_07c, 0x7C);
+
+    ASSERT_SIZEOF  (slave_inode,          0x50);
+    ASSERT_OFFSETOF(slave_inode, lock,    0x30);
+    ASSERT_OFFSETOF(slave_inode, masters, 0x40);
 
     ASSERT_SIZEOF(swift_stationary_layer_inode, 0xB8);
 

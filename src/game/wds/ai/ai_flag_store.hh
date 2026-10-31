@@ -13,6 +13,8 @@ namespace treyarch {
     // the flags source reads by index; the name map knows every one by its name
     enum e_ai_flag : i32 {
         ai_flag_is_inside_car      = 0x001,
+        ai_flag_ai_targetable      = 0x00B,
+        ai_flag_do_capture         = 0x146,
         ai_flag_frenzy_mode        = 0x18D,
         ai_flag_is_slim_actor      = 0x21A,
         ai_flag_pod_is_off_base    = 0x289,

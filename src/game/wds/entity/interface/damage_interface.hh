@@ -18,6 +18,7 @@ namespace treyarch {
         damage_ifc_flag_immune_to_death_from_damage = 0x00000100,
         damage_ifc_flag_stunned                     = 0x00000800,
         damage_ifc_flag_dealt_damage_this_frame     = 0x02000000,
+        damage_ifc_flag_unk_40000000                = 0x40000000, // hold_hostage_state sets it on both actors
         damage_ifc_flag_die_on_fall_damage          = 0x80000000
     };
 

@@ -1,5 +1,9 @@
 #include "retail.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/states/car_states.hh"
+#include "game/wds/ai/states/carry_states.hh"
+#include "game/wds/ai/states/civilian_agressor_states.hh"
+#include "game/wds/ai/states/sync_anim_state.hh"
 #include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
@@ -97,31 +101,31 @@ base_state* base_state::create_subclass(mash::virtual_types_key the_class_to_mak
         case 0x8417F8D1: // plr_loco_standing_state
             return construct(0x1E4, retail::sub_4D6920);
         case 0xEEB4561D: // generic_sync_anim_state
-            return construct(0x16C, retail::sub_4D0AA0);
+            return construct(0x16C, retail::sub_4D0AA0, source_vtable<generic_sync_anim_state>());
         case 0x0C34884F: // ai_obs_hop_sync_state
-            return construct(0x16C, retail::sub_4D0B30);
+            return construct(0x16C, retail::sub_4D0B30, source_vtable<ai_obs_hop_sync_state>());
         case 0x218FDD11: // generic_slim_sync_anim_state
-            return construct(0x16C, retail::sub_4D0BC0);
+            return construct(0x16C, retail::sub_4D0BC0, source_vtable<generic_slim_sync_anim_state>());
         case 0x58C6AED4: // plr_loco_sync_obstacle_avoid_state
-            return construct(0x184, retail::sub_580970);
+            return construct(0x184, retail::sub_580970, source_vtable<plr_loco_sync_obstacle_avoid_state>());
         case 0xC98C9073: // enter_car_state
-            return construct(0x16C, retail::sub_4D29F0);
+            return construct(0x16C, retail::sub_4D29F0, source_vtable<enter_car_state>());
         case 0x551F42AF: // exit_car_state
-            return construct(0x174, retail::sub_4D2AB0);
+            return construct(0x174, retail::sub_4D2AB0, source_vtable<exit_car_state>());
         case 0x1FD1A663: // hold_abductee_state
-            return construct(0x17C, retail::sub_4D59A0);
+            return construct(0x17C, retail::sub_4D59A0, source_vtable<hold_abductee_state>());
         case 0xAEB0722D: // harass_victim_state
-            return construct(0x16C, retail::sub_4D62C0);
+            return construct(0x16C, retail::sub_4D62C0, source_vtable<harass_victim_state>());
         case 0xFC896F31: // hold_hostage_state
-            return construct(0x178, retail::sub_4D65F0);
+            return construct(0x178, retail::sub_4D65F0, source_vtable<hold_hostage_state>());
         case 0x8028B654: // pick_up_ai_state
-            return construct(0x170, retail::sub_4C0B60);
+            return construct(0x170, retail::sub_4C0B60, source_vtable<pick_up_ai_state>());
         case 0xF2263541: // plr_pick_up_ai_state
-            return construct(0x174, retail::sub_4D48D0);
+            return construct(0x174, retail::sub_4D48D0, source_vtable<plr_pick_up_ai_state>());
         case 0xF9D700B9: // put_down_ai_state
-            return construct(0x174, retail::sub_4C0C50);
+            return construct(0x174, retail::sub_4C0C50, source_vtable<put_down_ai_state>());
         case 0xAB845D46: // plr_put_down_ai_state
-            return construct(0x178, retail::sub_4D49C0);
+            return construct(0x178, retail::sub_4D49C0, source_vtable<plr_put_down_ai_state>());
         case 0x97220741: // biped_idle_state
             return construct(0x158, retail::sub_4BF3C0);
         case 0xD8DA578F: // generic_combat_idle_state

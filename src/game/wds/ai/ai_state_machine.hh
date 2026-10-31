@@ -13,6 +13,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class actor;
     class ai_core;
     class ai_state_machine;
     class default_state_transition;
@@ -65,6 +66,9 @@ namespace treyarch {
         string_hash get_name() const {
             return my_mashed_state->get_name();
         }
+
+        ai_core* get_core() const;
+        actor*   get_actor() const;
 
         void initialize(mash::allocation_scope scope);
 
@@ -130,6 +134,36 @@ namespace treyarch {
         static enhanced_state* construct_inline(u32 size, void* vtable); // enhanced_state's constructor as the states without one of their own inline it
     };
 
+    class attack_enabled_state : public enhanced_state {
+
+    public:
+        u8 reserved_044[0x110];
+
+        explicit attack_enabled_state(mash::generating_vtable_version so_do_nothing) : enhanced_state(so_do_nothing) {}
+
+        void                    construct_mashed_class() override;
+        void                    destruct_mashed_class() override;
+        void                    unmash(mash::mash_info_struct* mash_info,
+                                       void*                   containing_class_ptr,
+                                       mash::buffer_type       buffer) override;
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        void activate(      ai_state_machine* the_state_machine,
+                      const mashed_state*     the_mashed_state,
+                      const mashed_state*     prev_mashed_state,
+                      const param_block*      extra_params) override;
+
+        void              deactivate(const mashed_state* next_mashed_state) override;
+        e_state_exit_code frame_advance(f32 delta_t) override;
+
+        virtual i32  unk_020(i32 unk);
+        virtual i32  unk_021(f32 unk);
+        virtual bool unk_022(i32 unk_1, i32 unk_2);
+        virtual bool unk_023();
+    };
+
     // layouts only from here on; retail builds these and their vtables stay retail
 
     class launch_layer_state : public enhanced_state {
@@ -154,12 +188,6 @@ namespace treyarch {
         virtual e_block_level get_block_level() const;
 
         static string_hash my_type_key;
-    };
-
-    class attack_enabled_state : public enhanced_state {
-
-    public:
-        u8 reserved_044[0x110];
     };
 
     class generic_loco_state : public attack_enabled_state {
@@ -230,6 +258,11 @@ namespace treyarch {
         const mashed_state*           my_interrupted_state;
         const param_block*            my_interrupted_params;
               e_state_exit_code       my_exit_status;
+
+        // sub_9EEB90
+        ai_core* get_core() const {
+            return my_core;
+        }
 
         // sub_4C6880
         i32 get_num_children() const {

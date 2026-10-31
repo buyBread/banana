@@ -32,11 +32,13 @@ namespace treyarch {
         ai_core_flag_in_limbo              = 0x00000004,
 
         ai_core_flag_unk_00000008 = 0x00000008, // with the civilian team, demotes the core to the low list
+        ai_core_flag_slave_mode   = 0x00000080,
         ai_core_flag_unk_00000100 = 0x00000100, // the next frame pops the slave graph
 
         ai_core_flag_hanging_from_pole = 0x00002000,
 
-        ai_core_flag_seated_in_car = 0x00010000 // the actor's base als state says so
+        ai_core_flag_seated_in_car = 0x00010000, // the actor's base als state says so
+        ai_core_flag_unk_00020000  = 0x00020000  // hold_hostage_state sets it on the hostage
     };
 
     enum e_ai_core_mode : u32 {
@@ -189,6 +191,13 @@ namespace treyarch {
         bool attempt_push_base_machine(ai_core* asker, const resource_key &the_state_graph, bool do_it_now); // a null asker means this core
         bool restart_base_machine();
         bool change_locomotion_machine(string_hash the_loco_inode);
+
+        bool attempt_to_engage_slave_mode(arch_base_vhandle new_master, als::layer_id desired_als_layer);
+
+        // inlined @ sub_4BEA10
+        bool is_in_slave_mode() const {
+            return (flags & ai_core_flag_slave_mode) != 0;
+        }
 
         void stop_looping_effects();
         void post_pending_sound_event();

@@ -22,6 +22,7 @@ namespace treyarch {
         // inlined @ sub_434AD0
         // inlined @ sub_84D1E0
         // inlined @ sub_84DB60
+        // inlined @ sub_49C200
         T get_random_value_inline() const { // get_random_value as retail inlines it: doubles between two roundings
             const T random = (T)((f64)(T)std::rand() * (f64)(1.0f / 32767.0f) * 2.0);
 

@@ -79,6 +79,11 @@ namespace treyarch {
             ((void (__thiscall*)(actor*))vtable[137])(this);
         }
 
+        // slot 143
+        void set_colgeom_flag_recursive(u32 flag, bool set) {
+            ((void (__thiscall*)(actor*, u32, bool))vtable[143])(this, flag, set);
+        }
+
         // slot 144; null takes the abs po
         void update_colgeom(po* replacement_po = nullptr) {
             ((void (__thiscall*)(actor*, po*))vtable[144])(this, replacement_po);

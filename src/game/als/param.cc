@@ -1255,20 +1255,14 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
                     if (other_core && other_core != core) {
                         auto* carry = (std_carry_inode*)other_core->get_info_node(info_node_type_std_carry);
 
-                        if (carry && carry->carry_master) {
-                            retail::sub_4924A0((u32*)carry, (u32*)&result);
-
-                            return result;
-                        }
+                        if (carry && carry->carry_master)
+                            return carry->get_carry_type();
                     }
                 }
             }
 
-            if (info_node* carry = core->get_info_node(info_node_type_std_carry)) {
-                retail::sub_4924A0((u32*)carry, (u32*)&result);
-
-                return result;
-            }
+            if (auto* carry = (std_carry_inode*)core->get_info_node(info_node_type_std_carry))
+                return carry->get_carry_type();
 
             result.initialize(mash::ALLOCATED, nullptr, 0);
 

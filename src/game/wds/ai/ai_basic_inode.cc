@@ -16,6 +16,7 @@
 using namespace treyarch;
 
 // sub_4EF830
+// inlined @ sub_4F9FD0
 e_simple_target_type ai_basic_inode::get_target_type(u32 slot) {
     e_simple_target_type target_type = simple_target_type_none;
 
@@ -56,6 +57,7 @@ e_simple_target_type ai_basic_inode::get_target_type(u32 slot) {
 }
 
 // sub_4E3050
+// inlined @ sub_4F9FD0
 void ai_basic_inode::clear_target(i32 slot) {
     if (slot < 0)
         return;
@@ -86,6 +88,7 @@ ai_simple_target* ai_basic_inode::get_target(u32 slot) {
 }
 
 // sub_4F2620
+// inlined @ sub_4F9FD0
 arch_base* ai_basic_inode::get_target_entity(u32 slot) {
     switch (slot) {
         case self_target_slot:
