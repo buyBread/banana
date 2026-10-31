@@ -17,8 +17,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_00fc4a38 { 0x00FC4A38 }; // ai car list (ai_car_inode, evil car list)
     inline util::memory_reference<engine_recursive_lock> unk_00fc4a70 { 0x00FC4A70 }; // ai_action_nugget ids
     inline util::memory_reference<engine_recursive_lock> unk_00fc4a98 { 0x00FC4A98 }; // ai_item_holder_inode
-    inline util::memory_reference<engine_recursive_lock> unk_00fc4b68 { 0x00FC4B68 }; // ai_tentacle_engine
-    inline util::memory_reference<engine_recursive_lock> unk_00fc4ff0 { 0x00FC4FF0 }; // ai_tentacle_info
     inline util::memory_reference<engine_recursive_lock> unk_00fc5028 { 0x00FC5028 }; // ai_civilian_agressor_inode
     inline util::memory_reference<engine_recursive_lock> unk_00fc50c8 { 0x00FC50C8 }; // hospitals (medical emergencies)
     inline util::memory_reference<engine_recursive_lock> unk_00fc57e0 { 0x00FC57E0 }; // info_node registries

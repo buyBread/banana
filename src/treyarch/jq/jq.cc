@@ -11,6 +11,8 @@
 #include "game/event/event_manager.hh"
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_tentacle_engine.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/ai/cpu_combat_pie.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/render/references.hh"
@@ -71,8 +73,8 @@ void jq::jobqueue_init() {
     references::unk_00fc23e0.get().reset();
     references::unk_00fc4968.get().reset();
     references::unk_010031d8.get().reset();
-    references::unk_00fc4ff0.get().reset();
-    references::unk_00fc4b68.get().reset();
+    treyarch::references::all_tentacles_lock.get().reset();
+    treyarch::references::ai_tentacle_engine_id_lock.get().reset();
     references::unk_00fd3ef8.get().reset();
     treyarch::references::ai_core_list_lock.get().reset();
     references::unk_00fc59a8.get().reset();
