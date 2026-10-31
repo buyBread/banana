@@ -11,6 +11,7 @@
 #include "game/event/event_manager.hh"
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_core_jq.hh"
 #include "game/wds/ai/ai_tentacle_engine.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/ai/cpu_combat_pie.hh"
@@ -163,7 +164,7 @@ void jq::jobqueue_init() {
     retail::sub_4CE360(); // ai_inode_determiner_jq
     retail::sub_4CACB0(); // ai_inode_jq
     retail::sub_4CADE0(); // post_ai_inode_jq
-    retail::sub_4E0D10(); // ai_core_jq
+    ai_core_jq::init();
     retail::sub_4CD7A0(); // pre_ai_core_jq
     retail::sub_677660(); // standing_jq
     retail::sub_638C20(); // simple_rotators_jq

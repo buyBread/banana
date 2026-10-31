@@ -11,6 +11,7 @@ namespace treyarch { namespace jq {
     // T holds the queue's statics and its descriptor
     template <typename T>
     struct full_queue {
+        // sub_4E0D10
         // sub_5D41B0
         static void init() {
             i32 group = retail::sub_A144D0(); // jq_alloc_batch_group
