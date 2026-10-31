@@ -25,7 +25,7 @@ void mission_manager::set_mission_finished_screen_has_appeared(bool appeared, bo
 
 // sub_97ED90
 void mission_manager::handle_finished_dialog_selection() {
-    i32 selection = ((igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog)->method_120();
+    i32 selection = references::frontend.get().igo->pauseless_dialog->get_selected_button();
 
     if ((!success_screen_type && selection == 2) || success_screen_type == 1) {
         references::frontend.get().igo->scrapbook->activate(0);

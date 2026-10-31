@@ -1,7 +1,9 @@
+#include "retail.hh"
 #include "game/app.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
+#include "treyarch/mash/string.hh"
 
 using namespace treyarch;
 
@@ -47,6 +49,18 @@ i32 ui_frontend::update_widget_suppression_conditions() {
     return visible;
 }
 
+// sub_689500
+void ui_frontend::set_generic_meter_visible(bool visible) {
+    if (mission_specific_meter)
+        mission_specific_meter->set_shown(visible);
+}
+
+// sub_689520
+void ui_frontend::set_generic_meter_value(f32 value) {
+    if (mission_specific_meter)
+        mission_specific_meter->set_value(value);
+}
+
 // sub_698E90
 void ui_frontend::set_dialog_box(dialog_box* box, u32 unk) { // deletes the one before and shows the new one
     if (dialog)
@@ -54,4 +68,14 @@ void ui_frontend::set_dialog_box(dialog_box* box, u32 unk) { // deletes the one 
 
     dialog = box;
     box->show(unk);
+}
+
+// sub_699210
+void ui_frontend::set_generic_meter_label(mash::string* label) {
+    auto set_label = (void (__thiscall*)(igo_3d_generic_meter_widget*, mash::string, bool))retail::sub_68C960;
+
+    if (mission_specific_meter)
+        set_label(mission_specific_meter, mash::string(*label), false);
+
+    label->finalize(mash::ALLOCATED);
 }

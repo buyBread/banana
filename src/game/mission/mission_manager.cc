@@ -359,7 +359,7 @@ void mission_manager::terminate_script(bool was_completed_successfully, bool sup
             retail::sub_68D020((u8*)igo->enemy_health_manager, 0);
 
         retail::sub_6E7000((u32*)igo, 0.0f, 0.0f); // letterbox
-        retail::sub_689500((u32**)igo, 0);
+        igo->set_generic_meter_visible(false);
     }
 
     string_hash stop_voice_bus;

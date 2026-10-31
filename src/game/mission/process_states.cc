@@ -763,21 +763,21 @@ void mission_manager::process_state_start_mission_failed_dialog() {
 
     i32 hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->hit_points.val;
 
-    auto* dialog = (igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog;
+    igo_3d_pauseless_dialog_widget* dialog = references::frontend.get().igo->pauseless_dialog;
 
-    dialog->method_0e8();
+    dialog->clear();
 
     if (!hit_points) {
-        dialog->method_0d8(3234);
-        dialog->method_0e4()(dialog, mash::string(""));
+        dialog->set_title_by_id(3234);
+        dialog->set_text("");
     } else {
-        dialog->method_0d8(311);
+        dialog->set_title_by_id(311);
 
         // constructs the name into the given slot; a by-value return cast would swap the slot and this
         alignas(mash::string) u8 name[sizeof(mash::string)];
         ((mash::string* (__thiscall*)(void*, void*))retail::sub_687300)(retail::sub_7685B0(), name);
 
-        dialog->method_0e4()(dialog, *(mash::string*)name);
+        dialog->set_text(*(mash::string*)name);
 
         ((mash::string*)name)->~string();
     }
@@ -805,7 +805,7 @@ void mission_manager::process_state_running_mission_failed_dialog() {
     if (references::frontend.get().igo->pauseless_dialog->is_shown())
         return;
 
-    i32 selection = ((igo_3d_pauseless_dialog_widget*)references::frontend.get().igo->pauseless_dialog)->method_120();
+    i32 selection = references::frontend.get().igo->pauseless_dialog->get_selected_button();
 
     if (is_quitable && selection != 1)
         quit_failed_mission();

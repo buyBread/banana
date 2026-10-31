@@ -5,6 +5,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_camera_widget.hh"
 #include "game/frontend/igo/igo_3d_face_button_system.hh"
+#include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/app.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
@@ -13,10 +14,12 @@
 #include "game/input/input_mgr.hh"
 #include "game/localized_string_table.hh"
 #include "game/math/references.hh"
+#include "game/mission/mission_manager.hh"
 #include "game/script/chuck_lib_widget.hh"
 #include "game/script/chuck_lib_widget_3d.hh"
 #include "game/script/script_access.hh"
 #include "treyarch/base/tl_fixed_string.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -412,60 +415,287 @@ bool slf__set_boss_meter_health_value__num__num__t::operator()(chuck::vm::vm_sta
     return true;
 }
 
+// sub_8242B0
 bool slf__clear_mission_objectives__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8242B0)(this, stack);
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_localized_string(340);
+
+    auto* title = new (storage) mash::string(text);
+
+    references::frontend.get().igo->pauseless_dialog->clear();
+    references::frontend.get().igo->pauseless_dialog->set_title(*title);
+
+    title->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860DE0
 bool slf__add_mission_objective__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860DE0)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x04));
+
+    references::frontend.get().igo->pauseless_dialog->add_text_line(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860EF0
 bool slf__add_mission_objective__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860EF0)(this, stack);
+    stack.sp -= 0x08;
+
+    chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              &nums);
+
+    references::frontend.get().igo->pauseless_dialog->add_text_line(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860FF0
 bool slf__add_mission_objective_debug__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860FF0)(this, stack);
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    return true;
 }
 
+// sub_824360
 bool slf__clear_3d_dialog_text__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824360)(this, stack);
+    references::frontend.get().igo->pauseless_dialog->clear();
+    references::frontend.get().igo->pauseless_dialog->set_title("");
+
+    return true;
 }
 
+// sub_861030
 bool slf__add_3d_dialog_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861030)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x04));
+
+    references::frontend.get().igo->pauseless_dialog->set_text(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_861140
 bool slf__add_3d_dialog_text__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861140)(this, stack);
+    stack.sp -= 0x08;
+
+    chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              &nums);
+
+    references::frontend.get().igo->pauseless_dialog->set_text(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860FF0
 bool slf__add_3d_dialog_text_debug__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860FF0)(this, stack);
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    return true;
 }
 
+// sub_861240
 bool slf__add_3d_objective_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861240)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x04));
+
+    references::frontend.get().igo->pauseless_dialog->add_text_line(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_861350
 bool slf__add_3d_objective_text__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861350)(this, stack);
+    stack.sp -= 0x08;
+
+    chuck::vm::script_dynamic_array<f32> nums((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x04));
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              &nums);
+
+    references::frontend.get().igo->pauseless_dialog->add_text_line(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860FF0
 bool slf__add_3d_objective_text_debug__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860FF0)(this, stack);
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    return true;
 }
 
+// sub_861450
 bool slf__bring_up_3d_dialog__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861450)(this, stack);
+    stack.sp -= 0x0C;
+
+    // the third argument is never read
+    auto show_button_2 = stack.local_num(0x00);
+    auto show_button_1 = stack.local_num(0x04);
+
+    if (!stack.thread->entry) {
+        retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0);
+
+        igo_3d_pauseless_dialog_widget* dialog = references::frontend.get().igo->pauseless_dialog;
+
+        retail::sub_6A2280((u32*)dialog, 410); // button 2 text
+        retail::sub_6A2260((u32*)dialog, 344); // button 1 text
+        retail::sub_68E950((i32)dialog, show_button_2 != 0.0f);
+        retail::sub_68E920((i32)dialog, show_button_1 != 0.0f);
+        retail::sub_6DE490((u8*)dialog, 2); // bring_up
+
+        return false;
+    }
+
+    if (references::frontend.get().igo->pauseless_dialog->is_dialog_shown())
+        return false;
+
+    auto result = (f32)references::frontend.get().igo->pauseless_dialog->get_selected_button();
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861570
 bool slf__set_3d_dialog_title__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861570)(this, stack);
+    stack.sp -= 0x04;
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* title = new (storage) mash::string(text);
+
+    references::frontend.get().igo->pauseless_dialog->set_title(title->c_str());
+
+    title->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_869EB0
 bool slf__set_3d_dialog_title_debug__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_869EB0)(this, stack);
+    stack.sp -= 0x04;
+
+    return true;
 }
 
 bool slf__show_game_button__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1012,44 +1242,152 @@ bool slf__display_ped_warning_with_duration__num__t::operator()(chuck::vm::vm_st
     return true;
 }
 
+// sub_862110
 bool slf__create_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862110)(this, stack);
+    stack.sp -= 0x04;
+
+    auto text_id = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (!igo->mission_specific_meter || !igo->mission_specific_meter->is_shown()) {
+        igo->set_generic_meter_visible(true);
+
+        alignas(mash::string) u8 label_storage[sizeof(mash::string)];
+        alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+        const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+        auto* label = new (label_storage) mash::string(text);
+
+        references::frontend.get().igo->set_generic_meter_label(new (storage) mash::string(label->c_str()));
+
+        label->finalize(mash::ALLOCATED);
+    }
+
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8621F0
 bool slf__create_meter__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8621F0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto label = (const char*)stack.local_uint(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (!igo->mission_specific_meter || !igo->mission_specific_meter->is_shown()) {
+        igo->set_generic_meter_visible(true);
+
+        alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+        references::frontend.get().igo->set_generic_meter_label(new (storage) mash::string(label));
+    }
+
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_862270
 bool slf__create_meter_with_label_placement__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862270)(this, stack);
+    stack.sp -= 0x08;
+
+    // the placement is never read
+    auto label = (const char*)stack.local_uint(0x00);
+
+    references::frontend.get().igo->set_generic_meter_visible(true);
+
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    references::frontend.get().igo->set_generic_meter_label(new (storage) mash::string(label));
+
+    f32 result = 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8622D0
 bool slf__set_meter_value__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto value = stack.local_num(0x04);
+
+    references::frontend.get().igo->set_generic_meter_value(value);
+
+    return true;
 }
 
+// sub_8622F0
 bool slf__set_meter_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_8622F0
 bool slf__set_meter_color__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8622F0)(this, stack);
+    stack.sp -= 0x08;
+
+    return true;
 }
 
+// sub_860000
 bool slf__set_meter_pos__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860000)(this, stack);
+    stack.sp -= 0x0C;
+
+    return true;
 }
 
+// sub_862300
 bool slf__delete_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862300)(this, stack);
+    stack.sp -= 0x04;
+
+    references::frontend.get().igo->set_generic_meter_visible(false);
+
+    return true;
 }
 
+// sub_862320
 bool slf__set_meter_visibility__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862320)(this, stack);
+    stack.sp -= 0x04;
+
+    auto visible = stack.local_num(0x00);
+
+    references::frontend.get().igo->set_generic_meter_visible(visible != 0.0f);
+
+    return true;
 }
 
+// sub_862360
 bool slf__set_meter_label__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862360)(this, stack);
+    stack.sp -= 0x08;
+
+    auto text_id = stack.local_num(0x04);
+
+    if (!references::frontend.get().igo)
+        return true;
+
+    alignas(mash::string) u8 label_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* label = new (label_storage) mash::string(text);
+
+    references::frontend.get().igo->set_generic_meter_label(new (storage) mash::string(label->c_str()));
+
+    label->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
 bool slf__create_fog__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1076,12 +1414,56 @@ bool slf__format_string__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_8629E0)(this, stack);
 }
 
+// sub_862AE0
 bool slf__show_mission_success_screen__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862AE0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto type      = stack.local_num(0x00);
+    auto parameter = stack.local_num(0x04);
+
+    igo_3d_pauseless_dialog_widget* dialog = references::frontend.get().igo->pauseless_dialog;
+
+    dialog->clear();
+    dialog->set_title_by_id(3436);
+    dialog->set_text("");
+
+    retail::sub_6ECF90((u32*)dialog); // fills in the results
+
+    dialog->unk_22c = 0;
+
+    if (type == 0.0f) {
+        retail::sub_6A2260((u32*)dialog, 410); // button 1 text
+        retail::sub_68E920((i32)dialog, 1);
+        retail::sub_6A2280((u32*)dialog, 689); // button 2 text
+        retail::sub_68E950((i32)dialog, 1);
+    } else {
+        retail::sub_68E920((i32)dialog, 0);
+
+        if (type == 1.0f) {
+            retail::sub_6A2280((u32*)dialog, 689);
+            retail::sub_68E950((i32)dialog, 1);
+        } else if (type == 2.0f) {
+            retail::sub_6A2280((u32*)dialog, 3043);
+            retail::sub_68E950((i32)dialog, 1);
+        } else if (type == 3.0f) {
+            retail::sub_6A2280((u32*)dialog, 410);
+            retail::sub_68E950((i32)dialog, 1);
+        }
+    }
+
+    mission_manager::inst()->success_screen_type      = (i32)type;
+    mission_manager::inst()->success_screen_parameter = (i32)parameter;
+
+    retail::sub_6DE490((u8*)dialog, 1); // bring_up
+
+    return true;
 }
 
+// sub_8245E0
 bool slf__close_3d_mission_info_screen__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8245E0)(this, stack);
+    references::frontend.get().igo->pauseless_dialog->close();
+
+    return true;
 }
 
 bool slf__lock_minimap__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {

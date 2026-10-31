@@ -7,7 +7,9 @@
 #include "game/frontend/igo/igo_3d_agility_test.hh"
 #include "game/frontend/igo/igo_3d_boss_meter_system.hh"
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
+#include "game/frontend/igo/igo_3d_generic_meter_widget.hh"
 #include "game/frontend/igo/igo_3d_message_box_widget.hh"
+#include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/frontend/igo/igo_3d_ped_warning_widget.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
@@ -92,7 +94,7 @@ namespace treyarch {
         igo_3d_widget*                      hero_portrait;
         igo_3d_widget*                      spidey_distance;
         igo_3d_boss_meter_system*           boss_meter_system;
-        igo_3d_widget*                      pauseless_dialog;
+        igo_3d_pauseless_dialog_widget*     pauseless_dialog;
         igo_3d_widget*                      district_marker;
         igo_3d_widget*                      unlock_message;
         igo_3d_widget*                      combo_move_tracker;
@@ -144,7 +146,7 @@ namespace treyarch {
         igo_3d_drawable*                    unknown_widget_1a8;
         igo_3d_drawable*                    unknown_widget_1ac;
         igo_3d_enemy_health_manager*        enemy_health_manager;
-        igo_3d_widget*                      mission_specific_meter;
+        igo_3d_generic_meter_widget*        mission_specific_meter;
         void*                               ui_lights[4][3];
         void*                               ui_environments[4];
         void*                               current_ui_environment;
@@ -181,6 +183,10 @@ namespace treyarch {
         void draw_interface_disabled_script_widgets(bool interface_disabled);
 
         void set_dialog_box(dialog_box* box, u32 unk);
+
+        void set_generic_meter_visible(bool visible);
+        void set_generic_meter_value  (f32 value);
+        void set_generic_meter_label  (mash::string* label); // finalizes the label
 
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);
