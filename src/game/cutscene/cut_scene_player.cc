@@ -24,6 +24,7 @@
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/morph_interface.hh"
+#include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
@@ -176,12 +177,12 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
     update_focus();
 
     if (state_flags & playing) {
-        player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
+        auto player = (spiderman_rvb_player_interface*)references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
 
         last_time = time;
         time      = get_time();
 
-        ((void (__thiscall*)(player_interface*, f32))((void**)player->vtable)[540])(player, time - last_time); // slot 540
+        player->unk_540(time - last_time);
     }
 
     if (!advance_fade(time_inc)) {
@@ -220,9 +221,6 @@ bool cut_scene_player::frame_advance_lite(f32 time_inc) {
 
 // sub_809850
 bool cut_scene_player::play(cut_scene* to_play) {
-    using change_suit_method   = void (__thiscall*)(player_interface* self, f32 unk, bool black);
-    using is_black_suit_method = bool (__thiscall*)(player_interface* self);
-
     if (!to_play || !to_play->play_count || !to_play->segments.size)
         return false;
 
@@ -241,16 +239,14 @@ bool cut_scene_player::play(cut_scene* to_play) {
     else
         state_flags &= ~hero_collisions_active;
 
-    player_interface* player = hero->player_ifc();
-
-    auto change_suit = (change_suit_method)((void**)player->vtable)[572];
+    auto player = (spiderman_rvb_player_interface*)hero->player_ifc();
 
     if (to_play->red_suit)
-        change_suit(player, 0.0f, false);
+        player->unk_572(0.0f, false);
     else if (to_play->black_suit)
-        change_suit(player, 0.0f, true);
+        player->unk_572(0.0f, true);
     else
-        change_suit(player, 0.0f, ((is_black_suit_method)((void**)player->vtable)[305])(player));
+        player->unk_572(0.0f, player->unk_305());
 
     state_flags &= ~skipping;
 
@@ -278,9 +274,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
     clamp_settings();
 
     if (!(current_cut_scene->flags & cut_scene::hero_unaffected)) {
-        player_interface* hero_player = hero->player_ifc();
-
-        ((void (__thiscall*)(player_interface*, i32, i32))((void**)hero_player->vtable)[369])(hero_player, 0, 1); // slot 369
+        hero->player_ifc()->unk_369(0, 1);
 
         if (hero->player_ifc()->get_reflexes())
             hero->player_ifc()->get_reflexes()->disable(false);
@@ -303,11 +297,8 @@ bool cut_scene_player::play(cut_scene* to_play) {
                 retail::sub_5BBBF0((u32*)unk_result, unk_object, true);
         }
 
-        if (hero->has_ifc(entity_ifc_ise)) {
-            generic_interface* ise = hero->my_ifc_storage->get_ifc(entity_ifc_ise);
-
-            ((void (__thiscall*)(generic_interface*))((void**)ise->vtable)[21])(ise); // slot 21
-        }
+        if (hero->has_ifc(entity_ifc_ise))
+            hero->ise_ifc()->stop_all_effects();
 
         ((actor*)hero)->get_ai_core()->idle_type = 1;
     }
@@ -470,11 +461,8 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
         }
 
         if (entry->unk_78) {
-            if (found->has_ifc(entity_ifc_ise)) {
-                generic_interface* ise = found->my_ifc_storage->get_ifc(entity_ifc_ise);
-
-                ((void (__thiscall*)(generic_interface*))((void**)ise->vtable)[20])(ise); // slot 20
-            }
+            if (found->has_ifc(entity_ifc_ise))
+                found->ise_ifc()->unk_020();
 
             if (found->has_ifc(entity_ifc_tentacle))
                 retail::sub_61FC80((u32*)found->my_ifc_storage->get_ifc(entity_ifc_tentacle));
@@ -629,9 +617,7 @@ void cut_scene_player::stop(cut_scene* only) {
 
             ((actor*)references::g_world_ptr.read()->get_hero_ptr())->get_ai_core()->idle_type = 0;
 
-            player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
-
-            ((void (__thiscall*)(player_interface*, i32))((void**)player->vtable)[187])(player, 0); // slot 187
+            references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_187(0);
         }
 
         start_end_fade();
@@ -827,9 +813,7 @@ void cut_scene_player::take_igo(bool give_back) {
 
     references::game.read()->disable_interface = true;
 
-    player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
-
-    ((void (__thiscall*)(player_interface*, u32))((void**)player->vtable)[47])(player, 0); // slot 47
+    references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_047(0);
 }
 
 // sub_8068A0
@@ -1159,16 +1143,10 @@ void cut_scene_player::raise_animation_events(mash::avl_tree<entity_class_entry>
 
 // sub_805FB0
 void cut_scene_player::raise_animation_events(entity_class_entry* entry, f32 t, f32 last_t, bool skipping) {
-    using is_black_suit_method = bool (__thiscall*)(player_interface* self);
-    using change_suit_method   = void (__thiscall*)(player_interface* self, f32 unk, bool black);
-
     if (!entry->events.size)
         return;
 
-    player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
-
-    auto is_black_suit = (is_black_suit_method)((void**)player->vtable)[305];
-    auto change_suit   = (change_suit_method)  ((void**)player->vtable)[572];
+    auto player = (spiderman_rvb_player_interface*)references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
 
     for (entity_class_entry::cutscene_animation_event** it = entry->events.begin(); it != entry->events.end(); it++) {
         entity_class_entry::cutscene_animation_event* animation_event = *it;
@@ -1207,23 +1185,23 @@ void cut_scene_player::raise_animation_events(entity_class_entry* entry, f32 t, 
         static const string_hash suit_change_black = string_hash(hash::djb2("suit_change_black"));
 
         if (id == suit_change_red) {
-            if (is_black_suit(player))
-                change_suit(player, std::bit_cast<f32>(param), false);
+            if (player->unk_305())
+                player->unk_572(std::bit_cast<f32>(param), false);
         } else if (id == suit_change_black) {
-            if (!is_black_suit(player))
-                change_suit(player, std::bit_cast<f32>(param), true);
+            if (!player->unk_305())
+                player->unk_572(std::bit_cast<f32>(param), true);
         } else {
             static const string_hash play_effect_blacksuit_only = string_hash(hash::djb2("event_play_effect_blacksuit_only"));
             static const string_hash play_effect_redsuit_only   = string_hash(hash::djb2("event_play_effect_redsuit_only"));
             static const string_hash play_effect                = string_hash(hash::djb2("PLAY_EFFECT"));
 
             if (id == play_effect_blacksuit_only) {
-                if (!is_black_suit(player))
+                if (!player->unk_305())
                     continue;
 
                 id = play_effect;
             } else if (id == play_effect_redsuit_only) {
-                if (is_black_suit(player))
+                if (player->unk_305())
                     continue;
 
                 id = play_effect;

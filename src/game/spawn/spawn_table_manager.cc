@@ -275,7 +275,7 @@ void spawn_table_manager::end_stars_mode() {
     player_interface* player = references::g_world_ptr.read()->hero_ptr->player_ifc();
 
     if (player)
-        ((void (__thiscall*)(player_interface*, bool, bool))((void**)player->vtable)[523])(player, false, unk_050); // slot 523, lock_suit
+        player->unk_523(false, unk_050);
 
     region_pack_manager::inst()->despawn_and_lock_quest_giver_in_mission(false);
 

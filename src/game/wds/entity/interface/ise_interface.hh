@@ -11,10 +11,11 @@ namespace treyarch {
     public:
         u8 reserved_00c[0x3C];
 
-        // slot 21
-        void stop_all_effects() {
-            ((void (__thiscall*)(ise_interface*))((void**)vtable)[21])(this);
-        }
+        virtual void* unk_019(void* unk, i32 unk_2);
+        virtual i32   unk_020();
+        virtual void  stop_all_effects();
+        virtual void* unk_022(void* unk);
+        virtual i32   unk_023();
     };
 
     ASSERT_SIZEOF(ise_interface, 0x48);

@@ -7,8 +7,6 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class time_interface;
-
     // SM3 eTimeMode
     enum e_time_mode : i32 {
         time_mode_world,
@@ -25,10 +23,6 @@ namespace treyarch {
         combat_dilate_mode_smooth_out
     };
 
-    struct time_interface_vtable : generic_interface_vtable {
-        void (__thiscall* frame_advance)(time_interface* self, f32 t); // sub_5FD3E0
-    };
-
     class time_interface : public entity_interface {
 
     public:
@@ -39,10 +33,6 @@ namespace treyarch {
         e_time_mode          time_mode;
         e_combat_dilate_mode combat_dilate_mode;
         boolx                ignore_reflex_dilation;
-
-        time_interface_vtable* get_vtable() const {
-            return (time_interface_vtable*)vtable;
-        }
 
         bool is_combat_dilated() const {
             return combat_dilate_mode != combat_dilate_mode_disabled && combat_dilate_mode != combat_dilate_mode_delay;
@@ -68,9 +58,7 @@ namespace treyarch {
             return time_dilation;
         }
 
-        void frame_advance(f32 t) {
-            get_vtable()->frame_advance(this, t);
-        }
+        virtual void frame_advance(f32 t);
 
         static void frame_advance_all_time_interfaces(f32 t);
     };

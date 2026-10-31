@@ -9,15 +9,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class script_data_interface;
-
-    struct script_data_interface_vtable : generic_interface_vtable {
-        bool (__thiscall* get_custom_ent)(script_data_interface* self, const string_hash &name, arch_base_vhandle* value, bool unk); // sub_610150
-        bool (__thiscall* set_custom_ent)(script_data_interface* self, const string_hash &name, arch_base_vhandle value, bool unk);  // sub_600EC0
-    };
-
     // the get/set_ifc_* slots read and write data
-    class script_data_interface : public entity_interface {
+    class script_data_interface : public actor_interface {
 
     public:
         u8                            pad_00c[0x04];
@@ -25,18 +18,9 @@ namespace treyarch {
         vc8::list<arch_base_vhandle>* custom_entity_list; // made by the first add
         u8                            pad_034[0x04];
 
-        script_data_interface_vtable* get_vtable() const {
-            return (script_data_interface_vtable*)vtable;
-        }
-
         // false when there's no such entity parameter
-        bool get_custom_ent(const string_hash &name, arch_base_vhandle* value, bool unk) {
-            return get_vtable()->get_custom_ent(this, name, value, unk);
-        }
-
-        bool set_custom_ent(const string_hash &name, arch_base_vhandle value, bool unk) {
-            return get_vtable()->set_custom_ent(this, name, value, unk);
-        }
+        virtual bool get_custom_ent(const string_hash &name, arch_base_vhandle* value, bool unk);
+        virtual bool set_custom_ent(const string_hash &name, arch_base_vhandle value, bool unk);
 
         bool has_entity_in_custom_list(); // the list isn't empty
 
@@ -49,8 +33,6 @@ namespace treyarch {
 
         void set_als_anim_filename_use_prefix(bool use_prefix);
     };
-
-    ASSERT_SIZEOF  (script_data_interface_vtable, 21 * 4);
 
     ASSERT_SIZEOF  (script_data_interface,                     0x38);
     ASSERT_OFFSETOF(script_data_interface, data,               0x10);

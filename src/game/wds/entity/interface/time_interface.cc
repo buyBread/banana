@@ -1,3 +1,4 @@
+#include "retail.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/references.hh"
 
@@ -26,6 +27,11 @@ f32 time_interface::calc_time_dilation() {
         default:
             return (f32)dilation;
     }
+}
+
+// slot 19
+void time_interface::frame_advance(f32 t) {
+    ((void (__thiscall*)(time_interface*, f32))retail::sub_5FD3E0)(this, t);
 }
 
 // sub_636A80

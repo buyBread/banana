@@ -929,11 +929,8 @@ bool slf__polytube__tentacle_web_set_up__entity__uint__num__t::operator()(chuck:
     if (owner->has_ifc(entity_ifc_tentacle)) {
         bool own_tentacles = !retail::sub_601C50((u32*)owner); // entity_base::is_hero
 
-        if (!own_tentacles) {
-            player_interface* player = owner->player_ifc();
-
-            own_tentacles = ((bool (__thiscall*)(player_interface*))(*(void***)player)[305])(player) && !use_hero_web; // slot 305, black mode
-        }
+        if (!own_tentacles)
+            own_tentacles = owner->player_ifc()->unk_305() && !use_hero_web;
 
         if (own_tentacles) {
             auto tentacle = (u32*)owner->my_ifc_storage->get_ifc(entity_ifc_tentacle);
@@ -944,11 +941,8 @@ bool slf__polytube__tentacle_web_set_up__entity__uint__num__t::operator()(chuck:
         }
     }
 
-    if (retail::sub_601C50((u32*)owner)) {
-        player_interface* player = owner->player_ifc();
-
-        ((void (__thiscall*)(player_interface*, polytube*, f32))(*(void***)player)[400])(player, self, radius); // slot 400, dress_polytube_as_web
-    }
+    if (retail::sub_601C50((u32*)owner))
+        owner->player_ifc()->unk_400(self, radius);
 
     return true;
 }

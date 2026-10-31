@@ -851,17 +851,10 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
         bool own_up = false;
 
         if (the_actor->has_ifc(entity_ifc_player)) {
-            player_interface* player = the_actor->player_ifc();
+            own_up = the_actor->player_ifc()->unk_485();
 
-            // slot 485
-            own_up = ((bool (__thiscall*)(player_interface*))((void**)player->vtable)[485])(player);
-
-            if (!own_up) {
-                player = the_actor->player_ifc();
-
-                // slot 487
-                own_up = ((bool (__thiscall*)(player_interface*))((void**)player->vtable)[487])(player);
-            }
+            if (!own_up)
+                own_up = the_actor->player_ifc()->unk_487();
         }
 
         *desired_up = own_up ? abs_po->get_y_facing() : treyarch::references::unk_00e6808c.get();

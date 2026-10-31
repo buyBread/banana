@@ -3,6 +3,16 @@
 
 using namespace treyarch;
 
+// slot 19
+bool script_data_interface::get_custom_ent(const string_hash &name, arch_base_vhandle* value, bool unk) {
+    return ((bool (__thiscall*)(script_data_interface*, const string_hash&, arch_base_vhandle*, bool))retail::sub_610150)(this, name, value, unk);
+}
+
+// slot 20
+bool script_data_interface::set_custom_ent(const string_hash &name, arch_base_vhandle value, bool unk) {
+    return ((bool (__thiscall*)(script_data_interface*, const string_hash&, arch_base_vhandle, bool))retail::sub_600EC0)(this, name, value, unk);
+}
+
 bool script_data_interface::has_entity_in_custom_list() {
     return retail::sub_610120((u32*)this);
 }

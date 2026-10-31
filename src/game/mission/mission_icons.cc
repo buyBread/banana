@@ -20,11 +20,8 @@ void mission_manager::update_eligible_missions() {
 
     i32 unk_value = -1;
 
-    if (entity* hero = references::g_world_ptr.read()->hero_ptr) {
-        player_interface* player = hero->player_ifc();
-
-        unk_value = ((i32 (__thiscall*)(player_interface*))((void**)player->vtable)[0x130 / 4])(player); // slot 76
-    }
+    if (entity* hero = references::g_world_ptr.read()->hero_ptr)
+        unk_value = hero->player_ifc()->unk_076();
 
     eligible_mission_instances->clear();
 
