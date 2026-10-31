@@ -16,7 +16,7 @@ i32 ui_frontend::select_ui_environment_index() {
     if (pauseless_dialog->is_shown())
         return 3;
 
-    return references::frontend.get().igo->zoom_map->blocks_world_rendering() ? 2 : 0;
+    return references::frontend.get().igo->zoom_map->is_open_or_zooming() ? 2 : 0;
 }
 
 // sub_689400
@@ -33,7 +33,7 @@ i32 ui_frontend::update_widget_suppression_conditions() {
 
     ui_frontend* current_igo = references::frontend.get().igo;
 
-    if (current_igo->zoom_map->blocks_world_rendering())
+    if (current_igo->zoom_map->is_open_or_zooming())
         widget_suppression_conditions |= suppress_when_zoom_map_open;
 
     if (current_igo->loading_screen && current_igo->loading_screen->is_shown())

@@ -41,7 +41,7 @@ void stealth_widget_t::draw() {
     if (!activated)
         return;
 
-    if (references::frontend.get().igo->zoom_map->blocks_world_rendering())
+    if (references::frontend.get().igo->zoom_map->is_open_or_zooming())
         return;
 
     if (meter)

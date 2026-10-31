@@ -69,7 +69,7 @@ void wds_render_manager::render() {
 
     igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
 
-    if (!zoom_map || !zoom_map->blocks_world_rendering())
+    if (!zoom_map || !zoom_map->is_open_or_zooming())
         submit_world(world);
     else
         submit_blocked_world(world);
@@ -81,7 +81,7 @@ void wds_render_manager::render() {
 void wds_render_manager::render_speedtrees() {
     igo_3d_zoom_map* zoom_map = treyarch::references::frontend.get().igo->zoom_map;
 
-    if ((!zoom_map || !zoom_map->blocks_world_rendering()) && treyarch::references::speed_trees_enabled.read()) {
+    if ((!zoom_map || !zoom_map->is_open_or_zooming()) && treyarch::references::speed_trees_enabled.read()) {
         speed_tree_manager &manager = treyarch::references::speed_tree_manager.get();
 
         manager.update();

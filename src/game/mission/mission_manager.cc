@@ -405,8 +405,8 @@ void mission_manager::terminate_script(bool was_completed_successfully, bool sup
 
                         mission_icon_info* icon = find_mission_icon(current_mission.mission_header_instance);
 
-                        if (zoom_map && icon && icon->poi_index != -1 && retail::sub_690AB0((u32*)zoom_map, icon->poi_index)) {
-                            retail::sub_6DFAC0((u32*)zoom_map, icon->poi_index);
+                        if (zoom_map && icon && icon->poi_index != -1 && zoom_map->is_poi_in_use((u32)icon->poi_index)) {
+                            zoom_map->remove_poi((u32)icon->poi_index);
 
                             icon->poi_index = -1;
                         }

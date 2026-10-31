@@ -3,7 +3,9 @@
 #include "retail.hh"
 #include "game/app.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_radar_widget.hh"
 #include "game/frontend/igo/igo_3d_timer_widget.hh"
+#include "game/frontend/igo/igo_3d_zoom_map.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
 #include "game/localized_string_table.hh"
@@ -253,76 +255,239 @@ bool slf__set_mission_text_debug__str__t::operator()(chuck::vm::vm_stack &stack)
     return ((invoke_t)retail::sub_869EB0)(this, stack);
 }
 
+// sub_85E910
 bool slf__remove_map_poi__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E910)(this, stack);
+    stack.sp -= 0x04;
+
+    auto index = stack.local_num(0x00);
+
+    if (index >= 0.0f)
+        references::frontend.get().igo->zoom_map->remove_poi((i32)index);
+
+    return true;
 }
 
+// sub_85E950
 bool slf__add_zoom_map_poi__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E950)(this, stack);
+    stack.sp -= 0x10;
+
+    auto position = *(const vector3d*)&stack.local_uint(0x00);
+    auto kind     = stack.local_num(0x0C);
+
+    auto result = (f32)references::frontend.get().igo->zoom_map->add_poi(position, (i32)kind, 0);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85E9B0
 bool slf__set_zoom_map_poi_shown__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E9B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto index = stack.local_num(0x00);
+    auto shown = stack.local_num(0x04);
+
+    references::frontend.get().igo->zoom_map->set_poi_shown((i32)index, shown != 0.0f);
+
+    return true;
 }
 
+// sub_85E9F0
 bool slf__add_zoom_map_safe_zone_marker__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E9F0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto position = *(const vector3d*)&stack.local_uint(0x00);
+
+    auto result = (f32)references::frontend.get().igo->zoom_map->add_safe_zone_marker(position);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85EA40
 bool slf__add_zoom_map_safe_zone_marker__entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EA40)(this, stack);
+    stack.sp -= 0x04;
+
+    arch_base_vhandle tracked(stack.local_uint(0x00));
+
+    auto result = (f32)references::frontend.get().igo->zoom_map->add_safe_zone_marker(tracked);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85E910
 bool slf__remove_zoom_map_safe_zone_marker__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E910)(this, stack);
+    stack.sp -= 0x04;
+
+    auto index = stack.local_num(0x00);
+
+    if (index >= 0.0f)
+        references::frontend.get().igo->zoom_map->remove_poi((i32)index);
+
+    return true;
 }
 
+// sub_85E9B0
 bool slf__set_zoom_map_safe_zone_marker_shown__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E9B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto index = stack.local_num(0x00);
+    auto shown = stack.local_num(0x04);
+
+    references::frontend.get().igo->zoom_map->set_poi_shown((i32)index, shown != 0.0f);
+
+    return true;
 }
 
+// sub_85EA80
 bool slf__set_zoom_map_safe_zone_marker_state__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EA80)(this, stack);
+    stack.sp -= 0x08;
+
+    auto index = stack.local_num(0x00);
+    auto state = stack.local_num(0x04);
+
+    references::frontend.get().igo->zoom_map->set_marker_state((i32)index, (i32)state);
+
+    return true;
 }
 
+// sub_85EAB0
 bool slf__enable_mini_map__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EAB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto enabled = stack.local_num(0x00);
+
+    references::frontend.get().igo->radar_widget->set_shown(enabled != 0.0f);
+
+    return true;
 }
 
+// sub_85EAF0
 bool slf__disable_zoom_map__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EAF0)(this, stack);
+    stack.sp -= 0x04;
+
+    bool disable = stack.local_num(0x00) != 0.0f;
+
+    igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
+
+    zoom_map->disabled          = disable;
+    zoom_map->movement_disabled = disable;
+
+    return true;
 }
 
+// sub_85EB40
 bool slf__bring_up_zoom_map__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EB40)(this, stack);
+    stack.sp -= 0x04;
+
+    bool through_script = (f64)stack.local_num(0x00) > 0.0001;
+
+    igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
+
+    if (!zoom_map->is_open)
+        ((void (__thiscall*)(igo_3d_zoom_map*))retail::sub_5B4A70)(zoom_map); // igo_3d_zoom_map select toggle, empty
+
+    zoom_map->brought_up_through_script = through_script;
+
+    return true;
 }
 
+// sub_823D20
 bool slf__kill_zoom_map__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823D20)(this, stack);
+    igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
+
+    if (zoom_map->is_open)
+        ((void (__thiscall*)(igo_3d_zoom_map*))retail::sub_5B4A70)(zoom_map); // igo_3d_zoom_map select toggle, empty
+
+    zoom_map->brought_up_through_script = false;
+
+    return true;
 }
 
+// sub_83EC80
 bool slf__is_zoom_map_up__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EC80)(this, stack);
+    f32 result = references::frontend.get().igo->zoom_map->is_open_or_zooming() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85EB90
 bool slf__snap_to_zoom_map_point__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EB90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto x = stack.local_num(0x00);
+    auto z = stack.local_num(0x04);
+
+    references::frontend.get().igo->zoom_map->snap_to_point(x, z);
+
+    return true;
 }
 
+// sub_85EBC0
 bool slf__set_zoom_map_help_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EBC0)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x04));
+
+    references::frontend.get().igo->zoom_map->set_help_text(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_85ECC0
 bool slf__feature_current_zoom_poi__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85ECC0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto feature = stack.local_num(0x00);
+
+    references::frontend.get().igo->zoom_map->feature_current_poi(feature != 0.0f);
+
+    return true;
 }
 
+// sub_83ECD0
 bool slf__is_a_zoom_poi_featured__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83ECD0)(this, stack);
+    f32 result = references::frontend.get().igo->zoom_map->get_selected_poi() != -1 ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85ED00
 bool slf__disable_zoom_map_movement__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85ED00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto disable = stack.local_num(0x00);
+
+    references::frontend.get().igo->zoom_map->movement_disabled = disable != 0.0f;
+
+    return true;
 }
 
 bool slf__bring_up_dialog_box_debug__str__num__num__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -337,12 +502,57 @@ bool slf__offscreen_indicator_add__entity__num__vector3d__num__t::operator()(chu
     return ((invoke_t)retail::sub_85EE40)(this, stack);
 }
 
+// sub_85EE60
 bool slf__set_zoom_map_poi_meta_title__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EE60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto index   = stack.local_num(0x00);
+    auto text_id = stack.local_num(0x04);
+
+    alignas(mash::string) u8 title_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* title = new (title_storage) mash::string(text);
+
+    references::frontend.get().igo->zoom_map->set_poi_meta_title((i32)index, new (storage) mash::string(*title));
+
+    title->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_85EF00
 bool slf__set_zoom_map_poi_meta_text__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85EF00)(this, stack);
+    // the count word covers the index, the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto index   = stack.local_num(0x00);
+    auto text_id = stack.local_num(0x04);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+    alignas(mash::string) u8 text_storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x08));
+
+    references::frontend.get().igo->zoom_map->set_poi_meta_text((i32)index, new (text_storage) mash::string(*result));
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
 bool slf__slide_in_ally_health_widget__t::operator()(chuck::vm::vm_stack &stack) {

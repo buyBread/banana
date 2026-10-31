@@ -53,8 +53,8 @@ void finger_of_god::set_poi_active(bool shown) {
 
     igo_3d_zoom_map* zoom_map = references::frontend.get().igo->zoom_map;
 
-    if (zoom_map && (u32)poi_index <= 0x1C1)
-        zoom_map->pois[poi_index].active = shown;
+    if (zoom_map)
+        zoom_map->set_poi_shown((u32)poi_index, shown);
 
     poi_active = shown;
 }

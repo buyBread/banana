@@ -220,10 +220,6 @@ namespace treyarch {
         void draw_background_texture(f32 strength);
 
         static void draw_background_overlay(f32 strength, u32 unused);
-
-        bool blocks_world_rendering() const {
-            return zoom_map->blocks_world_rendering();
-        }
     };
 
     ASSERT_SIZEOF  (ui_frontend_vtable,                   0x48);

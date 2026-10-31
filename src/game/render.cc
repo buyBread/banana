@@ -80,7 +80,7 @@ void game::render() {
     ngl::set_clear_flags(0);
     ngl::set_animation_time(0.0f);
 
-    if (!references::frontend.get().igo->blocks_world_rendering() && shadow::references::active.read()) {
+    if (!references::frontend.get().igo->zoom_map->is_open_or_zooming() && shadow::references::active.read()) {
         retail::sub_970CB0();
         the_world->render_mgr.render_depth_shadows();
     }
@@ -124,7 +124,7 @@ void game::render() {
 
     the_world->render_mgr.render();
 
-    if (!references::frontend.get().igo->blocks_world_rendering()) {
+    if (!references::frontend.get().igo->zoom_map->is_open_or_zooming()) {
         vector3d camera_position = this->get_current_view_camera()->get_abs_position();
 
         // IDA typed it as a no-argument void method, but it has to take a vector3d

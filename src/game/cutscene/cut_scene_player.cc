@@ -806,8 +806,8 @@ void cut_scene_player::take_igo(bool give_back) {
     if (give_back) {
         igo->radar_widget->set_shown((state_flags & radar_was_visible) != 0);
 
-        igo->zoom_map->unk_8f95 = false;
-        igo->zoom_map->unk_8f96 = false;
+        igo->zoom_map->disabled          = false;
+        igo->zoom_map->movement_disabled = false;
 
         references::game.read()->disable_interface = false;
 
@@ -822,8 +822,8 @@ void cut_scene_player::take_igo(bool give_back) {
     if (state_flags & radar_was_visible)
         igo->radar_widget->set_shown(false);
 
-    igo->zoom_map->unk_8f95 = true;
-    igo->zoom_map->unk_8f96 = true;
+    igo->zoom_map->disabled          = true;
+    igo->zoom_map->movement_disabled = true;
 
     references::game.read()->disable_interface = true;
 

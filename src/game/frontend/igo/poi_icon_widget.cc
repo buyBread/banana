@@ -28,7 +28,7 @@ void poi_icon_widget::draw() {
     if (igo->letterbox && igo->letterbox->is_shown())
         return;
 
-    if (igo->zoom_map->blocks_world_rendering())
+    if (igo->zoom_map->is_open_or_zooming())
         return;
 
     if (state - 1 <= 1 && unk_24)

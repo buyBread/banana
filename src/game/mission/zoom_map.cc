@@ -39,7 +39,7 @@ void mission_manager::clear_selected_poi(bool clear_zoom_map) {
     ui_frontend* igo = references::frontend.get().igo;
 
     if (clear_zoom_map && igo && igo->zoom_map)
-        retail::sub_690A10((u32*)igo->zoom_map);
+        igo->zoom_map->unselect_poi();
 
     flags &= ~mission_manager_flag_unk_04000000;
 }
@@ -54,7 +54,7 @@ void mission_manager::on_zoom_map_poi_selected(event*            raised_event,
     if (!igo)
         return;
 
-    i32 poi_index = retail::sub_690A50((u32*)igo->zoom_map);
+    i32 poi_index = igo->zoom_map->get_selected_poi();
 
     if (poi_index < 0)
         return;

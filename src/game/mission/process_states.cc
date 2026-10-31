@@ -14,6 +14,7 @@
 #include "game/frontend/igo/igo_3d_face_button_system.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
+#include "game/frontend/igo/igo_3d_zoom_map.hh"
 #include "game/game.hh"
 #include "game/glass_house_manager.hh"
 #include "game/mission/mission_manager.hh"
@@ -37,8 +38,6 @@
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace references {
-    util::memory_reference<string_hash> zoom_map_poi_selected                   { 0x0102C3E4 };
-    util::memory_reference<string_hash> zoom_map_poi_unselected                 { 0x0102CC60 };
     util::memory_reference<string_hash> last_mission_long_time_ago              { 0x0102C368 };
     util::memory_reference<string_hash> last_successful_mission_long_time_ago   { 0x0102C5E8 };
     util::memory_reference<string_hash> last_selected_zoom_map_destination_long { 0x0102CC10 };
