@@ -541,8 +541,7 @@ bool slf__city_life_failed_message__num__t::operator()(chuck::vm::vm_stack &stac
 
     igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
 
-    announcement->method_0dc()(announcement,
-                               mash::string(text),
+    announcement->show_message(text,
                                10.0f,
                                0,
                                0,
@@ -636,14 +635,14 @@ bool slf__city_life_complete_message__num__num__num__t::operator()(chuck::vm::vm
 
         igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
 
-        announcement->method_0dc()(announcement,
-                                   text + bonus,
-                                   10.0f,
-                                   0,
-                                   0,
-                                   0.0f,
-                                   0.0f,
-                                   references::city_life_message_color.read());
+        announcement->get_vtable()->show_message(announcement,
+                                                 text + bonus,
+                                                 10.0f,
+                                                 0,
+                                                 0,
+                                                 0.0f,
+                                                 0.0f,
+                                                 references::city_life_message_color.read());
     }
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
@@ -663,8 +662,7 @@ bool slf__city_life_xp_message__num__num__t::operator()(chuck::vm::vm_stack &sta
 
     igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
 
-    announcement->method_0dc()(announcement,
-                               mash::string(text),
+    announcement->show_message(text,
                                10.0f,
                                0,
                                0,
@@ -683,8 +681,7 @@ bool slf__city_life_in_progress_message__num__t::operator()(chuck::vm::vm_stack 
 
     igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
 
-    announcement->method_0dc()(announcement,
-                               mash::string(text),
+    announcement->show_message(text,
                                10.0f,
                                0,
                                0,

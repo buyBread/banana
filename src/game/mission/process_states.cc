@@ -11,6 +11,7 @@
 #include "game/cutscene/cut_scene_toa_helper.hh"
 #include "game/event/event_manager.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_face_button_system.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/game.hh"
@@ -510,7 +511,7 @@ void mission_manager::process_state_start_unloading() {
     app::inst()->get_game()->unk_078 = 0;
 
     if (references::frontend.get().igo && references::frontend.get().igo->face_button_system)
-        retail::sub_6DE2E0((u32*)references::frontend.get().igo->face_button_system);
+        references::frontend.get().igo->face_button_system->remove_all_buttons();
 
     cut_scene_toa_helper::get()->stop();
     retail::sub_730F10((u32*)references::glass_house_manager.read(), 1); // set_glass_house_level

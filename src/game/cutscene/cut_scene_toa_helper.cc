@@ -8,6 +8,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/frontend/igo/igo_3d_agility_test.hh"
+#include "game/frontend/igo/igo_3d_face_button_system.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -78,7 +79,7 @@ bool cut_scene_toa_helper::setup(chuck::vm::script_dynamic_array<const char*> cu
         end_button_time_list.push_back(end_times[i]);
 
     if (references::frontend.get().igo->face_button_system)
-        retail::sub_6DE2E0((u32*)references::frontend.get().igo->face_button_system);
+        references::frontend.get().igo->face_button_system->remove_all_buttons();
 
     current_sequence = 0;
 

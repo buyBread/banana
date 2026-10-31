@@ -9,8 +9,10 @@
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
 #include "game/frontend/igo/igo_3d_generic_meter_widget.hh"
 #include "game/frontend/igo/igo_3d_message_box_widget.hh"
+#include "game/frontend/igo/igo_3d_objective_text_widget.hh"
 #include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/frontend/igo/igo_3d_ped_warning_widget.hh"
+#include "game/frontend/igo/igo_3d_radar_widget.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
@@ -102,7 +104,7 @@ namespace treyarch {
         igo_3d_widget*                      hint_text_message;
         igo_3d_widget*                      mem_card_message;
         igo_3d_widget*                      timer_widget;
-        igo_3d_widget*                      radar_widget;
+        igo_3d_radar_widget*                radar_widget;
         igo_3d_nav_button_bar*              nav_button_bar;
         igo_3d_widget*                      modal_save_dialog;
         igo_3d_widget*                      generic_modal_dialog;
@@ -120,8 +122,8 @@ namespace treyarch {
         igo_3d_message_box_widget*          unified_announcement;
         igo_3d_message_box_widget*          unified_announcement_alias;
         igo_3d_drawable*                    unknown_widget_14c;
-        igo_3d_widget*                      objective_text;
-        igo_3d_widget*                      hint_text;
+        igo_3d_objective_text_widget*       objective_text;
+        igo_3d_hint_text_widget*            hint_text;
         igo_3d_widget*                      letterbox;
         igo_3d_widget*                      button_tips;
         treyarch::conversation_menu_system* conversation_menu_system;

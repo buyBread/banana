@@ -40,6 +40,8 @@ namespace treyarch {
         virtual void        unk_02c() = 0;
         virtual void        unk_030() = 0;
         virtual u8          unk_034() = 0; // xenon_input_device: always false (sub_71F870)
+        virtual void        unk_038() = 0;
+        virtual u8          unk_03c(i32 text_id) = 0; // xenon_input_device: always false (sub_71FF10)
     };
 
     ASSERT_SIZEOF(input_device, 0x08);

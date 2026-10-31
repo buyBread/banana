@@ -11,6 +11,7 @@
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
+#include "game/geometry/geometry_manager.hh"
 #include "game/input/input_mgr.hh"
 #include "game/localized_string_table.hh"
 #include "game/math/references.hh"
@@ -698,52 +699,207 @@ bool slf__set_3d_dialog_title_debug__str__t::operator()(chuck::vm::vm_stack &sta
     return true;
 }
 
+// sub_861610
 bool slf__show_game_button__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861610)(this, stack);
+    stack.sp -= 0x04;
+
+    auto kind = stack.local_num(0x00);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    f32 result = -1.0f;
+
+    if (system)
+        result = (f32)retail::sub_70C7E0((u32*)system, (i32)kind, -1.0f, 0.0f); // show_button
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8243B0
 bool slf__remove_all_game_buttons__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8243B0)(this, stack);
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->remove_all_buttons();
+
+    return true;
 }
 
+// sub_861690
 bool slf__remove_game_button__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861690)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->remove_button((i32)id);
+
+    return true;
 }
 
+// sub_8616C0
 bool slf__play_game_button_anim__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8616C0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id   = stack.local_num(0x00);
+    auto anim = stack.local_num(0x04);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        retail::sub_6D06E0((u32*)system, (i32)id, (i32)anim, 1, 0); // play the button anim
+
+    return true;
 }
 
+// sub_861700
 bool slf__game_button_anim_playing__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861700)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    f32 result = 0.0f;
+
+    if (system)
+        result = (f32)system->is_button_anim_playing((i32)id);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861770
 bool slf__set_game_button_pos__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861770)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto id = stack.local_num(0x00);
+    auto x  = stack.local_num(0x04);
+    auto y  = stack.local_num(0x08);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->set_button_pos((i32)id, x, y);
+
+    return true;
 }
 
+// sub_8617B0
 bool slf__set_game_button_pos__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8617B0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto id  = stack.local_num(0x00);
+    auto pos = (const vector3d*)&stack.local_uint(0x04);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->set_button_pos((i32)id, *pos);
+
+    return true;
 }
 
+// sub_8617F0
 bool slf__get_2d_ui_pos_from_world_pos__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8617F0)(this, stack);
+    stack.sp -= 0x0C;
+
+    const vector3d  &world     = *(const vector3d*)&stack.local_uint(0x00);
+    const matrix4x4 &to_view   = geometry_manager::references::world_to_view.get();
+    const matrix4x4 &to_screen = geometry_manager::references::view_to_screen.get();
+
+    auto view_x = (f32)((f64)world.x * to_view.x.x + (f64)world.y * to_view.y.x + (f64)world.z * to_view.z.x + (f64)to_view.w.x);
+    auto view_y = (f32)((f64)world.x * to_view.x.y + (f64)world.y * to_view.y.y + (f64)world.z * to_view.z.y + (f64)to_view.w.y);
+    auto view_z = (f32)((f64)world.x * to_view.x.z + (f64)world.y * to_view.y.z + (f64)world.z * to_view.z.z + (f64)to_view.w.z);
+
+    auto screen_x = (f32)((f64)view_x * to_screen.x.x + (f64)view_y * to_screen.y.x + (f64)view_z * to_screen.z.x + (f64)to_screen.w.x);
+    auto screen_y = (f32)((f64)view_x * to_screen.x.y + (f64)view_y * to_screen.y.y + (f64)view_z * to_screen.z.y + (f64)to_screen.w.y);
+    auto screen_z = (f32)((f64)view_x * to_screen.x.z + (f64)view_y * to_screen.y.z + (f64)view_z * to_screen.z.z + (f64)to_screen.w.z);
+    auto screen_w = (f32)((f64)view_x * to_screen.x.w + (f64)view_y * to_screen.y.w + (f64)view_z * to_screen.z.w + (f64)to_screen.w.w);
+
+    f32 scale = 0.0f;
+
+    if (screen_w != 0.0f)
+        scale = (f32)(1.0 / (f64)screen_w);
+
+    vector3d result((f32)((f64)screen_x * scale),
+                    (f32)((f64)screen_y * scale),
+                    (f32)((f64)screen_z * scale));
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861B00
 bool slf__set_game_button_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861B00)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto scale = stack.local_num(0x04);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->set_button_scale((i32)id, scale);
+
+    return true;
 }
 
+// sub_861B30
 bool slf__set_game_button_alpha__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861B30)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto alpha = stack.local_num(0x04);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system)
+        system->set_button_alpha((i32)id, alpha);
+
+    return true;
 }
 
+// sub_861B60
 bool slf__show_X_over_button__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861B60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id   = stack.local_num(0x00);
+    auto show = stack.local_num(0x04);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    if (system) {
+        bool shown = show > 0.0f;
+
+        system->show_x_over_button((i32)id, shown);
+    }
+
+    return true;
 }
 
+// sub_861BB0
 bool slf__is_X_over_button_shown__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861BB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
+
+    f32 result = 0.0f;
+
+    if (system)
+        result = (f32)system->is_x_over_button_shown((i32)id);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__load_debug_3d_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1410,8 +1566,37 @@ bool slf__terminate_script__num__num__num__t::operator()(chuck::vm::vm_stack &st
     return ((invoke_t)retail::sub_862990)(this, stack);
 }
 
+// sub_8629E0
 bool slf__format_string__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8629E0)(this, stack);
+    // the count word covers the text id and the format's nums
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto text_id = stack.local_num(0x00);
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x04));
+
+    // the script gets the characters of a string that dies right after
+    const char* characters = result->c_str();
+
+    stack.push(&characters, sizeof(characters));
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
 // sub_862AE0
@@ -1466,20 +1651,57 @@ bool slf__close_3d_mission_info_screen__t::operator()(chuck::vm::vm_stack &stack
     return true;
 }
 
+// sub_862C90
 bool slf__lock_minimap__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862C90)(this, stack);
+    stack.sp -= 0x10;
+
+    auto center = (const vector3d*)&stack.local_uint(0x00);
+    auto zoom   = stack.local_num(0x0C);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->radar_widget)
+        igo->radar_widget->lock_minimap(*center, zoom);
+
+    return true;
 }
 
+// sub_824600
 bool slf__unlock_minimap__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824600)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->radar_widget)
+        igo->radar_widget->unlock_minimap();
+
+    return true;
 }
 
+// sub_862CE0
 bool slf__minimap_buildings_invisible__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862CE0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto invisible = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->radar_widget)
+        igo->radar_widget->set_buildings_invisible(invisible != 0.0f);
+
+    return true;
 }
 
+// sub_862D30
 bool slf__minimap_wallmode_disable__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862D30)(this, stack);
+    stack.sp -= 0x04;
+
+    auto disabled = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->radar_widget)
+        igo->radar_widget->set_wallmode_disabled(disabled != 0.0f);
+
+    return true;
 }
 
 bool slf__get_collectible_level__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1498,16 +1720,38 @@ bool slf__is_upgrade_purchased__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_862E40)(this, stack);
 }
 
+// sub_862E90
 bool slf__suspend_instructional_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862E90)(this, stack);
+    stack.sp -= 0x04;
+
+    auto suspended = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->objective_text)
+        igo->objective_text->suspend(suspended != 0.0f);
+
+    return true;
 }
 
+// sub_824660
 bool slf__clear_instructional_text_no_fade__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824660)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->objective_text)
+        igo->objective_text->clear(false);
+
+    return true;
 }
 
+// sub_824680
 bool slf__rvb_clear_instructional_text__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824680)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->objective_text)
+        igo->objective_text->clear(true);
+
+    return true;
 }
 
 bool slf__try_to_purchase_upgrade__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1518,20 +1762,99 @@ bool slf__get_upgrade_id__str__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_862DE0)(this, stack);
 }
 
+// sub_8632D0
 bool slf__set_rvb_hint_text_debug__num__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8632D0)(this, stack);
+    stack.sp -= 0x0C;
+
+    // the second argument is never read
+    auto duration = stack.local_num(0x00);
+    auto text     = (const char*)stack.local_uint(0x08);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->hint_text)
+        igo->unified_announcement->show_message(text,
+                                                duration,
+                                                0,
+                                                0,
+                                                0.0f,
+                                                0.0f,
+                                                references::hint_text_color.read());
+
+    return true;
 }
 
 bool slf__is_vibration_option_enabled__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_83F4F0)(this, stack);
 }
 
+// sub_8246A0
 bool slf__hide_rvb_hint_text__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8246A0)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->hint_text)
+        igo->hint_text->clear(true);
+
+    return true;
 }
 
+// sub_862EE0
 bool slf__set_rvb_instructional_text__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862EE0)(this, stack);
+    // the count word covers every argument, the format's nums last
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    auto duration = stack.local_num(0x00);
+    auto text_id  = stack.local_num(0x04);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (!igo || !igo->objective_text)
+        return true;
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    auto* format = new (format_storage) mash::string();
+
+    input_mgr*    inputs = input_mgr::inst();
+    input_device* device = inputs->devices[joystick_2_device];
+
+    if (!device)
+        device = inputs->devices[joystick_1_device];
+
+    i32 id = (i32)text_id;
+
+    // a pad that answers both shows the next text instead
+    if (device && device->unk_034() && device->unk_03c((i32)text_id))
+        ++id;
+
+    *format = references::game.read()->string_localizer->lookup_scripttext_string(id);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x08));
+
+    // a lone "$" shows nothing
+    auto* marker = new (storage) mash::string("$");
+    bool  blank  = result->is_equal(marker->c_str());
+    marker->finalize(mash::ALLOCATED);
+
+    if (blank) {
+        auto* empty = new (storage) mash::string("");
+        *result = *empty;
+        empty->finalize(mash::ALLOCATED);
+    }
+
+    igo->objective_text->show_message(*result, duration);
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
 bool slf__get_root_debug_menu__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1542,12 +1865,29 @@ bool slf__is_motion_sensor_option_enabled__t::operator()(chuck::vm::vm_stack &st
     return ((invoke_t)retail::sub_841EB0)(this, stack);
 }
 
+// sub_824680
 bool slf__clear_rvb_instructional_queue__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824680)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->objective_text)
+        igo->objective_text->clear(true);
+
+    return true;
 }
 
+// sub_8630D0
 bool slf__set_rvb_instructional_text_debug__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8630D0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto duration = stack.local_num(0x00);
+    auto text     = (const char*)stack.local_uint(0x04);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->objective_text)
+        igo->objective_text->show_message(text, duration);
+
+    return true;
 }
 
 bool slf__create_polytube__t::operator()(chuck::vm::vm_stack &stack) {
@@ -1558,12 +1898,69 @@ bool slf__enumerate_resources_to_debug_menu__debug_menu_entry__num__str__t::oper
     return ((invoke_t)retail::sub_860000)(this, stack);
 }
 
+// sub_8246A0
 bool slf__clear_rvb_hint_queue__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8246A0)(this, stack);
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (igo && igo->hint_text)
+        igo->hint_text->clear(true);
+
+    return true;
 }
 
+// sub_863120
 bool slf__set_rvb_hint_text__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_863120)(this, stack);
+    // the count word covers every argument, the format's nums last
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * count);
+
+    // the second argument is never read
+    auto duration = stack.local_num(0x00);
+    auto text_id  = stack.local_num(0x08);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    if (!igo || !igo->hint_text)
+        return true;
+
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    const char* text = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    auto* format = new (format_storage) mash::string(text);
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x0C));
+
+    // a lone "$" shows nothing
+    auto* marker = new (storage) mash::string("$");
+    bool  blank  = result->is_equal(marker->c_str());
+    marker->finalize(mash::ALLOCATED);
+
+    if (blank) {
+        auto* empty = new (storage) mash::string("");
+        *result = *empty;
+        empty->finalize(mash::ALLOCATED);
+    }
+
+    // the hint text widget is tested, the message box shows it
+    igo->unified_announcement->show_message(*result,
+                                            duration,
+                                            0,
+                                            0,
+                                            0.0f,
+                                            0.0f,
+                                            references::hint_text_color.read());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
 // sub_85F1A0

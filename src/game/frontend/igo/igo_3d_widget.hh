@@ -154,6 +154,10 @@ namespace treyarch {
             get_vtable()->get_position(this, x, y);
         }
 
+        void set_position_z(f32 z) {
+            get_vtable()->set_position_z(this, z);
+        }
+
         void set_rotation_angle(f32 angle) {
             get_vtable()->set_rotation_angle(this, angle);
         }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/color.hh"
 #include "treyarch/chuck/script_library/script_library_class.hh"
 #include "treyarch/chuck/script_library/script_library_function.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
@@ -1888,5 +1889,8 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<slc_widget_3d_t*>     slc_widget_3d     { 0x010F70D8 };
         inline util::memory_reference<slc_finger_of_god_t*> slc_finger_of_god { 0x010F7104 };
+
+        // the rvb hint text's message box colour, constant data
+        inline util::memory_reference<color32> hint_text_color { 0x00F22154 };
     } // references
 } // treyarch
