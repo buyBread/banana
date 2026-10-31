@@ -1,4 +1,3 @@
-#include "retail.hh"
 #include "game/mission/mission_manager.hh"
 
 using namespace treyarch;
@@ -7,14 +6,9 @@ using namespace treyarch;
 void mission_manager::save_player_restart(const vector3d &position, vector3d xz_facing) {
     xz_facing.y = 0.0f;
 
-    if (xz_facing.length2() > 0.0001f) {
-        f32 direction[4] = { xz_facing.x, 0.0f, xz_facing.z, 0.0f };
-        f32 normalized[4];
-
-        retail::sub_401AA0((u64*)normalized, direction);
-
-        xz_facing = vector3d(normalized[0], normalized[1], normalized[2]);
-    } else {
+    if (xz_facing.length2() > 0.0001f)
+        xz_facing = math::unitize(vector3d(xz_facing.x, 0.0f, xz_facing.z));
+    else {
         xz_facing.x = 1.0f;
         xz_facing.z = 0.0f;
     }

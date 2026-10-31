@@ -61,6 +61,7 @@ namespace treyarch { namespace math {
         typedef const mat_class<4, 4, mat_kind_full, rep_constant>  constant;
         typedef       mat_class<4, 4, mat_kind_full, rep_std<true>> packed;
 
+        // sub_48D1D0
         template<i32 R1, i32 C1, typename T1, typename P1>
         mat_class(const mat_class<R1, C1, T1, P1> &a) {
             typename mat_class<R1, C1, T1, P1>::get_x_type x1;

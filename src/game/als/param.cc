@@ -27,6 +27,7 @@
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/math/references.hh"
+#include "game/math/usefulmath.hh"
 
 using namespace treyarch;
 
@@ -327,13 +328,13 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!retail::sub_402500((u32*)the_actor))
                 return 0.0f;
 
-            return (f32)retail::sub_402020((f32*)the_actor->player_ifc()->unk_095());
+            return the_actor->player_ifc()->unk_095()->length_float();
 
         case param_smoothed_lateral_speed:
             if (!retail::sub_402500((u32*)the_actor))
                 return 0.0f;
 
-            return (f32)retail::sub_4248B0((f32*)the_actor->player_ifc()->unk_095());
+            return the_actor->player_ifc()->unk_095()->xz_length_float();
 
         case param_smoothed_vertical_speed:
             if (!retail::sub_402500((u32*)the_actor))
@@ -388,9 +389,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         case param_attack_angle: {
             vector3d      attack = the_sm->get_external_vector(param_attack_direction);
             math::vector4 dir(attack.x, attack.y, attack.z, 0.0f);
-            math::vector4 reversed;
-
-            retail::sub_401A20((f32*)&reversed, (f32*)&dir);
+            math::vector4 reversed = -dir;
 
             vector3d from(reversed[0], reversed[1], reversed[2]);
 
@@ -403,7 +402,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             math::vector4 offset(destination.x - position.x, destination.y - position.y, destination.z - position.z, 0.0f - 0.0f);
 
-            return (f32)retail::sub_42A9E0((f32*)&offset);
+            return length_float((const vector3d*)&offset);
         }
 
         case param_desired_angle: {
@@ -728,16 +727,16 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             facing.y = 0.0f;
 
-            if (retail::sub_401FF0((f32*)&facing) > 0.0001f)
-                retail::sub_402050((f32*)&facing);
+            if (facing.length2_float() > 0.0001f)
+                facing.normalize();
             else
                 facing = treyarch::references::unk_00e68098.get();
 
             vector3d moving = velocity;
             moving.y = 0.0f;
 
-            if (retail::sub_401FF0((f32*)&moving) > 0.0001f)
-                retail::sub_402050((f32*)&moving);
+            if (moving.length2_float() > 0.0001f)
+                moving.normalize();
             else
                 moving = facing;
 
@@ -776,7 +775,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             math::vector4 offset(position.x - camera_position.x, position.y - camera_position.y, position.z - camera_position.z, 0.0f - 0.0f);
 
-            return (f32)retail::sub_42A9E0((f32*)&offset);
+            return length_float((const vector3d*)&offset);
         }
 
         // -1 without a hero
@@ -796,7 +795,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             math::vector4 offset(position.x - hero_position.x, position.y - hero_position.y, position.z - hero_position.z, 0.0f - 0.0f);
 
-            return (f32)retail::sub_42A9E0((f32*)&offset);
+            return length_float((const vector3d*)&offset);
         }
 
         // the view camera's facing against the way from it to the actor; -1 without one
@@ -807,11 +806,11 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             vector3d away = the_actor->my_abs_po->get_position() - treyarch::references::game.read()->get_current_view_camera()->my_abs_po->get_position();
 
-            retail::sub_402050((f32*)&away);
+            away.normalize();
 
             vector3d facing = treyarch::references::game.read()->get_current_view_camera()->my_abs_po->get_z_facing();
 
-            retail::sub_402050((f32*)&facing);
+            facing.normalize();
 
             if (param == param_pos_to_camera_facing_dot_product)
                 return away * facing;
@@ -1024,8 +1023,8 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 f32 als::compute_angle_between_vectors(const vector3d &forward, const vector3d &side, const vector3d &dir) {
     f32 along   = dir * forward;
     f32 across  = side * dir;
-    f32 angle   = (f32)retail::sub_44D790(across, along);
-    f32 degrees = (f32)(retail::sub_48DEE0(angle) * 57.29577791868205);
+    f32 angle   = math::atan(across, along);
+    f32 degrees = (f32)(clip_angle(angle) * 57.29577791868205);
 
     if (degrees > 180.0f)
         return (f32)((f64)degrees - 360.0);
@@ -1089,9 +1088,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                     const vector3d &z_row = pelvis.get_z_facing();
 
                     math::vector4 facing(z_row.x, z_row.y, z_row.z, 0.0f);
-                    math::vector4 reversed;
-
-                    retail::sub_401A20((f32*)&reversed, (f32*)&facing);
+                    math::vector4 reversed = -facing;
 
                     return vector3d(reversed[0], reversed[1], reversed[2]);
                 }

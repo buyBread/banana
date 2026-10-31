@@ -69,8 +69,9 @@ namespace treyarch { namespace math {
 
         unit_quaternion get_conjugate() const { return ~*this; }
 
+        // sub_48DFC0
         void to_matrix(matrix4x4* dest) const {
-            *dest = quat_mat33(*this);
+            *dest = matrix4x4(rot_mat33(quat_mat33(*this)));
         }
 
         typedef dir3::packed imag_type;

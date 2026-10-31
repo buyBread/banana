@@ -126,6 +126,13 @@ namespace treyarch { namespace math {
         f32 length2() const { return (f32)((f64)x * x + (f64)y * y + (f64)z * z); }
         f32 length()  const { return sqrt(length2()); }
 
+        // sub_401FF0
+        f32 length2_float() const { return x * x + y * y + z * z; }
+
+        // sub_402020
+        f32 length_float() const { return sqrt(x * x + y * y + z * z); }
+
+        // sub_402050
         vec_class &normalize() {
             *this = unitize(*this);
 
@@ -172,6 +179,9 @@ namespace treyarch { namespace math {
         f32 yz_length() const { return sqrt(yz_length2()); }
         f32 xz_length() const { return sqrt(xz_length2()); }
 
+        // sub_4248B0
+        f32 xz_length_float() const { return sqrt(x * x + z * z); }
+
         bool is_valid() const {
             return x > -1e30f && x < 1e30f &&
                    y > -1e30f && y < 1e30f &&
@@ -182,6 +192,12 @@ namespace treyarch { namespace math {
     inline vector3d operator-(const vector3d &a, const vector3d &b) {
         return vector3d(a.x - b.x, a.y - b.y, a.z - b.z);
     }
+
+    // sub_582FC0
+    inline f32 length2_float(const vector3d* v) { return v->x * v->x + v->y * v->y + v->z * v->z; }
+
+    // sub_42A9E0
+    inline f32 length_float(const vector3d* v) { return sqrt(v->x * v->x + v->y * v->y + v->z * v->z); }
 }} // treyarch::math
 
 namespace treyarch {

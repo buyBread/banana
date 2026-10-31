@@ -2747,14 +2747,11 @@ bool slf__entity__physical_ifc_apply_force__vector3d__num__t::operator()(chuck::
     if (!self)
         return true;
 
-    math::vector4 direction_4(direction->x, direction->y, direction->z, 0.0f);
-    math::vector4 unit;
+    vector3d unit = math::unitize(*direction);
 
-    retail::sub_401AA0((u64*)&unit, (f32*)&direction_4);
-
-    vector3d force((f32)((f64)unit[0] * magnitude),
-                   (f32)((f64)unit[1] * magnitude),
-                   (f32)((f64)unit[2] * magnitude));
+    vector3d force((f32)((f64)unit.x * magnitude),
+                   (f32)((f64)unit.y * magnitude),
+                   (f32)((f64)unit.z * magnitude));
 
     if (self->has_ifc(entity_ifc_physical) && !self->is_a_vehicle()) {
         self->physical_ifc()->add_velocity_increment(force);
@@ -2810,14 +2807,11 @@ bool slf__entity__physical_ifc_apply_force_at_pos__vector3d__num__vector3d__t::o
     if (!self)
         return true;
 
-    math::vector4 direction_4(direction->x, direction->y, direction->z, 0.0f);
-    math::vector4 unit;
+    vector3d unit = math::unitize(*direction);
 
-    retail::sub_401AA0((u64*)&unit, (f32*)&direction_4);
-
-    vector3d force((f32)((f64)unit[0] * magnitude),
-                   (f32)((f64)unit[1] * magnitude),
-                   (f32)((f64)unit[2] * magnitude));
+    vector3d force((f32)((f64)unit.x * magnitude),
+                   (f32)((f64)unit.y * magnitude),
+                   (f32)((f64)unit.z * magnitude));
 
     f32 torque_mult = count - 3 > 0 ? stack.local_num(0x20) : 1.0f;
 
@@ -3054,7 +3048,7 @@ bool slf__entity__physical_ifc_set_pendulum__entity__num__t::operator()(chuck::v
                            (f32)((f64)pivot_pos.z - position.z),
                            0.0f - 0.0f);
 
-        the_pendulum->set_constraint((f32)retail::sub_42A9E0((f32*)&rope));
+        the_pendulum->set_constraint(length_float((const vector3d*)&rope));
     } else
         the_pendulum->set_constraint(length);
 

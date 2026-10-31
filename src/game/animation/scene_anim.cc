@@ -346,16 +346,14 @@ void scene_anim::frame_advance(f32 delta_t) {
 
         const nal::po &origin = the_scene_anim->origins[light.index];
 
-        math::quaternion rotation = *(const math::quaternion*)&origin.get_m33().get_quaternion();
-        vector3d         position = *(const vector3d*)&origin.get_w();
+        math::unit_quaternion rotation = origin.get_m33().get_quaternion();
+        vector3d              position = *(const vector3d*)&origin.get_w();
 
-        math::rot_mat33 scratch;
-
-        auto rows = (math::rot_mat33*)retail::sub_48D800((u32*)&scratch, (f32*)&rotation);
+        math::rot_mat33 rows = math::quat_mat33(rotation);
 
         matrix4x4 basis;
 
-        retail::sub_408B10((u64*)&basis, (i32)rows);
+        retail::sub_408B10((u64*)&basis, (i32)&rows);
 
         light_po.get_matrix().x = basis.x;
         light_po.get_matrix().y = basis.y;

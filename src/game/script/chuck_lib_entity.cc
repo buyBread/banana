@@ -1754,22 +1754,19 @@ bool slf__entity__set_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
     if (!marky_camera_allows(self, stack))
         return true;
 
-    math::vector4 facing_4(facing->x, facing->y, facing->z, 0.0f);
-    math::vector4 unit;
-
-    retail::sub_401AA0((u64*)&unit, (f32*)&facing_4);
+    vector3d unit = math::unitize(*facing);
 
     // too close to straight up turns nothing
-    if (!(0.95 > (f64)unit[1]))
+    if (!(0.95 > (f64)unit.y))
         return true;
 
-    vector3d z_facing(unit[0], 0.0f, unit[2]);
-    retail::sub_402050((f32*)&z_facing);
+    vector3d z_facing(unit.x, 0.0f, unit.z);
+    z_facing.normalize();
 
     const vector3d &up = references::unk_00f2213c.get();
 
     vector3d x_facing = math::cross(up, z_facing);
-    retail::sub_402050((f32*)&x_facing);
+    x_facing.normalize();
 
     po rel_po;
     retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
@@ -1799,17 +1796,17 @@ bool slf__entity__set_facing__vector3d__vector3d__t::operator()(chuck::vm::vm_st
         return true;
 
     vector3d z_facing = *facing;
-    retail::sub_402050((f32*)&z_facing);
+    z_facing.normalize();
 
     vector3d y_facing = *up;
-    retail::sub_402050((f32*)&y_facing);
+    y_facing.normalize();
 
     vector3d x_facing = math::cross(y_facing, z_facing);
 
     if (0.01f > x_facing.length2())
         return true;
 
-    retail::sub_402050((f32*)&x_facing);
+    x_facing.normalize();
 
     po rel_po;
     retail::sub_5FC820((u64*)&rel_po, (i32)&x_facing, (i32)&y_facing, (u32*)&z_facing, (u32*)&self->my_rel_po->get_position());
@@ -1838,12 +1835,12 @@ bool slf__entity__set_abs_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack
     if (!((f32)std::sqrt((f64)z_facing.length2()) > 0.01f))
         return true;
 
-    retail::sub_402050((f32*)&z_facing);
+    z_facing.normalize();
 
     const vector3d &up = references::unk_00f2213c.get();
 
     vector3d x_facing = math::cross(up, z_facing);
-    retail::sub_402050((f32*)&x_facing);
+    x_facing.normalize();
 
     po abs_po;
     retail::sub_5FC820((u64*)&abs_po, (i32)&x_facing, (i32)&up, (u32*)&z_facing, (u32*)&position);
@@ -1868,7 +1865,7 @@ bool slf__entity__set_po_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
         return true;
 
     vector3d z_facing = *facing;
-    retail::sub_402050((f32*)&z_facing);
+    z_facing.normalize();
 
     po       abs_po = references::unk_010f76b0.read();
     vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
@@ -1900,7 +1897,7 @@ bool slf__entity__set_rel_po_facing__vector3d__t::operator()(chuck::vm::vm_stack
         return true;
 
     vector3d z_facing = *facing;
-    retail::sub_402050((f32*)&z_facing);
+    z_facing.normalize();
 
     po       rel_po = references::unk_010f76b0.read();
     vector4d z_facing_4(z_facing.x, z_facing.y, z_facing.z, 0.0f);
@@ -2811,19 +2808,16 @@ bool slf__entity__apply_web_damage_with_directed_react__num__num__num__vector3d_
     f32 result = 0.0f;
 
     if (self && self->has_ifc(entity_ifc_damage)) {
-        math::vector4 direction(dir->x, dir->y, dir->z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+        vector3d unit = math::unitize(*dir);
 
         // the script's vector is normalized in place
-        dir->x = unit[0];
-        dir->y = unit[1];
-        dir->z = unit[2];
+        dir->x = unit.x;
+        dir->y = unit.y;
+        dir->z = unit.z;
 
         const vector3d &position = self->my_abs_po->get_position();
 
-        vector3d loc(position.x + unit[0], position.y + unit[1], position.z + unit[2]);
+        vector3d loc(position.x + unit.x, position.y + unit.y, position.z + unit.z);
 
         hit_react_record react((i32)react_level, 0.0f);
         hit_react_record second_react((i32)second_react_level, 0.0f);
@@ -2905,19 +2899,16 @@ bool slf__entity__apply_damage_with_directed_react__num__num__num__vector3d__t::
     f32 result = 0.0f;
 
     if (self && self->has_ifc(entity_ifc_damage)) {
-        math::vector4 direction(dir->x, dir->y, dir->z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
+        vector3d unit = math::unitize(*dir);
 
         // the script's vector is normalized in place
-        dir->x = unit[0];
-        dir->y = unit[1];
-        dir->z = unit[2];
+        dir->x = unit.x;
+        dir->y = unit.y;
+        dir->z = unit.z;
 
         const vector3d &position = self->my_abs_po->get_position();
 
-        vector3d loc(position.x + unit[0], position.y + unit[1], position.z + unit[2]);
+        vector3d loc(position.x + unit.x, position.y + unit.y, position.z + unit.z);
 
         hit_react_record react((i32)react_level, 0.0f);
         hit_react_record second_react((i32)second_react_level, 0.0f);
@@ -2978,12 +2969,7 @@ bool slf__entity__apply_damage_with_react__num__num__num__entity__t::operator()(
 
         const vector3d &position = self->my_abs_po->get_position();
 
-        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(position.x - loc.x, position.y - loc.y, position.z - loc.z));
 
         hit_react_record react((i32)react_level, 0.0f);
         hit_react_record second_react((i32)second_react_level, 0.0f);
@@ -3059,12 +3045,7 @@ bool slf__entity__apply_damage_with_react_and_scales__num__entity__t::operator()
 
         const vector3d &position = self->my_abs_po->get_position();
 
-        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(position.x - loc.x, position.y - loc.y, position.z - loc.z));
 
         hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
         hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
@@ -3115,15 +3096,9 @@ bool slf__entity__apply_damage_with_react_at_pos__num__num__num__vector3d__entit
 
         const vector3d &abs_position = self->my_abs_po->get_position();
 
-        math::vector4 direction(abs_position.x - position->x,
-                                abs_position.y - position->y,
-                                abs_position.z - position->z,
-                                0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(abs_position.x - position->x,
+                                              abs_position.y - position->y,
+                                              abs_position.z - position->z));
 
         hit_react_record react((i32)react_level, 0.0f);
         hit_react_record second_react((i32)second_react_level, 0.0f);
@@ -3189,15 +3164,9 @@ bool slf__entity__apply_damage_with_react_and_scales_at_pos__num__vector3d__enti
 
         const vector3d &abs_position = self->my_abs_po->get_position();
 
-        math::vector4 direction(abs_position.x - position->x,
-                                abs_position.y - position->y,
-                                abs_position.z - position->z,
-                                0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(abs_position.x - position->x,
+                                              abs_position.y - position->y,
+                                              abs_position.z - position->z));
 
         hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
         hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
@@ -3263,15 +3232,9 @@ bool slf__entity__apply_damage_with_react_and_scales_at_pos_no_physics__num__vec
 
         const vector3d &abs_position = self->my_abs_po->get_position();
 
-        math::vector4 direction(abs_position.x - position->x,
-                                abs_position.y - position->y,
-                                abs_position.z - position->z,
-                                0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(abs_position.x - position->x,
+                                              abs_position.y - position->y,
+                                              abs_position.z - position->z));
 
         hit_react_record react(react_level, unk_04, scale_0, scale_1, scale_2);
         hit_react_record second_react(second_react_level, second_unk_04, second_scale_0, second_scale_1, second_scale_2);
@@ -3330,12 +3293,7 @@ bool slf__entity__apply_melee_damage__num__entity__t::operator()(chuck::vm::vm_s
 
         const vector3d &position = self->my_abs_po->get_position();
 
-        math::vector4 direction(position.x - loc.x, position.y - loc.y, position.z - loc.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        vector3d dir(unit[0], unit[1], unit[2]);
+        vector3d dir = math::unitize(vector3d(position.x - loc.x, position.y - loc.y, position.z - loc.z));
 
         string_hash wounded_category;
         wounded_category.initialize(mash::ALLOCATED);
@@ -3381,7 +3339,7 @@ bool slf__entity__apply_explosive_damage__num__vector3d__t::operator()(chuck::vm
 
     vector3d dir(abs_position.x - position->x, abs_position.y - position->y, abs_position.z - position->z);
 
-    retail::sub_402050((f32*)&dir); // vector3d::normalize
+    dir.normalize();
 
     string_hash wounded_category;
 
@@ -3500,7 +3458,7 @@ bool slf__entity__apply_explosive_damage__num__vector3d__vector3d__t::operator()
 
     vector3d dir(abs_position.x - position->x, abs_position.y - position->y, abs_position.z - position->z);
 
-    retail::sub_402050((f32*)&dir); // vector3d::normalize
+    dir.normalize();
 
     string_hash wounded_category;
 
@@ -6414,8 +6372,8 @@ bool slf__entity__crawl_attach_to_surface__vector3d__vector3d__t::operator()(chu
             vector3d to_probe   = probe.hit_pos - *position;
             vector3d to_surface = surface.hit_pos - *position;
 
-            f64 probe_distance   = retail::sub_582FC0((f32*)&to_probe);
-            f64 surface_distance = retail::sub_582FC0((f32*)&to_surface);
+            f32 probe_distance   = length2_float(&to_probe);
+            f32 surface_distance = length2_float(&to_surface);
 
             if (surface_distance > probe_distance)
                 crawl->attach_to_surface(probe, *desired_forward);
@@ -8175,7 +8133,7 @@ bool slf__entity__physical_ifc_add_dynamic_pendulum__entity__num__vector3d__t::o
                                (f32)((f64)pivot_pos.z - position.z),
                                0.0f - 0.0f);
 
-            the_pendulum->set_constraint((f32)retail::sub_42A9E0((f32*)&rope));
+            the_pendulum->set_constraint(length_float((const vector3d*)&rope));
         } else
             the_pendulum->set_constraint(length);
 

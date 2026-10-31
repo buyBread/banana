@@ -114,7 +114,7 @@ void mission_manager::quit_failed_mission() {
                 player_restart_xz_facing   = z_axis;
                 player_restart_xz_facing.y = 0.0f;
 
-                retail::sub_402050((f32*)&player_restart_xz_facing);
+                player_restart_xz_facing.normalize();
 
                 flags     |= mission_manager_flag_need_to_malor;
                 fall_back  = false;

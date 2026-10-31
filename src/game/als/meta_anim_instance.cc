@@ -1,6 +1,5 @@
 #include <cmath>
 
-#include "retail.hh"
 #include "game/als/animation_logic_system.hh"
 #include "game/als/meta_anim_instance.hh"
 #include "game/als/meta_anim_swing.hh"
@@ -303,21 +302,18 @@ void als::als_meta_anim_swing_instance::get_pose(f32 t, f32 t_prev, nal::pose* p
 
     nal::pose blended(pose->pose_layout, nullptr);
 
-    vector3d      up = the_layer->get_vector_param(the_als, param_current_up_vector);
-    math::vector4 up_dir(up.x, up.y, up.z, 0.0f);
-    math::vector4 up_unit;
-
-    retail::sub_401AA0((u64*)&up_unit, (f32*)&up_dir);
+    vector3d up      = the_layer->get_vector_param(the_als, param_current_up_vector);
+    vector3d up_unit = math::unitize(up);
 
     // the target flips with a delay, by speed and only while upright
-    if (up_unit[1] > 0.5f) {
+    if (up_unit.y > 0.5f) {
         f32 speed = the_layer->get_vector_param(the_als, param_current_velocity_vector).length();
 
         if (target_time > 0.5f) {
             if (speed < swing_low_speed) {
                 f32 step = dt;
 
-                if (up_unit[1] > 0.8f && swing_low_speed * 0.5f > speed)
+                if (up_unit.y > 0.8f && swing_low_speed * 0.5f > speed)
                     step = dt * 2.0f;
 
                 hold_timer -= step;

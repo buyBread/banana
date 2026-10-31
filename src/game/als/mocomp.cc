@@ -660,17 +660,8 @@ void als::simple_orientation::post_anim_action(f32 delta_t) {
         face_desired_direction();
     else {
         // the actor's own axes, unit length
-        auto unitized = [](const vector3d &axis) {
-            math::vector4 direction(axis.x, axis.y, axis.z, 0.0f);
-            math::vector4 unit;
-
-            retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-            return vector3d(unit[0], unit[1], unit[2]);
-        };
-
-        vector3d curr_dir = unitized(the_actor->my_abs_po->get_z_facing());
-        vector3d curr_up  = unitized(the_actor->my_abs_po->get_y_facing());
+        vector3d curr_dir = math::unitize(the_actor->my_abs_po->get_z_facing());
+        vector3d curr_up  = math::unitize(the_actor->my_abs_po->get_y_facing());
 
         turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
     }
@@ -737,12 +728,12 @@ void als::simple_orientation::turn_toward_desired(po &curr_offset, f32 delta_t, 
     if (desired_up.length2() < 0.0001f)
         desired_up = curr_up;
     else
-        retail::sub_402050((f32*)&desired_up);
+        desired_up.normalize();
 
     if (desired_dir.length2() < 0.0001f)
         desired_dir = curr_dir;
     else
-        retail::sub_402050((f32*)&desired_dir);
+        desired_dir.normalize();
 
     // the up only goes part of the way per frame
     f32 reorient_speed = the_base->get_optional_pb_float(reorient_to_vertical_speed_id, 1.0f, nullptr);
@@ -756,14 +747,14 @@ void als::simple_orientation::turn_toward_desired(po &curr_offset, f32 delta_t, 
     desired_dir = desired_dir - desired_up * (f32)(desired_dir * desired_up);
 
     if (desired_dir.length2() >= 0.0001f) {
-        retail::sub_402050((f32*)&desired_dir);
+        desired_dir.normalize();
 
         curr_dir = curr_dir - desired_up * (f32)(curr_dir * desired_up);
 
         if (curr_dir.length2() < 0.0001f)
             curr_dir = desired_dir;
         else
-            retail::sub_402050((f32*)&curr_dir);
+            curr_dir.normalize();
 
         f32 heading_dot = curr_dir * desired_dir;
         f32 up_dot      = curr_up * desired_up;
@@ -840,7 +831,7 @@ void als::simple_orientation::get_directions(animation_logic_system*, state_mach
             destination = base->get_external_vector(param_desired_destination);
 
             vector3d away(abs_po->get_position().x - destination.x, abs_po->get_position().y - destination.y, abs_po->get_position().z - destination.z);
-            retail::sub_402050((f32*)&away);
+            away.normalize();
 
             *desired_dir = away;
             facing_found = true;
@@ -1055,10 +1046,7 @@ void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
     if (the_base->has_ext_param_been_set(param_desired_movement_dir))
         direction = the_base->get_external_vector(param_desired_movement_dir);
 
-    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
-    math::vector4 unit;
-
-    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+    vector3d unit = math::unitize(direction);
 
     // as fast as the anim moves along the ground, or the state's speed when it doesn't
     vector3d offset = curr_offset->get_position();
@@ -1072,7 +1060,7 @@ void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
     }
 
     const vector3d &position = the_actor->my_abs_po->get_position();
-    vector3d        moved(unit[0] * speed + position.x, unit[1] * speed + position.y, position.z + unit[2] * speed);
+    vector3d        moved(unit.x * speed + position.x, unit.y * speed + position.y, position.z + unit.z * speed);
 
     retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
 
@@ -1411,10 +1399,7 @@ void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) 
     if (the_base->has_ext_param_been_set(param_desired_movement_dir))
         direction = the_base->get_external_vector(param_desired_movement_dir);
 
-    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
-    math::vector4 unit;
-
-    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+    vector3d unit = math::unitize(direction);
 
     // as fast as the anim moves along the ground, or the state's speed when it doesn't
     vector3d offset = curr_offset->get_position();
@@ -1428,7 +1413,7 @@ void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) 
     }
 
     const vector3d &position = the_actor->my_abs_po->get_position();
-    vector3d        moved(unit[0] * speed + position.x, unit[1] * speed + position.y, position.z + unit[2] * speed);
+    vector3d        moved(unit.x * speed + position.x, unit.y * speed + position.y, position.z + unit.z * speed);
 
     retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
 
@@ -1597,12 +1582,7 @@ void als::velocity_orientation::get_directions(animation_logic_system*, state_ma
     if (desired_dir->length2() < 1.0f)
         *desired_dir = the_actor->my_abs_po->get_z_facing();
 
-    math::vector4 direction(desired_dir->x, desired_dir->y, desired_dir->z, 0.0f);
-    math::vector4 unit;
-
-    retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-    *desired_dir = vector3d(unit[0], unit[1], unit[2]);
+    *desired_dir = math::unitize(*desired_dir);
     *desired_up  = treyarch::references::unk_00e6808c.get();
 }
 
@@ -1726,15 +1706,6 @@ i32 als::initial_velocity_orientation::get_mash_sizeof() const {
 
 // sub_5DC4A0
 void als::initial_velocity_orientation::activate(animation_logic_system* the_als_core, layer_id layer) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     simple_orientation::activate(the_als_core, layer);
 
     bool inverse_velocity = the_base->get_optional_pb_int(inverse_velocity_id, 0, nullptr) != 0;
@@ -1753,7 +1724,7 @@ void als::initial_velocity_orientation::activate(animation_logic_system* the_als
     if (initial_dir.length2() < 1.0f)
         initial_dir = the_actor->my_abs_po->get_z_facing();
 
-    initial_dir = unitized(initial_dir);
+    initial_dir = math::unitize(initial_dir);
 
     // straight up or down has no ground direction
     if (vector3d(cross(treyarch::references::unk_00e6808c.get(), initial_dir)).length2() < 0.01f)
@@ -1815,15 +1786,6 @@ i32 als::initial3D_velocity_orientation::get_mash_sizeof() const {
 
 // sub_5DC880
 void als::initial3D_velocity_orientation::activate(animation_logic_system* the_als_core, layer_id layer) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     simple_orientation::activate(the_als_core, layer);
 
     bool inverse_velocity = the_base->get_optional_pb_int(inverse_velocity_id, 0, nullptr) != 0;
@@ -1842,7 +1804,7 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
     if (initial_dir.length2() < 1.0f)
         initial_dir = the_actor->my_abs_po->get_z_facing();
 
-    initial_dir = unitized(initial_dir);
+    initial_dir = math::unitize(initial_dir);
 
     // straight up or down has no ground direction
     if (vector3d(cross(treyarch::references::unk_00e6808c.get(), initial_dir)).length2() < 0.01f)
@@ -1873,11 +1835,11 @@ void als::initial3D_velocity_orientation::activate(animation_logic_system* the_a
     if (the_actor->has_ifc(entity_ifc_physical)) {
         vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
-        vector3d heading = unitized(velocity);
-        vector3d side    = unitized(cross(heading, treyarch::references::unk_00e6808c.get()));
+        vector3d heading = math::unitize(velocity);
+        vector3d side    = math::unitize(cross(heading, treyarch::references::unk_00e6808c.get()));
 
         initial_up = cross(side, heading);
-        initial_up = unitized(initial_up);
+        initial_up = math::unitize(initial_up);
     } else if (the_base->has_ext_param_been_set(param_desired_up_vector))
         initial_up = the_base->get_external_vector(param_desired_up_vector);
     else
@@ -1968,8 +1930,8 @@ void als::strict_simple_orientation::post_anim_action(f32 delta_t) {
         vector3d curr_dir = the_actor->my_abs_po->get_z_facing();
         vector3d curr_up  = the_actor->my_abs_po->get_y_facing();
 
-        retail::sub_402050((f32*)&curr_dir);
-        retail::sub_402050((f32*)&curr_up);
+        curr_dir.normalize();
+        curr_up.normalize();
 
         turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
     }
@@ -1994,10 +1956,7 @@ void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
     if (the_base->has_ext_param_been_set(param_desired_movement_dir))
         direction = the_base->get_external_vector(param_desired_movement_dir);
 
-    math::vector4 strafe(direction.x, direction.y, direction.z, 0.0f);
-    math::vector4 unit;
-
-    retail::sub_401AA0((u64*)&unit, (f32*)&strafe);
+    vector3d unit = math::unitize(direction);
 
     f32 speed = 1.0f;
 
@@ -2007,7 +1966,7 @@ void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
     f32 step = speed * delta_t;
 
     const vector3d &position = the_actor->my_abs_po->get_position();
-    vector3d        moved(step * unit[0] + position.x, unit[1] * step + position.y, position.z + unit[2] * step);
+    vector3d        moved(step * unit.x + position.x, unit.y * step + position.y, position.z + unit.z * step);
 
     retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
 }
@@ -2132,15 +2091,6 @@ void als::input_orientation::post_anim_action(f32 delta_t) {
 
 // sub_5F2530
 void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     // the anim only gives the speed
     vector3d anim_offset = curr_offset->get_position();
     f32      anim_speed  = anim_offset.length() / delta_t;
@@ -2153,7 +2103,7 @@ void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
     vector3d move_dir = the_actor->my_abs_po->get_z_facing();
 
     if (the_base->get_optional_pb_int(move_dir_from_anim_id, 0, nullptr)) {
-        vector3d dir = unitized(anim_offset);
+        vector3d dir = math::unitize(anim_offset);
 
         const po       &abs_po   = *the_actor->my_abs_po;
         const vector3d &x_row    = abs_po.get_x_facing();
@@ -2175,7 +2125,7 @@ void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
 
         f32 keep = 1.0f - blend;
 
-        move_dir = unitized(vector3d(facing.x * keep + move_dir.x * blend,
+        move_dir = math::unitize(vector3d(facing.x * keep + move_dir.x * blend,
                                      facing.y * keep + move_dir.y * blend,
                                      facing.z * keep + move_dir.z * blend));
     }
@@ -2233,15 +2183,6 @@ i32 als::towed_orientation::get_mash_sizeof() const {
 
 // sub_5C7EF0
 void als::towed_orientation::post_anim_action(f32 delta_t) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     vector3d tow_point = get_tow_point();
     vector3d position  = the_actor->my_abs_po->get_position();
 
@@ -2256,9 +2197,9 @@ void als::towed_orientation::post_anim_action(f32 delta_t) {
 
     // straight under or over the tow point there's no way to face
     if (to_tow_point.xz_length2() > 0.0001f) {
-        vector3d heading = unitized(to_tow_point);
-        vector3d side    = unitized(cross(heading, treyarch::references::unk_00e6808c.get()));
-        vector3d up      = unitized(cross(side, heading));
+        vector3d heading = math::unitize(to_tow_point);
+        vector3d side    = math::unitize(cross(heading, treyarch::references::unk_00e6808c.get()));
+        vector3d up      = math::unitize(cross(side, heading));
 
         vector3d placed(tow_point.x + side.x * back_from_hitch.x + back_from_hitch.y * up.x + back_from_hitch.z * heading.x,
                         tow_point.y + side.y * back_from_hitch.x + up.y * back_from_hitch.y + heading.y * back_from_hitch.z,
@@ -2416,15 +2357,6 @@ i32 als::wallsprint_mocomp::get_mash_sizeof() const {
 
 // sub_5C68C0
 void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
 
     update_movement_window();
@@ -2444,8 +2376,8 @@ void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
         vector3d wall_dir = wall->get_wall_po()->get_z_facing();
         vector3d wall_up  = wall->get_wall_po()->get_y_facing();
 
-        vector3d curr_dir = unitized(wall_dir);
-        vector3d curr_up  = unitized(wall_up);
+        vector3d curr_dir = math::unitize(wall_dir);
+        vector3d curr_up  = math::unitize(wall_up);
 
         turn_toward_desired(curr_offset, delta_t, curr_dir, curr_up);
     }
@@ -2467,9 +2399,9 @@ void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
         vector3d up(y_row.x + (wall_m.y.x - y_row.x) * step, (wall_m.y.y - y_row.y) * step + y_row.y, (wall_m.y.z - y_row.z) * step + y_row.z);
         vector3d side = cross(up, dir);
 
-        vector3d unit_dir  = unitized(dir);
-        vector3d unit_up   = unitized(up);
-        vector3d unit_side = unitized(side);
+        vector3d unit_dir  = math::unitize(dir);
+        vector3d unit_up   = math::unitize(up);
+        vector3d unit_side = math::unitize(side);
 
         retail::sub_4015B0((u64*)&placed);
 
@@ -2731,15 +2663,15 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
                     vector3d facing = the_actor->my_abs_po->get_z_facing();
                     facing.y = 0.0f;
 
-                    retail::sub_402050((f32*)&facing);
+                    facing.normalize();
 
                     vector3d heading(move.x, 0.0f, move.z);
-                    retail::sub_402050((f32*)&heading);
+                    heading.normalize();
 
                     f32 along  = (f32)((f64)heading.z * facing.z + (f64)-heading.x * -facing.x);
                     f32 across = (f32)((f64)-heading.x * facing.z - (f64)heading.z * -facing.x);
 
-                    turn_angle = std::fabs((f32)retail::sub_44D790(across, along));
+                    turn_angle = std::fabs(math::atan(across, along));
                 }
 
                 auto slowed = [](f64 over) {
@@ -2771,12 +2703,12 @@ void flight_mocomp::post_anim_action(f32 delta_t) {
                 vector3d facing = the_actor->my_abs_po->get_z_facing();
                 facing.y = 0.0f;
 
-                retail::sub_402050((f32*)&facing);
+                facing.normalize();
 
                 f32 climb = move.y;
                 move.y    = 0.0f;
 
-                f32 run = (f32)retail::sub_402020((f32*)&move);
+                f32 run = move.length_float();
 
                 move = vector3d(facing.x * run, climb, facing.z * run);
             }
@@ -3115,20 +3047,11 @@ void als::move_and_face::update_params(f32) {
 
 // sub_5B1DC0
 vector3d als::move_and_face::simple_linear_translation(f32 delta_t, f32 time_percentage, const po &old_po) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     if (the_base->get_optional_pb_int(use_alt_linear_id, 0, nullptr)) {
         // to where the time puts it on the line from the start, no faster than the max
         f32      total    = (destination_point - start_point).length();
         vector3d position = old_po.get_position();
-        vector3d dir      = unitized(destination_point - position);
+        vector3d dir      = math::unitize(destination_point - position);
 
         if (position.x == destination_point.x && position.y == destination_point.y && position.z == destination_point.z)
             return position;
@@ -3141,7 +3064,7 @@ vector3d als::move_and_face::simple_linear_translation(f32 delta_t, f32 time_per
         if (max_movement_speed > 0.0001f && move.length() / delta_t > max_movement_speed) {
             f32 step = max_movement_speed * delta_t;
 
-            retail::sub_402050((f32*)&move);
+            move.normalize();
 
             target = vector3d(position.x + move.x * step, position.y + move.y * step, position.z + move.z * step);
         }
@@ -3178,15 +3101,6 @@ vector3d als::move_and_face::simple_linear_translation(f32 delta_t, f32 time_per
 
 // sub_5BF190
 po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentage, const po &old_po) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     // no faster than the max turn speed, either way round
     auto capped = [&](f32 step) {
         if (max_turn_speed > 0.0001f) {
@@ -3202,8 +3116,8 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
     po result;
     retail::sub_583280((u64*)&result, (u64*)&old_po); // po copy
 
-    vector3d up  = unitized(desired_up);
-    vector3d dir = unitized(desired_facing);
+    vector3d up  = math::unitize(desired_up);
+    vector3d dir = math::unitize(desired_facing);
 
     vector3d y_row = result.get_y_facing();
     vector3d z_row = result.get_z_facing();
@@ -3224,7 +3138,7 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
 
             step = capped(step);
 
-            vector3d axis = unitized(cross(y_row, up));
+            vector3d axis = math::unitize(cross(y_row, up));
 
             if (axis.length2() < 0.01f)
                 axis = z_row;
@@ -3247,19 +3161,19 @@ po als::move_and_face::simple_linear_orientation(f32 delta_t, f32 time_percentag
     vector3d flat_dir = dir - up * (f32)(up * dir);
 
     if (flat_dir.length2() > 0.0001f) {
-        dir = unitized(flat_dir);
+        dir = math::unitize(flat_dir);
 
         vector3d flat_z = z_row - up * (f32)(up * z_row);
 
         if (flat_z.length2() > 0.0001f) {
-            retail::sub_402050((f32*)&flat_z);
+            flat_z.normalize();
 
             vector3d flat_back = back - up * (f32)(up * back);
-            retail::sub_402050((f32*)&flat_back);
+            flat_back.normalize();
 
             f32 along          = flat_z * dir;
             f32 across         = flat_back * dir;
-            f32 heading_change = (f32)retail::sub_44D790(across, along);
+            f32 heading_change = math::atan(across, along);
 
             if (heading_change > 0.01f || heading_change < -0.01f) {
                 // the state can force the way round
@@ -3562,7 +3476,7 @@ void als::move_and_face::face_and_arrive_by(f32 delta_t) {
         if (dot > 0.9f) {
             target = target - facing.get_y_facing() * dot;
 
-            retail::sub_402050((f32*)&target);
+            target.normalize();
             retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
         }
     }
@@ -4758,7 +4672,7 @@ void als::attach_hand_to_point::face_and_arrive_by(f32 delta_t) {
         if (target.y > 0.9f) {
             target.y = 0.0f;
 
-            retail::sub_402050((f32*)&target);
+            target.normalize();
             retail::sub_44E1E0((f32*)&facing, target.x, target.y, target.z); // po: looks at the point
         }
     }
@@ -4812,18 +4726,9 @@ void als::constant_move_hand_to_point::activate(animation_logic_system* the_als_
 
 // sub_5F1A90
 vector3d als::constant_move_hand_to_point::compute_translation(f32 delta_t, const po &old_po, const po &) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     // straight at the point, at desired_speed
     vector3d position = old_po.get_position();
-    vector3d dir      = unitized(destination_point - position);
+    vector3d dir      = math::unitize(destination_point - position);
 
     f32 speed = the_base->has_ext_param_been_set(param_desired_speed) ? the_base->get_external_float(param_desired_speed) : 1.0f;
     f32 step  = speed * delta_t;
@@ -4907,15 +4812,6 @@ i32 als::combat_pole_swing_attach::get_mash_sizeof() const {
 
 // sub_5DB360
 void als::combat_pole_swing_attach::activate(animation_logic_system* the_als_core, layer_id layer) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     signal_move_and_face::activate(the_als_core, layer);
 
     pole_point         = the_actor->my_abs_po->get_position();
@@ -4937,9 +4833,9 @@ void als::combat_pole_swing_attach::activate(animation_logic_system* the_als_cor
         retail::sub_91BA80((i32*)pole, (f32*)&pole_start);
         retail::sub_91BC00((i32*)pole, (f32*)&pole_end);
 
-        vector3d along = unitized(pole_end - pole_start);
+        vector3d along = math::unitize(pole_end - pole_start);
 
-        side = unitized(cross(along, treyarch::references::unk_00e6808c.get()));
+        side = math::unitize(cross(along, treyarch::references::unk_00e6808c.get()));
     } else if (the_actor->has_base_ai_data()) {
         auto* teleport = (teleporting_layer_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_teleporting_layer);
 
@@ -4973,20 +4869,11 @@ void als::combat_pole_swing_attach::set_destination_point() {
 
 // sub_5DB1B0
 void als::combat_pole_swing_attach::set_desired_facing() {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     // level, from the pole toward desired_destination
     if (the_base->has_ext_param_been_set(param_desired_destination)) {
         facing   = the_base->get_external_vector(param_desired_destination) - pole_point;
         facing.y = 0.0f;
-        facing   = unitized(facing);
+        facing   = math::unitize(facing);
     }
 
     // or along the pole's side, on the target's half
@@ -5425,7 +5312,7 @@ void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine
         vector3d up       = abs_po.get_y_facing();
         vector3d blended  = up * (1.0f - speed) + treyarch::references::unk_00e6808c.get() * speed;
 
-        retail::sub_402050((f32*)&blended);
+        blended.normalize();
 
         if (blended.length2() > 0.0001f) {
             f32 angle = math::acos(up * blended);
@@ -5433,7 +5320,7 @@ void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine
             if (angle > 0.01f || angle < -0.01f) {
                 vector3d axis = cross(abs_po.get_y_facing(), blended);
 
-                retail::sub_402050((f32*)&axis);
+                axis.normalize();
 
                 // without an axis between them, about the facing
                 if (axis.length2() < 0.01f)
@@ -5635,7 +5522,7 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
             target.get_matrix().z.w = 0.0f;
             target.get_matrix().w.w = 1.0f;
 
-            retail::sub_48DFC0((f32*)&blended, (u64*)&target); // quaternion::to_matrix
+            blended.to_matrix(&target.get_matrix());
             retail::sub_9595B0((i32)&target);
         }
 
@@ -5832,8 +5719,8 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
                 f32      max_step = stick_speed_min * delta_t;
                 vector3d step     = hit_point - po_a.get_position();
 
-                if ((f32)retail::sub_402020((f32*)&step) > max_step) {
-                    retail::sub_402050((f32*)&step);
+                if (step.length_float() > max_step) {
+                    step.normalize();
 
                     step *= max_step;
                 }
@@ -5850,8 +5737,8 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
                 f32      max_step = stick_speed_min * delta_t;
                 vector3d step     = hit_point - po_b.get_position();
 
-                if ((f32)retail::sub_402020((f32*)&step) > max_step) {
-                    retail::sub_402050((f32*)&step);
+                if (step.length_float() > max_step) {
+                    step.normalize();
 
                     step *= max_step;
                 }
@@ -5982,15 +5869,6 @@ void als::momentum_sync_move_and_face::update_slide_axes(f32) {
 
 // sub_5C2490
 po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     po rotation;
     retail::sub_4015B0((u64*)&rotation);
 
@@ -6008,7 +5886,7 @@ po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
         f32 angle = math::acos(y_row * up);
 
         if (angle > 0.01f || angle < -0.01f) {
-            vector3d axis = unitized(cross(y_row, up));
+            vector3d axis = math::unitize(cross(y_row, up));
 
             if (axis.length2() < 0.01f)
                 axis = facing;
@@ -6055,22 +5933,22 @@ po als::momentum_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
     if (!(desired.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&desired);
+    desired.normalize();
 
     facing = facing - up * (f32)(up * facing);
 
     if (!(facing.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&facing);
+    facing.normalize();
 
     minus_x = minus_x - up * (f32)(up * minus_x);
 
-    retail::sub_402050((f32*)&minus_x);
+    minus_x.normalize();
 
     f32 along  = facing * desired;
     f32 across = minus_x * desired;
-    f32 angle  = (f32)retail::sub_44D790(across, along);
+    f32 angle  = math::atan(across, along);
 
     // at most turn_rate a second, else the fraction of the way
     if (turn_rate > 0.0f) {
@@ -6154,15 +6032,6 @@ i32 als::sturn_sync_move_and_face::get_mash_sizeof() const {
 
 // sub_5C2CD0
 po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     po rotation;
     retail::sub_4015B0((u64*)&rotation);
 
@@ -6181,7 +6050,7 @@ po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
         f32 angle = math::acos(y_row * up);
 
         if (angle > 0.01f || angle < -0.01f) {
-            vector3d axis = unitized(cross(y_row, up));
+            vector3d axis = math::unitize(cross(y_row, up));
 
             if (axis.length2() < 0.01f)
                 axis = facing;
@@ -6234,22 +6103,22 @@ po als::sturn_sync_move_and_face::get_turned_po(f32 delta_t, actor* target) {
     if (!(desired.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&desired);
+    desired.normalize();
 
     facing = facing - up * (f32)(up * facing);
 
     if (!(facing.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&facing);
+    facing.normalize();
 
     minus_x = minus_x - up * (f32)(up * minus_x);
 
-    retail::sub_402050((f32*)&minus_x);
+    minus_x.normalize();
 
     f32 along  = facing * desired;
     f32 across = minus_x * desired;
-    f32 angle  = (f32)retail::sub_44D790(across, along);
+    f32 angle  = math::atan(across, along);
 
     if (turn_rate > 0.0f) {
         f32 max_turn = turn_rate * delta_t;
@@ -6402,7 +6271,7 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
         dir    = offset;
         radius = offset.length();
 
-        retail::sub_402050((f32*)&dir);
+        dir.normalize();
     }
 
     // no closer than closest_distance_allowed, the middle point half way out to it
@@ -6460,15 +6329,6 @@ void als::combat_radial_move_and_face::build_path(f32, bool) {
 
 // sub_5DB9A0
 po als::combat_radial_move_and_face::get_facing_po(f32) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     po turned = *the_actor->my_abs_po;
 
     vector3d up      = turned.get_y_facing();
@@ -6484,20 +6344,20 @@ po als::combat_radial_move_and_face::get_facing_po(f32) {
     desired = desired - up * (f32)(up * desired);
 
     if (desired.length2() > 0.0001f) {
-        desired = unitized(desired);
+        desired = math::unitize(desired);
 
         facing = facing - up * (f32)(up * facing);
 
         if (facing.length2() > 0.0001f) {
-            retail::sub_402050((f32*)&facing);
+            facing.normalize();
 
             minus_x = minus_x - up * (f32)(up * minus_x);
 
-            retail::sub_402050((f32*)&minus_x);
+            minus_x.normalize();
 
             f32 along  = facing * desired;
             f32 across = minus_x * desired;
-            f32 angle  = (f32)retail::sub_44D790(across, along);
+            f32 angle  = math::atan(across, along);
 
             if (angle > 0.01f || angle < -0.01f) {
                 po rotation;
@@ -6647,7 +6507,7 @@ void als::biped_physics_mocomp::activate(animation_logic_system* the_als_core, l
                 force_dir.y = 0.0f;
         }
 
-        retail::sub_402050((f32*)&force_dir);
+        force_dir.normalize();
 
         force_dir.x = force_dir.x * force_scale;
         force_dir.y = force_dir.y * force_scale + force_y;
@@ -6926,15 +6786,6 @@ void als::swing_attack_move_and_face::read_params(f32) {
 
 // sub_5DA320
 void als::swing_attack_move_and_face::track(f32) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     // up toward the player's web anchor while it holds one, else the actor's
     if (the_actor->has_ifc(entity_ifc_player)) {
         vector3d anchor;
@@ -6942,7 +6793,7 @@ void als::swing_attack_move_and_face::track(f32) {
         if (the_actor->player_ifc()->unk_377(&anchor)) {
             up = anchor - the_actor->my_abs_po->get_position();
 
-            retail::sub_402050((f32*)&up);
+            up.normalize();
         }
     } else
         up = the_actor->my_abs_po->get_y_facing();
@@ -6957,7 +6808,7 @@ void als::swing_attack_move_and_face::track(f32) {
             else {
                 vector3d dir = offset;
 
-                retail::sub_402050((f32*)&dir);
+                dir.normalize();
 
                 f32 limit = math::cos(tracking_angle_max);
 
@@ -6977,7 +6828,7 @@ void als::swing_attack_move_and_face::track(f32) {
         }
     }
 
-    facing = unitized(facing - up * (f32)(up * facing));
+    facing = math::unitize(facing - up * (f32)(up * facing));
 }
 
 // sub_5C0750
@@ -6991,7 +6842,7 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
 
     vector3d velocity = the_actor->physical_ifc()->get_velocity();
 
-    f32      speed = (f32)retail::sub_402020((f32*)&velocity);
+    f32      speed = velocity.length_float();
     vector3d ahead = the_actor->my_abs_po->get_z_facing();
 
     velocity = ahead * speed;
@@ -7005,7 +6856,7 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
     if (probe.collision) {
         ahead = ahead - probe.hit_norm * (f32)(ahead * probe.hit_norm);
 
-        retail::sub_402050((f32*)&ahead);
+        ahead.normalize();
 
         velocity = ahead * speed;
     }
@@ -7016,15 +6867,6 @@ void als::swing_attack_move_and_face::steer_velocity(f32) {
 
 // sub_5C0A70
 po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     po turned = *the_actor->my_abs_po;
 
     vector3d z_row   = turned.get_z_facing();
@@ -7039,7 +6881,7 @@ po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
             stop_tracking = true;
 
         if (angle > 0.01f || angle < -0.01f) {
-            vector3d axis = unitized(cross(y_row, up));
+            vector3d axis = math::unitize(cross(y_row, up));
 
             if (axis.length2() < 0.01f)
                 axis = z_row;
@@ -7064,21 +6906,21 @@ po als::swing_attack_move_and_face::get_turned_po(f32 delta_t) {
     if (!(desired.length2() > 0.0001f))
         return turned;
 
-    desired = unitized(desired);
+    desired = math::unitize(desired);
     z_row   = z_row - up * (f32)(up * z_row);
 
     if (!(z_row.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&z_row);
+    z_row.normalize();
 
     minus_x = minus_x - up * (f32)(up * minus_x);
 
-    retail::sub_402050((f32*)&minus_x);
+    minus_x.normalize();
 
     f32 along  = z_row * desired;
     f32 across = minus_x * desired;
-    f32 angle  = (f32)retail::sub_44D790(across, along);
+    f32 angle  = math::atan(across, along);
 
     if (angle > tracking_angle_max)
         stop_tracking = true;
@@ -7289,15 +7131,6 @@ void als::momentum_combat_move_and_face::read_signal_times() {
 
 // sub_5D8EF0
 void als::momentum_combat_move_and_face::track(f32, bool initial) {
-    auto unitized = [](const vector3d &value) {
-        math::vector4 direction(value.x, value.y, value.z, 0.0f);
-        math::vector4 unit;
-
-        retail::sub_401AA0((u64*)&unit, (f32*)&direction);
-
-        return vector3d(unit[0], unit[1], unit[2]);
-    };
-
     if (stop_tracking || (!initial && !tracking && target_dir_set))
         return;
 
@@ -7324,7 +7157,7 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
             } else
                 has_target_pos = false;
 
-            retail::sub_402050((f32*)&target_dir);
+            target_dir.normalize();
 
             no_target_pos = false;
         }
@@ -7336,16 +7169,16 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
             target_pos = the_base->get_external_vector(param_desired_destination);
             target_dir = target_pos - the_actor->my_abs_po->get_position();
 
-            if (retail::sub_401FF0((f32*)&target_dir) > 0.0001f) {
+            if (target_dir.length2_float() > 0.0001f) {
                 no_target      = false;
                 has_target_pos = true;
 
-                if (!initial && tracking_dist_min >= retail::sub_402020((f32*)&target_dir))
+                if (!initial && tracking_dist_min >= target_dir.length_float())
                     stop_tracking = true;
             } else
                 has_target_pos = false;
 
-            retail::sub_402050((f32*)&target_dir);
+            target_dir.normalize();
 
             no_target_pos = false;
         } else
@@ -7382,7 +7215,7 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
                 if (target_dir.length2() < 0.0001f)
                     target_dir = the_actor->my_abs_po->get_z_facing();
 
-                retail::sub_402050((f32*)&target_dir);
+                target_dir.normalize();
 
                 target_dir_set = true;
             }
@@ -7403,8 +7236,8 @@ void als::momentum_combat_move_and_face::track(f32, bool initial) {
         }
     }
 
-    side = unitized(side);
-    up   = unitized(cross(target_dir, side));
+    side = math::unitize(side);
+    up   = math::unitize(cross(target_dir, side));
 }
 
 // sub_5D97F0
@@ -7435,12 +7268,12 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
             }
         }
 
-        retail::sub_402050((f32*)&side);
+        side.normalize();
 
         up_dir = cross(dir, side);
 
-        retail::sub_402050((f32*)&up_dir);
-        retail::sub_402050((f32*)&desired);
+        up_dir.normalize();
+        desired.normalize();
     }
 
     if (preserve_y_facing)
@@ -7460,7 +7293,7 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
         if (angle > 0.01f || angle < -0.01f) {
             vector3d axis = cross(y_row, up_dir);
 
-            retail::sub_402050((f32*)&axis);
+            axis.normalize();
 
             if (axis.length2() < 0.01f)
                 axis = facing;
@@ -7485,22 +7318,22 @@ po als::momentum_combat_move_and_face::get_facing_po(f32) {
     if (!(level.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&level);
+    level.normalize();
 
     facing = facing - up_dir * (f32)(up_dir * facing);
 
     if (!(facing.length2() > 0.0001f))
         return turned;
 
-    retail::sub_402050((f32*)&facing);
+    facing.normalize();
 
     minus_x = minus_x - up_dir * (f32)(up_dir * minus_x);
 
-    retail::sub_402050((f32*)&minus_x);
+    minus_x.normalize();
 
     f32 along  = facing * level;
     f32 across = minus_x * level;
-    f32 angle  = (f32)retail::sub_44D790(across, along);
+    f32 angle  = math::atan(across, along);
 
     if (angle > tracking_angle_max)
         stop_tracking = true;

@@ -507,7 +507,7 @@ po ai_tentacle_info::get_end_po() const {
     result.get_matrix().z.w = 0.0f;
     result.get_matrix().w.w = 1.0f;
 
-    retail::sub_48DFC0((f32*)&end_quat, (u64*)&result); // quaternion::to_matrix
+    end_quat.to_matrix(&result.get_matrix());
 
     result.get_matrix().w = vector4d(end_pos.x, end_pos.y, end_pos.z, 1.0f);
 
@@ -558,7 +558,7 @@ po ai_tentacle_info::get_abs_end_po() const { // the end node's fourth column is
     result.get_matrix().y.w = 0.0f;
     result.get_matrix().z.w = 0.0f;
 
-    retail::sub_48DFC0((f32*)&rotation, (u64*)&result); // quaternion::to_matrix
+    rotation.to_matrix(&result.get_matrix());
 
     const vector3d position = get_abs_end_position();
 
