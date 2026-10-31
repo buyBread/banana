@@ -15,6 +15,10 @@ namespace treyarch {
     public:
         u8 reserved_530[0x780];
 
+        explicit spiderman_rvb_player_interface(mash::generating_vtable_version so_do_nothing) : player_interface(so_do_nothing) {}
+
+        ~spiderman_rvb_player_interface() override;
+
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
         void unmash(mash::mash_info_struct* mash_info,
@@ -459,6 +463,8 @@ namespace treyarch {
         virtual void  unk_593(void* unk, i32 unk_2, f32 unk_3);
         virtual i32   unk_594(void* unk, i32 unk_2);
         virtual i32   unk_595(f32 unk);
+
+        static string_hash my_type_key;
     };
 
     ASSERT_SIZEOF(spiderman_rvb_player_interface, 0xCB0);

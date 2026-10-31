@@ -74,6 +74,8 @@ namespace treyarch {
         void initialize(mash::allocation_scope scope);
         void finalize(mash::allocation_scope scope);
 
+        void destruct_mashed_class();
+
         void set_flag(u32 flag, bool set) {
             if (set)
                 flags |= flag;

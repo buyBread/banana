@@ -5,6 +5,7 @@
 #include "game/boolx.hh"
 #include "game/math/algebra.hh"
 #include "game/math/references.hh"
+#include "treyarch/mash/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -33,6 +34,9 @@ namespace treyarch {
         line_info() : start(references::unk_01073f40.get()), end(references::unk_01073f40.get()), hit_entity(), collision(false), checked_collision(false), queued_for_collision_check(false) {
             clear();
         }
+
+        // inlined @ sub_71F600
+        explicit line_info(mash::generating_vtable_version) {}
 
         // sub_4030F0
         // inlined @ sub_5C00F0

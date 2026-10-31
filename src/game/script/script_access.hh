@@ -8,6 +8,11 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/string.hh"
 #include "game/resource_key.hh"
+#include "game/mutex.hh"
+#include "game/container/fixed_vector.hh"
+#include "treyarch/mm/mm.hh"
+#include "vc8/vector.hh"
+#include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
@@ -17,7 +22,7 @@ namespace treyarch {
 
     // an argument for script::call_function; a zero type ends the list
     struct script_arg {
-        u32         type = 0; // 1 is a num
+        u32         type = 0; // 1 is a num, 3 an entity
         const void* value;
         u32         unk_008;
     };
@@ -29,6 +34,9 @@ namespace treyarch {
 
         // bytes pushed per script_arg type, nine of them
         inline util::memory_reference<u32> script_arg_sizes { 0x00BDF340 };
+
+        // numbers the instances script_object_instance::init names without an owner
+        inline util::memory_reference<u32> ownerless_instance_count { 0x010F7088 };
     } // references
 
     namespace amalga {
@@ -61,6 +69,10 @@ namespace treyarch {
         static bool load_script_exec  (const char*                filename, resource_key* key, actor* owner);
         static bool unload_script_exec(const char*                filename,                    actor* owner);
         static bool unload_script_exec(chuck::vm::script_object*  object,                      actor* owner);
+
+        static bool load_script_exec  (const char*                filename, resource_key* key, amalga::resource_pack_slot* slot);
+        static bool unload_script_exec(const char*                filename,                    amalga::resource_pack_slot* slot);
+        static bool unload_script_exec(chuck::vm::script_object*  object,                      amalga::resource_pack_slot* slot);
 
         // nothing for a null object
         static chuck::vm::script_object*   find_object  (string_hash obj_name,  const mash::string        &filename, const resource_key* key);
@@ -150,4 +162,83 @@ namespace treyarch {
             return true;
         }
     };
+
+    // a function of an instance's script object, known by its declaration ("frame_advance(num)")
+    struct script_object_function {
+        string_hash function_name;  // the whole declaration hashed
+        i32         function_index; // -1 when the object doesn't have it
+        u32         argument_types; // 4 bits per argument
+
+        // false when the object doesn't have the function
+        bool set(const mash::string &func_declaration, chuck::vm::script_object* so, u32 unk);
+
+        static void parse_arguments(const mash::string &func_declaration,
+                                          u32*          argument_types,
+                                          u32           unk);
+
+        // one argument per 4 bits of argument_types, each pushed by its own type's size
+        static void push_arguments(      chuck::vm::vm_thread*                   thread,
+                                         u32                                     argument_types,
+                                   const container::fixed_vector<script_arg, 8> &args);
+    };
+
+    // an instance of a script object driven from code: its executable, the instance and the functions registered on it
+    class script_object_instance {
+
+    public:
+        engine_recursive_lock               lock;
+        i32                                 cached_function_index;
+        amalga::resource_pack_slot*         pack_slot;
+        resource_key                        script_exec_prefix;
+        arch_base_vhandle                   inst_handle;           // the instance's shadow
+        vc8::vector<script_object_function> functions;             // sorted by function_name
+        u8                                  pad_034[0x04];
+
+        script_object_instance();
+       ~script_object_instance();
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
+        // lets the instance destruct itself and unloads the executable
+        void destroy();
+
+        // the executable loads into the slot, else the owner's; the constructor's arguments follow script_obj's declaration
+        bool init(const mash::string                           &script_exec,
+                  const mash::string                           &script_obj,
+                        amalga::resource_pack_slot*             slot,
+                        actor*                                  owner,
+                  const char*                                   inst_name,
+                        bool                                    reuse,
+                  const container::fixed_vector<script_arg, 8> &args);
+
+        // the arguments up to the first one with a zero type
+        bool init(const mash::string                &script_exec,
+                  const mash::string                &script_obj,
+                        amalga::resource_pack_slot*  slot,
+                        actor*                       owner,
+                  const char*                        inst_name,
+                        bool                         reuse,
+                  const script_arg                  &arg0,
+                  const script_arg                  &arg1,
+                  const script_arg                  &arg2,
+                  const script_arg                  &arg3,
+                  const script_arg                  &arg4,
+                  const script_arg                  &arg5,
+                  const script_arg                  &arg6,
+                  const script_arg                  &arg7);
+
+        bool register_function(const mash::string &function_name, u32 unk);
+    };
+
+    ASSERT_SIZEOF  (script_object_function,                0x0C);
+    ASSERT_SIZEOF  (script_object_instance,                0x38);
+    ASSERT_OFFSETOF(script_object_instance, pack_slot,     0x14);
+    ASSERT_OFFSETOF(script_object_instance, inst_handle,   0x20);
+    ASSERT_OFFSETOF(script_object_instance, functions,     0x24);
 } // treyarch

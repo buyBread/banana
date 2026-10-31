@@ -6,6 +6,7 @@
 #include "game/input/game_button.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/delta_variable.hh"
+#include "game/line_info.hh"
 #include "treyarch/mash/array_replacement.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
@@ -18,6 +19,7 @@ namespace treyarch {
     class entity;
     class player_axis_control;
     class polytube;
+    class script_object_instance;
 
     /* slots 19+ are player_interface's own. SM3's order holds around frame_advance
        (map_controls 89, update_interface 91, frame_advance 92), but WoS inserted slots: SM3 has two getters at 19/20
@@ -25,34 +27,38 @@ namespace treyarch {
     class player_interface : public actor_interface {
 
     public:
-        u8                    reserved_00c[0x234];
-        delta_variable<i32>   mode;
-        i32                   mode_last_frame;
-        i32                   desired_mode;
-        u8                    reserved_250[0x03];
+        u8                      reserved_00c[0x234];
+        delta_variable<i32>     mode;
+        i32                     mode_last_frame;
+        i32                     desired_mode;
+        u8                      reserved_250[0x03];
         /* cleared by game::freeze_hero on the first freeze and set again on the last unfreeze and by unload_current_level;
            world_dynamics_system::frame_advance runs frame_advance while set and frame_advance_disabled otherwise */
-        bool                  enabled;
-        i32                   control_config;
-        game_axis*            control_axis[4];
-        player_axis_control*  player_axis[3];
-        u8                    reserved_274[0x2C];
-        vector3d              unk_2a0;       // als::crawl_transition's destination without attach_point
-        u8                    reserved_2ac[0x128];
-        player_reflexes       reflexes;
-        player_spider_senses  spider_senses;
-        u8                    reserved_414[0x9C];
-        arch_base_vhandle     unk_4b0;       // an actor the als's target_ai rules read as the hero's target
-        u8                    reserved_4b4[0x04];
-        f32                   unk_4b8;       // counted down by the frame advance; the blackscreen sets it to its fade time
-        u8                    reserved_4bc[0x44];
-        bool                  override_mode;
-        u8                    reserved_501[0x1B];
+        bool                    enabled;
+        i32                     control_config;
+        game_axis*              control_axis[4];
+        player_axis_control*    player_axis[3];
+        u8                      reserved_274[0x14];
+        line_info               surface_info;  // als::crawl_transition moves to its hit_pos without attach_point
+        u8                      reserved_2e4[0xF0];
+        player_reflexes         reflexes;
+        player_spider_senses    spider_senses;
+        u8                      reserved_414[0x9C];
+        arch_base_vhandle       unk_4b0;       // an actor the als's target_ai rules read as the hero's target
+        u8                      reserved_4b4[0x04];
+        f32                     unk_4b8;       // counted down by the frame advance; the blackscreen sets it to its fade time
+        script_object_instance* master_object; // the rvb's slot 24 builds it
+        u8                      reserved_4c0[0x40];
+        bool                    override_mode;
+        u8                      reserved_501[0x1B];
         mash::array_replacement
-            <game_button, 25> buttons;
+            <game_button, 25>   buttons;
         mash::array_replacement
-            <game_button, 89> command_buttons;
-        u8                    reserved_524[0x0C];
+            <game_button, 89>   command_buttons;
+        u8                      reserved_524[0x0C];
+
+        explicit player_interface(mash::generating_vtable_version so_do_nothing) : actor_interface(so_do_nothing),
+                                                                                    surface_info(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
@@ -638,11 +644,12 @@ namespace treyarch {
     ASSERT_OFFSETOF(player_interface, control_config,  0x254);
     ASSERT_OFFSETOF(player_interface, control_axis,    0x258);
     ASSERT_OFFSETOF(player_interface, player_axis,     0x268);
-    ASSERT_OFFSETOF(player_interface, unk_2a0,         0x2A0);
+    ASSERT_OFFSETOF(player_interface, surface_info,    0x288);
     ASSERT_OFFSETOF(player_interface, reflexes,        0x3D4);
     ASSERT_OFFSETOF(player_interface, spider_senses,   0x3FC);
     ASSERT_OFFSETOF(player_interface, unk_4b0,         0x4B0);
     ASSERT_OFFSETOF(player_interface, unk_4b8,         0x4B8);
+    ASSERT_OFFSETOF(player_interface, master_object,   0x4BC);
     ASSERT_OFFSETOF(player_interface, override_mode,   0x500);
     ASSERT_OFFSETOF(player_interface, buttons,         0x51C);
     ASSERT_OFFSETOF(player_interface, command_buttons, 0x520);

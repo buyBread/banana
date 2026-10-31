@@ -1,7 +1,20 @@
 #include "retail.hh"
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
+#include "game/script/script_access.hh"
+#include "game/wds/entity/actor.hh"
 
 using namespace treyarch;
+
+string_hash spiderman_rvb_player_interface::my_type_key { 0xFA62ACC8 }; // "spiderman_rvb_player_interface"
+
+// slot 0
+spiderman_rvb_player_interface::~spiderman_rvb_player_interface() {
+    retail::sub_7219C0((u32*)this);
+
+    // retail's destructor tore down player_interface's members too; empty the button arrays so their source destructors don't free them again
+    buttons.array         = nullptr;
+    command_buttons.array = nullptr;
+}
 
 // slot 1
 void spiderman_rvb_player_interface::construct_mashed_class() {
@@ -71,9 +84,32 @@ bool spiderman_rvb_player_interface::unk_023(i32 unk) {
     return ((bool (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_99CEC0)(this, unk);
 }
 
-// slot 24
+// sub_9A7610
 void spiderman_rvb_player_interface::unk_024(actor* owner) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, actor*))retail::sub_9A7610)(this, owner);
+    master_object = new script_object_instance();
+
+    arch_base_vhandle owner_handle = owner->my_handle;
+
+    script_arg owner_arg;
+    owner_arg.type  = 3;
+    owner_arg.value = &owner_handle;
+
+    master_object->init(mash::string("spiderman_rvb"),
+                        mash::string("spiderman_rvb_master_object(entity)"),
+                        owner->pack_slot,
+                        owner,
+                        nullptr,
+                        true,
+                        owner_arg,
+                        script_arg(),
+                        script_arg(),
+                        script_arg(),
+                        script_arg(),
+                        script_arg(),
+                        script_arg(),
+                        script_arg());
+
+    master_object->register_function(mash::string("frame_advance(num)"), 0);
 }
 
 // slot 25

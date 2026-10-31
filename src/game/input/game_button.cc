@@ -20,6 +20,12 @@ void game_button::finalize(mash::allocation_scope scope) {
     retail::sub_7373C0((i32)this, scope);
 }
 
+// sub_744E90
+void game_button::destruct_mashed_class() {
+    finalize(mash::FROM_MASH);
+    trigger_delay_timer.destruct_mashed_class();
+}
+
 void game_button::set_control(i32 ctrl) {
     retail::sub_737430((i32)this, ctrl);
 }

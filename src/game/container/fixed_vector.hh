@@ -10,6 +10,7 @@ namespace treyarch { namespace container {
 
         fixed_vector() : size_(0) {}
 
+        // sub_4E4C00
         T &push_back(const T &value) {
             return data_[size_++] = value;
         }

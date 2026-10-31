@@ -4319,7 +4319,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
         param             = the_base->get_external_vector(param_attach_point);
         destination_point = param;
     } else if (the_actor->has_ifc(entity_ifc_player))
-        destination_point = the_actor->player_ifc()->unk_2a0;
+        destination_point = the_actor->player_ifc()->surface_info.hit_pos;
     else if (the_actor->has_ifc(entity_ifc_standing)) {
         the_actor->standing_ifc()->enable(true);
         the_actor->standing_ifc()->flags |= standing_interface_flag_adv_standing;
