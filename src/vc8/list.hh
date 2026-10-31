@@ -57,11 +57,13 @@ namespace treyarch { namespace vc8 {
         node* begin() const noexcept { return sentinel->next; }
         node* end()   const noexcept { return sentinel; }
 
-        T &back() const noexcept { return sentinel->previous->value; }
+        T &front() const noexcept { return sentinel->next->value; }
+        T &back()  const noexcept { return sentinel->previous->value; }
 
         u32  size()  const noexcept { return count; }
         bool empty() const noexcept { return count == 0; }
 
+        // sub_4CC190
         // sub_4ED2B0
         static node* buy_node(node* next, node* previous, const T &value) {
             node* result = (node*)mm::allocate(sizeof(node));
@@ -87,6 +89,7 @@ namespace treyarch { namespace vc8 {
             return position;
         }
 
+        // sub_4CC220
         // sub_5CD230
         // sub_635E30
         // sub_6CBC90
@@ -104,6 +107,12 @@ namespace treyarch { namespace vc8 {
             return insert_before(sentinel, value);
         }
 
+        // inlined @ sub_4DE460
+        node* push_front(const T &value) {
+            return insert_before(sentinel->next, value);
+        }
+
+        // sub_6D5110
         node* erase(node* position) noexcept { // the sentinel is left alone
             node* next = position->next;
 
@@ -116,6 +125,12 @@ namespace treyarch { namespace vc8 {
             }
 
             return next;
+        }
+
+        // sub_5A85E0
+        // inlined @ sub_4DE570
+        void pop_front() noexcept { // nothing on an empty list
+            erase(sentinel->next);
         }
 
         // sub_4ECF90
