@@ -91,7 +91,7 @@ void script_garbage_collection::mutexes(script_instance*, stuff_to_delete_list_t
 // sub_85F170
 void script_garbage_collection::widgets_3d(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next)
-        retail::sub_6D8270((u32*)references::frontend.get().igo, (i32*)stuff->element);
+        references::frontend.get().igo->destroy_script_widget((igo_3d_script_widget*)stuff->element);
 }
 
 // sub_85CCD0

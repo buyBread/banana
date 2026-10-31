@@ -1,7 +1,9 @@
 #include <new>
 
 #include "retail.hh"
+#include "game/arch_base_vhandle.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_camera_widget.hh"
 #include "game/frontend/igo/igo_3d_face_button_system.hh"
 #include "game/app.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
@@ -10,6 +12,7 @@
 #include "game/game.hh"
 #include "game/input/input_mgr.hh"
 #include "game/localized_string_table.hh"
+#include "game/math/references.hh"
 #include "game/script/chuck_lib_widget.hh"
 #include "game/script/chuck_lib_widget_3d.hh"
 #include "game/script/script_access.hh"
@@ -19,60 +22,277 @@
 
 using namespace treyarch;
 
+// sub_8604B0
 bool slf__create_3d_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8604B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    igo_3d_script_widget* result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash key;
+
+        key.initialize(mash::ALLOCATED, name);
+
+        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AC10)(references::frontend.get().igo, key); // ui_frontend::create_script_widget
+
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860580
 bool slf__create_3d_widget_from_params__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860580)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    igo_3d_script_widget* result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash key;
+
+        key.initialize(mash::ALLOCATED, name);
+
+        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AD30)(references::frontend.get().igo, key); // ui_frontend::create_script_widget_from_params
+
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860650
 bool slf__create_3d_mission_text_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860650)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    alignas(mash::string) u8 widget_name_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 text_name_storage  [sizeof(mash::string)];
+
+    mash::string*         widget_name;
+    mash::string*         text_name;
+    igo_3d_script_widget* result;
+
+    {
+        native_resource_context context(stack);
+
+        widget_name = new (widget_name_storage) mash::string("ui_HUD_mission_text");
+        text_name   = new (text_name_storage)   mash::string("ui_HUD_mission_text");
+
+        string_hash text_key;
+        string_hash widget_key;
+        string_hash record_key;
+
+        text_key  .initialize(mash::ALLOCATED, text_name->c_str());
+        widget_key.initialize(mash::ALLOCATED, widget_name->c_str());
+        record_key.initialize(mash::ALLOCATED, name);
+
+        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash, string_hash))retail::sub_70AF40)(references::frontend.get().igo, // ui_frontend::create_mission_text_widget
+                                                                                                                              record_key,
+                                                                                                                              widget_key,
+                                                                                                                              text_key);
+
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    text_name  ->finalize(mash::ALLOCATED);
+    widget_name->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_8607B0
 bool slf__create_3d_hint_text_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8607B0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto name = (const char*)stack.local_uint(0x00);
+
+    alignas(mash::string) u8 widget_name_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 text_name_storage  [sizeof(mash::string)];
+
+    mash::string*         widget_name;
+    mash::string*         text_name;
+    igo_3d_script_widget* result;
+
+    {
+        native_resource_context context(stack);
+
+        widget_name = new (widget_name_storage) mash::string("ui_HUD_hint_text");
+        text_name   = new (text_name_storage)   mash::string("ui_HUD_hint_text");
+
+        string_hash text_key;
+        string_hash widget_key;
+        string_hash record_key;
+
+        text_key  .initialize(mash::ALLOCATED, text_name->c_str());
+        widget_key.initialize(mash::ALLOCATED, widget_name->c_str());
+        record_key.initialize(mash::ALLOCATED, name);
+
+        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash, string_hash))retail::sub_70B050)(references::frontend.get().igo, // ui_frontend::create_hint_text_widget
+                                                                                                                              record_key,
+                                                                                                                              widget_key,
+                                                                                                                              text_key);
+
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    text_name  ->finalize(mash::ALLOCATED);
+    widget_name->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_860910
 bool slf__create_3d_text_widget_from_params__str__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860910)(this, stack);
+    stack.sp -= 0x08;
+
+    auto widget_name = (const char*)stack.local_uint(0x00);
+    auto text_name   = (const char*)stack.local_uint(0x04);
+
+    igo_3d_script_widget* result;
+
+    {
+        native_resource_context context(stack);
+
+        string_hash text_key;
+        string_hash widget_key;
+
+        text_key  .initialize(mash::ALLOCATED, text_name);
+        widget_key.initialize(mash::ALLOCATED, widget_name);
+
+        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash))retail::sub_70AE40)(references::frontend.get().igo, widget_key, text_key); // ui_frontend::create_text_widget_from_params
+
+        stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    }
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8241E0
 bool slf__destroy_all_3d_mission_text_widgets__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8241E0)(this, stack);
+    stack.thread->get_instance(-1)->clear_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d);
+    references::frontend.get().igo->destroy_all_mission_text_widgets();
+
+    return true;
 }
 
+// sub_824210
 bool slf__hide_all_3d_mission_text_widgets__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824210)(this, stack);
+    references::frontend.get().igo->hide_all_mission_text_widgets();
+
+    return true;
 }
 
+// sub_824220
 bool slf__destroy_all_3d_hint_text_widgets__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824220)(this, stack);
+    stack.thread->get_instance(-1)->clear_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d);
+    references::frontend.get().igo->destroy_all_hint_text_widgets();
+
+    return true;
 }
 
+// sub_824250
 bool slf__hide_all_3d_hint_text_widgets__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824250)(this, stack);
+    references::frontend.get().igo->hide_all_hint_text_widgets();
+
+    return true;
 }
 
+// sub_860A20
 bool slf__create_3d_button_widget__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860A20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto kind = stack.local_num(0x00);
+
+    string_hash key;
+
+    key.initialize(mash::ALLOCATED, "");
+
+    if (igo_3d_face_button_system* buttons = references::frontend.get().igo->face_button_system)
+        key = buttons->get_button_widget_key((i32)kind);
+
+    auto result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AC10)(references::frontend.get().igo, key); // ui_frontend::create_script_widget
+
+    stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860AB0
 bool slf__destroy_3d_widget__widget_3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860AB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto widget = (igo_3d_script_widget*)stack.local_uint(0x00);
+
+    stack.thread->get_instance(-1)->remove_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)widget);
+    references::frontend.get().igo->destroy_script_widget(widget);
+
+    return true;
 }
 
+// sub_824260
 bool slf__destroy_all_3d_widgets__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824260)(this, stack);
+    stack.thread->get_instance(-1)->clear_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d);
+    references::frontend.get().igo->destroy_all_script_widgets();
+
+    return true;
 }
 
+// sub_860AF0
 bool slf__move_ui_camera_to_marker__widget_3d__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860AF0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto widget      = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto marker_name = (const char*)stack.local_uint(0x04);
+    auto duration    = stack.local_num(0x08);
+
+    if (references::frontend.get().igo->is_script_widget_valid(widget) &&
+        references::frontend.get().igo->camera_widget) {
+
+        string_hash marker;
+
+        marker.initialize(mash::ALLOCATED, marker_name);
+
+        references::frontend.get().igo->camera_widget->move_to_marker(widget, marker, duration, &references::unk_010f7780.get());
+    }
+
+    return true;
 }
 
+// sub_860B70
 bool slf__move_ui_camera_to_home__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860B70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto duration = stack.local_num(0x00);
+
+    if (references::frontend.get().igo->camera_widget) {
+        references::frontend.get().igo->camera_widget->kill_layer_0_anims();
+        references::frontend.get().igo->camera_widget->reset_entity_po();
+        references::frontend.get().igo->camera_widget->reset_position();
+
+        retail::sub_69A910(references::frontend.get().igo->camera_widget, duration); // igo_3d_camera_widget move home
+    }
+
+    return true;
 }
 
 bool slf__enable_health_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
@@ -283,76 +503,190 @@ bool slf__debug_3d_widget_add_ui_parameter_files_to_menu__debug_menu__t::operato
     return ((invoke_t)retail::sub_869EB0)(this, stack);
 }
 
+// sub_83ED90
 bool slf__get_ui_camera_entity__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83ED90)(this, stack);
+    igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget;
+
+    arch_base_vhandle result;
+
+    if (camera)
+        result = camera->entity_vh;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861C20
 bool slf__ui_camera_play_anim__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861C20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto anim = (const char*)stack.local_uint(0x00);
+
+    if (references::frontend.get().igo->camera_widget) {
+        references::frontend.get().igo->camera_widget->kill_layer_0_anims();
+
+        tl_fixed_string name(anim);
+
+        ((void (__thiscall*)(igo_3d_widget*, const tl_fixed_string*))retail::sub_699A10)(references::frontend.get().igo->camera_widget, &name); // igo_3d_widget::play_anim
+    }
+
+    return true;
 }
 
+// sub_861C70
 bool slf__ui_camera_move_to_marker__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861C70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto marker_name = (const char*)stack.local_uint(0x00);
+    auto duration    = stack.local_num(0x04);
+
+    if (references::frontend.get().igo->unknown_widget_188 &&
+        references::frontend.get().igo->camera_widget) {
+
+        string_hash marker;
+
+        marker.initialize(mash::ALLOCATED, marker_name);
+
+        ui_frontend* igo = references::frontend.get().igo;
+
+        igo->camera_widget->move_to_marker(igo->unknown_widget_188, marker, duration, &references::unk_010f7780.get());
+    }
+
+    return true;
 }
 
+// sub_8243D0
 bool slf__ui_camera_reset_starting_anim_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8243D0)(this, stack);
+    if (references::frontend.get().igo->camera_widget) {
+        references::frontend.get().igo->camera_widget->kill_layer_0_anims();
+        references::frontend.get().igo->camera_widget->reset_entity_po();
+    }
+
+    return true;
 }
 
+// sub_861CF0
 bool slf__ui_camera_set_edit_mode__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861CF0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto enabled = stack.local_num(0x00);
+
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->set_edit_mode(enabled != 0.0f);
+
+    return true;
 }
 
+// sub_824400
 bool slf__ui_camera_inc_x_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824400)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_x_pos();
+
+    return true;
 }
 
+// sub_824420
 bool slf__ui_camera_dec_x_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824420)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_x_pos();
+
+    return true;
 }
 
+// sub_824440
 bool slf__ui_camera_inc_y_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824440)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_y_pos();
+
+    return true;
 }
 
+// sub_824460
 bool slf__ui_camera_dec_y_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824460)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_y_pos();
+
+    return true;
 }
 
+// sub_824480
 bool slf__ui_camera_inc_z_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824480)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_z_pos();
+
+    return true;
 }
 
+// sub_8244A0
 bool slf__ui_camera_dec_z_pos__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8244A0)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_z_pos();
+
+    return true;
 }
 
+// sub_8244C0
 bool slf__ui_camera_inc_tilt__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8244C0)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_tilt();
+
+    return true;
 }
 
+// sub_8244E0
 bool slf__ui_camera_dec_tilt__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8244E0)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_tilt();
+
+    return true;
 }
 
+// sub_824500
 bool slf__ui_camera_inc_spin__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824500)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_spin();
+
+    return true;
 }
 
+// sub_824520
 bool slf__ui_camera_dec_spin__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824520)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_spin();
+
+    return true;
 }
 
+// sub_824540
 bool slf__ui_camera_inc_rotation__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824540)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->inc_rotation();
+
+    return true;
 }
 
+// sub_824560
 bool slf__ui_camera_dec_rotation__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824560)(this, stack);
+    if (igo_3d_camera_widget* camera = references::frontend.get().igo->camera_widget)
+        camera->dec_rotation();
+
+    return true;
 }
 
+// sub_861D40
 bool slf__ui_camera_reset_pos__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861D40)(this, stack);
+    stack.sp -= 0x04;
+
+    auto duration = stack.local_num(0x00);
+
+    if (references::frontend.get().igo->camera_widget) {
+        references::frontend.get().igo->camera_widget->reset_position();
+
+        retail::sub_69A910(references::frontend.get().igo->camera_widget, duration); // igo_3d_camera_widget move home
+    }
+
+    return true;
 }
 
 bool slf__add_ui_light__t::operator()(chuck::vm::vm_stack &stack) {

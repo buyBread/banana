@@ -45,6 +45,22 @@ void igo_3d_widget::kill_layer_0_anims() {
         anim_ctrl->kill_layer_anims(0);
 }
 
+// inlined @ sub_6D7E70
+// inlined @ sub_6D7F90
+// inlined @ sub_6D8070
+// inlined @ sub_6D8190
+// inlined @ sub_6D8270
+// inlined @ sub_6D8380
+void igo_3d_widget::reset_anim_speeds() {
+    arch_base* ent = entity_vh.resolve();
+
+    if (!ent || !ent->is_an_actor())
+        return;
+
+    if (animation_controller* anim_ctrl = ((actor*)ent)->anim_ctrl)
+        anim_ctrl->reset_speeds();
+}
+
 // sub_68A890
 bool igo_3d_widget::is_anim_playing() {
     arch_base* ent = entity_vh.resolve();
@@ -62,7 +78,14 @@ bool igo_3d_widget::is_anim_playing() {
     return anim_ctrl->get_anim_duration(0) > time;
 }
 
+// sub_68A900
+void igo_3d_widget::reset_entity_po() {
+    if (arch_base* ent = entity_vh.resolve())
+        retail::sub_626BE0((i32)ent, (u64*)&trans_matrix); // entity_base::set_rel_po
+}
+
 // sub_6899A0
+// inlined @ sub_6B2700
 i32 igo_3d_widget::get_mesh_index(const string_hash &nodename) {
     arch_base* ent = entity_vh.resolve();
 

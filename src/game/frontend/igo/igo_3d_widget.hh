@@ -127,6 +127,10 @@ namespace treyarch {
             return (igo_3d_widget_vtable*)vtable;
         }
 
+        void destroy() {
+            get_vtable()->destroy(this, 1);
+        }
+
         u8 is_shown() {
             return get_vtable()->is_shown(this);
         }
@@ -191,7 +195,9 @@ namespace treyarch {
         void fade_out(f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
 
         void kill_layer_0_anims();
+        void reset_anim_speeds();
         bool is_anim_playing(); // layer 0's newest anim hasn't reached its end
+        void reset_entity_po(); // puts the entity back at trans_matrix
 
         i32 get_mesh_index(const string_hash &nodename); // invalid_conglom_member without a conglomerate
         i32 find_child    (mash::string*      name);     // always -2; destroys the name

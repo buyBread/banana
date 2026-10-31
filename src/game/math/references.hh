@@ -55,6 +55,7 @@ namespace treyarch { namespace references {
     // translation unit copies of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
     inline util::memory_reference<matrix4x4> unk_01031d80    { 0x01031D80 };
+    inline util::memory_reference<matrix4x4> unk_010f7780    { 0x010F7780 }; // the widget_3d natives' copy
 
     // 9.8, the world's gravity
     inline util::memory_reference<f32> gravity { 0x00E6ACE8 };

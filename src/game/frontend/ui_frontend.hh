@@ -120,7 +120,7 @@ namespace treyarch {
         igo_3d_drawable*                    startup_widget_17c;
         igo_3d_drawable*                    startup_widget_180;
         igo_3d_drawable*                    startup_widget_184;
-        igo_3d_drawable*                    unknown_widget_188;
+        igo_3d_widget*                      unknown_widget_188;
         igo_3d_camera_widget*               camera_widget;
         u8                                  reserved_190[0x04];
         igo_3d_drawable**                   optional_widgets_begin;
@@ -171,6 +171,16 @@ namespace treyarch {
 
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);
+
+        void destroy_script_widget      (igo_3d_script_widget* widget); // whichever list has it
+        bool destroy_mission_text_widget(igo_3d_script_widget* widget); // false when unlisted or the instance ids differ
+        bool destroy_hint_text_widget   (igo_3d_script_widget* widget); // false when unlisted or the instance ids differ
+
+        void destroy_all_script_widgets(); // all three lists
+        void destroy_all_mission_text_widgets();
+        void destroy_all_hint_text_widgets();
+        void hide_all_mission_text_widgets();
+        void hide_all_hint_text_widgets();
 
         // inlined @ sub_6D85F0
         static igo_3d_script_widget* find_script_widget(const igo_3d_script_widget_list &list, igo_3d_script_widget* widget) {
