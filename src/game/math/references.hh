@@ -46,6 +46,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); what ai_basic_inode's optional vector params default to
     inline util::memory_reference<vector3d> unk_00fc5f00 { 0x00FC5F00 };
 
+    // (0, 0, 0); the tentacle and dangler code's ZEROVEC
+    inline util::memory_reference<vector3d> unk_00fc4a10 { 0x00FC4A10 };
+
     // (0, 0, 0); what an entity's vector param reads to a script when the entity has none
     inline util::memory_reference<vector3d> unk_010f7140 { 0x010F7140 };
 

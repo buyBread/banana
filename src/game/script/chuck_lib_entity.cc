@@ -24,6 +24,7 @@
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/ai_vehicle.hh"

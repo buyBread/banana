@@ -2,6 +2,7 @@
 
 #include "game/arch_base_vhandle.hh"
 #include "game/boolx.hh"
+#include "game/container/simple_list.hh"
 #include "treyarch/mash/mash_info.hh"
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector.hh"
@@ -39,7 +40,8 @@ namespace treyarch {
     public:
         void* self; // the resource handler points this at the cache itself
 
-        void*                      simple_list_vars[3]; // SM3's simple_list_variables<fx_cache*>
+        container::simple_list_variables
+            <fx_cache*>            simple_list_vars;
         resource_key               fx_name;             // a type-92 entity
         resource_key               cache_name;
         u32                        unk_20;

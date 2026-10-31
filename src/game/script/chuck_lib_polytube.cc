@@ -8,6 +8,8 @@
 #include "game/polytube.hh"
 #include "game/script/chuck_lib_polytube.hh"
 #include "game/script/script_access.hh"
+#include "game/wds/ai/ai_tentacle_engine.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -35,7 +37,7 @@ ai_tentacle_engine* treyarch::find_tentacle_engine(polytube* self, f32 id) {
     if (!self || !self->tentacle_info)
         return nullptr;
 
-    return (ai_tentacle_engine*)retail::sub_4B4B90((u32*)self->tentacle_info, (i32)id); // ai_tentacle_info::find_engine
+    return self->tentacle_info->get_engine((u32)(i32)id);
 }
 
 // inlined @ sub_864640
@@ -44,9 +46,9 @@ ai_tentacle_engine* treyarch::find_tentacle_engine(polytube* self, f32 id) {
 // inlined @ sub_864940
 // inlined @ sub_864A50
 f32 treyarch::link_tentacle_engine(ai_tentacle_info* info, ai_tentacle_engine* engine, f32 blend_time) { // the new engine's id
-    const u32 id = (u32)retail::sub_4B4B50((u32*)info, (u32*)engine); // ai_tentacle_info::link_engine
+    const u32 id = info->push_engine(engine);
 
-    retail::sub_4BC320((f32*)info, 1.0f, blend_time); // ai_tentacle_info::set_code_blend
+    info->set_code_blend(1.0f, blend_time);
 
     return (f32)id;
 }
@@ -382,7 +384,7 @@ bool slf__polytube__tentacle_set_end_position__vector3d__t::operator()(chuck::vm
     auto pos  = (const vector3d*)&stack.local_uint(0x04);
 
     if (self && self->tentacle_info)
-        retail::sub_491710((f32*)self->tentacle_info, (f32*)pos); // ai_tentacle_info::set_end_position
+        self->tentacle_info->set_end_position(*pos);
 
     return true;
 }
@@ -393,9 +395,7 @@ bool slf__polytube__tentacle_get_end_position__t::operator()(chuck::vm::vm_stack
 
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    vector3d result = self && self->tentacle_info ?
-        *(vector3d*)retail::sub_4917F0((char*)self->tentacle_info) : // ai_tentacle_info::get_end_position
-        vector3d(0.0f, 0.0f, 0.0f);
+    vector3d result = self && self->tentacle_info ? self->tentacle_info->get_end_position() : vector3d(0.0f, 0.0f, 0.0f);
 
     stack.push(&result, sizeof(result));
 
@@ -408,7 +408,7 @@ bool slf__polytube__tentacle_get_num_positions__t::operator()(chuck::vm::vm_stac
 
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
 
-    f32 result = self && self->tentacle_info ? (f32)retail::sub_4915D0((u32*)self->tentacle_info) : 0.0f; // ai_tentacle_info::get_num_positions
+    f32 result = self && self->tentacle_info ? (f32)self->tentacle_info->get_num_positions() : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -424,7 +424,7 @@ bool slf__polytube__tentacle_set_position__num__vector3d__t::operator()(chuck::v
     auto pos   = (const vector3d*)&stack.local_uint(0x08);
 
     if (self && self->tentacle_info)
-        retail::sub_4A01D0((u32*)self->tentacle_info, index, (f32*)pos); // ai_tentacle_info::set_position
+        self->tentacle_info->set_position(index, *pos);
 
     return true;
 }
@@ -436,9 +436,7 @@ bool slf__polytube__tentacle_get_position__num__t::operator()(chuck::vm::vm_stac
     auto self = (polytube*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
     auto index = (i32)stack.local_num(0x04);
 
-    vector3d result = self && self->tentacle_info ?
-        *(vector3d*)retail::sub_4A01B0((u32*)self->tentacle_info, index) : // ai_tentacle_info::get_position
-        vector3d(0.0f, 0.0f, 0.0f);
+    vector3d result = self && self->tentacle_info ? self->tentacle_info->get_position(index) : vector3d(0.0f, 0.0f, 0.0f);
 
     stack.push(&result, sizeof(result));
 
@@ -458,9 +456,9 @@ bool slf__polytube__tentacle_create_line__vector3d__num__t::operator()(chuck::vm
 
     // anything shorter is a straight line
     if (0.01f > length)
-        retail::sub_4B4510((i32)self->tentacle_info, (f32*)abs_position, nullptr);         // ai_tentacle_info::create_line
+        self->tentacle_info->create_line(*abs_position, nullptr);
     else
-        retail::sub_4B4730((i32)self->tentacle_info, (f32*)abs_position, length, nullptr); // ai_tentacle_info::create_sagging_line
+        retail::sub_4B4730((i32)self->tentacle_info, (f32*)abs_position, length, nullptr); // ai_tentacle_info::create_slack_line
 
     return true;
 }
@@ -474,7 +472,7 @@ bool slf__polytube__set_code_blend__num__num__t::operator()(chuck::vm::vm_stack 
     auto time  = stack.local_num(0x08);
 
     if (self && self->tentacle_info)
-        retail::sub_4BC320((f32*)self->tentacle_info, blend, time); // ai_tentacle_info::set_code_blend
+        self->tentacle_info->set_code_blend(blend, time);
 
     return true;
 }
@@ -487,7 +485,7 @@ bool slf__polytube__tentacle_kill_engine__num__t::operator()(chuck::vm::vm_stack
     auto id   = stack.local_num(0x04);
 
     if (self && self->tentacle_info)
-        retail::sub_4B4BC0((u32*)self->tentacle_info, (i32)id); // ai_tentacle_info::kill_engine
+        self->tentacle_info->kill_engine((u32)(i32)id);
 
     return true;
 }
@@ -518,11 +516,11 @@ bool slf__polytube__tentacle_add_strike_engine__vector3d__num__num__t::operator(
     if (!self || !self->tentacle_info)
         return true;
 
-    void* memory = mm::allocate(0x30);
+    void* memory = mm::allocate(sizeof(ai_tentacle_strike));
 
-    auto engine = memory ? (ai_tentacle_engine*)retail::sub_4B9E20((u32*)memory, (i32)self->tentacle_info) : nullptr;
+    auto* engine = memory ? new (memory) ai_tentacle_strike(self->tentacle_info) : nullptr;
 
-    ((void (__thiscall*)(ai_tentacle_engine*, const vector3d*, f32, i32))retail::sub_491CC0)(engine, target, speed, -1); // ai_tentacle_strike::setup
+    engine->setup(*target, speed, -1);
 
     f32 result = link_tentacle_engine(self->tentacle_info, engine, blend_time);
 
@@ -545,11 +543,11 @@ bool slf__polytube__tentacle_add_swirl_strike_engine__vector3d__num__num__num__n
     if (!self || !self->tentacle_info)
         return true;
 
-    void* memory = mm::allocate(0x38);
+    void* memory = mm::allocate(sizeof(ai_tentacle_swirl_strike));
 
-    auto engine = memory ? (ai_tentacle_engine*)retail::sub_4B9E90((u32*)memory, (i32)self->tentacle_info) : nullptr;
+    auto* engine = memory ? new (memory) ai_tentacle_swirl_strike(self->tentacle_info) : nullptr;
 
-    ((void (__thiscall*)(ai_tentacle_engine*, const vector3d*, f32, f32, f32))retail::sub_491CF0)(engine, target, speed, accel, curve_rad); // ai_tentacle_swirl_strike::setup
+    engine->setup(*target, speed, accel, curve_rad);
 
     f32 result = link_tentacle_engine(self->tentacle_info, engine, blend_time);
 
@@ -569,15 +567,15 @@ bool slf__polytube__tentacle_add_dangle_engine__num__num__t::operator()(chuck::v
     if (!self || !self->tentacle_info)
         return true;
 
-    void* memory = mm::allocate(0x2C);
+    void* memory = mm::allocate(sizeof(ai_tentacle_dangle));
 
-    auto engine = memory ? (ai_tentacle_engine*)retail::sub_4B9ED0((i32)memory, (i32)self->tentacle_info) : nullptr;
+    auto* engine = memory ? new (memory) ai_tentacle_dangle(self->tentacle_info) : nullptr;
 
     // too short keeps the tentacle's own length
     if (length < 0.0001)
         length = -1.0f;
 
-    ((void (__thiscall*)(ai_tentacle_engine*, f32, const vector3d*, bool, bool))retail::sub_4A07F0)(engine, length, &references::unk_010f7140.get(), true, true); // ai_tentacle_dangle::setup
+    ((void (__thiscall*)(ai_tentacle_dangle*, f32, const vector3d*, bool, bool))retail::sub_4A07F0)(engine, length, &references::unk_010f7140.get(), true, true); // ai_tentacle_dangle::setup
 
     f32 result = link_tentacle_engine(self->tentacle_info, engine, blend_time);
 
@@ -599,11 +597,11 @@ bool slf__polytube__tentacle_add_follow_engine__num__num__vector3d__num__t::oper
     if (!self || !self->tentacle_info)
         return true;
 
-    void* memory = mm::allocate(0x3C);
+    void* memory = mm::allocate(sizeof(ai_tentacle_follow));
 
-    auto engine = memory ? (ai_tentacle_engine*)retail::sub_4B9F70((i32)memory, (i32)self->tentacle_info) : nullptr;
+    auto* engine = memory ? new (memory) ai_tentacle_follow(self->tentacle_info) : nullptr;
 
-    ((void (__thiscall*)(ai_tentacle_engine*, f32, f32, const vector3d*, i32, bool, bool))retail::sub_4BC580)(engine, slack_percent, drag, gravity, 0, true, false); // ai_tentacle_follow::setup
+    engine->setup(slack_percent, drag, *gravity, arch_base_vhandle(), true, false);
 
     f32 result = link_tentacle_engine(self->tentacle_info, engine, blend_time);
 
@@ -623,14 +621,14 @@ bool slf__polytube__tentacle_add_slack_engine__num__num__t::operator()(chuck::vm
     if (!self || !self->tentacle_info)
         return true;
 
-    void* memory = mm::allocate(0x40);
+    void* memory = mm::allocate(sizeof(ai_tentacle_slack));
 
-    auto engine = memory ? (ai_tentacle_engine*)retail::sub_4B9FA0((i32)memory, (i32)self->tentacle_info) : nullptr;
+    auto* engine = memory ? new (memory) ai_tentacle_slack(self->tentacle_info) : nullptr;
 
     // hanging under the world's gravity
     vector3d gravity(0.0f, -0.0f - references::gravity.read(), 0.0f);
 
-    ((void (__thiscall*)(ai_tentacle_engine*, f32, f32, const vector3d*, i32, bool, bool))retail::sub_4BC690)(engine, rope_len, 1.0f, &gravity, 0, true, false); // ai_tentacle_slack::setup
+    engine->setup(rope_len, 1.0f, gravity, arch_base_vhandle(), true, false);
 
     f32 result = link_tentacle_engine(self->tentacle_info, engine, blend_time);
 
@@ -653,7 +651,7 @@ bool slf__polytube__tentacle_set_engine_attach_ent__num__entity__t::operator()(c
         return true;
 
     if (engine->get_type() == tentacle_engine_follow || engine->get_type() == tentacle_engine_slack)
-        retail::sub_491EF0((i32)engine, (i32)ent); // ai_tentacle_follow::set_attach_ent
+        ((ai_tentacle_follow*)engine)->set_attach_ent(arch_base_vhandle(ent));
 
     return true;
 }
@@ -673,7 +671,7 @@ bool slf__polytube__tentacle_set_engine_attach_ent__num__entity__vector3d__t::op
         return true;
 
     if (engine->get_type() == tentacle_engine_follow || engine->get_type() == tentacle_engine_slack)
-        retail::sub_492060((i32)engine, (i32)ent, (f32*)local_end); // ai_tentacle_follow::set_attach_ent
+        ((ai_tentacle_follow*)engine)->set_attach_ent(arch_base_vhandle(ent), *local_end);
 
     return true;
 }
@@ -694,7 +692,7 @@ bool slf__polytube__tentacle_set_engine_target__num__vector3d__t::operator()(chu
     if (engine->get_type() == tentacle_engine_strike)
         ((ai_tentacle_strike*)engine)->target = *target;
     else if (engine->get_type() == tentacle_engine_swirl_strike)
-        ((ai_tentacle_strike*)engine)->target = *target;
+        ((ai_tentacle_swirl_strike*)engine)->target = *target;
 
     return true;
 }
@@ -780,9 +778,9 @@ bool slf__polytube__tentacle_get_engine_drag__num__t::operator()(chuck::vm::vm_s
 
     if (engine) {
         if (engine->get_type() == tentacle_engine_follow)
-            result = ((ai_tentacle_follow*)engine)->follow_drag;
+            result = ((ai_tentacle_follow*)engine)->drag;
         else if (engine->get_type() == tentacle_engine_dangle)
-            result = (f32)retail::sub_491E60((u32*)engine); // ai_tentacle_dangle_old::get_drag
+            result = (f32)retail::sub_491E60((u32*)engine); // ai_tentacle_dangle_old::get_air_resistance
     }
 
     stack.push(&result, sizeof(result));
@@ -804,9 +802,9 @@ bool slf__polytube__tentacle_set_engine_drag__num__num__t::operator()(chuck::vm:
         return true;
 
     if (engine->get_type() == tentacle_engine_follow)
-        ((void (__thiscall*)(ai_tentacle_engine*, f32))retail::sub_492080)(engine, drag); // ai_tentacle_follow::set_drag
+        ((ai_tentacle_follow*)engine)->set_drag(drag);
     else if (engine->get_type() == tentacle_engine_dangle)
-        ((void (__thiscall*)(ai_tentacle_engine*, f32))retail::sub_491E70)(engine, drag); // ai_tentacle_dangle_old::set_drag
+        ((ai_tentacle_dangle_old*)engine)->set_air_resistance(drag);
 
     return true;
 }
@@ -840,7 +838,7 @@ bool slf__polytube__tentacle_set_engine_elasticity__num__num__t::operator()(chuc
 
     // any engine is taken for a dangle
     if (engine)
-        ((void (__thiscall*)(ai_tentacle_engine*, f32))retail::sub_491DC0)(engine, elasticity); // ai_tentacle_dangle_old::set_elasticity
+        ((ai_tentacle_dangle_old*)engine)->set_elasticity(elasticity);
 
     return true;
 }
@@ -857,7 +855,7 @@ bool slf__polytube__tentacle_get_engine_gravity__num__t::operator()(chuck::vm::v
     vector3d result = references::unk_010f7140.get();
 
     if (engine && (engine->get_type() == tentacle_engine_follow || engine->get_type() == tentacle_engine_dangle))
-        retail::sub_491E20((u32*)engine, (i32)&result); // ai_tentacle_dangle_old::get_gravity
+        result = ((ai_tentacle_dangle_old*)engine)->get_gravity();
 
     stack.push(&result, sizeof(result));
 
@@ -875,7 +873,7 @@ bool slf__polytube__tentacle_set_engine_gravity__num__vector3d__t::operator()(ch
     ai_tentacle_engine* engine = find_tentacle_engine(self, id);
 
     if (engine && (engine->get_type() == tentacle_engine_follow || engine->get_type() == tentacle_engine_dangle))
-        retail::sub_491DA0((u32*)engine, (f32*)gravity); // ai_tentacle_dangle_old::set_gravity
+        ((ai_tentacle_dangle_old*)engine)->set_gravity(*gravity);
 
     return true;
 }

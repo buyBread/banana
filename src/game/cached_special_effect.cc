@@ -23,9 +23,7 @@ void fx_cache_ent::finalize(mash::allocation_scope) {
 void fx_cache::construct_mashed_class() {
     self = nullptr;
 
-    simple_list_vars[0] = nullptr;
-    simple_list_vars[1] = nullptr;
-    simple_list_vars[2] = nullptr;
+    simple_list_vars.initialize();
 
     fx_name   .construct_mashed_class();
     cache_name.construct_mashed_class();
