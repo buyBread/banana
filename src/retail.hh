@@ -17932,7 +17932,7 @@ namespace retail {
     inline auto const sub_87CD60 = (char (__stdcall*)(i32**))0x0087CD60;
     inline auto const sub_87CDB0 = (i32 (__stdcall*)(i32*Src))0x0087CDB0;
     inline auto const sub_87CEE0 = (i32 (__thiscall*)(u32*self, i32))0x0087CEE0;
-    inline auto const sub_87CFC0 = (void* (__thiscall*)(void*self, u8*, u32*, u8*, u32*, u32*, u32*, u32*, u32*, u32*))0x0087CFC0;
+    inline auto const sub_87CFC0 = (bool (__thiscall*)(void*self, u32, u32*, u32*, u32*, u32*, u32*, u32*, u32*, u32*))0x0087CFC0; // manual
     inline auto const sub_87D140 = (i32 (__thiscall*)(u32*self, i32, i32*))0x0087D140;
     inline auto const sub_87D200 = (u32* (__thiscall*)(u32*self, u32*, u32))0x0087D200;
     inline auto const sub_87D4C0 = (u32 (__cdecl*)(...))0x0087D4C0; // prototype unavailable

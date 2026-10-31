@@ -44,6 +44,10 @@ void physical_interface::cancel_all_velocity(const vector3d &dir, bool both_dir)
     retail::sub_6253F0((i32)this, (f32*)&dir, both_dir);
 }
 
+guidance_system* physical_interface::create_guidance_sys(guidance_system::e_guidance_sys_type type) {
+    return (guidance_system*)retail::sub_5FFE20((u32*)this, type);
+}
+
 void physical_interface::stop_biped_physics(bool on_destroyed) {
     retail::sub_67A440((i32)this, on_destroyed);
 }

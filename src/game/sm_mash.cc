@@ -9,6 +9,7 @@
 #include "game/sm_mash.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
+#include "game/wds/entity/interface/thrown_weapon_interface.hh"
 #include "treyarch/mash/virtual_base.hh"
 
 using namespace treyarch;
@@ -181,6 +182,7 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<param_vector3d>();
         mash::mash_virtual_base::register_class<generic_anim_by_filename>();
         mash::mash_virtual_base::register_class<spiderman_rvb_player_interface>();
+        mash::mash_virtual_base::register_class<thrown_weapon_interface>();
     }
 
     retail::sub_723DA0();

@@ -354,6 +354,11 @@ namespace treyarch {
 
         region* get_primary_region();
 
+        // inlined
+        bool is_in_limbo() {
+            return (flags & entity_flag_in_limbo) || !get_primary_region();
+        }
+
         using entity_search_list = vc8::list<entity*>;
 
         // held while a script reads found_entities

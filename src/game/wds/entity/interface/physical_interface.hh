@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/wds/entity/interface/generic_interface.hh"
+#include "game/physics/guidance_sys.hh"
 #include "game/container/multi_vector.hh"
 #include "game/timing/simple_timer.hh"
 #include "game/arch_base_vhandle.hh"
@@ -10,7 +11,6 @@
 
 namespace treyarch {
     class biped_system;
-    class guidance_system;
     class pendulum;
     class rigid_body_prop_head;
     struct physical_interface_driver;
@@ -39,7 +39,8 @@ namespace treyarch {
         physical_interface_flag_non_biped_physics = 0x00040000,
         physical_interface_flag_biped_running     = 0x00080000,
         physical_interface_flag_bouncy            = 0x10000000,
-        physical_interface_flag_sticky            = 0x20000000
+        physical_interface_flag_sticky            = 0x20000000,
+        physical_interface_flag_stuck             = 0x80000000
     };
 
     class physical_interface : public actor_interface {
@@ -165,6 +166,18 @@ namespace treyarch {
         void set_angular_velocity(const vector3d &v) {
             angular_velocity = v;
         }
+
+        // inlined
+        bool has_guidance_sys() const {
+            return guide_sys != nullptr;
+        }
+
+        // inlined
+        guidance_system* guidance_sys() const {
+            return guide_sys;
+        }
+
+        guidance_system* create_guidance_sys(guidance_system::e_guidance_sys_type type); // only a rocket makes one
 
         void enable(bool val = true);
         void set_gravity(bool val = true); // a change also restarts the gravity delay
