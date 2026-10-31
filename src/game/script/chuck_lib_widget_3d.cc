@@ -3,8 +3,14 @@
 #include "retail.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_face_button_system.hh"
+#include "game/app.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
+#include "game/frontend/igo/igo_3d_text.hh"
 #include "game/frontend/ui_frontend.hh"
+#include "game/game.hh"
+#include "game/input/input_mgr.hh"
+#include "game/localized_string_table.hh"
+#include "game/script/chuck_lib_widget.hh"
 #include "game/script/chuck_lib_widget_3d.hh"
 #include "game/script/script_access.hh"
 #include "treyarch/base/tl_fixed_string.hh"
@@ -966,92 +972,466 @@ bool slf__widget_3d__get_text_id__str__t::operator()(chuck::vm::vm_stack &stack)
     return true;
 }
 
+// sub_85FA00
 bool slf__widget_3d__set_text_shown__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FA00)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto shown = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_shown(shown != 0.0f);
+    }
+
+    return true;
 }
 
+// sub_85FA70
 bool slf__widget_3d__set_text__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FA70)(this, stack);
+    // the count word covers every argument after self, the format's nums last
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    auto self    = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id      = stack.local_num(0x04);
+    auto text_id = stack.local_num(0x08);
+
+    if (!self || !references::frontend.get().igo->is_script_widget_valid(self))
+        return true;
+
+    igo_3d_text* text = self->get_text((i32)id);
+
+    if (!text)
+        return true;
+
+    // every string here dies through finalize, the destructor's twin
+    alignas(mash::string) u8 format_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 result_storage[sizeof(mash::string)];
+    alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+    auto* format = new (format_storage) mash::string();
+
+    input_mgr*    inputs = input_mgr::inst();
+    input_device* device = inputs->devices[joystick_2_device];
+
+    if (!device)
+        device = inputs->devices[joystick_1_device];
+
+    *format = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
+
+    if (device && device->unk_034()) {
+        alignas(4) u8 message[0x30]; // message_text
+
+        auto set_text = (void          (__thiscall*)(void*, mash::string))retail::sub_68B3C0;
+        auto get_text = (mash::string* (__thiscall*)(void*, mash::string*))retail::sub_90AB90;
+
+        retail::sub_68B310((u32*)message); // message_text::message_text
+
+        set_text(message, mash::string(*format));
+
+        retail::sub_6B2760((u32*)message); // rewrites the pad tokens
+
+        mash::string* rewritten = get_text(message, (mash::string*)storage);
+
+        bool changed = format->compare(rewritten->c_str()) != 0;
+
+        rewritten->finalize(mash::ALLOCATED);
+
+        if (changed) {
+            rewritten = get_text(message, (mash::string*)storage);
+
+            *format = *rewritten;
+
+            rewritten->finalize(mash::ALLOCATED);
+        }
+
+        retail::sub_68B440((i32*)message);
+        retail::sub_68B3A0((u32*)message); // message_text::~message_text
+    }
+
+    mash::string* result = format_script_text((mash::string*)result_storage,
+                                              new (storage) mash::string(*format),
+                                              0,
+                                              &stack.local_num(0x0C));
+
+    // a lone "$" shows nothing
+    auto* marker = new (storage) mash::string("$");
+    bool  blank  = result->is_equal(marker->c_str());
+    marker->finalize(mash::ALLOCATED);
+
+    if (blank) {
+        auto* empty = new (storage) mash::string("");
+        *result = *empty;
+        empty->finalize(mash::ALLOCATED);
+    }
+
+    text->set_text_no_localize(result->c_str());
+
+    result->finalize(mash::ALLOCATED);
+    format->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_85FD10
 bool slf__widget_3d__set_null_text__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FD10)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_text_no_localize("");
+    }
+
+    return true;
 }
 
+// sub_85FD70
 bool slf__widget_3d__set_text_debug__num__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FD70)(this, stack);
+    i32 count = (i32)stack.pop_num();
+
+    stack.move_sp(-4 * (count + 1));
+
+    return true;
 }
 
+// sub_85FDB0
 bool slf__widget_3d__set_text_pos__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FDB0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto x    = stack.local_num(0x08);
+    auto y    = stack.local_num(0x0C);
+
+    if (!self || !references::frontend.get().igo->is_script_widget_valid(self))
+        return true;
+
+    igo_3d_text* text = self->get_text((i32)id);
+
+    if (text) {
+        text->set_text_position_x(x);
+        text->set_text_position_y(y);
+    }
+
+    return true;
 }
 
+// sub_85FE20
 bool slf__widget_3d__set_text_dimensions__num__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FE20)(this, stack);
+    stack.sp -= 0x10;
+
+    auto self   = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id     = stack.local_num(0x04);
+    auto width  = stack.local_num(0x08);
+    auto height = stack.local_num(0x0C);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_dimensions(width, height);
+    }
+
+    return true;
 }
 
+// sub_85FE70
 bool slf__widget_3d__set_text_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FE70)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto scale = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_font_scale(scale);
+    }
+
+    return true;
 }
 
+// sub_85FEC0
 bool slf__widget_3d__set_text_button_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FEC0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto scale = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_button_scale(scale);
+    }
+
+    return true;
 }
 
+// sub_85FF10
 bool slf__widget_3d__set_text_valign__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FF10)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto align = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_v_justification((i32)align);
+    }
+
+    return true;
 }
 
+// sub_85FF60
 bool slf__widget_3d__set_text_halign__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FF60)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto align = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_h_justification((i32)align);
+    }
+
+    return true;
 }
 
+// sub_85FFB0
 bool slf__widget_3d__set_text_font__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85FFB0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto font = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_font((i32)font, 2);
+    }
+
+    return true;
 }
 
+// sub_860000
 bool slf__widget_3d__set_text_color__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860000)(this, stack);
+    stack.sp -= 0x0C;
+
+    return true;
 }
 
+// sub_860010
 bool slf__widget_3d__set_text_color__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860010)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto color = (const vector3d*)&stack.local_uint(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_font_color(color->x, color->y, color->z);
+    }
+
+    return true;
 }
 
+// sub_860070
 bool slf__widget_3d__set_text_wordwrap__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860070)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto wrap = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_word_wrap(wrap != 0.0f);
+    }
+
+    return true;
 }
 
+// sub_8600E0
 bool slf__widget_3d__set_text_x_scale__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8600E0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto scale = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_x_scale(scale);
+    }
+
+    return true;
 }
 
+// sub_860130
 bool slf__widget_3d__set_text_character_gap__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860130)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto gap  = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_character_gap(gap);
+    }
+
+    return true;
 }
 
+// sub_860180
 bool slf__widget_3d__set_text_wordwrap_line_gap__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860180)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto gap  = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->set_word_wrap_line_gap(gap);
+    }
+
+    return true;
 }
 
+// sub_8601D0
 bool slf__widget_3d__set_text_shadow__num__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8601D0)(this, stack);
+    stack.sp -= 0x14;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto color = (const vector3d*)&stack.local_uint(0x08);
+
+    if (!self || !references::frontend.get().igo->is_script_widget_valid(self))
+        return true;
+
+    igo_3d_text* text = self->get_text((i32)id);
+
+    if (text) {
+        text->set_shadow(true);
+        text->set_shadow_color(color->x, color->y, color->z);
+    }
+
+    return true;
 }
 
+// sub_860240
 bool slf__widget_3d__set_text_shadow_alpha__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860240)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self  = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id    = stack.local_num(0x04);
+    auto alpha = stack.local_num(0x08);
+
+    if (!self || !references::frontend.get().igo->is_script_widget_valid(self))
+        return true;
+
+    igo_3d_text* text = self->get_text((i32)id);
+
+    if (!text)
+        return true;
+
+    // no alpha turns the shadow off and keeps the old alpha
+    if (alpha <= 0.0f)
+        text->set_shadow(false);
+    else {
+        text->set_shadow(true);
+        text->set_shadow_alpha(alpha);
+    }
+
+    return true;
 }
 
+// sub_8602B0
 bool slf__widget_3d__set_text_typewriter__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8602B0)(this, stack);
+    stack.sp -= 0x0C;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+    auto on   = stack.local_num(0x08);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->typewriter = on != 0.0f;
+    }
+
+    return true;
 }
 
+// sub_860310
 bool slf__widget_3d__is_text_done_updating__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860310)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+
+    igo_3d_text* text = nullptr;
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self))
+        text = self->get_text((i32)id);
+
+    f32 result = text ? (f32)text->all_lines_revealed() : 1.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8603A0
 bool slf__widget_3d__end_text_typewriter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8603A0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto self = (igo_3d_script_widget*)stack.local_uint(0x00);
+    auto id   = stack.local_num(0x04);
+
+    if (self && references::frontend.get().igo->is_script_widget_valid(self)) {
+        igo_3d_text* text = self->get_text((i32)id);
+
+        if (text)
+            text->typewriter = false;
+    }
+
+    return true;
 }
 
 // sub_8603E0

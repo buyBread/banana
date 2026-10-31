@@ -1,7 +1,149 @@
+#include <new>
+
 #include "retail.hh"
+#include "game/app.hh"
+#include "game/game.hh"
+#include "game/localized_string_table.hh"
 #include "game/script/chuck_lib_widget.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 
 using namespace treyarch;
+
+// sub_823D50
+mash::string* treyarch::format_script_text(mash::string* out,
+                                           mash::string* format,
+                                           i32           byte_offset,
+                                           const f32*    nums) {
+
+    new (out) mash::string();
+
+    i32 mark = format->find("%", 0);
+
+    if (mark == mash::string::npos)
+        *out = *format;
+    else {
+        // every temporary dies through finalize, the destructor's twin
+        alignas(mash::string) u8 storage[sizeof(mash::string)];
+        alignas(mash::string) u8 separator_storage[sizeof(mash::string)];
+
+        nums = (const f32*)((const u8*)nums + byte_offset);
+
+        i32 previous = -2;
+
+        do {
+            auto* piece = new (storage) mash::string(format->substr(previous + 2, mark - previous - 2));
+            *out += *piece;
+            piece->finalize(mash::ALLOCATED);
+
+            switch (format->data()[mark + 1]) {
+                case '%':
+                    *out += "%";
+                    break;
+
+                case 'd': {
+                    auto* number = new (storage) mash::string(mash::string::from_int((i32)*nums));
+                    *out += *number;
+                    number->finalize(mash::ALLOCATED);
+
+                    ++nums;
+                    break;
+                }
+
+                case 'f': {
+                    auto* number = new (storage) mash::string(mash::string::from_float(*nums));
+                    *out += *number;
+                    number->finalize(mash::ALLOCATED);
+
+                    ++nums;
+                    break;
+                }
+
+                case 't': {
+                    f32 seconds = *nums++;
+
+                    if (seconds > 0.0f) {
+                        i32 whole = (i32)seconds;
+
+                        auto* time = new (storage) mash::string(mash::string::fmt, "%02d:%02d", whole / 60, whole % 60);
+                        *out += *time;
+                        time->finalize(mash::ALLOCATED);
+                    } else
+                        *out += "--:--";
+
+                    break;
+                }
+
+                case 'T': {
+                    f32 seconds = *nums++;
+
+                    auto* separator = new (separator_storage) mash::string(references::game.read()->string_localizer->lookup_localized_string(258));
+
+                    mash::string* time;
+
+                    if (seconds > 0.0f) {
+                        i32 whole        = (i32)seconds;
+                        i32 milliseconds = (i32)(((f64)seconds - (f32)whole) * 1000.0);
+
+                        if (milliseconds >= 1000)
+                            milliseconds = 0;
+
+                        time = new (storage) mash::string(mash::string::fmt,
+                                                          "%02d:%02d%s%002d",
+                                                          whole / 60,
+                                                          whole % 60,
+                                                          separator->c_str(),
+                                                          milliseconds);
+                    } else
+                        time = new (storage) mash::string(mash::string::fmt, "--:--%s---", separator->c_str());
+
+                    *out += *time;
+                    time->finalize(mash::ALLOCATED);
+                    separator->finalize(mash::ALLOCATED);
+
+                    break;
+                }
+
+                default:
+                    break;
+            }
+
+            previous = mark;
+
+            if (mark + 2 >= format->size())
+                break;
+
+            mark = format->find("%", mark + 2);
+        } while (mark != mash::string::npos);
+
+        if (previous + 2 < format->size()) {
+            auto* rest = new (storage) mash::string(format->substr(previous + 2, mash::string::npos));
+            *out += *rest;
+            rest->finalize(mash::ALLOCATED);
+        }
+    }
+
+    format->finalize(mash::ALLOCATED);
+
+    return out;
+}
+
+// sub_85ED40
+mash::string* treyarch::format_script_text(mash::string*                         out,
+                                           mash::string*                         format,
+                                           chuck::vm::script_dynamic_array<f32>* nums) {
+
+    if (nums->array->size()) {
+        alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+        // the elements go in as they lie, one num word after another
+        format_script_text(out, new (storage) mash::string(*format), 0, (const f32*)nums->array->begin());
+    } else
+        new (out) mash::string(*format);
+
+    format->finalize(mash::ALLOCATED);
+
+    return out;
+}
 
 bool slf__get_timer_widget__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_83EC10)(this, stack);

@@ -46,20 +46,20 @@ void ui_frontend::draw_script_widgets() {
             if (!widget)
                 continue;
 
-            // children labelled "[...]" get method_008(1);
-            // a widget without children is hidden
-            vc8::list<igo_3d_script_widget_child*> children(widget->children);
+            // texts reading "[...]" are shown;
+            // a widget without texts is hidden
+            vc8::list<igo_3d_text*> texts(widget->texts);
 
-            if (children.size()) {
-                for (auto* child = children.begin(); child != children.end(); child = child->next) {
-                    igo_3d_script_widget_child* value = child->value;
+            if (texts.size()) {
+                for (auto* text_position = texts.begin(); text_position != texts.end(); text_position = text_position->next) {
+                    igo_3d_text* text = text_position->value;
 
                     bool bracketed = false;
 
-                    if (value) {
+                    if (text) {
                         alignas(mash::string) u8 storage[sizeof(mash::string)];
 
-                        mash::string* label = value->vtable->get_label(value, (mash::string*)storage);
+                        mash::string* label = text->get_text((mash::string*)storage);
 
                         bracketed = label->data()[0] == '[';
 
@@ -68,7 +68,7 @@ void ui_frontend::draw_script_widgets() {
                     }
 
                     if (bracketed)
-                        value->vtable->method_008(value, 1);
+                        text->set_shown(true);
                 }
             } else
                 widget->set_shown(false);

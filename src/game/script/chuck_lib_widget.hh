@@ -3,10 +3,26 @@
 #include "treyarch/chuck/script_library/script_library_class.hh"
 #include "treyarch/chuck/script_library/script_library_function.hh"
 #include "treyarch/chuck/vm/vm_stack.hh"
+#include "treyarch/mash/string.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace chuck { namespace vm {
+        template<typename T>
+        class script_dynamic_array;
+    }} // chuck::vm
+
+    /* script text with the natives' trailing nums put in: %d, %f, %t (minutes:seconds), %T (with milliseconds) and %%.
+       out is raw storage, built here; format is a copy in raw storage, finalized here */
+    mash::string* format_script_text(mash::string*                         out,
+                                     mash::string*                         format,
+                                     i32                                   byte_offset,
+                                     const f32*                            nums);
+    mash::string* format_script_text(mash::string*                         out,
+                                     mash::string*                         format,
+                                     chuck::vm::script_dynamic_array<f32>* nums);
+
     class slc_timer_widget_t : public chuck::script_library::script_library_class {
 
     public:

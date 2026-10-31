@@ -95,8 +95,8 @@ namespace treyarch {
         u8                            unk_050;             // latched by spawning the entity
         u8                            reserved_051[0x0F];
         matrix4x4                     trans_matrix;
-        vc8::map<i32, igo_3d_text*>   unk_0a0;
-        vc8::map<i32, igo_3d_widget*> unk_0ac;
+        vc8::map<i32, igo_3d_text*>   member_texts;        // by conglomerate member index
+        vc8::map<i32, igo_3d_widget*> member_widgets;      // by conglomerate member index
         vc8::list<igo_3d_text*>       unk_0b8;
         vc8::list<igo_3d_widget*>     unk_0c4;
         u8                            reserved_0d0[0x08];
@@ -223,7 +223,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget, entity_vh,                   0x04C);
     ASSERT_OFFSETOF(igo_3d_widget, unk_050,                     0x050);
     ASSERT_OFFSETOF(igo_3d_widget, trans_matrix,                0x060);
-    ASSERT_OFFSETOF(igo_3d_widget, unk_0a0,                     0x0A0);
+    ASSERT_OFFSETOF(igo_3d_widget, member_texts,                0x0A0);
+    ASSERT_OFFSETOF(igo_3d_widget, member_widgets,              0x0AC);
     ASSERT_OFFSETOF(igo_3d_widget, unk_0c4,                     0x0C4);
     ASSERT_OFFSETOF(igo_3d_widget, faded_in,                    0x0D8);
     ASSERT_OFFSETOF(igo_3d_widget, fade_in_remaining,           0x0DC);
