@@ -136,15 +136,15 @@ void ui_frontend::draw() {
         if (loading_screen)
             loading_screen->render();
 
-        if (letterbox &&((loading_screen->color >> 24) != 0xFF ||
-                          loading_screen->fade < 1.0f)) {
+        if (letterbox_widget && (loading_screen->color.a != 0xFF ||
+                                 loading_screen->fade < 1.0f)) {
 
-            letterbox->render();
+            letterbox_widget->render();
         }
     } else {
         if (!current_game->disable_interface) {
             if (!current_game->game_paused) {
-                if (!current_igo->letterbox || !current_igo->letterbox->is_shown()) {
+                if (!current_igo->letterbox_widget || !current_igo->letterbox_widget->is_shown()) {
                     if (!cut_scene_toa_helper::get()->is_running()) {
                         if (!conversation_menu_system->is_conversation_active()) {
                             if (unknown_widget_0c0)
@@ -271,8 +271,8 @@ void ui_frontend::draw() {
 
         draw_interface_disabled_script_widgets(current_game->disable_interface);
 
-        if (letterbox && (!scrapbook || !scrapbook->is_active()))
-            letterbox->render();
+        if (letterbox_widget && (!scrapbook || !scrapbook->is_active()))
+            letterbox_widget->render();
 
         if (zoom_map)
             zoom_map->draw_map_overlay();
@@ -300,8 +300,8 @@ void ui_frontend::draw() {
 
     if (!current_igo->loading_screen->is_shown() &&
         !current_game->disable_interface && !current_game->game_paused &&
-        (!current_igo->letterbox ||
-         !current_igo->letterbox->is_shown())) {
+        (!current_igo->letterbox_widget ||
+         !current_igo->letterbox_widget->is_shown())) {
 
         if (!cut_scene_toa_helper::get()->is_running() && !conversation_menu_system->is_conversation_active())
             if (radar_widget)

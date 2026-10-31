@@ -614,7 +614,7 @@ void cut_scene_player::stop(cut_scene* only) {
             if ((flags & 0x4000) && !(flags & cut_scene::no_fades))
                 state_flags |= 0x0800;
             else if (on_last_segment() && !(state_flags & toa_middle) && !(state_flags & toa_first))
-                retail::sub_6E7000((u32*)igo, 0.8f, 0.0f); // letterbox
+                igo->letterbox(0.8f, 0.0f);
         }
     }
 
@@ -713,14 +713,14 @@ bool cut_scene_player::advance_fade(f32 time_inc) {
             play_current_segment();
 
             if (current_cut_scene && (current_cut_scene->flags & 0x0004) && (current_cut_scene->flags & 0x2000))
-                retail::sub_6E7000((u32*)igo, 0.0f, 60.0f); // letterbox
+                igo->letterbox(0.0f, 60.0f);
         } else {
             finish();
 
             if (state_flags & 0x0800) {
                 state_flags &= ~0x0800;
 
-                retail::sub_6E7000((u32*)igo, 0.0f, 0.0f);
+                igo->letterbox(0.0f, 0.0f);
 
                 if (state_flags & give_back_igo) {
                     state_flags &= ~give_back_igo;
@@ -1124,7 +1124,7 @@ bool cut_scene_player::start_current_segment() {
         !(state_flags & toa_middle) &&
         !(state_flags & toa_last)) {
 
-        retail::sub_6E7000((u32*)references::frontend.get().igo, 1.5f, 60.0f); // letterbox
+        references::frontend.get().igo->letterbox(1.5f, 60.0f);
     }
 
     return true;

@@ -165,7 +165,7 @@ void game::advance_state_load_level(f32 time_inc) {
 
     retail::sub_687F40((u32**)&frontend);
     level.destroy_loading_widgets();
-    retail::sub_707E90((u8*)frontend.igo->loading_screen, 0.0f, 1, 0, 0, 0, 45.0f);
+    frontend.igo->loading_screen->blackscreen_on(0.0f, true, false, false, false, 45.0f);
 
     mission_manager* missions = mission_manager::inst();
 
@@ -254,7 +254,7 @@ void game::advance_state_credits(f32) {
     process_stack.back().go_next_state();
 
     retail::sub_8FF2F0();
-    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+    references::frontend.get().igo->loading_screen->blackscreen_on(0.0f, false, false, false, false, 45.0f);
 
     clear_screen();
 

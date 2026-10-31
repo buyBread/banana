@@ -109,7 +109,9 @@ namespace treyarch {
         player_spider_senses  spider_senses;
         u8                    reserved_414[0x9C];
         arch_base_vhandle     unk_4b0;       // an actor the als's target_ai rules read as the hero's target
-        u8                    reserved_4b4[0x4C];
+        u8                    reserved_4b4[0x04];
+        f32                   unk_4b8;       // counted down by the frame advance; the blackscreen sets it to its fade time
+        u8                    reserved_4bc[0x44];
         bool                  override_mode;
         u8                    reserved_501[0x1B];
         mash::array_replacement
@@ -319,6 +321,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(player_interface, reflexes,        0x3D4);
     ASSERT_OFFSETOF(player_interface, spider_senses,   0x3FC);
     ASSERT_OFFSETOF(player_interface, unk_4b0,         0x4B0);
+    ASSERT_OFFSETOF(player_interface, unk_4b8,         0x4B8);
     ASSERT_OFFSETOF(player_interface, override_mode,   0x500);
     ASSERT_OFFSETOF(player_interface, buttons,         0x51C);
     ASSERT_OFFSETOF(player_interface, command_buttons, 0x520);

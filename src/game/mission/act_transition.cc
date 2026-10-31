@@ -97,7 +97,7 @@ void mission_manager::advance_act_transition() {
                 (!auto_launch_instances || !auto_launch_instances->size()) &&
                 !quest_manager::inst()->unk_000)
 
-                retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.25f, 0);
+                references::frontend.get().igo->loading_screen->blackscreen_off(0.25f, false);
 
             act_transition_state = 0;
 
@@ -112,7 +112,7 @@ void mission_manager::begin_act_transition() {
     act_transition_countdown = 3;
     act_transition_state     = 2;
 
-    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.1f, 0, 1, 0, 0, 45.0f);
+    references::frontend.get().igo->loading_screen->blackscreen_on(0.1f, false, true, false, false, 45.0f);
 }
 
 // sub_97E490

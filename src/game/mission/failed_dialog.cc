@@ -77,7 +77,7 @@ void mission_manager::quit_failed_mission() {
                               script_arg());
     }
 
-    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+    references::frontend.get().igo->loading_screen->blackscreen_on(0.0f, false, false, false, false, 45.0f);
 
     {
         i32 max_hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points();
@@ -170,7 +170,7 @@ void mission_manager::retry_failed_mission() {
                               script_arg());
     }
 
-    retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+    references::frontend.get().igo->loading_screen->blackscreen_on(0.0f, false, false, false, false, 45.0f);
 
     {
         i32 max_hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->get_max_hit_points();

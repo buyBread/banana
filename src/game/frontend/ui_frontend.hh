@@ -6,14 +6,18 @@
 #include "game/frontend/entity_tracker.hh"
 #include "game/frontend/igo/igo_3d_agility_test.hh"
 #include "game/frontend/igo/igo_3d_boss_meter_system.hh"
+#include "game/frontend/igo/igo_3d_button_tips.hh"
 #include "game/frontend/igo/igo_3d_enemy_health_manager.hh"
 #include "game/frontend/igo/igo_3d_generic_meter_widget.hh"
+#include "game/frontend/igo/igo_3d_letterbox.hh"
+#include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_message_box_widget.hh"
 #include "game/frontend/igo/igo_3d_objective_text_widget.hh"
 #include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/frontend/igo/igo_3d_ped_warning_widget.hh"
 #include "game/frontend/igo/igo_3d_radar_widget.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
+#include "game/frontend/igo/igo_3d_spidey_distance_widget.hh"
 #include "game/frontend/igo/igo_3d_timer_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
@@ -24,6 +28,7 @@
 #include "game/container/legacy_list.hh"
 #include "game/math/algebra.hh"
 #include "treyarch/math/matrix.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "game/mutex.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -32,7 +37,6 @@
 namespace treyarch {
     class igo_3d_camera_widget;
     class igo_3d_face_button_system;
-    class igo_3d_loading_screen;
     class igo_3d_nav_button_bar;
     class igo_3d_scrapbook;
 
@@ -78,6 +82,14 @@ namespace treyarch {
 
         // background mode 4 sets it; nothing reads it
         inline util::memory_reference<u32> unk_0102fe9c { 0x0102FE9C };
+
+        // spiderman_is_spider_senses_on is true while it's set
+        inline util::memory_reference<u8> spider_senses_on { 0x0102CDB5 };
+
+        // 0 in retail data and never written; letterbox keeps the height only at exactly 1
+        inline util::memory_reference<f32> unk_0102d00c { 0x0102D00C };
+
+        inline util::memory_reference<string_hash> senses_exited { 0x0102C48C };
     } // references
 
     class ui_frontend {
@@ -95,7 +107,7 @@ namespace treyarch {
         igo_3d_widget*                      combo_meter;
         igo_3d_widget*                      hero_health;
         igo_3d_widget*                      hero_portrait;
-        igo_3d_widget*                      spidey_distance;
+        igo_3d_spidey_distance_widget*      spidey_distance;
         igo_3d_boss_meter_system*           boss_meter_system;
         igo_3d_pauseless_dialog_widget*     pauseless_dialog;
         igo_3d_widget*                      district_marker;
@@ -125,8 +137,8 @@ namespace treyarch {
         igo_3d_drawable*                    unknown_widget_14c;
         igo_3d_objective_text_widget*       objective_text;
         igo_3d_hint_text_widget*            hint_text;
-        igo_3d_widget*                      letterbox;
-        igo_3d_widget*                      button_tips;
+        igo_3d_letterbox*                   letterbox_widget;
+        igo_3d_button_tips*                 button_tips;
         treyarch::conversation_menu_system* conversation_menu_system;
         dialog_box*                         dialog;
         u8                                  conversation_state_168;
@@ -193,6 +205,8 @@ namespace treyarch {
 
         void destroy_fog(finger_of_god* fog); // deletes it and drops it from the radar
 
+        void letterbox(f32 time, f32 height); // leaves the senses first when the height is above 0.0001
+
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);
 
@@ -237,7 +251,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, scrapbook,                     0x128);
     ASSERT_OFFSETOF(ui_frontend, zoom_map,                      0x12C);
     ASSERT_OFFSETOF(ui_frontend, loading_screen,                0x130);
-    ASSERT_OFFSETOF(ui_frontend, letterbox,                     0x158);
+    ASSERT_OFFSETOF(ui_frontend, letterbox_widget,              0x158);
     ASSERT_OFFSETOF(ui_frontend, button_tips,                   0x15C);
     ASSERT_OFFSETOF(ui_frontend, unified_announcement,          0x144);
     ASSERT_OFFSETOF(ui_frontend, conversation_menu_system,      0x160);

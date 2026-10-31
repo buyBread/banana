@@ -4,6 +4,9 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 #include "treyarch/mash/string.hh"
 
 using namespace treyarch;
@@ -39,7 +42,7 @@ i32 ui_frontend::update_widget_suppression_conditions() {
     if (current_igo->loading_screen && current_igo->loading_screen->is_shown())
         widget_suppression_conditions |= suppress_when_loading_screen;
 
-    if (current_igo->letterbox && current_igo->letterbox->is_shown())
+    if (current_igo->letterbox_widget && current_igo->letterbox_widget->is_shown())
         widget_suppression_conditions |= suppress_when_letterbox_visible;
 
     u8 visible = current_igo->pauseless_dialog->is_shown();
@@ -103,4 +106,26 @@ void ui_frontend::destroy_fog(finger_of_god* fog) {
     *position = nullptr;
 
     radar->fingers_of_god.erase(position);
+}
+
+// sub_6E7000
+void ui_frontend::letterbox(f32 time, f32 height) {
+    if (!letterbox_widget)
+        return;
+
+    if ((f64)height > 0.0001) {
+        ui_frontend* igo = references::frontend.get().igo;
+
+        references::spider_senses_on.write(0);
+        igo->background_effect_mode = 0;
+        retail::sub_6B17B0(igo, 0.0f); // the background effect update
+
+        if (references::g_world_ptr.read()->get_hero_ptr())
+            references::g_world_ptr.read()->get_hero_ptr()->raise_event(references::senses_exited.read());
+    }
+
+    if (references::unk_0102d00c.read() != 1.0f)
+        height = (f32)(height * 0.5);
+
+    letterbox_widget->letterbox(time, height);
 }

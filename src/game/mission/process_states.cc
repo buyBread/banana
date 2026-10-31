@@ -109,7 +109,7 @@ void mission_manager::process_state_idle(f32 time_inc) {
     }
 
     if (flags & mission_manager_flag_need_to_malor) {
-        retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0, 0, 0, 0, 45.0f);
+        references::frontend.get().igo->loading_screen->blackscreen_on(0.0f, false, false, false, false, 45.0f);
 
         flags       &= ~mission_manager_flag_need_to_malor;
         state_timer  = 0.0f;
@@ -644,7 +644,7 @@ void mission_manager::process_state_unloading() {
         game_data* data = references::game.read()->data;
 
         if ((!data || !retail::sub_77C9F0((u32*)data)) && end_fade)
-            retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 1);
+            references::frontend.get().igo->loading_screen->blackscreen_off(0.0f, true);
     }
 
     state = mission_manager_state_idle;
@@ -759,7 +759,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 // sub_980FE0
 void mission_manager::process_state_start_mission_failed_dialog() {
     play_failed_music();
-    retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0);
+    references::frontend.get().igo->loading_screen->blackscreen_off(0.0f, false);
 
     i32 hit_points = references::g_world_ptr.read()->hero_ptr->damage_ifc()->hit_points.val;
 
@@ -830,7 +830,7 @@ void mission_manager::process_state_blackscreen_on() {
     if (flags & mission_manager_flag_unk_08000000)
         flags &= ~mission_manager_flag_unk_08000000;
     else if (!references::frontend.get().igo->loading_screen->is_shown())
-        retail::sub_707E90((u8*)references::frontend.get().igo->loading_screen, 1.5f, 0, 0, 0, 0, 45.0f);
+        references::frontend.get().igo->loading_screen->blackscreen_on(1.5f, false, false, false, false, 45.0f);
 
     state_timer = 0.0f;
 

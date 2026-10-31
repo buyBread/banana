@@ -25,7 +25,7 @@ void poi_icon_widget::draw() {
 
     ui_frontend* igo = references::frontend.get().igo;
 
-    if (igo->letterbox && igo->letterbox->is_shown())
+    if (igo->letterbox_widget && igo->letterbox_widget->is_shown())
         return;
 
     if (igo->zoom_map->is_open_or_zooming())

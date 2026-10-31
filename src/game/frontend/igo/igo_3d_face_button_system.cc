@@ -24,6 +24,11 @@ mash::string* igo_3d_face_button_system::get_button_anim_name(mash::string* resu
     return new (result) mash::string(references::button_anim_names.get()[kind][index].text);
 }
 
+// sub_6B8820
+bool igo_3d_face_button_system::has_button(i32 id) {
+    return find_button(id) != nullptr;
+}
+
 // sub_6DE2E0
 void igo_3d_face_button_system::remove_all_buttons() {
     engine_lock_scope scope(&lock);

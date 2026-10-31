@@ -358,7 +358,7 @@ void mission_manager::terminate_script(bool was_completed_successfully, bool sup
         if (igo->enemy_health_manager)
             retail::sub_68D020((u8*)igo->enemy_health_manager, 0);
 
-        retail::sub_6E7000((u32*)igo, 0.0f, 0.0f); // letterbox
+        igo->letterbox(0.0f, 0.0f);
         igo->set_generic_meter_visible(false);
     }
 

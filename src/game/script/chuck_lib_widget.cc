@@ -9,6 +9,7 @@
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
 #include "game/localized_string_table.hh"
+#include "game/mission/mission_manager.hh"
 #include "game/script/chuck_lib_widget.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 
@@ -159,88 +160,234 @@ bool slf__get_timer_widget__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_83EC40
 bool slf__is_blackscreen__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EC40)(this, stack);
+    f32 result = references::frontend.get().igo->loading_screen->is_shown() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85E280
 bool slf__blackscreen_on__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E280)(this, stack);
+    stack.sp -= 0x04;
+
+    auto time = stack.local_num(0x00);
+
+    references::frontend.get().igo->loading_screen->blackscreen_on(time, true, false, false, false, 45.0f);
+
+    return true;
 }
 
+// sub_85E2C0
 bool slf__blackscreen_on_from_cutscene__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E2C0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto time = stack.local_num(0x00);
+
+    references::frontend.get().igo->loading_screen->blackscreen_on(time, true, false, true, false, 45.0f);
+
+    return true;
 }
 
+// sub_85E300
 bool slf__blackscreen_on_from_cutscene_no_freeze__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E300)(this, stack);
+    stack.sp -= 0x04;
+
+    auto time = stack.local_num(0x00);
+
+    references::frontend.get().igo->loading_screen->blackscreen_on(time, true, false, true, true, 45.0f);
+
+    return true;
 }
 
+// sub_85E340
 bool slf__blackscreen_off__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E340)(this, stack);
+    stack.sp -= 0x04;
+
+    auto time = stack.local_num(0x00);
+
+    if (!mission_manager::inst()->is_mission_ready())
+        references::frontend.get().igo->loading_screen->blackscreen_off(time, false);
+
+    return true;
 }
 
+// sub_85E380
 bool slf__letterbox__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E380)(this, stack);
+    stack.sp -= 0x08;
+
+    auto time   = stack.local_num(0x00);
+    auto height = stack.local_num(0x04);
+
+    references::frontend.get().igo->letterbox(time, height);
+
+    return true;
 }
 
+// sub_85E3B0
 bool slf__add_tip__entity__str__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E3B0)(this, stack);
+    stack.sp -= 0x10;
+
+    arch_base_vhandle ent(stack.local_uint(0x00));
+
+    auto button_a = (const char*)stack.local_uint(0x04);
+    auto button_b = (const char*)stack.local_uint(0x08);
+    auto modifier = stack.local_num(0x0C);
+
+    auto result = (f32)references::frontend.get().igo->button_tips->add_tip(ent, button_a, button_b, modifier, 0.0f);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_85E410
 bool slf__remove_tip__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E410)(this, stack);
+    stack.sp -= 0x04;
+
+    auto index = stack.local_num(0x00);
+
+    references::frontend.get().igo->button_tips->remove_tip((i32)index);
+
+    return true;
 }
 
+// sub_85E440
 bool slf__activate_stealth_meter__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E440)(this, stack);
+    stack.sp -= 0x08;
+
+    auto max_distance = stack.local_num(0x00);
+    auto min_distance = stack.local_num(0x04);
+
+    igo_3d_spidey_distance_widget* distance = references::frontend.get().igo->spidey_distance;
+
+    distance->set_max_distance(max_distance);
+    distance->set_min_distance(min_distance);
+    distance->set_mode(2);
+    distance->set_shown(true);
+
+    return true;
 }
 
+// sub_85E490
 bool slf__activate_follow_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E490)(this, stack);
+    stack.sp -= 0x04;
+
+    auto max_distance = stack.local_num(0x00);
+
+    igo_3d_spidey_distance_widget* distance = references::frontend.get().igo->spidey_distance;
+
+    distance->set_max_distance(max_distance);
+    distance->set_mode(1);
+    distance->set_shown(true);
+
+    return true;
 }
 
+// sub_85E4D0
 bool slf__activate_distance_widget__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E4D0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto max_distance = stack.local_num(0x00);
+
+    references::frontend.get().igo->spidey_distance->set_max_distance(max_distance);
+    references::frontend.get().igo->spidey_distance->set_shown(true);
+
+    return true;
 }
 
+// sub_823CA0
 bool slf__activate_distance_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823CA0)(this, stack);
+    references::frontend.get().igo->spidey_distance->set_shown(true);
+
+    return true;
 }
 
+// sub_85E510
 bool slf__set_distance_widget_min_distance__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E510)(this, stack);
+    stack.sp -= 0x04;
+
+    auto min_distance = stack.local_num(0x00);
+
+    references::frontend.get().igo->spidey_distance->set_min_distance(min_distance);
+
+    return true;
 }
 
+// sub_85E540
 bool slf__set_distance_widget_max_distance__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E540)(this, stack);
+    stack.sp -= 0x04;
+
+    auto max_distance = stack.local_num(0x00);
+
+    references::frontend.get().igo->spidey_distance->set_max_distance(max_distance);
+
+    return true;
 }
 
+// sub_85E570
 bool slf__flip_distance_widget_orientation_with_hot_cold__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E570)(this, stack);
+    stack.sp -= 0x04;
+
+    auto flip = stack.local_num(0x00);
+
+    references::frontend.get().igo->spidey_distance->set_hot_cold_flip(flip != 0.0f);
+
+    return true;
 }
 
+// sub_85E5B0
 bool slf__update_distance_widget__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E5B0)(this, stack);
+    stack.sp -= 0x0C;
+
+    references::frontend.get().igo->spidey_distance->set_offset(*(const vector3d*)&stack.local_uint(0x00));
+
+    return true;
 }
 
+// sub_823CC0
 bool slf__deactivate_distance_widget__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823CC0)(this, stack);
+    references::frontend.get().igo->spidey_distance->set_shown(false);
+    references::frontend.get().igo->spidey_distance->set_hot_cold_flip(false);
+    references::frontend.get().igo->spidey_distance->reset_tints();
+
+    return true;
 }
 
+// sub_85E5D0
 bool slf__set_distance_bar_near_tint__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E5D0)(this, stack);
+    stack.sp -= 0x0C;
+
+    references::frontend.get().igo->spidey_distance->set_near_tint(*(const vector3d*)&stack.local_uint(0x00));
+
+    return true;
 }
 
+// sub_85E5F0
 bool slf__set_distance_bar_mid_tint__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E5F0)(this, stack);
+    stack.sp -= 0x0C;
+
+    references::frontend.get().igo->spidey_distance->set_mid_tint(*(const vector3d*)&stack.local_uint(0x00));
+
+    return true;
 }
 
+// sub_85E610
 bool slf__set_distance_bar_far_tint__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_85E610)(this, stack);
+    stack.sp -= 0x0C;
+
+    references::frontend.get().igo->spidey_distance->set_far_tint(*(const vector3d*)&stack.local_uint(0x00));
+
+    return true;
 }
 
+// sub_823D00
 bool slf__reset_distance_bar_tints__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_823D00)(this, stack);
+    references::frontend.get().igo->spidey_distance->reset_tints();
+
+    return true;
 }
 
 bool slf__start_exitable_state__num__entity__t::operator()(chuck::vm::vm_stack &stack) {

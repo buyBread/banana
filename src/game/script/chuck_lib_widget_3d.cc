@@ -657,7 +657,7 @@ bool slf__bring_up_3d_dialog__num__num__num__t::operator()(chuck::vm::vm_stack &
     auto show_button_1 = stack.local_num(0x04);
 
     if (!stack.thread->entry) {
-        retail::sub_6A9D60((u8*)references::frontend.get().igo->loading_screen, 0.0f, 0);
+        references::frontend.get().igo->loading_screen->blackscreen_off(0.0f, false);
 
         igo_3d_pauseless_dialog_widget* dialog = references::frontend.get().igo->pauseless_dialog;
 

@@ -50,6 +50,7 @@ namespace treyarch {
             get_vtable()->draw_buttons(this);
         }
 
+        // inlined @ sub_6B8820
         // inlined @ sub_6B8860
         // inlined @ sub_6B8B40
         // inlined @ sub_6B8BA0
@@ -65,6 +66,8 @@ namespace treyarch {
 
             return nullptr;
         }
+
+        bool has_button(i32 id);
 
         void remove_all_buttons();
         void remove_button(i32 id); // every button with the id
