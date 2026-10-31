@@ -11702,8 +11702,8 @@ namespace retail {
     inline auto const sub_70CE00 = (u32 (__cdecl*)(...))0x0070CE00; // prototype unavailable
     inline auto const sub_70CE40 = (u32 (__cdecl*)(...))0x0070CE40; // prototype unavailable
     inline auto const sub_70CE80 = (u32 (__cdecl*)(...))0x0070CE80; // prototype unavailable
-    inline auto const sub_70CEC0 = (i32 (__thiscall*)(u32*self, i32, char*))0x0070CEC0;
-    inline auto const sub_70D060 = (i32 (__thiscall*)(u32*self, char*))0x0070D060;
+    inline auto const sub_70CEC0 = (i32 (__thiscall*)(void*self, u32, i32))0x0070CEC0; // manual
+    inline auto const sub_70D060 = (i32 (__thiscall*)(void*self, i32))0x0070D060; // manual
     inline auto const sub_70D1D0 = (i32 (__thiscall*)(i32 self))0x0070D1D0;
     inline auto const sub_70D7F0 = (i32 (__thiscall*)(u32*self, i32, i32, i32, i32, f32, f32, f32))0x0070D7F0;
     inline auto const sub_70D830 = (u32* (__thiscall*)(u32*self))0x0070D830;

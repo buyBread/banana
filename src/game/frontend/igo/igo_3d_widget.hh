@@ -61,7 +61,10 @@ namespace treyarch {
         void           (__thiscall* set_suppression_mask)(igo_3d_widget* self, u32 mask);
         void           (__thiscall* set_color)(igo_3d_widget* self, f32 r, f32 g, f32 b); // each clamped into [0, 1]
         void           (__thiscall* set_uv_offset)(igo_3d_widget* self, f32 u, f32 v);
-        void*          reserved_050[12];
+        void*          reserved_050[2];
+        f32            (__thiscall* get_position_x)(igo_3d_widget* self);
+        f32            (__thiscall* get_position_y)(igo_3d_widget* self);
+        void*          reserved_060[8];
         u32            (__thiscall* suppression_mask)(igo_3d_widget* self);
         void*          reserved_084[7];
         void           (__thiscall* start_timed_move)(igo_3d_widget* self, f32 duration, f32 from_x, f32 from_y, f32 from_z, f32 to_x, f32 to_y, f32 to_z, i32 curve);
@@ -187,6 +190,14 @@ namespace treyarch {
             get_vtable()->set_uv_offset(this, u, v);
         }
 
+        f32 get_position_x() {
+            return get_vtable()->get_position_x(this);
+        }
+
+        f32 get_position_y() {
+            return get_vtable()->get_position_y(this);
+        }
+
         u32 suppression_mask() {
             return get_vtable()->suppression_mask(this);
         }
@@ -216,6 +227,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget_vtable, render,               0x00C);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, set_shown,            0x014);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, set_uv_offset,        0x04C);
+    ASSERT_OFFSETOF(igo_3d_widget_vtable, get_position_x,       0x058);
+    ASSERT_OFFSETOF(igo_3d_widget_vtable, get_position_y,       0x05C);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, suppression_mask,     0x080);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, start_timed_move,     0x0A0);
     ASSERT_OFFSETOF(igo_3d_widget_vtable, spawn_entity,         0x0A8);

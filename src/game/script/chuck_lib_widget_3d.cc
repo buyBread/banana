@@ -295,44 +295,121 @@ bool slf__move_ui_camera_to_home__num__t::operator()(chuck::vm::vm_stack &stack)
     return true;
 }
 
+// sub_860BD0
 bool slf__enable_health_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860BD0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto enabled = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    igo->vtable->set_meters_shown(igo, enabled != 0.0f);
+
+    return true;
 }
 
+// sub_860C20
 bool slf__enable_radar__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860C20)(this, stack);
+    stack.sp -= 0x04;
+
+    auto enabled = stack.local_num(0x00);
+
+    ui_frontend* igo = references::frontend.get().igo;
+
+    igo->vtable->set_radar_shown(igo, enabled != 0.0f);
+
+    return true;
 }
 
+// sub_860C70
 bool slf__enable_boss_meter__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860C70)(this, stack);
+    stack.sp -= 0x08;
+
+    auto boss = stack.local_uint(0x00);
+    auto type = stack.local_num(0x04);
+
+    references::frontend.get().igo->boss_meter_system->remove_all_meters();
+
+    retail::sub_70CEC0(references::frontend.get().igo->boss_meter_system, boss, (i32)type); // igo_3d_boss_meter_system add
+
+    return true;
 }
 
+// sub_824290
 bool slf__disable_boss_meter__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824290)(this, stack);
+    references::frontend.get().igo->boss_meter_system->remove_all_meters();
+
+    return true;
 }
 
+// sub_860CB0
 bool slf__add_boss_meter__entity__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860CB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto boss = stack.local_uint(0x00);
+    auto type = stack.local_num(0x04);
+
+    auto result = (f32)retail::sub_70CEC0(references::frontend.get().igo->boss_meter_system, boss, (i32)type); // igo_3d_boss_meter_system add
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860D00
 bool slf__add_boss_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860D00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto type = stack.local_num(0x00);
+
+    auto result = (f32)retail::sub_70D060(references::frontend.get().igo->boss_meter_system, (i32)type); // igo_3d_boss_meter_system add
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860D40
 bool slf__remove_boss_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860D40)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    references::frontend.get().igo->boss_meter_system->remove_meter((i32)id);
+
+    return true;
 }
 
+// sub_824290
 bool slf__remove_all_boss_meters__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824290)(this, stack);
+    references::frontend.get().igo->boss_meter_system->remove_all_meters();
+
+    return true;
 }
 
+// sub_860D70
 bool slf__get_boss_meter_health_value__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860D70)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    f32 result = references::frontend.get().igo->boss_meter_system->get_health((i32)id);
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_860DB0
 bool slf__set_boss_meter_health_value__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_860DB0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id     = stack.local_num(0x00);
+    auto health = stack.local_num(0x04);
+
+    references::frontend.get().igo->boss_meter_system->set_health((i32)id, health);
+
+    return true;
 }
 
 bool slf__clear_mission_objectives__t::operator()(chuck::vm::vm_stack &stack) {
@@ -689,48 +766,151 @@ bool slf__ui_camera_reset_pos__num__t::operator()(chuck::vm::vm_stack &stack) {
     return true;
 }
 
+// sub_83EDE0
 bool slf__add_ui_light__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EDE0)(this, stack);
+    auto result = (f32)((i32 (__thiscall*)(ui_frontend*))retail::sub_71FB70)(references::frontend.get().igo); // ui_frontend add ui light, always -1
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861D80
 bool slf__ui_light_exists__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861D80)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id); // ui_frontend ui light lookup, always null
+
+    f32 result = light ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861DE0
 bool slf__get_ui_light_x__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861DE0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id); // ui_frontend ui light lookup, always null
+
+    f32 result = light ? light->x : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861E40
 bool slf__get_ui_light_y__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861E40)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id); // ui_frontend ui light lookup, always null
+
+    f32 result = light ? light->y : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861EA0
 bool slf__get_ui_light_near_dist__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861EA0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id); // ui_frontend ui light lookup, always null
+
+    f32 result = light ? light->near_dist : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861F00
 bool slf__get_ui_light_far_dist__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861F00)(this, stack);
+    stack.sp -= 0x04;
+
+    auto id = stack.local_num(0x00);
+
+    ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id); // ui_frontend ui light lookup, always null
+
+    f32 result = light ? light->far_dist : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_861F60
 bool slf__set_ui_light_x__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861F60)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto value = stack.local_num(0x04);
+
+    if (ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id)) // ui_frontend ui light lookup, always null
+        light->x = value;
+
+    return true;
 }
 
+// sub_861F90
 bool slf__set_ui_light_y__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861F90)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto value = stack.local_num(0x04);
+
+    if (ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id)) // ui_frontend ui light lookup, always null
+        light->y = value;
+
+    return true;
 }
 
+// sub_861FC0
 bool slf__set_ui_light_near_dist__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861FC0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto value = stack.local_num(0x04);
+
+    if (ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id)) // ui_frontend ui light lookup, always null
+        light->near_dist = value;
+
+    return true;
 }
 
+// sub_861FF0
 bool slf__set_ui_light_far_dist__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_861FF0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto id    = stack.local_num(0x00);
+    auto value = stack.local_num(0x04);
+
+    if (ui_light* light = ((ui_light* (__thiscall*)(ui_frontend*, i32))retail::sub_A90D90)(references::frontend.get().igo, (i32)id)) // ui_frontend ui light lookup, always null
+        light->far_dist = value;
+
+    return true;
 }
 
+// sub_862020
 bool slf__set_ui_light_widget_index__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862020)(this, stack);
+    stack.sp -= 0x04;
+
+    auto index = stack.local_num(0x00);
+
+    ((void (__thiscall*)(ui_frontend*, i32))retail::sub_689610)(references::frontend.get().igo, (i32)index); // ui_frontend set ui light widget index, empty
+
+    return true;
 }
 
 bool slf__set_debug_3d_text_marker__str__t::operator()(chuck::vm::vm_stack &stack) {
@@ -753,36 +933,83 @@ bool slf__reattach_child_widget__str__t::operator()(chuck::vm::vm_stack &stack) 
     return ((invoke_t)retail::sub_869EB0)(this, stack);
 }
 
+// sub_862040
 bool slf__set_cutscene_texture__str__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_862040)(this, stack);
+    stack.sp -= 0x04;
+
+    auto texture = (const char*)stack.local_uint(0x00);
+
+    alignas(mash::string) u8 name_storage[sizeof(mash::string)];
+
+    auto* name = new (name_storage) mash::string(texture);
+
+    references::frontend.get().set_cutscene_texture(name);
+
+    name->finalize(mash::ALLOCATED);
+
+    return true;
 }
 
+// sub_8620B0
 bool slf__display_cutscene__num__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8620B0)(this, stack);
+    stack.sp -= 0x08;
+
+    auto duration = stack.local_num(0x00);
+    auto delay    = stack.local_num(0x04);
+
+    references::frontend.get().display_cutscene(duration, delay);
+
+    return true;
 }
 
+// sub_824580
 bool slf__hide_cutscene__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824580)(this, stack);
+    references::frontend.get().hide_cutscene();
+
+    return true;
 }
 
+// sub_83EE10
 bool slf__is_displaying_cutscene__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_83EE10)(this, stack);
+    f32 result = references::frontend.get().draw_cutscene_quad ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_824590
 bool slf__send_hide_cutscene_quad_signal__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824590)(this, stack);
+    references::frontend.get().send_hide_cutscene_quad_signal();
+
+    return true;
 }
 
+// sub_8245A0
 bool slf__display_ped_warning__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8245A0)(this, stack);
+    ((void (__thiscall*)(frontend_manager*))retail::sub_5B4A70)(&references::frontend.get()); // empty
+
+    return true;
 }
 
+// sub_8245B0
 bool slf__hide_ped_warning__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8245B0)(this, stack);
+    ((void (__thiscall*)(frontend_manager*))retail::sub_5B4A70)(&references::frontend.get()); // empty
+    ((void (__thiscall*)(frontend_manager*, f32))retail::sub_689610)(&references::frontend.get(), -1.0f); // empty
+
+    return true;
 }
 
+// sub_8620E0
 bool slf__display_ped_warning_with_duration__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8620E0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto duration = stack.local_num(0x00);
+
+    ((void (__thiscall*)(frontend_manager*, f32))retail::sub_689610)(&references::frontend.get(), duration); // empty
+    ((void (__thiscall*)(frontend_manager*))retail::sub_5B4A70)(&references::frontend.get()); // empty
+
+    return true;
 }
 
 bool slf__create_meter__num__t::operator()(chuck::vm::vm_stack &stack) {

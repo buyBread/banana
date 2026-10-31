@@ -12,6 +12,7 @@
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
+#include "game/frontend/igo/igo_generic_decay_timer.hh"
 #include "game/frontend/igo/igo_widget_group.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
@@ -34,6 +35,7 @@ namespace treyarch {
 
     using ui_frontend_method         = void (__thiscall*)(ui_frontend* self);
     using ui_frontend_advance_method = void (__thiscall*)(ui_frontend* self, f32 time_inc);
+    using ui_frontend_show_method    = void (__thiscall*)(ui_frontend* self, bool shown);
 
     struct ui_frontend_vtable {
         void*                      reserved_000[6];
@@ -44,9 +46,20 @@ namespace treyarch {
         ui_frontend_method         draw_quad_list;
         ui_frontend_method         draw_pass_1;
         ui_frontend_method         draw_pass_2;
+        void*                      reserved_038[2];
+        ui_frontend_show_method    set_meters_shown;
+        ui_frontend_show_method    set_radar_shown;
     };
 
     using igo_3d_script_widget_list = vc8::list<igo_3d_script_widget*>;
+
+    // what the ui light natives read and write; pc's light lookup never finds one
+    struct ui_light {
+        f32 near_dist;
+        f32 far_dist;
+        f32 x;
+        f32 y;
+    };
 
     namespace references {
         inline util::memory_reference<u8> optional_widget_group_enabled { 0x00BB1EA9 };
@@ -114,7 +127,7 @@ namespace treyarch {
         u8                                  conversation_state_168;
         u8                                  reserved_169[0x03];
         entity_tracker_manager*             entity_tracker_mgr;
-        u8                                  reserved_170[0x04];
+        igo_3d_drawable*                    unknown_widget_170;
         void*                               unknown_widget_174;
         u8                                  reserved_178[0x04];
         igo_3d_drawable*                    startup_widget_17c;
@@ -148,9 +161,9 @@ namespace treyarch {
         u8                                  reserved_279[0x03];
         u32                                 background_effect_mode;     // the RenderBackgroundEffects switch
         ngl::texture*                       background_texture;         // modes 7-9
-        u8                                  reserved_284[0x08];         // an IGOGenericDecayTimer starts here
-        f32                                 background_effect_strength; // that timer's first float; modes 2, 3, 8, 9
-        u8                                  reserved_290[0x44];
+        igo_generic_decay_timer             background_effect_fade;     // its value is the strength of modes 2, 3, 8, 9
+        igo_generic_decay_timer             unk_2a0;
+        u8                                  reserved_2bc[0x18];
         u32                                 widget_suppression_conditions;
         vc8::list<igo_3d_widget*>           widgets; // drawn unless their suppression mask matches
 
@@ -202,13 +215,15 @@ namespace treyarch {
         }
     };
 
-    ASSERT_SIZEOF  (ui_frontend_vtable,                 0x38);
-    ASSERT_OFFSETOF(ui_frontend_vtable, update,         0x18);
-    ASSERT_OFFSETOF(ui_frontend_vtable, draw,           0x24);
-    ASSERT_OFFSETOF(ui_frontend_vtable, draw_startup,   0x28);
-    ASSERT_OFFSETOF(ui_frontend_vtable, draw_quad_list, 0x2C);
-    ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_1,    0x30);
-    ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_2,    0x34);
+    ASSERT_SIZEOF  (ui_frontend_vtable,                   0x48);
+    ASSERT_OFFSETOF(ui_frontend_vtable, update,           0x18);
+    ASSERT_OFFSETOF(ui_frontend_vtable, draw,             0x24);
+    ASSERT_OFFSETOF(ui_frontend_vtable, draw_startup,     0x28);
+    ASSERT_OFFSETOF(ui_frontend_vtable, draw_quad_list,   0x2C);
+    ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_1,      0x30);
+    ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_2,      0x34);
+    ASSERT_OFFSETOF(ui_frontend_vtable, set_meters_shown, 0x40);
+    ASSERT_OFFSETOF(ui_frontend_vtable, set_radar_shown,  0x44);
 
     ASSERT_OFFSETOF(ui_frontend, special_meter,                 0x0B8);
     ASSERT_OFFSETOF(ui_frontend, pauseless_dialog,              0x0E8);
@@ -239,7 +254,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, scene_draw_state_278,          0x278);
     ASSERT_OFFSETOF(ui_frontend, background_effect_mode,        0x27C);
     ASSERT_OFFSETOF(ui_frontend, background_texture,            0x280);
-    ASSERT_OFFSETOF(ui_frontend, background_effect_strength,    0x28C);
+    ASSERT_OFFSETOF(ui_frontend, background_effect_fade,        0x284);
+    ASSERT_OFFSETOF(ui_frontend, unk_2a0,                       0x2A0);
     ASSERT_OFFSETOF(ui_frontend, widget_suppression_conditions, 0x2D4);
     ASSERT_OFFSETOF(ui_frontend, widgets,                       0x2D8);
 } // treyarch

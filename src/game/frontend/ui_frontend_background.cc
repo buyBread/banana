@@ -32,7 +32,7 @@ void ui_frontend::render_background_effects() {
 
         case 2:
         case 3:
-            draw_background_overlay(background_effect_strength, 0);
+            draw_background_overlay(background_effect_fade.value, 0);
             break;
 
         case 4:
@@ -45,7 +45,7 @@ void ui_frontend::render_background_effects() {
 
         case 8:
         case 9:
-            draw_background_texture(background_effect_strength);
+            draw_background_texture(background_effect_fade.value);
             break;
 
         case 10:

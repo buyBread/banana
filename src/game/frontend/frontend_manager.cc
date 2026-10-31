@@ -1,8 +1,13 @@
 #include <windows.h>
 
+#include "retail.hh"
 #include "game/app.hh"
+#include "game/fixed_string.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/hash/algo.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
 using namespace treyarch;
@@ -48,4 +53,44 @@ void frontend_manager::draw_igo() {
 
     igo->draw_quad_list();
     igo->clear_quad_list();
+}
+
+// sub_698990
+void frontend_manager::set_cutscene_texture(const mash::string* name) {
+    if (name->length() <= 0) {
+        draw_cutscene_quad = false;
+
+        return;
+    }
+
+    fixed_string texture_name;
+
+    texture_name.hash = string_hash(hash::djb2(name->c_str()));
+    texture_name.text = nullptr;
+
+    ngl::set_quad_tex(cutscene_quad, (ngl::texture*)retail::sub_9E45A0(&texture_name.text)); // ngl texture lookup
+
+    if (texture_name.text)
+        mm::free(texture_name.text);
+}
+
+// sub_6B13F0
+void frontend_manager::display_cutscene(f32 duration, f32 delay) {
+    draw_cutscene_quad = true;
+
+    cutscene_timer.start(0.0f, 1.0f, duration, delay);
+}
+
+// sub_688020
+void frontend_manager::hide_cutscene() {
+    draw_cutscene_quad = false;
+}
+
+// sub_698B10
+void frontend_manager::send_hide_cutscene_quad_signal() {
+    if (draw_cutscene_quad &&
+        cutscene_timer.active &&
+        cutscene_timer.duration > cutscene_timer.remaining)
+
+        draw_cutscene_quad = false;
 }
