@@ -29,10 +29,12 @@ namespace treyarch {
     class entity_base;
     class player_combo_counter;
     class player_jump_info;
+    class player_web_shooters;
     class polytube;
     class script_object_instance;
     class swing_data;
     class swing_params;
+    struct swing_anchor_data;
 
     enum e_swinger_hand : i32;
 
@@ -356,7 +358,7 @@ namespace treyarch {
         virtual bool              swing_l_hand() const;
         virtual bool              swing_any_hand();
         virtual bool              swing_both_hand();
-        virtual bool              swap_swing_hands(bool refire);       // rvb: swaps its two +0x638 records
+        virtual void              swap_swing_hands(bool refire);
         virtual bool              swing_r_hand_locked() const;
         virtual bool              swing_l_hand_locked() const;
         virtual bool              swing_any_hand_locked();
@@ -586,17 +588,17 @@ namespace treyarch {
         virtual bool              unk_341();
         virtual i32               unk_342();
         virtual i32               unk_343();
-        virtual void              unk_344(f32 unk);
-        virtual void              unk_345(i32 unk);
-        virtual void              unk_346(f32 unk);
-        virtual void              unk_347(f32 unk);
-        virtual void              unk_348(f32 unk);
-        virtual void              unk_349(i32 unk);
-        virtual void              unk_350(i32 unk);
-        virtual void              unk_351(i32 unk);
-        virtual void              unk_352(i32 unk);
-        virtual void              unk_353(i32 unk);
-        virtual void              unk_354(i32 unk);
+        virtual void              set_sweet_spot_incline_angle_degrees(f32 angle);
+        virtual void              set_sweet_spot_distance(f32 dist);
+        virtual void              set_sweet_cone_angle_degrees(f32 angle);
+        virtual void              set_max_swing_web_length(f32 len);
+        virtual void              set_min_swing_web_length(f32 len);
+        virtual void              set_min_dynamic_sweet_length(f32 len);
+        virtual void              set_max_dynamic_sweet_length(f32 len);
+        virtual void              set_overdrive_sweet_length(f32 len);
+        virtual void              unk_352(f32 len);
+        virtual void              set_overdrive_velocity(f32 vel);
+        virtual void              set_min_dynamic_sweet_angle(f32 angle);
         virtual void              set_max_dynamic_sweet_angle(f32 angle);
         virtual void              set_swing_ground_clearance(f32 clearance);
         virtual void              unk_357(f32 rate);
@@ -622,19 +624,19 @@ namespace treyarch {
         virtual void              get_reel_in_rate(f32* min_rate, f32* max_rate, f32* max_time, f32* max_range);
         virtual void              get_fake_anchor_params(f32* max_time, f32* pull_rate);
         virtual void              unk_368(f32 unk, swing_data* swinger);
-        virtual void              unk_369(i32 unk, i32 unk_2);
+        virtual bool              break_webs(bool add_momentum, bool add_dangler);
         virtual bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler);
-        virtual i32               unk_371(i32 unk, i32 unk_2);
+        virtual void              unk_371(e_swinger_hand hand, bool hide); // rvb: leaves a copy of the hand's web dangling
         virtual entity*           get_last_anchor() const;
-        virtual i32               unk_373();
-        virtual f32               unk_374();                           // the als's swing_time
+        virtual void              hide_web_dangles();
+        virtual f32               get_time_on_web();                   // the als's swing_time
         virtual f32               unk_375();
-        virtual i32               unk_376();
+        virtual player_web_shooters* get_web_shooters();
         virtual bool              unk_377(vector3d* point);            // rvb: the anchor of whichever of its two hands (+0x638) holds one
         virtual bool              unk_378();
         virtual i32               unk_379();
         virtual i32               unk_380(i32 unk);
-        virtual f32               unk_381(void* unk, i32 unk_2, f32 unk_3);
+        virtual f32               weight_swing_anchor(const vector3d &point, const vector3d &normal, f32 dist_sq);
         virtual bool              unk_382(i32 unk);
         virtual i32               unk_383();
         virtual bool              unk_384();
@@ -647,25 +649,31 @@ namespace treyarch {
         virtual bool              unk_391(i32 unk, i32 unk_2);
         virtual bool              unk_392(bool skip);
         virtual bool              unk_393(f32 unk);
-        virtual i32               unk_394();
-        virtual i32               unk_395();
-        virtual i32               unk_396(i32 unk);
-        virtual i32               unk_397();
-        virtual i32               unk_398(i32 unk);
+        virtual swing_data*       get_active_swinger();
+        virtual e_swinger_hand    get_active_swinger_hand();
+        virtual e_swinger_hand    get_other_swinger_hand(e_swinger_hand cur_hand);
+        virtual swing_data*       get_last_fired_swinger();
+        virtual swing_data*       choose_next_swinger_to_fire(e_swinger_hand which_hand);
         virtual swing_data*       get_swinger(e_swinger_hand i);
         virtual void              unk_400(polytube* tube, f32 radius); // dresses the polytube as the hero's web
         virtual i32               get_als_swing_hand_value();          // the als's swing_hand
-        virtual i32               unk_402(i32 unk, i32 unk_2);
+        virtual void              apply_awesome_delta(f32 boost_value, f32 delta_t);
         virtual f32               get_awesome_rating() const;          // the als's swing_level_rating
         virtual f32               unk_404(f32 progress);
         virtual f32               unk_405(f32 progress);
         virtual f32               unk_406(f32 progress);
         virtual f32               unk_407(f32 progress);
-        virtual void              unk_408(i32 unk, i32 unk_2);
-        virtual void              unk_409(i32 unk, i32 unk_2, i32 unk_3);
-        virtual void              unk_410(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32               unk_411(i32 unk, i32 unk_2);
-        virtual void              unk_412(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
+        virtual void              set_swinger_info(swing_data* the_swinger, const swing_anchor_data* data);
+        virtual void              set_zip_info(swing_data* the_swinger, const line_info* data, bool enable_pendulum);
+        virtual void              unk_410(swing_data*      first_swinger, // rvb: zips both hands at once, pendulums off
+                                          swing_data*      second_swinger,
+                                          const line_info* first_data,
+                                          const line_info* second_data);
+        virtual void              set_yoyo_info(swing_data* the_swinger, const line_info* data);
+        virtual void              unk_412(swing_data*  the_swinger,    // rvb: zips onto a point in the pivot's space
+                                          entity_base* pivot,
+                                          vector3d     pos,
+                                          bool         enable_pendulum);
         virtual i32               unk_413(i32 unk, i32 unk_2, void* unk_3);
         virtual f32               get_swing_collision_break_length() const;
         virtual f32               get_swing_collision_stick_length() const;

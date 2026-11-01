@@ -335,7 +335,7 @@ namespace treyarch {
         i32               unk_121() override;
         bool              swing_r_hand() const override;
         bool              swing_l_hand() const override;
-        bool              swap_swing_hands(bool refire) override;
+        void              swap_swing_hands(bool refire) override;
         bool              swing_r_hand_locked() const override;
         bool              swing_l_hand_locked() const override;
         void              lock_swing_r_hand(bool l) override;
@@ -459,17 +459,17 @@ namespace treyarch {
         bool              unk_341() override;
         i32               unk_342() override;
         i32               unk_343() override;
-        void              unk_344(f32 unk) override;
-        void              unk_345(i32 unk) override;
-        void              unk_346(f32 unk) override;
-        void              unk_347(f32 unk) override;
-        void              unk_348(f32 unk) override;
-        void              unk_349(i32 unk) override;
-        void              unk_350(i32 unk) override;
-        void              unk_351(i32 unk) override;
-        void              unk_352(i32 unk) override;
-        void              unk_353(i32 unk) override;
-        void              unk_354(i32 unk) override;
+        void              set_sweet_spot_incline_angle_degrees(f32 angle) override;
+        void              set_sweet_spot_distance(f32 dist) override;
+        void              set_sweet_cone_angle_degrees(f32 angle) override;
+        void              set_max_swing_web_length(f32 len) override;
+        void              set_min_swing_web_length(f32 len) override;
+        void              set_min_dynamic_sweet_length(f32 len) override;
+        void              set_max_dynamic_sweet_length(f32 len) override;
+        void              set_overdrive_sweet_length(f32 len) override;
+        void              unk_352(f32 len) override;
+        void              set_overdrive_velocity(f32 vel) override;
+        void              set_min_dynamic_sweet_angle(f32 angle) override;
         void              set_max_dynamic_sweet_angle(f32 angle) override;
         void              set_swing_ground_clearance(f32 clearance) override;
         void              unk_357(f32 rate) override;
@@ -494,18 +494,18 @@ namespace treyarch {
         void              get_reel_in_rate(f32* min_rate, f32* max_rate, f32* max_time, f32* max_range) override;
         void              get_fake_anchor_params(f32* max_time, f32* pull_rate) override;
         void              unk_368(f32 unk, swing_data* swinger) override;
-        void              unk_369(i32 unk, i32 unk_2) override;
+        bool              break_webs(bool add_momentum, bool add_dangler) override;
         bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler) override;
-        i32               unk_371(i32 unk, i32 unk_2) override;
-        i32               unk_373() override;
-        f32               unk_374() override;
+        void              unk_371(e_swinger_hand hand, bool hide) override;
+        void              hide_web_dangles() override;
+        f32               get_time_on_web() override;
         f32               unk_375() override;
-        i32               unk_376() override;
+        player_web_shooters* get_web_shooters() override;
         bool              unk_377(vector3d* point) override;
         bool              unk_378() override;
         i32               unk_379() override;
         i32               unk_380(i32 unk) override;
-        f32               unk_381(void* unk, i32 unk_2, f32 unk_3) override;
+        f32               weight_swing_anchor(const vector3d &point, const vector3d &normal, f32 dist_sq) override;
         bool              unk_382(i32 unk) override;
         i32               unk_383() override;
         bool              unk_384() override;
@@ -518,24 +518,27 @@ namespace treyarch {
         bool              unk_391(i32 unk, i32 unk_2) override;
         bool              unk_392(bool skip) override;
         bool              unk_393(f32 unk) override;
-        i32               unk_394() override;
-        i32               unk_395() override;
-        i32               unk_396(i32 unk) override;
-        i32               unk_398(i32 unk) override;
+        swing_data*       get_active_swinger() override;
+        e_swinger_hand    get_active_swinger_hand() override;
+        e_swinger_hand    get_other_swinger_hand(e_swinger_hand cur_hand) override;
+        swing_data*       choose_next_swinger_to_fire(e_swinger_hand which_hand) override;
         swing_data*       get_swinger(e_swinger_hand i) override;
         void              unk_400(polytube* tube, f32 radius) override;
         i32               get_als_swing_hand_value() override;
-        i32               unk_402(i32 unk, i32 unk_2) override;
+        void              apply_awesome_delta(f32 boost_value, f32 delta_t) override;
         f32               get_awesome_rating() const override;
         f32               unk_404(f32 progress) override;
         f32               unk_405(f32 progress) override;
         f32               unk_406(f32 progress) override;
         f32               unk_407(f32 progress) override;
-        void              unk_408(i32 unk, i32 unk_2) override;
-        void              unk_409(i32 unk, i32 unk_2, i32 unk_3) override;
-        void              unk_410(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4) override;
-        i32               unk_411(i32 unk, i32 unk_2) override;
-        void              unk_412(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6) override;
+        void              set_swinger_info(swing_data* the_swinger, const swing_anchor_data* data) override;
+        void              set_zip_info(swing_data* the_swinger, const line_info* data, bool enable_pendulum) override;
+        void              unk_410(swing_data*      first_swinger,
+                                  swing_data*      second_swinger,
+                                  const line_info* first_data,
+                                  const line_info* second_data) override;
+        void              set_yoyo_info(swing_data* the_swinger, const line_info* data) override;
+        void              unk_412(swing_data* the_swinger, entity_base* pivot, vector3d pos, bool enable_pendulum) override;
         i32               unk_413(i32 unk, i32 unk_2, void* unk_3) override;
         f32               get_swing_collision_break_length() const override;
         f32               get_swing_collision_stick_length() const override;
@@ -684,7 +687,7 @@ namespace treyarch {
         virtual bool     unk_578();
         virtual i32      unk_579(void* unk, void* unk_2, void* unk_3, i32 unk_4, i32 unk_5);
         virtual void     unk_580(f32 delta_t);
-        virtual bool     unk_581(i32 unk, i32 unk_2);
+        virtual bool     unk_581(arch_base_vhandle entity_handle, swing_data* swinger); // the entity is within range and ahead of the hero
         virtual i32      unk_582(f32 unk);
         virtual i32      is_in_webcast_approach();
         virtual f32      unk_584();
@@ -706,6 +709,7 @@ namespace treyarch {
 
         static string_hash my_type_key;
         static bool        mario_jump_pressed; // a mario jump's press waits here for its release
+        static bool        favor_stick_dir;
     };
 
     ASSERT_SIZEOF  (spiderman_rvb_player_interface::unk_068c_t,           0x18);

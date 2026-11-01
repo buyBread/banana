@@ -214,7 +214,7 @@ void world_dynamics_system::malor_point(const vector3d &xyz, bool translate_cam,
 
     bool restart_biped_physics = false;
 
-    hero_ptr->player_ifc()->unk_369(0, 0);
+    hero_ptr->player_ifc()->break_webs(false, false);
 
     if (physical->is_flagged(physical_interface_flag_biped_running)) {
         physical->stop_biped_physics(false);

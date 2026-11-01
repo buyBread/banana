@@ -650,8 +650,8 @@ bool player_interface::swing_both_hand() {
 }
 
 // slot 129
-bool player_interface::swap_swing_hands(bool refire) {
-    return ((bool (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, refire);
+void player_interface::swap_swing_hands(bool refire) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, refire);
 }
 
 // slot 130
@@ -2042,58 +2042,58 @@ i32 player_interface::unk_343() {
 }
 
 // slot 344
-void player_interface::unk_344(f32 unk) {
-    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, unk);
+void player_interface::set_sweet_spot_incline_angle_degrees(f32 angle) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, angle);
 }
 
 // slot 345
-void player_interface::unk_345(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_sweet_spot_distance(f32 dist) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, dist);
 }
 
 // slot 346
-void player_interface::unk_346(f32 unk) {
-    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, unk);
+void player_interface::set_sweet_cone_angle_degrees(f32 angle) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, angle);
 }
 
 // slot 347
-void player_interface::unk_347(f32 unk) {
-    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, unk);
+void player_interface::set_max_swing_web_length(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 348
-void player_interface::unk_348(f32 unk) {
-    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, unk);
+void player_interface::set_min_swing_web_length(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 349
-void player_interface::unk_349(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_min_dynamic_sweet_length(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 350
-void player_interface::unk_350(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_max_dynamic_sweet_length(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 351
-void player_interface::unk_351(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_overdrive_sweet_length(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 352
-void player_interface::unk_352(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_352(f32 len) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, len);
 }
 
 // slot 353
-void player_interface::unk_353(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_overdrive_velocity(f32 vel) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, vel);
 }
 
 // slot 354
-void player_interface::unk_354(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_min_dynamic_sweet_angle(f32 angle) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, angle);
 }
 
 // slot 355
@@ -2197,8 +2197,8 @@ void player_interface::unk_368(f32 unk, swing_data* swinger) {
 }
 
 // slot 369
-void player_interface::unk_369(i32 unk, i32 unk_2) {
-    ((void (__thiscall*)(player_interface*, i32, i32))retail::sub_5BD2C0)(this, unk, unk_2);
+bool player_interface::break_webs(bool add_momentum, bool add_dangler) {
+    return ((bool (__thiscall*)(player_interface*, bool, bool))retail::sub_5BD2C0)(this, add_momentum, add_dangler);
 }
 
 // slot 370
@@ -2207,8 +2207,8 @@ bool player_interface::break_web(e_swinger_hand web_to_break, bool add_momentum,
 }
 
 // slot 371
-i32 player_interface::unk_371(i32 unk, i32 unk_2) {
-    return ((i32 (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::unk_371(e_swinger_hand hand, bool hide) {
+    ((void (__thiscall*)(player_interface*, e_swinger_hand, bool))retail::sub_AD2D40)(this, hand, hide);
 }
 
 // slot 372
@@ -2217,12 +2217,12 @@ entity* player_interface::get_last_anchor() const {
 }
 
 // slot 373
-i32 player_interface::unk_373() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_5B4A70)(this);
+void player_interface::hide_web_dangles() {
+    ((void (__thiscall*)(player_interface*))retail::sub_5B4A70)(this);
 }
 
 // slot 374
-f32 player_interface::unk_374() {
+f32 player_interface::get_time_on_web() {
     return ((f32 (__thiscall*)(player_interface*))retail::sub_720050)(this);
 }
 
@@ -2232,8 +2232,8 @@ f32 player_interface::unk_375() {
 }
 
 // slot 376
-i32 player_interface::unk_376() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
+player_web_shooters* player_interface::get_web_shooters() {
+    return ((player_web_shooters* (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
 }
 
 // slot 377
@@ -2257,8 +2257,8 @@ i32 player_interface::unk_380(i32 unk) {
 }
 
 // slot 381
-f32 player_interface::unk_381(void* unk, i32 unk_2, f32 unk_3) {
-    return ((f32 (__thiscall*)(player_interface*, void*, i32, f32))retail::sub_71FF00)(this, unk, unk_2, unk_3);
+f32 player_interface::weight_swing_anchor(const vector3d &point, const vector3d &normal, f32 dist_sq) {
+    return ((f32 (__thiscall*)(player_interface*, const vector3d*, const vector3d*, f32))retail::sub_71FF00)(this, &point, &normal, dist_sq);
 }
 
 // slot 382
@@ -2322,28 +2322,28 @@ bool player_interface::unk_393(f32 unk) {
 }
 
 // slot 394
-i32 player_interface::unk_394() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
+swing_data* player_interface::get_active_swinger() {
+    return ((swing_data* (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
 }
 
 // slot 395
-i32 player_interface::unk_395() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FB70)(this);
+e_swinger_hand player_interface::get_active_swinger_hand() {
+    return ((e_swinger_hand (__thiscall*)(player_interface*))retail::sub_71FB70)(this);
 }
 
 // slot 396
-i32 player_interface::unk_396(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FF20)(this, unk);
+e_swinger_hand player_interface::get_other_swinger_hand(e_swinger_hand cur_hand) {
+    return ((e_swinger_hand (__thiscall*)(player_interface*, e_swinger_hand))retail::sub_71FF20)(this, cur_hand);
 }
 
-// slot 397
-i32 player_interface::unk_397() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FF30)(this);
+// sub_71FF30
+swing_data* player_interface::get_last_fired_swinger() {
+    return get_active_swinger();
 }
 
 // slot 398
-i32 player_interface::unk_398(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_A90D90)(this, unk);
+swing_data* player_interface::choose_next_swinger_to_fire(e_swinger_hand which_hand) {
+    return ((swing_data* (__thiscall*)(player_interface*, e_swinger_hand))retail::sub_A90D90)(this, which_hand);
 }
 
 // slot 399
@@ -2362,8 +2362,8 @@ i32 player_interface::get_als_swing_hand_value() {
 }
 
 // slot 402
-i32 player_interface::unk_402(i32 unk, i32 unk_2) {
-    return ((i32 (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::apply_awesome_delta(f32 boost_value, f32 delta_t) {
+    ((void (__thiscall*)(player_interface*, f32, f32))retail::sub_AD2D40)(this, boost_value, delta_t);
 }
 
 // slot 403
@@ -2392,28 +2392,36 @@ f32 player_interface::unk_407(f32 progress) {
 }
 
 // slot 408
-void player_interface::unk_408(i32 unk, i32 unk_2) {
-    ((void (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::set_swinger_info(swing_data* the_swinger, const swing_anchor_data* data) {
+    ((void (__thiscall*)(player_interface*, swing_data*, const swing_anchor_data*))retail::sub_AD2D40)(this, the_swinger, data);
 }
 
 // slot 409
-void player_interface::unk_409(i32 unk, i32 unk_2, i32 unk_3) {
-    ((void (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_7AE090)(this, unk, unk_2, unk_3);
+void player_interface::set_zip_info(swing_data* the_swinger, const line_info* data, bool enable_pendulum) {
+    ((void (__thiscall*)(player_interface*, swing_data*, const line_info*, bool))retail::sub_7AE090)(this, the_swinger, data, enable_pendulum);
 }
 
 // slot 410
-void player_interface::unk_410(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4) {
-    ((void (__thiscall*)(player_interface*, i32, i32, i32, i32))retail::sub_9CD780)(this, unk, unk_2, unk_3, unk_4);
+void player_interface::unk_410(swing_data*      first_swinger,
+                               swing_data*      second_swinger,
+                               const line_info* first_data,
+                               const line_info* second_data) {
+
+    ((void (__thiscall*)(player_interface*, swing_data*, swing_data*, const line_info*, const line_info*))retail::sub_9CD780)(this,
+                                                                                                                         first_swinger,
+                                                                                                                         second_swinger,
+                                                                                                                         first_data,
+                                                                                                                         second_data);
 }
 
 // slot 411
-i32 player_interface::unk_411(i32 unk, i32 unk_2) {
-    return ((i32 (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::set_yoyo_info(swing_data* the_swinger, const line_info* data) {
+    ((void (__thiscall*)(player_interface*, swing_data*, const line_info*))retail::sub_AD2D40)(this, the_swinger, data);
 }
 
 // slot 412
-void player_interface::unk_412(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6) {
-    ((void (__thiscall*)(player_interface*, i32, i32, i32, i32, i32, i32))retail::sub_71FF60)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6);
+void player_interface::unk_412(swing_data* the_swinger, entity_base* pivot, vector3d pos, bool enable_pendulum) {
+    ((void (__thiscall*)(player_interface*, swing_data*, entity_base*, vector3d, bool))retail::sub_71FF60)(this, the_swinger, pivot, pos, enable_pendulum);
 }
 
 // slot 413

@@ -278,7 +278,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
     clamp_settings();
 
     if (!(current_cut_scene->flags & cut_scene::hero_unaffected)) {
-        hero->player_ifc()->unk_369(0, 1);
+        hero->player_ifc()->break_webs(false, true);
 
         if (hero->player_ifc()->get_reflexes())
             hero->player_ifc()->get_reflexes()->disable(false);

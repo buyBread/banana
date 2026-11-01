@@ -300,7 +300,7 @@ void game_data::soft_load() {
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
-    hero->player_ifc()->unk_369(0, 1);
+    hero->player_ifc()->break_webs(false, true);
 
     if (hero->has_standing_ifc()) {
         hero->standing_ifc()->enable(true);

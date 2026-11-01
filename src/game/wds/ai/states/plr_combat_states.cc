@@ -160,7 +160,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
                 if (player->get_command_button(plr_cmd_swing)->released())
                     the_exit_code = state_exit_code_swing;
 
-                i32 hand = player->unk_395();
+                i32 hand = player->get_active_swinger_hand();
 
                 if (hand != -1) {
                     static const string_hash swing_hand_key     = string_hash(hash::djb2("swing_hand"));

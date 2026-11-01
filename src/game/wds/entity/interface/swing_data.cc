@@ -175,7 +175,7 @@ bool swing_data::frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index
     if (!attach_pendulum.has_a_moving_anchor())
         attach_pendulum.set_constraint(constraint);
 
-    f32 web_time = (f32)((f64)plr_ifc->unk_374() * (f64)0.5f);
+    f32 web_time = (f32)((f64)plr_ifc->get_time_on_web() * (f64)0.5f);
 
     clamp_value(&web_time, 0.0f, 1.0f);
 

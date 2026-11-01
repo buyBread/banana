@@ -231,7 +231,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 0.0f;
 
-            return the_actor->player_ifc()->unk_374();
+            return the_actor->player_ifc()->get_time_on_web();
 
         case param_swing_to_anchor_angle:
             if (!the_actor->has_player_ifc())
