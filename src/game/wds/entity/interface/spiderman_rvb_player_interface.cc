@@ -27,6 +27,10 @@ spiderman_rvb_player_interface::~spiderman_rvb_player_interface() {
     // retail's destructor tore down player_interface's members too; empty the button arrays so their source destructors don't free them again
     buttons.array         = nullptr;
     command_buttons.array = nullptr;
+
+    // and rebuild the preset strings empty, so their source destructors don't count them out a second time
+    ::new (&preset_dodge_anim) mash::string();
+    ::new (&preset_block_anim) mash::string();
 }
 
 // slot 1
@@ -1070,8 +1074,8 @@ i32 spiderman_rvb_player_interface::unk_215() {
 }
 
 // slot 218
-i32 spiderman_rvb_player_interface::unk_218() {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9B3DC0)(this);
+void spiderman_rvb_player_interface::init_attacks() {
+    ((void (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9B3DC0)(this);
 }
 
 // slot 221
@@ -1080,8 +1084,8 @@ i32 spiderman_rvb_player_interface::unk_221(f32 unk) {
 }
 
 // slot 228
-i32 spiderman_rvb_player_interface::unk_228() {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9B4860)(this);
+void spiderman_rvb_player_interface::init_tricks() {
+    ((void (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9B4860)(this);
 }
 
 // slot 237

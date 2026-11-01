@@ -72,6 +72,8 @@ namespace treyarch {
                                    cpu_combat_inode*          cmbt) override;
 
         virtual void unk_066(actor* the_actor); // the player interface's mode word becomes 9
+
+        static string_hash my_type_key;
     };
 
     // the hero's melee on a car

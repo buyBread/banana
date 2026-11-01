@@ -29,9 +29,18 @@ namespace treyarch {
 
     // SM3's eCombatMove, as far as WoS's are read; WoS has more moves than SM3
     enum e_combat_move : i32 {
-        combat_move_light_melee = 0x00,
-        combat_move_script_move = 0x15,
-        combat_num_moves        = 0x26  // no move
+        combat_move_light_melee     = 0x00,
+        combat_move_counter_attack  = 0x05,
+        combat_move_dodge           = 0x06,
+        combat_move_block           = 0x07,
+        combat_move_script_move     = 0x15,
+        combat_num_moves            = 0x26, // no move
+        combat_max_moves            = 1000,
+        combat_move_trick_a         = 1001,
+        combat_move_trick_b         = 1002,
+        combat_move_trick_c         = 1003,
+        combat_move_trick_d         = 1004,
+        combat_and_tricks_num_moves = 1005  // no trick
     };
 
     // SM3's combat_state::eCombatSignal, as far as WoS's are read

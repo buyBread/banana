@@ -20,6 +20,8 @@ using namespace treyarch;
 
 // ==== plr_combat_state ==== //
 
+string_hash plr_combat_state::my_type_key { 0x6E055FE3 }; // "plr_combat_state"
+
 // slot 1
 void plr_combat_state::construct_mashed_class() {
     ((void (__thiscall*)(plr_combat_state*))retail::sub_5488E0)(this);

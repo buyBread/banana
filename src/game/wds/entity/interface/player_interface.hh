@@ -1,23 +1,33 @@
 #pragma once
 
+#include "game/wds/ai/states/combat_state.hh"
 #include "game/wds/entity/interface/generic_interface.hh"
 #include "game/wds/entity/interface/player_reflexes.hh"
+#include "game/wds/entity/interface/plr_combat_attack.hh"
 #include "game/input/game_axis.hh"
 #include "game/input/game_button.hh"
+#include "game/timing/simple_timer.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/boolx.hh"
 #include "game/delta_variable.hh"
 #include "game/line_info.hh"
+#include "game/smoothilator.hh"
 #include "treyarch/mash/array_replacement.hh"
+#include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
+#include "vc8/list.hh"
+#include "vc8/vector.hh"
 
 namespace treyarch {
     class ai_core;
+    class ai_target;
     class entity;
     class player_axis_control;
+    class player_combo_counter;
     class polytube;
     class script_object_instance;
 
@@ -27,7 +37,10 @@ namespace treyarch {
     class player_interface : public actor_interface {
 
     public:
-        u8                      reserved_00c[0x234];
+        bool                    unk_000c;      // slots 311 / 313 answer them
+        bool                    unk_000d;
+        u8                      pad_00e[0x02];
+        u8                      reserved_010[0x230];
         delta_variable<i32>     mode;
         i32                     mode_last_frame;
         i32                     desired_mode;
@@ -42,10 +55,55 @@ namespace treyarch {
         player_axis_control*    player_axis[3];
         u8                      reserved_274[0x14];
         line_info               surface_info;  // als::crawl_transition moves to its hit_pos without attach_point
-        u8                      reserved_2e4[0xF0];
+        i32                     current_jump_type;
+        boolx                   allow_double_jump;
+        bool                    unk_02e9;
+        bool                    unk_02ea;
+        bool                    unk_02eb;
+        bool                    unk_02ec;
+        u8                      pad_2ed[0x03];
+        smoothilator<vector3d>  velocity_recorder_smoothilator;
+        vector3d                last_position;
+        vector3d                unk_030c;
+        vc8::list<u32>*         unk_0318;      // nothing inserts into it
+        plr_combat_attack*      attacks[combat_num_moves];
+        e_combat_move           next_attack;
+        plr_trick_move*         tricks[combat_and_tricks_num_moves - combat_max_moves - 1];
+        e_combat_move           next_trick;
+        i32                     unk_03cc;      // the als's max_trick_combo
+        arch_base_vhandle       switch_ent;
         player_reflexes         reflexes;
         player_spider_senses    spider_senses;
-        u8                      reserved_414[0x9C];
+        u8                      reserved_414[0x18];
+        player_combo_counter*   unk_042c;
+        player_combo_counter*   combo_counter_display;
+        simple_timer            combo_counter_delay;
+        boolx                   transition;
+        bool                    unk_0439;
+        bool                    unk_043a;
+        u8                      pad_43b[0x01];
+        i32                     switch_can_be_flicked_function_index;
+        f32                     ranged_max_switch_range;
+        f32                     calced_jump_height;
+        f32                     calced_jump_distance;
+        vector3d                initial_jump_force_applied;
+        vector3d                jump_start;
+        vector3d                unk_0464;      // the wallplant normal
+        arch_base_vhandle       unk_0470;
+        arch_base_vhandle       unk_0474;
+        mash::string            preset_dodge_anim;
+        i32                     preset_dodge_type;
+        mash::string            preset_block_anim;
+        i32                     preset_block_type;
+        arch_base_vhandle       combat_vehicle;
+        f32                     unk_049c;
+        i32                     post_process_flags;
+        bool                    unk_04a4;
+        bool                    unk_04a5;      // the rvb's check_for_block tests it
+        bool                    unk_04a6;
+        u8                      pad_4a7[0x01];
+        arch_base_vhandle       unk_04a8;
+        f32                     unk_04ac;      // PLR_MIN_TARGET_RANGE
         arch_base_vhandle       unk_4b0;       // an actor the als's target_ai rules read as the hero's target
         u8                      reserved_4b4[0x04];
         f32                     unk_4b8;       // counted down by the frame advance; the blackscreen sets it to its fade time
@@ -60,7 +118,11 @@ namespace treyarch {
         u8                      reserved_524[0x0C];
 
         explicit player_interface(mash::generating_vtable_version so_do_nothing) : actor_interface(so_do_nothing),
-                                                                                    surface_info(so_do_nothing) {}
+                                                                                    surface_info(so_do_nothing),
+                                                                                    velocity_recorder_smoothilator(so_do_nothing),
+                                                                                    combo_counter_delay(so_do_nothing),
+                                                                                    preset_dodge_anim(so_do_nothing),
+                                                                                    preset_block_anim(so_do_nothing) {}
 
         void construct_mashed_class() override;
         void destruct_mashed_class() override;
@@ -271,38 +333,40 @@ namespace treyarch {
         virtual void              unk_208(i32 unk);
         virtual void              unk_209(i32 unk);
         virtual f32               unk_210();
-        virtual i32               unk_211(i32 unk, i32 unk_2, i32 unk_3);
-        virtual i32               unk_212(i32 unk, i32 unk_2, i32 unk_3);
-        virtual i32               unk_213(i32 unk);
-        virtual bool              unk_214(i32 unk);
-        virtual i32               unk_215();
-        virtual i32               unk_216();
-        virtual i32               unk_217();
-        virtual i32               unk_218();
-        virtual void              unk_219(bool unk);
-        virtual bool              unk_220(f32 delta_t, f32 unk_2);
-        virtual i32               unk_221(f32 unk);
-        virtual void              unk_222(i32 unk, i32 unk_2, i32 unk_3);
-        virtual void              unk_223(i32 unk, i32 unk_2);
-        virtual i32               unk_224(i32 unk);
-        virtual i32               unk_225();
-        virtual i32               unk_226();
-        virtual i32               unk_227(i32 unk);
-        virtual i32               unk_228();
-        virtual i32               unk_229();
-        virtual void              unk_230(f32 unk);
-        virtual bool              unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
-        virtual bool              unk_232(f32 delta_t);
-        virtual i32               unk_233();
-        virtual i32               unk_234(void* unk);
-        virtual i32               unk_235();
-        virtual i32               unk_236(i32 unk);
-        virtual bool              unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6, i32 unk_7);
-        virtual i32               unk_238(i32 unk);
-        virtual i32               unk_239();
-        virtual i32               unk_240(void* unk);
-        virtual i32               unk_241();
-        virtual i32               unk_242(i32 unk);
+
+        virtual void                     force_attack(e_combat_move move, const ai_target* targ, i32 script_move);
+        virtual void                     force_attack(e_combat_move move, const vc8::vector<ai_target>* targs, i32 script_move);
+        virtual const plr_combat_attack* get_attack(e_combat_move att) const;
+        virtual bool                     attack_possible(e_combat_move att) const;
+        virtual i32                      unk_215();
+        virtual e_combat_move            get_next_attack_enum() const;
+        virtual const plr_combat_attack* get_next_attack() const;
+        virtual void                     init_attacks();
+        virtual void                     clear_attacks(bool all);
+        virtual bool                     should_execute_combat(f32 delta_t, f32 tolerance);
+        virtual i32                      unk_221(f32 unk);
+        virtual void                     unk_222(i32 unk, i32 unk_2, i32 unk_3);
+        virtual void                     unk_223(i32 unk, i32 unk_2);
+        virtual const plr_trick_move*    get_trick(e_combat_move trk) const;
+        virtual e_combat_move            get_next_trick_enum() const;
+        virtual const plr_trick_move*    get_next_trick() const;
+        virtual i32                      get_trick_array_index(e_combat_move trk) const;
+        virtual void                     init_tricks();
+        virtual void                     clear_tricks();
+        virtual void                     update_tricks(f32 delta_t);
+        virtual bool                     unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
+        virtual bool                     should_execute_dodge(f32 delta_t);
+        virtual const char*              get_dodge_anim() const;
+        virtual void                     override_dodge_anim(const char* a);
+        virtual i32                      get_dodge_type() const;
+        virtual void                     override_dodge_type(i32 t);
+        virtual bool                     unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6, i32 unk_7);
+        virtual bool                     should_execute_block(f32 delta_t);
+        virtual const char*              get_block_anim() const;
+        virtual void                     override_block_anim(const char* a);
+        virtual i32                      get_block_type() const;
+        virtual void                     override_block_type(i32 t);
+
         virtual void*             unk_243(void* unk);
         virtual void*             unk_244(void* unk);
         virtual i32               unk_245();
@@ -343,7 +407,7 @@ namespace treyarch {
         virtual void*             unk_280(void* unk);
         virtual bool              unk_281(ai_core* core);
         virtual bool              unk_282(ai_core* core);              // drops what the core's carry inode holds
-        virtual bool              unk_283(i32 unk);
+        virtual bool              is_current_combat_target(arch_base_vhandle targ) const;
         virtual bool              unk_284();
         virtual i32               unk_285();
         virtual i32               unk_286();
@@ -640,21 +704,38 @@ namespace treyarch {
         }
     };
 
-    ASSERT_SIZEOF  (player_interface,                  0x530);
-    ASSERT_OFFSETOF(player_interface, mode,            0x240);
-    ASSERT_OFFSETOF(player_interface, desired_mode,    0x24C);
-    ASSERT_OFFSETOF(player_interface, mode_locked,     0x250);
-    ASSERT_OFFSETOF(player_interface, enabled,         0x253);
-    ASSERT_OFFSETOF(player_interface, control_config,  0x254);
-    ASSERT_OFFSETOF(player_interface, control_axis,    0x258);
-    ASSERT_OFFSETOF(player_interface, player_axis,     0x268);
-    ASSERT_OFFSETOF(player_interface, surface_info,    0x288);
-    ASSERT_OFFSETOF(player_interface, reflexes,        0x3D4);
-    ASSERT_OFFSETOF(player_interface, spider_senses,   0x3FC);
-    ASSERT_OFFSETOF(player_interface, unk_4b0,         0x4B0);
-    ASSERT_OFFSETOF(player_interface, unk_4b8,         0x4B8);
-    ASSERT_OFFSETOF(player_interface, master_object,   0x4BC);
-    ASSERT_OFFSETOF(player_interface, override_mode,   0x500);
-    ASSERT_OFFSETOF(player_interface, buttons,         0x51C);
-    ASSERT_OFFSETOF(player_interface, command_buttons, 0x520);
+    ASSERT_SIZEOF  (player_interface,                                       0x530);
+    ASSERT_OFFSETOF(player_interface, unk_000c,                             0x00C);
+    ASSERT_OFFSETOF(player_interface, mode,                                 0x240);
+    ASSERT_OFFSETOF(player_interface, desired_mode,                         0x24C);
+    ASSERT_OFFSETOF(player_interface, mode_locked,                          0x250);
+    ASSERT_OFFSETOF(player_interface, enabled,                              0x253);
+    ASSERT_OFFSETOF(player_interface, control_config,                       0x254);
+    ASSERT_OFFSETOF(player_interface, control_axis,                         0x258);
+    ASSERT_OFFSETOF(player_interface, player_axis,                          0x268);
+    ASSERT_OFFSETOF(player_interface, surface_info,                         0x288);
+    ASSERT_OFFSETOF(player_interface, current_jump_type,                    0x2E4);
+    ASSERT_OFFSETOF(player_interface, velocity_recorder_smoothilator,       0x2F0);
+    ASSERT_OFFSETOF(player_interface, unk_0318,                             0x318);
+    ASSERT_OFFSETOF(player_interface, attacks,                              0x31C);
+    ASSERT_OFFSETOF(player_interface, next_attack,                          0x3B4);
+    ASSERT_OFFSETOF(player_interface, tricks,                               0x3B8);
+    ASSERT_OFFSETOF(player_interface, next_trick,                           0x3C8);
+    ASSERT_OFFSETOF(player_interface, switch_ent,                           0x3D0);
+    ASSERT_OFFSETOF(player_interface, reflexes,                             0x3D4);
+    ASSERT_OFFSETOF(player_interface, spider_senses,                        0x3FC);
+    ASSERT_OFFSETOF(player_interface, unk_042c,                             0x42C);
+    ASSERT_OFFSETOF(player_interface, transition,                           0x438);
+    ASSERT_OFFSETOF(player_interface, switch_can_be_flicked_function_index, 0x43C);
+    ASSERT_OFFSETOF(player_interface, initial_jump_force_applied,           0x44C);
+    ASSERT_OFFSETOF(player_interface, preset_dodge_anim,                    0x478);
+    ASSERT_OFFSETOF(player_interface, preset_block_anim,                    0x488);
+    ASSERT_OFFSETOF(player_interface, combat_vehicle,                       0x498);
+    ASSERT_OFFSETOF(player_interface, unk_04ac,                             0x4AC);
+    ASSERT_OFFSETOF(player_interface, unk_4b0,                              0x4B0);
+    ASSERT_OFFSETOF(player_interface, unk_4b8,                              0x4B8);
+    ASSERT_OFFSETOF(player_interface, master_object,                        0x4BC);
+    ASSERT_OFFSETOF(player_interface, override_mode,                        0x500);
+    ASSERT_OFFSETOF(player_interface, buttons,                              0x51C);
+    ASSERT_OFFSETOF(player_interface, command_buttons,                      0x520);
 } // treyarch

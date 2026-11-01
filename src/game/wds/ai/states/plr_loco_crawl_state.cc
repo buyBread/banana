@@ -141,7 +141,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
 
         return state_exit_code_fall;
 
-    if (can_handle_exit_code(state_exit_code_attack) && player->unk_220(delta_t, 0.0f))
+    if (can_handle_exit_code(state_exit_code_attack) && player->should_execute_combat(delta_t, 0.0f))
         return state_exit_code_attack;
 
     if (can_handle_exit_code(state_exit_code_stand) && unk_022())
@@ -156,7 +156,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
     if (player->unk_461() && !player->unk_462() && can_handle_exit_code(state_exit_code_strength_test))
         return state_exit_code_strength_test;
 
-    if (can_handle_exit_code(state_exit_code_dodge) && player->unk_232(delta_t))
+    if (can_handle_exit_code(state_exit_code_dodge) && player->should_execute_dodge(delta_t))
         return state_exit_code_dodge;
 
     if (can_handle_exit_code(state_exit_code_wall_evade) && player->unk_270())

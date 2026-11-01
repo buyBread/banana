@@ -1,9 +1,12 @@
 #include "retail.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/ai/actions/pick_up_ai_action.hh"
+#include "game/wds/ai/states/plr_combat_states.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_state_machine.hh"
 #include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/info_node.hh"
+#include "game/wds/entity/actor.hh"
 
 using namespace treyarch;
 
@@ -1031,24 +1034,30 @@ f32 player_interface::unk_210() {
     return ((f32 (__thiscall*)(player_interface*))retail::sub_720010)(this);
 }
 
-// slot 211
-i32 player_interface::unk_211(i32 unk, i32 unk_2, i32 unk_3) {
-    return ((i32 (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_986C40)(this, unk, unk_2, unk_3);
+// sub_986C40
+void player_interface::force_attack(e_combat_move move, const vc8::vector<ai_target>* targs, i32 script_move) {
+    clear_attacks(true);
+
+    attacks[move]->forced_set_up(this, move, targs, script_move);
+    next_attack = move;
 }
 
-// slot 212
-i32 player_interface::unk_212(i32 unk, i32 unk_2, i32 unk_3) {
-    return ((i32 (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_986C00)(this, unk, unk_2, unk_3);
+// sub_986C00
+void player_interface::force_attack(e_combat_move move, const ai_target* targ, i32 script_move) {
+    clear_attacks(true);
+
+    attacks[move]->forced_set_up(this, move, targ, script_move);
+    next_attack = move;
 }
 
-// slot 213
-i32 player_interface::unk_213(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FB20)(this, unk);
+// sub_71FB20
+const plr_combat_attack* player_interface::get_attack(e_combat_move att) const {
+    return (att >= 0 && att < combat_num_moves) ? attacks[att] : nullptr;
 }
 
-// slot 214
-bool player_interface::unk_214(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_71FB40)(this, unk);
+// sub_71FB40
+bool player_interface::attack_possible(e_combat_move att) const {
+    return (att >= 0 && att < combat_num_moves && attacks[att]) ? attacks[att]->has_potential_targets(this, true) : false;
 }
 
 // slot 215
@@ -1056,29 +1065,48 @@ i32 player_interface::unk_215() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71FB70)(this);
 }
 
-// slot 216
-i32 player_interface::unk_216() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FB80)(this);
+// sub_71FB80
+e_combat_move player_interface::get_next_attack_enum() const {
+    return next_attack;
 }
 
-// slot 217
-i32 player_interface::unk_217() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FB90)(this);
+// sub_71FB90
+const plr_combat_attack* player_interface::get_next_attack() const {
+    return get_attack(get_next_attack_enum());
 }
 
-// slot 218
-i32 player_interface::unk_218() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_99A4B0)(this);
+// sub_99A4B0
+void player_interface::init_attacks() {
+    for (plr_combat_attack* &attack : attacks) {
+        delete attack;
+        attack = nullptr;
+    }
+
+    attacks[combat_move_script_move] = new plr_combat_attack();
+
+    clear_attacks(true);
 }
 
-// slot 219
-void player_interface::unk_219(bool unk) {
-    ((void (__thiscall*)(player_interface*, bool))retail::sub_99A570)(this, unk);
+// sub_99A570
+void player_interface::clear_attacks(bool all) {
+    for (plr_combat_attack* attack : attacks)
+        if (attack)
+            attack->clear();
+
+    if (all)
+        unk_0318->clear();
+    else if (!unk_0318->empty())
+        unk_0318->pop_front();
+
+    next_attack = combat_num_moves;
 }
 
-// slot 220
-bool player_interface::unk_220(f32 delta_t, f32 unk_2) {
-    return ((bool (__thiscall*)(player_interface*, f32, f32))retail::sub_986C80)(this, delta_t, unk_2);
+// sub_986C80
+bool player_interface::should_execute_combat(f32, f32 tolerance) {
+    if (next_attack != combat_num_moves && attacks[next_attack])
+        return attacks[next_attack]->should_execute(this, tolerance);
+
+    return false;
 }
 
 // slot 221
@@ -1096,39 +1124,59 @@ void player_interface::unk_223(i32 unk, i32 unk_2) {
     ((void (__thiscall*)(player_interface*, i32, i32))retail::sub_9922E0)(this, unk, unk_2);
 }
 
-// slot 224
-i32 player_interface::unk_224(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FBB0)(this, unk);
+// sub_71FBB0
+const plr_trick_move* player_interface::get_trick(e_combat_move trk) const {
+    return (trk > combat_max_moves && trk < combat_and_tricks_num_moves) ? tricks[trk - combat_max_moves - 1] : nullptr;
 }
 
-// slot 225
-i32 player_interface::unk_225() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FBD0)(this);
+// sub_71FBD0
+e_combat_move player_interface::get_next_trick_enum() const {
+    return next_trick;
 }
 
-// slot 226
-i32 player_interface::unk_226() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FBE0)(this);
+// sub_71FBE0
+const plr_trick_move* player_interface::get_next_trick() const {
+    return get_trick(get_next_trick_enum());
 }
 
-// slot 227
-i32 player_interface::unk_227(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FC00)(this, unk);
+// sub_71FC00
+i32 player_interface::get_trick_array_index(e_combat_move trk) const {
+    return trk - combat_max_moves - 1;
 }
 
-// slot 228
-i32 player_interface::unk_228() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_986CD0)(this);
+// sub_986CD0
+void player_interface::init_tricks() {
+    for (plr_trick_move* &trick : tricks) {
+        delete trick;
+        trick = nullptr;
+    }
+
+    clear_tricks();
 }
 
-// slot 229
-i32 player_interface::unk_229() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_986D10)(this);
+// sub_986D10
+void player_interface::clear_tricks() {
+    for (plr_trick_move* trick : tricks)
+        if (trick)
+            trick->clear();
+
+    next_trick = combat_and_tricks_num_moves;
 }
 
-// slot 230
-void player_interface::unk_230(f32 unk) {
-    ((void (__thiscall*)(player_interface*, f32))retail::sub_986B00)(this, unk);
+// sub_986B00
+void player_interface::update_tricks(f32 delta_t) {
+    f32 best_time = 0.0f;
+
+    for (i32 i = 0; i < 4; ++i) {
+        if (!tricks[i])
+            continue;
+
+        bool has_next_trick = next_trick != combat_and_tricks_num_moves &&
+                              tricks[get_trick_array_index(next_trick)];
+
+        if (tricks[i]->update(delta_t, &best_time, has_next_trick))
+            next_trick = (e_combat_move)(combat_move_trick_a + i);
+    }
 }
 
 // slot 231
@@ -1136,29 +1184,29 @@ bool player_interface::unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk
     return ((bool (__thiscall*)(player_interface*, i32, i32, i32, i32, i32, i32))retail::sub_99B330)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6);
 }
 
-// slot 232
-bool player_interface::unk_232(f32 delta_t) {
-    return ((bool (__thiscall*)(player_interface*, f32))retail::sub_986D50)(this, delta_t);
+// sub_986D50
+bool player_interface::should_execute_dodge(f32) {
+    return next_attack == combat_move_dodge;
 }
 
-// slot 233
-i32 player_interface::unk_233() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FC10)(this);
+// sub_71FC10
+const char* player_interface::get_dodge_anim() const {
+    return preset_dodge_anim.c_str();
 }
 
-// slot 234
-i32 player_interface::unk_234(void* unk) {
-    return ((i32 (__thiscall*)(player_interface*, void*))retail::sub_71FC20)(this, unk);
+// sub_71FC20
+void player_interface::override_dodge_anim(const char* a) {
+    preset_dodge_anim = a;
 }
 
-// slot 235
-i32 player_interface::unk_235() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FC30)(this);
+// sub_71FC30
+i32 player_interface::get_dodge_type() const {
+    return preset_dodge_type;
 }
 
-// slot 236
-i32 player_interface::unk_236(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FC40)(this, unk);
+// sub_71FC40
+void player_interface::override_dodge_type(i32 t) {
+    preset_dodge_type = t;
 }
 
 // slot 237
@@ -1166,29 +1214,29 @@ bool player_interface::unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk
     return ((bool (__thiscall*)(player_interface*, i32, i32, i32, i32, i32, i32, i32))retail::sub_986D60)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6, unk_7);
 }
 
-// slot 238
-i32 player_interface::unk_238(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_986D70)(this, unk);
+// sub_986D70
+bool player_interface::should_execute_block(f32) {
+    return next_attack == combat_move_block;
 }
 
-// slot 239
-i32 player_interface::unk_239() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FC50)(this);
+// sub_71FC50
+const char* player_interface::get_block_anim() const {
+    return preset_block_anim.c_str();
 }
 
-// slot 240
-i32 player_interface::unk_240(void* unk) {
-    return ((i32 (__thiscall*)(player_interface*, void*))retail::sub_71FC60)(this, unk);
+// sub_71FC60
+void player_interface::override_block_anim(const char* a) {
+    preset_block_anim = a;
 }
 
-// slot 241
-i32 player_interface::unk_241() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FC70)(this);
+// sub_71FC70
+i32 player_interface::get_block_type() const {
+    return preset_block_type;
 }
 
-// slot 242
-i32 player_interface::unk_242(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FC80)(this, unk);
+// sub_71FC80
+void player_interface::override_block_type(i32 t) {
+    preset_block_type = t;
 }
 
 // slot 243
@@ -1407,9 +1455,17 @@ bool player_interface::unk_282(ai_core* core) {
     return ((bool (__thiscall*)(player_interface*, ai_core*))retail::sub_992930)(this, core);
 }
 
-// slot 283
-bool player_interface::unk_283(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_986D80)(this, unk);
+// sub_986D80
+bool player_interface::is_current_combat_target(arch_base_vhandle targ) const {
+    if (!targ.resolve())
+        return false;
+
+    base_state* state = my_actor->get_ai_core()->my_base_machine->my_curr_state;
+
+    if (state && state->get_virtual_type_key() == plr_combat_state::my_type_key.source_hash_code)
+        return ((bool (__thiscall*)(base_state*, arch_base_vhandle))retail::sub_416D60)(state, targ); // the combat state's hit list
+
+    return false;
 }
 
 // slot 284

@@ -138,6 +138,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_5A85E0
         // inlined @ sub_4DE570
+        // inlined @ sub_99A570
         void pop_front() noexcept { // nothing on an empty list
             erase(sentinel->next);
         }
@@ -145,6 +146,7 @@ namespace treyarch { namespace vc8 {
         // sub_4ECF90
         // sub_7FB2F0
         // inlined @ sub_97A400
+        // inlined @ sub_99A570
         void clear() noexcept {
             node* position = sentinel->next;
 
