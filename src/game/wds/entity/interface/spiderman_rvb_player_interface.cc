@@ -182,8 +182,8 @@ bool spiderman_rvb_player_interface::unk_028(i32 unk) {
 }
 
 // slot 29
-bool spiderman_rvb_player_interface::unk_029() {
-    return ((bool (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_7216D0)(this);
+bool spiderman_rvb_player_interface::unk_029() const {
+    return ((bool (__thiscall*)(const spiderman_rvb_player_interface*))retail::sub_7216D0)(this);
 }
 
 // slot 30
@@ -232,7 +232,7 @@ i32 spiderman_rvb_player_interface::unk_039(i32 unk) {
 }
 
 // sub_9A7030
-arch_base_vhandle spiderman_rvb_player_interface::unk_040() {
+arch_base_vhandle spiderman_rvb_player_interface::unk_040() const {
     return unk_0724;
 }
 
@@ -421,13 +421,13 @@ bool spiderman_rvb_player_interface::unk_074() {
 }
 
 // slot 76
-i32 spiderman_rvb_player_interface::unk_076() {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_A944D0)(this);
+i32 spiderman_rvb_player_interface::unk_076() const {
+    return ((i32 (__thiscall*)(const spiderman_rvb_player_interface*))retail::sub_A944D0)(this);
 }
 
 // slot 77
-i32 spiderman_rvb_player_interface::unk_077() {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_ABD4A0)(this);
+i32 spiderman_rvb_player_interface::unk_077() const {
+    return ((i32 (__thiscall*)(const spiderman_rvb_player_interface*))retail::sub_ABD4A0)(this);
 }
 
 // slot 78
@@ -1665,7 +1665,7 @@ bool spiderman_rvb_player_interface::unk_257() {
 }
 
 // sub_7210E0
-arch_base_vhandle spiderman_rvb_player_interface::unk_258() {
+arch_base_vhandle spiderman_rvb_player_interface::unk_258() const {
     return unk_0780;
 }
 
@@ -1780,7 +1780,7 @@ bool spiderman_rvb_player_interface::unk_284() {
 }
 
 // sub_720DA0
-bool spiderman_rvb_player_interface::is_in_rvb_black_mode() {
+bool spiderman_rvb_player_interface::is_in_rvb_black_mode() const {
     return rvb_black_mode;
 }
 

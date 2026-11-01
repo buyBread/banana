@@ -36,3 +36,8 @@ arch_base_vhandle manip_obj_interface::update_for_grab(entity* grabber) {
 
     return result;
 }
+
+// sub_611790
+bool manip_obj_interface::is_active() const {
+    return references::active_manip_objs.get().contains((manip_obj_interface*)this);
+}

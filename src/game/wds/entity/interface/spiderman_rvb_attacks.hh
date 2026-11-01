@@ -356,6 +356,9 @@ namespace treyarch {
         i32                     get_mash_sizeof() const override;
 
         bool attack_possible(const player_interface* plr_ifc) override;
+
+    protected:
+        bool attack_possible_with_upgrades(const player_interface* plr_ifc, const char* black_upgrade, const char* red_upgrade); // black mode needs the black upgrade, red mode the red one
     };
 
     class spiderman_rvb_special_x_attack : public spiderman_rvb_special_attack {

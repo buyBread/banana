@@ -50,6 +50,11 @@ namespace treyarch {
         }
 
         // inlined
+        bool is_adv_standing() const {
+            return (flags & standing_interface_flag_adv_standing) != 0;
+        }
+
+        // inlined
         void enable(bool i) {
             if (i)
                 flags |= standing_interface_flag_enabled;

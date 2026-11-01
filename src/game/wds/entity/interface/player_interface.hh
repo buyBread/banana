@@ -300,7 +300,7 @@ namespace treyarch {
         virtual bool              unk_026();
         virtual bool              unk_027(i32 unk);
         virtual bool              unk_028(i32 unk);
-        virtual bool              unk_029();
+        virtual bool              unk_029() const;
         virtual f32               unk_030();
         virtual i32               unk_031(i32 unk);
         virtual i32               unk_032(i32 unk);
@@ -311,7 +311,7 @@ namespace treyarch {
         virtual void              set_zip_override_anchor_num(f32 num);
         virtual f32               unk_038();
         virtual i32               unk_039(i32 unk);
-        virtual arch_base_vhandle unk_040();
+        virtual arch_base_vhandle unk_040() const;
         virtual arch_base_vhandle unk_041(i32 index);                  // a null handle in player_interface
         virtual i32               unk_042();
         virtual void              unk_043(i32 unk);
@@ -347,8 +347,8 @@ namespace treyarch {
         virtual bool              unk_073();
         virtual bool              unk_074();
         virtual void              set_desired_mode(i32 m);
-        virtual i32               unk_076();
-        virtual i32               unk_077();
+        virtual i32               unk_076() const;
+        virtual i32               unk_077() const;
         virtual void              set_swing_override_anchor(arch_base_vhandle anchor);
         virtual void              set_zip_override_anchor(arch_base_vhandle anchor);
         virtual arch_base_vhandle unk_080();
@@ -542,7 +542,7 @@ namespace treyarch {
         virtual void              unk_255(f32 delta_t);
         virtual void              unk_256();
         virtual bool              unk_257();
-        virtual arch_base_vhandle unk_258();
+        virtual arch_base_vhandle unk_258() const;
         virtual bool              unk_259(f32 delta_t);
         virtual bool              unk_260(f32 delta_t);
         virtual bool              unk_261(void* unk, void* unk_2, void* unk_3);
@@ -591,7 +591,7 @@ namespace treyarch {
         virtual void              set_jump_start(vector3d s);
         virtual void*             unk_303(void* unk);
         virtual i32               unk_304(i32 unk);
-        virtual bool              is_in_rvb_black_mode();
+        virtual bool              is_in_rvb_black_mode() const;
         virtual i32               unk_306();
         virtual i32               unk_307();
         virtual f32               unk_308();

@@ -252,7 +252,7 @@ namespace treyarch {
         bool              unk_026() override;
         bool              unk_027(i32 unk) override;
         bool              unk_028(i32 unk) override;
-        bool              unk_029() override;
+        bool              unk_029() const override;
         f32               unk_030() override;
         i32               unk_031(i32 unk) override;
         i32               unk_032(i32 unk) override;
@@ -262,7 +262,7 @@ namespace treyarch {
         void              set_zip_override_anchor_num(f32 num) override;
         f32               unk_038() override;
         i32               unk_039(i32 unk) override;
-        arch_base_vhandle unk_040() override;
+        arch_base_vhandle unk_040() const override;
         arch_base_vhandle unk_041(i32 index) override;
         i32               unk_042() override;
         void              unk_043(i32 unk) override;
@@ -294,8 +294,8 @@ namespace treyarch {
         void*             unk_071(void* unk) override;
         bool              unk_072() override;
         bool              unk_074() override;
-        i32               unk_076() override;
-        i32               unk_077() override;
+        i32               unk_076() const override;
+        i32               unk_077() const override;
         void              set_swing_override_anchor(arch_base_vhandle anchor) override;
         void              set_zip_override_anchor(arch_base_vhandle anchor) override;
         arch_base_vhandle unk_080() override;
@@ -408,7 +408,7 @@ namespace treyarch {
         void              unk_255(f32 delta_t) override;
         void              unk_256() override;
         bool              unk_257() override;
-        arch_base_vhandle unk_258() override;
+        arch_base_vhandle unk_258() const override;
         i32               unk_262(i32 unk, i32 unk_2) override;
         bool              unk_263(void* unk, i32 unk_2) override;
         bool              unk_264(f32 delta_t, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
@@ -422,7 +422,7 @@ namespace treyarch {
         bool              unk_272() override;
         entity*           unk_273(entity* target) override;
         bool              unk_284() override;
-        bool              is_in_rvb_black_mode() override;
+        bool              is_in_rvb_black_mode() const override;
         i32               unk_306() override;
         i32               unk_307() override;
         f32               unk_308() override;

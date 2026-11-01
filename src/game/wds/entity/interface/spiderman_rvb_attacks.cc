@@ -1,6 +1,21 @@
+#include <cmath>
+
 #include "retail.hh"
 #include "game/wds/entity/interface/spiderman_rvb_attacks.hh"
+#include "game/wds/entity/interface/manip_obj_interface.hh"
+#include "game/wds/entity/interface/occupant_interface.hh"
+#include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/standing_interface.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/info_node.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/entity_base.hh"
+#include "game/wds/entity/vehicle.hh"
+#include "game/game.hh"
+#include "game/game_meter_manager.hh"
+#include "game/math/po.hh"
+#include "game/math/references.hh"
 
 using namespace treyarch;
 
@@ -68,17 +83,39 @@ bool spiderman_rvb_grapple_attack::update(e_combat_move            move,
                                                                                                                                                                                                         unk);
 }
 
-// slot 19
+// sub_9A6CC0
 bool spiderman_rvb_grapple_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_grapple_attack*, const player_interface*))retail::sub_9A6CC0)(this, plr_ifc);
+    return plr_combat_attack::attack_possible(plr_ifc);
 }
 
-// slot 20
+// sub_9B6AD0
 f32 spiderman_rvb_grapple_attack::compute_target_score(ai_target* tmp_target, const player_interface* plr_ifc, u32 flag_override) {
-    return ((f32 (__thiscall*)(spiderman_rvb_grapple_attack*, ai_target*, const player_interface*, u32))retail::sub_9B6AD0)(this,
-                                                                                                                            tmp_target,
-                                                                                                                            plr_ifc,
-                                                                                                                            flag_override);
+    if (!retail::sub_40F580((i32)tmp_target->target.resolve())) // the target's als has the Combat_SM_Grapple_Grab category
+        return -1.0f;
+
+    i32 mode = plr_ifc->get_mode();
+
+    if (mode < 3 || mode > 7)
+        return plr_combat_attack::compute_target_score(tmp_target, plr_ifc, flag_override);
+
+    u32    flags = flag_override ? flag_override : target_flags;
+    actor* owner = plr_ifc->my_actor;
+
+    return tmp_target->compute_score(owner,
+                                     owner->my_abs_po->get_position(),
+                                     attack_dir,
+                                     attack_up,
+                                     min_range,
+                                     3.0f,
+                                     min_vert_range,
+                                     max_vert_range,
+                                     -1.1f,
+                                     -1.1f,
+                                     flags,
+                                     nullptr,
+                                     0,
+                                     0,
+                                     0x14);
 }
 
 // ==== spiderman_rvb_air_attack ==== //
@@ -124,9 +161,17 @@ i32 spiderman_rvb_air_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9B6C50
 bool spiderman_rvb_air_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_air_attack*, const player_interface*))retail::sub_9B6C50)(this, plr_ifc);
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    actor* owner = plr_ifc->my_actor;
+
+    if (owner->has_standing_ifc() && owner->standing_ifc()->is_effectively_standing())
+        return false;
+
+    return true;
 }
 
 // ==== spiderman_rvb_air_jump_attack ==== //
@@ -172,9 +217,20 @@ i32 spiderman_rvb_air_jump_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9B6CA0
 bool spiderman_rvb_air_jump_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_air_jump_attack*, const player_interface*))retail::sub_9B6CA0)(this, plr_ifc);
+    if (plr_ifc->get_mode() == 9)
+        return true;
+
+    if (plr_ifc->get_next_attack_enum() == combat_num_moves)
+        return false;
+
+    actor* owner = plr_ifc->my_actor;
+
+    if (!owner->has_standing_ifc())
+        return false;
+
+    return owner->standing_ifc()->is_effectively_standing() || owner->standing_ifc()->is_adv_standing();
 }
 
 // ==== spiderman_rvb_car_finish_attack ==== //
@@ -248,9 +304,11 @@ bool spiderman_rvb_car_finish_attack::update(e_combat_move            move,
                                                                                                                                                                                                            unk);
 }
 
-// slot 10
+// sub_9B6E30
 void spiderman_rvb_car_finish_attack::clear() {
-    ((void (__thiscall*)(spiderman_rvb_car_finish_attack*))retail::sub_9B6E30)(this);
+    combat_vehicle = arch_base_vhandle();
+
+    plr_combat_attack::clear();
 }
 
 // slot 12
@@ -262,9 +320,23 @@ bool spiderman_rvb_car_finish_attack::build_target_list(const player_interface* 
                                                                                                                                         check_possible);
 }
 
-// slot 21
+// sub_9B6E40
 bool spiderman_rvb_car_finish_attack::target_still_valid(ai_target* tmp_target, const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_car_finish_attack*, ai_target*, const player_interface*))retail::sub_9B6E40)(this, tmp_target, plr_ifc);
+    auto* car = (entity_base*)combat_vehicle.resolve();
+
+    if (!car || !car->is_a_vehicle())
+        return false;
+
+    if (tmp_target->target != combat_vehicle)
+        return false;
+
+    // the player has to be the vehicle's car-combat attacker
+    if (!car->occupant_ifc()->unk_044.resolve() ||
+        car->occupant_ifc()->unk_044.resolve() != plr_ifc->my_actor)
+
+        return false;
+
+    return car->occupant_ifc()->is_seat_occupied(0);
 }
 
 // inlined @ sub_9A7590
@@ -344,9 +416,11 @@ bool spiderman_rvb_throw_manip_attack::update(e_combat_move            move,
                                                                                                                                                                                                             unk);
 }
 
-// slot 10
+// sub_9B6E30
 void spiderman_rvb_throw_manip_attack::clear() {
-    ((void (__thiscall*)(spiderman_rvb_throw_manip_attack*))retail::sub_9B6E30)(this);
+    manip_to_throw = arch_base_vhandle();
+
+    plr_combat_attack::clear();
 }
 
 // slot 12
@@ -358,14 +432,31 @@ bool spiderman_rvb_throw_manip_attack::build_target_list(const player_interface*
                                                                                                                                          check_possible);
 }
 
-// slot 19
+// sub_9B6ED0
 bool spiderman_rvb_throw_manip_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_throw_manip_attack*, const player_interface*))retail::sub_9B6ED0)(this, plr_ifc);
+    if (!plr_ifc->my_actor->standing_ifc()->is_effectively_standing())
+        return false;
+
+    return plr_combat_attack::attack_possible(plr_ifc);
 }
 
-// slot 21
+// sub_9B6FF0
 bool spiderman_rvb_throw_manip_attack::target_still_valid(ai_target* tmp_target, const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_throw_manip_attack*, ai_target*, const player_interface*))retail::sub_9B6FF0)(this, tmp_target, plr_ifc);
+    auto* manip = (entity_base*)manip_to_throw.resolve();
+
+    if (!manip)
+        return false;
+
+    if (tmp_target->target != manip_to_throw)
+        return plr_combat_attack::target_still_valid(tmp_target, plr_ifc);
+
+    if (!manip->has_manip_obj_ifc())
+        return false;
+
+    if (manip->manip_obj_ifc()->is_active())
+        return false;
+
+    return manip->is_alive();
 }
 
 // inlined @ sub_9A7590
@@ -447,9 +538,9 @@ bool spiderman_rvb_web_yank_attack::build_target_list(const player_interface* pl
                                                                                                                                       check_possible);
 }
 
-// slot 19
+// sub_9A6CC0
 bool spiderman_rvb_web_yank_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_web_yank_attack*, const player_interface*))retail::sub_9A6CC0)(this, plr_ifc);
+    return plr_combat_attack::attack_possible(plr_ifc);
 }
 
 // ==== spiderman_rvb_melee_or_car_combat_attack ==== //
@@ -504,22 +595,90 @@ bool spiderman_rvb_melee_or_car_combat_attack::build_target_list(const player_in
                                                                                                                                                  check_possible);
 }
 
-// slot 19
+// sub_9A6CF0
 bool spiderman_rvb_melee_or_car_combat_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_melee_or_car_combat_attack*, const player_interface*))retail::sub_9A6CF0)(this, plr_ifc);
+    auto* car = (entity_base*)plr_ifc->get_combat_vehicle().resolve();
+
+    if (car && car->is_a_vehicle() && ((vehicle*)car)->condition)
+        return false;
+
+    return plr_combat_attack::attack_possible(plr_ifc);
 }
 
-// slot 20
+// sub_9B72D0
 f32 spiderman_rvb_melee_or_car_combat_attack::compute_target_score(ai_target* tmp_target, const player_interface* plr_ifc, u32 flag_override) {
-    return ((f32 (__thiscall*)(spiderman_rvb_melee_or_car_combat_attack*, ai_target*, const player_interface*, u32))retail::sub_9B72D0)(this,
-                                                                                                                                        tmp_target,
-                                                                                                                                        plr_ifc,
-                                                                                                                                        flag_override);
+    u32 flags = flag_override ? flag_override : target_flags;
+
+    auto* car = (entity_base*)plr_ifc->get_combat_vehicle().resolve();
+
+    if (!car ||
+        !car->occupant_ifc()->unk_044.resolve() ||
+        car->occupant_ifc()->unk_044.resolve() != plr_ifc->my_actor)
+
+        return plr_combat_attack::compute_target_score(tmp_target, plr_ifc, flags);
+
+    // the player is its vehicle's car-combat attacker, so only someone else riding in it scores
+    auto* ent = (entity_base*)tmp_target->target.resolve();
+
+    if (!ent || !ent->is_an_actor() || !((actor*)ent)->get_ai_core())
+        return -1.0f;
+
+    auto* car_node = (ai_car_inode*)((actor*)ent)->get_ai_core()->get_info_node(info_node_type_ai_car);
+
+    if (!car_node                               ||
+        !car_node->is_in_car                    ||
+        car_node->selected_car.resolve() != car ||
+        !car_node->selected_seat)
+
+        return -1.0f;
+
+    actor* owner = plr_ifc->my_actor;
+
+    return tmp_target->compute_score(owner,
+                                     owner->my_abs_po->get_position(),
+                                     attack_dir,
+                                     attack_up,
+                                     0.0f,
+                                     20.0f,
+                                     -20.0f,
+                                     20.0f,
+                                     min_dotp,
+                                     min_vert_dotp,
+                                     (flags & ~0x400C0) | 0x20000,
+                                     nullptr,
+                                     0,
+                                     0,
+                                     0x14);
 }
 
-// slot 21
+// sub_9B7450
 bool spiderman_rvb_melee_or_car_combat_attack::target_still_valid(ai_target* tmp_target, const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_melee_or_car_combat_attack*, ai_target*, const player_interface*))retail::sub_9B7450)(this, tmp_target, plr_ifc);
+    auto* car = (entity_base*)plr_ifc->get_combat_vehicle().resolve();
+
+    if (!car ||
+        !car->occupant_ifc()->unk_044.resolve() ||
+        car->occupant_ifc()->unk_044.resolve() != plr_ifc->my_actor)
+
+        return plr_combat_attack::target_still_valid(tmp_target, plr_ifc);
+
+    u32 flags = (target_flags & ~0x400C0) | 0x20000;
+
+    // the player is its vehicle's car-combat attacker, so a target outside the vehicle stays valid
+    auto* ent = (entity_base*)tmp_target->target.resolve();
+
+    if (!ent || !ent->is_an_actor() || !((actor*)ent)->get_ai_core())
+        return true;
+
+    auto* car_node = (ai_car_inode*)((actor*)ent)->get_ai_core()->get_info_node(info_node_type_ai_car);
+
+    if (!car_node                               ||
+        !car_node->is_in_car                    ||
+        car_node->selected_car.resolve() != car ||
+        !car_node->selected_seat)
+
+        return true;
+
+    return tmp_target->target_valid(plr_ifc->my_actor, flags);
 }
 
 // ==== spiderman_rvb_momentum_attack ==== //
@@ -565,9 +724,12 @@ i32 spiderman_rvb_momentum_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 11
+// sub_9BA970
 bool spiderman_rvb_momentum_attack::has_potential_targets(const player_interface* plr_ifc, bool check_possible) {
-    return ((bool (__thiscall*)(spiderman_rvb_momentum_attack*, const player_interface*, bool))retail::sub_9BA970)(this, plr_ifc, check_possible);
+    if (check_possible && !attack_possible(plr_ifc))
+        return false;
+
+    return !plr_ifc->unk_040().null();
 }
 
 // slot 12
@@ -579,17 +741,25 @@ bool spiderman_rvb_momentum_attack::build_target_list(const player_interface* pl
                                                                                                                                       check_possible);
 }
 
-// slot 19
+// sub_9B7610
 bool spiderman_rvb_momentum_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_momentum_attack*, const player_interface*))retail::sub_9B7610)(this, plr_ifc);
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    if (!plr_ifc->unk_029())
+        return false;
+
+    i32 mode = plr_ifc->get_mode();
+
+    if (mode != 9 && mode != 4 && mode != 5 && mode != 3 && mode != 14 && mode != 1)
+        return false;
+
+    return has_potential_targets(plr_ifc, false);
 }
 
-// slot 20
+// sub_9A6CD0
 f32 spiderman_rvb_momentum_attack::compute_target_score(ai_target* tmp_target, const player_interface* plr_ifc, u32 flag_override) {
-    return ((f32 (__thiscall*)(spiderman_rvb_momentum_attack*, ai_target*, const player_interface*, u32))retail::sub_9A6CD0)(this,
-                                                                                                                             tmp_target,
-                                                                                                                             plr_ifc,
-                                                                                                                             flag_override);
+    return plr_combat_attack::compute_target_score(tmp_target, plr_ifc, flag_override ? flag_override : target_flags);
 }
 
 // ==== spiderman_rvb_civ_save_attack ==== //
@@ -635,9 +805,12 @@ i32 spiderman_rvb_civ_save_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 11
+// sub_9BA970
 bool spiderman_rvb_civ_save_attack::has_potential_targets(const player_interface* plr_ifc, bool check_possible) {
-    return ((bool (__thiscall*)(spiderman_rvb_civ_save_attack*, const player_interface*, bool))retail::sub_9BA970)(this, plr_ifc, check_possible);
+    if (check_possible && !attack_possible(plr_ifc))
+        return false;
+
+    return !plr_ifc->unk_040().null();
 }
 
 // slot 12
@@ -649,17 +822,20 @@ bool spiderman_rvb_civ_save_attack::build_target_list(const player_interface* pl
                                                                                                                                       check_possible);
 }
 
-// slot 19
+// sub_9B7070
 bool spiderman_rvb_civ_save_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_civ_save_attack*, const player_interface*))retail::sub_9B7070)(this, plr_ifc);
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    if (plr_ifc->get_mode() == 3 || plr_ifc->unk_0251)
+        return false;
+
+    return has_potential_targets(plr_ifc, false);
 }
 
-// slot 20
+// sub_9A6CD0
 f32 spiderman_rvb_civ_save_attack::compute_target_score(ai_target* tmp_target, const player_interface* plr_ifc, u32 flag_override) {
-    return ((f32 (__thiscall*)(spiderman_rvb_civ_save_attack*, ai_target*, const player_interface*, u32))retail::sub_9A6CD0)(this,
-                                                                                                                             tmp_target,
-                                                                                                                             plr_ifc,
-                                                                                                                             flag_override);
+    return plr_combat_attack::compute_target_score(tmp_target, plr_ifc, flag_override ? flag_override : target_flags);
 }
 
 // ==== spiderman_rvb_wall_attack ==== //
@@ -726,9 +902,9 @@ bool spiderman_rvb_wall_attack::update(e_combat_move            move,
                                                                                                                                                                                                      unk);
 }
 
-// slot 19
-bool spiderman_rvb_wall_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_wall_attack*, const player_interface*))retail::sub_71FF10)(this, plr_ifc);
+// sub_71FF10
+bool spiderman_rvb_wall_attack::attack_possible(const player_interface*) {
+    return false;
 }
 
 // ==== spiderman_rvb_pole_swing_attack ==== //
@@ -795,21 +971,43 @@ bool spiderman_rvb_pole_swing_attack::update(e_combat_move            move,
                                                                                                                                                                                                            unk);
 }
 
-// slot 17
+// sub_9BAB10
 vector3d spiderman_rvb_pole_swing_attack::get_attack_direction(const player_interface* plr_ifc, const void* unk) {
-    vector3d result;
+    vector3d dir = math::unitize(plr_ifc->my_actor->my_abs_po->get_z_facing());
+    vector3d up  = get_attack_up(plr_ifc, unk);
 
-    ((vector3d* (__thiscall*)(spiderman_rvb_pole_swing_attack*, vector3d*, const player_interface*, const void*))retail::sub_9BAB10)(this,
-                                                                                                                                     &result,
-                                                                                                                                     plr_ifc,
-                                                                                                                                     unk);
+    if (std::fabs(up * dir) >= 0.9999f)
+        dir = math::unitize(plr_ifc->my_actor->my_abs_po->get_y_facing());
 
-    return result;
+    const vector3d &zero = references::unk_01112ca0.get();
+
+    math::vector4 basis_dir(dir.x, dir.y, dir.z, 0.0f);
+    math::vector4 basis_up(up.x, up.y, up.z, 0.0f);
+    math::vector4 basis_origin(zero.x, zero.y, zero.z, 0.0f);
+
+    po basis;
+    basis.set_po(basis_dir, basis_up, basis_origin);
+
+    return basis.get_z_facing();
 }
 
-// slot 19
+// sub_9BAA80
 bool spiderman_rvb_pole_swing_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_pole_swing_attack*, const player_interface*))retail::sub_9BAA80)(this, plr_ifc);
+    if (plr_ifc->unk_076() != 0 || plr_ifc->unk_077() != 1)
+        return false;
+
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    i32 mode = plr_ifc->get_mode();
+
+    if (mode != 9 && mode != 4 && mode != 5 && mode != 14)
+        return false;
+
+    if (!has_potential_targets(plr_ifc, false))
+        return false;
+
+    return ((player_interface*)plr_ifc)->unk_386(0.25f, true);
 }
 
 // ==== spiderman_rvb_swing_attack ==== //
@@ -855,9 +1053,25 @@ i32 spiderman_rvb_swing_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9BA9B0
 bool spiderman_rvb_swing_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_swing_attack*, const player_interface*))retail::sub_9BA9B0)(this, plr_ifc);
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    actor* owner = plr_ifc->my_actor;
+
+    if (owner->has_physical_ifc() && 3.0f > owner->physical_ifc()->get_velocity().length())
+        return false;
+
+    i32 mode = plr_ifc->get_mode();
+
+    if (mode == 3)
+        return true;
+
+    if (mode != 9)
+        return false;
+
+    return plr_ifc->unk_0251;
 }
 
 // ==== spiderman_rvb_melee_or_car_combat_ground_attack ==== //
@@ -903,9 +1117,23 @@ i32 spiderman_rvb_melee_or_car_combat_ground_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9B7560
 bool spiderman_rvb_melee_or_car_combat_ground_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_melee_or_car_combat_ground_attack*, const player_interface*))retail::sub_9B7560)(this, plr_ifc);
+    if (!spiderman_rvb_melee_or_car_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    auto* car = (entity_base*)plr_ifc->get_combat_vehicle().resolve();
+
+    // the player is its vehicle's car-combat attacker
+    if (car &&
+        car->occupant_ifc()->unk_044.resolve() &&
+        car->occupant_ifc()->unk_044.resolve() == plr_ifc->my_actor)
+
+        return true;
+
+    actor* owner = plr_ifc->my_actor;
+
+    return owner->has_standing_ifc() && owner->standing_ifc()->is_effectively_standing();
 }
 
 // ==== spiderman_rvb_special_attack ==== //
@@ -951,9 +1179,44 @@ i32 spiderman_rvb_special_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9BAD50
 bool spiderman_rvb_special_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_special_attack*, const player_interface*))retail::sub_9BAD50)(this, plr_ifc);
+    if (plr_ifc->get_mode() == 3)
+        return false;
+
+    if (!(retail::sub_933A90((i32*)references::game_meter_manager.read(), 0) >= 300.0f)) // meter 0's level
+        return false;
+
+    return spiderman_rvb_melee_or_car_combat_attack::attack_possible(plr_ifc);
+}
+
+// inlined @ sub_9BAD90
+// inlined @ sub_9BAE90
+// inlined @ sub_9BAF90
+bool spiderman_rvb_special_attack::attack_possible_with_upgrades(const player_interface* plr_ifc, const char* black_upgrade, const char* red_upgrade) {
+    string_hash name;
+
+    name.initialize(mash::ALLOCATED, black_upgrade);
+    i32 black_id = retail::sub_9210B0((u32*)references::upgrade_manager.read(), (u32*)&name); // get_upgrade_id
+
+    name.initialize(mash::ALLOCATED, red_upgrade);
+    i32 red_id = retail::sub_9210B0((u32*)references::upgrade_manager.read(), (u32*)&name);
+
+    bool black_owned = black_id >= 0 && retail::sub_9219C0((u32*)references::upgrade_manager.read(), black_id); // is_upgrade_owned
+    bool red_owned   = red_id   >= 0 && retail::sub_9219C0((u32*)references::upgrade_manager.read(), red_id);
+
+    if (!(plr_ifc->is_in_rvb_black_mode() && black_owned) &&
+        (plr_ifc->is_in_rvb_black_mode() || !red_owned))
+
+        return false;
+
+    if (plr_ifc->get_mode() == 3)
+        return false;
+
+    if (!(retail::sub_933A90((i32*)references::game_meter_manager.read(), 0) >= 300.0f))
+        return false;
+
+    return spiderman_rvb_melee_or_car_combat_attack::attack_possible(plr_ifc);
 }
 
 // ==== spiderman_rvb_special_x_attack ==== //
@@ -999,9 +1262,9 @@ i32 spiderman_rvb_special_x_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9BAD90
 bool spiderman_rvb_special_x_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_special_x_attack*, const player_interface*))retail::sub_9BAD90)(this, plr_ifc);
+    return attack_possible_with_upgrades(plr_ifc, "GROUND_POUND_1", "RISING_WEB_1");
 }
 
 // ==== spiderman_rvb_special_y_attack ==== //
@@ -1047,9 +1310,9 @@ i32 spiderman_rvb_special_y_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9BAE90
 bool spiderman_rvb_special_y_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_special_y_attack*, const player_interface*))retail::sub_9BAE90)(this, plr_ifc);
+    return attack_possible_with_upgrades(plr_ifc, "BEATDOWN_1", "MULTI_FURY_1");
 }
 
 // ==== spiderman_rvb_special_b_attack ==== //
@@ -1095,9 +1358,9 @@ i32 spiderman_rvb_special_b_attack::get_mash_sizeof() const {
     return sizeof(*this);
 }
 
-// slot 19
+// sub_9BAF90
 bool spiderman_rvb_special_b_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_special_b_attack*, const player_interface*))retail::sub_9BAF90)(this, plr_ifc);
+    return attack_possible_with_upgrades(plr_ifc, "ICHOR_GRASP_1", "WEB_BLIZZARD_1");
 }
 
 // ==== spiderman_rvb_counter_attack ==== //
@@ -1173,7 +1436,13 @@ bool spiderman_rvb_counter_attack::build_target_list(const player_interface* plr
                                                                                                                                      check_possible);
 }
 
-// slot 19
+// sub_9BACF0
 bool spiderman_rvb_counter_attack::attack_possible(const player_interface* plr_ifc) {
-    return ((bool (__thiscall*)(spiderman_rvb_counter_attack*, const player_interface*))retail::sub_9BACF0)(this, plr_ifc);
+    if (!plr_combat_attack::attack_possible(plr_ifc))
+        return false;
+
+    if (plr_ifc->get_mode() != 19)
+        return false;
+
+    return !plr_ifc->unk_258().null() && plr_ifc->unk_258().resolve();
 }

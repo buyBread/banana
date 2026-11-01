@@ -128,8 +128,8 @@ bool player_interface::unk_028(i32 unk) {
 }
 
 // slot 29
-bool player_interface::unk_029() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::unk_029() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 30
@@ -183,9 +183,9 @@ i32 player_interface::unk_039(i32 unk) {
 }
 
 // slot 40
-arch_base_vhandle player_interface::unk_040() {
+arch_base_vhandle player_interface::unk_040() const {
     arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+    ((arch_base_vhandle* (__thiscall*)(const player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
 
     return result;
 }
@@ -375,13 +375,13 @@ void player_interface::set_desired_mode(i32 m) {
 }
 
 // slot 76
-i32 player_interface::unk_076() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FB70)(this);
+i32 player_interface::unk_076() const {
+    return ((i32 (__thiscall*)(const player_interface*))retail::sub_71FB70)(this);
 }
 
 // slot 77
-i32 player_interface::unk_077() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
+i32 player_interface::unk_077() const {
+    return ((i32 (__thiscall*)(const player_interface*))retail::sub_A944D0)(this);
 }
 
 // slot 78
@@ -1564,9 +1564,9 @@ bool player_interface::unk_257() {
 }
 
 // slot 258
-arch_base_vhandle player_interface::unk_258() {
+arch_base_vhandle player_interface::unk_258() const {
     arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+    ((arch_base_vhandle* (__thiscall*)(const player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
 
     return result;
 }
@@ -1847,8 +1847,8 @@ i32 player_interface::unk_304(i32 unk) {
 }
 
 // slot 305
-bool player_interface::is_in_rvb_black_mode() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::is_in_rvb_black_mode() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 306
