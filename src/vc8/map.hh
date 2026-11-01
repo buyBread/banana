@@ -18,6 +18,10 @@ namespace treyarch { namespace vc8 {
     class map : public tree<K, std::pair<const K, V>, map_key<K, V>, compare_t> {
 
     public:
+        map() = default;
+
+        explicit map(mash::generating_vtable_version so_do_nothing) noexcept : tree<K, std::pair<const K, V>, map_key<K, V>, compare_t>(so_do_nothing) {}
+
         // sub_6F4730
         // sub_6F48E0
         // sub_6F4950

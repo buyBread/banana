@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "treyarch/mash/types.hh"
 #include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -35,6 +36,9 @@ namespace treyarch { namespace vc8 {
             sentinel->next     = sentinel;
             sentinel->previous = sentinel;
         }
+
+        // leaves the list alone, for a containing class's generating constructor
+        explicit list(mash::generating_vtable_version) noexcept {}
 
         // sub_4ED040
         ~list() {

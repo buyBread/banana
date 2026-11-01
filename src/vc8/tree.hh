@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "treyarch/mash/types.hh"
 #include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -129,6 +130,9 @@ namespace treyarch { namespace vc8 {
             head_node->right  = head_node;
         }
 
+        // leaves the tree alone, for a containing class's generating constructor
+        explicit tree(mash::generating_vtable_version) noexcept {}
+
         // sub_800C90
         // sub_800D20
         tree(const tree &right) : compare(right.compare),
@@ -175,6 +179,7 @@ namespace treyarch { namespace vc8 {
         u32  max_size() const noexcept { return 0xFFFFFFFF / sizeof(T); }
         bool empty()    const noexcept { return count == 0; }
 
+        // inlined @ sub_6F83E0
         // inlined @ sub_93D010
         void clear() {
             erase(begin(), end());
@@ -493,6 +498,8 @@ namespace treyarch { namespace vc8 {
             return next_node;
         }
 
+        // sub_6D6150
+        // sub_6D6410
         // sub_7FF640
         // sub_7FF730
         // sub_8041A0
