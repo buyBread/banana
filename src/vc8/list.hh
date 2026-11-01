@@ -43,6 +43,7 @@ namespace treyarch { namespace vc8 {
         explicit list(mash::generating_vtable_version) noexcept {}
 
         // sub_4ED040
+        // inlined @ sub_97A400
         ~list() {
             clear();
             
@@ -143,6 +144,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_4ECF90
         // sub_7FB2F0
+        // inlined @ sub_97A400
         void clear() noexcept {
             node* position = sentinel->next;
 

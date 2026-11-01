@@ -149,6 +149,7 @@ namespace treyarch { namespace vc8 {
 
         // inlined @ sub_A20D60
         // inlined @ sub_958750
+        // inlined @ sub_97A400
         ~tree() {
             erase(begin(), end());
 
@@ -181,6 +182,7 @@ namespace treyarch { namespace vc8 {
 
         // inlined @ sub_6F83E0
         // inlined @ sub_93D010
+        // inlined @ sub_97A400
         void clear() {
             erase(begin(), end());
         }
@@ -510,6 +512,8 @@ namespace treyarch { namespace vc8 {
         // sub_93C220
         // sub_93E580
         // sub_958380
+        // sub_973F00
+        // sub_9787D0
         // sub_A20CA0
         node* erase(node* first, node* last) { // the whole tree is dropped without rebalancing
             if (first == begin() && last == end()) {

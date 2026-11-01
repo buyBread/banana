@@ -120,6 +120,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_51D5F0
         // sub_7DCA50
+        // inlined @ sub_97A400
         void destroy() noexcept {
             clear();
 
