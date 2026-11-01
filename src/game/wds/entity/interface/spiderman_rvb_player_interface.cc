@@ -1,7 +1,20 @@
+#include <cmath>
+
 #include "retail.hh"
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
+#include "game/als/als.hh"
+#include "game/als/param.hh"
+#include "game/colgeom.hh"
+#include "game/game_meter_manager.hh"
 #include "game/script/script_access.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/entity/interface/physical_interface.hh"
+#include "game/wds/entity/interface/standing_interface.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 
 using namespace treyarch;
 
@@ -113,8 +126,8 @@ void spiderman_rvb_player_interface::unk_024(actor* owner) {
 }
 
 // slot 25
-void* spiderman_rvb_player_interface::unk_025(i32 unk) {
-    return ((void* (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A9550)(this, unk);
+void* spiderman_rvb_player_interface::unk_025(f32 delta_t) {
+    return ((void* (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9A9550)(this, delta_t);
 }
 
 // slot 26
@@ -415,9 +428,272 @@ void spiderman_rvb_player_interface::update_interface() {
     ((void (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9BB0E0)(this);
 }
 
-// slot 92
+// sub_9BB110
 void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9BB110)(this, delta_t);
+    actor* owner = my_actor;
+
+    // stuck below the world for two seconds without standing: dead, then put back at y 1.5
+    if (!(owner->flags & entity_flag_suspended) &&
+        owner->my_abs_po->get_position().y < -8.0f &&
+        owner->has_standing_ifc()) {
+
+        if (!owner->standing_ifc()->is_effectively_standing()) {
+            fall_timer = (f32)((f64)fall_timer + (f64)delta_t);
+
+            if (fall_timer > 2.0f) {
+                actor* hero = my_actor;
+
+                fall_timer = 0.0f;
+
+                if (retail::sub_4024A0((u32*)hero)) // entity_base::has_damage_ifc
+                    hero->damage_ifc()->set_hit_points(0);
+
+                if (retail::sub_48E700((u8*)my_actor))
+                    retail::sub_640D20((u8*)my_actor);
+
+                vector3d position = my_actor->my_abs_po->get_position();
+                position.y        = 1.5f;
+
+                references::g_world_ptr.read()->malor_point(position, false, true);
+            }
+        }
+    } else
+        fall_timer = 0.0f;
+
+    if (references::unk_00f4db94.read() != 1 || references::reload_current_upgrade_settings.read()) {
+        references::unk_00f4db94                   .write(1);
+        references::reload_current_upgrade_settings.write(0);
+
+        unk_023(1);
+    }
+
+    unk_527(delta_t);
+    unk_540(delta_t);
+
+    if (get_command_button(74)->triggered())
+        unk_573();
+
+    if (auto* als_node = (als_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_als)) {
+        auto* als = (als::animation_logic_system_interface*)als_node->my_als;
+
+        if (unk_0530) {
+            als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_in_blacksuit_mode, 1.0f);
+
+            if (!unk_0531 && unk_0538 && unk_0540 > 0.0f)
+                als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_desires_blacksuit_mode, 0.0f);
+            else
+                als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_desires_blacksuit_mode, 1.0f);
+        } else {
+            als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_in_blacksuit_mode, 0.0f);
+
+            if (!unk_0531 && unk_0538 && unk_0540 > 0.0f)
+                als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_desires_blacksuit_mode, 1.0f);
+            else
+                als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_desires_blacksuit_mode, 0.0f);
+        }
+
+        u8 in_combat = (u8)unk_042();
+
+        als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_in_combat_mode, (f32)in_combat);
+
+        bool in_focus = false;
+
+        arch_base_vhandle target;
+        arch_base_vhandle target_again;
+
+        if (((arch_base_vhandle*)unk_048(&target))->value &&
+            ((arch_base_vhandle*)unk_048(&target_again))->resolve())
+
+            in_focus = true;
+
+        als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_in_focus_mode, (f32)in_focus);
+    }
+
+    references::unk_00f4d5a0.write(3.25f);
+    references::unk_00f4d5a4.write(0.002f);
+    references::unk_00f4d590.write(3.25f);
+    references::unk_00f4d594.write(0.002f);
+
+    retail::sub_574560((i32)unk_0634, (i32)my_actor, delta_t);
+
+    vector3d velocity = references::unk_00f4de2c.read() ? *unk_095() : my_actor->physical_ifc()->get_velocity();
+
+    horizontal_speed = (f32)std::sqrt((f64)(f32)((f64)velocity.x * (f64)velocity.x + (f64)velocity.z * (f64)velocity.z));
+
+    retail::sub_9A7D10((u8*)this, delta_t);
+
+    if (mode.current != 9 && mode.current != 3)
+        unk_027(1);
+
+    references::unk_01112c58.write(0);
+
+    switch (mode.current) {
+        case 2:
+        case 4:
+        case 5:
+        case 14:
+            unk_544(delta_t);
+
+            break;
+
+        default:
+            break;
+    }
+
+    if (unk_103() || retail::sub_992A60((u32**)this)) {
+        unk_198();
+        unk_203();
+    } else if (mode.current != mode_last_frame) {
+        if (!unk_0251 && mode.current != 3 && (mode_last_frame == 3 || mode_last_frame == 9))
+            unk_203();
+
+        unk_198();
+    } else if (unk_490() || unk_494()) {
+        unk_198();
+        unk_203();
+    } else if (mode.current >= 4 && (mode.current <= 5 || mode.current == 14))
+        unk_201(delta_t);
+    else
+        unk_198();
+
+    retail::sub_9A7B00((i32)this, delta_t);
+
+    for (i32 index = 0; index < 2; ++index) {
+        if (retail::sub_993670((i32)unk_0638[index], (u32*)this, delta_t, index)) {
+            unk_370(index, 0, 1);
+            unk_332(0.0f, 1);
+            unk_189(true);
+            unk_136();
+        }
+
+        if (unk_0638[index]->unk_50) {
+            unk_0ca8[index].unk_1c = unk_0638[index]->unk_60;
+            unk_0ca8[index].unk_10 = unk_0638[index]->unk_54;
+
+            vector3d position;
+            retail::sub_60D3E0((char*)unk_0638[index]->unk_04, (i32)&position);
+
+            unk_0ca8[index].unk_04 = position;
+        }
+    }
+
+    for (i32 index = 0; index < 8; ++index)
+        retail::sub_994200((i32)unk_0648[index], delta_t);
+
+    unk_0830 = (f32)((f64)unk_0830 - (f64)delta_t);
+    unk_0834 = (f32)((f64)unk_0834 - (f64)delta_t);
+    unk_0838 = (f32)((f64)unk_0838 - (f64)delta_t);
+    unk_0840 = (f32)((f64)unk_0840 - (f64)delta_t);
+    unk_083c = (f32)((f64)unk_083c - (f64)delta_t);
+    unk_0848 = (f32)((f64)unk_0848 - (f64)delta_t);
+    unk_084c = (f32)((f64)unk_084c - (f64)delta_t);
+
+    if (unk_0674) {
+        unk_0674 = false;
+        unk_0678 = (f32)((f64)delta_t + (f64)unk_0678);
+    } else
+        unk_0678 = 0.0f;
+
+    if (mode.current == 8)
+        unk_057c = 0.0f;
+    else
+        unk_057c = (f32)((f64)unk_057c - (f64)delta_t);
+
+    if (unk_0b54 > 0.0f) {
+        unk_0b54 = (f32)((f64)unk_0b54 - (f64)delta_t);
+
+        if (0.0f > unk_0b54)
+            unk_486(true, 0.0f);
+    }
+
+    if (unk_0b58 > 0.0f) {
+        unk_0b58 = (f32)((f64)unk_0b58 - (f64)delta_t);
+
+        if (0.0f > unk_0b58)
+            unk_488(true, 0.0f);
+    }
+
+    unk_0598 = 42;
+    unk_0a1c = 106;
+
+    unk_025(delta_t);
+
+    retail::sub_987AC0((i32*)unk_054c, delta_t);
+
+    unk_153(1);
+
+    if (master_object) {
+        script_arg time_arg;
+        time_arg.type  = 1;
+        time_arg.value = &delta_t;
+
+        script_arg none[7];
+
+        retail::sub_87CFC0(master_object, // script_object_instance: call a registered function
+                           references::frame_advance_num.read().source_hash_code,
+                           (u32*)&time_arg,
+                           (u32*)&none[0],
+                           (u32*)&none[1],
+                           (u32*)&none[2],
+                           (u32*)&none[3],
+                           (u32*)&none[4],
+                           (u32*)&none[5],
+                           (u32*)&none[6]);
+    }
+
+    bool                command_79 = get_command_button(79)->triggered();
+    game_meter_manager* meters     = references::game_meter_manager.read();
+
+    if (unk_306()) {
+        if (command_79 ||
+            retail::sub_9339C0((i32*)meters, 0) ||
+            my_actor->damage_ifc()->hit_points.val <= 0)
+
+            unk_0ba4 ^= 3;
+    } else if (unk_307())
+        unk_0ba4 &= ~2u;
+    else if (command_79 && retail::sub_933930((i32*)meters, 0))
+        unk_0ba4 |= 1;
+
+    player_interface::frame_advance(delta_t);
+
+    unk_582(delta_t);
+    unk_081(delta_t);
+    unk_082(delta_t);
+
+    if (unk_0c14 > 0.0f) {
+        unk_0c14 = (f32)((f64)unk_0c14 - (f64)delta_t);
+
+        if (unk_0c14 <= 0.0f) {
+            unk_0c14 = 0.0f;
+
+            if (unk_0c10.value && unk_0c10.resolve()) {
+                if (collision_geometry* colgeom = ((entity_base*)unk_0c10.resolve())->get_colgeom()) {
+                    colgeom->flags |= fi_collide_camera;
+
+                    unk_0c10 = arch_base_vhandle();
+                }
+            }
+        }
+    }
+
+    retail::sub_9A9360((u32**)this);
+
+    unk_255(delta_t);
+    unk_595(delta_t);
+
+    if (unk_0ca0 > 0.0f) {
+        unk_0ca0 = (f32)((f64)unk_0ca0 - (f64)delta_t);
+
+        if (unk_0ca0 <= 0.0f) {
+            if (auto* target = (combat_target_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_combat_target)) {
+                target->set_threat_capacity(10);
+                target->set_engagement_capacity(10);
+            }
+        }
+    }
+
+    last_position = my_actor->my_abs_po->get_position();
 }
 
 // slot 94
@@ -878,8 +1154,8 @@ void spiderman_rvb_player_interface::unk_254(i32 unk) {
 }
 
 // slot 255
-void spiderman_rvb_player_interface::unk_255(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9B4B20)(this, unk);
+void spiderman_rvb_player_interface::unk_255(f32 delta_t) {
+    ((void (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9B4B20)(this, delta_t);
 }
 
 // slot 256
@@ -1736,8 +2012,8 @@ bool spiderman_rvb_player_interface::unk_487() {
 }
 
 // slot 488
-bool spiderman_rvb_player_interface::unk_488(i32 unk, i32 unk_2) {
-    return ((bool (__thiscall*)(spiderman_rvb_player_interface*, i32, i32))retail::sub_9A4260)(this, unk, unk_2);
+bool spiderman_rvb_player_interface::unk_488(bool unk, f32 unk_2) {
+    return ((bool (__thiscall*)(spiderman_rvb_player_interface*, bool, f32))retail::sub_9A4260)(this, unk, unk_2);
 }
 
 // slot 489
@@ -1991,8 +2267,8 @@ bool spiderman_rvb_player_interface::unk_543() {
 }
 
 // slot 544
-i32 spiderman_rvb_player_interface::unk_544(i32 unk) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A5DF0)(this, unk);
+i32 spiderman_rvb_player_interface::unk_544(f32 delta_t) {
+    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9A5DF0)(this, delta_t);
 }
 
 // slot 545

@@ -158,6 +158,7 @@ namespace treyarch {
             return 0.0f;
         }
 
+        // inlined @ sub_9BB110
         bool triggered(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;

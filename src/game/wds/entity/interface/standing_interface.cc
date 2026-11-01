@@ -21,6 +21,7 @@ void standing_interface::manage_standing(f32 delta_t, bool force, f32 max_force_
 }
 
 // sub_4028A0
+// inlined @ sub_7976E0
 void standing_interface::manage_standing(bool force, f32 max_force_delta) {
     manage_standing(0.01f, force, max_force_delta);
 }

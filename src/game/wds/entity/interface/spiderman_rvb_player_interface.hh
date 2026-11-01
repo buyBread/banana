@@ -2,18 +2,107 @@
 
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/delta_variable.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace references {
+        // development_option<bool> RPGTuning/RELOAD_CURRENT_UPGRADE_SETTINGS
+        inline util::memory_reference<u8> reload_current_upgrade_settings { 0x01112D0C };
+
+        // what frame_advance last reloaded the upgrade settings with; 1 from the start
+        inline util::memory_reference<i32> unk_00f4db94 { 0x00F4DB94 };
+
+        // .data 1; frame_advance takes the velocity from slot 95 while it's set, else from the physical interface
+        inline util::memory_reference<u8> unk_00f4de2c { 0x00F4DE2C };
+
+        // set to 0 every hero frame
+        inline util::memory_reference<u8> unk_01112c58 { 0x01112C58 };
+
+        // "frame_advance(num)", the master object's function frame_advance calls
+        inline util::memory_reference<string_hash> frame_advance_num { 0x01112D5C };
+
+        // two of the {3.75, 0.0035} pairs at 0x00F4D590, rewritten every hero frame
+        inline util::memory_reference<f32> unk_00f4d590 { 0x00F4D590 };
+        inline util::memory_reference<f32> unk_00f4d594 { 0x00F4D594 };
+        inline util::memory_reference<f32> unk_00f4d5a0 { 0x00F4D5A0 };
+        inline util::memory_reference<f32> unk_00f4d5a4 { 0x00F4D5A4 };
+    } // references
+
+    // one of the two at +0x638
+    struct spiderman_rvb_unk_0638 {
+        u8       reserved_00[0x04];
+        u8       unk_04[0x4C];      // sub_60D3E0 gives its position
+        bool     unk_50;            // frame_advance copies the rest into its unk_0ca8 record while set
+        u8       pad_51[0x03];
+        vector3d unk_54;
+        f32      unk_60;
+    };
+
+    // one of the two at +0xCA8, filled from the matching +0x638 object
+    struct spiderman_rvb_unk_0ca8 {
+        u8       reserved_00[0x04];
+        vector3d unk_04;
+        vector3d unk_10;
+        f32      unk_1c;
+    };
+
     // the hero's player interface
     class spiderman_rvb_player_interface : public player_interface {
 
     public:
-        u8 reserved_530[0x780];
+        bool                    unk_0530;         // the als's player_in_blacksuit_mode
+        bool                    unk_0531;
+        u8                      reserved_0532[0x06];
+        bool                    unk_0538;
+        u8                      reserved_0539[0x07];
+        f32                     unk_0540;
+        u8                      reserved_0544[0x08];
+        u8                      unk_054c[0x30];   // advanced every frame (sub_987AC0)
+        f32                     unk_057c;         // counted down, held at 0 in mode 8
+        u8                      reserved_0580[0x18];
+        delta_variable<i32>     unk_0598;         // set to 42 every frame
+        u8                      reserved_05a0[0x90];
+        f32                     horizontal_speed; // the velocity's length in x and z
+        void*                   unk_0634;
+        spiderman_rvb_unk_0638* unk_0638[2];
+        u8                      reserved_0640[0x08];
+        void*                   unk_0648[8];      // each advanced every frame (sub_994200)
+        u8                      reserved_0668[0x0C];
+        bool                    unk_0674;         // consumed by frame_advance, which then times it in unk_0678
+        u8                      reserved_0675[0x03];
+        f32                     unk_0678;
+        u8                      reserved_067c[0x40];
+        vector3d                last_position;    // the owner's position as frame_advance left it
+        u8                      reserved_06c8[0x168];
+        f32                     unk_0830;         // the seven timers frame_advance counts down
+        f32                     unk_0834;
+        f32                     unk_0838;
+        f32                     unk_083c;
+        f32                     unk_0840;
+        u8                      reserved_0844[0x04];
+        f32                     unk_0848;
+        f32                     unk_084c;
+        u8                      reserved_0850[0x1CC];
+        i32                     unk_0a1c;         // set to 106 every frame
+        u8                      reserved_0a20[0x134];
+        f32                     unk_0b54;         // slot 486 runs when it runs out
+        f32                     unk_0b58;         // slot 488 runs when it runs out
+        u8                      reserved_0b5c[0x48];
+        u32                     unk_0ba4;         // flags; slots 306 and 307 read bits 0 and 1
+        u8                      reserved_0ba8[0x68];
+        arch_base_vhandle       unk_0c10;         // flagged 0x10 through its slot 68 once unk_0c14 runs out
+        f32                     unk_0c14;
+        u8                      reserved_0c18[0x88];
+        f32                     unk_0ca0;         // resets the combat target capacities when it runs out
+        f32                     fall_timer;       // how long the owner has been below y -8 without standing
+        spiderman_rvb_unk_0ca8* unk_0ca8;         // two of them
+        u8                      reserved_0cac[0x04];
 
         explicit spiderman_rvb_player_interface(mash::generating_vtable_version so_do_nothing) : player_interface(so_do_nothing) {}
 
@@ -39,7 +128,7 @@ namespace treyarch {
         i32               unk_022(f32 unk) override;
         bool              unk_023(i32 unk) override;
         void              unk_024(actor* owner) override;
-        void*             unk_025(i32 unk) override;
+        void*             unk_025(f32 delta_t) override;
         bool              unk_026() override;
         bool              unk_027(i32 unk) override;
         bool              unk_028(i32 unk) override;
@@ -190,7 +279,7 @@ namespace treyarch {
         void              unk_252(i32 unk) override;
         f32               unk_253() override;
         void              unk_254(i32 unk) override;
-        void              unk_255(i32 unk) override;
+        void              unk_255(f32 delta_t) override;
         void              unk_256() override;
         bool              unk_257() override;
         void*             unk_258(void* unk) override;
@@ -359,7 +448,7 @@ namespace treyarch {
         bool              unk_485() override;
         void              unk_486(bool unk, f32 unk_2) override;
         bool              unk_487() override;
-        bool              unk_488(i32 unk, i32 unk_2) override;
+        bool              unk_488(bool unk, f32 unk_2) override;
         i32               unk_489() override;
         i32               unk_490() override;
         f32               unk_491() override;
@@ -411,7 +500,7 @@ namespace treyarch {
         virtual f32   unk_541(i32 unk);
         virtual void* unk_542(void* unk, i32 unk_2);
         virtual bool  unk_543();
-        virtual i32   unk_544(i32 unk);
+        virtual i32   unk_544(f32 delta_t);
         virtual bool  unk_545();
         virtual i32   unk_546(i32 unk);
         virtual bool  unk_547();
@@ -467,5 +556,35 @@ namespace treyarch {
         static string_hash my_type_key;
     };
 
-    ASSERT_SIZEOF(spiderman_rvb_player_interface, 0xCB0);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_50, 0x50);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_54, 0x54);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_60, 0x60);
+
+    ASSERT_SIZEOF  (spiderman_rvb_unk_0ca8,         0x20);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_04, 0x04);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_10, 0x10);
+    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_1c, 0x1C);
+
+    ASSERT_SIZEOF  (spiderman_rvb_player_interface,                   0xCB0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0530,          0x530);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0538,          0x538);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0540,          0x540);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_054c,          0x54C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_057c,          0x57C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0598,          0x598);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, horizontal_speed, 0x630);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0638,          0x638);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0648,          0x648);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0674,          0x674);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0678,          0x678);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, last_position,    0x6BC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0830,          0x830);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0848,          0x848);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0a1c,          0xA1C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0b54,          0xB54);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ba4,          0xBA4);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c10,          0xC10);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ca0,          0xCA0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, fall_timer,       0xCA4);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ca8,          0xCA8);
 } // treyarch

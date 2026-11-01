@@ -45,6 +45,34 @@ world_dynamics_system::world_dynamics_system() : last_hero_ai_disable_count(0),
     retail::sub_600E20();
 }
 
+// sub_97A400
+world_dynamics_system::~world_dynamics_system() {
+    unk_128.clear();
+
+    // a scene anim's destructor takes its own entry out of this map; the walk steps on from the erased node
+    for (scene_anim_map_t::node* where = scene_anim_map.begin(); where != scene_anim_map.end(); where = where->next())
+        delete where->value.second;
+
+    scene_anim_map.clear();
+
+    retail::sub_7FEA00((i32)&ent_mgr); // wds_entity_manager, which its destructor runs again
+
+    hero_ptr = nullptr;
+
+    if (the_terrain) {
+        retail::sub_7AC480((i32**)the_terrain); // ~terrain
+        mm::free(the_terrain);
+    }
+
+    hero_ptr      = nullptr;
+    chase_cam_ptr = nullptr;
+
+    references::unk_01113240.write(nullptr);
+
+    retail::sub_824F10(); // clears the master script's global object and instance
+    retail::sub_646780(); // empties the list of grenades out of their cache
+}
+
 // sub_967E00
 void world_dynamics_system::add_player(const mash::string &filename, const po &transform) {
     if (!filename.empty())
@@ -252,8 +280,7 @@ void world_dynamics_system::malor_point(const vector3d &xyz, bool translate_cam,
         retail::sub_626CA0((u32*)chase_cam_ptr, (u32*)&behind); // entity_base::set_rel_position
     }
 
-    if (chase_cam_ptr->unk_0ec < 1)
-        chase_cam_ptr->unk_0ec = 1;
+    chase_cam_ptr->invalidate();
 
     if (restart_biped_physics)
         retail::sub_67FB10((u32*)physical); // physical_interface::start_biped_physics

@@ -56,6 +56,7 @@ namespace treyarch {
         i32                         unk_13c;
 
         world_dynamics_system();
+       ~world_dynamics_system();
 
         entity* get_hero_ptr() const {
             return hero_ptr;

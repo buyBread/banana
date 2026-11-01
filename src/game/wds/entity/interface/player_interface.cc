@@ -96,8 +96,8 @@ void player_interface::unk_024(actor* owner) {
 }
 
 // slot 25
-void* player_interface::unk_025(i32 unk) {
-    return ((void* (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void* player_interface::unk_025(f32 delta_t) {
+    return ((void* (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, delta_t);
 }
 
 // slot 26
@@ -1249,8 +1249,8 @@ void player_interface::unk_254(i32 unk) {
 }
 
 // slot 255
-void player_interface::unk_255(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_255(f32 delta_t) {
+    ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, delta_t);
 }
 
 // slot 256
@@ -2440,8 +2440,8 @@ bool player_interface::unk_487() {
 }
 
 // slot 488
-bool player_interface::unk_488(i32 unk, i32 unk_2) {
-    return ((bool (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+bool player_interface::unk_488(bool unk, f32 unk_2) {
+    return ((bool (__thiscall*)(player_interface*, bool, f32))retail::sub_AD2D40)(this, unk, unk_2);
 }
 
 // slot 489

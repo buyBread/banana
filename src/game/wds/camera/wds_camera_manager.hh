@@ -22,6 +22,7 @@ namespace treyarch {
         u8            marky_camera_rumble_high[0x08];
 
         wds_camera_manager();
+       ~wds_camera_manager();
 
         camera_handle get_marky_camera() const {
             return marky_camera;

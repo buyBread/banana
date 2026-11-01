@@ -124,6 +124,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_5745C0
 // inlined @ sub_552EC0
 // inlined @ sub_801B00
+// inlined @ sub_9BB110
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);

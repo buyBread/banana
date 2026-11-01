@@ -6,3 +6,7 @@ using namespace treyarch;
 wds_camera_manager::wds_camera_manager() {
     retail::sub_972610((u32*)this);
 }
+
+wds_camera_manager::~wds_camera_manager() {
+    retail::sub_95CC90((i32*)this);
+}

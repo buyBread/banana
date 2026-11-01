@@ -6,3 +6,7 @@ using namespace treyarch;
 wds_entity_manager::wds_entity_manager() {
     retail::sub_803410((u32*)this);
 }
+
+wds_entity_manager::~wds_entity_manager() {
+    retail::sub_8027D0((u32*)this);
+}

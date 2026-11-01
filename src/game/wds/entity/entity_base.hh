@@ -45,19 +45,20 @@ namespace treyarch {
 
     // SM3's EFLAG_*, but 0x800000 and 0x20000000
     enum e_entity_flags : u32 {
-        entity_flag_in_limbo          = 0x00000001,
-        entity_flag_moving            = 0x00000040,
-        entity_flag_walkable          = 0x00000080,
-        entity_flag_graphics_visible  = 0x00000200,
-        entity_flag_special_target    = 0x00001000,
-        entity_flag_collisions_active = 0x00004000,
-        entity_flag_member            = 0x00008000,
-        entity_flag_nontarget         = 0x00020000,
-        entity_flag_beamable          = 0x00080000,
-        entity_flag_detectable        = 0x00800000, // SM3's GLOWABLE
-        entity_flag_bone_connector    = 0x08000000,
-        entity_flag_allow_lockon      = 0x20000000, // SM3's COLGEOM_INSTANCED
-        entity_flag_suspended         = 0x40000000
+        entity_flag_in_limbo              = 0x00000001,
+        entity_flag_moving                = 0x00000040,
+        entity_flag_walkable              = 0x00000080,
+        entity_flag_graphics_visible      = 0x00000200,
+        entity_flag_special_target        = 0x00001000,
+        entity_flag_collisions_active     = 0x00004000,
+        entity_flag_member                = 0x00008000,
+        entity_flag_nontarget             = 0x00020000,
+        entity_flag_beamable              = 0x00080000,
+        entity_flag_externally_controlled = 0x00400000,
+        entity_flag_detectable            = 0x00800000, // SM3's GLOWABLE
+        entity_flag_bone_connector        = 0x08000000,
+        entity_flag_allow_lockon          = 0x20000000, // SM3's COLGEOM_INSTANCED
+        entity_flag_suspended             = 0x40000000
     };
 
     // SM3's EFLAG_EXT_*, but 0x10000

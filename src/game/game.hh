@@ -13,6 +13,7 @@
 namespace treyarch {
     struct level_descriptor;
     class game_data;
+    class input_mgr;
     class localized_string_table; // impl?
     class message_board; // impl?
     class speedtree_collection;
@@ -167,10 +168,12 @@ namespace treyarch {
         void handle_game_states(f32* time_inc);
         void advance_state_legal(f32 time_inc);
         void advance_state_unk_2(f32 time_inc);
+        void advance_state_unk_4(f32 time_inc, i32 movie);
         void advance_state_load_level(f32 time_inc);
         void advance_state_running(f32 time_inc);
         void advance_state_paused(f32 time_inc);
         void advance_state_credits(f32 time_inc);
+        void advance_state_movie(f32 time_inc);
         void soft_reset_process();
         void frame_advance_frontend(f32 time_inc);
         void frame_advance_game_overlays(f32 time_inc);
@@ -187,6 +190,8 @@ namespace treyarch {
         void enable_marky_cam(bool enable, bool sync = true, f32 priority = -1000.0f, f32 interp_time = 0.0f);
 
         camera_handle get_current_view_camera();
+
+        void handle_cameras(input_mgr* input_manager, f32* time_inc);
         
         void handle_frame_locking(f32* time_inc);
 

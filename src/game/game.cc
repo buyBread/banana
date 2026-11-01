@@ -12,6 +12,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
 #include "game/game.hh"
+#include "game/geometry/geometry_manager.hh"
 #include "game/input/input_mgr.hh"
 #include "game/level_descriptor.hh"
 #include "game/mission/mission_manager.hh"
@@ -50,6 +51,23 @@ namespace treyarch { namespace references {
 
     // a static empty string only game::load_complete reads
     util::memory_reference<mash::string> unk_011116c4 { 0x011116C4 };
+
+    // game::handle_cameras' debug cameras: 0 the chase cam, 1 the user cam, 2 the edit cam
+    util::memory_reference<i32> user_cam_mode { 0x011113A0 };
+
+    // picks the user cam's control set; input_mgr's control queries read it too
+    util::memory_reference<u8> user_cam_controls { 0x01111393 };
+
+    // set after the hero was moved to the user cam, so physics stops again next frame
+    util::memory_reference<u8> user_cam_hero_moved { 0x0111139D };
+
+    // set when handle_cameras switched or reseated a camera; nothing reads it
+    util::memory_reference<u8> camera_changed { 0x0111139C };
+
+    // the three camera controls' states last frame
+    util::memory_reference<f32> last_camera_control_0 { 0x011113A4 };
+    util::memory_reference<f32> last_camera_control_1 { 0x011113A8 };
+    util::memory_reference<f32> last_camera_control_2 { 0x011113AC };
 }} // treyarch::references
 
 using namespace treyarch;
@@ -244,7 +262,7 @@ void game::unload_current_level() {
     world_dynamics_system* world = the_world;
 
     if (world) {
-        retail::sub_97A400(world); // ~world_dynamics_system
+        world->~world_dynamics_system();
         mm::free(world);
     }
 
@@ -330,6 +348,267 @@ void game::freeze_hero(bool freeze) {
 
 void game::enable_marky_cam(bool enable, bool sync, f32 priority, f32 interp_time) {
     retail::sub_97AE30((i32)this, enable, sync, priority, interp_time);
+}
+
+// sub_97C060
+void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
+    references::cameras_handled.write(1);
+
+    if (!level_is_loaded)
+        return;
+
+    if (references::user_cam_mode.read() == 1 &&
+        retail::sub_96EA30((i32)input_manager, 66, 11, 0, 0) != 0.0) { // input_mgr::get_control_state
+
+        string_hash user_cam_id;
+        user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
+
+        auto* user_cam = (entity*)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+        const vector3d &facing   = user_cam->my_abs_po->get_z_facing();
+        const vector3d &position = user_cam->my_abs_po->get_position();
+
+        vector3d ahead((f32)((f64)position.x + (f64)(f32)((f64)facing.x * 4.0)),
+                       (f32)((f64)position.y + (f64)(f32)((f64)facing.y * 4.0)),
+                       (f32)((f64)position.z + (f64)(f32)((f64)facing.z * 4.0)));
+
+        references::g_world_ptr.read()->malor_point(ahead, false, true);
+
+        references::g_world_ptr.read()->hero_ptr->physical_ifc()->cancel_all_velocity(references::unk_011113e0.get(), true);
+        references::g_world_ptr.read()->hero_ptr->player_ifc()->unk_140();
+
+        references::user_cam_hero_moved.write(1);
+
+        debug_stop_physics = 0;
+    } else if (references::user_cam_hero_moved.read()) {
+        debug_stop_physics = 1;
+
+        references::user_cam_hero_moved.write(0);
+    }
+
+    bool alternate_controls = references::user_cam_controls.read();
+
+    f32 control_0 = (f32)retail::sub_96EA30((i32)input_manager, alternate_controls ? 46 : 43, 11, 0, 0); // input_mgr::get_control_state
+    f32 control_1 = (f32)retail::sub_96EA30((i32)input_manager, alternate_controls ? 47 : 44, 11, 0, 0);
+    f32 control_2 = (f32)retail::sub_96EA30((i32)input_manager, alternate_controls ? 50 : 49, 11, 0, 0);
+
+    bool held_0 = control_0 > 0.0001f;
+    bool held_1 = control_1 > 0.0001f;
+
+    bool pressed_0 = held_0 && 0.0001f > references::last_camera_control_0.read();
+    bool pressed_1 = held_1 && 0.0001f > references::last_camera_control_1.read();
+
+    bool switched    = false;
+    bool keep_matrix = true;
+    i32  mode;
+
+    references::camera_changed.write(0);
+
+    if (held_0 && held_1 && (pressed_0 || pressed_1)) {
+        if (references::user_cam_mode.read() == 1) {
+            switched = true;
+            mode     = 0;
+
+            references::user_cam_controls.write(0);
+            references::user_cam_mode    .write(0);
+        } else {
+            if (references::user_cam_mode.read() == 2)
+                keep_matrix = false;
+
+            switched = true;
+            mode     = 1;
+
+            references::user_cam_controls.write(1);
+            references::user_cam_mode    .write(1);
+        }
+    } else if (control_2 > 0.0001f &&
+               0.0001f > references::last_camera_control_2.read()) {
+
+        mode = references::user_cam_mode.read();
+
+        if (mode == 1) {
+            switched    = true;
+            mode        = 2;
+            keep_matrix = false;
+
+            references::user_cam_controls.write(0);
+            references::user_cam_mode    .write(2);
+        }
+    } else
+        mode = references::user_cam_mode.read();
+
+    references::last_camera_control_0.write(control_0);
+    references::last_camera_control_1.write(control_1);
+    references::last_camera_control_2.write(control_2);
+
+    if (switched) {
+        references::camera_changed.write(1);
+
+        // every mode but the chase cam's picks the user cam, so the edit cam's case is never reached
+        i32 choice = 1;
+
+        if (!mode) {
+            choice             = 0;
+            debug_stop_physics = 0;
+        }
+
+        const char* message;
+
+        switch (choice) {
+            case 1: {
+                string_hash user_cam_id;
+                user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
+
+                auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+                if (keep_matrix)
+                    retail::sub_626BE0((i32)user_cam, (u64*)current_game_camera->my_abs_po); // entity_base::set_rel_po
+
+                retail::sub_97AF20((u32*)this, (u32*)user_cam, true); // game::set_current_camera
+
+                message = "New Camera: User Cam";
+
+                break;
+            }
+
+            case 2: {
+                string_hash user_cam_id;
+                user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
+
+                auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+                retail::sub_626CA0((u32*)user_cam, (u32*)&current_view_camera->my_rel_po->get_position()); // entity_base::set_rel_position
+                retail::sub_97AF20((u32*)this, (u32*)user_cam, true);                                      // game::set_current_camera
+
+                message = "New Camera: Edit Cam";
+
+                break;
+            }
+
+            default:
+                retail::sub_97AF20((u32*)this, (u32*)current_game_camera, true); // game::set_current_camera
+
+                message = "New Camera: Chase Cam";
+
+                break;
+        }
+
+        ((void (__thiscall*)(message_board*, mash::string, f32, u32))retail::sub_601CE0)(mb, mash::string(message), 2.0f, 0xFFFFFFFF); // a debug message, empty on pc
+    }
+
+    if (retail::sub_96EBF0((i32)input_manager, 93, 11, 0, 0) == 1.0) { // input_mgr::get_control_delta
+        geometry_manager::references::scene_analyzer_enabled.write(!geometry_manager::references::scene_analyzer_enabled.read());
+
+        string_hash scene_analyzer_cam_id;
+        scene_analyzer_cam_id.initialize(mash::ALLOCATED, "SCENE_ANALYZER_CAM");
+
+        auto* scene_analyzer_cam = (entity*)retail::sub_640AE0(&scene_analyzer_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+        retail::sub_626CA0((u32*)scene_analyzer_cam, (u32*)&current_game_camera->my_rel_po->get_position()); // entity_base::set_rel_position
+    }
+
+    if (retail::sub_96EBF0((i32)input_manager, 62, 11, 0, 0) == 1.0 ||
+        retail::sub_96EBF0((i32)input_manager, 63, 11, 0, 0) == 1.0) {
+
+        string_hash user_cam_id;
+        user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
+
+        auto* user_cam = (entity*)retail::sub_640AE0(&user_cam_id.source_hash_code, 28, false); // entity_handle_manager::find_entity
+
+        string_hash chase_cam_id;
+        chase_cam_id.initialize(mash::ALLOCATED, "CHASE_CAM");
+
+        auto* chase_cam = (entity*)retail::sub_640AE0(&chase_cam_id.source_hash_code, 28, false);
+
+        retail::sub_626BE0((i32)user_cam, (u64*)chase_cam->my_abs_po); // entity_base::set_rel_po
+
+        references::camera_changed.write(1);
+    }
+
+    if (*time_inc != 0.0f && (!debug_stop_physics || debug_single_step)) {
+        camera_handle seat   = nullptr;
+        bool          seated = true;
+
+        if (!unk_078 && the_world->camera_mgr.animated_camera_enabled)
+            seat = the_world->camera_mgr.animated_camera;
+        else if (the_world->camera_mgr.marky_camera_enabled)
+            seat = the_world->camera_mgr.marky_camera;
+        else
+            seated = false;
+
+        if (seated) {
+            current_game_camera = seat;
+
+            retail::sub_97AF20((u32*)this, (u32*)seat, true); // game::set_current_camera
+
+            current_view_camera->frame_advance(*time_inc);
+        } else {
+            camera_handle view = current_view_camera;
+
+            if (view != the_world->get_chase_cam_ptr())
+                view->frame_advance(*time_inc);
+
+            if (!(current_view_camera->flags & entity_flag_externally_controlled)) {
+                camera_handle game_camera = current_game_camera;
+
+                if (game_camera != the_world->get_chase_cam_ptr()) {
+                    if (current_view_camera == game_camera)
+                        retail::sub_97AF20((u32*)this, (u32*)the_world->get_chase_cam_ptr(), false); // game::set_current_camera
+
+                    current_game_camera = the_world->get_chase_cam_ptr();
+                }
+            }
+
+            if (!references::g_world_ptr.read()->hero_ptr && the_world->get_chase_cam_ptr())
+                the_world->get_chase_cam_ptr()->frame_advance(*time_inc);
+
+            if (camera_handle chase = the_world->get_chase_cam_ptr())
+                chase->frame_advance(*time_inc);
+        }
+    }
+
+    if (current_view_camera != the_world->get_chase_cam_ptr()) {
+        the_world->get_chase_cam_ptr()->unk_160();
+        the_world->get_chase_cam_ptr()->unk_162(false);
+    }
+
+    retail::sub_797950((f32*)current_view_camera, *time_inc); // eases the view camera's fov
+
+    current_view_camera->adjust_geometry_pipe(false);
+
+    if (geometry_manager::references::scene_analyzer_enabled.read()) {
+        string_hash scene_analyzer_cam_id;
+        scene_analyzer_cam_id.initialize(mash::ALLOCATED, "SCENE_ANALYZER_CAM");
+
+        auto* scene_analyzer_cam = (camera_handle)retail::sub_640AE0(&scene_analyzer_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+        scene_analyzer_cam->adjust_geometry_pipe(true);
+    }
+
+    if (base_camera) {
+        string_hash station_cam_id;
+        station_cam_id.initialize(mash::ALLOCATED, "STATION_CAM");
+
+        auto* station_cam = (entity*)retail::sub_640AE0(&station_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+
+        const vector3d &tracked = base_camera->my_abs_po->get_position();
+
+        f32 dx = (f32)((f64)tracked.x - (f64)base_cam_position.x);
+        f32 dy = (f32)((f64)tracked.y - (f64)base_cam_position.y);
+        f32 dz = (f32)((f64)tracked.z - (f64)base_cam_position.z);
+
+        base_cam_position.x = (f32)((f64)base_cam_position.x + (f64)dx);
+        base_cam_position.y = (f32)((f64)base_cam_position.y + (f64)dy);
+        base_cam_position.z = (f32)((f64)base_cam_position.z + (f64)dz);
+
+        const vector3d &station_position = station_cam->my_abs_po->get_position();
+
+        vector3d moved((f32)((f64)station_position.x + (f64)dx),
+                       (f32)((f64)station_position.y + (f64)dy),
+                       (f32)((f64)station_position.z + (f64)dz));
+
+        retail::sub_626CA0((u32*)station_cam, (u32*)&moved); // entity_base::set_rel_position
+    }
 }
 
 // sub_97B1A0
@@ -564,8 +843,8 @@ void game::load_this_level(bool start_only, bool finish_only) {
     if (chase) {
         current_view_camera = chase;
 
-        if (chase->is_a_game_camera() && chase->unk_0ec < 1)
-            chase->unk_0ec = 1;
+        if (chase->is_a_game_camera())
+            chase->invalidate();
 
         if (!current_game_camera && chase->is_a_game_camera())
             current_game_camera = chase;

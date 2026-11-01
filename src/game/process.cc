@@ -96,6 +96,36 @@ void game::frame_advance_frontend(f32 time_inc) {
     frame_advance_soap(data);
 }
 
+// sub_76BB70
+// inlined @ sub_770480
+void game::advance_state_unk_4(f32 time_inc, i32 movie) { // movie 1 plays "intro", 2 "aspyr"
+    frame_advance_frontend(time_inc);
+    process_stack.back().go_next_state();
+
+    if (references::restart_skip_the_title.read())
+        return;
+
+    if (movie == 1)
+        begin_movie("intro");
+    else if (movie == 2)
+        begin_movie("aspyr");
+}
+
+// sub_75D180
+void game::advance_state_movie(f32 time_inc) {
+    frame_advance_frontend(time_inc);
+
+    movie_manager* movies = movie_manager::inst();
+
+    retail::sub_6ABCA0((u32*)movies, time_inc); // movie_manager::frame_advance
+
+    // 2 is closed and 4 failed to open; 3 ends it too
+    if (movies->state == 2 || movies->state == 4 || movies->state == 3) {
+        retail::sub_6ABBE0((u32*)movies); // clears to black twice, then closes
+        process_stack.back().go_next_state();
+    }
+}
+
 // sub_770310
 void game::advance_state_unk_2(f32 time_inc) {
     if (!references::unk_01036e74.read()) {
@@ -312,16 +342,12 @@ void game::handle_game_states(f32* time_inc) {
             return;
 
         case 4:
-            retail::sub_76BB70((u32*)this, *time_inc, 1);
-            
+            advance_state_unk_4(*time_inc, 1);
+
             return;
 
         case 5:
-            frame_advance_frontend(*time_inc);
-            process_stack.back().go_next_state();
-
-            if (!references::restart_skip_the_title.read())
-                begin_movie("aspyr");
+            advance_state_unk_4(*time_inc, 2);
 
             return;
 
@@ -358,7 +384,7 @@ void game::handle_game_states(f32* time_inc) {
             return;
 
         case 18:
-            retail::sub_75D180((u32*)this, *time_inc);
+            advance_state_movie(*time_inc);
 
             return;
 

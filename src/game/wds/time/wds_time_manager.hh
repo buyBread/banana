@@ -8,18 +8,20 @@ namespace treyarch {
 
     public:
         // the five factors multiplied by get_time_dilation_factor
-        f32 unk_000;
-        f32 global_time_dilation;   // chuck get/set_global_time_dilation
-        f32 reflexes_time_dilation; // the one factor ignore_reflex_dilation skips (time_interface::calc_time_dilation)
-        f32 unk_00c;
-        u8  reserved_010[0x0C];
-        u32 frame_sequence;
-        u8  reserved_020[0x04];
-        f32 unk_024;
-        f32 time_inc;               // this frame's undilated step, from frame_advance
-        u8  reserved_02c[0x10];
+        f32   unk_000;
+        f32   global_time_dilation;   // chuck get/set_global_time_dilation
+        f32   reflexes_time_dilation; // the one factor ignore_reflex_dilation skips (time_interface::calc_time_dilation)
+        f32   unk_00c;
+        u8    reserved_010[0x0C];
+        u32   frame_sequence;
+        void* unk_020;                // 0xA0 bytes, deleted through its first slot
+        f32   unk_024;
+        f32   time_inc;               // this frame's undilated step, from frame_advance
+        u8    reserved_02c[0x04];
+        u8    unk_030[0x0C];
 
         wds_time_manager();
+       ~wds_time_manager();
 
         /* inlined (frame_advance sub_968530, world_dynamics_system::frame_advance, time_interface::calc_time_dilation).
            SM3 multiplies global and velocity dilation, then reflexes unless ignored, and floors at 0.000001 */
@@ -38,6 +40,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(wds_time_manager, reflexes_time_dilation, 0x08);
     ASSERT_OFFSETOF(wds_time_manager, unk_00c,                0x0C);
     ASSERT_OFFSETOF(wds_time_manager, frame_sequence,         0x1C);
+    ASSERT_OFFSETOF(wds_time_manager, unk_020,                0x20);
     ASSERT_OFFSETOF(wds_time_manager, unk_024,                0x24);
     ASSERT_OFFSETOF(wds_time_manager, time_inc,               0x28);
+    ASSERT_OFFSETOF(wds_time_manager, unk_030,                0x30);
 } // treyarch

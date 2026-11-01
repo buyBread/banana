@@ -15,6 +15,7 @@ namespace treyarch {
         u8                    reserved_034[0x04];
 
         wds_entity_manager();
+       ~wds_entity_manager();
     };
 
     ASSERT_SIZEOF  (wds_entity_manager,         0x38);

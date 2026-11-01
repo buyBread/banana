@@ -129,7 +129,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     morph_interface::frame_advance_all_morph_ifcs(time_inc);
 
     // game::handle_cameras may rewrite time_inc for everything below
-    retail::sub_97C060((i32)references::game.read(), (i32)input_mgr::inst(), &time_inc);
+    references::game.read()->handle_cameras(input_mgr::inst(), &time_inc);
 
     f32 hero_time_inc = dilate_entity_time(hero_ptr, time_inc);
 

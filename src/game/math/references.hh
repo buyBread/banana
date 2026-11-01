@@ -43,6 +43,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); what a parameter without a vector and a missing vector parameter read
     inline util::memory_reference<vector3d> unk_00fc3440 { 0x00FC3440 };
 
+    // (0, 0, 0); game::handle_cameras cancels the hero's velocity along it
+    inline util::memory_reference<vector3d> unk_011113e0 { 0x011113E0 };
+
     // (0, 0, 0); what the ai info nodes' optional vector params default to
     inline util::memory_reference<vector3d> unk_00fc3d70 { 0x00FC3D70 };
 

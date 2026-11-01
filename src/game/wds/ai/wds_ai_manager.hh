@@ -25,6 +25,14 @@ namespace treyarch {
         // inlined @ sub_97A860
         wds_ai_manager() : cached_path_graph(nullptr) {}
 
+        // sub_977270
+        // inlined @ sub_97A400
+        ~wds_ai_manager() {
+            path_graph_list.clear();
+
+            cached_path_graph = nullptr;
+        }
+
         bool path_graph_exists(const resource_key &id);
         void add_path_graph(path_graph* graph);
         void remove_path_graph(path_graph* graph);

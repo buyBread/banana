@@ -7,11 +7,33 @@ namespace treyarch {
 
     public:
         u8  reserved_0e8[0x04];
-        i32 unk_0ec;            // raised to at least 1 when the camera becomes the view camera or follows a malor
+        i32 countdown_invalid_frames;
         u8  reserved_0f0[0x20];
+
+        // inlined @ sub_967860
+        // inlined @ sub_97B440
+        void invalidate(i32 n_frames_to_invalidate = 1) {
+            if (n_frames_to_invalidate > countdown_invalid_frames)
+                countdown_invalid_frames = n_frames_to_invalidate;
+        }
 
         const vector3d &get_abs_position() const {
             return my_abs_po->get_position();
+        }
+
+        // slot 159
+        void adjust_geometry_pipe(bool scene_analyzer = false) {
+            ((void (__thiscall*)(camera*, bool))(*(void***)this)[159])(this, scene_analyzer);
+        }
+
+        // slot 160
+        void unk_160() {
+            ((void (__thiscall*)(camera*))(*(void***)this)[160])(this);
+        }
+
+        // slot 162
+        void unk_162(bool unk) {
+            ((void (__thiscall*)(camera*, bool))(*(void***)this)[162])(this, unk);
         }
 
         // slot 163; the SM3 .ii's camera::get_fov, returns degrees
@@ -76,7 +98,7 @@ namespace treyarch {
     ASSERT_SIZEOF(camera,      0x110);
     ASSERT_SIZEOF(game_camera, 0x1C0);
 
-    ASSERT_OFFSETOF(camera, unk_0ec, 0xEC);
+    ASSERT_OFFSETOF(camera, countdown_invalid_frames, 0xEC);
 
     ASSERT_OFFSETOF(marky_camera, target,                0x1CC);
     ASSERT_OFFSETOF(marky_camera, roll,                  0x1D8);

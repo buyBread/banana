@@ -103,7 +103,7 @@ void game::frame_advance_level(f32 time_inc) {
     this->handle_game_states(&time_inc);
 
     if (!references::cameras_handled.read())
-        retail::sub_97C060((i32)this, (i32)input_manager, &time_inc);
+        handle_cameras(input_manager, &time_inc);
 
     retail::sub_7D1EB0();
 }

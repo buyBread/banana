@@ -32,7 +32,8 @@ namespace treyarch {
         i32                     mode_last_frame;
         i32                     desired_mode;
         bool                    mode_locked;   // the spiderman_lock_mode native sets it
-        u8                      reserved_251[0x02];
+        bool                    unk_0251;      // the rvb's frame_advance skips slot 203 on a mode change while set
+        u8                      reserved_0252[0x01];
         /* cleared by game::freeze_hero on the first freeze and set again on the last unfreeze and by unload_current_level;
            world_dynamics_system::frame_advance runs frame_advance while set and frame_advance_disabled otherwise */
         bool                    enabled;
@@ -84,7 +85,7 @@ namespace treyarch {
         virtual i32               unk_022(f32 unk);
         virtual bool              unk_023(i32 unk);
         virtual void              unk_024(actor* owner);               // set_owner's last step; the rvb builds the hero's master script object
-        virtual void*             unk_025(i32 unk);
+        virtual void*             unk_025(f32 delta_t);
         virtual bool              unk_026();
         virtual bool              unk_027(i32 unk);
         virtual bool              unk_028(i32 unk);
@@ -314,7 +315,7 @@ namespace treyarch {
         virtual void              unk_252(i32 unk);
         virtual f32               unk_253();
         virtual void              unk_254(i32 unk);
-        virtual void              unk_255(i32 unk);
+        virtual void              unk_255(f32 delta_t);
         virtual void              unk_256();
         virtual bool              unk_257();
         virtual void*             unk_258(void* unk);
@@ -547,7 +548,7 @@ namespace treyarch {
         virtual bool              unk_485();
         virtual void              unk_486(bool unk, f32 unk_2);        // rvb: stores both at +0xB5C and +0xB54
         virtual bool              unk_487();
-        virtual bool              unk_488(i32 unk, i32 unk_2);
+        virtual bool              unk_488(bool unk, f32 unk_2);        // rvb: stores both at +0xB5D and +0xB58
         virtual i32               unk_489();
         virtual i32               unk_490();
         virtual f32               unk_491();
@@ -613,6 +614,7 @@ namespace treyarch {
         }
 
         // sub_783720
+        // inlined @ sub_7976E0
         // inlined @ sub_86B470
         void enable_button(i32 ctrl, bool v) {
             buttons[ctrl].enable(v);
