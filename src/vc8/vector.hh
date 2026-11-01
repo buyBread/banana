@@ -115,6 +115,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_938FD0
         // inlined @ sub_939240
         // inlined @ sub_950450
+        // inlined @ sub_9C2810
         void clear() noexcept {
             erase(first, last);
         }

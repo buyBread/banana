@@ -98,13 +98,13 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
         player->unk_179((combo_move->unk_18 & combo_unk_18_flag_00000002) != 0);
 
         if (combo_move->unk_14 & combo_unk_14_flag_00000040)
-            player->unk_492(1);
+            player->unk_492(true);
 
         if (combo_move->unk_14 & combo_unk_14_flag_00000200)
-            player->unk_506(1);
+            player->unk_506(true);
 
         if (combo_move->unk_14 & combo_unk_14_flag_00010000)
-            player->unk_512(1);
+            player->unk_512(true);
     }
 
     player->unk_060(current_targets->size() > 0 ? (*current_targets)[0] : arch_base_vhandle());

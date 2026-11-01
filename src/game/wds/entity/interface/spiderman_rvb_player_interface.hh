@@ -30,6 +30,9 @@ namespace treyarch {
         // "damage", the combo move param check_for_block takes as the block value
         inline util::memory_reference<string_hash> damage { 0x00FC1A44 };
 
+        // "wall_explode_recovery", the als base layer param slot 484 tests
+        inline util::memory_reference<string_hash> wall_explode_recovery { 0x01112CAC };
+
         // two of the {3.75, 0.0035} pairs at 0x00F4D590, rewritten every hero frame
         inline util::memory_reference<f32> unk_00f4d590 { 0x00F4D590 };
         inline util::memory_reference<f32> unk_00f4d594 { 0x00F4D594 };
@@ -251,16 +254,16 @@ namespace treyarch {
         void              unk_043(i32 unk) override;
         bool              unk_044(i32 unk) override;
         bool              unk_045() override;
-        void              unk_046(i32 unk) override;
+        void              set_zlock_entity(arch_base_vhandle entity) override;
         void              unk_047(u32 unk) override;
-        void*             unk_048(void* unk) override;
+        arch_base_vhandle unk_048() override;
         bool              unk_049(i32 unk) override;
         i32               unk_050(arch_base_vhandle target) override;
         i32               unk_051(i32 unk, i32 unk_2, i32 unk_3) override;
         void*             unk_052(void* unk) override;
         void*             unk_053(void* unk, void* unk_2) override;
-        void              unk_054(i32 unk, i32 unk_2) override;
-        void*             unk_055(void* unk) override;
+        void              unk_054(arch_base_vhandle target, u32 kind) override;
+        arch_base_vhandle unk_055() override;
         f32               unk_056() override;
         i32               unk_057() override;
         i32               unk_060(arch_base_vhandle target) override;
@@ -555,32 +558,32 @@ namespace treyarch {
         arch_base_vhandle unk_483(i32 index) override;
         bool              unk_484() override;
         bool              unk_485() override;
-        void              unk_486(bool unk, f32 unk_2) override;
+        bool              unk_486(bool unk, f32 delay) override;
         bool              unk_487() override;
-        bool              unk_488(bool unk, f32 unk_2) override;
+        bool              unk_488(bool unk, f32 delay) override;
         i32               unk_489() override;
         i32               unk_490() override;
         f32               unk_491() override;
-        void              unk_492(i32 unk) override;
+        void              unk_492(bool start) override;
         i32               unk_493() override;
         i32               unk_494() override;
-        i32               unk_495() override;
-        i32               unk_496() override;
-        i32               unk_497() override;
-        i32               unk_498() override;
-        i32               unk_499() override;
+        i32               is_in_webcast_approach_normal_hit_range() override;
+        i32               is_in_webcast_approach_critical_hit_range() override;
+        i32               is_in_approach_counter() override;
+        i32               is_in_webcast_approach_early_range() override;
+        i32               is_in_webcast_approach_counter_range() override;
         i32               unk_500() override;
         i32               unk_501() override;
-        f32               unk_502() override;
+        f32               approach_norm_to_crit_percent() override;
         i32               unk_503() override;
-        bool              unk_504(i32 unk) override;
-        void              unk_506(i32 unk) override;
-        void*             unk_507(void* unk) override;
+        bool              is_webcasting_entity(arch_base_vhandle entity) override;
+        void              unk_506(bool start) override;
+        const vector3d*   unk_507(const vector3d* v) override;
         vector3d          unk_508() const override;
         i32               unk_509() override;
-        void              unk_510(i32 unk) override;
+        void              unk_510(bool start) override;
         bool              unk_511() override;
-        bool              unk_512(i32 unk) override;
+        bool              unk_512(bool unk) override;
         bool              unk_513(i32 unk) override;
         void*             unk_514(i32 unk) override;
         bool              unk_515() override;
@@ -615,22 +618,22 @@ namespace treyarch {
         virtual bool  unk_547();
         virtual f32   unk_548(f32 unk);
         virtual f32   unk_549(f32 unk);
-        virtual i32   unk_550(void* unk, i32 unk_2);
+        virtual void  unk_550(arch_base_vhandle* out, i32 count);
         virtual void* unk_551(void* unk);
         virtual i32   unk_552(void* unk, i32 unk_2);
-        virtual void  unk_553(i32 unk, i32 unk_2, i32 unk_3);
+        virtual void  unk_553(arch_base_vhandle old_target, arch_base_vhandle new_target, arch_base_vhandle other_target);
         virtual f32   unk_554();
         virtual void  unk_555(f32 unk);
         virtual void* unk_556(void* unk);
         virtual void* unk_557(i32 unk);
         virtual void  unk_558(f32 unk);
-        virtual void* unk_559(f32 unk);
+        virtual void  unk_559(f32 delta_t);
         virtual void* unk_560(f32 unk);
-        virtual i32   unk_561(void* unk, void* unk_2);
-        virtual f32   unk_562(i32 unk);
-        virtual f32   unk_563(f32 unk, f32 unk_2);
+        virtual i32   unk_561(game_button* button, i32* state);
+        virtual f32   unk_562(arch_base_vhandle target);
+        virtual f32   unk_563(f32 level, f32 target_level);
         virtual i32   unk_564(f32 unk);
-        virtual i32   unk_565(f32 unk);
+        virtual void  unk_565(f32 delta_t);
         virtual void  unk_566(i32 unk);
         virtual void* unk_567(f32 unk);
         virtual void  unk_568();
@@ -648,7 +651,7 @@ namespace treyarch {
         virtual void* unk_580(f32 unk);
         virtual bool  unk_581(i32 unk, i32 unk_2);
         virtual i32   unk_582(f32 unk);
-        virtual i32   unk_583();
+        virtual i32   is_in_webcast_approach();
         virtual f32   unk_584();
         virtual void  unk_585();
         virtual void* unk_586(void* unk);
@@ -661,6 +664,8 @@ namespace treyarch {
         virtual void  unk_593(void* unk, i32 unk_2, f32 unk_3);
         virtual i32   unk_594(void* unk, i32 unk_2);
         virtual i32   unk_595(f32 unk);
+
+        static constexpr f32 timed_target_times[4] = { 3.0f, 0.5f, 3.0f, 5.0f }; // by kind
 
         static string_hash my_type_key;
     };

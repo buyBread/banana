@@ -222,16 +222,16 @@ namespace treyarch {
         virtual void              unk_043(i32 unk);
         virtual bool              unk_044(i32 unk);
         virtual bool              unk_045();
-        virtual void              unk_046(i32 unk);
+        virtual void              set_zlock_entity(arch_base_vhandle entity);
         virtual void              unk_047(u32 unk);
-        virtual void*             unk_048(void* unk);
+        virtual arch_base_vhandle unk_048();                           // rvb: the zlock entity
         virtual bool              unk_049(i32 unk);
         virtual i32               unk_050(arch_base_vhandle target);
         virtual i32               unk_051(i32 unk, i32 unk_2, i32 unk_3);
         virtual void*             unk_052(void* unk);
         virtual void*             unk_053(void* unk, void* unk_2);
-        virtual void              unk_054(i32 unk, i32 unk_2);
-        virtual void*             unk_055(void* unk);
+        virtual void              unk_054(arch_base_vhandle target, u32 kind);
+        virtual arch_base_vhandle unk_055();                           // rvb: the timed target
         virtual f32               unk_056();
         virtual i32               unk_057();
         virtual void              unk_058(i32 unk);
@@ -677,33 +677,33 @@ namespace treyarch {
         virtual arch_base_vhandle unk_483(i32 index);                  // a null handle in player_interface
         virtual bool              unk_484();
         virtual bool              unk_485();
-        virtual void              unk_486(bool unk, f32 unk_2);        // rvb: stores both at +0xB5C and +0xB54
+        virtual bool              unk_486(bool unk, f32 delay);        // rvb: stores both at +0xB5C and +0xB54
         virtual bool              unk_487();
-        virtual bool              unk_488(bool unk, f32 unk_2);        // rvb: stores both at +0xB5D and +0xB58
+        virtual bool              unk_488(bool unk, f32 delay);        // rvb: stores both at +0xB5D and +0xB58
         virtual i32               unk_489();
         virtual i32               unk_490();
         virtual f32               unk_491();
-        virtual void              unk_492(i32 unk);
+        virtual void              unk_492(bool start);
         virtual i32               unk_493();
         virtual i32               unk_494();
-        virtual i32               unk_495();
-        virtual i32               unk_496();
-        virtual i32               unk_497();
-        virtual i32               unk_498();
-        virtual i32               unk_499();
+        virtual i32               is_in_webcast_approach_normal_hit_range();
+        virtual i32               is_in_webcast_approach_critical_hit_range();
+        virtual i32               is_in_approach_counter();
+        virtual i32               is_in_webcast_approach_early_range();
+        virtual i32               is_in_webcast_approach_counter_range();
         virtual i32               unk_500();
         virtual i32               unk_501();
-        virtual f32               unk_502();
+        virtual f32               approach_norm_to_crit_percent();
         virtual i32               unk_503();
-        virtual bool              unk_504(i32 unk);
+        virtual bool              is_webcasting_entity(arch_base_vhandle entity);
         virtual f32               unk_505();
-        virtual void              unk_506(i32 unk);
-        virtual void*             unk_507(void* unk);
+        virtual void              unk_506(bool start);
+        virtual const vector3d*   unk_507(const vector3d* v);
         virtual vector3d          unk_508() const;                     // the owner's z facing in player_interface
         virtual i32               unk_509();
-        virtual void              unk_510(i32 unk);
+        virtual void              unk_510(bool start);
         virtual bool              unk_511();
-        virtual bool              unk_512(i32 unk);
+        virtual bool              unk_512(bool unk);
         virtual bool              unk_513(i32 unk);
         virtual void*             unk_514(i32 unk);
         virtual bool              unk_515();

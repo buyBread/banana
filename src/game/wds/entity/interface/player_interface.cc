@@ -213,8 +213,8 @@ bool player_interface::unk_045() {
 }
 
 // slot 46
-void player_interface::unk_046(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::set_zlock_entity(arch_base_vhandle entity) {
+    ((void (__thiscall*)(player_interface*, arch_base_vhandle))retail::sub_689610)(this, entity);
 }
 
 // slot 47
@@ -223,8 +223,11 @@ void player_interface::unk_047(u32 unk) {
 }
 
 // slot 48
-void* player_interface::unk_048(void* unk) {
-    return ((void* (__thiscall*)(player_interface*, void*))retail::sub_720180)(this, unk);
+arch_base_vhandle player_interface::unk_048() {
+    arch_base_vhandle result;
+    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+
+    return result;
 }
 
 // slot 49
@@ -253,13 +256,16 @@ void* player_interface::unk_053(void* unk, void* unk_2) {
 }
 
 // slot 54
-void player_interface::unk_054(i32 unk, i32 unk_2) {
-    ((void (__thiscall*)(player_interface*, i32, i32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::unk_054(arch_base_vhandle target, u32 kind) {
+    ((void (__thiscall*)(player_interface*, arch_base_vhandle, u32))retail::sub_AD2D40)(this, target, kind);
 }
 
 // slot 55
-void* player_interface::unk_055(void* unk) {
-    return ((void* (__thiscall*)(player_interface*, void*))retail::sub_720180)(this, unk);
+arch_base_vhandle player_interface::unk_055() {
+    arch_base_vhandle result;
+    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+
+    return result;
 }
 
 // slot 56
@@ -2747,8 +2753,8 @@ bool player_interface::unk_485() {
 }
 
 // slot 486
-void player_interface::unk_486(bool unk, f32 unk_2) {
-    ((void (__thiscall*)(player_interface*, bool, f32))retail::sub_AD2D40)(this, unk, unk_2);
+bool player_interface::unk_486(bool unk, f32 delay) {
+    return ((bool (__thiscall*)(player_interface*, bool, f32))retail::sub_AD2D40)(this, unk, delay);
 }
 
 // slot 487
@@ -2757,8 +2763,8 @@ bool player_interface::unk_487() {
 }
 
 // slot 488
-bool player_interface::unk_488(bool unk, f32 unk_2) {
-    return ((bool (__thiscall*)(player_interface*, bool, f32))retail::sub_AD2D40)(this, unk, unk_2);
+bool player_interface::unk_488(bool unk, f32 delay) {
+    return ((bool (__thiscall*)(player_interface*, bool, f32))retail::sub_AD2D40)(this, unk, delay);
 }
 
 // slot 489
@@ -2777,8 +2783,8 @@ f32 player_interface::unk_491() {
 }
 
 // slot 492
-void player_interface::unk_492(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_492(bool start) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, start);
 }
 
 // slot 493
@@ -2792,27 +2798,27 @@ i32 player_interface::unk_494() {
 }
 
 // slot 495
-i32 player_interface::unk_495() {
+i32 player_interface::is_in_webcast_approach_normal_hit_range() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 496
-i32 player_interface::unk_496() {
+i32 player_interface::is_in_webcast_approach_critical_hit_range() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 497
-i32 player_interface::unk_497() {
+i32 player_interface::is_in_approach_counter() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 498
-i32 player_interface::unk_498() {
+i32 player_interface::is_in_webcast_approach_early_range() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 499
-i32 player_interface::unk_499() {
+i32 player_interface::is_in_webcast_approach_counter_range() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
@@ -2827,7 +2833,7 @@ i32 player_interface::unk_501() {
 }
 
 // slot 502
-f32 player_interface::unk_502() {
+f32 player_interface::approach_norm_to_crit_percent() {
     return ((f32 (__thiscall*)(player_interface*))retail::sub_720050)(this);
 }
 
@@ -2837,8 +2843,8 @@ i32 player_interface::unk_503() {
 }
 
 // slot 504
-bool player_interface::unk_504(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_71FF10)(this, unk);
+bool player_interface::is_webcasting_entity(arch_base_vhandle entity) {
+    return ((bool (__thiscall*)(player_interface*, arch_base_vhandle))retail::sub_71FF10)(this, entity);
 }
 
 // slot 505
@@ -2847,13 +2853,13 @@ f32 player_interface::unk_505() {
 }
 
 // slot 506
-void player_interface::unk_506(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_506(bool start) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, start);
 }
 
 // slot 507
-void* player_interface::unk_507(void* unk) {
-    return ((void* (__thiscall*)(player_interface*, void*))retail::sub_689610)(this, unk);
+const vector3d* player_interface::unk_507(const vector3d* v) {
+    return ((const vector3d* (__thiscall*)(player_interface*, const vector3d*))retail::sub_689610)(this, v);
 }
 
 // sub_9874C0
@@ -2867,8 +2873,8 @@ i32 player_interface::unk_509() {
 }
 
 // slot 510
-void player_interface::unk_510(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_510(bool start) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, start);
 }
 
 // slot 511
@@ -2877,8 +2883,8 @@ bool player_interface::unk_511() {
 }
 
 // slot 512
-bool player_interface::unk_512(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+bool player_interface::unk_512(bool unk) {
+    return ((bool (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, unk);
 }
 
 // slot 513
