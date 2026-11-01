@@ -159,6 +159,7 @@ namespace treyarch { namespace chuck { namespace vm {
         }
 
         // sub_417910
+        // inlined @ sub_41C930
         iterator erase(iterator &where) {
             return iterator(array->erase(where.real_iter));
         }
