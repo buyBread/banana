@@ -6,21 +6,29 @@
 #include "game/als/als.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/boolx.hh"
+#include "game/float_spring.hh"
 #include "game/resource_key.hh"
 #include "game/timing/simple_timer.hh"
 #include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 #include "treyarch/mash/array_replacement.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mm/mm.hh"
 #include "game/hash/algo.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
+#include "vc8/list.hh"
 #include "vc8/vector.hh"
 
 namespace treyarch {
+    namespace chuck { namespace vm {
+        class script_instance;
+    }}
+
     class actor;
     class als_inode;
+    class combat_state;
     class cpu_combat_inode;
     class entity;
     class entity_base;
@@ -195,7 +203,8 @@ namespace treyarch {
         combo_unk_10_flag_00008000 = 0x00008000, // the hero raises WALL_HIT on what he hits
         combo_unk_10_flag_00010000 = 0x00010000, // AIR_HIT
         combo_unk_10_flag_00020000 = 0x00020000, // GROUND_HIT
-        combo_unk_10_flag_00200000 = 0x00200000  // the hero picks up a friendly ai he hits
+        combo_unk_10_flag_00200000 = 0x00200000, // the hero picks up a friendly ai he hits
+        combo_unk_10_flag_00800000 = 0x00800000  // the move looks for a wall ahead
     };
 
     // the hero's combat frame hands each to the player interface slot beside it
@@ -215,7 +224,7 @@ namespace treyarch {
         combo_unk_18_flag_00000002 = 0x00000002, // slot 179
         combo_unk_18_flag_00000008 = 0x00000008, // the launch runs every frame, not only on an anim action
         combo_unk_18_flag_00000010 = 0x00000010, // the hero's hit adds nothing to meter 0
-        combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::unk_1f2
+        combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::hit_dilation_pending
     };
 
     // one move of a combat chain
@@ -260,6 +269,26 @@ namespace treyarch {
     struct auto_calc_target {
         arch_base_vhandle target;
         u8                reserved_04[0x0C];
+    };
+
+    // a combat script's frame_advance thread and what its natives may ask about it
+    struct combat_thread_info {
+              chuck::vm::script_instance* the_instance;
+              combat_state*               frame_advancing_combat_state;
+              i32                         frame_advancing_chain_size;
+        const combo_move_data*            frame_advancing_combo_move;
+              cpu_combat_inode*           frame_advancing_cpu_combat_inode;
+              weapon_interface_extender*  frame_advancing_weapon;
+              entity_base*                frame_advancing_weapon_entity;
+              i32                         frame_advancing_usage_type;
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
     };
 
     // the melee state; abstract, its subclasses pick the moves
@@ -320,13 +349,13 @@ namespace treyarch {
         i32                             chain_size;
         i32                             unk_140;                           // request-made transitions in a row that kept the first target
         u32                             signal_flags;                      // e_combat_signal
-        u8                              reserved_148[0x50];
+        u32                             callback_ids[20];                  // activate's event callbacks, removed by deactivate
         plr_strength_test*              strength_test;
         simple_timer                    strength_test_delay;
         chuck::vm::script_dynamic_array
             <arch_base_vhandle>*        sync_targets;                      // the ones start_sync_anim engaged
         arch_base_vhandle               sync_buddy;
-        u32                             unk_1a8;
+        i32                             next_weapon_index;                 // the one weapon a move that alternates fires next
         f32                             delay_standing;                    // the move's params, copied by move_transition
         f32                             target_exit_speed;
         vector3d                        target_exit_vector;
@@ -347,7 +376,7 @@ namespace treyarch {
         boolx                           last_attack_missed;
         boolx                           attack_applied;
         boolx                           jump_connect_applied;
-        bool                            unk_1e2;                           // slot 56's answer, taken once per chain
+        bool                            jump_launch_applied;               // slot 56's answer, taken once per chain
         boolx                           delaying_stun;
         boolx                           in_custom_cam;
         boolx                           executed_faked_time_attack;
@@ -357,15 +386,18 @@ namespace treyarch {
         boolx                           auto_holster_move;
         boolx                           in_sync_combo_anim;
         boolx                           in_buddy_combo_anim;
-        bool                            unk_1ec;                           // cleared as a move starts
-        u8                              reserved_1ed[0x05];
-        bool                            unk_1f2;
-        u8                              reserved_1f3[0x1D];
-        f32                             unk_210;
-        f32                             unk_214;
-        f32                             unk_218;
-        f32                             unk_21c;
-        f32                             unk_220;
+        bool                            attack_sound_spawned;              // cleared as a move starts
+        u8                              reserved_1ed[0x03];
+        bool                            hit_dilation_waits_for_signal;
+        bool                            hit_dilation_single_signal;        // the first HIT_DILATION signal clears hit_dilation_pending
+        bool                            hit_dilation_pending;
+        u8                              pad_1f3[0x01];
+        float_spring                    v_look;
+        f32                             time_dilation_start_time;
+        f32                             time_dilation_start_scale;
+        f32                             time_dilation_end_time;
+        f32                             time_dilation_end_scale;
+        f32                             time_dilation_scale;
         i32                             time_dilation_mode;                // the move's param, copied by move_transition
         u8                              reserved_228[0xCC];
         mash::array_replacement
@@ -527,8 +559,32 @@ namespace treyarch {
                                          als_inode*        my_als,
                                          cpu_combat_inode* cmbt);
 
+        void apply_hit_dilation_preset(i32 preset, i32 mode); // mode as time_dilation_mode
+
     private:
         static void wait_for_target_list_lock(); // returns once no other thread holds the lock
+
+        static void add_combat_thread_info   (combat_thread_info* info);
+        static void remove_combat_thread_info(combat_thread_info* info); // frees it
+
+        void spawn_attack_sound(      f32               delta_t,
+                                const combo_move_data*  combo_move,
+                                      als_inode*        my_als,
+                                      cpu_combat_inode* cmbt);
+
+        void share_attack_flags_with_hero(      f32               delta_t,
+                                          const combo_move_data*  combo_move,
+                                                als_inode*        my_als,
+                                                cpu_combat_inode* cmbt);
+
+        void probe_wall_ahead(      f32               delta_t,
+                              const combo_move_data*  combo_move,
+                                    als_inode*        my_als,
+                                    cpu_combat_inode* cmbt);
+
+        void update_v_look         (f32 delta_t);
+        void update_time_dilation  (als_inode* my_als);
+        void auto_calc_throw_target(const combo_move_data* combo_move, als_inode* my_als);
 
         resource_key      get_sync_react_asg(entity* target) const;     // "sync_controlled_combat_react" for the hero, else "sync_combat_react"
         void              release_sync_target(actor* target);
@@ -546,6 +602,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(combo_move_data, params,  0x20);
 
     ASSERT_SIZEOF(auto_calc_target, 0x10);
+
+    ASSERT_SIZEOF  (combat_thread_info,                             0x20);
+    ASSERT_OFFSETOF(combat_thread_info, frame_advancing_combo_move, 0x0C);
+    ASSERT_OFFSETOF(combat_thread_info, frame_advancing_usage_type, 0x1C);
 
     ASSERT_SIZEOF  (combat_state,                                    0x2F8);
     ASSERT_OFFSETOF(combat_state, current_buddies,                   0x044);
@@ -566,10 +626,12 @@ namespace treyarch {
     ASSERT_OFFSETOF(combat_state, fake_attack_pos,                   0x10C);
     ASSERT_OFFSETOF(combat_state, chain_size,                        0x13C);
     ASSERT_OFFSETOF(combat_state, signal_flags,                      0x144);
+    ASSERT_OFFSETOF(combat_state, callback_ids,                      0x148);
     ASSERT_OFFSETOF(combat_state, strength_test,                     0x198);
     ASSERT_OFFSETOF(combat_state, strength_test_delay,               0x19C);
     ASSERT_OFFSETOF(combat_state, sync_targets,                      0x1A0);
     ASSERT_OFFSETOF(combat_state, sync_buddy,                        0x1A4);
+    ASSERT_OFFSETOF(combat_state, next_weapon_index,                 0x1A8);
     ASSERT_OFFSETOF(combat_state, delay_standing,                    0x1AC);
     ASSERT_OFFSETOF(combat_state, target_exit_speed,                 0x1B0);
     ASSERT_OFFSETOF(combat_state, jump_exit_speed,                   0x1C0);
@@ -578,15 +640,18 @@ namespace treyarch {
     ASSERT_OFFSETOF(combat_state, attack_dodged,                     0x1DA);
     ASSERT_OFFSETOF(combat_state, attack_blocked,                    0x1DC);
     ASSERT_OFFSETOF(combat_state, jump_connect_applied,              0x1E1);
-    ASSERT_OFFSETOF(combat_state, unk_1e2,                           0x1E2);
+    ASSERT_OFFSETOF(combat_state, jump_launch_applied,               0x1E2);
     ASSERT_OFFSETOF(combat_state, delaying_stun,                     0x1E3);
     ASSERT_OFFSETOF(combat_state, in_custom_cam,                     0x1E4);
     ASSERT_OFFSETOF(combat_state, auto_draw_move,                    0x1E8);
     ASSERT_OFFSETOF(combat_state, in_sync_combo_anim,                0x1EA);
     ASSERT_OFFSETOF(combat_state, in_buddy_combo_anim,               0x1EB);
-    ASSERT_OFFSETOF(combat_state, unk_1ec,                           0x1EC);
-    ASSERT_OFFSETOF(combat_state, unk_1f2,                           0x1F2);
-    ASSERT_OFFSETOF(combat_state, unk_210,                           0x210);
+    ASSERT_OFFSETOF(combat_state, attack_sound_spawned,              0x1EC);
+    ASSERT_OFFSETOF(combat_state, hit_dilation_waits_for_signal,     0x1F0);
+    ASSERT_OFFSETOF(combat_state, hit_dilation_pending,              0x1F2);
+    ASSERT_OFFSETOF(combat_state, v_look,                            0x1F4);
+    ASSERT_OFFSETOF(combat_state, time_dilation_start_time,          0x210);
+    ASSERT_OFFSETOF(combat_state, time_dilation_scale,               0x220);
     ASSERT_OFFSETOF(combat_state, time_dilation_mode,                0x224);
     ASSERT_OFFSETOF(combat_state, weapon_to_use,                     0x2F4);
 
@@ -624,6 +689,13 @@ namespace treyarch {
     inline const string_hash maintain_previous_throw_target_key  = string_hash(hash::djb2("maintain_previous_throw_target"));
     inline const string_hash auto_calc_throw_target_key          = string_hash(hash::djb2("auto_calc_throw_target"));
     inline const string_hash auto_calc_throw_target_on_start_key = string_hash(hash::djb2("auto_calc_throw_target_on_start"));
+    inline const string_hash auto_calc_throw_target_radius_key   = string_hash(hash::djb2("auto_calc_throw_target_radius"));
+    inline const string_hash auto_calc_throw_target_arc_key      = string_hash(hash::djb2("auto_calc_throw_target_arc"));
+
+    inline const string_hash meta_type_v_look_key            = string_hash(hash::djb2("meta_type_v_look"));
+    inline const string_hash meta_type_v_look_rate_delta_key = string_hash(hash::djb2("meta_type_v_look_rate_delta"));
+    inline const string_hash meta_type_v_look_rate_damp_key  = string_hash(hash::djb2("meta_type_v_look_rate_damp"));
+    inline const string_hash meta_type_v_look_rate_mute_key  = string_hash(hash::djb2("meta_type_v_look_rate_mute"));
 
     namespace references {
         // SM3's combat_state::combat_sync_react_asg, "sync_combat_react"
@@ -631,6 +703,10 @@ namespace treyarch {
 
         // held around every combat state's current_targets
         inline util::memory_reference<engine_recursive_lock> target_list_lock { 0x00FC23E0 };
+
+        // the running frame_advance threads, made by the first add and deleted with the last entry
+        inline util::memory_reference<vc8::list<combat_thread_info*>*> combat_thread_infos     { 0x00FC1EA0 };
+        inline util::memory_reference<engine_recursive_lock>           combat_thread_info_lock { 0x00FC2058 };
 
         // raised on both sides of a sync anim or buddy combo
         inline util::memory_reference<string_hash> ai_combat_sync_begin { 0x0102CB9C };

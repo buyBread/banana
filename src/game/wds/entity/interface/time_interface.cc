@@ -4,6 +4,10 @@
 
 using namespace treyarch;
 
+combat_dilation_info::combat_dilation_info() {
+    ((combat_dilation_info* (__thiscall*)(combat_dilation_info*))retail::sub_607C70)(this);
+}
+
 // sub_5FD510
 f32 time_interface::calc_time_dilation() {
     f64 dilation = is_combat_dilated() ? (f64)combat_dilation * (f64)attack_dilation : (f64)attack_dilation;
@@ -27,6 +31,14 @@ f32 time_interface::calc_time_dilation() {
         default:
             return (f32)dilation;
     }
+}
+
+void time_interface::set_combat_dilation(const combat_dilation_info &info) {
+    ((void (__thiscall*)(time_interface*, const combat_dilation_info*))retail::sub_5FD400)(this, &info);
+}
+
+void time_interface::set_attack_dilation(f32 d) {
+    ((void (__thiscall*)(time_interface*, f32))retail::sub_5FD960)(this, d);
 }
 
 // slot 19

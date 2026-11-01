@@ -14,7 +14,16 @@ namespace treyarch {
     public:
         // SM3's target_flags, as far as retail confirms them
         enum e_target_flags : u32 {
-            target_allow_dead_target = 0x00008000
+            target_ai_enemy          = 0x00000001,
+            target_damageable        = 0x00000008,
+            target_alive             = 0x00000010,
+            target_los               = 0x00000040,
+            target_beam_los          = 0x00000080,
+            target_active_switch     = 0x00000100,
+            target_alarm_switch      = 0x00000400,
+            target_allow_dead_target = 0x00008000,
+            target_unk_00040000      = 0x00040000,
+            target_unk_04000000      = 0x04000000
         };
 
         using accept_func = bool (*)(entity_base*    attacker,

@@ -172,6 +172,9 @@ namespace treyarch {
 
         bool is_stunned() const;
 
+        static void push_delay_stun_recovery();
+        static void pop_delay_stun_recovery();
+
         bool is_life_bar_hidden() const;
         void set_life_bar_hidden(bool hidden);
 

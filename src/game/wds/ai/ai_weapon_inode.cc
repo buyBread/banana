@@ -87,3 +87,11 @@ void ai_weapon_inode::draw_weapon(const string_hash &name, const string_hash &ot
 void ai_weapon_inode::holster_weapon(const string_hash &name, const string_hash &other_name, bool immediate) {
     retail::sub_4EC410((u32*)this, (u32*)&name, (u32*)&other_name, immediate);
 }
+
+void ai_weapon_inode::draw_weapon(ai_weapon* weapon, ai_weapon* other_weapon, bool immediate) {
+    retail::sub_4EC490((u32*)this, (i32)weapon, (i32)other_weapon, immediate);
+}
+
+void ai_weapon_inode::holster_weapon(ai_weapon* weapon, ai_weapon* other_weapon, bool immediate) {
+    retail::sub_4EC330((u32*)this, (i32)weapon, (i32)other_weapon, immediate);
+}

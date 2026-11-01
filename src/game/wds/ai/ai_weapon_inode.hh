@@ -107,6 +107,8 @@ namespace treyarch {
         void       enable_all_weapons (bool enable);
         void       draw_weapon        (const string_hash &name, const string_hash &other_name, bool immediate);
         void       holster_weapon     (const string_hash &name, const string_hash &other_name, bool immediate);
+        void       draw_weapon        (ai_weapon* weapon, ai_weapon* other_weapon, bool immediate);
+        void       holster_weapon     (ai_weapon* weapon, ai_weapon* other_weapon, bool immediate);
     };
 
     ASSERT_OFFSETOF(ai_weapon, weapon_entity, 0x00);

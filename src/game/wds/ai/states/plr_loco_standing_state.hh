@@ -3,6 +3,7 @@
 #include "game/wds/ai/ai_state_machine.hh"
 #include "game/als/als.hh"
 #include "game/boolx.hh"
+#include "game/float_spring.hh"
 #include "game/hash/algo.hh"
 #include "game/resource_key.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -28,7 +29,7 @@ namespace treyarch {
         f32          unk_17c;               // three timers slot 28 steps
         f32          unk_180;
         f32          unk_184;
-        u8           reserved_188[0x1C];    // a spring slot 21 steps
+        float_spring unk_188;               // slot 21 steps it
         f32          unk_1a4;
         boolx        can_pickup_putdown;
         boolx        can_attack;

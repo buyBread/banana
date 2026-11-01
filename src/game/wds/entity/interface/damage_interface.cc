@@ -47,6 +47,14 @@ bool damage_interface::is_stunned() const {
     return hp > 0 && stun && (hp <= stun->stun_hp || (flags & damage_ifc_flag_stunned));
 }
 
+void damage_interface::push_delay_stun_recovery() {
+    retail::sub_5FE240();
+}
+
+void damage_interface::pop_delay_stun_recovery() {
+    retail::sub_5FE250();
+}
+
 // sub_5FE170
 bool damage_interface::is_life_bar_hidden() const {
     return life_bar && (ext_flags & damage_ifc_ext_flag_life_bar_hidden);

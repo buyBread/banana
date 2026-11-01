@@ -23,6 +23,17 @@ namespace treyarch {
         combat_dilate_mode_smooth_out
     };
 
+    // SM3 combat_dilation_info
+    struct combat_dilation_info {
+        f32 dilation;
+        f32 duration;
+        f32 delay;
+        f32 smooth_in;
+        f32 smooth_out;
+
+        combat_dilation_info();
+    };
+
     class time_interface : public entity_interface {
 
     public:
@@ -39,6 +50,9 @@ namespace treyarch {
         }
 
         f32 calc_time_dilation();
+
+        void set_combat_dilation(const combat_dilation_info &info);
+        void set_attack_dilation(f32 d);
 
         // inlined @ sub_86EAB0
         void set_mode(e_time_mode mode) {
@@ -66,6 +80,10 @@ namespace treyarch {
     namespace references {
         inline util::memory_reference<vc8::vector<time_interface*>*> all_time_interfaces { 0x00FFEABC };
     } // references
+
+    ASSERT_SIZEOF  (combat_dilation_info,             0x14);
+    ASSERT_OFFSETOF(combat_dilation_info, duration,   0x04);
+    ASSERT_OFFSETOF(combat_dilation_info, smooth_out, 0x10);
 
     ASSERT_OFFSETOF(time_interface, time_dilation,          0x0C);
     ASSERT_OFFSETOF(time_interface, attack_dilation,        0x10);

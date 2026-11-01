@@ -80,6 +80,11 @@ f32 als_inode::get_duration(als::layer_id the_layer) {
     return my_als->get_als_layer(the_layer)->get_duration();
 }
 
+// sub_44F450
+f32 als_inode::get_current_normalized_time(als::layer_id the_layer) {
+    return my_als->get_als_layer(the_layer)->get_current_normalized_time();
+}
+
 // sub_44F470
 f32 als_inode::get_current_time(als::layer_id the_layer) {
     return my_als->get_als_layer(the_layer)->get_current_anim_time();

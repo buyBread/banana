@@ -1,7 +1,12 @@
+#include <cmath>
+#include <new>
+
 #include "retail.hh"
 #include "game/wds/ai/states/combat_state.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
+#include "game/wds/ai/ai_target.hh"
+#include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/cpu_combat_inode.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
@@ -10,16 +15,23 @@
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/script_data_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
+#include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 #include "game/als/als.hh"
 #include "game/als/state_machine.hh"
 #include "game/animation/animation_controller.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "game/script/script_access.hh"
 #include "game/colgeom.hh"
+#include "game/app.hh"
+#include "game/line_info.hh"
+#include "game/local_collision.hh"
 #include "game/quest_manager.hh"
 #include "game/math/po.hh"
 #include "game/math/references.hh"
+#include "treyarch/math/trig.hh"
 
 using namespace treyarch;
 
@@ -537,7 +549,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 get_actor()->get_ai_core()->flags &= ~ai_core_flag_unk_00040000;
 
                 if (combo_move && combo_move->unk_18 & combo_unk_18_flag_00008000)
-                    unk_1f2 = false;
+                    hit_dilation_pending = false;
 
                 arch_base_vhandle prev_first_target = current_targets->empty() ? arch_base_vhandle() : (*current_targets)[0];
 
@@ -574,13 +586,13 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 }
 
                 if (!((bool (__thiscall*)(als::state_machine_interface*))retail::sub_40A850)(my_als->my_als->get_als_layer(layer))) {
-                    unk_220 = 1.0f;
-                    unk_214 = 1.0f;
-                    unk_210 = F32_MAX;
-                    unk_21c = 1.0f;
-                    unk_218 = F32_MAX;
+                    time_dilation_scale       = 1.0f;
+                    time_dilation_start_scale = 1.0f;
+                    time_dilation_start_time  = F32_MAX;
+                    time_dilation_end_scale   = 1.0f;
+                    time_dilation_end_time    = F32_MAX;
 
-                    ((void (__thiscall*)(combat_state*, als_inode*))retail::sub_417000)(this, my_als);
+                    update_time_dilation(my_als);
                 }
 
                 if (by_request) {
@@ -618,7 +630,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 }
 
                 if (my_als->get_optional_als_pb_int(auto_calc_throw_target_on_start_key, 0, als::base_layer, nullptr))
-                    ((void (__thiscall*)(combat_state*, const combo_move_data*, als_inode*))retail::sub_41A430)(this, combo_move, my_als);
+                    auto_calc_throw_target(combo_move, my_als);
 
                 if (by_request) {
                     arch_base_vhandle first_target = current_targets->empty() ? arch_base_vhandle() : (*current_targets)[0];
@@ -720,7 +732,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 start_sync_anim(combo_move);
                 start_buddy_combo(combo_move);
 
-                unk_1ec = false;
+                attack_sound_spawned = false;
 
                 // the move's camera: its flag, else the script's say
                 if (custom_camera_func_id == -1) {
@@ -747,7 +759,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
             } else
                 next_move = get_next_move(delta_t, &next_script_move_num);
 
-            ((void (__thiscall*)(combat_state*, als_inode*))retail::sub_417000)(this, my_als);
+            update_time_dilation(my_als);
 
             (*combat_anim_values)[50] = next_move == combat_num_moves ? -1.0f : get_combat_move_script_code(next_move, next_script_move_num);
 
@@ -825,7 +837,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                     retail::sub_90C790(false);
             }
 
-            if (!unk_1e2                                        &&
+            if (!jump_launch_applied                            &&
                 combo_move                                      &&
                 combo_move->flags_3 & combo_flag_3_unk_00000400 &&
                 combo_move->unk_18 & combo_unk_18_flag_00000008)
@@ -838,14 +850,14 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 else if (auto_holster_move)
                     perform_auto_holster(combo_move);
 
-                if (!unk_1e2                                           &&
+                if (!jump_launch_applied                               &&
                     combo_move                                         &&
                     combo_move->flags_3 & combo_flag_3_unk_00000400    &&
                     combo_move->get_jump_launch_force(nullptr) != 0.0f &&
                     get_actor()->has_physical_ifc()) {
 
-                    unk_1e2            = unk_056(combo_move);
-                    initially_standing = false;
+                    jump_launch_applied = unk_056(combo_move);
+                    initially_standing  = false;
                 }
             }
 
@@ -880,7 +892,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
             if (my_als->get_optional_als_pb_int(auto_calc_throw_target_key,           0, als::base_layer, nullptr) &&
                 !my_als->get_optional_als_pb_int(auto_calc_throw_target_on_start_key, 0, als::base_layer, nullptr))
 
-                ((void (__thiscall*)(combat_state*, const combo_move_data*, als_inode*))retail::sub_41A430)(this, next_combo_move, my_als);
+                auto_calc_throw_target(next_combo_move, my_als);
 
             set_als_position(my_als, next_combo_move);
             set_als_facing(my_als, next_combo_move);
@@ -899,11 +911,10 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
     }
 
     update_camera(delta_t, combo_move, my_als, cmbt);
-
-    ((void (__thiscall*)(combat_state*, f32, const combo_move_data*, als_inode*, cpu_combat_inode*))retail::sub_409E50)(this, delta_t, combo_move, my_als, cmbt);
-    ((void (__thiscall*)(combat_state*, f32, const combo_move_data*, als_inode*, cpu_combat_inode*))retail::sub_412CE0)(this, delta_t, combo_move, my_als, cmbt);
-    ((void (__thiscall*)(combat_state*, f32, const combo_move_data*, als_inode*, cpu_combat_inode*))retail::sub_40A9A0)(this, delta_t, combo_move, my_als, cmbt);
-    ((void (__thiscall*)(combat_state*, f32))retail::sub_417220)(this, delta_t);
+    spawn_attack_sound(delta_t, combo_move, my_als, cmbt);
+    share_attack_flags_with_hero(delta_t, combo_move, my_als, cmbt);
+    probe_wall_ahead(delta_t, combo_move, my_als, cmbt);
+    update_v_look(delta_t);
 
     signal_flags = 0;
 
@@ -1605,8 +1616,101 @@ void combat_state::start_combat_script(f32 delta_t) {
     }
 }
 
+// sub_410B90
 void combat_state::kill_combat_script(bool unload_exec) {
-    ((void (__thiscall*)(combat_state*, bool))retail::sub_410B90)(this, unload_exec);
+    if (chuck::vm::script_instance* inst = script::get_instance(combat_script_inst)) {
+        if (kill_move_func_id != -1)
+            script::run_thread(script::create_thread(kill_move_func_id, inst, get_actor()));
+
+        chuck::vm::script_object* object = inst->parent;
+
+        script::destroy_instance(inst, true);
+
+        if (unload_exec) {
+            script::unload_script_exec(object, get_actor());
+
+            combat_script_exec_prefix.set(string_hash(), 0);
+        }
+    }
+
+    combat_script_inst = arch_base_vhandle();
+
+    // start_combat_script's lookup order
+    init_move_func_id                 = -1;
+    frame_advance_func_id             = -1;
+    hit_target_func_id                = -1;
+    allow_target_hit_func_id          = -1;
+    spawn_hit_fx_func_id              = -1;
+    spawn_blocked_fx_func_id          = -1;
+    spawn_hit_sound_func_id           = -1;
+    spawn_attack_sound_func_id        = -1;
+    spawn_missed_sound_func_id        = -1;
+    spawn_dodged_sound_func_id        = -1;
+    spawn_blocked_sound_func_id       = -1;
+    spawn_attack_window_sound_func_id = -1;
+    get_als_facing_func_id            = -1;
+    get_als_up_func_id                = -1;
+    get_als_position_func_id          = -1;
+    get_jump_launch_vector_func_id    = -1;
+    get_blast_vector_func_id          = -1;
+    kill_move_func_id                 = -1;
+    custom_camera_func_id             = -1;
+    custom_camera_engaged_func_id     = -1;
+    combat_move_func_id               = -1;
+    move_transition_func_id           = -1;
+    strength_test_values_func_id      = -1;
+    playback_speed_func_id            = -1;
+    get_damage_func_id                = -1;
+    get_damage_type_func_id           = -1;
+    set_gun_fire_info_func_id         = -1;
+    set_rocket_fire_info_func_id      = -1;
+    set_grenade_fire_info_func_id     = -1;
+    update_target_lists_func_id       = -1;
+    get_auto_calc_target_pos_func_id  = -1;
+    get_auto_calc_target_dir_func_id  = -1;
+}
+
+// sub_417520
+void combat_state::add_combat_thread_info(combat_thread_info* info) {
+    engine_lock_scope lock(&references::combat_thread_info_lock.get());
+
+    vc8::list<combat_thread_info*>* infos = references::combat_thread_infos.read();
+
+    if (!infos) {
+        infos = new (mm::allocate(sizeof(vc8::list<combat_thread_info*>))) vc8::list<combat_thread_info*>();
+
+        references::combat_thread_infos.write(infos);
+    }
+
+    infos->push_front(info);
+}
+
+// sub_4175F0
+void combat_state::remove_combat_thread_info(combat_thread_info* info) {
+    engine_lock_scope lock(&references::combat_thread_info_lock.get());
+
+    vc8::list<combat_thread_info*>* infos = references::combat_thread_infos.read();
+
+    if (!infos)
+        return;
+
+    for (auto* node = infos->begin(); node != infos->end(); node = node->next)
+        if (node->value == info) {
+            delete node->value;
+
+            references::combat_thread_infos.read()->erase(node);
+
+            break;
+        }
+
+    infos = references::combat_thread_infos.read();
+
+    if (infos->empty()) {
+        infos->~list();
+        mm::free(infos);
+
+        references::combat_thread_infos.write(nullptr);
+    }
 }
 
 // sub_41F7B0
@@ -1685,48 +1789,544 @@ i32 combat_state::internal_auto_calc_targets(const combo_move_data* combo_move, 
     return ((i32 (__thiscall*)(combat_state*, const combo_move_data*, vc8::vector<auto_calc_target>*))retail::sub_41BF10)(this, combo_move, targets);
 }
 
+// sub_40A000
 void combat_state::set_delay_stun_recovery(const combo_move_data* combo_move) {
-    ((void (__thiscall*)(combat_state*, const combo_move_data*))retail::sub_40A000)(this, combo_move);
+    if (combo_move && combo_move->flags_1 & combo_flag_delay_stun_recovery) {
+        if (!delaying_stun) {
+            delaying_stun = true;
+
+            damage_interface::push_delay_stun_recovery();
+        }
+    } else if (delaying_stun) {
+        delaying_stun = false;
+
+        damage_interface::pop_delay_stun_recovery();
+    }
 }
 
+// sub_40EEC0
 void combat_state::perform_auto_draw(const combo_move_data* combo_move) {
-    ((void (__thiscall*)(combat_state*, const combo_move_data*))retail::sub_40EEC0)(this, combo_move);
+    if (weapon_to_use[0].valid() || weapon_to_use[1].valid())
+        if (auto* weapons = (ai_weapon_inode*)get_core()->get_info_node(info_node_type_ai_weapon)) {
+            ai_weapon* weapon       = weapons->find_weapon(weapon_to_use[0]);
+            ai_weapon* other_weapon = weapons->find_weapon(weapon_to_use[1]);
+
+            if (auto_draw_move)
+                weapons->draw_weapon(weapon, other_weapon, true);
+        }
+
+    auto_draw_move = false;
 }
 
+// sub_40EF70
 void combat_state::perform_auto_holster(const combo_move_data* combo_move) {
-    ((void (__thiscall*)(combat_state*, const combo_move_data*))retail::sub_40EF70)(this, combo_move);
+    if (weapon_to_use[0].valid() || weapon_to_use[1].valid())
+        if (auto* weapons = (ai_weapon_inode*)get_core()->get_info_node(info_node_type_ai_weapon)) {
+            ai_weapon* weapon       = weapons->find_weapon(weapon_to_use[0]);
+            ai_weapon* other_weapon = weapons->find_weapon(weapon_to_use[1]);
+
+            if (auto_holster_move)
+                weapons->holster_weapon(weapon, other_weapon, true);
+        }
+
+    auto_holster_move = false;
 }
 
+// sub_412E30
 void combat_state::update_camera(      f32               delta_t,
                                  const combo_move_data*  combo_move,
                                        als_inode*        my_als,
                                        cpu_combat_inode* cmbt) {
 
-    ((void (__thiscall*)(combat_state*,
-                         f32,
-                         const combo_move_data*,
-                         als_inode*,
-                         cpu_combat_inode*))retail::sub_412E30)(this,
-                                                                delta_t,
-                                                                combo_move,
-                                                                my_als,
-                                                                cmbt);
+    // without a camera signal this frame the script says whether its camera is engaged
+    if (!(signal_flags & (combat_signal_animated_camera_on | combat_signal_animated_camera_off)) &&
+        custom_camera_func_id         != -1                                                     &&
+        custom_camera_engaged_func_id != -1) {
+
+        bool disengaged = false;
+
+        if (chuck::vm::script_instance* inst = script::get_instance(combat_script_inst)) {
+            f32 engaged = 0.0f;
+
+            chuck::vm::vm_thread* thread = script::create_thread(custom_camera_engaged_func_id, inst, get_actor());
+
+            script::push_value(thread, delta_t);
+            script::push_value(thread, current_targets->array);
+            script::push_value(thread, combat_anim_values->array);
+            script::run_thread_with_return(thread, &engaged);
+
+            disengaged = engaged < 0.5f;
+        }
+
+        if (disengaged) {
+            if (in_custom_cam)
+                signal_flags |= combat_signal_animated_camera_off;
+        } else if (!in_custom_cam)
+            signal_flags |= combat_signal_animated_camera_on;
+    }
+
+    bool hero_involved = false;
+
+    if (retail::sub_601C50((u32*)get_actor())) // entity_base::is_hero
+        hero_involved = true;
+    else if (current_targets->size())
+        for (auto it = current_targets->begin(); it != current_targets->end(); ++it) {
+            arch_base* target = (*it).resolve();
+
+            if (target && retail::sub_601C50((u32*)target)) {
+                hero_involved = true;
+
+                break;
+            }
+        }
+
+    if (signal_flags & combat_signal_animated_camera_on) {
+        if (hero_involved)
+            enter_custom_camera(combo_move);
+    } else if (signal_flags & combat_signal_animated_camera_off &&
+               (custom_camera_func_id == -1 || custom_camera_engaged_func_id != -1))
+
+        exit_custom_camera();
+
+    if (!retail::sub_97AEF0((u32*)references::game.read())) // game::is_animated_cam_enabled
+        in_custom_cam = false;
+
+    // the script drives the animated camera, which is externally controlled only through the call
+    if (in_custom_cam && custom_camera_func_id != -1)
+        if (chuck::vm::script_instance* inst = script::get_instance(combat_script_inst)) {
+            if (combo_move && combo_move->flags_3 & combo_flag_animated_camera) {
+                references::g_world_ptr.read()->camera_mgr.animated_camera->flags &= ~entity_flag_externally_controlled;
+                references::g_world_ptr.read()->camera_mgr.animated_camera->frame_advance(delta_t);
+            }
+
+            references::g_world_ptr.read()->camera_mgr.animated_camera->flags |= entity_flag_externally_controlled;
+
+            chuck::vm::vm_thread* thread = script::create_thread(custom_camera_func_id, inst, get_actor());
+
+            script::push_entity(thread, references::g_world_ptr.read()->camera_mgr.animated_camera);
+            script::push_value(thread, delta_t);
+            script::push_value(thread, current_targets->array);
+            script::push_value(thread, combat_anim_values->array);
+            script::run_thread(thread);
+
+            return;
+        }
+
+    references::g_world_ptr.read()->camera_mgr.animated_camera->flags &= ~entity_flag_externally_controlled;
 }
 
+// sub_4176A0
 void combat_state::advance_combat_script(      f32               delta_t,
                                          const combo_move_data*  combo_move,
                                                als_inode*        my_als,
                                                cpu_combat_inode* cmbt) {
 
-    ((void (__thiscall*)(combat_state*,
-                         f32,
-                         const combo_move_data*,
-                         als_inode*,
-                         cpu_combat_inode*))retail::sub_4176A0)(this,
-                                                                delta_t,
-                                                                combo_move,
-                                                                my_als,
-                                                                cmbt);
+    chuck::vm::script_instance* inst = script::get_instance(combat_script_inst);
+
+    if (!inst)
+        return;
+
+    if (init_move_func_id != -1) {
+        chuck::vm::vm_thread* thread = script::create_thread(init_move_func_id, inst, get_actor());
+
+        script::push_value(thread, current_targets->array);
+        script::push_value(thread, combat_anim_values->array);
+        script::run_thread(thread);
+
+        init_move_func_id = -1;
+    }
+
+    if (frame_advance_func_id != -1) {
+        chuck::vm::vm_thread* thread = script::create_thread(frame_advance_func_id, inst, get_actor());
+
+        script::push_value(thread, delta_t);
+        script::push_value(thread, current_targets->array);
+        script::push_value(thread, combat_anim_values->array);
+
+        auto* info = new combat_thread_info;
+
+        info->the_instance                     = inst;
+        info->frame_advancing_combat_state     = this;
+        info->frame_advancing_combo_move       = combo_move;
+        info->frame_advancing_chain_size       = chain_size;
+        info->frame_advancing_cpu_combat_inode = cmbt;
+        info->frame_advancing_weapon           = nullptr;
+        info->frame_advancing_weapon_entity    = nullptr;
+        info->frame_advancing_usage_type       = 4;
+
+        add_combat_thread_info(info);
+        script::run_thread(thread);
+        remove_combat_thread_info(info);
+    }
+
+    f32 speed;
+
+    if (auto* layer = (als::state_machine*)my_als->my_als->get_als_layer(als::base_layer))
+        speed = layer->get_playback_speed();
+    else
+        speed = 1.0f;
+
+    if (playback_speed_func_id != -1) {
+        chuck::vm::vm_thread* thread = script::create_thread(playback_speed_func_id, inst, get_actor());
+
+        script::push_value(thread, speed);
+        script::push_value(thread, combo_move ? combo_move->get_script_move_id(nullptr) : -1.0f);
+        script::push_value(thread, current_targets->array);
+        script::push_value(thread, combat_anim_values->array);
+        script::run_thread_with_return(thread, &speed);
+    }
+
+    if (get_actor()->has_ifc(entity_ifc_player))
+        speed = get_actor()->player_ifc()->unk_318() * speed;
+
+    f32 scaled = 1.0f * speed;
+
+    if (als::state_machine_interface* layer = my_als->my_als->get_als_layer(als::base_layer))
+        layer->set_speed(scaled);
+}
+
+// sub_412A40
+void combat_state::apply_hit_dilation_preset(i32 preset, i32 mode) {
+    combat_dilation_info info;
+
+    switch (preset) {
+        case 1:
+            info.duration = 0.125f;
+            info.dilation = 0.15f;
+            break;
+
+        case 2:
+            info.duration = 0.2f;
+            info.dilation = 0.15f;
+            break;
+
+        case 3:
+            info.duration = 0.25f;
+            info.dilation = 0.15f;
+            break;
+
+        case 4:
+            info.duration = 0.7f;
+            info.dilation = 0.7f;
+            break;
+
+        case 5:
+            info.duration = 0.5f;
+            info.dilation = 0.5f;
+            break;
+
+        case 6:
+            info.duration = 0.25f;
+            info.dilation = 1.0f;
+            break;
+    }
+
+    switch (mode) {
+        case 0: // the world
+            ((time_interface*)retail::sub_968660((u32*)&references::g_world_ptr.read()->time_mgr))->set_combat_dilation(info); // wds_time_manager: the world's time interface
+            break;
+
+        case 1: // the actor
+            if (!get_actor()->has_ifc(entity_ifc_time))
+                get_actor()->create_time_ifc();
+
+            get_actor()->time_ifc()->set_combat_dilation(info);
+            break;
+
+        case 2: // the targets
+            if (current_targets && current_targets->size() > 0)
+                for (auto it = current_targets->begin(); it != current_targets->end(); ++it) {
+                    auto* target = (entity_base*)(*it).resolve();
+
+                    if (!target)
+                        continue;
+
+                    if (!target->has_ifc(entity_ifc_time))
+                        target->create_time_ifc();
+
+                    target->time_ifc()->set_combat_dilation(info);
+                }
+
+            break;
+    }
+}
+
+// sub_409E50
+void combat_state::spawn_attack_sound(      f32               delta_t,
+                                      const combo_move_data*  combo_move,
+                                            als_inode*        my_als,
+                                            cpu_combat_inode* cmbt) {
+
+    if (!combo_move || attack_sound_spawned)
+        return;
+
+    string_hash sound_grp = combo_move->get_attack_sound_group(nullptr);
+
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    if (sound_grp == none)
+        sound_grp = attack_key;
+
+    spawn_sound(combo_move,
+                get_actor(),
+                sound_grp,
+                &get_actor()->my_abs_po->get_position(),
+                spawn_attack_sound_func_id,
+                &unk_098);
+
+    attack_sound_spawned = true;
+}
+
+// sub_412CE0
+void combat_state::share_attack_flags_with_hero(      f32               delta_t,
+                                                const combo_move_data*  combo_move,
+                                                      als_inode*        my_als,
+                                                      cpu_combat_inode* cmbt) {
+
+    if (!combo_move || get_actor()->has_ifc(entity_ifc_player) || !current_targets->size())
+        return;
+
+    arch_base_vhandle first_target = (*current_targets)[0];
+
+    if (first_target.null())
+        return;
+
+    entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+    if (first_target.resolve() != hero)
+        return;
+
+    player_interface* player = references::g_world_ptr.read()->get_hero_ptr()->player_ifc();
+
+    player->unk_167((combo_move->unk_14 & combo_unk_14_flag_04000000) != 0);
+    player->unk_169((combo_move->unk_14 & combo_unk_14_flag_02000000) != 0);
+    player->unk_171((combo_move->unk_14 & combo_unk_14_flag_01000000) != 0);
+    player->unk_173((combo_move->unk_14 & combo_unk_14_flag_00800000) != 0);
+    player->unk_175((combo_move->unk_14 & combo_unk_14_flag_00000400) != 0);
+    player->unk_177((combo_move->unk_18 & combo_unk_18_flag_00000001) != 0);
+    player->unk_179((combo_move->unk_18 & combo_unk_18_flag_00000002) != 0);
+}
+
+// sub_40A9A0
+void combat_state::probe_wall_ahead(      f32               delta_t,
+                                    const combo_move_data*  combo_move,
+                                          als_inode*        my_als,
+                                          cpu_combat_inode* cmbt) {
+
+    if (!combo_move || !(combo_move->unk_10 & combo_unk_10_flag_00800000) || !get_actor()->has_ifc(entity_ifc_physical))
+        return;
+
+    vector3d position = get_actor()->my_abs_po->get_position();
+    vector3d facing   = get_actor()->my_abs_po->get_z_facing();
+    vector3d up       = get_actor()->my_abs_po->get_y_facing();
+
+    als::animation_logic_system_interface* the_als = my_als->my_als;
+
+    f32 height = ((als::state_machine*)the_als->get_als_layer(als::base_layer))->get_float_param((als::animation_logic_system*)the_als,
+                                                                                                 als::param_height_above_ground);
+
+    // the line starts at least a meter above the ground
+    vector3d start = position;
+
+    if (1.0f > height) {
+        f32 raise = (f32)(1.0 - (f64)height);
+
+        const vector3d &y = references::unk_00e6049c.get();
+
+        start = vector3d((f32)((f64)(f32)((f64)raise * y.x) + position.x),
+                         (f32)((f64)(f32)((f64)raise * y.y) + position.y),
+                         (f32)((f64)(f32)((f64)raise * y.z) + position.z));
+    }
+
+    vector3d forward ((f32)((f64)facing.x *  3.0), (f32)((f64)facing.y *  3.0), (f32)((f64)facing.z *  3.0));
+    vector3d backward((f32)((f64)facing.x * -1.0), (f32)((f64)facing.y * -1.0), (f32)((f64)facing.z * -1.0));
+
+    vector3d ahead ((f32)((f64)forward.x  + start.x), (f32)((f64)forward.y  + start.y), (f32)((f64)forward.z  + start.z));
+    vector3d behind((f32)((f64)backward.x + start.x), (f32)((f64)backward.y + start.y), (f32)((f64)backward.z + start.z));
+
+    line_info probe(behind, ahead);
+    retail::sub_798F50((char*)&probe, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0); // line_info::check_collision
+
+    f32 facing_wall = (f32)(up * probe.hit_norm);
+
+    if (probe.collision && std::fabs(facing_wall) < 0.1f) {
+        retail::sub_4029A0((u32**)my_als, als::param_had_wall_collision,     1.0f,                                     0); // als_inode::set_desired_param
+        retail::sub_4029D0((u32**)my_als, als::param_desired_forward_vector, (i32)&probe.hit_norm,                     0);
+        retail::sub_4029D0((u32**)my_als, als::param_desired_destination,    (i32)&probe.hit_pos,                      0);
+        retail::sub_4029D0((u32**)my_als, als::param_desired_up_vector,      (i32)&references::unk_00e6049c.get(), 0);
+    } else
+        my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_had_wall_collision, 0.0f);
+
+    retail::sub_798F10((u8*)&probe); // line_info::~line_info
+}
+
+// sub_417220
+void combat_state::update_v_look(f32 delta_t) {
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    arch_base_vhandle first_target = current_targets->size() ? (*current_targets)[0] : arch_base_vhandle();
+    auto*             target       = (entity_base*)first_target.resolve();
+
+    // the first target's height as an angle off the actor's up, 0 above and 1 below
+    f32 look = 0.5f;
+
+    if (target) {
+        const vector3d &from = get_actor()->my_abs_po->get_position();
+        const vector3d &to   = target->my_abs_po->get_position();
+
+        vector3d dir((f32)((f64)to.x - from.x), (f32)((f64)to.y - from.y), (f32)((f64)to.z - from.z));
+
+        if (dir.length2() > 0.0001f)
+            dir.normalize();
+        else
+            dir = get_actor()->my_abs_po->get_z_facing();
+
+        if (my_als->get_optional_als_pb_int(meta_type_v_look_key, 0, als::base_layer, nullptr)) {
+            f32 dot     = (f32)(get_actor()->my_abs_po->get_y_facing() * dir);
+            f32 from_up = (f32)(1.570796370506287 - math::asin(dot));
+            f32 degrees = (f32)(from_up * 57.29577791868205);
+
+            if (degrees >= 0.0f && 180.0f >= degrees)
+                look = (f32)((f64)degrees / 180.0);
+        }
+    }
+
+    f32 rate_delta = my_als->get_optional_als_pb_float(meta_type_v_look_rate_delta_key, 70.0f, als::base_layer, nullptr);
+    f32 rate_damp  = my_als->get_optional_als_pb_float(meta_type_v_look_rate_damp_key,  10.0f, als::base_layer, nullptr);
+    f32 rate_mute  = my_als->get_optional_als_pb_float(meta_type_v_look_rate_mute_key,  10.0f, als::base_layer, nullptr);
+
+    v_look.stiffness = rate_delta;
+    v_look.damping   = rate_damp;
+    v_look.mute_rate = rate_mute;
+    v_look.update(delta_t, look);
+
+    my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_meta_linear_blend_amount_5, v_look.value);
+}
+
+// sub_417000
+void combat_state::update_time_dilation(als_inode* my_als) {
+    if (time_dilation_start_time == time_dilation_end_time)
+        time_dilation_scale = time_dilation_end_scale;
+    else {
+        f32 duration   = my_als->get_duration(als::base_layer);
+        f32 normalized = my_als->get_current_normalized_time(als::base_layer);
+
+        f32 anim_time = (f32)(((f64)normalized - (f32)(i32)normalized) * duration);
+
+        if (anim_time >= time_dilation_end_time)
+            time_dilation_scale = time_dilation_end_scale;
+        else if (anim_time >= time_dilation_start_time)
+            time_dilation_scale = (f32)(((f64)time_dilation_end_scale - time_dilation_start_scale) *
+                                        ((f64)anim_time - time_dilation_start_time)                /
+                                        ((f64)time_dilation_end_time - time_dilation_start_time)   +
+                                        time_dilation_start_scale);
+    }
+
+    switch (time_dilation_mode) {
+        case 0: // the world
+            ((time_interface*)retail::sub_968660((u32*)&references::g_world_ptr.read()->time_mgr))->set_attack_dilation(time_dilation_scale); // wds_time_manager: the world's time interface
+            break;
+
+        case 1: // the actor
+            if (!get_actor()->has_ifc(entity_ifc_time))
+                get_actor()->create_time_ifc();
+
+            get_actor()->time_ifc()->set_attack_dilation(time_dilation_scale);
+            break;
+
+        case 2: // the targets
+            if (current_targets && current_targets->size() > 0)
+                for (auto it = current_targets->begin(); it != current_targets->end(); ++it) {
+                    auto* target = (entity_base*)(*it).resolve();
+
+                    if (!target)
+                        continue;
+
+                    if (!target->has_ifc(entity_ifc_time))
+                        target->create_time_ifc();
+
+                    target->time_ifc()->set_attack_dilation(time_dilation_scale);
+                }
+
+            break;
+    }
+}
+
+// sub_41A430
+void combat_state::auto_calc_throw_target(const combo_move_data* combo_move, als_inode* my_als) {
+    throw_target = arch_base_vhandle();
+
+    f32 radius    = my_als->get_optional_als_pb_float(auto_calc_throw_target_radius_key, 20.0f, als::base_layer, nullptr);
+    f32 min_range = my_als->get_optional_als_pb_float(auto_calc_throw_target_radius_key, 0.0f,  als::base_layer, nullptr); // the radius key again
+    f32 arc       = my_als->get_optional_als_pb_float(auto_calc_throw_target_arc_key,    60.0f, als::base_layer, nullptr);
+
+    vector3d position = get_actor()->my_abs_po->get_position();
+    vector3d facing;
+
+    if (get_actor()->has_ifc(entity_ifc_player))
+        facing = get_actor()->player_ifc()->player_axis[0]->get_player_dir();
+    else {
+        const matrix4x4 &m = get_actor()->my_abs_po->get_matrix();
+
+        facing = vector3d((f32)((f64)m.y.x * 0.0 + (f64)m.x.x * 0.0 + m.z.x + (f64)m.w.x * 0.0),
+                          (f32)((f64)m.y.y * 0.0 + (f64)m.x.y * 0.0 + m.z.y + (f64)m.w.y * 0.0),
+                          (f32)((f64)m.y.z * 0.0 + (f64)m.x.z * 0.0 + m.z.z + (f64)m.w.z * 0.0));
+    }
+
+    vector3d dir = math::unitize(facing);
+
+    f32 min_dot = math::cos((f32)((f64)arc * 0.5 * 0.017453293005625408));
+
+    vc8::vector<arch_base_vhandle> excluded;
+
+    for (arch_base_vhandle target : *current_targets)
+        excluded.push_back(target);
+
+    vector3d up(0.0f, 1.0f, 0.0f);
+
+    auto find_best_damageable_target = (entity_base* (__cdecl*)(entity_base*,
+                                                                const vector3d*,
+                                                                const vector3d*,
+                                                                const vector3d*,
+                                                                f32,
+                                                                f32,
+                                                                f32,
+                                                                f32,
+                                                                f32,
+                                                                f32,
+                                                                ai_target::accept_func,
+                                                                ai_target*,
+                                                                vc8::vector<arch_base_vhandle>*,
+                                                                bool,
+                                                                u32))retail::sub_4714F0;
+
+    entity_base* best = find_best_damageable_target(get_actor(),
+                                                    &position,
+                                                    &up,
+                                                    &dir,
+                                                    min_range,
+                                                    radius,
+                                                    -0.0f - radius,
+                                                    radius,
+                                                    min_dot,
+                                                    -1.1f,
+                                                    nullptr,
+                                                    nullptr,
+                                                    &excluded,
+                                                    true,
+                                                    ai_target::target_ai_enemy      |
+                                                    ai_target::target_damageable    |
+                                                    ai_target::target_alive         |
+                                                    ai_target::target_los           |
+                                                    ai_target::target_beam_los      |
+                                                    ai_target::target_active_switch |
+                                                    ai_target::target_alarm_switch  |
+                                                    ai_target::target_unk_00040000  |
+                                                    ai_target::target_unk_04000000);
+
+    if (best)
+        throw_target = best->my_handle;
 }
 
 // sub_40A050
