@@ -574,7 +574,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
     references::unk_00f4d590.write(3.25f);
     references::unk_00f4d594.write(0.002f);
 
-    retail::sub_574560((i32)swing, (i32)my_actor, delta_t); // swing_params::frame_advance
+    swing->frame_advance(my_actor, delta_t);
 
     vector3d velocity = references::unk_00f4de2c.read() ? *unk_095() : my_actor->physical_ifc()->get_velocity();
 
@@ -940,9 +940,9 @@ f32 spiderman_rvb_player_interface::get_jump_charge() const {
     return 0.0f;
 }
 
-// slot 149
-f32 spiderman_rvb_player_interface::unk_149() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_720EA0)(this);
+// sub_720EA0
+f32 spiderman_rvb_player_interface::get_als_jump_charge() const {
+    return stored_als_jump_charge;
 }
 
 // slot 152
@@ -2032,39 +2032,39 @@ void spiderman_rvb_player_interface::unk_354(i32 unk) {
     ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6BA0)(this, unk);
 }
 
-// slot 355
-void spiderman_rvb_player_interface::unk_355(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6BC0)(this, unk);
+// sub_9A6BC0
+void spiderman_rvb_player_interface::set_max_dynamic_sweet_angle(f32 angle) {
+    swing->set_max_dynamic_sweet_angle(angle);
 }
 
-// slot 356
-void spiderman_rvb_player_interface::unk_356(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6B40)(this, unk);
+// sub_9A6B40
+void spiderman_rvb_player_interface::set_swing_ground_clearance(f32 clearance) {
+    swing->set_swing_ground_clearance(clearance);
 }
 
-// slot 357
-void spiderman_rvb_player_interface::unk_357(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6BE0)(this, unk);
+// sub_9A6BE0
+void spiderman_rvb_player_interface::unk_357(f32 rate) {
+    swing->set_min_reel_in_rate(rate);
 }
 
-// slot 358
-void spiderman_rvb_player_interface::unk_358(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6C00)(this, unk);
+// sub_9A6C00
+void spiderman_rvb_player_interface::unk_358(f32 rate) {
+    swing->set_max_reel_in_rate(rate);
 }
 
-// slot 359
-void spiderman_rvb_player_interface::unk_359(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6C20)(this, unk);
+// sub_9A6C20
+void spiderman_rvb_player_interface::unk_359(f32 value) {
+    swing->set_unk_78(value);
 }
 
-// slot 360
-void spiderman_rvb_player_interface::unk_360(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6C40)(this, unk);
+// sub_9A6C40
+void spiderman_rvb_player_interface::unk_360(f32 value) {
+    swing->set_unk_7c(value);
 }
 
-// slot 361
-void spiderman_rvb_player_interface::unk_361(i32 unk) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6C60)(this, unk);
+// sub_9A6C60
+void spiderman_rvb_player_interface::unk_361(f32 value) {
+    swing->set_unk_80(value);
 }
 
 // sub_9A5E40
@@ -2101,19 +2101,24 @@ void spiderman_rvb_player_interface::get_dynamic_sweet_spot_params(f32* min_leng
     *max_angle            = swing->max_dynamic_sweet_angle;
 }
 
-// slot 365
-i32 spiderman_rvb_player_interface::unk_365(void* unk, void* unk_2) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, void*, void*))retail::sub_9A5ED0)(this, unk, unk_2);
+// sub_9A5ED0
+void spiderman_rvb_player_interface::get_blacksuit_swing_params(f32* swing_velocity_mod, f32* to_anchor_force) {
+    *swing_velocity_mod = swing->unk_84;
+    *to_anchor_force    = swing->unk_88;
 }
 
-// slot 366
-void* spiderman_rvb_player_interface::unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4) {
-    return ((void* (__thiscall*)(spiderman_rvb_player_interface*, void*, void*, void*, void*))retail::sub_9A5F00)(this, unk, unk_2, unk_3, unk_4);
+// sub_9A5F00
+void spiderman_rvb_player_interface::get_reel_in_rate(f32* min_rate, f32* max_rate, f32* max_time, f32* max_range) {
+    *min_rate  = swing->min_reel_in_rate;
+    *max_rate  = swing->max_reel_in_rate;
+    *max_time  = swing->unk_78;
+    *max_range = swing->unk_7c;
 }
 
-// slot 367
-i32 spiderman_rvb_player_interface::unk_367(void* unk, void* unk_2) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, void*, void*))retail::sub_9A5F30)(this, unk, unk_2);
+// sub_9A5F30
+void spiderman_rvb_player_interface::get_fake_anchor_params(f32* max_time, f32* pull_rate) {
+    *max_time  = swing->unk_a4;
+    *pull_rate = swing->unk_a8;
 }
 
 // slot 368
@@ -2310,9 +2315,9 @@ i32 spiderman_rvb_player_interface::unk_402(i32 unk, i32 unk_2) {
     return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32, i32))retail::sub_9A4D30)(this, unk, unk_2);
 }
 
-// slot 403
-f32 spiderman_rvb_player_interface::unk_403() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A4EA0)(this);
+// sub_9A4EA0
+f32 spiderman_rvb_player_interface::get_awesome_rating() const {
+    return swing->swing_level_cur;
 }
 
 // sub_9A4C10
@@ -2379,19 +2384,19 @@ i32 spiderman_rvb_player_interface::unk_413(i32 unk, i32 unk_2, void* unk_3) {
     return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32, i32, void*))retail::sub_9A6180)(this, unk, unk_2, unk_3);
 }
 
-// slot 414
-f32 spiderman_rvb_player_interface::unk_414() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A67D0)(this);
+// sub_9A67D0
+f32 spiderman_rvb_player_interface::get_swing_collision_break_length() const {
+    return swing->collision_break_length;
 }
 
-// slot 415
-f32 spiderman_rvb_player_interface::unk_415() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A67E0)(this);
+// sub_9A67E0
+f32 spiderman_rvb_player_interface::get_swing_collision_stick_length() const {
+    return swing->collision_stick_length;
 }
 
-// slot 416
+// sub_9A67F0
 f32 spiderman_rvb_player_interface::unk_416() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A67F0)(this);
+    return swing->collision_min_time;
 }
 
 // slot 417
@@ -2429,34 +2434,34 @@ i32 spiderman_rvb_player_interface::unk_423() {
     return ((i32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_721660)(this);
 }
 
-// slot 425
+// sub_9A69A0
 f32 spiderman_rvb_player_interface::get_als_swing_angle() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69A0)(this);
+    return swing->main_angle;
 }
 
-// slot 427
+// sub_9A69B0
 f32 spiderman_rvb_player_interface::get_als_swing_side_angle() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69B0)(this);
+    return swing->side_angle;
 }
 
-// slot 429
+// sub_9A69C0
 f32 spiderman_rvb_player_interface::get_als_swing_to_anchor_angle() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69C0)(this);
+    return swing->to_anchor_angle;
 }
 
-// slot 432
-f32 spiderman_rvb_player_interface::unk_432() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69D0)(this);
+// sub_9A69D0
+f32 spiderman_rvb_player_interface::get_als_swing_entry_speed() {
+    return swing->entry_speed;
 }
 
-// slot 433
-f32 spiderman_rvb_player_interface::unk_433() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69E0)(this);
+// sub_9A69E0
+f32 spiderman_rvb_player_interface::get_als_swing_exit_speed() {
+    return swing->speed;
 }
 
-// slot 434
-f32 spiderman_rvb_player_interface::unk_434() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A4770)(this);
+// sub_9A4770
+f32 spiderman_rvb_player_interface::get_als_lateral_speed() {
+    return cur_lateral_velocity;
 }
 
 // slot 438
@@ -2469,24 +2474,24 @@ void spiderman_rvb_player_interface::unk_439(i32 unk) {
     ((void (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_721900)(this, unk);
 }
 
-// slot 440
-f32 spiderman_rvb_player_interface::unk_440() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6800)(this);
+// sub_9A6800
+f32 spiderman_rvb_player_interface::get_swing_boost_cooldown_time() const {
+    return swing->boost_cooldown_time;
 }
 
-// slot 441
-f32 spiderman_rvb_player_interface::unk_441() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6810)(this);
+// sub_9A6810
+f32 spiderman_rvb_player_interface::get_min_swing_boost_angle() const {
+    return swing->min_boost_angle;
 }
 
-// slot 442
-f32 spiderman_rvb_player_interface::unk_442() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6820)(this);
+// sub_9A6820
+f32 spiderman_rvb_player_interface::get_max_swing_boost_angle() const {
+    return swing->max_boost_angle;
 }
 
-// slot 443
-f32 spiderman_rvb_player_interface::unk_443() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6830)(this);
+// sub_9A6830
+f32 spiderman_rvb_player_interface::get_swing_boost_force() const {
+    return linear_formula(swing->unk_9c, swing->unk_a0, swing->swing_level_cur);
 }
 
 // slot 444
@@ -2494,69 +2499,76 @@ f32 spiderman_rvb_player_interface::unk_444() {
     return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_721670)(this);
 }
 
-// slot 445
-f32 spiderman_rvb_player_interface::unk_445() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6860)(this);
+// sub_9A6860
+f32 spiderman_rvb_player_interface::get_swing_jump_boost() const {
+    return linear_formula(swing->jump_boost_base, swing->jump_boost_rate, swing->swing_level_cur);
 }
 
-// slot 446
-f32 spiderman_rvb_player_interface::unk_446() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6890)(this);
+// sub_9A6890
+f32 spiderman_rvb_player_interface::get_swing_drag_coefficient() const {
+    return linear_formula(swing->drag_coefficient_base, swing->drag_coefficient_rate, swing->swing_level_cur);
 }
 
-// slot 447
-f32 spiderman_rvb_player_interface::unk_447() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A68C0)(this);
+// sub_9A68C0
+f32 spiderman_rvb_player_interface::get_swing_drag_coefficient_min_speed() const {
+    return linear_formula(swing->drag_coefficient_min_speed_base,
+                          swing->drag_coefficient_min_speed_rate,
+                          swing->swing_level_cur);
 }
 
-// slot 448
-f32 spiderman_rvb_player_interface::unk_448() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A68F0)(this);
+// sub_9A68F0
+f32 spiderman_rvb_player_interface::get_swing_drag_coefficient_horz_scale() const {
+    return swing->drag_coefficient_horz_scale;
 }
 
-// slot 449
-f32 spiderman_rvb_player_interface::unk_449() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6900)(this);
+// sub_9A6900
+f32 spiderman_rvb_player_interface::get_swing_drag_coefficient_up_scale() const {
+    return swing->drag_coefficient_up_scale;
 }
 
-// slot 450
-f32 spiderman_rvb_player_interface::unk_450() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6910)(this);
+// sub_9A6910
+f32 spiderman_rvb_player_interface::get_swing_drag_coefficient_down_scale() const {
+    return swing->drag_coefficient_down_scale;
 }
 
-// slot 451
-f32 spiderman_rvb_player_interface::unk_451() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6920)(this);
+// sub_9A6920
+f32 spiderman_rvb_player_interface::get_swing_ground_clearance() const {
+    return swing->ground_clearance;
 }
 
-// slot 452
+// sub_9A69F0
 f32 spiderman_rvb_player_interface::unk_452() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A69F0)(this);
+    return swing->unk_e8;
 }
 
-// slot 453
-i32 spiderman_rvb_player_interface::unk_453(i32 unk, i32 unk_2, i32 unk_3) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32, i32, i32))retail::sub_9A6A00)(this, unk, unk_2, unk_3);
+// sub_9A6A00
+void spiderman_rvb_player_interface::set_new_swing_record_keeping(f32 swing_entry_speed,
+                                                                  f32 to_anchor_angle,
+                                                                  f32 to_anchor_length) {
+
+    swing->entry_speed      = swing_entry_speed;
+    swing->to_anchor_angle  = to_anchor_angle;
+    swing->to_anchor_length = to_anchor_length;
 }
 
-// slot 454
-f32 spiderman_rvb_player_interface::unk_454() {
-    return ((f32 (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6930)(this);
+// sub_9A6930
+f32 spiderman_rvb_player_interface::get_swing_max_dot_for_velocity_preservation() const {
+    return swing->max_dot_for_velocity_preservation;
 }
 
-// slot 455
-i32 spiderman_rvb_player_interface::unk_455(i32 unk) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6940)(this, unk);
+// sub_9A6940
+void spiderman_rvb_player_interface::set_swing_max_dot_for_velocity_preservation(f32 d) {
+    swing->max_dot_for_velocity_preservation = d;
 }
 
-// slot 456
-bool spiderman_rvb_player_interface::unk_456() {
-    return ((bool (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9A6960)(this);
+// sub_9A6960
+bool spiderman_rvb_player_interface::get_swing_avoid_ground() const {
+    return swing->avoid_ground;
 }
 
-// slot 457
-bool spiderman_rvb_player_interface::unk_457(i32 unk) {
-    return ((bool (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A6980)(this, unk);
+// sub_9A6980
+void spiderman_rvb_player_interface::set_swing_avoid_ground(bool b) {
+    swing->avoid_ground = b;
 }
 
 // slot 458

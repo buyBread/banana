@@ -104,7 +104,9 @@ bool swing_data::frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index
             f32 dist_sq = (lif.hit_pos - owner->my_abs_po->get_position()).length2_float();
 
             // close enough: the web sticks where it's blocked
-            if (plr_ifc->unk_415() * plr_ifc->unk_415() > dist_sq) {
+            if (plr_ifc->get_swing_collision_stick_length() *
+                plr_ifc->get_swing_collision_stick_length() > dist_sq) {
+
                 vector3d away = owner->my_abs_po->get_position() - lif.hit_pos;
 
                 if (plr_ifc->unk_077() == 1) {
@@ -127,18 +129,20 @@ bool swing_data::frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index
 
                 f32 reach  = (f32)std::sqrt((f64)dist_sq);
                 f32 ground = spiderman_rvb_player_interface::compute_ground_level_at_sweet_spot_position(lif.hit_pos, reach, owner->get_primary_region());
-                f32 height = lif.hit_pos.y - ground - plr_ifc->unk_451();
+                f32 height = lif.hit_pos.y - ground - plr_ifc->get_swing_ground_clearance();
                 f32 limit  = reach > height ? height : reach;
 
                 if (goal_constraint > limit)
                     goal_constraint = limit;
 
-                if (plr_ifc->unk_414() > goal_constraint) {
+                if (plr_ifc->get_swing_collision_break_length() > goal_constraint) {
                     retail::sub_798F10((u8*)&lif); // line_info::~line_info
 
                     return true;
                 }
-            } else if (plr_ifc->unk_414() * plr_ifc->unk_414() > dist_sq) {
+            } else if (plr_ifc->get_swing_collision_break_length() *
+                       plr_ifc->get_swing_collision_break_length() > dist_sq) {
+
                 retail::sub_798F10((u8*)&lif); // line_info::~line_info
 
                 return true;
@@ -161,8 +165,8 @@ bool swing_data::frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index
             constraint = constraint + (span.length_float() - constraint) * blend;
         }
 
-        if (plr_ifc->unk_414() > constraint)
-            constraint = (f32)(plr_ifc->unk_414() + (f64)0.0001f);
+        if (plr_ifc->get_swing_collision_break_length() > constraint)
+            constraint = (f32)(plr_ifc->get_swing_collision_break_length() + (f64)0.0001f);
     }
 
     if (constraint < 1.0f)

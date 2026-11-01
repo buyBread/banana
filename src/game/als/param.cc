@@ -201,7 +201,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 0.0f;
 
-            return the_actor->player_ifc()->unk_149();
+            return the_actor->player_ifc()->get_als_jump_charge();
 
         case param_active_jump_charge:
             if (!the_actor->has_player_ifc())
@@ -261,13 +261,13 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 1.0f;
 
-            return the_actor->player_ifc()->unk_432();
+            return the_actor->player_ifc()->get_als_swing_entry_speed();
 
         case param_swing_exit_speed:
             if (!the_actor->has_player_ifc())
                 return 1.0f;
 
-            return the_actor->player_ifc()->unk_433();
+            return the_actor->player_ifc()->get_als_swing_exit_speed();
 
         case param_trick_window:
             if (!the_actor->has_player_ifc() || !the_actor->player_ifc()->unk_152())
@@ -291,7 +291,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 1.0f;
 
-            return the_actor->player_ifc()->unk_403();
+            return the_actor->player_ifc()->get_awesome_rating();
 
         // 1 or -1
         case param_is_carrying: {

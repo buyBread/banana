@@ -376,7 +376,7 @@ namespace treyarch {
         virtual void              set_abs_jump_charge(f32 fraction);
         virtual void              clear_jump_charge(bool store_for_als);
         virtual f32               get_jump_charge() const;             // the als's active_jump_charge
-        virtual f32               unk_149();                           // the als's jump_charge
+        virtual f32               get_als_jump_charge() const;
         virtual bool              unk_150();                           // the als's blacksuit_swing_window
         virtual void              unk_151(i32 unk);
         virtual bool              unk_152();                           // the als's trick_window
@@ -597,13 +597,13 @@ namespace treyarch {
         virtual void              unk_352(i32 unk);
         virtual void              unk_353(i32 unk);
         virtual void              unk_354(i32 unk);
-        virtual void              unk_355(i32 unk);
-        virtual void              unk_356(i32 unk);
-        virtual void              unk_357(i32 unk);
-        virtual void              unk_358(i32 unk);
-        virtual void              unk_359(i32 unk);
-        virtual void              unk_360(i32 unk);
-        virtual void              unk_361(i32 unk);
+        virtual void              set_max_dynamic_sweet_angle(f32 angle);
+        virtual void              set_swing_ground_clearance(f32 clearance);
+        virtual void              unk_357(f32 rate);
+        virtual void              unk_358(f32 rate);
+        virtual void              unk_359(f32 value);
+        virtual void              unk_360(f32 value);
+        virtual void              unk_361(f32 value);
         virtual void              unk_362(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4);
         virtual void              get_sweet_spot_params(f32* incline_sin,
                                                         f32* incline_cos,
@@ -618,9 +618,9 @@ namespace treyarch {
                                                                 f32* max_no_anchor_length,
                                                                 f32* min_angle,
                                                                 f32* max_angle);
-        virtual i32               unk_365(void* unk, void* unk_2);
-        virtual void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4);
-        virtual i32               unk_367(void* unk, void* unk_2);
+        virtual void              get_blacksuit_swing_params(f32* swing_velocity_mod, f32* to_anchor_force);
+        virtual void              get_reel_in_rate(f32* min_rate, f32* max_rate, f32* max_time, f32* max_range);
+        virtual void              get_fake_anchor_params(f32* max_time, f32* pull_rate);
         virtual void              unk_368(f32 unk, swing_data* swinger);
         virtual void              unk_369(i32 unk, i32 unk_2);
         virtual bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler);
@@ -656,7 +656,7 @@ namespace treyarch {
         virtual void              unk_400(polytube* tube, f32 radius); // dresses the polytube as the hero's web
         virtual i32               get_als_swing_hand_value();          // the als's swing_hand
         virtual i32               unk_402(i32 unk, i32 unk_2);
-        virtual f32               unk_403();                           // the als's swing_level_rating
+        virtual f32               get_awesome_rating() const;          // the als's swing_level_rating
         virtual f32               unk_404(f32 progress);
         virtual f32               unk_405(f32 progress);
         virtual f32               unk_406(f32 progress);
@@ -667,8 +667,8 @@ namespace treyarch {
         virtual i32               unk_411(i32 unk, i32 unk_2);
         virtual void              unk_412(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
         virtual i32               unk_413(i32 unk, i32 unk_2, void* unk_3);
-        virtual f32               unk_414();
-        virtual f32               unk_415();
+        virtual f32               get_swing_collision_break_length() const;
+        virtual f32               get_swing_collision_stick_length() const;
         virtual f32               unk_416();
         virtual i32               unk_417();
         virtual i32               unk_418();
@@ -685,32 +685,34 @@ namespace treyarch {
         virtual f32               get_als_swing_to_anchor_angle();
         virtual f32               unk_430();
         virtual f32               unk_431();                           // slot 430 in degrees
-        virtual f32               unk_432();                           // the als's swing_entry_speed
-        virtual f32               unk_433();                           // the als's swing_exit_speed
-        virtual f32               unk_434();
+        virtual f32               get_als_swing_entry_speed();
+        virtual f32               get_als_swing_exit_speed();
+        virtual f32               get_als_lateral_speed();
         virtual f32               unk_435();
         virtual f32               unk_436();
         virtual f32               unk_437();
         virtual f32               unk_438();
         virtual void              unk_439(i32 unk);
-        virtual f32               unk_440();
-        virtual f32               unk_441();
-        virtual f32               unk_442();
-        virtual f32               unk_443();
+        virtual f32               get_swing_boost_cooldown_time() const;
+        virtual f32               get_min_swing_boost_angle() const;
+        virtual f32               get_max_swing_boost_angle() const;
+        virtual f32               get_swing_boost_force() const;
         virtual f32               unk_444();
-        virtual f32               unk_445();
-        virtual f32               unk_446();
-        virtual f32               unk_447();
-        virtual f32               unk_448();
-        virtual f32               unk_449();
-        virtual f32               unk_450();
-        virtual f32               unk_451();
+        virtual f32               get_swing_jump_boost() const;
+        virtual f32               get_swing_drag_coefficient() const;
+        virtual f32               get_swing_drag_coefficient_min_speed() const;
+        virtual f32               get_swing_drag_coefficient_horz_scale() const;
+        virtual f32               get_swing_drag_coefficient_up_scale() const;
+        virtual f32               get_swing_drag_coefficient_down_scale() const;
+        virtual f32               get_swing_ground_clearance() const;
         virtual f32               unk_452();
-        virtual i32               unk_453(i32 unk, i32 unk_2, i32 unk_3);
-        virtual f32               unk_454();
-        virtual i32               unk_455(i32 unk);
-        virtual bool              unk_456();
-        virtual bool              unk_457(i32 unk);
+        virtual void              set_new_swing_record_keeping(f32 swing_entry_speed,
+                                                               f32 to_anchor_angle,
+                                                               f32 to_anchor_length);
+        virtual f32               get_swing_max_dot_for_velocity_preservation() const;
+        virtual void              set_swing_max_dot_for_velocity_preservation(f32 d);
+        virtual bool              get_swing_avoid_ground() const;
+        virtual void              set_swing_avoid_ground(bool b);
         virtual void              unk_458(void* unk, void* unk_2, f32 unk_3);
         virtual i32               unk_459();
         virtual i32               unk_460(f32 unk);

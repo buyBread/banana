@@ -49,6 +49,11 @@ namespace treyarch {
         inline util::memory_reference<f32> unk_00f4d5a4 { 0x00F4D5A4 };
     } // references
 
+    // the swing tune's level-scaled values
+    inline f32 linear_formula(f32 base, f32 rate, f32 x) {
+        return base + rate * x;
+    }
+
     // the hero's player interface
     class spiderman_rvb_player_interface : public player_interface {
 
@@ -343,7 +348,7 @@ namespace treyarch {
         void              set_abs_jump_charge(f32 fraction) override;
         void              clear_jump_charge(bool store_for_als) override;
         f32               get_jump_charge() const override;
-        f32               unk_149() override;
+        f32               get_als_jump_charge() const override;
         bool              unk_152() override;
         bool              unk_153(i32 unk) override;
         bool              unk_156() override;
@@ -465,13 +470,13 @@ namespace treyarch {
         void              unk_352(i32 unk) override;
         void              unk_353(i32 unk) override;
         void              unk_354(i32 unk) override;
-        void              unk_355(i32 unk) override;
-        void              unk_356(i32 unk) override;
-        void              unk_357(i32 unk) override;
-        void              unk_358(i32 unk) override;
-        void              unk_359(i32 unk) override;
-        void              unk_360(i32 unk) override;
-        void              unk_361(i32 unk) override;
+        void              set_max_dynamic_sweet_angle(f32 angle) override;
+        void              set_swing_ground_clearance(f32 clearance) override;
+        void              unk_357(f32 rate) override;
+        void              unk_358(f32 rate) override;
+        void              unk_359(f32 value) override;
+        void              unk_360(f32 value) override;
+        void              unk_361(f32 value) override;
         void              get_sweet_spot_params(f32* incline_sin,
                                                 f32* incline_cos,
                                                 f32* sweet_cone_cos,
@@ -485,9 +490,9 @@ namespace treyarch {
                                                         f32* max_no_anchor_length,
                                                         f32* min_angle,
                                                         f32* max_angle) override;
-        i32               unk_365(void* unk, void* unk_2) override;
-        void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4) override;
-        i32               unk_367(void* unk, void* unk_2) override;
+        void              get_blacksuit_swing_params(f32* swing_velocity_mod, f32* to_anchor_force) override;
+        void              get_reel_in_rate(f32* min_rate, f32* max_rate, f32* max_time, f32* max_range) override;
+        void              get_fake_anchor_params(f32* max_time, f32* pull_rate) override;
         void              unk_368(f32 unk, swing_data* swinger) override;
         void              unk_369(i32 unk, i32 unk_2) override;
         bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler) override;
@@ -521,7 +526,7 @@ namespace treyarch {
         void              unk_400(polytube* tube, f32 radius) override;
         i32               get_als_swing_hand_value() override;
         i32               unk_402(i32 unk, i32 unk_2) override;
-        f32               unk_403() override;
+        f32               get_awesome_rating() const override;
         f32               unk_404(f32 progress) override;
         f32               unk_405(f32 progress) override;
         f32               unk_406(f32 progress) override;
@@ -532,8 +537,8 @@ namespace treyarch {
         i32               unk_411(i32 unk, i32 unk_2) override;
         void              unk_412(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6) override;
         i32               unk_413(i32 unk, i32 unk_2, void* unk_3) override;
-        f32               unk_414() override;
-        f32               unk_415() override;
+        f32               get_swing_collision_break_length() const override;
+        f32               get_swing_collision_stick_length() const override;
         f32               unk_416() override;
         i32               unk_417() override;
         i32               unk_418() override;
@@ -545,29 +550,31 @@ namespace treyarch {
         f32               get_als_swing_angle() override;
         f32               get_als_swing_side_angle() override;
         f32               get_als_swing_to_anchor_angle() override;
-        f32               unk_432() override;
-        f32               unk_433() override;
-        f32               unk_434() override;
+        f32               get_als_swing_entry_speed() override;
+        f32               get_als_swing_exit_speed() override;
+        f32               get_als_lateral_speed() override;
         f32               unk_438() override;
         void              unk_439(i32 unk) override;
-        f32               unk_440() override;
-        f32               unk_441() override;
-        f32               unk_442() override;
-        f32               unk_443() override;
+        f32               get_swing_boost_cooldown_time() const override;
+        f32               get_min_swing_boost_angle() const override;
+        f32               get_max_swing_boost_angle() const override;
+        f32               get_swing_boost_force() const override;
         f32               unk_444() override;
-        f32               unk_445() override;
-        f32               unk_446() override;
-        f32               unk_447() override;
-        f32               unk_448() override;
-        f32               unk_449() override;
-        f32               unk_450() override;
-        f32               unk_451() override;
+        f32               get_swing_jump_boost() const override;
+        f32               get_swing_drag_coefficient() const override;
+        f32               get_swing_drag_coefficient_min_speed() const override;
+        f32               get_swing_drag_coefficient_horz_scale() const override;
+        f32               get_swing_drag_coefficient_up_scale() const override;
+        f32               get_swing_drag_coefficient_down_scale() const override;
+        f32               get_swing_ground_clearance() const override;
         f32               unk_452() override;
-        i32               unk_453(i32 unk, i32 unk_2, i32 unk_3) override;
-        f32               unk_454() override;
-        i32               unk_455(i32 unk) override;
-        bool              unk_456() override;
-        bool              unk_457(i32 unk) override;
+        void              set_new_swing_record_keeping(f32 swing_entry_speed,
+                                                       f32 to_anchor_angle,
+                                                       f32 to_anchor_length) override;
+        f32               get_swing_max_dot_for_velocity_preservation() const override;
+        void              set_swing_max_dot_for_velocity_preservation(f32 d) override;
+        bool              get_swing_avoid_ground() const override;
+        void              set_swing_avoid_ground(bool b) override;
         void              unk_458(void* unk, void* unk_2, f32 unk_3) override;
         i32               unk_459() override;
         i32               unk_460(f32 unk) override;
