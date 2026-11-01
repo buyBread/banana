@@ -190,6 +190,8 @@ namespace treyarch {
         bool pop_base_machine         (const resource_key &the_state_graph, bool do_it_now);
         bool attempt_push_base_machine(ai_core* asker, const resource_key &the_state_graph, bool do_it_now); // a null asker means this core
         bool restart_base_machine();
+
+        const ai_state_machine* find_machine(const resource_key &graph_name) const; // the running machine of that graph
         bool change_locomotion_machine(string_hash the_loco_inode);
 
         bool attempt_to_engage_slave_mode(arch_base_vhandle new_master, als::layer_id desired_als_layer);

@@ -63,7 +63,7 @@ namespace treyarch {
         void              unk_047(u32 unk) override;
         void*             unk_048(void* unk) override;
         bool              unk_049(i32 unk) override;
-        i32               unk_050(i32 unk) override;
+        i32               unk_050(arch_base_vhandle target) override;
         i32               unk_051(i32 unk, i32 unk_2, i32 unk_3) override;
         void*             unk_052(void* unk) override;
         void*             unk_053(void* unk, void* unk_2) override;
@@ -205,7 +205,7 @@ namespace treyarch {
         bool              unk_270() override;
         bool              unk_271() override;
         bool              unk_272() override;
-        i32               unk_273(void* unk) override;
+        entity*           unk_273(entity* target) override;
         bool              unk_284() override;
         bool              unk_305() override;
         i32               unk_306() override;

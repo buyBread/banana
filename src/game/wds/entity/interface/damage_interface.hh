@@ -17,6 +17,7 @@ namespace treyarch {
     enum e_damage_interface_flags : u32 {
         damage_ifc_flag_immune_to_death_from_damage = 0x00000100,
         damage_ifc_flag_stunned                     = 0x00000800,
+        damage_ifc_flag_unk_00001000                = 0x00001000, // the hero's hits still count at 0 hit points
         damage_ifc_flag_dealt_damage_this_frame     = 0x02000000,
         damage_ifc_flag_unk_40000000                = 0x40000000, // hold_hostage_state sets it on both actors
         damage_ifc_flag_die_on_fall_damage          = 0x80000000
@@ -33,7 +34,10 @@ namespace treyarch {
     };
 
     struct damage_info {
-        u8                reserved_00[0x6C];
+        u8                reserved_00[0x34];
+        i32               damage;
+        i32               unk_38;          // a tenth of it goes to the hero's combo meter on a hit
+        u8                reserved_3c[0x30];
         arch_base_vhandle attacker;
         arch_base_vhandle attacker_weapon;
     };
@@ -218,7 +222,9 @@ namespace treyarch {
                                                      bool              force_react);
     };
 
-    ASSERT_SIZEOF  (damage_info, 0x74);
+    ASSERT_SIZEOF  (damage_info,         0x74);
+    ASSERT_OFFSETOF(damage_info, damage, 0x34);
+    ASSERT_OFFSETOF(damage_info, unk_38, 0x38);
 
     ASSERT_OFFSETOF(damage_stun, recover_remaining, 0x0C);
 

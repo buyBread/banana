@@ -364,7 +364,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_elevation:
-            if (!retail::sub_4024E0((u32*)the_actor)) // has_standing_ifc
+            if (!the_actor->has_standing_ifc())
                 return 0.0f;
 
             return the_actor->standing_ifc()->cur_elevation;
@@ -449,7 +449,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             return 1.0f;
 
         case param_effectively_standing:
-            if (!retail::sub_4024E0((u32*)the_actor) || !the_actor->standing_ifc()->is_effectively_standing())
+            if (!the_actor->has_standing_ifc() || !the_actor->standing_ifc()->is_effectively_standing())
                 return 0.0f;
 
             return 1.0f;
@@ -1051,7 +1051,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                 if (the_actor->physical_ifc()->is_prop_physics_running() ||
                     the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
                     ((the_actor->physical_ifc()->flags & 1) && !(the_actor->physical_ifc()->flags & 2) &&
-                     (!retail::sub_4024E0((u32*)the_actor) || // has_standing_ifc
+                     (!the_actor->has_standing_ifc() ||
                       !the_actor->standing_ifc()->is_enabled() ||
                       !the_actor->standing_ifc()->is_effectively_standing()))) {
 

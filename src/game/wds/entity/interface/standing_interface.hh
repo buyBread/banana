@@ -65,9 +65,13 @@ namespace treyarch {
         }
 
         f32  get_pure_anim_floor_offset() const;
+        f32  get_floor_offset();
         void set_floor_offset_override(f32 new_override);
 
         void manage_standing(f32 delta_t, bool force, f32 max_force_delta);
+        void manage_standing(bool force, f32 max_force_delta);
+
+        void clear_effectively_standing();
 
         void set_control_parent(entity* parent); // null lets go of the current one
     };

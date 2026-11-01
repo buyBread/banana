@@ -184,6 +184,11 @@ bool std_carry_inode::get_allow_web_pickup() const {
     return my_param_block.get_optional_pb_int(allow_web_pickup_key, 1, nullptr) != 0;
 }
 
+// sub_492370
+bool std_carry_inode::get_allow_pickup() const {
+    return my_param_block.get_optional_pb_int(allow_pickup_key, 0, nullptr) != 0;
+}
+
 // sub_4924A0
 string_hash std_carry_inode::get_carry_type() const {
     string_hash none;

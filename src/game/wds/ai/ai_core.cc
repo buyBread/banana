@@ -119,6 +119,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_9925A0
 // inlined @ sub_4BF060
 // inlined @ sub_4A1DA0
+// inlined @ sub_41F3E0
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -498,6 +499,10 @@ bool ai_core::restart_base_machine() {
     change_base_machine(my_base_machine->get_name(), true);
 
     return true;
+}
+
+const ai_state_machine* ai_core::find_machine(const resource_key &graph_name) const {
+    return ((const ai_state_machine* (__thiscall*)(const ai_core*, const resource_key*))retail::sub_4CCD60)(this, &graph_name);
 }
 
 bool ai_core::change_locomotion_machine(string_hash the_loco_inode) {

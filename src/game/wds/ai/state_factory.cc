@@ -3,6 +3,8 @@
 #include "game/wds/ai/states/car_states.hh"
 #include "game/wds/ai/states/carry_states.hh"
 #include "game/wds/ai/states/civilian_agressor_states.hh"
+#include "game/wds/ai/states/cpu_combat_states.hh"
+#include "game/wds/ai/states/plr_combat_states.hh"
 #include "game/wds/ai/states/sync_anim_state.hh"
 #include "treyarch/mm/mm.hh"
 
@@ -330,19 +332,19 @@ base_state* base_state::create_subclass(mash::virtual_types_key the_class_to_mak
         case 0x29E23FE4: // civilian_wounded_state
             return construct(0x1A8, retail::sub_4D5F30);
         case 0x0E30D75D: // cpu_combat_state
-            return construct(0x300, retail::sub_4D0890);
+            return construct(0x300, retail::sub_4D0890, source_vtable<cpu_combat_state>());
         case 0xC2CA2E5D: // civ_beat_up_cpu_combat_state
-            return construct(0x300, retail::sub_4D5DF0);
+            return construct(0x300, retail::sub_4D5DF0, source_vtable<civ_beat_up_cpu_combat_state>());
         case 0xDA68A2A6: // generic_slim_combat_state
-            return construct(0x2F8, retail::sub_4D0A40);
+            return construct(0x2F8, retail::sub_4D0A40, source_vtable<generic_slim_combat_state>());
         case 0x6E055FE3: // plr_combat_state
-            return construct(0x304, retail::sub_4D40E0);
+            return construct(0x304, retail::sub_4D40E0, source_vtable<plr_combat_state>());
         case 0xEE39BA2F: // plr_car_combat_attack_state
-            return construct(0x304, retail::sub_4D4D40);
+            return construct(0x304, retail::sub_4D4D40, source_vtable<plr_car_combat_attack_state>());
         case 0x05F66503: // rhino_ride_state
-            return construct(0x318, retail::sub_4D4EA0);
+            return construct(0x318, retail::sub_4D4EA0, source_vtable<rhino_ride_state>());
         case 0x62C467AA: // plr_trick_state
-            return construct(0x318, retail::sub_4D6F70);
+            return construct(0x318, retail::sub_4D6F70, source_vtable<plr_trick_state>());
         case 0xCA21AD52: // crawl_calculate_path_state
             return construct(0x44, retail::sub_4872B0);
         case 0x7342EB03: // crawl_transition_state

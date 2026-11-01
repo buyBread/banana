@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "game/audio/sound_response.hh"
 #include "game/arch_base.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
@@ -51,11 +52,11 @@ void script_garbage_collection::entities(script_instance*, stuff_to_delete_list_
 // sub_8663E0
 void script_garbage_collection::sound_responses(script_instance*, stuff_to_delete_list_t &stuff_to_delete) {
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next) {
-        void* sound_response = (void*)stuff->element;
+        auto* response = (sound_response*)stuff->element;
 
-        if (sound_response) {
-            retail::sub_8FFA10(sound_response, 0);
-            mm::free(sound_response);
+        if (response) {
+            response->~sound_response();
+            mm::free(response);
         }
     }
 }

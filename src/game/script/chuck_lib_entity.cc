@@ -8370,7 +8370,7 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
             if (self->physical_ifc()->is_prop_physics_running() ||
                 self->physical_ifc()->is_flagged(physical_interface_flag_biped_running) ||
                 (self->physical_ifc()->is_enabled() && !self->physical_ifc()->is_suspended() &&
-                 (!retail::sub_4024E0((u32*)self) || // has_standing_ifc
+                 (!self->has_standing_ifc() ||
                   !self->standing_ifc()->is_enabled() ||
                   !self->standing_ifc()->is_effectively_standing())))
 

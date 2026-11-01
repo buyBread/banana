@@ -221,8 +221,8 @@ bool player_interface::unk_049(i32 unk) {
 }
 
 // slot 50
-i32 player_interface::unk_050(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+i32 player_interface::unk_050(arch_base_vhandle target) {
+    return ((i32 (__thiscall*)(player_interface*, arch_base_vhandle))retail::sub_689610)(this, target);
 }
 
 // slot 51
@@ -1339,8 +1339,8 @@ bool player_interface::unk_272() {
 }
 
 // slot 273
-i32 player_interface::unk_273(void* unk) {
-    return ((i32 (__thiscall*)(player_interface*, void*))retail::sub_9CAAD0)(this, unk);
+entity* player_interface::unk_273(entity* target) {
+    return ((entity* (__thiscall*)(player_interface*, entity*))retail::sub_9CAAD0)(this, target);
 }
 
 // slot 274

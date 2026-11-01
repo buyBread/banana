@@ -24,6 +24,7 @@ namespace treyarch { namespace references {
     inline util::memory_reference<vector3d> unk_00e64478 { 0x00E64478 };
     inline util::memory_reference<vector3d> unk_00f22130 { 0x00F22130 };
     inline util::memory_reference<vector3d> unk_00f2213c { 0x00F2213C };
+    inline util::memory_reference<vector3d> unk_00e6049c { 0x00E6049C };
 
     // (0, 0, 0); read by box triggers and other entity setup
     inline util::memory_reference<vector3d> unk_0102ff40 { 0x0102FF40 };
@@ -45,6 +46,9 @@ namespace treyarch { namespace references {
 
     // (0, 0, 0); what ai_basic_inode's optional vector params default to
     inline util::memory_reference<vector3d> unk_00fc5f00 { 0x00FC5F00 };
+
+    // (0, 0, 0); the combat states' ZEROVEC
+    inline util::memory_reference<vector3d> unk_00fc1ee0 { 0x00FC1EE0 };
 
     // (0, 0, 0); the tentacle and dangler code's ZEROVEC
     inline util::memory_reference<vector3d> unk_00fc4a10 { 0x00FC4A10 };

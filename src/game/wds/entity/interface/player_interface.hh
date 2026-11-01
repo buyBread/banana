@@ -108,7 +108,7 @@ namespace treyarch {
         virtual void              unk_047(u32 unk);
         virtual void*             unk_048(void* unk);
         virtual bool              unk_049(i32 unk);
-        virtual i32               unk_050(i32 unk);
+        virtual i32               unk_050(arch_base_vhandle target);
         virtual i32               unk_051(i32 unk, i32 unk_2, i32 unk_3);
         virtual void*             unk_052(void* unk);
         virtual void*             unk_053(void* unk, void* unk_2);
@@ -331,7 +331,7 @@ namespace treyarch {
         virtual bool              unk_270();
         virtual bool              unk_271();
         virtual bool              unk_272();
-        virtual i32               unk_273(void* unk);
+        virtual entity*           unk_273(entity* target);             // what plr_combat_state::hit_target hits in its place
         virtual bool              should_pick_up_ai(f32 delta_t);
         virtual bool              unk_275(i32 unk);
         virtual void*             unk_276(void* unk);

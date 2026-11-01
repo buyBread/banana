@@ -341,6 +341,7 @@ namespace treyarch {
     inline const string_hash scaring_informant_key  = string_hash(hash::djb2("scaring_informant"));
     inline const string_hash dropping_informant_key = string_hash(hash::djb2("dropping_informant"));
     inline const string_hash allow_web_pickup_key   = string_hash(hash::djb2("allow_web_pickup"));
+    inline const string_hash allow_pickup_key       = string_hash(hash::djb2("allow_pickup"));
     inline const string_hash carry_type_key         = string_hash(hash::djb2("carry_type"));
     inline const string_hash carry_bone_key         = string_hash(hash::djb2("carry_bone"));
 
@@ -386,6 +387,7 @@ namespace treyarch {
         bool        get_scaring_informant() const;
         bool        get_dropping_informant() const;
         bool        get_allow_web_pickup() const;
+        bool        get_allow_pickup() const;
         string_hash get_carry_type() const;
 
     private:
