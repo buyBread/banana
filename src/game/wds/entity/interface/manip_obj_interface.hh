@@ -45,7 +45,9 @@ namespace treyarch {
         u32                    flags;
         i32                    collision_frame;
         vector3d               collision_frame_normal;
-        u8                     reserved_084[0x84];
+        u8                     reserved_084[0x04];
+        i32                    unk_088; // the dodge type a dodge of it presets on the hero
+        u8                     reserved_08c[0x7C];
 
         void set_flag(e_manip_obj_flags flag, bool onoff) {
             if (onoff)
@@ -115,4 +117,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(manip_obj_interface, throw_velocity,         0x60);
     ASSERT_OFFSETOF(manip_obj_interface, flags,                  0x70);
     ASSERT_OFFSETOF(manip_obj_interface, collision_frame_normal, 0x78);
+    ASSERT_OFFSETOF(manip_obj_interface, unk_088,                0x88);
 } // treyarch

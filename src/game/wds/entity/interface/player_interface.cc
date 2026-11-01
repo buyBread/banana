@@ -4,11 +4,20 @@
 #include "game/wds/ai/states/plr_combat_states.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/ai_target.hh"
 #include "game/wds/ai/ai_weapon_inode.hh"
 #include "game/wds/ai/info_node.hh"
+#include "game/wds/entity/interface/damage_interface.hh"
+#include "game/wds/entity/interface/manip_obj_interface.hh"
+#include "game/wds/entity/interface/player_combo_counter.hh"
+#include "game/wds/entity/interface/weapon_interface_extender.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/als/als.hh"
+#include "game/math/po.hh"
 
 using namespace treyarch;
+
+e_combat_move player_interface::previous_next_attack;
 
 // slot 1
 void player_interface::construct_mashed_class() {
@@ -1109,9 +1118,73 @@ bool player_interface::should_execute_combat(f32, f32 tolerance) {
     return false;
 }
 
-// slot 221
-i32 player_interface::unk_221(f32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, f32))retail::sub_99AA90)(this, unk);
+// sub_99AA90
+void player_interface::update_attacks(f32 delta_t) {
+    i32 cur_mode = get_mode();
+
+    // the first combat frame keeps last frame's next attack
+    if (cur_mode != 9 || mode_last_frame == 9) {
+        auto* my_als = (als_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_als);
+
+        if (cur_mode != 9  &&
+            cur_mode != 16 &&
+            my_als->my_als->get_als_layer(als::base_layer)->did_transition_succeed())
+
+            clear_attacks(true);
+
+        previous_next_attack = next_attack;
+        next_attack          = combat_num_moves;
+
+        f32 best_time = -1.0f;
+
+        if (unk_265()) {
+            next_attack = combat_move_counter_attack;
+
+            for (i32 i = 0; i < combat_num_moves; ++i)
+                if (i != combat_move_counter_attack && attacks[i])
+                    attacks[i]->clear();
+        } else if (attacks[combat_move_dodge]                                         &&
+                   !(my_actor->damage_ifc()->flags & damage_ifc_flag_unk_10000000)     &&
+                   attacks[combat_move_dodge]->update(combat_move_dodge,
+                                                      this,
+                                                      my_als,
+                                                      delta_t,
+                                                      &best_time,
+                                                      combat_num_moves,
+                                                      nullptr,
+                                                      nullptr)                         &&
+                   best_time >= 0.0f) {
+
+            next_attack = combat_move_dodge;
+
+            for (i32 i = 0; i < combat_num_moves; ++i)
+                if (i != combat_move_dodge && attacks[i])
+                    attacks[i]->clear();
+        } else if (!is_carrying_or_carried()) {
+            for (i32 i = 0; i < combat_num_moves; ++i) {
+                if (i == combat_move_dodge || !attacks[i])
+                    continue;
+
+                const plr_combat_attack* current_attack = next_attack != combat_num_moves ? attacks[next_attack] : nullptr;
+
+                if (attacks[i]->update((e_combat_move)i, this, my_als, delta_t, &best_time, next_attack, current_attack, nullptr))
+                    next_attack = (e_combat_move)i;
+            }
+        }
+    }
+
+    if (next_attack != combat_move_dodge) {
+        unk_312(false);
+        unk_314(false);
+    }
+
+    auto* my_als = (als_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_als);
+
+    f32 hit_chain = (f32)(unk_165() + 1.0);
+    my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_webcast_hit_chain_number, hit_chain);
+
+    f32 crit_chain = (f32)(unk_166() + 1.0);
+    my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_webcast_crit_chain_number, crit_chain);
 }
 
 // slot 222
@@ -1119,9 +1192,21 @@ void player_interface::unk_222(i32 unk, i32 unk_2, i32 unk_3) {
     ((void (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_7AE090)(this, unk, unk_2, unk_3);
 }
 
-// slot 223
-void player_interface::unk_223(i32 unk, i32 unk_2) {
-    ((void (__thiscall*)(player_interface*, i32, i32))retail::sub_9922E0)(this, unk, unk_2);
+// sub_9922E0
+void player_interface::unk_223(entity_base* ent, i32) {
+    if (!ent || !ent->is_an_actor())
+        return;
+
+    auto* the_actor = (actor*)ent->my_handle.resolve();
+
+    if (!the_actor || !the_actor->get_ai_core())
+        return;
+
+    auto* theirs = (combat_target_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_combat_target);
+    auto* mine   = (combat_target_inode*)my_actor ->get_ai_core()->get_info_node(info_node_type_combat_target);
+
+    if (theirs && mine)
+        retail::sub_483380((u32*)mine, (i32)theirs); // combat_target_inode hostiles removal
 }
 
 // sub_71FBB0
@@ -1179,9 +1264,124 @@ void player_interface::update_tricks(f32 delta_t) {
     }
 }
 
-// slot 231
-bool player_interface::unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6) {
-    return ((bool (__thiscall*)(player_interface*, i32, i32, i32, i32, i32, i32))retail::sub_99B330)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6);
+// sub_99B330
+bool player_interface::check_for_dodge(      entity_base*               attacker,
+                                             i32,
+                                       const combo_move_data*           combo_move,
+                                             weapon_interface_extender* weapon,
+                                             entity_base*               weapon_entity,
+                                             i32                        usage_type) {
+
+    if (!reflexes.is_enabled() || !attacks[combat_move_dodge])
+        return false;
+
+    attacks[combat_move_dodge]->clear();
+
+    ai_core* core = my_actor->get_ai_core();
+
+    if (!core || !core->my_base_machine || !core->my_base_machine->my_curr_state)
+        return false;
+
+    if (mode.current != 9 &&
+        mode.current != 3 &&
+        !((enhanced_state*)core->my_base_machine->my_curr_state)->can_handle_exit_code(state_exit_code_dodge, false))
+
+        return false;
+
+    ai_target target;
+    target.set_target(attacker->my_handle);
+
+    plr_combat_attack* dodge = attacks[combat_move_dodge];
+
+    dodge->attack_dir = my_actor->my_abs_po->get_z_facing();
+    dodge->attack_dir.normalize();
+
+    dodge->attack_up = my_actor->my_abs_po->get_y_facing();
+    dodge->attack_up.normalize();
+
+    f32 score = !weapon && !attacker->has_manip_obj_ifc() ? dodge->compute_target_score(&target, this, 0) : 1.0f;
+
+    target.score = score;
+
+    if (!((f64)score > (f64)0.0001f))
+        return false;
+
+    auto* my_als = (als_inode*)core->get_info_node(info_node_type_als);
+
+    dodge->clear();
+    dodge->targets->push_back(target);
+
+    f32 als_time = ((f32 (__thiscall*)(als_inode*, als::layer_id))retail::sub_44F470)(my_als, als::base_layer); // als_inode::get_current_time
+    dodge->timer = (f32)(als_time + (f64)0.15f);
+
+    if (combo_move) {
+        preset_dodge_anim = combo_move->get_dodge_anim(nullptr);
+        preset_dodge_type = combo_move->get_dodge_type(nullptr);
+
+        if (preset_dodge_type == -1 && !(combo_move->flags_2 & combo_flag_allow_counter_attack))
+            preset_dodge_type = -2;
+    } else if (weapon) {
+        preset_dodge_anim = "";
+
+        switch (usage_type) {
+            case 0:
+            case 1:
+            case 3:
+                preset_dodge_type = weapon->unk_020();
+
+                break;
+
+            case 2:
+                preset_dodge_type = -6;
+
+                break;
+
+            default:
+                break;
+        }
+
+        ai_target weapon_target;
+        weapon_target.set_target(weapon_entity ? weapon_entity->my_handle : arch_base_vhandle());
+
+        if (weapon_target.target.resolve()) {
+            weapon_target.score = 1.0f;
+
+            dodge->targets->push_back(weapon_target);
+        }
+    } else if (attacker->has_manip_obj_ifc()) {
+        preset_dodge_anim = "";
+        preset_dodge_type = attacker->manip_obj_ifc()->unk_088;
+
+        ai_target thrower_target;
+        thrower_target.set_target(attacker->manip_obj_ifc()->thrower);
+
+        if (thrower_target.target.resolve()) {
+            thrower_target.score = 1.0f;
+
+            dodge->targets->push_back(thrower_target);
+        }
+    } else {
+        preset_dodge_anim = "";
+        preset_dodge_type = -1;
+    }
+
+    if (my_actor->has_combo_ifc()) {
+        f32 counter_value;
+        f32 delay;
+
+        if (combo_move) {
+            counter_value = combo_move->get_combo_counter_value(nullptr);
+            delay         = combo_move->get_combo_counter_delay(nullptr);
+        } else {
+            counter_value = 1.0f;
+            delay         = -1.0f;
+        }
+
+        retail::sub_626630((i32)my_actor->combo_ifc(), counter_value, 6);
+        retail::sub_601640(my_actor->combo_ifc(), delay);
+    }
+
+    return true;
 }
 
 // sub_986D50
@@ -1473,54 +1673,72 @@ bool player_interface::unk_284() {
     return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
 }
 
-// slot 285
-i32 player_interface::unk_285() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FCC0)(this);
+// sub_71FCC0
+player_combo_counter* player_interface::unk_285() {
+    return unk_042c;
 }
 
-// slot 286
-i32 player_interface::unk_286() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FCD0)(this);
+// sub_71FCD0
+player_combo_counter* player_interface::get_combo_counter_display() const {
+    return combo_counter_display;
 }
 
-// slot 287
-i32 player_interface::unk_287(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_986B90)(this, unk);
+// sub_986B90
+void player_interface::inc_combo_counter(i32 num) {
+    set_combo_counter(get_combo_counter() + num);
 }
 
-// slot 288
-void player_interface::unk_288(i32 unk) {
-    ((void (__thiscall*)(player_interface*, i32))retail::sub_996680)(this, unk);
+// sub_996680
+void player_interface::set_combo_counter(i32 num) {
+    f32 value = (f32)num;
+
+    if ((f64)value > (f64)0.1f && get_combo_counter() != num) {
+        combo_counter_display->scale_text(vector2d(1.15f, 1.15f), 0.75f);
+        combo_counter_display->flash_color(color32(0x00, 0xFF, 0x00), 0.75f);
+    } else if ((f64)-0.1f > (f64)value && get_combo_counter() != num) {
+        combo_counter_display->scale_text(vector2d(1.0f, 1.0f), 0.75f);
+        combo_counter_display->flash_color(color32(0xFF, 0x00, 0x00), 0.75f);
+    }
+
+    combo_counter_display->combo_counter = num;
 }
 
-// slot 289
-i32 player_interface::unk_289(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FCE0)(this, unk);
+// sub_71FCE0
+player_combo_counter* player_interface::unk_289(i32 unk) {
+    combo_counter_display->unk_50 = unk;
+
+    return combo_counter_display;
 }
 
-// slot 290
-i32 player_interface::unk_290(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71FCF0)(this, unk);
+// sub_71FCF0
+player_combo_counter* player_interface::unk_290(i32 unk) {
+    combo_counter_display->unk_4c = unk;
+
+    return combo_counter_display;
 }
 
-// slot 291
-void player_interface::unk_291(f32 unk, bool unk_2) {
-    ((void (__thiscall*)(player_interface*, f32, bool))retail::sub_986BC0)(this, unk, unk_2);
+// sub_986BC0
+void player_interface::set_combo_counter_delay(f32 num, bool force) { // only rises unless forced
+    if (0.0f > num)
+        num = 1.0f;
+
+    if ((f64)num > (f64)combo_counter_delay.time || force)
+        combo_counter_delay = num;
 }
 
-// slot 292
-i32 player_interface::unk_292() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FD00)(this);
+// sub_71FD00
+i32 player_interface::get_combo_counter() const {
+    return combo_counter_display->combo_counter;
 }
 
-// slot 293
+// sub_71FD10
 i32 player_interface::unk_293() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FD10)(this);
+    return combo_counter_display->unk_4c;
 }
 
-// slot 294
+// sub_71FD20
 i32 player_interface::unk_294() {
-    return ((i32 (__thiscall*)(player_interface*))retail::sub_71FD20)(this);
+    return combo_counter_display->unk_50;
 }
 
 // slot 295
@@ -2420,17 +2638,14 @@ void player_interface::unk_472() {
     ((void (__thiscall*)(player_interface*))retail::sub_5B4A70)(this);
 }
 
-// slot 473
-arch_base_vhandle player_interface::unk_473() {
-    arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720080)(this, &result);
-
-    return result;
+// sub_720080
+arch_base_vhandle player_interface::get_combat_vehicle() const {
+    return combat_vehicle;
 }
 
-// slot 474
-i32 player_interface::unk_474(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_720260)(this, unk);
+// sub_720260
+void player_interface::set_combat_vehicle(arch_base_vhandle v) {
+    combat_vehicle = v;
 }
 
 // slot 475
@@ -2733,9 +2948,59 @@ void player_interface::unk_534(i32 unk, f32 unk_2) {
     ((void (__thiscall*)(player_interface*, i32, f32))retail::sub_AD2D40)(this, unk, unk_2);
 }
 
-// slot 535
-i32 player_interface::unk_535(void* unk, i32 unk_2, i32 unk_3, i32 unk_4, void* unk_5, void* unk_6) {
-    return ((i32 (__thiscall*)(player_interface*, void*, i32, i32, i32, void*, void*))retail::sub_99AFE0)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6);
+// sub_99AFE0
+entity_base* player_interface::select_lockon_target(const vector3d &base_pos,
+                                                          f32       min_range,
+                                                          f32       max_range,
+                                                          f32       min_dotp,
+                                                    const vector3d &dir,
+                                                    const vector3d &up) const {
+
+    ai_target         candidate;
+    arch_base_vhandle best;
+    f32               best_score = -1.0f;
+
+    retail::sub_5FE3D0(); // damageable search lock
+
+    if (retail::sub_643530((u32*)&base_pos, max_range, 3) > 0) { // damage_interface::find_damageable, alive and visible
+        vc8::list<damage_interface*>* found = references::found_damageable.read();
+
+        for (auto* node = found->begin(); node != found->end(); node = node->next) {
+            candidate.set_target(node->value->my_actor->my_handle);
+
+            f32 score = candidate.compute_score(my_actor,
+                                                base_pos,
+                                                dir,
+                                                up,
+                                                min_range,
+                                                max_range,
+                                                -max_range,
+                                                max_range,
+                                                min_dotp,
+                                                -1.1f,
+                                                0x80041,
+                                                nullptr,
+                                                0,
+                                                0,
+                                                0x14);
+
+            if (score > best_score) {
+                best       = candidate.target;
+                best_score = score;
+            }
+        }
+    }
+
+    retail::sub_5FE3F0(); // damageable search unlock
+
+    return (entity_base*)best.resolve();
+}
+
+// sub_992A60
+bool player_interface::is_carrying_or_carried() const {
+    auto* carry = (std_carry_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_std_carry);
+
+    return carry && (carry->is_carrying() || carry->is_being_carried());
 }
 
 // sub_783750

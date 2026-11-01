@@ -264,7 +264,7 @@ namespace treyarch {
         f32               unk_210() override;
         i32               unk_215() override;
         void              init_attacks() override;
-        i32               unk_221(f32 unk) override;
+        void              update_attacks(f32 delta_t) override;
         void              init_tricks() override;
         bool              unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6, i32 unk_7) override;
         void*             unk_243(void* unk) override;

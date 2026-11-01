@@ -273,7 +273,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
 
             if (can_handle_exit_code(state_exit_code_transition)          &&
                 unk_1b4 == 2                                              &&
-                !retail::sub_992A60((u32**)player)                        &&
+                !player->is_carrying_or_carried()                         &&
                 player->get_command_button(5)->triggered_or_missed_press()) {
 
                 grinds = true;
@@ -299,7 +299,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
             if (grinds)
                 the_exit_code = state_exit_code_wall_grind;
             else {
-                if (!retail::sub_992A60((u32**)player) && unk_1bc == 1) {
+                if (!player->is_carrying_or_carried() && unk_1bc == 1) {
                     if (unk_1b4 == 5 && player->unk_530(delta_t)) {
                         if (can_handle_exit_code(state_exit_code_sync_obstacle_avoid) && player->unk_532(nullptr))
                             the_exit_code = state_exit_code_sync_obstacle_avoid;

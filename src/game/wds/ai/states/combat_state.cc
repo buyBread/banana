@@ -82,6 +82,14 @@ f32 combo_move_data::get_combo_counter_delay(bool* exists) const {
     return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_402620)(this, exists);
 }
 
+const char* combo_move_data::get_dodge_anim(bool* exists) const {
+    return ((const char* (__thiscall*)(const combo_move_data*, bool*))retail::sub_4E2140)(this, exists);
+}
+
+i32 combo_move_data::get_dodge_type(bool* exists) const {
+    return ((i32 (__thiscall*)(const combo_move_data*, bool*))retail::sub_4E20E0)(this, exists);
+}
+
 // ==== combat_state ==== //
 
 // slot 1

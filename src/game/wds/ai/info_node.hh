@@ -410,6 +410,7 @@ namespace treyarch {
         }
 
         // sub_50C9D0
+        // inlined @ sub_992A60
         bool is_carrying() const { // slaves only
             return carry_slaves && carry_slaves->size();
         }

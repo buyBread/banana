@@ -26,6 +26,7 @@ namespace treyarch {
     class ai_core;
     class ai_target;
     class entity;
+    class entity_base;
     class player_axis_control;
     class player_combo_counter;
     class polytube;
@@ -344,9 +345,9 @@ namespace treyarch {
         virtual void                     init_attacks();
         virtual void                     clear_attacks(bool all);
         virtual bool                     should_execute_combat(f32 delta_t, f32 tolerance);
-        virtual i32                      unk_221(f32 unk);
+        virtual void                     update_attacks(f32 delta_t);
         virtual void                     unk_222(i32 unk, i32 unk_2, i32 unk_3);
-        virtual void                     unk_223(i32 unk, i32 unk_2);
+        virtual void                     unk_223(entity_base* ent, i32 unk_2); // takes the entity off the owner's hostiles
         virtual const plr_trick_move*    get_trick(e_combat_move trk) const;
         virtual e_combat_move            get_next_trick_enum() const;
         virtual const plr_trick_move*    get_next_trick() const;
@@ -354,7 +355,12 @@ namespace treyarch {
         virtual void                     init_tricks();
         virtual void                     clear_tricks();
         virtual void                     update_tricks(f32 delta_t);
-        virtual bool                     unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
+        virtual bool                     check_for_dodge(      entity_base*               attacker,
+                                                               i32                        chain_size,
+                                                         const combo_move_data*           combo_move,
+                                                               weapon_interface_extender* weapon,
+                                                               entity_base*               weapon_entity,
+                                                               i32                        usage_type);
         virtual bool                     should_execute_dodge(f32 delta_t);
         virtual const char*              get_dodge_anim() const;
         virtual void                     override_dodge_anim(const char* a);
@@ -409,16 +415,18 @@ namespace treyarch {
         virtual bool              unk_282(ai_core* core);              // drops what the core's carry inode holds
         virtual bool              is_current_combat_target(arch_base_vhandle targ) const;
         virtual bool              unk_284();
-        virtual i32               unk_285();
-        virtual i32               unk_286();
-        virtual i32               unk_287(i32 unk);
-        virtual void              unk_288(i32 unk);
-        virtual i32               unk_289(i32 unk);
-        virtual i32               unk_290(i32 unk);
-        virtual void              unk_291(f32 unk, bool unk_2);
-        virtual i32               unk_292();
-        virtual i32               unk_293();
-        virtual i32               unk_294();
+
+        virtual player_combo_counter* unk_285();
+        virtual player_combo_counter* get_combo_counter_display() const;
+        virtual void                  inc_combo_counter(i32 num);
+        virtual void                  set_combo_counter(i32 num);
+        virtual player_combo_counter* unk_289(i32 unk);
+        virtual player_combo_counter* unk_290(i32 unk);
+        virtual void                  set_combo_counter_delay(f32 num, bool force);
+        virtual i32                   get_combo_counter() const;
+        virtual i32                   unk_293();
+        virtual i32                   unk_294();
+
         virtual f32               unk_295();
         virtual void              unk_296(i32 unk);
         virtual f32               unk_297();
@@ -597,8 +605,8 @@ namespace treyarch {
         virtual bool              unk_470();
         virtual i32               unk_471();
         virtual void              unk_472();
-        virtual arch_base_vhandle unk_473();                           // its +0x498
-        virtual i32               unk_474(i32 unk);
+        virtual arch_base_vhandle get_combat_vehicle() const;
+        virtual void              set_combat_vehicle(arch_base_vhandle v);
         virtual f32               unk_475();
         virtual void              unk_476(i32 unk);
         virtual i32               unk_477(i32 unk, bool unk_2);
@@ -659,7 +667,14 @@ namespace treyarch {
         virtual bool              unk_532(const line_info* unk);       // rvb: null takes that line_info
         virtual i32               unk_533(i32 unk);
         virtual void              unk_534(i32 unk, f32 unk_2);
-        virtual i32               unk_535(void* unk, i32 unk_2, i32 unk_3, i32 unk_4, void* unk_5, void* unk_6);
+        virtual entity_base*      select_lockon_target(const vector3d &base_pos,
+                                                             f32       min_range,
+                                                             f32       max_range,
+                                                             f32       min_dotp,
+                                                       const vector3d &dir,
+                                                       const vector3d &up) const;
+
+        static e_combat_move previous_next_attack; // update_attacks keeps last update's next_attack here
 
         i32 get_mode() const {
             return mode.current;
@@ -702,6 +717,8 @@ namespace treyarch {
         player_spider_senses* get_spider_senses() {
             return &spider_senses;
         }
+
+        bool is_carrying_or_carried() const;
     };
 
     ASSERT_SIZEOF  (player_interface,                                       0x530);

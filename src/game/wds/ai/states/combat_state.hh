@@ -70,6 +70,7 @@ namespace treyarch {
         combo_flag_maintain_standing         = 0x00000400,
         combo_flag_buddy_combo               = 0x00200000,
         combo_flag_cancel_target_stun        = 0x00800000,
+        combo_flag_allow_counter_attack      = 0x04000000,
         combo_flag_reset_double_jump         = 0x20000000
     };
 
@@ -137,6 +138,8 @@ namespace treyarch {
         i32              get_combo_move_type_id       (bool* exists) const;
         f32              get_combo_counter_value      (bool* exists) const;
         f32              get_combo_counter_delay      (bool* exists) const;
+        const char*      get_dodge_anim               (bool* exists) const;
+        i32              get_dodge_type               (bool* exists) const;
     };
 
     // what internal_auto_calc_targets finds

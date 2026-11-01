@@ -8,7 +8,9 @@
 #include "treyarch/mash/string_hash.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
+#include "vc8/list.hh"
 
 namespace treyarch {
     class combo_move_data;
@@ -20,6 +22,7 @@ namespace treyarch {
         damage_ifc_flag_unk_00001000                = 0x00001000, // the hero's hits still count at 0 hit points
         damage_ifc_flag_dealt_damage_this_frame     = 0x02000000,
         damage_ifc_flag_unk_08000000                = 0x08000000, // lets a non-interruptable combat move be broken; the combat frame clears it
+        damage_ifc_flag_unk_10000000                = 0x10000000, // the hero's update_attacks skips the dodge while set
         damage_ifc_flag_unk_40000000                = 0x40000000, // hold_hostage_state sets it on both actors
         damage_ifc_flag_die_on_fall_damage          = 0x80000000
     };
@@ -222,6 +225,11 @@ namespace treyarch {
                                                      u8*               applied,
                                                      bool              force_react);
     };
+
+    namespace references {
+        // what the last damage_interface::find_damageable found
+        inline util::memory_reference<vc8::list<damage_interface*>*> found_damageable { 0x00FFE5FC };
+    } // references
 
     ASSERT_SIZEOF  (damage_info,         0x74);
     ASSERT_OFFSETOF(damage_info, damage, 0x34);

@@ -284,7 +284,7 @@ bool plr_combat_state::hit_target(      entity*           target,
 
     // a friendly ai hit with such a move is picked up instead
     if ((combo_move->unk_10 & combo_unk_10_flag_00200000) &&
-        !retail::sub_992A60((u32**)player)                 &&
+        !player->is_carrying_or_carried()                  &&
         target->is_an_actor()                              &&
         alive_before) {
 

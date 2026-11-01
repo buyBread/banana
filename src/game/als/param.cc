@@ -1322,11 +1322,11 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
                 }
             }
 
-            // a player's: the car behind unk_473, else the vehicle behind unk_061
+            // a player's: its combat vehicle, else the vehicle behind unk_061
             if (!the_actor->has_player_ifc())
                 break;
 
-            arch_base* car = the_actor->player_ifc()->unk_473().resolve();
+            arch_base* car = the_actor->player_ifc()->get_combat_vehicle().resolve();
 
             if (!car) {
                 arch_base* other = the_actor->player_ifc()->unk_061().resolve();

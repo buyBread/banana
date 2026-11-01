@@ -134,7 +134,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
     }
 
     if (can_handle_exit_code(state_exit_code_fall)                 &&
-        (retail::sub_992A60((u32**)player)                         ||
+        (player->is_carrying_or_carried()                          ||
          player->unk_143()                                         ||
          (get_actor()->has_standing_ifc()                          &&
           !get_actor()->standing_ifc()->is_effectively_standing())))

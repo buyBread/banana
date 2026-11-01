@@ -547,7 +547,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
             break;
     }
 
-    if (unk_103() || retail::sub_992A60((u32**)this)) {
+    if (unk_103() || is_carrying_or_carried()) {
         unk_198();
         unk_203();
     } else if (mode.current != mode_last_frame) {
@@ -1079,8 +1079,8 @@ void spiderman_rvb_player_interface::init_attacks() {
 }
 
 // slot 221
-i32 spiderman_rvb_player_interface::unk_221(f32 unk) {
-    return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9A6680)(this, unk);
+void spiderman_rvb_player_interface::update_attacks(f32 delta_t) {
+    ((void (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9A6680)(this, delta_t);
 }
 
 // slot 228

@@ -17,7 +17,7 @@ namespace treyarch {
         explicit weapon_interface_extender(mash::generating_vtable_version so_do_nothing) : entity_interface(so_do_nothing) {}
 
         virtual i32 unk_019(void* unk) = 0;
-        virtual i32 unk_020() = 0;
+        virtual i32 unk_020() = 0; // the dodge type a dodge of it presets on the hero
         virtual i32 unk_021() = 0;
 
         entity* get_holder() const; // null unless the weapon interface's holder resolves
