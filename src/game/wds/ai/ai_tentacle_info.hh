@@ -134,6 +134,9 @@ namespace treyarch {
         void init_num_positions(i32 num_pos, entity* _base_node, entity* _end_node);
         void apply_render_info();
 
+        void set_visible(bool vis);
+        bool is_visible() const;
+
         void frame_advance(f32 delta_t);
         void update_spline(bool ignore_limbo);
 

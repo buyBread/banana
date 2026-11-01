@@ -634,7 +634,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
     }
 
     for (i32 index = 0; index < 8; ++index)
-        retail::sub_994200((i32)swing_leftovers[index], delta_t); // swing_leftover::frame_advance
+        swing_leftovers[index]->frame_advance(delta_t);
 
     unk_0830 = (f32)((f64)unk_0830 - (f64)delta_t);
     unk_0834 = (f32)((f64)unk_0834 - (f64)delta_t);

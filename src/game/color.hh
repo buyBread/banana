@@ -44,6 +44,8 @@ namespace treyarch {
         void set_red_float  (const f32 &value) { r = adjust(value); }
         void set_green_float(const f32 &value) { g = adjust(value); }
         void set_blue_float (const f32 &value) { b = adjust(value); }
+
+        // sub_423E10
         void set_alpha_float(const f32 &value) { a = adjust(value); }
 
         // sub_405DC0

@@ -63,14 +63,15 @@ namespace treyarch {
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
-        entity_ext_flag_spawned                = 0x00000100,
-        entity_ext_flag_is_auto_activate_prop  = 0x00000800,
-        entity_ext_flag_invulnerable           = 0x00004000,
-        entity_ext_flag_noncrawlable           = 0x00008000,
-        entity_ext_flag_shadow_casting         = 0x00010000, // SM3's AI_COVER
-        entity_ext_flag_sync_anim              = 0x00020000,
-        entity_ext_flag_ai_los_see_through     = 0x00100000,
-        entity_ext_flag_attack_damage_unlocked = 0x20000000
+        entity_ext_flag_spawned                         = 0x00000100,
+        entity_ext_flag_is_auto_activate_prop           = 0x00000800,
+        entity_ext_flag_invulnerable                    = 0x00004000,
+        entity_ext_flag_noncrawlable                    = 0x00008000,
+        entity_ext_flag_shadow_casting                  = 0x00010000, // SM3's AI_COVER
+        entity_ext_flag_sync_anim                       = 0x00020000,
+        entity_ext_flag_ai_los_see_through              = 0x00100000,
+        entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
+        entity_ext_flag_attack_damage_unlocked          = 0x20000000
     };
 
     class entity_base : public arch_base {

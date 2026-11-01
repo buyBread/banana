@@ -305,6 +305,14 @@ void ai_tentacle_info::apply_render_info() {
     retail::sub_96F1B0((i32)&tentacle->the_spline, tentacle_info->num_subdivisions, tentacle->the_spline.spline_type); // spline::build
 }
 
+void ai_tentacle_info::set_visible(bool vis) {
+    retail::sub_491580((u32**)this, vis);
+}
+
+bool ai_tentacle_info::is_visible() const {
+    return retail::sub_4915A0((u32*)this);
+}
+
 // sub_4914E0
 entity* ai_tentacle_info::get_my_entity() const { // an external polytube stands in for a missing owner
     if (my_entity.resolve())

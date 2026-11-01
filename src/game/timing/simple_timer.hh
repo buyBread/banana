@@ -17,8 +17,22 @@ namespace treyarch {
 
         explicit simple_timer(mash::generating_vtable_version) {}
 
+        f32 get_time() const {
+            return time;
+        }
+
         simple_timer &operator=(f32 t) {
             time = t;
+
+            return *this;
+        }
+
+        // inlined @ sub_994200
+        simple_timer &operator-=(f32 t) { // never below 0
+            time -= t;
+
+            if (time < 0.0f)
+                time = 0.0f;
 
             return *this;
         }

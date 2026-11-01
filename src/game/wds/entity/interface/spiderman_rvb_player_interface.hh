@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/swing_data.hh"
 #include "game/wds/ai/ai_strength_test_info.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/delta_variable.hh"

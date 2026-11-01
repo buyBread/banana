@@ -1,5 +1,7 @@
 #include "retail.hh"
 #include "game/wds/entity/pendulum.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/math/po.hh"
 
 using namespace treyarch;
 
@@ -23,11 +25,44 @@ void pendulum::set_entity_base_pivot(entity* _pivot) {
     retail::sub_6210D0((char*)this, (i32)_pivot);
 }
 
+// sub_456450
+void pendulum::set_entity_base_pivot(entity_base* _pivot, const vector3d &_pivot_pos) {
+    entity_base_pivot = _pivot ? _pivot->my_handle : arch_base_vhandle();
+    abs_pivot_pos     = _pivot_pos;
+
+    if (_pivot)
+        rel_pivot_pos = _pivot->my_abs_po->inverse_xform(abs_pivot_pos);
+    else
+        rel_pivot_pos = abs_pivot_pos;
+
+    get_pivot_abs_pos();
+
+    unk_04f = true;
+}
+
 vector3d pendulum::get_pivot_abs_pos() const {
     vector3d result;
     retail::sub_60D3E0((char*)this, (i32)&result);
 
     return result;
+}
+
+// sub_60D520
+bool pendulum::has_a_moving_anchor() const {
+    auto* anchor = (entity_base*)entity_base_pivot.resolve();
+
+    while (anchor) {
+        if (!(anchor->flags & entity_flag_bone_connector) &&
+            anchor->ext_flags & entity_ext_flag_added_to_list_of_moved_entities)
+
+            return true;
+
+        anchor = anchor->flags & entity_flag_member ?
+            (entity_base*)retail::sub_601910((u32*)anchor) : // entity_base::get_attach_root
+            anchor->my_parent;
+    }
+
+    return false;
 }
 
 // sub_5FF710

@@ -8,6 +8,7 @@
 
 namespace treyarch {
     class entity;
+    class entity_base;
     class rigid_body_constraint_distance;
     class rigid_body_constraint_point;
     class user_rigid_body;
@@ -38,7 +39,7 @@ namespace treyarch {
             enabled = _enable;
         }
 
-        // inlined
+        // sub_54BFA0
         void set_vector3d_pivot(const vector3d &_pivot) {
             entity_base_pivot = arch_base_vhandle();
             abs_pivot_pos     = _pivot;
@@ -46,12 +47,15 @@ namespace treyarch {
         }
 
         void     set_entity_base_pivot(entity* _pivot);
+        void     set_entity_base_pivot(entity_base* _pivot, const vector3d &_pivot_pos);
         vector3d get_pivot_abs_pos() const;
 
         // inlined
         void set_constraint(f32 _constraint) {
             constraint = _constraint;
         }
+
+        bool has_a_moving_anchor() const; // the pivot or one of its parents is in the moved list
 
         void set_attach_limb(i32 l); // a limb past 9 is ignored
 

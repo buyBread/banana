@@ -4,7 +4,6 @@
 #include "game/wds/entity/interface/generic_interface.hh"
 #include "game/wds/entity/interface/player_reflexes.hh"
 #include "game/wds/entity/interface/plr_combat_attack.hh"
-#include "game/wds/entity/pendulum.hh"
 #include "game/input/game_axis.hh"
 #include "game/input/game_button.hh"
 #include "game/timing/simple_timer.hh"
@@ -32,59 +31,16 @@ namespace treyarch {
     class player_jump_info;
     class polytube;
     class script_object_instance;
+    class swing_data;
+    class swing_params;
 
-    // SM3 eSwingerHand
-    enum e_swinger_hand : i32 {
-        swinger_none  = -1,
-        swinger_right = 0,
-        swinger_left  = 1,
-        max_swingers  = 2,
-        swinger_both  = max_swingers
-    };
-
-    // SM3 eSwingerStatus
-    enum e_swinger_status : i32 {
-        swinger_inactive,
-        swinger_animating,
-        swinger_launching,
-        swinger_attached
-    };
+    enum e_swinger_hand : i32;
 
     // SM3 ePostProcessAction
     enum e_post_process_action : i32 {
         pp_swing_anchor_search = 0x01,
         pp_swing_avoid_ground  = 0x02
     };
-
-    class swing_leftover;
-    class swing_params;
-
-    // SM3 swing_anchor_data; retail adds a point before goal_constraint
-    struct swing_anchor_data {
-        arch_base_vhandle anchor;
-        vector3d          pos;
-        vector3d          unk_10;
-        f32               goal_constraint;
-    };
-
-    // SM3 swing_data, as far as it's read; retail adds a point before goal_constraint
-    class swing_data {
-
-    public:
-        e_swinger_status status;
-        pendulum         attach_pendulum;
-        vector3d         unk_54;
-        f32              goal_constraint;
-    };
-
-    ASSERT_SIZEOF  (swing_anchor_data,                  0x20);
-    ASSERT_OFFSETOF(swing_anchor_data, pos,             0x04);
-    ASSERT_OFFSETOF(swing_anchor_data, unk_10,          0x10);
-    ASSERT_OFFSETOF(swing_anchor_data, goal_constraint, 0x1C);
-
-    ASSERT_OFFSETOF(swing_data, attach_pendulum, 0x04);
-    ASSERT_OFFSETOF(swing_data, unk_54,          0x54);
-    ASSERT_OFFSETOF(swing_data, goal_constraint, 0x60);
 
     // SM3 ePlayerButtonCommand, command_buttons' index; the combat block is 28 + e_combat_move
     enum e_player_button_command : i32 {
