@@ -118,6 +118,7 @@ namespace treyarch { namespace chuck { namespace vm {
         }
 
         // sub_83D760
+        // inlined @ sub_57D110
         i32 size() const {
             return (i32)array->size();
         }
