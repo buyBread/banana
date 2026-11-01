@@ -6,7 +6,6 @@
 #include "game/amalga/resource_handler.hh"
 #include "game/amalga/worldly_pack_slot.hh"
 #include "game/app.hh"
-#include "treyarch/chuck/vm/script_instance.hh"
 #include "game/als/animation_logic_system.hh"
 #include "game/event/event_manager.hh"
 #include "game/game.hh"
@@ -301,11 +300,6 @@ namespace treyarch {
         banana::log.msg("redirecting als_res_data::post_unmash_fixup (actor post-load setup)");
 
         if (!util::redirect_rel32(0x00629854, { 0xE8, 0x17, 0x57, 0xFC, 0xFF }, &als::als_res_data::post_unmash_fixup))
-            FATAL_BREAKPOINT();
-
-        banana::log.msg("redirecting script_instance::run_single_thread_until_finished");
-
-        if (!util::redirect_rel32(0x00A1CE06, { 0xE8, 0xF5, 0x1D, 0x00, 0x00 }, &chuck::vm::script_instance::run_single_thread_until_finished))
             FATAL_BREAKPOINT();
 
         banana::log.msg("redirecting spawn_table_manager creation (region_spawn_manager)");
