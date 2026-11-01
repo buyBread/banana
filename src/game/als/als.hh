@@ -22,6 +22,7 @@ namespace treyarch {
     class animation_controller;
     class entity;
     struct anim_event_param;
+    struct hit_react_record;
 
     using nal_anim_id = tl_fixed_string;
 
@@ -117,10 +118,10 @@ namespace treyarch {
             virtual bool is_cat_our_prev_cat(category_id test_category) const = 0;
             virtual bool is_requesting_category(category_id requested_category) const = 0;
 
-            virtual bool          unk_045() const = 0;
-            virtual u32           get_num_unk_44() const = 0;
-            virtual state_unk_44* get_unk_44(u32 index) const = 0;
-            virtual void*         unk_048(bool unk, entity* the_entity) const = 0;
+            virtual bool              unk_045() const = 0;
+            virtual u32               get_num_unk_44() const = 0;
+            virtual state_unk_44*     get_unk_44(u32 index) const = 0;
+            virtual hit_react_record* unk_048(bool second_react, entity* the_entity) const = 0;
         };
 
         class animation_logic_system_interface {

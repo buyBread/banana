@@ -136,7 +136,7 @@ i32 als::state::get_mash_sizeof() const {
 }
 
 // sub_5D4760
-void* als::state::unk_048(bool unk, entity* the_entity) const {
+hit_react_record* als::state::unk_048(bool second_react, entity* the_entity) const {
     string_hash combat_id;
     string_hash group;
 
@@ -172,17 +172,17 @@ void* als::state::unk_048(bool unk, entity* the_entity) const {
         }
     }
 
-    void* by_group = nullptr;
-    void* unnamed  = nullptr;
+    hit_react_record* by_group = nullptr;
+    hit_react_record* unnamed  = nullptr;
 
-    for (state_unk_58* record : unk ? unk_6c : unk_58) {
+    for (state_unk_58* record : second_react ? unk_6c : unk_58) {
         if (combat_id != string_hash() && combat_id == record->unk_00)
-            return &record->unk_04;
+            return (hit_react_record*)&record->unk_04;
 
         if (group != string_hash() && !by_group && group == record->unk_00)
-            by_group = &record->unk_04;
+            by_group = (hit_react_record*)&record->unk_04;
         else if (!unnamed && record->unk_00 == string_hash())
-            unnamed = &record->unk_04;
+            unnamed = (hit_react_record*)&record->unk_04;
     }
 
     return by_group ? by_group : unnamed;

@@ -161,10 +161,10 @@ namespace treyarch { namespace als {
         bool is_cat_our_prev_cat(category_id test_category) const override;
         bool is_requesting_category(category_id requested_category) const override;
 
-        bool          unk_045() const override;
-        u32           get_num_unk_44() const override;
-        state_unk_44* get_unk_44(u32 index) const override;
-        void*         unk_048(bool unk, entity* the_entity) const override;
+        bool              unk_045() const override;
+        u32               get_num_unk_44() const override;
+        state_unk_44*     get_unk_44(u32 index) const override;
+        hit_react_record* unk_048(bool second_react, entity* the_entity) const override;
 
         virtual mash::string get_signal_times_string(string_hash signal_name, bool in_frames) const; // ", "-separated, frames at 30 a second
         virtual mash::string get_last_transition_string() const;

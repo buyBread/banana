@@ -1,3 +1,5 @@
+#include <windows.h>
+
 #include "retail.hh"
 #include "game/als/als.hh"
 #include "game/cutscene/cut_scene_player.hh"
@@ -136,6 +138,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_99AA90
 // inlined @ sub_9922E0
 // inlined @ sub_992A60
+// inlined @ sub_4C5590
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -740,6 +743,49 @@ void ai_core::post_pending_sound_event() {
     }
 
     unk_628 = false;
+}
+
+// sub_4C5590
+void ai_core::spawn_hit_pause_effect() {
+    auto* my_als = (als_inode*)get_info_node(info_node_type_als);
+
+    if (!my_als)
+        return;
+
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    string_hash effect = my_als->get_optional_als_pb_hash(hit_pause_effect_key, none, als::base_layer, nullptr);
+
+    none.initialize(mash::ALLOCATED);
+
+    if (effect != none)
+        my_actor->spawn_effect(effect, 0);
+}
+
+// sub_402A00
+bool ai_core::wait_for_other_ai_retrying(ai_core* asker, ai_core* core, i32 tries, i32* answer) {
+    i32 last_answer = 0;
+
+    // a refusal of 2 or 3 isn't retried
+    while (tries > 0) {
+        if (retail::sub_4CDEC0((i32*)asker, (i32*)core, (u32*)&last_answer)) // wait_for_other_ai
+            break;
+
+        if (last_answer == 3 || last_answer == 2)
+            break;
+
+        if (--tries <= 0)
+            break;
+
+        Sleep(0);
+        Sleep(0);
+    }
+
+    if (answer)
+        *answer = last_answer;
+
+    return last_answer == 1;
 }
 
 // sub_4C53F0

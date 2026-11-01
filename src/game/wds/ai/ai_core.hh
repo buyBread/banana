@@ -37,9 +37,9 @@ namespace treyarch {
 
         ai_core_flag_hanging_from_pole = 0x00002000,
 
-        ai_core_flag_seated_in_car = 0x00010000, // the actor's base als state says so
-        ai_core_flag_unk_00020000  = 0x00020000, // hold_hostage_state sets it on the hostage
-        ai_core_flag_unk_00040000  = 0x00040000  // cleared by the combat frame as a move starts
+        ai_core_flag_seated_in_car    = 0x00010000, // the actor's base als state says so
+        ai_core_flag_unk_00020000     = 0x00020000, // hold_hostage_state sets it on the hostage
+        ai_core_flag_attack_connected = 0x00040000  // set by combat_state::hit_target, cleared by the combat frame as a move starts
     };
 
     enum e_ai_core_mode : u32 {
@@ -53,6 +53,8 @@ namespace treyarch {
     inline const string_hash tether_radius_key = string_hash(hash::djb2("TETHER_RADIUS"));
 
     inline const string_hash path_graph_key = string_hash(hash::djb2("PATH_GRAPH"));
+
+    inline const string_hash hit_pause_effect_key = string_hash(hash::djb2("hit_pause_effect"));
 
     struct ai_core_list;
 
@@ -205,6 +207,9 @@ namespace treyarch {
 
         void stop_looping_effects();
         void post_pending_sound_event();
+        void spawn_hit_pause_effect(); // the als's hit_pause_effect on the actor
+
+        static bool wait_for_other_ai_retrying(ai_core* asker, ai_core* core, i32 tries, i32* answer); // only an answer of 1 succeeds
 
         bool should_be_in_limbo() const;
         void enter_limbo();

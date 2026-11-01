@@ -494,11 +494,11 @@ als::state_unk_44* als::state_machine::get_unk_44(u32 index) const {
 }
 
 // sub_5E0980
-void* als::state_machine::unk_048(bool unk, entity* the_entity) const {
+hit_react_record* als::state_machine::unk_048(bool second_react, entity* the_entity) const {
     if (!curr_state)
         return nullptr;
 
-    return curr_state->unk_048(unk, the_entity);
+    return curr_state->unk_048(second_react, the_entity);
 }
 
 // sub_5D5B50

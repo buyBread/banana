@@ -22,9 +22,10 @@ namespace treyarch {
         damage_ifc_flag_stunned                     = 0x00000800,
         damage_ifc_flag_unk_00001000                = 0x00001000, // the hero's hits still count at 0 hit points
         damage_ifc_flag_dealt_damage_this_frame     = 0x02000000,
-        damage_ifc_flag_unk_08000000                = 0x08000000, // lets a non-interruptable combat move be broken; the combat frame clears it
-        damage_ifc_flag_unk_10000000                = 0x10000000, // the hero's update_attacks skips the dodge while set
-        damage_ifc_flag_unk_40000000                = 0x40000000, // hold_hostage_state sets it on both actors
+        damage_ifc_flag_combat_combo_breaker        = 0x08000000, // lets a non-interruptable combat move be broken; the combat frame clears it
+        damage_ifc_flag_combat_invulnerable         = 0x10000000, // combat_state::hit_target skips it; the hero's update_attacks skips the dodge
+        damage_ifc_flag_combat_engaged              = 0x20000000, // a combo_breaker hit sets combat_combo_breaker only while it's set
+        damage_ifc_flag_unk_40000000                = 0x40000000, // only the hero's combat hits land; hold_hostage_state sets it on both actors
         damage_ifc_flag_die_on_fall_damage          = 0x80000000
     };
 
@@ -248,6 +249,9 @@ namespace treyarch {
     namespace references {
         // what the last damage_interface::find_damageable found
         inline util::memory_reference<vc8::list<damage_interface*>*> found_damageable { 0x00FFE5FC };
+
+        // one of the debug damage modes' flags; combat hits skip the hero while it's set
+        inline util::memory_reference<bool> unk_00ffeab6 { 0x00FFEAB6 };
     } // references
 
     ASSERT_SIZEOF  (damage_info,         0x74);

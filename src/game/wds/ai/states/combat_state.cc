@@ -25,6 +25,8 @@
 #include "game/als/internal.hh"
 #include "game/als/mocomp.hh"
 #include "game/als/state_machine.hh"
+#include "game/event/anim_event.hh"
+#include "game/event/default_callbacks.hh"
 #include "game/animation/animation_controller.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
 #include "game/script/script_access.hh"
@@ -320,7 +322,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
     if (!chain_runs                                                                                          &&
         combo_move                                                                                           &&
         (combo_move->flags_1 & combo_flag_non_interruptable || combo_move->flags_1 & combo_flag_unbreakable) &&
-        !(get_actor()->has_ifc(entity_ifc_damage) && get_actor()->damage_ifc()->flags & damage_ifc_flag_unk_08000000)) {
+        !(get_actor()->has_ifc(entity_ifc_damage) && get_actor()->damage_ifc()->flags & damage_ifc_flag_combat_combo_breaker)) {
 
         switch (the_exit_code) {
             case state_exit_code_death:
@@ -551,7 +553,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
             if (transitioned) {
                 my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_button_held_through_state, 1.0f);
 
-                get_actor()->get_ai_core()->flags &= ~ai_core_flag_unk_00040000;
+                get_actor()->get_ai_core()->flags &= ~ai_core_flag_attack_connected;
 
                 if (combo_move && combo_move->unk_18 & combo_unk_18_flag_00008000)
                     hit_dilation_pending = false;
@@ -924,7 +926,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
     signal_flags = 0;
 
     if (get_actor()->has_ifc(entity_ifc_damage))
-        get_actor()->damage_ifc()->flags &= ~damage_ifc_flag_unk_08000000;
+        get_actor()->damage_ifc()->flags &= ~damage_ifc_flag_combat_combo_breaker;
 
     if (cmbt)
         cmbt->set_script_chain_size(chain_size);
@@ -1975,24 +1977,464 @@ bool combat_state::check_for_target_hit(      entity*           target,
     return unk_049(target, combo_move, my_als, cmbt, connect_point);
 }
 
-// slot 53
+// sub_41DD80
 bool combat_state::hit_target(      entity*           target,
                               const combo_move_data*  combo_move,
                                     als_inode*        my_als,
                                     cpu_combat_inode* cmbt,
                                     vector3d*         connect_point) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                const combo_move_data*,
-                                als_inode*,
-                                cpu_combat_inode*,
-                                vector3d*))retail::sub_41DD80)(this,
-                                                               target,
-                                                               combo_move,
-                                                               my_als,
-                                                               cmbt,
-                                                               connect_point);
+    als::layer_id layer       = get_combat_layer();
+    ai_core*      target_core = target && target->is_an_actor() ? ((actor*)target)->get_ai_core() : nullptr;
+
+    attack_missed = true;
+
+    i32 wait_answer;
+
+    if (target_core && !ai_core::wait_for_other_ai_retrying(get_core(), target_core, 10, &wait_answer))
+        return false;
+
+    bool hit = target                                                                                                   &&
+               target != get_actor()                                                                                    &&
+               target->has_ifc(entity_ifc_damage)                                                                       &&
+               !(target->damage_ifc()->flags & damage_ifc_flag_combat_invulnerable)                                     &&
+               (retail::sub_601C50((u32*)get_actor()) || !(target->damage_ifc()->flags & damage_ifc_flag_unk_40000000)) && // entity_base::is_hero
+               !(target->ext_flags & entity_ext_flag_invulnerable)                                                      &&
+               (!retail::sub_601C50((u32*)target) || !references::unk_00ffeab6.read());
+
+    // the target is read even when it's null
+    i32      damage      = get_damage(combo_move, target->my_handle);
+    i32      damage_type = get_damage_type(combo_move, target->my_handle);
+    vector3d blast       = unk_035(combo_move, target->my_handle);
+
+    chuck::vm::script_instance* inst = nullptr;
+
+    if (hit) {
+        inst = script::get_instance(combat_script_inst);
+
+        if (inst && allow_target_hit_func_id != -1) {
+            chuck::vm::vm_thread* thread = script::create_thread(allow_target_hit_func_id, inst, get_actor());
+
+            script::push_entity(thread, target);
+            script::push_value(thread, current_targets->array);
+            script::push_value(thread, combat_anim_values->array);
+
+            f32 allowed = 1.0f;
+
+            script::run_thread_with_return(thread, &allowed);
+
+            if (!(allowed > 0.0001f))
+                hit = false;
+        }
+    }
+
+    if (hit) {
+        static const string_hash force_first_target_hit_as_primary_target_key = string_hash(hash::djb2("force_first_target_hit_as_primary_target"));
+
+        // the attack window's first target
+        if (already_hit_targets->empty()) {
+            arch_base_vhandle first = target->my_handle;
+
+            if (combo_move->unk_18 & combo_unk_18_flag_00001000) {
+                if (current_targets->empty()) {
+                    current_targets->push_back(first);
+
+                    unk_063(my_als, (entity*)first.resolve());
+                } else if (!(combo_move->flags_2 & combo_flag_sync_anim) && target->my_handle != *current_targets->begin()) {
+                    auto end = current_targets->end();
+
+                    for (auto position = ++current_targets->begin(); position != end; ++position) {
+                        if (*position == target->my_handle) {
+                            current_targets->erase(position);
+                            break;
+                        }
+                    }
+
+                    current_targets->push_front(first);
+
+                    i32 max_targets = combo_move->get_max_targets(nullptr);
+
+                    if (current_targets->size() > max_targets)
+                        current_targets->pop_back();
+
+                    unk_063(my_als, (entity*)first.resolve());
+                }
+            }
+
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_first_target_hit_this_frame, 1.0f);
+        }
+
+        if (!combo_move || !(combo_move->unk_18 & combo_unk_18_flag_00000400))
+            already_hit_targets->push_back(target->my_handle);
+
+        if (combo_move && get_actor()->has_ifc(entity_ifc_player) && combo_move->unk_14 & combo_unk_14_flag_00000040)
+            get_actor()->player_ifc()->unk_514(target->my_handle);
+
+        hit = !check_for_dodge(target, chain_size, combo_move, nullptr, nullptr, 4, cmbt);
+
+        if (hit) {
+            if (combo_move) {
+                if (combo_move->flags_2 & combo_flag_kill_sync_anim_on_hit) {
+                    if (target_core)
+                        retail::sub_4CC650((i32)get_core(), (u32*)target_core); // release_wait_for_other_ai
+
+                    kill_sync_anim(false);
+
+                    if (target_core)
+                        ai_core::wait_for_other_ai_retrying(get_core(), target_core, 10, &wait_answer);
+                }
+
+                if (combo_move->flags_2 & combo_flag_kill_buddy_combo_on_hit)
+                    kill_buddy_combo(false);
+            }
+
+            attack_connected = true;
+            attack_missed    = false;
+
+            hit_react_record* react        = my_als->my_als->get_als_layer(layer)->unk_048(false, target);
+            hit_react_record* second_react = my_als->my_als->get_als_layer(layer)->unk_048(true, target);
+
+            attack_blocked = check_for_block(target, chain_size, combo_move, react, nullptr, nullptr, 4, cmbt);
+
+            get_actor()->get_ai_core()->flags |= ai_core_flag_attack_connected;
+
+            bool             signal_exists;
+            anim_event_param param;
+
+            signal_exists = false;
+            param.type    = 0;
+
+            f32 time_to_signal = my_als->get_time_to_signal(references::hit_pause.read(), layer, &signal_exists, false, &param);
+
+            if (signal_exists && 0.0f >= time_to_signal) {
+                animation_controller* ctrl     = get_actor()->anim_ctrl;
+                f32                   duration = param.type == 2 ? *(f32*)&param.value : 0.15f;
+
+                ((void (__thiscall*)(animation_controller*, f32, f32))retail::sub_5AD320)(get_actor()->anim_ctrl,
+                                                                                          ctrl->get_anim_normalized_time(layer),
+                                                                                          duration); // animation_controller: hit pause
+
+                get_actor()->get_ai_core()->spawn_hit_pause_effect();
+            }
+
+            // a hit dilation signal still ahead, or one the move waits for, is left to the signal callback
+            signal_exists = false;
+            param.type    = 0;
+
+            time_to_signal = my_als->get_time_to_signal(references::hit_dilation.read(), layer, &signal_exists, false, &param);
+
+            if (signal_exists) {
+                if (!(0.0f >= time_to_signal) || hit_dilation_waits_for_signal)
+                    hit_dilation_pending = true;
+                else {
+                    if (param.type == 4)
+                        apply_hit_dilation_preset((i32)param.value, 1);
+                    else {
+                        combat_dilation_info info;
+
+                        info.duration = 0.125f;
+                        info.dilation = 0.15f;
+
+                        if (!get_actor()->has_ifc(entity_ifc_time))
+                            get_actor()->create_time_ifc();
+
+                        get_actor()->time_ifc()->set_combat_dilation(info);
+                    }
+
+                    get_actor()->get_ai_core()->spawn_hit_pause_effect();
+                }
+            }
+
+            signal_exists = false;
+            param.type    = 0;
+
+            time_to_signal = my_als->get_time_to_signal(references::hit_dilation_target.read(), layer, &signal_exists, false, &param);
+
+            if (signal_exists) {
+                if (!(0.0f >= time_to_signal) || hit_dilation_waits_for_signal)
+                    hit_dilation_pending = true;
+                else {
+                    if (param.type == 4)
+                        apply_hit_dilation_preset((i32)param.value, 2);
+                    else {
+                        combat_dilation_info info;
+
+                        info.duration = 0.125f;
+                        info.dilation = 0.15f;
+
+                        if (current_targets && current_targets->size() > 0)
+                            for (auto it = current_targets->begin(); it != current_targets->end(); ++it) {
+                                auto* dilated = (entity_base*)(*it).resolve();
+
+                                if (!dilated)
+                                    continue;
+
+                                if (!dilated->has_ifc(entity_ifc_time))
+                                    dilated->create_time_ifc();
+
+                                dilated->time_ifc()->set_combat_dilation(info);
+                            }
+                    }
+
+                    get_actor()->get_ai_core()->spawn_hit_pause_effect();
+                }
+            }
+
+            signal_exists = false;
+            param.type    = 0;
+
+            time_to_signal = my_als->get_time_to_signal(references::hit_dilation_world.read(), layer, &signal_exists, false, &param);
+
+            if (signal_exists) {
+                if (!(0.0f >= time_to_signal) || hit_dilation_waits_for_signal)
+                    hit_dilation_pending = true;
+                else {
+                    if (param.type == 4)
+                        apply_hit_dilation_preset((i32)param.value, 0);
+                    else {
+                        combat_dilation_info info;
+
+                        info.duration = 0.125f;
+                        info.dilation = 0.15f;
+
+                        ((time_interface*)retail::sub_968660((u32*)&references::g_world_ptr.read()->time_mgr))->set_combat_dilation(info); // wds_time_manager: the world's time interface
+                    }
+
+                    get_actor()->get_ai_core()->spawn_hit_pause_effect();
+                }
+            }
+
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_hit_target,       1.0f);
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_attack_connected, 1.0f);
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_attack_missed,    0.0f);
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_attack_dodged,    0.0f);
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_attack_blocked,   attack_blocked ? 1.0f : 0.0f);
+
+            i32 dealt = 0;
+
+            const vector3d &actor_position  = get_actor()->my_abs_po->get_position();
+            const vector3d &target_position = target->my_abs_po->get_position();
+
+            vector3d delta((f32)((f64)target_position.x - actor_position.x),
+                           (f32)((f64)target_position.y - actor_position.y),
+                           (f32)((f64)target_position.z - actor_position.z));
+
+            vector3d direction = math::unitize(delta);
+
+            if (!attack_blocked) {
+                f32 damage_value = (f32)damage;
+
+                (*combat_anim_values)[cmbt_damage]      = damage_value;
+                (*combat_anim_values)[cmbt_damage_type] = (f32)damage_type;
+
+                if (!inst || hit_target_func_id == -1) {
+                    bool friendly = false;
+
+                    if (combo_move->unk_10 & combo_unk_10_flag_00200000 && target_core) {
+                        auto their_team = (ai_team::e_team)retail::sub_42B120((i32)target_core);
+                        auto my_team    = (ai_team::e_team)retail::sub_42B120((i32)get_core());
+
+                        if (my_team != ai_team::num_teams && their_team != ai_team::num_teams && ai_team::is_friend(my_team, their_team))
+                            friendly = true;
+                    }
+
+                    if (retail::sub_4024A0((u32*)target) && !friendly) { // entity_base::has_damage_ifc
+                        damage_interface* their_damage = target->damage_ifc();
+                        string_hash       wounded      = combo_move->get_wounded_category(nullptr);
+
+                        dealt = their_damage->apply_damage_with_combo_web_damage(get_actor(),
+                                                                                 nullptr,
+                                                                                 damage,
+                                                                                 8,
+                                                                                 damage_type,
+                                                                                 react,
+                                                                                 second_react,
+                                                                                 &get_actor()->my_abs_po->get_position(),
+                                                                                 &direction,
+                                                                                 cancel_target_death_immunity ? 8 : 0,
+                                                                                 &wounded,
+                                                                                 &blast,
+                                                                                 num_rb_phys_bones,
+                                                                                 combo_move,
+                                                                                 nullptr,
+                                                                                 false);
+
+                        if (combo_move->flags_1 & combo_flag_combo_breaker && their_damage->flags & damage_ifc_flag_combat_engaged)
+                            their_damage->flags |= damage_ifc_flag_combat_combo_breaker;
+                    }
+                } else {
+                    // the script deals the damage
+                    chuck::vm::vm_thread* thread = script::create_thread(hit_target_func_id, inst, get_actor());
+
+                    script::push_entity(thread, target);
+                    script::push_value(thread, current_targets->array);
+                    script::push_value(thread, combat_anim_values->array);
+
+                    f32 script_damage = damage_value;
+
+                    script::run_thread_with_return(thread, &script_damage);
+
+                    dealt = (i32)((f64)script_damage + 0.5);
+
+                    if (combo_move->flags_1 & combo_flag_combo_breaker &&
+                        retail::sub_4024A0((u32*)target)               && // entity_base::has_damage_ifc
+                        target->damage_ifc()->flags & damage_ifc_flag_combat_engaged)
+
+                        target->damage_ifc()->flags |= damage_ifc_flag_combat_combo_breaker;
+                }
+
+                ai_team::add_attack_meter(get_core(), 1.0f);
+
+                if (target_core)
+                    ai_team::add_hurt_meter(target_core, 1.0f);
+            }
+
+            (*combat_anim_values)[cmbt_damage] = (f32)dealt;
+
+            if (attack_blocked) {
+                if (combo_move)
+                    spawn_sound_impact(combo_move, get_actor(), target, connect_point, dealt, true);
+
+                if (inst && spawn_blocked_fx_func_id != -1) {
+                    chuck::vm::vm_thread* thread = script::create_thread(spawn_blocked_fx_func_id, inst, get_actor());
+
+                    script::push_entity(thread, target);
+                    script::push_value(thread, *connect_point);
+                    script::push_value(thread, combat_anim_values->array);
+                    script::run_thread(thread);
+                }
+            } else {
+                if (combo_move)
+                    spawn_sound_impact(combo_move, get_actor(), target, connect_point, dealt, false);
+
+                ((bool (__cdecl*)(entity*, entity*, als_inode*, const vector3d*))retail::sub_4A2D00)(get_actor(), target, my_als, connect_point); // the hit effects
+            }
+
+            if (!attack_blocked && target->is_an_actor() && ((actor*)target)->get_ai_core()) {
+                auto* their_combat = (cpu_combat_inode*)((actor*)target)->get_ai_core()->get_info_node(info_node_type_cpu_combat);
+
+                if (their_combat)
+                    their_combat->unk_024(get_actor(), combo_move, nullptr, nullptr, 4, dealt);
+            }
+
+            if (cmbt) {
+                cmbt->flags = (cmbt->flags & ~cpu_combat_inode_flag_attack_missed) | cpu_combat_inode_flag_attack_connected;
+
+                cmbt->set_attack_blocked(attack_blocked);
+            }
+
+            // the hero gets what he hits to throw, held at the connect point or at a conglomerate's sync member nearest to it
+            if (target->has_ifc(entity_ifc_manip_obj) && retail::sub_601C50((u32*)get_actor()) && get_actor()->has_player_ifc()) {
+                get_actor()->player_ifc()->unk_064(target->my_handle);
+                get_actor()->player_ifc()->unk_066(*connect_point);
+
+                if (target->is_a_conglomerate()) {
+                    i32 nearest_index    = -1;
+                    f32 nearest_distance = 0.0f;
+
+                    for (i32 index = 0; index < 10; ++index) {
+                        const string_hash &bone = als::sync_bone_ids[index];
+
+                        if (!((conglomerate*)target)->has_member_for_linking(bone))
+                            continue;
+
+                        auto* member = ((entity* (__thiscall*)(entity*, const string_hash*))retail::sub_408F10)(target, &bone); // conglomerate::get_member_for_linking
+
+                        const vector3d &member_position = member->my_abs_po->get_position();
+
+                        vector3d offset((f32)((f64)connect_point->x - member_position.x),
+                                        (f32)((f64)connect_point->y - member_position.y),
+                                        (f32)((f64)connect_point->z - member_position.z));
+
+                        f32 distance = offset.length_float();
+
+                        if (nearest_distance > distance || nearest_index < 0) {
+                            nearest_distance = distance;
+                            nearest_index    = index;
+
+                            get_actor()->player_ifc()->unk_066(member->my_abs_po->get_position());
+                        }
+                    }
+                }
+            }
+        } else {
+            my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_combat_attack_dodged, 1.0f);
+
+            if (combo_move)
+                spawn_sound(combo_move,
+                            target,
+                            combo_move->get_dodged_sound_group(nullptr),
+                            &target->my_abs_po->get_position(),
+                            spawn_dodged_sound_func_id,
+                            nullptr);
+        }
+
+        // a landed hit, or a dodge that counts as one, stops both sides
+        if (hit || combo_move->flags_2 & combo_flag_dodge_counts_as_hit) {
+            if (target->has_ifc(entity_ifc_physical)) {
+                if (combo_move->flags_1 & combo_flag_target_connect_cancel_all_velocity)
+                    target->physical_ifc()->cancel_all_velocity(references::unk_00fc1ee0.get(), true);
+                else if (combo_move->get_target_cancel_velocity_dir(nullptr).length2_float() > 0.0001f) {
+                    bool both_dir = (combo_move->flags_1 & combo_flag_target_cancel_velocity_dir_both_ways) != 0;
+
+                    target->physical_ifc()->cancel_all_velocity(combo_move->get_target_cancel_velocity_dir(nullptr), both_dir);
+                }
+            }
+
+            if (get_actor()->has_ifc(entity_ifc_physical)) {
+                if (combo_move->flags_1 & combo_flag_self_connect_cancel_all_velocity)
+                    get_actor()->physical_ifc()->cancel_all_velocity(references::unk_00fc1ee0.get(), true);
+                else if (combo_move->get_self_cancel_velocity_dir(nullptr).length2_float() > 0.0001f) {
+                    bool both_dir = (combo_move->flags_1 & combo_flag_self_cancel_velocity_dir_both_ways) != 0;
+
+                    get_actor()->physical_ifc()->cancel_all_velocity(combo_move->get_self_cancel_velocity_dir(nullptr), both_dir);
+                }
+
+                // neither side standing: both take the larger velocity, per axis
+                if (combo_move->flags_1 & combo_flag_equalize_velocity                                                     &&
+                    !(get_actor()->has_ifc(entity_ifc_standing) && get_actor()->standing_ifc()->is_effectively_standing()) &&
+                    !(target->has_standing_ifc() && target->standing_ifc()->is_effectively_standing())) {
+
+                    vector3d increment = get_actor()->physical_ifc()->velocity_increment;
+                    vector3d velocity  = get_actor()->physical_ifc()->get_velocity();
+
+                    vector3d mine(increment.x + velocity.x,
+                                  increment.y + velocity.y,
+                                  increment.z + velocity.z);
+
+                    vector3d theirs;
+
+                    // the actor's velocity again, not the target's
+                    if (target->has_physical_ifc()) {
+                        increment = get_actor()->physical_ifc()->velocity_increment;
+                        velocity  = get_actor()->physical_ifc()->get_velocity();
+
+                        theirs = vector3d(increment.x + velocity.x,
+                                          increment.y + velocity.y,
+                                          increment.z + velocity.z);
+                    } else
+                        theirs = references::unk_00fc1ee0.get();
+
+                    if (theirs.length2_float() >= 0.01f) {
+                        f32 x = std::fabs(mine.x) > std::fabs(theirs.x) ? mine.x : theirs.x;
+                        f32 y = mine.y > theirs.y ? mine.y : theirs.y;
+                        f32 z = std::fabs(mine.z) <= std::fabs(theirs.z) ? theirs.z : mine.z;
+
+                        get_actor()->physical_ifc()->add_velocity_increment(vector3d(x - mine.x, y - mine.y, z - mine.z), false);
+
+                        if (target->has_physical_ifc())
+                            target->physical_ifc()->add_velocity_increment(vector3d(x - theirs.x, y - theirs.y, z - theirs.z), false);
+                    } else
+                        get_actor()->physical_ifc()->cancel_all_velocity(references::unk_00fc1ee0.get(), true);
+                }
+            }
+        }
+    }
+
+    if (target_core)
+        retail::sub_4CC650((i32)get_core(), (u32*)target_core); // release_wait_for_other_ai
+
+    return hit;
 }
 
 // slot 54
@@ -3003,7 +3445,7 @@ void combat_state::release_sync_target(actor* target) {
     if (ai_core* target_core = target->get_ai_core()) {
         i32 wait_result = 0;
 
-        if (retail::sub_402A00((i32)get_core(), (i32)target_core, 10, (u32*)&wait_result) || wait_result == 2) {
+        if (ai_core::wait_for_other_ai_retrying(get_core(), target_core, 10, &wait_result) || wait_result == 2) {
             target_core->pop_base_machine(get_sync_react_asg(target), true);
 
             if (wait_result == 1)

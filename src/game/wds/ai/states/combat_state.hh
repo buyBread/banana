@@ -206,7 +206,7 @@ namespace treyarch {
         combo_unk_10_flag_00010000 = 0x00010000, // AIR_HIT
         combo_unk_10_flag_00020000 = 0x00020000, // GROUND_HIT
         combo_unk_10_flag_00100000 = 0x00100000, // slot 26 takes the first target's up
-        combo_unk_10_flag_00200000 = 0x00200000, // the hero picks up a friendly ai he hits
+        combo_unk_10_flag_00200000 = 0x00200000, // no damage to a friendly ai; the hero picks it up
         combo_unk_10_flag_00800000 = 0x00800000  // the move looks for a wall ahead
     };
 
@@ -215,7 +215,7 @@ namespace treyarch {
         combo_unk_14_flag_00000001 = 0x00000001, // exit_attack_window clears standing flag 0x800
         combo_unk_14_flag_00000002 = 0x00000002, // exit_attack_window clears standing flag 0x1000
         combo_unk_14_flag_00000004 = 0x00000004, // exit_attack_window clears physical flag 0x200
-        combo_unk_14_flag_00000040 = 0x00000040, // slot 492, only when set
+        combo_unk_14_flag_00000040 = 0x00000040, // slot 492, only when set; hit_target hands slot 514 the target
         combo_unk_14_flag_00000200 = 0x00000200, // slot 506, only when set
         combo_unk_14_flag_00000400 = 0x00000400, // slot 175
         combo_unk_14_flag_00010000 = 0x00010000, // slot 512, only when set
@@ -230,6 +230,8 @@ namespace treyarch {
         combo_unk_18_flag_00000002 = 0x00000002, // slot 179
         combo_unk_18_flag_00000008 = 0x00000008, // the launch runs every frame, not only on an anim action
         combo_unk_18_flag_00000010 = 0x00000010, // the hero's hit adds nothing to meter 0
+        combo_unk_18_flag_00000400 = 0x00000400, // hit_target doesn't record the target in already_hit_targets
+        combo_unk_18_flag_00001000 = 0x00001000, // the attack window's first target hit becomes the primary target
         combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::hit_dilation_pending
     };
 
@@ -780,6 +782,11 @@ namespace treyarch {
         // raised on both sides of a sync anim or buddy combo
         inline util::memory_reference<string_hash> ai_combat_sync_begin { 0x0102CB9C };
         inline util::memory_reference<string_hash> ai_combat_sync_end   { 0x0102C674 };
+
+        // the hit time dilation signals on the actor, its targets and the world
+        inline util::memory_reference<string_hash> hit_dilation        { 0x0102C5DC };
+        inline util::memory_reference<string_hash> hit_dilation_target { 0x0102C61C };
+        inline util::memory_reference<string_hash> hit_dilation_world  { 0x0102C400 };
 
         // raised on a combat state's actor while its strength test runs
         inline util::memory_reference<string_hash> strength_test_finisher_in_range     { 0x0102C4D8 };

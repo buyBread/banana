@@ -293,9 +293,9 @@ namespace treyarch {
         virtual arch_base_vhandle unk_061();                           // rvb: its +0x728; a null handle in player_interface
         virtual void*             unk_062(void* unk);
         virtual i32               unk_063(i32 unk);
-        virtual i32               unk_064(i32 unk);
+        virtual i32               unk_064(arch_base_vhandle prop);     // the prop to throw; rvb: its +0x750
         virtual void*             unk_065(void* unk);
-        virtual void              unk_066(i32 unk, i32 unk_2, i32 unk_3);
+        virtual void              unk_066(vector3d attach_point);      // the prop to throw's attach point; rvb: its +0x744
         virtual i32               unk_067(i32 unk);
         virtual bool              unk_068(i32 unk);
         virtual bool              unk_069();
@@ -777,7 +777,7 @@ namespace treyarch {
         virtual bool              unk_511();
         virtual bool              unk_512(bool unk);
         virtual bool              unk_513(i32 unk);
-        virtual void*             unk_514(i32 unk);
+        virtual void*             unk_514(arch_base_vhandle target);   // rvb: appends it to +0x818 unless slot 513 has it
         virtual bool              is_in_wallmode();
         virtual i32               unk_516(i32 unk, void* unk_2, bool unk_3);
         virtual i32               unk_517();

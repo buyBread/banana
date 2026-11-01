@@ -315,8 +315,8 @@ i32 player_interface::unk_063(i32 unk) {
 }
 
 // slot 64
-i32 player_interface::unk_064(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+i32 player_interface::unk_064(arch_base_vhandle prop) {
+    return ((i32 (__thiscall*)(player_interface*, arch_base_vhandle))retail::sub_689610)(this, prop);
 }
 
 // slot 65
@@ -325,8 +325,8 @@ void* player_interface::unk_065(void* unk) {
 }
 
 // slot 66
-void player_interface::unk_066(i32 unk, i32 unk_2, i32 unk_3) {
-    ((void (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_7AE090)(this, unk, unk_2, unk_3);
+void player_interface::unk_066(vector3d attach_point) {
+    ((void (__thiscall*)(player_interface*, vector3d))retail::sub_7AE090)(this, attach_point);
 }
 
 // slot 67
@@ -1165,8 +1165,8 @@ void player_interface::update_attacks(f32 delta_t) {
             for (i32 i = 0; i < combat_num_moves; ++i)
                 if (i != combat_move_counter_attack && attacks[i])
                     attacks[i]->clear();
-        } else if (attacks[combat_move_dodge]                                         &&
-                   !(my_actor->damage_ifc()->flags & damage_ifc_flag_unk_10000000)     &&
+        } else if (attacks[combat_move_dodge]                                             &&
+                   !(my_actor->damage_ifc()->flags & damage_ifc_flag_combat_invulnerable) &&
                    attacks[combat_move_dodge]->update(combat_move_dodge,
                                                       this,
                                                       my_als,
@@ -1174,7 +1174,7 @@ void player_interface::update_attacks(f32 delta_t) {
                                                       &best_time,
                                                       combat_num_moves,
                                                       nullptr,
-                                                      nullptr)                         &&
+                                                      nullptr)                            &&
                    best_time >= 0.0f) {
 
             next_attack = combat_move_dodge;
@@ -2939,8 +2939,8 @@ bool player_interface::unk_513(i32 unk) {
 }
 
 // slot 514
-void* player_interface::unk_514(i32 unk) {
-    return ((void* (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void* player_interface::unk_514(arch_base_vhandle target) {
+    return ((void* (__thiscall*)(player_interface*, arch_base_vhandle))retail::sub_689610)(this, target);
 }
 
 // slot 515

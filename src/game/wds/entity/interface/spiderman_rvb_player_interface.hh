@@ -302,9 +302,9 @@ namespace treyarch {
         arch_base_vhandle unk_061() override;
         void*             unk_062(void* unk) override;
         i32               unk_063(i32 unk) override;
-        i32               unk_064(i32 unk) override;
+        i32               unk_064(arch_base_vhandle prop) override;
         void*             unk_065(void* unk) override;
-        void              unk_066(i32 unk, i32 unk_2, i32 unk_3) override;
+        void              unk_066(vector3d attach_point) override;
         i32               unk_067(i32 unk) override;
         bool              unk_068(i32 unk) override;
         bool              unk_069() override;
@@ -633,7 +633,7 @@ namespace treyarch {
         bool              unk_511() override;
         bool              unk_512(bool unk) override;
         bool              unk_513(i32 unk) override;
-        void*             unk_514(i32 unk) override;
+        void*             unk_514(arch_base_vhandle target) override;
         bool              is_in_wallmode() override;
         i32               unk_517() override;
         bool              unk_518(i32 unk) override;

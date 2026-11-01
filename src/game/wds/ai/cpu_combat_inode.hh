@@ -11,7 +11,9 @@
 namespace treyarch {
     class  ai_core;
     class  combo_move_data;
+    class  entity;
     class  entity_base;
+    class  weapon_interface_extender;
     struct cpu_combat_movement;
 
     // combat_state's move_transition sets the move bits, hit_target and the dodge and block slots the result bits
@@ -45,6 +47,29 @@ namespace treyarch {
         void set_script_strength_test_value(f32 value);
         void set_script_strength_test_status(f32 status);
         void set_attack_blocked(bool blocked);
+
+        // slot 24; an attacker's hit landed on the inode's actor, the script hears of it
+        void unk_024(      entity_base*               attacker,
+                     const combo_move_data*           combo_move,
+                           weapon_interface_extender* weapon,
+                           entity*                    weapon_entity,
+                           i32                        usage_type,
+                           i32                        damage) {
+
+            ((void (__thiscall*)(cpu_combat_inode*,
+                                 entity_base*,
+                                 const combo_move_data*,
+                                 weapon_interface_extender*,
+                                 entity*,
+                                 i32,
+                                 i32))(*(void***)this)[24])(this,
+                                                            attacker,
+                                                            combo_move,
+                                                            weapon,
+                                                            weapon_entity,
+                                                            usage_type,
+                                                            damage);
+        }
 
         // slot 25; what add_incoming_attack calls on the target's inode
         bool unk_025(entity_base* attacker, const combo_move_data* combo_move, i32 chain_position) {
