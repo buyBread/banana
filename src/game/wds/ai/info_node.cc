@@ -14,6 +14,83 @@ actor* info_node::get_actor() const {
     return my_ai_core->my_actor;
 }
 
+als::category_id als_inode::get_category_id(als::layer_id the_layer) {
+    als::category_id cat;
+
+    ((als::category_id* (__thiscall*)(als_inode*, als::category_id*, als::layer_id))retail::sub_409930)(this, &cat, the_layer);
+
+    return cat;
+}
+
+const combo_move_data* als_inode::get_combo_move(als::layer_id the_layer) {
+    return ((const combo_move_data* (__thiscall*)(als_inode*, als::layer_id))retail::sub_44F330)(this, the_layer);
+}
+
+bool als_inode::anim_finished(als::category_id cat, als::layer_id the_layer, bool allow_looping, bool ignore_time) {
+    return ((bool (__thiscall*)(als_inode*, als::category_id, als::layer_id, bool, bool))retail::sub_44F1F0)(this,
+                                                                                                           cat,
+                                                                                                           the_layer,
+                                                                                                           allow_looping,
+                                                                                                           ignore_time);
+}
+
+void als_inode::request_category_transition(als::category_id cat,
+                                            als::layer_id    layer,
+                                            bool             should_succeed,
+                                            bool             is_master_request,
+                                            bool             ingore_same_cat_request_protection,
+                                            bool             unk) {
+
+    ((void (__thiscall*)(als_inode*,
+                         als::category_id,
+                         als::layer_id,
+                         bool,
+                         bool,
+                         bool,
+                         bool))retail::sub_457B20)(this,
+                                                   cat,
+                                                   layer,
+                                                   should_succeed,
+                                                   is_master_request,
+                                                   ingore_same_cat_request_protection,
+                                                   unk);
+}
+
+f32 als_inode::get_time_to_signal(string_hash       evt,
+                                  als::layer_id     the_layer,
+                                  bool*             signal_exists,
+                                  bool              scale_by_speed,
+                                  anim_event_param* param) {
+
+    return ((f32 (__thiscall*)(als_inode*,
+                               string_hash,
+                               als::layer_id,
+                               bool*,
+                               bool,
+                               anim_event_param*))retail::sub_44F390)(this,
+                                                                      evt,
+                                                                      the_layer,
+                                                                      signal_exists,
+                                                                      scale_by_speed,
+                                                                      param);
+}
+
+i32 als_inode::get_optional_als_pb_int(const string_hash   &parameter,
+                                       const i32           &default_value,
+                                             als::layer_id  the_layer,
+                                             bool*          exists) const {
+
+    return ((i32 (__thiscall*)(const als_inode*,
+                               const string_hash*,
+                               const i32*,
+                               als::layer_id,
+                               bool*))retail::sub_44F510)(this,
+                                                          &parameter,
+                                                          &default_value,
+                                                          the_layer,
+                                                          exists);
+}
+
 // sub_450480
 void loco_inode::set_needs_repathfind(bool needs_it, bool latch) {
     needs_repathfind = needs_it;
@@ -86,11 +163,11 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
         string_hash carry;
         carry.initialize(mash::ALLOCATED, "Carry");
 
-        retail::sub_457B20((u32*)master_als, (i32)carry.source_hash_code, 9, 1, 0, nullptr, 0);
+        master_als->request_category_transition(carry, (als::layer_id)9, true, false, false, false);
 
         if (slave_als) {
-            auto* master_logic = (als::animation_logic_system_interface*)master_als->my_als;
-            auto* slave_logic  = (als::animation_logic_system_interface*)slave_als->my_als;
+            auto* master_logic = master_als->my_als;
+            auto* slave_logic  = slave_als->my_als;
 
             slave_logic ->set_coordinator(master_logic, 0);
             master_logic->set_coordinator(master_logic, 0);
@@ -101,14 +178,14 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
     bone = references::bip01_r_clavicle.read();
 
     if (slave_als) {
-        auto* slave_logic = (als::animation_logic_system_interface*)slave_als->my_als;
+        auto* slave_logic = slave_als->my_als;
 
         engine_lock_scope als_scope(slave_logic->get_access_lock());
 
         string_hash carried_sync;
         carried_sync.initialize(mash::ALLOCATED, "Carried_Sync");
 
-        retail::sub_457B20((u32*)slave_als, (i32)carried_sync.source_hash_code, 9, 1, 1, nullptr, 0);
+        slave_als->request_category_transition(carried_sync, (als::layer_id)9, true, true, false, false);
         slave_logic->force_update(0.0001f, true);
 
         string_hash carry_bone;
@@ -125,7 +202,7 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
         string_hash carried;
         carried.initialize(mash::ALLOCATED, "Carried");
 
-        retail::sub_457B20((u32*)slave_als, (i32)carried.source_hash_code, 9, 1, 1, nullptr, 0);
+        slave_als->request_category_transition(carried, (als::layer_id)9, true, true, false, false);
         slave_logic->force_update(0.0001f, true);
     } else
         attach_slave(slave, bone);

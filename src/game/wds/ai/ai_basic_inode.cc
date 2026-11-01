@@ -6,6 +6,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_vehicle.hh"
 #include "game/wds/ai/info_node.hh"
+#include "game/wds/ai/states/combat_state.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/vehicle.hh"
@@ -406,14 +407,14 @@ bool treyarch::rvb_is_crawling(arch_base* the_entity) {
 
         return true;
 
-    info_node* als_node = the_actor->get_ai_core()->get_info_node(info_node_type_als);
+    auto* als_node = (als_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_als);
 
     if (!als_node)
         return false;
 
-    auto move = (u8*)retail::sub_44F330((u32**)als_node, 0); // als_inode: the current combo move
+    const combo_move_data* move = als_node->get_combo_move(als::base_layer);
 
-    return move && (*(u32*)(move + 0x10) & 0x8000);
+    return move && (move->unk_10 & combo_unk_10_flag_00008000);
 }
 
 // sub_4C77E0
@@ -426,7 +427,7 @@ arch_base_vhandle treyarch::rvb_get_animation_coordinator(arch_base* the_entity)
     if (!als_node)
         return arch_base_vhandle();
 
-    auto the_als = (als::animation_logic_system_interface*)als_node->my_als;
+    auto the_als = als_node->my_als;
 
     if (!the_als->has_coordinator())
         return arch_base_vhandle();

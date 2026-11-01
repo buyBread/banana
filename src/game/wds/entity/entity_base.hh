@@ -156,6 +156,16 @@ namespace treyarch {
             return has_ifc(entity_ifc_standing);
         }
 
+        // sub_402500
+        bool has_player_ifc() const {
+            return has_ifc(entity_ifc_player);
+        }
+
+        // sub_402520
+        bool has_combo_ifc() const {
+            return has_ifc(entity_ifc_combo);
+        }
+
         // sub_48E6E0
         bool has_occupant_ifc() const {
             return has_ifc(entity_ifc_occupant);

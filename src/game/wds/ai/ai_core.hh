@@ -38,7 +38,8 @@ namespace treyarch {
         ai_core_flag_hanging_from_pole = 0x00002000,
 
         ai_core_flag_seated_in_car = 0x00010000, // the actor's base als state says so
-        ai_core_flag_unk_00020000  = 0x00020000  // hold_hostage_state sets it on the hostage
+        ai_core_flag_unk_00020000  = 0x00020000, // hold_hostage_state sets it on the hostage
+        ai_core_flag_unk_00040000  = 0x00040000  // cleared by the combat frame as a move starts
     };
 
     enum e_ai_core_mode : u32 {

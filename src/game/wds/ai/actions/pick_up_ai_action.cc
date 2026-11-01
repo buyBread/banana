@@ -60,7 +60,7 @@ void pick_up_ai_action::activate() {
         string_hash picked_up_by_ai;
         picked_up_by_ai.initialize(mash::ALLOCATED, "Picked_Up_By_AI");
 
-        retail::sub_457B20((u32*)target_als, (i32)picked_up_by_ai.source_hash_code, 9, 1, 1, nullptr, 0);
+        target_als->request_category_transition(picked_up_by_ai, (als::layer_id)9, true, true, false, false);
     }
 
     the_target->raise_event(references::begin_pick_up.read());

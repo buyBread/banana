@@ -19,6 +19,7 @@ namespace treyarch {
         damage_ifc_flag_stunned                     = 0x00000800,
         damage_ifc_flag_unk_00001000                = 0x00001000, // the hero's hits still count at 0 hit points
         damage_ifc_flag_dealt_damage_this_frame     = 0x02000000,
+        damage_ifc_flag_unk_08000000                = 0x08000000, // lets a non-interruptable combat move be broken; the combat frame clears it
         damage_ifc_flag_unk_40000000                = 0x40000000, // hold_hostage_state sets it on both actors
         damage_ifc_flag_die_on_fall_damage          = 0x80000000
     };

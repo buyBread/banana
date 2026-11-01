@@ -170,6 +170,7 @@ namespace treyarch {
         }
 
         // inlined @ sub_5745C0
+        // inlined @ sub_41F860
         bool triggered_or_missed_press(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;

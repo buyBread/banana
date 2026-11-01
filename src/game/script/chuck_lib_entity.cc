@@ -207,7 +207,7 @@ void treyarch::update_als_facing(entity* self) {
     retail::sub_4029D0((u32**)node, als::param_desired_forward_vector, (i32)&self->my_abs_po->get_z_facing(), 0); // als_inode::set_desired_param
 
     if (node->my_als)
-        ((als::animation_logic_system_interface*)node->my_als)->force_matrix_update();
+        node->my_als->force_matrix_update();
 }
 
 void treyarch::set_or_move_rel_position(entity* self, const vector3d* position, bool set, f32 camera_priority) {
@@ -8375,7 +8375,7 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
                   !self->standing_ifc()->is_effectively_standing())))
 
                 result = self->physical_ifc()->get_velocity();
-            else if (retail::sub_402500((u32*)self)) // has_player_ifc
+            else if (self->has_player_ifc())
                 result = *self->player_ifc()->unk_095();
             else
                 retail::sub_614190((u32*)self, (f32*)&result);

@@ -474,7 +474,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
         unk_573();
 
     if (auto* als_node = (als_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_als)) {
-        auto* als = (als::animation_logic_system_interface*)als_node->my_als;
+        auto* als = als_node->my_als;
 
         if (unk_0530) {
             als->get_als_layer(als::base_layer)->set_desired_param(als::param_player_in_blacksuit_mode, 1.0f);

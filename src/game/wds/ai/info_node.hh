@@ -23,6 +23,7 @@
 namespace treyarch {
     class actor;
     class ai_core;
+    class combo_move_data;
     class manip_obj_interface;
     struct ped_path;
 
@@ -122,8 +123,31 @@ namespace treyarch {
     class als_inode : public info_node {
 
     public:
-        void* my_als; // als::animation_logic_system_interface
-        u32   unk_034;
+        als::animation_logic_system_interface* my_als;
+        u32                                    unk_034;
+
+        als::category_id       get_category_id(als::layer_id the_layer);
+        const combo_move_data* get_combo_move (als::layer_id the_layer);
+
+        bool anim_finished(als::category_id cat, als::layer_id the_layer, bool allow_looping, bool ignore_time);
+
+        void request_category_transition(als::category_id cat,
+                                         als::layer_id    layer,
+                                         bool             should_succeed,
+                                         bool             is_master_request,
+                                         bool             ingore_same_cat_request_protection,
+                                         bool             unk);
+
+        f32 get_time_to_signal(string_hash       evt,
+                               als::layer_id     the_layer,
+                               bool*             signal_exists,
+                               bool              scale_by_speed,
+                               anim_event_param* param);
+
+        i32 get_optional_als_pb_int(const string_hash   &parameter,
+                                    const i32           &default_value,
+                                          als::layer_id  the_layer,
+                                          bool*          exists) const;
     };
 
     inline const string_hash currently_using_swift_key      = string_hash(hash::djb2("currently_using_swift"));

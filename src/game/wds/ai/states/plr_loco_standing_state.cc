@@ -258,9 +258,9 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
 
             auto* als_node = (als_inode*)get_core()->get_info_node(info_node_type_als);
 
-            if (((als::animation_logic_system_interface*)als_node->my_als)->get_als_layer(als::base_layer)->did_transition_succeed()) {
+            if (als_node->my_als->get_als_layer(als::base_layer)->did_transition_succeed()) {
                 i32 none         = 0;
-                i32 delay_frames = retail::sub_44F510((u32**)als_node, (u32*)&delay_standing_frames_key, (i32)&none, 0, 0); // als_inode::get_optional_pb_int
+                i32 delay_frames = als_node->get_optional_als_pb_int(delay_standing_frames_key, none, als::base_layer, nullptr);
 
                 if (delay_frames && get_actor()->has_ifc(entity_ifc_standing)) {
                     get_actor()->standing_ifc()->flags |= standing_interface_flag_enabled;

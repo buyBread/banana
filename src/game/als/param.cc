@@ -198,13 +198,13 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_jump_charge:
-            if (!retail::sub_402500((u32*)the_actor)) // has_player_ifc
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_149();
 
         case param_active_jump_charge:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_148();
@@ -228,67 +228,67 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             return (f32)retail::sub_5BABD0((u32*)the_actor->damage_ifc());
 
         case param_swing_time:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_374();
 
         case param_swing_to_anchor_angle:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_429();
 
         case param_swing_angle:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 270.0f;
 
             return the_actor->player_ifc()->unk_425();
 
         case param_swing_side_angle:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_427();
 
         case param_swing_hand:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return -1.0f;
 
             return (f32)the_actor->player_ifc()->unk_401();
 
         case param_swing_entry_speed:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_432();
 
         case param_swing_exit_speed:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_433();
 
         case param_trick_window:
-            if (!retail::sub_402500((u32*)the_actor) || !the_actor->player_ifc()->unk_152())
+            if (!the_actor->has_player_ifc() || !the_actor->player_ifc()->unk_152())
                 return 0.0f;
 
             return 1.0f;
 
         case param_max_trick_combo:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return (f32)the_actor->player_ifc()->unk_154();
 
         case param_blacksuit_swing_window:
-            if (!retail::sub_402500((u32*)the_actor) || !the_actor->player_ifc()->unk_150())
+            if (!the_actor->has_player_ifc() || !the_actor->player_ifc()->unk_150())
                 return 0.0f;
 
             return 1.0f;
 
         case param_swing_level_rating:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 1.0f;
 
             return the_actor->player_ifc()->unk_403();
@@ -303,7 +303,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (carry && carry->is_carrying())
                 return 1.0f;
 
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return -1.0f;
 
             if (the_actor->player_ifc()->get_mode() == 21 || the_actor->player_ifc()->get_mode() == 22)
@@ -325,19 +325,19 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_smoothed_speed:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_095()->length_float();
 
         case param_smoothed_lateral_speed:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_095()->xz_length_float();
 
         case param_smoothed_vertical_speed:
-            if (!retail::sub_402500((u32*)the_actor))
+            if (!the_actor->has_player_ifc())
                 return 0.0f;
 
             return the_actor->player_ifc()->unk_095()->y;
@@ -1066,7 +1066,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                 return *(vector3d*)(*(u8**)(body + 0xB4) + 0xD0);
             }
 
-            if (retail::sub_402500((u32*)the_actor)) // has_player_ifc
+            if (the_actor->has_player_ifc())
                 return *the_actor->player_ifc()->unk_095();
 
             vector3d velocity;
@@ -1247,7 +1247,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
 
             // the coordinator's actor's carry while it holds someone, else its own
             if (auto* als_node = (als_inode*)core->get_info_node(info_node_type_als)) {
-                auto* node_als = (animation_logic_system_interface*)als_node->my_als;
+                auto* node_als = als_node->my_als;
 
                 if (node_als->has_coordinator()) {
                     ai_core* other_core = node_als->get_coordinator()->get_actor()->get_ai_core();
@@ -1323,7 +1323,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
             }
 
             // a player's: the car behind unk_473, else the vehicle behind unk_061
-            if (!retail::sub_402500((u32*)the_actor)) // has_player_ifc
+            if (!the_actor->has_player_ifc())
                 break;
 
             arch_base* car = the_actor->player_ifc()->unk_473().resolve();

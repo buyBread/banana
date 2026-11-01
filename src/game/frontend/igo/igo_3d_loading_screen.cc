@@ -68,7 +68,7 @@ void igo_3d_loading_screen::update(f32 time_inc) {
             } else {
                 entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
-                if (hero && retail::sub_402500((u32*)hero)) // has_player_ifc
+                if (hero && hero->has_player_ifc())
                     hero->player_ifc()->unk_4b8 = 0.0f;
 
                 fade = 0.0f;

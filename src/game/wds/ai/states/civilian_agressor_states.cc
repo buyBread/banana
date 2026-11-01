@@ -81,7 +81,7 @@ void hold_hostage_state::activate(      ai_state_machine* the_state_machine,
         auto* victim_als = (als_inode*)((info_node*)retail::sub_4941F0(agressor))->get_core()->get_info_node(info_node_type_als);
 
         if (victim_als && own_als)
-            ((als::animation_logic_system_interface*)victim_als->my_als)->set_coordinator((als::animation_logic_system_interface*)own_als->my_als, 0);
+            victim_als->my_als->set_coordinator(own_als->my_als, 0);
 
         if (auto* hostage = (actor*)agressor->unk_026()) {
             if (hostage->my_ifc_storage->get_ifc(entity_ifc_damage))
@@ -166,7 +166,7 @@ void harass_victim_state::activate(      ai_state_machine* the_state_machine,
         auto* victim_als = (als_inode*)((info_node*)retail::sub_4941F0(agressor))->get_core()->get_info_node(info_node_type_als);
 
         if (victim_als && own_als)
-            ((als::animation_logic_system_interface*)victim_als->my_als)->set_coordinator((als::animation_logic_system_interface*)own_als->my_als, 0);
+            victim_als->my_als->set_coordinator(own_als->my_als, 0);
     }
 
     agressor->lock.release();
@@ -274,7 +274,7 @@ void hold_abductee_state::activate(      ai_state_machine* the_state_machine,
         auto* victim_als = (als_inode*)((info_node*)retail::sub_4941F0(agressor))->get_core()->get_info_node(info_node_type_als);
 
         if (victim_als && own_als)
-            ((als::animation_logic_system_interface*)victim_als->my_als)->set_coordinator((als::animation_logic_system_interface*)own_als->my_als, 0);
+            victim_als->my_als->set_coordinator(own_als->my_als, 0);
     }
 
     unk_16c = 0;

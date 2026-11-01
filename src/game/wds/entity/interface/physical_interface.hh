@@ -35,6 +35,8 @@ namespace treyarch {
         physical_interface_flag_enabled           = 0x00000001,
         physical_interface_flag_suspended         = 0x00000002,
         physical_interface_flag_gravity           = 0x00000004,
+        physical_interface_flag_collided          = 0x00000020,
+        physical_interface_flag_ext_collided      = 0x00000040,
         physical_interface_flag_immobile          = 0x00000100,
         physical_interface_flag_non_biped_physics = 0x00040000,
         physical_interface_flag_biped_running     = 0x00080000,

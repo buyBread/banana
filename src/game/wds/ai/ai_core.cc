@@ -125,6 +125,8 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_552EC0
 // inlined @ sub_801B00
 // inlined @ sub_9BB110
+// inlined @ sub_41F860
+// inlined @ sub_411870
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -591,7 +593,7 @@ void ai_core::frame_advance(f32 delta_t) {
     if (my_locomotion_mode == ai_core_mode_killing_machines && !my_locomotion_machine) {
         auto als_node = (als_inode*)get_info_node(info_node_type_als);
 
-        if (!als_node || ((als::animation_logic_system_interface*)als_node->my_als)->get_als_layer(als::base_layer)->is_interruptable()) {
+        if (!als_node || als_node->my_als->get_als_layer(als::base_layer)->is_interruptable()) {
             retail::sub_4DD830((u32*)this, // ai_core::spawn_state_machine_internal
                                nullptr,
                                (u32*)&my_loco_inode->get_loco_graph(),
@@ -605,7 +607,7 @@ void ai_core::frame_advance(f32 delta_t) {
     }
 
     if (auto als_node = (als_inode*)get_info_node(info_node_type_als)) {
-        auto the_als = (als::animation_logic_system_interface*)als_node->my_als;
+        auto the_als = als_node->my_als;
 
         if ((the_als->get_als_layer(als::base_layer)->did_transition_succeed() || the_als->force_updated) &&
             !references::cut_scene_player.read()->is_playing() &&
