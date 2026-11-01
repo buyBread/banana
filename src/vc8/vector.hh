@@ -244,7 +244,17 @@ namespace treyarch { namespace vc8 {
             ++last;
         }
 
+        // sub_418C70
+        T* insert(T* where, const T &value) { // returns the inserted element
+            u32 offset = size() == 0 ? 0 : (u32)(where - first);
+
+            insert_n(where, 1, value);
+
+            return first + offset;
+        }
+
         // sub_43B160
+        // inlined @ sub_417960
         void pop_back() noexcept {
             if (empty())
                 return;
@@ -294,6 +304,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_94B390
         // inlined @ sub_99B200
         // inlined @ sub_9C2D60
+        // inlined @ sub_417910
         T* erase(T* position) noexcept {
             T* result = position;
 
@@ -369,6 +380,73 @@ namespace treyarch { namespace vc8 {
             first        = allocation;
             last         = allocation + old_size;
             capacity_end = allocation + new_capacity;
+        }
+
+        // sub_417A00
+        void insert_n(T* where, u32 count, const T &value) {
+            T copy = value; // the value may live in the vector itself
+
+            u32 old_capacity = capacity();
+
+            if (!count)
+                return;
+
+            if (0xFFFFFFFF / sizeof(T) - size() < count)
+                throw_length_error();
+
+            if (old_capacity < size() + count) {
+                u32 new_capacity = 0xFFFFFFFF / sizeof(T) - old_capacity / 2 < old_capacity ? 0 : old_capacity + old_capacity / 2;
+
+                if (new_capacity < size() + count)
+                    new_capacity = size() + count;
+
+                T* allocation = (T*)mm::allocate(new_capacity * sizeof(T));
+                T* position   = allocation;
+
+                for (T* source = first; source != where; ++source, ++position)
+                    new (position) T(std::move(*source));
+
+                for (u32 index = 0; index < count; ++index, ++position)
+                    new (position) T(copy);
+
+                for (T* source = where; source != last; ++source, ++position)
+                    new (position) T(std::move(*source));
+
+                u32 new_size = size() + count;
+
+                if (first) {
+                    clear();
+                    mm::free(first);
+                }
+
+                capacity_end = allocation + new_capacity;
+                last         = allocation + new_size;
+                first        = allocation;
+            } else if ((u32)(last - where) < count) {
+                for (T* source = where, *destination = where + count; source != last; ++source, ++destination)
+                    new (destination) T(std::move(*source));
+
+                for (T* destination = last; destination != where + count; ++destination)
+                    new (destination) T(copy);
+
+                T* old_last = last;
+
+                last += count;
+
+                for (T* destination = where; destination != old_last; ++destination)
+                    *destination = copy;
+            } else {
+                T* old_last = last;
+
+                for (T* source = old_last - count; source != old_last; ++source, ++last)
+                    new (last) T(std::move(*source));
+
+                for (T* source = old_last - count, *destination = old_last; source != where;)
+                    *--destination = std::move(*--source);
+
+                for (T* destination = where; destination != where + count; ++destination)
+                    *destination = copy;
+            }
         }
     };
 
