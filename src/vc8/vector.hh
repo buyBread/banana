@@ -97,6 +97,7 @@ namespace treyarch { namespace vc8 {
               T &back()       noexcept { return last[-1]; }
         const T &back() const noexcept { return last[-1]; }
 
+        // sub_696FE0
         u32 size() const noexcept {
             return first ? (u32)(last - first) : 0;
         }
