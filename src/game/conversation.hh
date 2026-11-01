@@ -32,13 +32,13 @@ namespace treyarch {
     };
 
     struct conversation_state {
-        mash::string           name;
+        mash::string           name;      // the reply label its parent lists
         mash::string           text;
         mash::string           quest;
-        i32                    unk_24;
+        i32                    action;    // what picking the state does, see conversation_menu_system::unk_007
         conversation_condition condition; // the state is only offered while this holds
         i32                    depth;     // children sit one level deeper than their parent
-        i32                    unk_3c;
+        i32                    unk_3c;    // 2, 3 and 6 swap which side speaks the line
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -78,7 +78,7 @@ namespace treyarch {
     ASSERT_SIZEOF  (conversation_state,            0x40);
     ASSERT_OFFSETOF(conversation_state, text,      0x0C);
     ASSERT_OFFSETOF(conversation_state, quest,     0x18);
-    ASSERT_OFFSETOF(conversation_state, unk_24,    0x24);
+    ASSERT_OFFSETOF(conversation_state, action,    0x24);
     ASSERT_OFFSETOF(conversation_state, condition, 0x28);
     ASSERT_OFFSETOF(conversation_state, depth,     0x38);
     ASSERT_OFFSETOF(conversation_state, unk_3c,    0x3C);

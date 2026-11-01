@@ -95,7 +95,7 @@ void mission_manager::advance_act_transition() {
 
             if (!(flags & mission_manager_flag_mission_ready) && state != mission_manager_state_running_mission &&
                 (!auto_launch_instances || !auto_launch_instances->size()) &&
-                !quest_manager::inst()->unk_000)
+                !quest_manager::inst()->hold_blackscreen)
 
                 references::frontend.get().igo->loading_screen->blackscreen_off(0.25f, false);
 

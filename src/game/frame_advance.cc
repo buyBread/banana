@@ -99,7 +99,7 @@ void game::frame_advance_level(f32 time_inc) {
 
     mission_manager::inst()->frame_advance(time_inc);
     
-    retail::sub_801790((i32)quest_manager::inst(), time_inc);
+    quest_manager::inst()->frame_advance(time_inc);
     this->handle_game_states(&time_inc);
 
     if (!references::cameras_handled.read())

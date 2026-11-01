@@ -7,9 +7,15 @@
 #include "treyarch/mash/string_hash.hh"
 #include "vc8/list.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace references {
+        inline util::memory_reference<string_hash> enter { 0x0102C6A8 };
+        inline util::memory_reference<string_hash> leave { 0x0102C744 };
+    } // references
+
     enum e_trigger_flags : u32 {
         trigger_flag_active                 = 0x00000001,
         trigger_flag_use_any_char           = 0x00000002,

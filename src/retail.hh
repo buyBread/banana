@@ -9956,7 +9956,7 @@ namespace retail {
     inline auto const sub_68BF20 = (char (__thiscall*)(i32 self))0x0068BF20;
     inline auto const sub_68BF40 = (char (__thiscall*)(u8*self))0x0068BF40;
     inline auto const sub_68BF70 = (i32 (__thiscall*)(u32*self))0x0068BF70;
-    inline auto const sub_68BF90 = (i32 (__cdecl*)(i32, i32, i32))0x0068BF90; // __userpurge
+    inline auto const sub_68BF90 = (void (__thiscall*)(u32*self, i32))0x0068BF90; // manual
     inline auto const sub_68C190 = (i32 (__thiscall*)(u32*self, char, i32, i32))0x0068C190;
     inline auto const sub_68C200 = (u32 (__cdecl*)(...))0x0068C200; // prototype unavailable
     inline auto const sub_68C210 = (char (__thiscall*)(i32 self))0x0068C210;
@@ -10434,7 +10434,7 @@ namespace retail {
     inline auto const sub_6A0AC0 = (i32 (__cdecl*)(i32, i32, i32))0x006A0AC0; // __userpurge
     inline auto const sub_6A0AE0 = (i32 (__thiscall*)(i32 self, i32))0x006A0AE0;
     inline auto const sub_6A0B30 = (i32 (__thiscall*)(u32*self))0x006A0B30;
-    inline auto const sub_6A0C10 = (i32 (__stdcall*)(i32, char*Str1, i32))0x006A0C10;
+    inline auto const sub_6A0C10 = (void (__thiscall*)(u32*self, i32, i32, i32))0x006A0C10; // manual
     inline auto const sub_6A0D30 = (char (__thiscall*)(i32 self, char))0x006A0D30;
     inline auto const sub_6A0D90 = (void (__thiscall*)(i32 self, i32))0x006A0D90;
     inline auto const sub_6A0DE0 = (i32 (__thiscall*)(i32 self, i32))0x006A0DE0;
@@ -13549,7 +13549,7 @@ namespace retail {
     inline auto const sub_75D840 = (i32 (__thiscall*)(i32 self, u32*, i32, i32, char))0x0075D840;
     inline auto const sub_75D8E0 = (u32* (__thiscall*)(u32*self, u32*))0x0075D8E0;
     inline auto const sub_75D8F0 = (i32 (__thiscall*)(u32*self))0x0075D8F0;
-    inline auto const sub_75D900 = (i32 (__thiscall*)(i32 self, u32*, i32, i32))0x0075D900;
+    inline auto const sub_75D900 = (i32 (__thiscall*)(i32 self, u32*, i32, f32))0x0075D900; // manual
     inline auto const sub_75DA40 = (void (__thiscall*)(void*self))0x0075DA40;
     inline auto const sub_75DAA0 = (u32* (__thiscall*)(u32*self, u32*, i32, i32, i32))0x0075DAA0;
     inline auto const sub_75DAE0 = (i32 (__thiscall*)(u32*self, u32))0x0075DAE0;
@@ -18445,7 +18445,7 @@ namespace retail {
     inline auto const sub_901710 = (u32* (__thiscall*)(u32*self))0x00901710;
     inline auto const sub_901730 = (i32 (__thiscall*)(u32*self))0x00901730;
     inline auto const sub_901750 = (void (__thiscall*)(u32*self))0x00901750;
-    inline auto const sub_901790 = (char (__thiscall*)(void (__cdecl*self)(u32, void*)))0x00901790;
+    inline auto const sub_901790 = (char (__thiscall*)(u32*self))0x00901790; // manual
     inline auto const sub_901880 = (u32* (__thiscall*)(u32*self))0x00901880;
     inline auto const sub_901960 = (i32 (__thiscall*)(u32*self))0x00901960;
     inline auto const sub_901A00 = (void (__thiscall*)(i32*self, i32))0x00901A00;
@@ -20138,7 +20138,7 @@ namespace retail {
     inline auto const sub_97BB70 = (void (__thiscall*)(i32 self))0x0097BB70;
     inline auto const sub_97BC40 = (void (__thiscall*)(i32 self, char, i32, f32, i32, i32, i32))0x0097BC40;
     inline auto const sub_97BD40 = (void (__thiscall*)(u32*self, char))0x0097BD40;
-    inline auto const sub_97BE60 = (i32 (__stdcall*)(char))0x0097BE60;
+    inline auto const sub_97BE60 = (void (__thiscall*)(u32*self, bool))0x0097BE60; // manual
     inline auto const sub_97BFB0 = (char* (__cdecl*)(char*, char*, char*))0x0097BFB0;
     inline auto const sub_97BFF0 = (char* (__cdecl*)(char*, char*, const void*))0x0097BFF0;
     inline auto const sub_97C020 = (char* (__cdecl*)(char*, char*, char*))0x0097C020;

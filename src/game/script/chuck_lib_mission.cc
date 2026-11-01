@@ -13,6 +13,7 @@
 #include "game/amalga/resource_types.hh"
 #include "game/app.hh"
 #include "game/color.hh"
+#include "game/conversation.hh"
 #include "game/environment_progression.hh"
 #include "game/frontend/dialog_box.hh"
 #include "game/frontend/frontend_manager.hh"
@@ -33,6 +34,7 @@
 #include "game/spawn_point_list_collection.hh"
 #include "game/summon_progression.hh"
 #include "game/summon_state.hh"
+#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -401,7 +403,7 @@ bool slf__test__t::operator()(chuck::vm::vm_stack &stack) {
 bool slf__register_quest_giver__entity__t::operator()(chuck::vm::vm_stack &stack) {
     stack.sp -= 0x04;
 
-    retail::sub_801B00((u32*)quest_manager::inst(), (i32)arch_base_vhandle(stack.local_uint(0x00)).resolve(), nullptr);
+    quest_manager::inst()->giver_register_entity((actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve(), false);
 
     return true;
 }
@@ -567,7 +569,7 @@ bool slf__do_conversation_wait__str__t::operator()(chuck::vm::vm_stack &stack) {
     key.set(name, (u32)amalga::e_resource_type::JSON_CONVERSATION);
 
     if (u8* found = amalga::resource_manager::get_resource(key, nullptr, nullptr))
-        retail::sub_717CE0((i32)references::frontend.get().igo->conversation_menu_system, (i32)found, 1, 0); // start the conversation
+        references::frontend.get().igo->conversation_menu_system->begin_conversation((conversation*)found, true, false);
 
     return false;
 }

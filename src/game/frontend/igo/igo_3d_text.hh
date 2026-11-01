@@ -43,7 +43,8 @@ namespace treyarch {
         void          (__thiscall* set_shadow_alpha)(igo_3d_text* self, f32 alpha);
         void*         reserved_124[5];
         void          (__thiscall* render)(igo_3d_text* self); // sub_69D520
-        void*         reserved_13c[5];
+        void*         reserved_13c[4];
+        void          (__thiscall* update)(igo_3d_text* self, f32 time_inc); // the typewriter's reveal
         u8            (__thiscall* all_lines_revealed)(igo_3d_text* self);
         void*         reserved_154[11];
     };
@@ -51,7 +52,9 @@ namespace treyarch {
     class igo_3d_text {
     public:
         igo_3d_text_vtable* vtable;
-        u8                  reserved_004[0x50];
+        u8                  reserved_004[0x40];
+        u32                 line_count;
+        u8                  reserved_048[0x0C];
         bool                typewriter;         // reveals a character every 1/45 s
         u8                  reserved_055[0x23];
 
@@ -85,6 +88,10 @@ namespace treyarch {
 
         void set_text_no_localize(const char* text) { // the slot owns the string built here
             vtable->set_text_no_localize(this, mash::string(text));
+        }
+
+        void set_text_no_localize(const mash::string &text) { // the slot owns the copy
+            vtable->set_text_no_localize(this, text);
         }
 
         void set_font(i32 font, i32 mat_type) {
@@ -143,6 +150,10 @@ namespace treyarch {
             vtable->render(this);
         }
 
+        void update(f32 time_inc) {
+            vtable->update(this, time_inc);
+        }
+
         u8 all_lines_revealed() {
             return vtable->all_lines_revealed(this);
         }
@@ -164,8 +175,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_shadow,             0x118);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_shadow_alpha,       0x120);
     ASSERT_OFFSETOF(igo_3d_text_vtable, render,                 0x138);
+    ASSERT_OFFSETOF(igo_3d_text_vtable, update,                 0x14C);
     ASSERT_OFFSETOF(igo_3d_text_vtable, all_lines_revealed,     0x150);
 
     ASSERT_SIZEOF  (igo_3d_text,             0x78);
+    ASSERT_OFFSETOF(igo_3d_text, line_count, 0x44);
     ASSERT_OFFSETOF(igo_3d_text, typewriter, 0x54);
 } // treyarch
