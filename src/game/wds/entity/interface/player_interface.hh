@@ -4,6 +4,7 @@
 #include "game/wds/entity/interface/generic_interface.hh"
 #include "game/wds/entity/interface/player_reflexes.hh"
 #include "game/wds/entity/interface/plr_combat_attack.hh"
+#include "game/wds/entity/pendulum.hh"
 #include "game/input/game_axis.hh"
 #include "game/input/game_button.hh"
 #include "game/timing/simple_timer.hh"
@@ -31,11 +32,58 @@ namespace treyarch {
     class polytube;
     class script_object_instance;
 
+    // SM3 eSwingerHand
+    enum e_swinger_hand : i32 {
+        swinger_none  = -1,
+        swinger_right = 0,
+        swinger_left  = 1,
+        max_swingers  = 2,
+        swinger_both  = max_swingers
+    };
+
+    // SM3 eSwingerStatus
+    enum e_swinger_status : i32 {
+        swinger_inactive,
+        swinger_animating,
+        swinger_launching,
+        swinger_attached
+    };
+
     // SM3 ePostProcessAction
     enum e_post_process_action : i32 {
         pp_swing_anchor_search = 0x01,
         pp_swing_avoid_ground  = 0x02
     };
+
+    class swing_leftover;
+    class swing_params;
+
+    // SM3 swing_anchor_data; retail adds a point before goal_constraint
+    struct swing_anchor_data {
+        arch_base_vhandle anchor;
+        vector3d          pos;
+        vector3d          unk_10;
+        f32               goal_constraint;
+    };
+
+    // SM3 swing_data, as far as it's read; retail adds a point before goal_constraint
+    class swing_data {
+
+    public:
+        e_swinger_status status;
+        pendulum         attach_pendulum;
+        vector3d         unk_54;
+        f32              goal_constraint;
+    };
+
+    ASSERT_SIZEOF  (swing_anchor_data,                  0x20);
+    ASSERT_OFFSETOF(swing_anchor_data, pos,             0x04);
+    ASSERT_OFFSETOF(swing_anchor_data, unk_10,          0x10);
+    ASSERT_OFFSETOF(swing_anchor_data, goal_constraint, 0x1C);
+
+    ASSERT_OFFSETOF(swing_data, attach_pendulum, 0x04);
+    ASSERT_OFFSETOF(swing_data, unk_54,          0x54);
+    ASSERT_OFFSETOF(swing_data, goal_constraint, 0x60);
 
     /* slots 19+ are player_interface's own. SM3's order holds around frame_advance
        (map_controls 89, update_interface 91, frame_advance 92), but WoS inserted slots: SM3 has two getters at 19/20
@@ -321,7 +369,7 @@ namespace treyarch {
         virtual bool              unk_190();
         virtual bool              unk_191(bool unk);
         virtual bool              unk_192();
-        virtual bool              unk_193(i32 unk);
+        virtual bool              unk_193(bool unk);
         virtual bool              unk_194(f32 unk);
         virtual i32               unk_195();
         virtual i32               unk_196(i32 unk);
@@ -371,29 +419,35 @@ namespace treyarch {
         virtual void                     override_dodge_anim(const char* a);
         virtual i32                      get_dodge_type() const;
         virtual void                     override_dodge_type(i32 t);
-        virtual bool                     unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6, i32 unk_7);
+        virtual bool                     check_for_block(      entity_base*               attacker,
+                                                               i32                        chain_size,
+                                                         const combo_move_data*           combo_move,
+                                                               hit_react_record*          react,
+                                                               weapon_interface_extender* weapon,
+                                                               entity_base*               weapon_entity,
+                                                               i32                        usage_type);
         virtual bool                     should_execute_block(f32 delta_t);
         virtual const char*              get_block_anim() const;
         virtual void                     override_block_anim(const char* a);
         virtual i32                      get_block_type() const;
         virtual void                     override_block_type(i32 t);
 
-        virtual void*             unk_243(void* unk);
-        virtual void*             unk_244(void* unk);
+        virtual arch_base_vhandle unk_243();
+        virtual arch_base_vhandle unk_244();
         virtual i32               unk_245();
         virtual f32               unk_246();
         virtual f32               unk_247();
         virtual bool              unk_248();
-        virtual bool              unk_249(i32 unk);
+        virtual void              unk_249(bool unk);
         virtual f32               unk_250();
-        virtual f32               unk_251();
-        virtual void              unk_252(i32 unk);
+        virtual f32               get_block_strength();
+        virtual void              unk_252(f32 unk);
         virtual f32               unk_253();
-        virtual void              unk_254(i32 unk);
+        virtual void              unk_254(f32 unk);
         virtual void              unk_255(f32 delta_t);
         virtual void              unk_256();
         virtual bool              unk_257();
-        virtual void*             unk_258(void* unk);
+        virtual arch_base_vhandle unk_258();
         virtual bool              unk_259(f32 delta_t);
         virtual bool              unk_260(f32 delta_t);
         virtual bool              unk_261(void* unk, void* unk_2, void* unk_3);
@@ -401,10 +455,10 @@ namespace treyarch {
         virtual bool              unk_263(void* unk, i32 unk_2);
         virtual bool              unk_264(f32 delta_t, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
         virtual bool              unk_265();
-        virtual void              unk_266(i32 unk, i32 unk_2, i32 unk_3);
+        virtual void              force_evade(vector3d v);
         virtual void              unk_267();
         virtual bool              unk_268();
-        virtual i32               unk_269(i32 unk);
+        virtual vector3d          unk_269();
         virtual bool              unk_270();
         virtual bool              unk_271();
         virtual bool              unk_272();
@@ -478,7 +532,7 @@ namespace treyarch {
         virtual i32               unk_338();
         virtual i32               unk_339();
         virtual bool              unk_340();
-        virtual i32               unk_341();
+        virtual bool              unk_341();
         virtual i32               unk_342();
         virtual i32               unk_343();
         virtual void              unk_344(f32 unk);
@@ -505,7 +559,7 @@ namespace treyarch {
         virtual i32               unk_365(void* unk, void* unk_2);
         virtual void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4);
         virtual i32               unk_367(void* unk, void* unk_2);
-        virtual void              unk_368(f32 unk, void* record);      // rvb: one of its two +0x638 records
+        virtual void              unk_368(f32 unk, swing_data* swinger);
         virtual void              unk_369(i32 unk, i32 unk_2);
         virtual bool              unk_370(i32 unk, i32 unk_2, i32 unk_3);
         virtual i32               unk_371(i32 unk, i32 unk_2);
@@ -536,7 +590,7 @@ namespace treyarch {
         virtual i32               unk_396(i32 unk);
         virtual i32               unk_397();
         virtual i32               unk_398(i32 unk);
-        virtual void*             unk_399(i32 index);                  // rvb: its +0x638 record at the index
+        virtual swing_data*       unk_399(i32 index);                  // rvb: its swinger at the index
         virtual void              unk_400(polytube* tube, f32 radius); // dresses the polytube as the hero's web
         virtual i32               unk_401();                           // the als's swing_hand
         virtual i32               unk_402(i32 unk, i32 unk_2);

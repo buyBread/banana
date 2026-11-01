@@ -27,6 +27,9 @@ namespace treyarch {
         // "frame_advance(num)", the master object's function frame_advance calls
         inline util::memory_reference<string_hash> frame_advance_num { 0x01112D5C };
 
+        // "damage", the combo move param check_for_block takes as the block value
+        inline util::memory_reference<string_hash> damage { 0x00FC1A44 };
+
         // two of the {3.75, 0.0035} pairs at 0x00F4D590, rewritten every hero frame
         inline util::memory_reference<f32> unk_00f4d590 { 0x00F4D590 };
         inline util::memory_reference<f32> unk_00f4d594 { 0x00F4D594 };
@@ -34,77 +37,177 @@ namespace treyarch {
         inline util::memory_reference<f32> unk_00f4d5a4 { 0x00F4D5A4 };
     } // references
 
-    // one of the two at +0x638
-    struct spiderman_rvb_unk_0638 {
-        u32      unk_00;            // the hero's combat frame only hands slot 368 a record with it set
-        u8       unk_04[0x4C];      // sub_60D3E0 gives its position
-        bool     unk_50;            // frame_advance copies the rest into its unk_0ca8 record while set
-        u8       pad_51[0x03];
-        vector3d unk_54;
-        f32      unk_60;
-    };
-
-    // one of the two at +0xCA8, filled from the matching +0x638 object
-    struct spiderman_rvb_unk_0ca8 {
-        u8       reserved_00[0x04];
-        vector3d unk_04;
-        vector3d unk_10;
-        f32      unk_1c;
-    };
-
     // the hero's player interface
     class spiderman_rvb_player_interface : public player_interface {
 
     public:
-        bool                    unk_0530;         // the als's player_in_blacksuit_mode
-        bool                    unk_0531;
-        u8                      reserved_0532[0x06];
-        bool                    unk_0538;
-        u8                      reserved_0539[0x07];
-        f32                     unk_0540;
-        u8                      reserved_0544[0x08];
-        u8                      unk_054c[0x30];   // advanced every frame (sub_987AC0)
-        f32                     unk_057c;         // counted down, held at 0 in mode 8
-        u8                      reserved_0580[0x18];
-        delta_variable<i32>     unk_0598;         // set to 42 every frame
-        u8                      reserved_05a0[0x90];
-        f32                     horizontal_speed; // the velocity's length in x and z
-        void*                   unk_0634;
-        spiderman_rvb_unk_0638* unk_0638[2];
-        u8                      reserved_0640[0x08];
-        void*                   unk_0648[8];      // each advanced every frame (sub_994200)
-        u8                      reserved_0668[0x0C];
-        bool                    unk_0674;         // consumed by frame_advance, which then times it in unk_0678
-        u8                      reserved_0675[0x03];
-        f32                     unk_0678;
-        u8                      reserved_067c[0x40];
-        vector3d                last_position;    // the owner's position as frame_advance left it
-        u8                      reserved_06c8[0x168];
-        f32                     unk_0830;         // the seven timers frame_advance counts down
-        f32                     unk_0834;
-        f32                     unk_0838;
-        f32                     unk_083c;
-        f32                     unk_0840;
-        u8                      reserved_0844[0x04];
-        f32                     unk_0848;
-        f32                     unk_084c;
-        u8                      reserved_0850[0x1CC];
-        i32                     unk_0a1c;         // set to 106 every frame
-        u8                      reserved_0a20[0x134];
-        f32                     unk_0b54;         // slot 486 runs when it runs out
-        f32                     unk_0b58;         // slot 488 runs when it runs out
-        u8                      reserved_0b5c[0x48];
-        u32                     unk_0ba4;         // flags; slots 306 and 307 read bits 0 and 1
-        u8                      reserved_0ba8[0x68];
-        arch_base_vhandle       unk_0c10;         // flagged 0x10 through its slot 68 once unk_0c14 runs out
-        f32                     unk_0c14;
-        u8                      reserved_0c18[0x88];
-        f32                     unk_0ca0;         // resets the combat target capacities when it runs out
-        f32                     fall_timer;       // how long the owner has been below y -8 without standing
-        spiderman_rvb_unk_0ca8* unk_0ca8;         // two of them
-        u8                      reserved_0cac[0x04];
+        bool                     rvb_black_mode;                  // the als's player_in_blacksuit_mode
+        bool                     suit_locked;
+        bool                     suit_mode_locked;
+        u8                       pad_533[0x01];
+        i32                      unk_0534;                        // slot 525 copies the mode here
+        bool                     unk_0538;
+        bool                     unk_0539;
+        u8                       pad_53a[0x02];
+        f32                      unk_053c;
+        f32                      unk_0540;
+        u8                       reserved_0544[0x08];
+        u8                       web_shooters[0x28];              // a player_web_shooters
+        u32                      trick_begin_callback_id;
+        u32                      trick_end_callback_id;
+        f32                      unk_057c;                        // counted down, held at 0 in mode 8
+        u8                       reserved_0580[0x04];
+        f32                      jump_charge_time;
+        f32                      jump_min_charge_time;
+        f32                      jump_max_charge_time;
+        f32                      unk_0590;                        // PLR_SWEET_MANUAL_DODGE_TIME
+        f32                      stored_als_jump_charge;
+        delta_variable<i32>      forced_jump_type;                // set to 42 every frame
+        u8                       heading_sampling_window[0x48];   // a direction_sampling_window
+        u8                       up_sampling_window[0x48];
+        f32                      cur_lateral_velocity;            // the velocity's length in x and z
+        swing_params*            swing;
+        swing_data*              swingers[max_swingers];
+        e_swinger_hand           active_swinger;
+        e_swinger_hand           considering_swinger;
+        swing_leftover*          swing_leftovers[8];
+        i32                      last_swing_leftover;
+        f32                      time_on_web;
+        f32                      unk_0670;
+        bool                     unk_0674;                        // consumed by frame_advance, which then times it in unk_0678
+        u8                       pad_675[0x03];
+        f32                      unk_0678;
+        f32                      unk_067c;
+        u8                       vertical_line_anchor_tune[0x0C]; // a vertical_line_anchor_tune_t
+        u8                       unk_068c[0x18];
+        u8                       unk_06a4[0x18];
+        vector3d                 unk_06bc;                        // the owner's position as frame_advance left it
+        u8                       unk_06c8[0x18];
+        arch_base_vhandle        swing_override_anchor;
+        arch_base_vhandle        zip_override_anchor;
+        u32                      unk_06e8;                        // the timed target
+        f32                      unk_06ec;
+        arch_base_vhandle        unk_06f0;
+        u8                       reserved_06f4[0x0A];
+        bool                     unk_06fe;                        // the zlock control
+        u8                       reserved_06ff[0x05];
+        f32                      unk_0704;
+        f32                      unk_0708;
+        f32                      unk_070c;
+        u8                       reserved_0710[0x0C];
+        arch_base_vhandle        unk_071c;                        // the zlock target
+        u8                       reserved_0720[0x04];
+        arch_base_vhandle        unk_0724;
+        arch_base_vhandle        unk_0728;
+        arch_base_vhandle        unk_072c[2];
+        f32                      zip_override_anchor_num;
+        u8                       reserved_0738[0x0C];
+        vector3d                 unk_0744;
+        arch_base_vhandle        unk_0750;
+        arch_base_vhandle        unk_0754;
+        u32                      unk_0758;
+        bool                     unk_075c;
+        u8                       pad_75d[0x03];
+        arch_base_vhandle        unk_0760;                        // check_for_block's attacker
+        arch_base_vhandle        unk_0764;                        // and weapon entity
+        i32                      unk_0768;                        // the react level
+        f32                      unk_076c;
+        f32                      unk_0770;                        // the block value, summed while unk_077c is set
+        f32                      unk_0774;
+        f32                      unk_0778;
+        bool                     unk_077c;
+        bool                     unk_077d;
+        bool                     unk_077e;
+        u8                       pad_77f[0x01];
+        arch_base_vhandle        unk_0780;                        // the attacker again while unk_077e is set
+        u8                       reserved_0784[0x2C];
+        u32                      unk_07b0;
+        u32                      unk_07b4;
+        u32                      unk_07b8;
+        u8                       reserved_07bc[0x0C];
+        u32                      unk_07c8;
+        u32                      unk_07cc;
+        u8                       reserved_07d0[0x10];
+        f32                      unk_07e0;
+        f32                      unk_07e4;
+        f32                      unk_07e8;
+        i32                      unk_07ec;
+        i32                      unk_07f0;
+        u8                       reserved_07f4[0x08];
+        bool                     unk_07fc;
+        u8                       pad_7fd[0x03];
+        f32                      unk_0800;
+        vector3d                 unk_0804;
+        bool                     unk_0810[7];
+        u8                       pad_817[0x01];
+        vc8::vector
+            <arch_base_vhandle>* unk_0818;
+        u8                       reserved_081c[0x04];
+        f32                      zipjump_ground_angle;
+        f32                      zipjump_air_angle;
+        f32                      zipjump_length;
+        f32                      unk_082c;                        // PLR_ZIPJUMP_BOOST_FORCE
+        f32                      unk_0830;                        // the seven timers frame_advance counts down
+        f32                      unk_0834;
+        f32                      unk_0838;
+        f32                      unk_083c;
+        f32                      unk_0840;
+        f32                      unk_0844;                        // unk_0840's starting duration
+        f32                      unk_0848;
+        f32                      unk_084c;
+        bool                     unk_0850;                        // force_evade's request
+        u8                       pad_851[0x03];
+        vector3d                 unk_0854;
+        bool                     unk_0860;
+        bool                     unk_0861;
+        bool                     unk_0862;
+        u8                       reserved_0863[0x0D];
+        line_info                desired_zip_or_yoyo_data;
+        arch_base_vhandle        unk_08cc[2];                     // the pole the hero swings on and its parent
+        u8                       wallsprint_tune[0x80];           // a wallsprint_tune_t
+        line_info                wall_sprint_surface_info;
+        u8                       reserved_09b0[0x64];
+        boolx                    _exterior_transition;
+        boolx                    _exterior_transition_180;
+        u8                       reserved_0a16[0x06];
+        i32                      unk_0a1c;                        // set to 106 every frame
+        u8                       reserved_0a20[0x04];
+        u8                       my_strength_test_info[0x20];
+        u8                       my_slingshot_point_info[0x24];
+        u8                       my_agility_test_info[0x60];
+        u8                       reserved_0ac8[0x04];
+        u8                       skydiving_tune[0x88];            // a skydiving_tune_t
+        f32                      unk_0b54;                        // slot 486 runs when it runs out
+        f32                      unk_0b58;                        // slot 488 runs when it runs out
+        bool                     unk_0b5c;
+        bool                     unk_0b5d;
+        u8                       reserved_0b5e[0x0A];
+        f32                      unk_0b68;                        // force_run_speed_pct
+        u8                       reserved_0b6c[0x38];
+        u32                      unk_0ba4;                        // flags; slots 306 and 307 read bits 0 and 1
+        line_info                unk_0ba8;
+        f32                      unk_0c04;                        // the obstacle hop's hold time
+        u8                       reserved_0c08[0x04];
+        i32                      unk_0c0c;
+        arch_base_vhandle        unk_0c10;                        // flagged 0x10 through its slot 68 once unk_0c14 runs out
+        f32                      unk_0c14;
+        arch_base_vhandle        unk_0c18;
+        f32                      unk_0c1c;
+        u8                       reserved_0c20[0x38];
+        f32                      unk_0c58;
+        f32                      unk_0c5c;
+        f32                      unk_0c60[4];
+        vector3d                 unk_0c70[4];
+        f32                      noone_attack_me_time;            // resets the combat target capacities when it runs out
+        f32                      fall_timer;                      // how long the owner has been below y -8 without standing
+        mash::array_replacement_base
+            <swing_anchor_data>  desired_swing_anchor_data;
+        u8                       reserved_0cac[0x04];
 
-        explicit spiderman_rvb_player_interface(mash::generating_vtable_version so_do_nothing) : player_interface(so_do_nothing) {}
+        explicit spiderman_rvb_player_interface(mash::generating_vtable_version so_do_nothing) : player_interface(so_do_nothing),
+                                                                                                  desired_zip_or_yoyo_data(so_do_nothing),
+                                                                                                  wall_sprint_surface_info(so_do_nothing),
+                                                                                                  unk_0ba8(so_do_nothing) {}
 
         ~spiderman_rvb_player_interface() override;
 
@@ -246,7 +349,7 @@ namespace treyarch {
         bool              unk_180() override;
         bool              unk_188() override;
         bool              unk_192() override;
-        bool              unk_193(i32 unk) override;
+        bool              unk_193(bool unk) override;
         bool              unk_194(f32 unk) override;
         i32               unk_195() override;
         i32               unk_196(i32 unk) override;
@@ -266,31 +369,37 @@ namespace treyarch {
         void              init_attacks() override;
         void              update_attacks(f32 delta_t) override;
         void              init_tricks() override;
-        bool              unk_237(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6, i32 unk_7) override;
-        void*             unk_243(void* unk) override;
-        void*             unk_244(void* unk) override;
+        bool              check_for_block(      entity_base*               attacker,
+                                                i32                        chain_size,
+                                          const combo_move_data*           combo_move,
+                                                hit_react_record*          react,
+                                                weapon_interface_extender* weapon,
+                                                entity_base*               weapon_entity,
+                                                i32                        usage_type) override;
+        arch_base_vhandle unk_243() override;
+        arch_base_vhandle unk_244() override;
         i32               unk_245() override;
         f32               unk_246() override;
         f32               unk_247() override;
         bool              unk_248() override;
-        bool              unk_249(i32 unk) override;
+        void              unk_249(bool unk) override;
         f32               unk_250() override;
-        f32               unk_251() override;
-        void              unk_252(i32 unk) override;
+        f32               get_block_strength() override;
+        void              unk_252(f32 unk) override;
         f32               unk_253() override;
-        void              unk_254(i32 unk) override;
+        void              unk_254(f32 unk) override;
         void              unk_255(f32 delta_t) override;
         void              unk_256() override;
         bool              unk_257() override;
-        void*             unk_258(void* unk) override;
+        arch_base_vhandle unk_258() override;
         i32               unk_262(i32 unk, i32 unk_2) override;
         bool              unk_263(void* unk, i32 unk_2) override;
         bool              unk_264(f32 delta_t, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
         bool              unk_265() override;
-        void              unk_266(i32 unk, i32 unk_2, i32 unk_3) override;
+        void              force_evade(vector3d v) override;
         void              unk_267() override;
         bool              unk_268() override;
-        i32               unk_269(i32 unk) override;
+        vector3d          unk_269() override;
         bool              unk_270() override;
         bool              unk_271() override;
         bool              unk_272() override;
@@ -322,7 +431,7 @@ namespace treyarch {
         i32               unk_338() override;
         i32               unk_339() override;
         bool              unk_340() override;
-        i32               unk_341() override;
+        bool              unk_341() override;
         i32               unk_342() override;
         i32               unk_343() override;
         void              unk_344(f32 unk) override;
@@ -348,7 +457,7 @@ namespace treyarch {
         i32               unk_365(void* unk, void* unk_2) override;
         void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4) override;
         i32               unk_367(void* unk, void* unk_2) override;
-        void              unk_368(f32 unk, void* record) override;
+        void              unk_368(f32 unk, swing_data* swinger) override;
         void              unk_369(i32 unk, i32 unk_2) override;
         bool              unk_370(i32 unk, i32 unk_2, i32 unk_3) override;
         i32               unk_371(i32 unk, i32 unk_2) override;
@@ -377,7 +486,7 @@ namespace treyarch {
         i32               unk_395() override;
         i32               unk_396(i32 unk) override;
         i32               unk_398(i32 unk) override;
-        void*             unk_399(i32 index) override;
+        swing_data*       unk_399(i32 index) override;
         void              unk_400(polytube* tube, f32 radius) override;
         i32               unk_401() override;
         i32               unk_402(i32 unk, i32 unk_2) override;
@@ -556,35 +665,59 @@ namespace treyarch {
         static string_hash my_type_key;
     };
 
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_50, 0x50);
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_54, 0x54);
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0638, unk_60, 0x60);
-
-    ASSERT_SIZEOF  (spiderman_rvb_unk_0ca8,         0x20);
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_04, 0x04);
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_10, 0x10);
-    ASSERT_OFFSETOF(spiderman_rvb_unk_0ca8, unk_1c, 0x1C);
-
-    ASSERT_SIZEOF  (spiderman_rvb_player_interface,                   0xCB0);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0530,          0x530);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0538,          0x538);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0540,          0x540);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_054c,          0x54C);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_057c,          0x57C);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0598,          0x598);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, horizontal_speed, 0x630);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0638,          0x638);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0648,          0x648);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0674,          0x674);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0678,          0x678);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, last_position,    0x6BC);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0830,          0x830);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0848,          0x848);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0a1c,          0xA1C);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0b54,          0xB54);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ba4,          0xBA4);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c10,          0xC10);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ca0,          0xCA0);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, fall_timer,       0xCA4);
-    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ca8,          0xCA8);
+    ASSERT_SIZEOF  (spiderman_rvb_player_interface,                            0xCB0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, rvb_black_mode,            0x530);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0534,                  0x534);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0540,                  0x540);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, web_shooters,              0x54C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, trick_begin_callback_id,   0x574);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, jump_charge_time,          0x584);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, forced_jump_type,          0x598);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, heading_sampling_window,   0x5A0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, cur_lateral_velocity,      0x630);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, swingers,                  0x638);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, swing_leftovers,           0x648);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0674,                  0x674);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, vertical_line_anchor_tune, 0x680);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_06bc,                  0x6BC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, swing_override_anchor,     0x6E0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_06fe,                  0x6FE);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_071c,                  0x71C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, zip_override_anchor_num,   0x734);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0744,                  0x744);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0760,                  0x760);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_077c,                  0x77C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0780,                  0x780);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_07b0,                  0x7B0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_07c8,                  0x7C8);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_07e0,                  0x7E0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_07fc,                  0x7FC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0810,                  0x810);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0818,                  0x818);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, zipjump_ground_angle,      0x820);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0830,                  0x830);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0850,                  0x850);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0854,                  0x854);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, desired_zip_or_yoyo_data,  0x870);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_08cc,                  0x8CC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, wallsprint_tune,           0x8D4);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, wall_sprint_surface_info,  0x954);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, _exterior_transition,      0xA14);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0a1c,                  0xA1C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, my_strength_test_info,     0xA24);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, my_slingshot_point_info,   0xA44);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, my_agility_test_info,      0xA68);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, skydiving_tune,            0xACC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0b54,                  0xB54);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0b68,                  0xB68);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ba4,                  0xBA4);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ba8,                  0xBA8);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c04,                  0xC04);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c0c,                  0xC0C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c18,                  0xC18);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c58,                  0xC58);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c70,                  0xC70);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, noone_attack_me_time,      0xCA0);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, fall_timer,                0xCA4);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, desired_swing_anchor_data, 0xCA8);
 } // treyarch

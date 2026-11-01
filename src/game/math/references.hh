@@ -70,6 +70,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0), in writable data; polytube point animations start from it
     inline util::memory_reference<vector3d> unk_00ffec30 { 0x00FFEC30 };
 
+    // (0, 0, 0); the hero's player interface resets its forced evade to it
+    inline util::memory_reference<vector3d> unk_01112ca0 { 0x01112CA0 };
+
     // (0, 0, 0, 0); a zero up vector's normalized stand-in when a scene anim binds an entity
     inline util::memory_reference<vector4d> unk_00fd4340 { 0x00FD4340 };
 

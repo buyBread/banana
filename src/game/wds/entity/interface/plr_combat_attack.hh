@@ -90,7 +90,12 @@ namespace treyarch {
               boolx        button_held;
               u8           pad_0d[0x03];
 
+        plr_trick_move();
         ~plr_trick_move() override;
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
 
         void                    construct_mashed_class() override;
         void                    destruct_mashed_class() override;

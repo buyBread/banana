@@ -180,6 +180,10 @@ void plr_combat_attack::initialize(mash::allocation_scope scope) {
 
 // ==== plr_trick_move ==== //
 
+plr_trick_move::plr_trick_move() {
+    retail::sub_988220((u32*)this);
+}
+
 // slot 0
 plr_trick_move::~plr_trick_move() {
     ((void (__thiscall*)(plr_trick_move*, u32))retail::sub_718FC0)(this, 0);

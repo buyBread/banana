@@ -148,10 +148,10 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
             the_exit_code = state_exit_code_zip;
         } else {
             for (i32 index = 0; index < 2; ++index) {
-                auto* record = (spiderman_rvb_unk_0638*)player->unk_399(index);
+                swing_data* swinger = player->unk_399(index);
 
-                if (record->unk_00) {
-                    player->unk_368(delta_t, record);
+                if (swinger->status) {
+                    player->unk_368(delta_t, swinger);
                     break;
                 }
             }

@@ -39,7 +39,8 @@ namespace treyarch {
     class thrown_weapon_interface : public weapon_interface_extender {
 
     public:
-        u8                       reserved_010[0x20];
+        i32                      unk_010;                // the hero's check_for_block takes it as the block value
+        u8                       reserved_014[0x1C];
         f32                      fuse_time;
         f32                      fuse_time_var;
         f32                      arm_time;

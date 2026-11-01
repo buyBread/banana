@@ -71,7 +71,8 @@ namespace treyarch {
         combo_flag_buddy_combo               = 0x00200000,
         combo_flag_cancel_target_stun        = 0x00800000,
         combo_flag_allow_counter_attack      = 0x04000000,
-        combo_flag_reset_double_jump         = 0x20000000
+        combo_flag_reset_double_jump         = 0x20000000,
+        combo_flag_allow_target_block        = 0x80000000
     };
 
     // SM3's combo_flags_3 and WoS's additions, as far as they're read
