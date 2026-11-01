@@ -22,6 +22,7 @@ namespace treyarch { namespace soap {
     using storage_query       = i32              (__thiscall*)(storage* self);
     using storage_test        = bool             (__thiscall*)(storage* self);
     using storage_article_get = storage_article* (__thiscall*)(storage* self, i32 user, i32 index);
+    using storage_article_has = bool             (__thiscall*)(storage* self, i32 user, i32 index);
     using storage_flag_set    = void             (__thiscall*)(storage* self, bool value);
 
     struct storage_vtable {
@@ -31,7 +32,8 @@ namespace treyarch { namespace soap {
         storage_query       busy;            // the pending service
         void*               reserved_01c[6];
         storage_article_get article;
-        void*               reserved_038[3];
+        storage_article_has article_exists;
+        void*               reserved_03c[2];
         storage_flag_set    set_must_show_active_device_unavailable;
         storage_method      method_048;
         storage_test        test_04c;
@@ -64,6 +66,10 @@ namespace treyarch { namespace soap {
             return vtable->article(this, user, index);
         }
 
+        bool article_exists(i32 user, i32 index) {
+            return vtable->article_exists(this, user, index);
+        }
+
         void set_must_show_active_device_unavailable(bool value) {
             vtable->set_must_show_active_device_unavailable(this, value);
         }
@@ -90,6 +96,7 @@ namespace treyarch { namespace soap {
     ASSERT_OFFSETOF(storage_vtable, frame_advance,                           0x14);
     ASSERT_OFFSETOF(storage_vtable, busy,                                    0x18);
     ASSERT_OFFSETOF(storage_vtable, article,                                 0x34);
+    ASSERT_OFFSETOF(storage_vtable, article_exists,                          0x38);
     ASSERT_OFFSETOF(storage_vtable, set_must_show_active_device_unavailable, 0x44);
     ASSERT_OFFSETOF(storage_vtable, method_048,                              0x48);
     ASSERT_OFFSETOF(storage_vtable, test_04c,                                0x4C);
