@@ -319,6 +319,7 @@ void igo_3d_widget::unk_053() {
 
 
 // sub_699C40
+// inlined @ sub_6DE490
 void igo_3d_widget::fade_in(f32 duration, f32 from_alpha, f32 to_alpha, f32 delay) {
     fade_in_duration   = duration;
     fade_in_remaining  = (f32)((f64)duration + delay);

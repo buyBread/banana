@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vc8/list.hh"
+#include "vc8/vector.hh"
 #include "game/frontend/conversation_menu_system.hh"
 #include "game/frontend/dialog_box.hh"
 #include "game/frontend/entity_tracker.hh"
@@ -24,6 +25,7 @@
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
 #include "game/frontend/igo/igo_generic_decay_timer.hh"
 #include "game/frontend/igo/igo_widget_group.hh"
+#include "game/input/game_button.hh"
 #include "treyarch/ngl/quad/quad.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
 #include "game/container/legacy_list.hh"
@@ -36,6 +38,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class entity;
+    class event;
     class igo_3d_camera_widget;
     class igo_3d_face_button_system;
     class igo_3d_nav_button_bar;
@@ -49,14 +53,15 @@ namespace treyarch {
 
     struct ui_frontend_vtable {
         void*                      reserved_000[6];
-        ui_frontend_advance_method update; // KSPS IGOUpdate, SM3 IGOFrontEnd::Update; see game::frame_advance_game_overlays
+        ui_frontend_advance_method update; // KSPS IGOUpdate, SM3 IGOFrontEnd::Update; source calls ui_frontend::update directly
         void*                      reserved_01c[2];
         ui_frontend_method         draw;
         ui_frontend_method         draw_startup;
         ui_frontend_method         draw_quad_list;
         ui_frontend_method         draw_pass_1;
         ui_frontend_method         draw_pass_2;
-        void*                      reserved_038[2];
+        ui_frontend_advance_method unk_014;
+        void*                      reserved_03c;
         ui_frontend_show_method    set_meters_shown;
         ui_frontend_show_method    set_radar_shown;
     };
@@ -91,6 +96,7 @@ namespace treyarch {
         inline util::memory_reference<f32> unk_0102d00c { 0x0102D00C };
 
         inline util::memory_reference<string_hash> senses_exited { 0x0102C48C };
+        inline util::memory_reference<string_hash> faded_out     { 0x0102C800 };
     } // references
 
     // the ally meter at ui_frontend +0x1ac
@@ -114,7 +120,17 @@ namespace treyarch {
 
     public:
         ui_frontend_vtable*                 vtable;
-        u8                                  reserved_004[0xB4];
+        u8                                  reserved_004[0x0C];
+        i32                                 hero_freezes;                // fade_blackscreen's freeze_hero calls, paid back by release_hero_freezes
+        u32                                 faded_out_callback_id;
+        bool                                player_callbacks_registered;
+        bool                                death_dialog_shown;
+        u8                                  unk_01a;
+        bool                                death_dialog_deferred;       // the update retries on_player_faded_out while it's set
+        game_button                         unk_01c;                     // control 11
+        game_button                         unk_068;                     // control 12
+        bool                                unk_0b4;                     // the update acts on the pauseless dialog's answer once it's closed
+        u8                                  reserved_0b5[0x03];
         igo_3d_widget*                      special_meter;
         igo_3d_widget*                      unknown_widget_0bc;
         igo_3d_widget*                      unknown_widget_0c0;
@@ -170,10 +186,7 @@ namespace treyarch {
         igo_3d_widget*                      startup_widget_184;
         igo_3d_widget*                      unknown_widget_188;
         igo_3d_camera_widget*               camera_widget;
-        u8                                  reserved_190[0x04];
-        igo_3d_widget**                     optional_widgets_begin;
-        igo_3d_widget**                     optional_widgets_end;
-        igo_3d_widget**                     optional_widgets_capacity;
+        vc8::vector<igo_3d_widget*>         optional_widgets;
         igo_3d_widget*                      optional_widget;
         igo_widget_group*                   widget_group_1a4;
         igo_3d_widget*                      unknown_widget_1a8;
@@ -202,6 +215,8 @@ namespace treyarch {
         u32                                 widget_suppression_conditions;
         vc8::list<igo_3d_widget*>           widgets; // drawn unless their suppression mask matches
 
+        void update(f32 time_inc); // slot 6
+
         void draw();
         void draw_startup();
         void draw_quad_list();
@@ -216,6 +231,13 @@ namespace treyarch {
         void draw_interface_disabled_script_widgets(bool interface_disabled);
 
         void set_dialog_box(dialog_box* box, bool freeze_hero);
+
+        void fade_blackscreen(bool on, f32 time, bool silent); // fading in freezes the hero until release_hero_freezes
+        void release_hero_freezes();
+
+        void        register_player_callbacks(entity* hero); // once
+        static void player_faded_out_callback(event* raised_event, arch_base_vhandle recipient, void* parameters);
+        void        on_player_faded_out(); // ends the mission or brings up the death dialog
 
         void set_generic_meter_visible(bool visible);
         void set_generic_meter_value  (f32 value);
@@ -274,9 +296,17 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend_vtable, draw_quad_list,   0x2C);
     ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_1,      0x30);
     ASSERT_OFFSETOF(ui_frontend_vtable, draw_pass_2,      0x34);
+    ASSERT_OFFSETOF(ui_frontend_vtable, unk_014,          0x38);
     ASSERT_OFFSETOF(ui_frontend_vtable, set_meters_shown, 0x40);
     ASSERT_OFFSETOF(ui_frontend_vtable, set_radar_shown,  0x44);
 
+    ASSERT_OFFSETOF(ui_frontend, hero_freezes,                  0x010);
+    ASSERT_OFFSETOF(ui_frontend, faded_out_callback_id,         0x014);
+    ASSERT_OFFSETOF(ui_frontend, player_callbacks_registered,   0x018);
+    ASSERT_OFFSETOF(ui_frontend, death_dialog_deferred,         0x01B);
+    ASSERT_OFFSETOF(ui_frontend, unk_01c,                       0x01C);
+    ASSERT_OFFSETOF(ui_frontend, unk_068,                       0x068);
+    ASSERT_OFFSETOF(ui_frontend, unk_0b4,                       0x0B4);
     ASSERT_OFFSETOF(ui_frontend, special_meter,                 0x0B8);
     ASSERT_OFFSETOF(ui_frontend, pauseless_dialog,              0x0E8);
     ASSERT_OFFSETOF(ui_frontend, scrapbook,                     0x128);
@@ -291,7 +321,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(ui_frontend, unknown_widget_174,            0x174);
     ASSERT_OFFSETOF(ui_frontend, startup_widget_17c,            0x17C);
     ASSERT_OFFSETOF(ui_frontend, camera_widget,                 0x18C);
-    ASSERT_OFFSETOF(ui_frontend, optional_widgets_begin,        0x194);
+    ASSERT_OFFSETOF(ui_frontend, optional_widgets,              0x190);
+    ASSERT_OFFSETOF(ui_frontend, optional_widget,               0x1A0);
     ASSERT_OFFSETOF(ui_frontend, ui_lights,                     0x1B8);
     ASSERT_OFFSETOF(ui_frontend, ui_environments,               0x1E8);
     ASSERT_OFFSETOF(ui_frontend, current_ui_environment,        0x1F8);

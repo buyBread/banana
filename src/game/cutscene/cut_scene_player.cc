@@ -391,7 +391,7 @@ void cut_scene_player::start_fade() {
 
     fade_timer = fading->start_fade.fade_out_time;
 
-    retail::sub_70A8B0((u32*)igo, true, fade_timer, true); // shows the loading screen
+    igo->fade_blackscreen(true, fade_timer, true);
 }
 
 // sub_808DB0
@@ -738,14 +738,14 @@ bool cut_scene_player::advance_fade(f32 time_inc) {
         u32 black = 0xFF000000;
 
         retail::sub_698B50((u32*)igo, &black);
-        retail::sub_6884F0((u32*)igo); // lets go of the hero freezes the loading screen took
+        igo->release_hero_freezes();
 
         fade_state = 0;
 
         return true;
     }
 
-    retail::sub_70A8B0((u32*)igo, false, fade_in_time, true); // hides the loading screen
+    igo->fade_blackscreen(false, fade_in_time, true);
 
     fade_timer = fade_in_time;
     fade_state = 3;
@@ -778,7 +778,7 @@ void cut_scene_player::start_end_fade() {
     ui_frontend* igo = references::frontend.get().igo;
 
     retail::sub_698B50((u32*)igo, &fading->end_fade.color); // the loading screen's color
-    retail::sub_70A8B0((u32*)igo, true, fade_timer, true);  // shows the loading screen
+    igo->fade_blackscreen(true, fade_timer, true);
 }
 
 // sub_8057A0

@@ -112,7 +112,7 @@ void game::frame_advance_level(f32 time_inc) {
 void game::frame_advance_game_overlays(f32 time_inc) {
     frontend_manager &frontend = references::frontend.get();
 
-    frontend.igo->vtable->update(frontend.igo, time_inc);
+    frontend.igo->update(time_inc);
     frontend.pause_menu_timer = (f32)((f64)frontend.pause_menu_timer - (f64)time_inc);
 
     retail::sub_698A30(&frontend, time_inc);

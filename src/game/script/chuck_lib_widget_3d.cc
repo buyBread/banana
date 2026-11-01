@@ -665,7 +665,7 @@ bool slf__bring_up_3d_dialog__num__num__num__t::operator()(chuck::vm::vm_stack &
         retail::sub_6A2260((u32*)dialog, 344); // button 1 text
         retail::sub_68E950((i32)dialog, show_button_2 != 0.0f);
         retail::sub_68E920((i32)dialog, show_button_1 != 0.0f);
-        retail::sub_6DE490((u8*)dialog, 2); // bring_up
+        dialog->igo_3d_dialog_widget::bring_up(2);
 
         return false;
     }
@@ -1775,7 +1775,7 @@ bool slf__show_mission_success_screen__num__num__t::operator()(chuck::vm::vm_sta
     mission_manager::inst()->success_screen_type      = (i32)type;
     mission_manager::inst()->success_screen_parameter = (i32)parameter;
 
-    retail::sub_6DE490((u8*)dialog, 1); // bring_up
+    dialog->igo_3d_dialog_widget::bring_up(1);
 
     return true;
 }

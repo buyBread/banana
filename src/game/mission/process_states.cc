@@ -795,7 +795,7 @@ void mission_manager::process_state_start_mission_failed_dialog() {
         retail::sub_68E920((i32)dialog, 0);
     }
 
-    retail::sub_6DE490((u8*)dialog, 1);
+    dialog->igo_3d_dialog_widget::bring_up(1);
 
     state = mission_manager_state_running_mission_failed_dialog;
 }

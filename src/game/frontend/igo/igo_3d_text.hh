@@ -23,7 +23,10 @@ namespace treyarch {
         void          (__thiscall* set_font_scale)(igo_3d_text* self, f32 scale);
         void*         reserved_04c;
         void          (__thiscall* set_font_color)(igo_3d_text* self, f32 r, f32 g, f32 b);
-        void*         reserved_054[18];
+        void*         reserved_054[3];
+        f32           (__thiscall* get_width)(igo_3d_text* self);  // set_dimensions' w
+        f32           (__thiscall* get_height)(igo_3d_text* self); // set_dimensions' h
+        void*         reserved_068[13];
         void          (__thiscall* set_button_scale)(igo_3d_text* self, f32 scale);
         void*         reserved_0a0[6];
         mash::string* (__thiscall* get_text)(igo_3d_text* self, mash::string* result); // by value
@@ -62,6 +65,10 @@ namespace treyarch {
 
         void set_dimensions(f32 w, f32 h) {
             vtable->set_dimensions(this, w, h);
+        }
+
+        f32 get_width() {
+            return vtable->get_width(this);
         }
 
         void set_h_justification(i32 just_flags) {
@@ -147,6 +154,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_text_no_localize,   0x03C);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_font_scale,         0x048);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_font_color,         0x050);
+    ASSERT_OFFSETOF(igo_3d_text_vtable, get_width,              0x060);
+    ASSERT_OFFSETOF(igo_3d_text_vtable, get_height,             0x064);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_button_scale,       0x09C);
     ASSERT_OFFSETOF(igo_3d_text_vtable, get_text,               0x0B8);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_text_position_x,    0x0D4);

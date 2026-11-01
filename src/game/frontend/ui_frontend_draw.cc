@@ -173,9 +173,9 @@ void ui_frontend::draw() {
                             ally_health_widget->render();
 
                         if (references::optional_widget_group_enabled.read()) {
-                            if (optional_widgets_begin) {
-                                for (igo_3d_widget** widget = optional_widgets_begin;
-                                     widget != optional_widgets_end; ++widget) {
+                            if (optional_widgets.begin()) {
+                                for (igo_3d_widget** widget = optional_widgets.begin();
+                                     widget != optional_widgets.end(); ++widget) {
                                     if (*widget)
                                         (*widget)->render();
                                 }

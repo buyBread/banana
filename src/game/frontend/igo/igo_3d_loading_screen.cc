@@ -112,6 +112,9 @@ void igo_3d_loading_screen::blackscreen_on(f32 time, bool unk, bool hold, bool s
 }
 
 // sub_6A9D60
+// inlined @ sub_6DE490
+// inlined @ sub_6E70D0
+// inlined @ sub_70A8B0
 void igo_3d_loading_screen::blackscreen_off(f32 time, bool force) {
     if (!mission_manager::inst()->is_mission_running() && held && !force)
         return;

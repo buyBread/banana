@@ -17,6 +17,7 @@ namespace treyarch {
 
         // inlined @ sub_6B13F0
         // inlined @ sub_6A7000
+        // inlined @ sub_6DE490
         void start(f32 start_value, f32 end_value, f32 length, f32 delay) { // value holds at start_value for delay
             f32 total = (f32)((f64)(f32)((f64)length + (f64)delay) - 0.0);
 

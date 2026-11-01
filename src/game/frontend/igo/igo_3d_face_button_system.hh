@@ -36,7 +36,7 @@ namespace treyarch {
         u8                               reserved_34[0x04];
 
         virtual void unk_024() = 0;
-        virtual i32  unk_025(i32 unk_0, i32 unk_1) = 0;
+        virtual void unk_025(f32 unk) = 0;
         virtual void unk_026() = 0;
         virtual void draw_buttons() = 0;
 

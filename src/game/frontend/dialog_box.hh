@@ -16,7 +16,9 @@ namespace treyarch {
         bool           confirmed;
         u8             choice;         // 0 or 1
         bool           freeze;         // show stores its argument here
-        u8             reserved_164[0x50];
+        u8             reserved_164[0x04];
+        u32            unk_168;        // the front end's update deletes a hidden box only while it's 0
+        u8             reserved_16c[0x48];
         igo_3d_widget* updown_button;  // "~updown"
         igo_3d_widget* confirm_button; // "~confirm"
         u8             reserved_1bc[0x04];
@@ -51,6 +53,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(dialog_box, shown,          0x160);
     ASSERT_OFFSETOF(dialog_box, confirmed,      0x161);
     ASSERT_OFFSETOF(dialog_box, choice,         0x162);
+    ASSERT_OFFSETOF(dialog_box, unk_168,        0x168);
     ASSERT_OFFSETOF(dialog_box, updown_button,  0x1B4);
     ASSERT_OFFSETOF(dialog_box, confirm_button, 0x1B8);
 } // treyarch
