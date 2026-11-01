@@ -67,7 +67,7 @@ void ngl::process_section(mesh* owner, mesh_section* section) {
     const char* mesh_name = owner->name.text ? owner->name.text : "(null)";
 
     if (!section->material_data) {
-        banana::log.ngl("section of mesh \"{}\" is missing a material -- assigning default material", mesh_name);
+        // banana::log.ngl("section of mesh \"{}\" is missing a material -- assigning default material", mesh_name);
 
         section->material_data = &get_default_material();
     }
@@ -76,9 +76,9 @@ void ngl::process_section(mesh* owner, mesh_section* section) {
     shader*   section_shader   = section_material->shader_data;
 
     if (section_shader && !section_shader->check_vertex_definition_version(section)) {
-        banana::log.ngl("shader \"{}\" rejected the vertex definition of a mesh \"{}\" section -- assigning default shader",
-                        section_shader->get_name().text ? section_shader->get_name().text : "(null)",
-                        mesh_name);
+        // banana::log.ngl("shader \"{}\" rejected the vertex definition of a mesh \"{}\" section -- assigning default shader",
+        //                 section_shader->get_name().text ? section_shader->get_name().text : "(null)",
+        //                 mesh_name);
 
         section_material->shader_data = &get_default_shader();
     }

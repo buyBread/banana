@@ -19,19 +19,19 @@
 #include "banana/util/types.hh"
 
 #ifdef DEBUG
-#define PRINT_COLOR_TEST 1
-#define ALWAYS_FLUSH 1
-#define ALLOCATE_CONSOLE 1
+    #define PRINT_COLOR_TEST 1
+    #define ALWAYS_FLUSH 1
+    #define ALLOCATE_CONSOLE 1
 #else
-#define PRINT_COLOR_TEST 0
-#define ALWAYS_FLUSH 0
-#define ALLOCATE_CONSOLE 0
+    #define PRINT_COLOR_TEST 0
+    #define ALWAYS_FLUSH 0
+    #define ALLOCATE_CONSOLE 0
 #endif
 
 class s_logging : public util::singleton<s_logging> {
 
     enum class e_log_type : u8 {
-        msg, wrn, err, dbg, ngl,
+        msg, wrn, err, dbg,
     };
 
     struct log_entry {
@@ -57,7 +57,6 @@ class s_logging : public util::singleton<s_logging> {
             case e_log_type::wrn: return "[ WRN ]";
             case e_log_type::err: return "[ ERR ]";
             case e_log_type::dbg: return "[ DBG ]";
-            case e_log_type::ngl: return "[ NGL ]";
         }
 
         return {};
@@ -69,7 +68,6 @@ class s_logging : public util::singleton<s_logging> {
             case e_log_type::wrn: return "[\033[33m WRN\033[0m ]"; // yello
             case e_log_type::err: return "[\033[95m ERR\033[0m ]"; // brite purpur
             case e_log_type::dbg: return "[\033[0m DBG\033[0m ]";
-            case e_log_type::ngl: return "[\033[31m NGL\033[0m ]"; // red
         }
 
         return {};
@@ -140,7 +138,6 @@ class s_logging : public util::singleton<s_logging> {
         wrn("The quick brown fox jumps over the lazy dog.");
         err("The quick brown fox jumps over the lazy dog.");
         dbg("The quick brown fox jumps over the lazy dog.");
-        ngl("The quick brown fox jumps over the lazy dog.");
 #endif
 
         std::deque<log_entry> local;
@@ -308,14 +305,6 @@ public:
 #endif
         log(e_log_type::dbg, "{}", str);
     }
-
-    template <typename... t_args>
-    void ngl(std::format_string<t_args...> fmt, t_args&&... args) {
-        log(e_log_type::ngl, fmt, std::forward<t_args>(args)...);
-    }
-    void ngl(std::string_view str) {
-        log(e_log_type::ngl, "{}", str);
-    }
 };
 
 namespace banana {
@@ -323,3 +312,5 @@ namespace banana {
 } // banana
 
 #undef PRINT_COLOR_TEST
+#undef ALWAYS_FLUSH
+#undef ALLOCATE_CONSOLE

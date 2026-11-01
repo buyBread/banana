@@ -77,7 +77,7 @@ void log_unowned_node(void* vftable) {
         last = target;
 
         if (seen.insert(target).second)
-            banana::log.ngl("unowned render node -- address: {:p} | vtable: {:p}", target, vftable);
+            ; // banana::log.ngl("unowned render node -- address: {:p} | vtable: {:p}", target, vftable);
     }
 }
 #endif

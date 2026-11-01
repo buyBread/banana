@@ -29,15 +29,15 @@ void ngl::process_material(material* value) {
     else {
         const char* material_name = value->name.text ? value->name.text : "(null)";
 
-        if (!material_shader)
-            banana::log.ngl("unable to find shader 0x{:08X}, used by material \"{}\" -- assigning default shader",
-                            shader_name.source_hash_code,
-                            material_name);
-        else
-            banana::log.ngl("shader \"{}\" rejected material \"{}\" (version {}) -- assigning default shader",
-                            material_shader->get_name().text ? material_shader->get_name().text : "(null)",
-                            material_name,
-                            value->binary_version);
+        // if (!material_shader)
+        //     banana::log.ngl("unable to find shader 0x{:08X}, used by material \"{}\" -- assigning default shader",
+        //                     shader_name.source_hash_code,
+        //                     material_name);
+        // else
+        //     banana::log.ngl("shader \"{}\" rejected material \"{}\" (version {}) -- assigning default shader",
+        //                     material_shader->get_name().text ? material_shader->get_name().text : "(null)",
+        //                     material_name,
+        //                     value->binary_version);
 
         value->shader_data = &get_default_shader();
     }

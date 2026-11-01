@@ -170,7 +170,7 @@ void ngl::d3d9::reset_device() {
 
     game::restore_device_resources();
 
-    banana::log.ngl("device reset -- 0x{:08X}", (u32)result);
+    // banana::log.ngl("device reset -- 0x{:08X}", (u32)result);
 }
 
 // sub_9DCBA0
@@ -193,15 +193,15 @@ ULONG ngl::d3d9::init() {
 
     const D3DPRESENT_PARAMETERS &presentation = references::present_params.get();
 
-    banana::log.ngl("device created -- 0x{:08X} -- {} | {}x{} | {} | back buffer format: {} | refresh: {}Hz | interval: 0x{:08X}",
-                    (u32)result,
-                    device_type == D3DDEVTYPE_REF ? "reference" : "hardware",
-                    presentation.BackBufferWidth,
-                    presentation.BackBufferHeight,
-                    presentation.Windowed ? "windowed" : "fullscreen",
-                    (u32)presentation.BackBufferFormat,
-                    presentation.FullScreen_RefreshRateInHz,
-                    presentation.PresentationInterval);
+    // banana::log.ngl("device created -- 0x{:08X} -- {} | {}x{} | {} | back buffer format: {} | refresh: {}Hz | interval: 0x{:08X}",
+    //                 (u32)result,
+    //                 device_type == D3DDEVTYPE_REF ? "reference" : "hardware",
+    //                 presentation.BackBufferWidth,
+    //                 presentation.BackBufferHeight,
+    //                 presentation.Windowed ? "windowed" : "fullscreen",
+    //                 (u32)presentation.BackBufferFormat,
+    //                 presentation.FullScreen_RefreshRateInHz,
+    //                 presentation.PresentationInterval);
 
     ngli_init_work_buffers();
     references::dev.get()->GetDeviceCaps(&references::caps.get());
@@ -260,7 +260,7 @@ void ngl::d3d9::flip() {
         if (device_lost != (result == D3DERR_DEVICELOST)) {
             device_lost = !device_lost;
 
-            banana::log.ngl(device_lost ? "device lost" : "device restored");
+            // banana::log.ngl(device_lost ? "device lost" : "device restored");
         }
 
         if (result == D3DERR_DEVICELOST) {
