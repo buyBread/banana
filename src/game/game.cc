@@ -308,9 +308,9 @@ void game::freeze_hero(bool freeze) {
     retail::sub_548450((u32*)hero, freeze); // the invulnerable flag
 
     if (freeze)
-        hero->suspend_routed(true);
+        hero->suspend(true);
     else
-        hero->unsuspend_routed(true);
+        hero->unsuspend(true);
 
     hero->player_ifc()->set_enabled(!freeze);
 

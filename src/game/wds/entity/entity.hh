@@ -98,10 +98,6 @@ namespace treyarch {
         virtual bool          hates_spiderman();
         virtual mash::string* get_signaller_owner_name(mash::string* result) const;
 
-        // slots 116 / 117; actor's shared body runs in source, any other the object's own
-        void suspend_routed  (bool update_region);
-        void unsuspend_routed(bool update_region);
-
         void invoke_render_phase();
 
         region* get_primary_region();

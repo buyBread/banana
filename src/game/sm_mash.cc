@@ -7,9 +7,17 @@
 #include "game/als/script_state.hh"
 #include "game/meta_anims.hh"
 #include "game/sm_mash.hh"
+#include "game/water_box.hh"
 #include "game/wds/ai/param_block.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
+#include "game/wds/entity/conglomerate_clone.hh"
+#include "game/wds/entity/door.hh"
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
 #include "game/wds/entity/interface/thrown_weapon_interface.hh"
+#include "game/wds/entity/sign.hh"
+#include "game/wds/entity/sky.hh"
+#include "game/wds/entity/vehicle.hh"
 #include "treyarch/mash/virtual_base.hh"
 
 using namespace treyarch;
@@ -21,6 +29,7 @@ void treyarch::sm_generate_vtable() {
     /* the source-owned part of the generated list (sub_723DA0), under its guard and in its order;
        it goes first, so the list's own registrations of these keys are refused and the source vtables stay */
     if (!references::vtables_generated.read()) {
+        mash::mash_virtual_base::register_class<actor>();
         mash::mash_virtual_base::register_class<ai_puppet_anim_by_filename>();
         mash::mash_virtual_base::register_class<combat_block_meta_anim>();
         mash::mash_virtual_base::register_class<combat_dodge_meta_anim>();
@@ -171,6 +180,10 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<als::scripted_category>();
         mash::mash_virtual_base::register_class<als::scripted_state>();
         mash::mash_virtual_base::register_class<als::scripted_trans_group>();
+        mash::mash_virtual_base::register_class<conglomerate>();
+        mash::mash_virtual_base::register_class<conglomerate_clone>();
+        mash::mash_virtual_base::register_class<dynamic_conglomerate_clone>();
+        mash::mash_virtual_base::register_class<door>();
         mash::mash_virtual_base::register_class<param_class>();
         mash::mash_virtual_base::register_class<param_entity>();
         mash::mash_virtual_base::register_class<param_float>();
@@ -181,8 +194,12 @@ void treyarch::sm_generate_vtable() {
         mash::mash_virtual_base::register_class<param_string>();
         mash::mash_virtual_base::register_class<param_vector3d>();
         mash::mash_virtual_base::register_class<generic_anim_by_filename>();
+        mash::mash_virtual_base::register_class<sign>();
+        mash::mash_virtual_base::register_class<sky>();
         mash::mash_virtual_base::register_class<spiderman_rvb_player_interface>();
         mash::mash_virtual_base::register_class<thrown_weapon_interface>();
+        mash::mash_virtual_base::register_class<vehicle>();
+        mash::mash_virtual_base::register_class<water_box>();
     }
 
     retail::sub_723DA0();

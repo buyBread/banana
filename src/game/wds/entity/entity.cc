@@ -1,5 +1,4 @@
 #include "retail.hh"
-#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 
 using namespace treyarch;
@@ -323,20 +322,6 @@ bool entity::hates_spiderman() {
 // slot 135
 mash::string* entity::get_signaller_owner_name(mash::string* result) const {
     return ((mash::string* (__thiscall*)(const entity*, mash::string*))retail::sub_601FB0)(this, result);
-}
-
-void entity::suspend_routed(bool update_region) {
-    if ((*(void***)this)[116] == (void*)retail::sub_602EB0)
-        ((actor*)this)->actor::suspend(update_region);
-    else
-        suspend(update_region);
-}
-
-void entity::unsuspend_routed(bool update_region) {
-    if ((*(void***)this)[117] == (void*)retail::sub_602EF0)
-        ((actor*)this)->actor::unsuspend(update_region);
-    else
-        unsuspend(update_region);
 }
 
 // sub_612D30
