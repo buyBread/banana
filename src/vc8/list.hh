@@ -142,6 +142,7 @@ namespace treyarch { namespace vc8 {
         // sub_5A85E0
         // inlined @ sub_4DE570
         // inlined @ sub_99A570
+        // inlined @ sub_4F7470
         void pop_front() noexcept { // nothing on an empty list
             erase(sentinel->next);
         }
