@@ -165,6 +165,14 @@ namespace treyarch {
             gravity_multiplier = g;
         }
 
+        // inlined @ sub_41C930
+        void set_combat_gravity_multiplier(f32 g, f32 dur = 1.0f) {
+            combat_gravity_multiplier    = g;
+            combat_gravity_restore_timer = dur;
+        }
+
+        f32 get_final_gravity_multiplier() const;
+
         // inlined
         void set_angular_velocity(const vector3d &v) {
             angular_velocity = v;

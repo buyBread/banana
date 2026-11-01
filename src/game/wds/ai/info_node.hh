@@ -144,6 +144,12 @@ namespace treyarch {
                                bool              scale_by_speed,
                                anim_event_param* param);
 
+        f32 get_time_since_signal(string_hash       evt,
+                                  als::layer_id     the_layer,
+                                  bool*             signal_exists,
+                                  bool              scale_by_speed,
+                                  anim_event_param* param);
+
         f32 get_duration               (als::layer_id the_layer);
         f32 get_current_normalized_time(als::layer_id the_layer);
         f32 get_current_time           (als::layer_id the_layer);

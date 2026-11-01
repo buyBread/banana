@@ -2,6 +2,7 @@
 
 #include "game/audio/sound_response.hh"
 #include "game/wds/ai/ai_state_machine.hh"
+#include "game/wds/ai/ai_target.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/als/als.hh"
 #include "game/arch_base_vhandle.hh"
@@ -219,10 +220,13 @@ namespace treyarch {
         combo_unk_14_flag_00000200 = 0x00000200, // slot 506, only when set
         combo_unk_14_flag_00000400 = 0x00000400, // slot 175
         combo_unk_14_flag_00010000 = 0x00010000, // slot 512, only when set
+        combo_unk_14_flag_00100000 = 0x00100000, // update_combat hits current_targets instead of the targets around the move
         combo_unk_14_flag_00800000 = 0x00800000, // slot 173
         combo_unk_14_flag_01000000 = 0x01000000, // slot 171
         combo_unk_14_flag_02000000 = 0x02000000, // slot 169
-        combo_unk_14_flag_04000000 = 0x04000000  // slot 167
+        combo_unk_14_flag_04000000 = 0x04000000, // slot 167
+        combo_unk_14_flag_40000000 = 0x40000000, // plr_combat_state slot 48 pushes player slot 40's target
+        combo_unk_14_flag_80000000 = 0x80000000  // one weapon per attack, taking turns
     };
 
     enum e_combo_unk_18_flags : u32 {
@@ -230,9 +234,11 @@ namespace treyarch {
         combo_unk_18_flag_00000002 = 0x00000002, // slot 179
         combo_unk_18_flag_00000008 = 0x00000008, // the launch runs every frame, not only on an anim action
         combo_unk_18_flag_00000010 = 0x00000010, // the hero's hit adds nothing to meter 0
+        combo_unk_18_flag_00000080 = 0x00000080, // plr_combat_state slot 48 pushes the zlock entity
         combo_unk_18_flag_00000400 = 0x00000400, // hit_target doesn't record the target in already_hit_targets
         combo_unk_18_flag_00001000 = 0x00001000, // the attack window's first target hit becomes the primary target
-        combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::hit_dilation_pending
+        combo_unk_18_flag_00008000 = 0x00008000, // a transition into the move clears combat_state::hit_dilation_pending
+        combo_unk_18_flag_00040000 = 0x00040000  // update_combat keeps targets that are dodging or countering
     };
 
     // SM3's CombatAnimValues; WoS has twelve signals of three elements, the third the time to the signal over the layer's speeds
@@ -315,12 +321,6 @@ namespace treyarch {
         vector3d         get_self_cancel_velocity_dir  (bool* exists) const;
         vector3d         get_target_cancel_velocity_dir(bool* exists) const;
         vector3d         get_auto_calc_targets_dir     (bool* exists) const;
-    };
-
-    // what internal_auto_calc_targets finds
-    struct auto_calc_target {
-        arch_base_vhandle target;
-        u8                reserved_04[0x0C];
     };
 
     // a combat script's frame_advance thread and what its natives may ask about it
@@ -531,7 +531,7 @@ namespace treyarch {
 
         virtual string_hash   get_combat_als_category() const;
         virtual als::layer_id get_combat_layer();
-        virtual bool          unk_048(const combo_move_data* combo_move, void* unk);
+        virtual bool          unk_048(const combo_move_data* combo_move, vc8::vector<ai_target>* targets); // pushes a target the move forces on it
 
         virtual bool unk_049(      entity*           target,
                              const combo_move_data*  combo_move,
@@ -599,7 +599,7 @@ namespace treyarch {
         void kill_combat_script(bool unload_exec);
 
         void push_target(arch_base_vhandle targ);
-        i32  internal_auto_calc_targets(const combo_move_data* combo_move, vc8::vector<auto_calc_target>* targets); // how many it found
+        i32  internal_auto_calc_targets(const combo_move_data* combo_move, vc8::vector<ai_target>* targets); // how many it found
 
         void set_delay_stun_recovery(const combo_move_data* combo_move);
         void perform_auto_draw      (const combo_move_data* combo_move);
@@ -642,6 +642,11 @@ namespace treyarch {
         void update_time_dilation  (als_inode* my_als);
         void auto_calc_throw_target(const combo_move_data* combo_move, als_inode* my_als);
 
+        i32  search_area_targets(const combo_move_data* combo_move, als_inode* my_als, vc8::vector<ai_target>* targets); // how many it found
+
+        void update_hit_sphere_positions   (als_inode* my_als);
+        void save_prev_hit_sphere_positions(als_inode* my_als);
+
         resource_key      get_sync_react_asg(entity* target) const;     // "sync_controlled_combat_react" for the hero, else "sync_combat_react"
         void              release_sync_target(actor* target);
         arch_base_vhandle engage_sync_target(arch_base_vhandle target); // null when it couldn't be engaged
@@ -649,6 +654,8 @@ namespace treyarch {
 
         void update_initially_standing();
         bool is_floor_within_reach(); // the floor below is no further down than the floor offset and half a meter
+
+        static const vector3d unset_fire_position; // (-10000, -10000, -10000); where a shot goes when nothing gives a position
     };
 
     ASSERT_OFFSETOF(combo_move_data, flags_1, 0x04);
@@ -656,8 +663,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(combo_move_data, unk_10,  0x10);
     ASSERT_OFFSETOF(combo_move_data, unk_18,  0x18);
     ASSERT_OFFSETOF(combo_move_data, params,  0x20);
-
-    ASSERT_SIZEOF(auto_calc_target, 0x10);
 
     ASSERT_SIZEOF  (combat_thread_info,                             0x20);
     ASSERT_OFFSETOF(combat_thread_info, frame_advancing_combo_move, 0x0C);
@@ -731,6 +736,7 @@ namespace treyarch {
     inline const string_hash damage_arc_key                 = string_hash(hash::djb2("damage_arc"));
     inline const string_hash damage_radius_key              = string_hash(hash::djb2("damage_radius"));
     inline const string_hash connect_range_mod_key          = string_hash(hash::djb2("connect_range_mod"));
+    inline const string_hash jump_connect_force_key         = string_hash(hash::djb2("jump_connect_force"));
     inline const string_hash attack_time_key                = string_hash(hash::djb2("attack_time"));
     inline const string_hash wounded_category_key           = string_hash(hash::djb2("wounded_category"));
     inline const string_hash attack_sound_group_key         = string_hash(hash::djb2("attack_sound_group"));
@@ -758,6 +764,10 @@ namespace treyarch {
     inline const string_hash meta_type_v_look_rate_delta_key = string_hash(hash::djb2("meta_type_v_look_rate_delta"));
     inline const string_hash meta_type_v_look_rate_damp_key  = string_hash(hash::djb2("meta_type_v_look_rate_damp"));
     inline const string_hash meta_type_v_look_rate_mute_key  = string_hash(hash::djb2("meta_type_v_look_rate_mute"));
+
+    inline const string_hash gravity_filter_key           = string_hash(hash::djb2("gravity_filter"));
+    inline const string_hash gravity_filter_down_only_key = string_hash(hash::djb2("gravity_filter_down_only"));
+    inline const string_hash gravity_filter_up_only_key   = string_hash(hash::djb2("gravity_filter_up_only"));
 
     inline const string_hash hit_effect_key = string_hash(hash::djb2("hit_effect"));
 

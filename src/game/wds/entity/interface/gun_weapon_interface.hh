@@ -9,8 +9,11 @@ namespace treyarch {
 
     public:
         u8  reserved_010[0x10];
-        i32 unk_020; // the hero's check_for_block takes it as the block value
+        i32 unk_020;            // the hero's check_for_block takes it as the block value
+        u8  reserved_024[0x18];
+        f32 unk_03c;            // combat_state::update_combat fires the gun only on the attack window's first frame or while it's no more than zero
     };
 
     ASSERT_OFFSETOF(gun_weapon_interface, unk_020, 0x20);
+    ASSERT_OFFSETOF(gun_weapon_interface, unk_03c, 0x3C);
 } // treyarch

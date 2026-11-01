@@ -15,6 +15,7 @@ namespace treyarch {
     class  entity_base;
     class  weapon_interface_extender;
     struct cpu_combat_movement;
+    struct cpu_combat_queued_move;
 
     // combat_state's move_transition sets the move bits, hit_target and the dodge and block slots the result bits
     enum e_cpu_combat_inode_flags : u32 {
@@ -74,6 +75,17 @@ namespace treyarch {
         // slot 25; what add_incoming_attack calls on the target's inode
         bool unk_025(entity_base* attacker, const combo_move_data* combo_move, i32 chain_position) {
             return ((bool (__thiscall*)(cpu_combat_inode*, entity_base*, const combo_move_data*, i32))(*(void***)this)[25])(this, attacker, combo_move, chain_position);
+        }
+
+        // slot 28; under the script lock, the combat script hears of the move with the targets and buddies
+        bool unk_028(cpu_combat_queued_move*                          move,
+                     chuck::vm::script_dynamic_array<arch_base_vhandle>* targets,
+                     chuck::vm::script_dynamic_array<arch_base_vhandle>* buddies) {
+
+            return ((bool (__thiscall*)(cpu_combat_inode*,
+                                        cpu_combat_queued_move*,
+                                        chuck::vm::script_dynamic_array<arch_base_vhandle>*,
+                                        chuck::vm::script_dynamic_array<arch_base_vhandle>*))(*(void***)this)[28])(this, move, targets, buddies);
         }
 
         // slot 31; a flag the script raises, read under the script lock

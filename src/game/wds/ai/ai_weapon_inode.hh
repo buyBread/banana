@@ -13,6 +13,8 @@
 namespace treyarch {
     class ai_action_nugget;
     class entity;
+    class gun_weapon_interface;
+    class thrown_weapon_interface;
 
     // SM3's eAIWeaponState
     enum e_ai_weapon_state : i32 {
@@ -61,12 +63,23 @@ namespace treyarch {
 
         e_ai_weapon_state get_state() const;
 
+        // null without a live weapon entity that has the interface
+        gun_weapon_interface*    get_gun_weapon_ifc   () const;
+        thrown_weapon_interface* get_thrown_weapon_ifc() const;
+
         static bool fire(entity*            shooter,
                          ai_weapon*         weapon,
                          e_weapon_fire_kind kind,
                          bool               if_empty,
                          arch_base_vhandle  target,
                          vector3d           position);
+
+        // as the weapon's own kind
+        static bool fire(entity*           shooter,
+                         ai_weapon*        weapon,
+                         bool              if_empty,
+                         arch_base_vhandle target,
+                         vector3d          position);
     };
 
     // runs its core's actions

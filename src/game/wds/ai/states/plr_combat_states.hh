@@ -52,7 +52,7 @@ namespace treyarch {
         i32           get_damage_type(const combo_move_data* combo_move, arch_base_vhandle target) const override;
         i32           get_damage(const combo_move_data* combo_move, arch_base_vhandle target) const override;
         vector3d      unk_035(const combo_move_data* combo_move, arch_base_vhandle target) override;
-        bool          unk_048(const combo_move_data* combo_move, void* unk) override;
+        bool          unk_048(const combo_move_data* combo_move, vc8::vector<ai_target>* targets) override;
 
         bool hit_target(      entity*           target,
                         const combo_move_data*  combo_move,

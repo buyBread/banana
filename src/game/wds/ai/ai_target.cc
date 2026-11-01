@@ -9,6 +9,7 @@ ai_target::ai_target() {
 }
 
 // sub_402DE0
+// inlined @ sub_582ED0
 ai_target::ai_target(arch_base_vhandle _target) : target() {
     set_target(_target);
 }

@@ -92,9 +92,41 @@ void cpu_combat_state::get_info_node_list(info_node_desc_list &the_list) const {
     the_list.add_entry(cpu_combat_inode::my_type_key);
 }
 
-// slot 20
+// sub_4F7470
 void cpu_combat_state::update_next_move() {
-    ((void (__thiscall*)(cpu_combat_state*))retail::sub_4F7470)(this);
+    if (queued_moves->empty())
+        return;
+
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    const combo_move_data* combo_move = my_als->get_combo_move(als::base_layer);
+
+    cpu_combat_queued_move* move = queued_moves->front();
+    queued_moves->pop_front();
+
+    // unless the move keeps the last targets, the queued ones that still resolve become the state's
+    if (!combo_move || !(combo_move->flags_1 & combo_flag_maintain_prev_targets)) {
+        i32 max_targets = combo_move ? combo_move->get_max_targets(nullptr) : 1;
+
+        for (ai_target *target = move->targets.begin(), *end = move->targets.end(); target != end; ++target) {
+            if (max_targets <= 0)
+                break;
+
+            if (target->target.resolve()) {
+                push_target(target->target);
+
+                --max_targets;
+            }
+        }
+    }
+
+    {
+        engine_lock_scope lock(&references::target_list_lock.get());
+
+        ((cpu_combat_inode*)get_core()->get_info_node(info_node_type_cpu_combat))->unk_028(move, current_targets, current_buddies);
+    }
+
+    delete move;
 }
 
 // slot 21

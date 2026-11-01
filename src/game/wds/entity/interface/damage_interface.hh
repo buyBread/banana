@@ -252,6 +252,9 @@ namespace treyarch {
 
         // one of the debug damage modes' flags; combat hits skip the hero while it's set
         inline util::memory_reference<bool> unk_00ffeab6 { 0x00FFEAB6 };
+
+        // another one; while it's set, each combat move of the hero without weapons kills every damageable around him
+        inline util::memory_reference<bool> unk_00ffead0 { 0x00FFEAD0 };
     } // references
 
     ASSERT_SIZEOF  (damage_info,         0x74);

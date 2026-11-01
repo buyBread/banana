@@ -32,6 +32,10 @@ vector3d physical_interface::get_velocity() const {
     return result;
 }
 
+f32 physical_interface::get_final_gravity_multiplier() const {
+    return ((f32 (__thiscall*)(const physical_interface*))retail::sub_5FF990)(this);
+}
+
 void physical_interface::add_velocity_increment(const vector3d &v, bool allow_limbo) {
     retail::sub_659810((i32)this, (f32*)&v, allow_limbo);
 }

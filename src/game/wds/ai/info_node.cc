@@ -77,6 +77,16 @@ f32 als_inode::get_time_to_signal(string_hash       evt,
                                                                       param);
 }
 
+// sub_44F3E0
+f32 als_inode::get_time_since_signal(string_hash       evt,
+                                     als::layer_id     the_layer,
+                                     bool*             signal_exists,
+                                     bool              scale_by_speed,
+                                     anim_event_param* param) {
+
+    return my_als->get_als_layer(the_layer)->get_time_since_signal(evt, signal_exists, scale_by_speed, param);
+}
+
 // sub_44F430
 f32 als_inode::get_duration(als::layer_id the_layer) {
     return my_als->get_als_layer(the_layer)->get_duration();

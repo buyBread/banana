@@ -205,19 +205,65 @@ void plr_combat_state::get_info_node_list(info_node_desc_list &the_list) const {
     ((void (__thiscall*)(const plr_combat_state*, info_node_desc_list*))retail::sub_4E36C0)(this, &the_list);
 }
 
-// slot 20
+// sub_57B440
 void plr_combat_state::update_next_move() {
-    ((void (__thiscall*)(plr_combat_state*))retail::sub_57B440)(this);
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    const combo_move_data* combo_move = my_als->get_combo_move(als::base_layer);
+
+    player_interface*        player = get_actor()->player_ifc();
+    const plr_combat_attack* attack;
+
+    if (first_move == combat_num_moves)
+        attack = player->get_next_attack();
+    else {
+        attack     = player->get_attack(first_move);
+        first_move = combat_num_moves;
+    }
+
+    if (attack) {
+        // unless the move keeps the last targets, the attack's become the state's
+        if (!combo_move || !(combo_move->flags_1 & combo_flag_maintain_prev_targets)) {
+            i32 max_targets = combo_move ? combo_move->get_max_targets(nullptr) : 1;
+
+            for (ai_target *target = attack->targets->begin(), *end = attack->targets->end(); target != end; ++target, --max_targets) {
+                if (max_targets <= 0)
+                    break;
+
+                push_target(target->target);
+            }
+        }
+
+        attack_button = attack->button;
+    } else
+        attack_button = nullptr;
+
+    button_held = attack_button && attack_button->pressed();
+
+    player->clear_attacks(false);
 }
 
-// slot 21
+// sub_54C460
 e_combat_move plr_combat_state::get_next_move(f32 delta_t, i32* next_script_move_num) {
-    return ((e_combat_move (__thiscall*)(plr_combat_state*, f32, i32*))retail::sub_54C460)(this, delta_t, next_script_move_num);
+    player_interface* player = get_actor()->player_ifc();
+
+    e_combat_move next_move = player->get_next_attack_enum();
+
+    if (next_move == combat_move_script_move) {
+        *next_script_move_num = player->get_attack(combat_move_script_move)->script_move_num;
+
+        return combat_move_script_move;
+    }
+
+    return next_move;
 }
 
-// slot 22
+// sub_54C410
 e_combat_move plr_combat_state::get_initial_move(i32* next_script_move_num) {
-    return ((e_combat_move (__thiscall*)(plr_combat_state*, i32*))retail::sub_54C410)(this, next_script_move_num);
+    if (first_move == combat_move_script_move)
+        *next_script_move_num = get_actor()->player_ifc()->get_attack(first_move)->script_move_num;
+
+    return first_move != combat_num_moves ? first_move : combat_move_light_melee;
 }
 
 // slot 23
@@ -262,9 +308,25 @@ vector3d plr_combat_state::unk_035(const combo_move_data* combo_move, arch_base_
     return result;
 }
 
-// slot 48
-bool plr_combat_state::unk_048(const combo_move_data* combo_move, void* unk) {
-    return ((bool (__thiscall*)(plr_combat_state*, const combo_move_data*, void*))retail::sub_582ED0)(this, combo_move, unk);
+// sub_582ED0
+bool plr_combat_state::unk_048(const combo_move_data* combo_move, vc8::vector<ai_target>* targets) {
+    player_interface* player = get_actor()->player_ifc();
+
+    if (!combo_move)
+        return false;
+
+    if (combo_move->unk_14 & combo_unk_14_flag_40000000 && !player->unk_040().null()) {
+        targets->push_back(ai_target(player->unk_040()));
+
+        return true;
+    }
+
+    if (!(combo_move->unk_18 & combo_unk_18_flag_00000080) || player->unk_048().null())
+        return false;
+
+    targets->push_back(ai_target(player->unk_048()));
+
+    return true;
 }
 
 // sub_54C7B0

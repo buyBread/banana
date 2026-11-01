@@ -20,6 +20,14 @@ e_ai_weapon_state ai_weapon::get_state() const {
     return (e_ai_weapon_state)retail::sub_4E7A40((u8*)this);
 }
 
+gun_weapon_interface* ai_weapon::get_gun_weapon_ifc() const {
+    return (gun_weapon_interface*)retail::sub_4E79C0((void*)this);
+}
+
+thrown_weapon_interface* ai_weapon::get_thrown_weapon_ifc() const {
+    return (thrown_weapon_interface*)retail::sub_4E79F0((void*)this);
+}
+
 // sub_4ECBE0
 bool ai_weapon::fire(entity*            shooter,
                      ai_weapon*         weapon,
@@ -32,6 +40,15 @@ bool ai_weapon::fire(entity*            shooter,
         return false;
 
     return fire_weapon_entity(shooter, weapon->weapon_entity.resolve()->my_handle, kind, if_empty, target, position);
+}
+
+bool ai_weapon::fire(entity*           shooter,
+                     ai_weapon*        weapon,
+                     bool              if_empty,
+                     arch_base_vhandle target,
+                     vector3d          position) {
+
+    return ((bool (__cdecl*)(entity*, ai_weapon*, bool, arch_base_vhandle, vector3d))retail::sub_4ECB80)(shooter, weapon, if_empty, target, position);
 }
 
 string_hash ai_action_processor_inode::add_action(ai_action_nugget* my_action) {
