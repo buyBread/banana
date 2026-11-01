@@ -12,6 +12,7 @@
 namespace treyarch {
     class ai_tentacle_slack;
     class ai_tentacle_web_curly;
+    class player_interface;
 
     // SM3 eSwingerHand
     enum e_swinger_hand : i32 {
@@ -56,6 +57,8 @@ namespace treyarch {
         boolx                  for_zip;
         u8                     pad_2d9[0x03];
 
+        bool frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index); // true when the web should break
+        void post_process(player_interface* plr_ifc, f32 delta_t, i32 index);
         void anim_started();
         void fire(f32 speed = 50.0f, f32 accel = 50.0f, f32 curve_rad = 1.0f, bool zip = false);
         void hide();

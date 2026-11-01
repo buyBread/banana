@@ -473,7 +473,7 @@ void player_interface::frame_advance_disabled(f32 delta_t) {
 }
 
 // slot 94
-void player_interface::unk_094(f32 delta_t) {
+void player_interface::post_process(f32 delta_t) {
     ((void (__thiscall*)(player_interface*, f32))retail::sub_689610)(this, delta_t);
 }
 
@@ -2740,9 +2740,9 @@ void player_interface::set_post_process_flag(e_post_process_action f, bool set) 
         post_process_flags &= ~f;
 }
 
-// slot 478
-bool player_interface::unk_478(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_7200F0)(this, unk);
+// sub_7200F0
+bool player_interface::get_post_process_flag(e_post_process_action f) {
+    return (post_process_flags & f) != 0;
 }
 
 // slot 479

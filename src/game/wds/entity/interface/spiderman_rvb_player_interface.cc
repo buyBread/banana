@@ -619,7 +619,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
     retail::sub_9A7B00((i32)this, delta_t);
 
     for (i32 index = 0; index < 2; ++index) {
-        if (retail::sub_993670((i32)swingers[index], (u32*)this, delta_t, index)) { // swing_data::frame_advance
+        if (swingers[index]->frame_advance(this, delta_t, index)) {
             break_web((e_swinger_hand)index, false, true);
             unk_332(0.0f, true);
             unk_189(true);
@@ -752,9 +752,21 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
     unk_06bc = my_actor->my_abs_po->get_position();
 }
 
-// slot 94
-void spiderman_rvb_player_interface::unk_094(f32 delta_t) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9BBC80)(this, delta_t);
+// sub_9BBC80
+void spiderman_rvb_player_interface::post_process(f32 delta_t) {
+    player_interface::post_process(delta_t);
+
+    for (i32 index = 0; index < max_swingers; ++index)
+        swingers[index]->post_process(this, delta_t, index);
+
+    for (i32 index = 0; index < 8; ++index)
+        swing_leftovers[index]->post_process(delta_t);
+
+    if (get_post_process_flag(pp_swing_anchor_search))
+        retail::sub_9B0800((u32*)this, unk_395()); // attempt_to_initiate_swing_check
+
+    if (get_post_process_flag(pp_swing_avoid_ground))
+        unk_460(delta_t);
 }
 
 // slot 96
@@ -3512,4 +3524,20 @@ i32 spiderman_rvb_player_interface::unk_594(void* unk, i32 unk_2) {
 // slot 595
 i32 spiderman_rvb_player_interface::unk_595(f32 unk) {
     return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, f32))retail::sub_9BF060)(this, unk);
+}
+
+// sub_9882D0
+f32 spiderman_rvb_player_interface::compute_ground_level_at_sweet_spot_position(const vector3d &position, f32 max_web_length, const region* reg) {
+    line_info lif(position, position - vector3d(0.0f, max_web_length, 0.0f));
+
+    f32 ground_level;
+
+    if (retail::sub_798F50((char*)&lif, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0)) // line_info::check_collision
+        ground_level = lif.hit_pos.y;
+    else
+        ground_level = ((f32 (__thiscall*)(const region*))retail::sub_77ECC0)(reg); // region::get_ground_level
+
+    retail::sub_798F10((u8*)&lif); // line_info::~line_info
+
+    return ground_level;
 }

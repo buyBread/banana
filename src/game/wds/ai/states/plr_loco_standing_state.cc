@@ -289,7 +289,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
 
                     line_info probe(get_actor()->my_abs_po->get_position(), above);
 
-                    if (retail::sub_798F50((char*)&probe, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) // line_info::check_collision
+                    if (retail::sub_798F50((char*)&probe, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0)) // line_info::check_collision
                         grinds = false;
 
                     retail::sub_798F10((u8*)&probe); // line_info::~line_info

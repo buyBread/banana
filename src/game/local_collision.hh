@@ -8,12 +8,11 @@ namespace treyarch {
     class actor;
 
     namespace references {
-        // the filters als::swing_attack_move_and_face's probe checks against
-        inline util::memory_reference<void*> unk_00e7b2a0 { 0x00E7B2A0 };
-        inline util::memory_reference<void*> unk_00e7b2d0 { 0x00E7B2D0 };
-
-        // the static filter the hero's crawl state checks its sphere against
-        inline util::memory_reference<void*> unk_00e7b2dc { 0x00E7B2DC };
+        // SM3's local_collision filter references; pointers to the filter objects
+        inline util::memory_reference<void*> entfilter_reject_all         { 0x00E7B298 };
+        inline util::memory_reference<void*> entfilter_entity_no_capsules { 0x00E7B2A0 };
+        inline util::memory_reference<void*> obbfilter_lineseg_test       { 0x00E7B2D0 };
+        inline util::memory_reference<void*> obbfilter_sphere_test        { 0x00E7B2DC };
 
         inline util::memory_reference<void*> entfilter_base_vtable      { 0x00B8A254 };
         inline util::memory_reference<void*> exclude_entfilter_t_vtable { 0x00B9190C }; // exclude_entfilter_t<entfilter_and<entfilter_entity, entfilter_no_capsules>>

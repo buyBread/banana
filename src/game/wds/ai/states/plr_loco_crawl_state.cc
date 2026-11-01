@@ -234,7 +234,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
 
     line_info probe(start, end);
 
-    if (!retail::sub_798F50((char*)&probe, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) { // line_info::check_collision
+    if (!retail::sub_798F50((char*)&probe, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0)) { // line_info::check_collision
         local_collision::exclude_entfilter_t<local_collision::entfilter_and<local_collision::entfilter_entity, local_collision::entfilter_no_capsules>> filter(get_actor());
 
         vector3d hit_pos;
@@ -243,7 +243,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
         if (!retail::sub_7F7060((f32*)&get_actor()->my_abs_po->get_position(),
                                 1.5f,
                                 (i32 (__stdcall***)(char))&filter,
-                                (i32 (__stdcall***)(char))references::unk_00e7b2dc.read(),
+                                (i32 (__stdcall***)(char))references::obbfilter_sphere_test.read(),
                                 (f32*)&hit_pos,
                                 (f32*)&hit_norm,
                                 0,

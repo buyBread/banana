@@ -13,6 +13,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    struct region;
+
     namespace references {
         // development_option<bool> RPGTuning/RELOAD_CURRENT_UPGRADE_SETTINGS
         inline util::memory_reference<u8> reload_current_upgrade_settings { 0x01112D0C };
@@ -310,7 +312,7 @@ namespace treyarch {
         void              render_phase() override;
         void              update_interface() override;
         void              frame_advance(f32 delta_t) override;
-        void              unk_094(f32 delta_t) override;
+        void              post_process(f32 delta_t) override;
         bool              unk_096(i32 unk) override;
         bool              unk_097() override;
         bool              unk_098(i32 unk) override;
@@ -690,6 +692,8 @@ namespace treyarch {
         virtual void     unk_593(void* unk, i32 unk_2, f32 unk_3);
         virtual i32      unk_594(void* unk, i32 unk_2);
         virtual i32      unk_595(f32 unk);
+
+        static f32 compute_ground_level_at_sweet_spot_position(const vector3d &position, f32 max_web_length, const region* reg); // straight down from the position
 
         static constexpr f32 timed_target_times[4] = { 3.0f, 0.5f, 3.0f, 5.0f }; // by kind
 

@@ -42,6 +42,7 @@ namespace treyarch {
         // sub_4030F0
         // inlined @ sub_5C00F0
         // inlined @ sub_552EC0
+        // inlined @ sub_9882D0
         line_info(const vector3d &s, const vector3d &e) : start(s), end(e), hit_entity(), collision(false), checked_collision(false), queued_for_collision_check(false) {
             clear();
         }

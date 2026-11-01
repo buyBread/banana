@@ -137,8 +137,8 @@ namespace treyarch {
     };
 
     /* slots 19+ are player_interface's own. SM3's order holds around frame_advance
-       (map_controls 89, update_interface 91, frame_advance 92), but WoS inserted slots: SM3 has two getters at 19/20
-       and a single post_process where retail has 93 and 94, so those are named from their retail use */
+       (map_controls 89, update_interface 91, frame_advance 92, post_process 94), but WoS inserted slots:
+       SM3 has two getters at 19/20 and no slot 93, which is named from its retail use */
     class player_interface : public actor_interface {
 
     public:
@@ -321,7 +321,7 @@ namespace treyarch {
         virtual void              update_interface();
         virtual void              frame_advance(f32 delta_t);
         virtual void              frame_advance_disabled(f32 delta_t); // clears input and swing state, ignores delta_t
-        virtual void              unk_094(f32 delta_t);
+        virtual void              post_process(f32 delta_t);
         virtual vector3d*         unk_095();                           // its own +0x2F0; the als takes it as a player's velocity
         virtual bool              unk_096(i32 unk);
         virtual bool              unk_097();
@@ -731,7 +731,7 @@ namespace treyarch {
         virtual f32               unk_475();
         virtual void              unk_476(i32 unk);
         virtual void              set_post_process_flag(e_post_process_action f, bool set);
-        virtual bool              unk_478(i32 unk);
+        virtual bool              get_post_process_flag(e_post_process_action f);
         virtual bool              unk_479();
         virtual bool              unk_480(bool unk);
         virtual bool              unk_481();

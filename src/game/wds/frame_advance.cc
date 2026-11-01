@@ -133,7 +133,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
 
     f32 hero_time_inc = dilate_entity_time(hero_ptr, time_inc);
 
-    hero_ptr->player_ifc()->unk_094(hero_time_inc);
+    hero_ptr->player_ifc()->post_process(hero_time_inc);
 
     retail::sub_63CC40(dilate_world_time(time_inc)); // tentacle_interface registry
     ai_tentacle_info::frame_advance_all_tentacles(time_inc);

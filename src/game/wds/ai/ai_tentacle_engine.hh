@@ -7,6 +7,7 @@
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
+#include "vc8/vector.hh"
 
 namespace treyarch {
     class ai_tentacle_info;
@@ -202,6 +203,20 @@ namespace treyarch {
                    bool               _update_end);
     };
 
+    // curls a web's line as it flies; its setup and frame stay native
+    class ai_tentacle_web_curly : public ai_tentacle_dangle_old {
+
+    public:
+        arch_base_vhandle     spiderman;
+        vc8::vector<vector3d> curl_pos;
+        vector3d              curl_dir;
+        f32                   dangle_blend;
+        f32                   num_curls;
+        i32                   curl_type;
+
+        void reset_curl();
+    };
+
     ASSERT_SIZEOF  (ai_tentacle_engine,                   0x1C);
     ASSERT_OFFSETOF(ai_tentacle_engine, simple_list_vars, 0x04);
     ASSERT_OFFSETOF(ai_tentacle_engine, id,               0x10);
@@ -230,4 +245,10 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (ai_tentacle_slack,              0x40);
     ASSERT_OFFSETOF(ai_tentacle_slack, rope_length, 0x3C);
+
+    ASSERT_SIZEOF  (ai_tentacle_web_curly,            0x50);
+    ASSERT_OFFSETOF(ai_tentacle_web_curly, spiderman, 0x24);
+    ASSERT_OFFSETOF(ai_tentacle_web_curly, curl_pos,  0x28);
+    ASSERT_OFFSETOF(ai_tentacle_web_curly, curl_dir,  0x38);
+    ASSERT_OFFSETOF(ai_tentacle_web_curly, curl_type, 0x4C);
 } // treyarch

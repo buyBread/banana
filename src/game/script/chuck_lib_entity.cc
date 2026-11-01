@@ -5756,7 +5756,7 @@ bool slf__entity__ai_has_clear_line_of_fire__entity__t::operator()(chuck::vm::vm
         line_info line(*start, end);
 
         // the world cuts it short, just off the hit
-        if (retail::sub_798F50((char*)&line, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) // line_info::check_collision
+        if (retail::sub_798F50((char*)&line, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0)) // line_info::check_collision
             end = line.hit_pos + line.hit_norm * 0.01f;
 
         // any core that isn't an enemy standing in the way blocks it
@@ -6368,7 +6368,7 @@ bool slf__entity__crawl_attach_to_surface__vector3d__vector3d__t::operator()(chu
         probe.start = *position + surface.hit_norm * 0.1f;
         probe.end   = probe.start - surface.hit_norm * 5.25f;
 
-        if (retail::sub_798F50((char*)&probe, (i32)references::unk_00e7b2a0.read(), (i32)references::unk_00e7b2d0.read(), nullptr, 0)) { // line_info::check_collision
+        if (retail::sub_798F50((char*)&probe, (i32)references::entfilter_entity_no_capsules.read(), (i32)references::obbfilter_lineseg_test.read(), nullptr, 0)) { // line_info::check_collision
             vector3d to_probe   = probe.hit_pos - *position;
             vector3d to_surface = surface.hit_pos - *position;
 
