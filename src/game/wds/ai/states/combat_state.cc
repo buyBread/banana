@@ -401,7 +401,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
             if (past_early_exit()                           &&
                 get_actor()->has_ifc(entity_ifc_player)     &&
-                get_actor()->player_ifc()->unk_194(delta_t) &&
+                get_actor()->player_ifc()->handle_jump_charge(delta_t) &&
                 can_handle_exit_code(state_exit_code_jump_launch))
 
                 return state_exit_code_jump_launch;

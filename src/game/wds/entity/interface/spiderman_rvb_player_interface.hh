@@ -231,7 +231,7 @@ namespace treyarch {
         void set_owner(actor* owner) override;
 
         f32               unk_021() override;
-        i32               unk_022(f32 unk) override;
+        void              set_rpg_progress(f32 progress) override;
         bool              unk_023(i32 unk) override;
         void              unk_024(actor* owner) override;
         void*             unk_025(f32 delta_t) override;
@@ -299,14 +299,14 @@ namespace treyarch {
         bool              unk_096(i32 unk) override;
         bool              unk_097() override;
         bool              unk_098(i32 unk) override;
-        i32               unk_099() override;
+        bool              is_walking() const override;
         i32               unk_100() override;
         i32               unk_101() override;
         i32               unk_107() override;
         i32               unk_108(i32 unk) override;
-        bool              unk_113() override;
+        bool              exterior_transition() override;
         bool              unk_114(i32 unk) override;
-        bool              unk_115() override;
+        bool              exterior_transition_180() override;
         bool              unk_116(i32 unk) override;
         i32               unk_118() override;
         bool              unk_119(i32 unk) override;
@@ -319,18 +319,18 @@ namespace treyarch {
         bool              unk_134(i32 unk) override;
         bool              unk_135(i32 unk) override;
         i32               unk_136() override;
-        i32               unk_137() override;
-        i32               unk_139() override;
+        bool              on_ground() const override;
+        bool              on_ceiling() const override;
         i32               unk_141() override;
-        void              unk_145(f32 unk) override;
-        void              unk_146(f32 unk) override;
-        void              unk_147(f32 unk) override;
-        f32               unk_148() override;
+        void              inc_jump_charge(f32 delta_t) override;
+        void              set_abs_jump_charge(f32 fraction) override;
+        void              clear_jump_charge(bool store_for_als) override;
+        f32               get_jump_charge() const override;
         f32               unk_149() override;
         bool              unk_152() override;
         bool              unk_153(i32 unk) override;
         bool              unk_156() override;
-        i32               unk_157() override;
+        i32               predict_jump_type() override;
         i32               unk_158(i32 unk) override;
         void              unk_163() override;
         void              unk_164() override;
@@ -353,7 +353,7 @@ namespace treyarch {
         bool              unk_188() override;
         bool              unk_192() override;
         bool              unk_193(bool unk) override;
-        bool              unk_194(f32 unk) override;
+        bool              handle_jump_charge(f32 delta_t) override;
         i32               unk_195() override;
         i32               unk_196(i32 unk) override;
         i32               unk_197() override;
@@ -408,7 +408,7 @@ namespace treyarch {
         bool              unk_272() override;
         entity*           unk_273(entity* target) override;
         bool              unk_284() override;
-        bool              unk_305() override;
+        bool              is_in_rvb_black_mode() override;
         i32               unk_306() override;
         i32               unk_307() override;
         f32               unk_308() override;
@@ -423,13 +423,13 @@ namespace treyarch {
         f32               unk_325() override;
         bool              unk_326() override;
         bool              unk_327(i32 unk) override;
-        void              unk_330(f32 unk, i32 unk_2) override;
-        void              unk_331(f32 unk, i32 unk_2) override;
-        void              unk_332(f32 unk, i32 unk_2) override;
-        i32               unk_333(f32 unk, i32 unk_2) override;
-        void              unk_334(f32 unk, i32 unk_2) override;
-        void              unk_335(f32 unk, i32 unk_2) override;
-        void              unk_336(f32 unk, i32 unk_2) override;
+        void              unk_330(f32 duration, bool force) override;
+        void              unk_331(f32 duration, bool force) override;
+        void              unk_332(f32 duration, bool force) override;
+        void              unk_333(f32 duration, bool force) override;
+        void              unk_334(f32 duration, bool force) override;
+        void              unk_335(f32 duration, bool force) override;
+        void              unk_336(f32 duration, bool force) override;
         i32               unk_337() override;
         i32               unk_338() override;
         i32               unk_339() override;
@@ -586,17 +586,17 @@ namespace treyarch {
         bool              unk_512(bool unk) override;
         bool              unk_513(i32 unk) override;
         void*             unk_514(i32 unk) override;
-        bool              unk_515() override;
+        bool              is_in_wallmode() override;
         i32               unk_517() override;
         bool              unk_518(i32 unk) override;
         bool              unk_519() override;
         bool              unk_520() override;
         i32               unk_522() override;
-        void              unk_523(bool unk, bool unk_2) override;
+        void              lock_suit(bool lock, bool black) override;
         bool              unk_524() override;
-        i32               unk_525(i32 unk, i32 unk_2) override;
-        i32               unk_526() override;
-        void              unk_527(f32 unk) override;
+        void              mode_lock_suit(bool lock, f32 time) override;
+        void              unk_526() override;
+        void              unk_527(f32 delta_t) override;
         line_info*        unk_528() override;
         void*             unk_529(i32 unk) override;
         bool              unk_530(f32 unk) override;
@@ -608,7 +608,7 @@ namespace treyarch {
         virtual bool  unk_537(void* unk);
         virtual bool  unk_538(i32 unk);
         virtual f32   unk_539();
-        virtual void  unk_540(f32 unk);             // the cut scene player's time step while it plays
+        virtual void  unk_540(f32 delta_t);         // the cut scene player's time step while it plays
         virtual f32   unk_541(i32 unk);
         virtual void* unk_542(void* unk, i32 unk_2);
         virtual bool  unk_543();
@@ -668,6 +668,7 @@ namespace treyarch {
         static constexpr f32 timed_target_times[4] = { 3.0f, 0.5f, 3.0f, 5.0f }; // by kind
 
         static string_hash my_type_key;
+        static bool        mario_jump_pressed; // a mario jump's press waits here for its release
     };
 
     ASSERT_SIZEOF  (spiderman_rvb_player_interface,                            0xCB0);

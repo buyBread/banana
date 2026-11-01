@@ -401,7 +401,7 @@ void spawn_table_manager::end_stars_mode() {
     player_interface* player = references::g_world_ptr.read()->hero_ptr->player_ifc();
 
     if (player)
-        player->unk_523(false, unk_050);
+        player->lock_suit(false, unk_050);
 
     region_pack_manager::inst()->despawn_and_lock_quest_giver_in_mission(false);
 

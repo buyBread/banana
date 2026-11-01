@@ -155,7 +155,7 @@ void world_dynamics_system::add_player(const mash::string &filename, const po &t
         retail::sub_93F540((u32*)meters, (i32)references::redsuit_behaviors.read().source_hash_code);
         retail::sub_93F540((u32*)meters, (i32)references::blacksuit_behaviors.read().source_hash_code);
 
-        string_hash behaviors = hero_ptr->player_ifc()->unk_305() ?
+        string_hash behaviors = hero_ptr->player_ifc()->is_in_rvb_black_mode() ?
             references::blacksuit_behaviors.read() :
             references::redsuit_behaviors.read();
 

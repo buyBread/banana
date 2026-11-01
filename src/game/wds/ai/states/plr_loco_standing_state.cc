@@ -130,7 +130,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
 
                         the_exit_code = state_exit_code_crawl;
                     } else {
-                        player->unk_335(-1.0f, 0);
+                        player->unk_335(-1.0f, false);
                         player->unk_114(0);
                         player->unk_116(0);
                         player->unk_321(&surface);

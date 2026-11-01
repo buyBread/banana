@@ -207,7 +207,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 0.0f;
 
-            return the_actor->player_ifc()->unk_148();
+            return the_actor->player_ifc()->get_jump_charge();
 
         case param_damage_stunned:
             if (!retail::sub_4024A0((u32*)the_actor) || !the_actor->damage_ifc()->is_stunned()) // has_damage_ifc

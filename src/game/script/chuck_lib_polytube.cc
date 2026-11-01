@@ -929,7 +929,7 @@ bool slf__polytube__tentacle_web_set_up__entity__uint__num__t::operator()(chuck:
         bool own_tentacles = !retail::sub_601C50((u32*)owner); // entity_base::is_hero
 
         if (!own_tentacles)
-            own_tentacles = owner->player_ifc()->unk_305() && !use_hero_web;
+            own_tentacles = owner->player_ifc()->is_in_rvb_black_mode() && !use_hero_web;
 
         if (own_tentacles) {
             auto tentacle = (u32*)owner->my_ifc_storage->get_ifc(entity_ifc_tentacle);

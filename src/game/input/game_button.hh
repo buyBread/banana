@@ -163,6 +163,7 @@ namespace treyarch {
         // inlined @ sub_808170
         // inlined @ sub_9BB110
         // inlined @ sub_54CF20
+        // inlined @ sub_9A7F50
         bool triggered(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;
@@ -171,6 +172,7 @@ namespace treyarch {
         }
 
         // inlined @ sub_57D110
+        // inlined @ sub_9A98A0
         bool released(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;
@@ -180,6 +182,7 @@ namespace treyarch {
 
         // inlined @ sub_5745C0
         // inlined @ sub_41F860
+        // inlined @ sub_9A98A0
         bool triggered_or_missed_press(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;

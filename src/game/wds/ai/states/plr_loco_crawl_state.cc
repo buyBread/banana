@@ -116,7 +116,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
         return state_exit_code_jump;
     }
 
-    if (can_handle_exit_code(state_exit_code_jump) && get_actor()->player_ifc()->unk_194(delta_t)) {
+    if (can_handle_exit_code(state_exit_code_jump) && get_actor()->player_ifc()->handle_jump_charge(delta_t)) {
         player->unk_181(1);
 
         const vector3d &position = get_actor()->my_abs_po->get_position();
@@ -190,11 +190,11 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
                 math::vector4(position.x, position.y, position.z, 0.0f));
 
         player->unk_329(&pose);
-        player->unk_330(-1.0f, 0);
+        player->unk_330(-1.0f, false);
         player->unk_327(1);
         player->unk_158(40);
         player->unk_136();
-        player->unk_332(0.5f, 0);
+        player->unk_332(0.5f, false);
 
         return state_exit_code_jump;
     }
@@ -209,7 +209,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
                 math::vector4(position.x, position.y, position.z, 0.0f));
 
         player->unk_329(&pose);
-        player->unk_330(-1.0f, 0);
+        player->unk_330(-1.0f, false);
         player->unk_158(37);
 
         return state_exit_code_zip;

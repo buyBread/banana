@@ -29,6 +29,7 @@ namespace treyarch {
     class entity;
     class entity_base;
     class player_combo_counter;
+    class player_jump_info;
     class polytube;
     class script_object_instance;
 
@@ -198,7 +199,7 @@ namespace treyarch {
         virtual bool              is_enabled() const;
         virtual void              set_enabled(bool value);
         virtual f32               unk_021();
-        virtual i32               unk_022(f32 unk);
+        virtual void              set_rpg_progress(f32 progress);
         virtual bool              unk_023(i32 unk);
         virtual void              unk_024(actor* owner);               // set_owner's last step; the rvb builds the hero's master script object
         virtual void*             unk_025(f32 delta_t);
@@ -275,10 +276,10 @@ namespace treyarch {
         virtual bool              unk_096(i32 unk);
         virtual bool              unk_097();
         virtual bool              unk_098(i32 unk);
-        virtual i32               unk_099();
+        virtual bool              is_walking() const;
         virtual i32               unk_100();
         virtual i32               unk_101();
-        virtual bool              unk_102();                           // rvb_is_crawling asks 102..106 and 138 after crawling
+        virtual bool              is_wallsprinting() const;            // rvb_is_crawling asks 102..106 and 138 after crawling
         virtual bool              is_crawl_jumping();
         virtual bool              unk_104();
         virtual bool              unk_105();
@@ -289,9 +290,9 @@ namespace treyarch {
         virtual bool              unk_110() const;
         virtual bool              unk_111() const;
         virtual void              set_transition(bool t, bool unk);    // unk picks which of unk_0439 / unk_043a goes up with t
-        virtual bool              unk_113();
+        virtual bool              exterior_transition();
         virtual bool              unk_114(i32 unk);
-        virtual bool              unk_115();
+        virtual bool              exterior_transition_180();
         virtual bool              unk_116(i32 unk);
         virtual bool              interior_transition();
         virtual i32               unk_118();
@@ -313,18 +314,18 @@ namespace treyarch {
         virtual bool              unk_134(i32 unk);
         virtual bool              unk_135(i32 unk);
         virtual i32               unk_136();
-        virtual i32               unk_137();
-        virtual bool              unk_138();
-        virtual i32               unk_139();
+        virtual bool              on_ground() const;
+        virtual bool              on_wall() const;
+        virtual bool              on_ceiling() const;
         virtual void              unk_140();                           // the snap and translate natives call it after a move
         virtual i32               unk_141();
         virtual bool              unk_142(bool unk);
         virtual bool              unk_143();
         virtual void              unk_144();
-        virtual void              unk_145(f32 unk);
-        virtual void              unk_146(f32 unk);
-        virtual void              unk_147(f32 unk);
-        virtual f32               unk_148();                           // the als's active_jump_charge
+        virtual void              inc_jump_charge(f32 delta_t);
+        virtual void              set_abs_jump_charge(f32 fraction);
+        virtual void              clear_jump_charge(bool store_for_als);
+        virtual f32               get_jump_charge() const;             // the als's active_jump_charge
         virtual f32               unk_149();                           // the als's jump_charge
         virtual bool              unk_150();                           // the als's blacksuit_swing_window
         virtual void              unk_151(i32 unk);
@@ -333,10 +334,10 @@ namespace treyarch {
         virtual i32               unk_154();                           // the als's max_trick_combo
         virtual i32               unk_155(i32 unk);
         virtual bool              unk_156();
-        virtual i32               unk_157();
+        virtual i32               predict_jump_type();
         virtual i32               unk_158(i32 unk);
         virtual bool              unk_159(i32 unk);
-        virtual void*             unk_160(i32 unk);
+        virtual player_jump_info* get_jump_info(i32 jump);
         virtual i32               unk_161();
         virtual i32               unk_162(i32 unk);
         virtual void              unk_163();
@@ -370,7 +371,7 @@ namespace treyarch {
         virtual bool              unk_191(bool unk);
         virtual bool              unk_192();
         virtual bool              unk_193(bool unk);
-        virtual bool              unk_194(f32 unk);
+        virtual bool              handle_jump_charge(f32 delta_t);
         virtual i32               unk_195();
         virtual i32               unk_196(i32 unk);
         virtual i32               unk_197();
@@ -496,7 +497,7 @@ namespace treyarch {
         virtual void              set_jump_start(vector3d s);
         virtual void*             unk_303(void* unk);
         virtual i32               unk_304(i32 unk);
-        virtual bool              unk_305();                           // black mode, judging by the cut scenes and polytubes
+        virtual bool              is_in_rvb_black_mode();
         virtual i32               unk_306();
         virtual i32               unk_307();
         virtual f32               unk_308();
@@ -521,13 +522,13 @@ namespace treyarch {
         virtual bool              unk_327(i32 unk);
         virtual void*             unk_328();
         virtual void*             unk_329(void* unk);
-        virtual void              unk_330(f32 unk, i32 unk_2);
-        virtual void              unk_331(f32 unk, i32 unk_2);
-        virtual void              unk_332(f32 unk, i32 unk_2);
-        virtual i32               unk_333(f32 unk, i32 unk_2);
-        virtual void              unk_334(f32 unk, i32 unk_2);
-        virtual void              unk_335(f32 unk, i32 unk_2);
-        virtual void              unk_336(f32 unk, i32 unk_2);
+        virtual void              unk_330(f32 duration, bool force);
+        virtual void              unk_331(f32 duration, bool force);
+        virtual void              unk_332(f32 duration, bool force);
+        virtual void              unk_333(f32 duration, bool force);
+        virtual void              unk_334(f32 duration, bool force);
+        virtual void              unk_335(f32 duration, bool force);
+        virtual void              unk_336(f32 duration, bool force);
         virtual i32               unk_337();
         virtual i32               unk_338();
         virtual i32               unk_339();
@@ -706,7 +707,7 @@ namespace treyarch {
         virtual bool              unk_512(bool unk);
         virtual bool              unk_513(i32 unk);
         virtual void*             unk_514(i32 unk);
-        virtual bool              unk_515();
+        virtual bool              is_in_wallmode();
         virtual i32               unk_516(i32 unk, void* unk_2, bool unk_3);
         virtual i32               unk_517();
         virtual bool              unk_518(i32 unk);
@@ -714,11 +715,11 @@ namespace treyarch {
         virtual bool              unk_520();
         virtual void              unk_521();
         virtual i32               unk_522();
-        virtual void              unk_523(bool unk, bool unk_2);
+        virtual void              lock_suit(bool lock, bool black);
         virtual bool              unk_524();
-        virtual i32               unk_525(i32 unk, i32 unk_2);
-        virtual i32               unk_526();
-        virtual void              unk_527(f32 unk);
+        virtual void              mode_lock_suit(bool lock, f32 time);
+        virtual void              unk_526();
+        virtual void              unk_527(f32 delta_t);
         virtual line_info*        unk_528();                           // rvb: a line_info of its own (+0xBA8)
         virtual void*             unk_529(i32 unk);
         virtual bool              unk_530(f32 unk);

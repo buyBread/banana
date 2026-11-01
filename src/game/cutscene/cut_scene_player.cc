@@ -250,7 +250,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
     else if (to_play->black_suit)
         player->unk_572(0.0f, true);
     else
-        player->unk_572(0.0f, player->unk_305());
+        player->unk_572(0.0f, player->is_in_rvb_black_mode());
 
     state_flags &= ~skipping;
 
@@ -1186,10 +1186,10 @@ void cut_scene_player::raise_animation_events(entity_class_entry* entry, f32 t, 
         static const string_hash suit_change_black = string_hash(hash::djb2("suit_change_black"));
 
         if (id == suit_change_red) {
-            if (player->unk_305())
+            if (player->is_in_rvb_black_mode())
                 player->unk_572(std::bit_cast<f32>(param), false);
         } else if (id == suit_change_black) {
-            if (!player->unk_305())
+            if (!player->is_in_rvb_black_mode())
                 player->unk_572(std::bit_cast<f32>(param), true);
         } else {
             static const string_hash play_effect_blacksuit_only = string_hash(hash::djb2("event_play_effect_blacksuit_only"));
@@ -1197,12 +1197,12 @@ void cut_scene_player::raise_animation_events(entity_class_entry* entry, f32 t, 
             static const string_hash play_effect                = string_hash(hash::djb2("PLAY_EFFECT"));
 
             if (id == play_effect_blacksuit_only) {
-                if (!player->unk_305())
+                if (!player->is_in_rvb_black_mode())
                     continue;
 
                 id = play_effect;
             } else if (id == play_effect_redsuit_only) {
-                if (player->unk_305())
+                if (player->is_in_rvb_black_mode())
                     continue;
 
                 id = play_effect;
