@@ -10,6 +10,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "game/environment_progression.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_scrapbook.hh"
 #include "game/game.hh"
 #include "game/input/input_mgr.hh"
 #include "game/level_descriptor.hh"
@@ -162,6 +163,11 @@ void game::one_time_init_stuff() {
     retail::sub_6B12C0((u8*)&frontend);
     retail::sub_717BC0((u32*)&frontend);
 
+    // the front end's retail constructor built these
+    frontend.igo->loading_screen->stamp_source_vtable();
+    frontend.igo->scrapbook->stamp_source_vtable();
+    frontend.igo->conversation_menu_system->stamp_source_vtables();
+
     if (!references::pack_mode.read())
         retail::sub_9874E0();
 
@@ -224,7 +230,7 @@ void game::unload_current_level() {
     level_is_loaded = 0;
 
     retail::sub_900F70(); // sound shutdown
-    retail::sub_7F7340((u32*)input_mgr::inst()->unk_004);
+    retail::sub_7F7340((u32*)input_mgr::inst()->rumble_ptr);
 
     while (hero_freeze_depth > 0)
         freeze_hero(false);
@@ -263,7 +269,7 @@ void game::unload_current_level() {
 
     level_is_loaded = 0;
 
-    input_mgr::inst()->unk_80c = 0;
+    input_mgr::inst()->playing_scene_anim = false;
 
     // the next level gets a fresh world
     void* world_allocation = mm::allocate(sizeof(world_dynamics_system));

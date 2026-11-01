@@ -9,6 +9,7 @@
 #include "game/event/event_manager.hh"
 #include "game/game.hh"
 #include "game/glass_house_manager.hh"
+#include "game/input/input_mgr.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/movie_manager.hh"
 #include "game/pathfinder/obstacle_manager.hh"
@@ -89,7 +90,7 @@ app::app() {
     retail::sub_428F00(); // mission_memory_manager::create_inst
     trigger_manager::create_inst();
     retail::sub_4290F0(); // dinput_mgr::create_inst
-    retail::sub_428E90(); // input_mgr::create_inst
+    input_mgr::create_inst();
 
     if (!references::pack_mode.read())
         pathfinder::obstacle_manager::create_inst();

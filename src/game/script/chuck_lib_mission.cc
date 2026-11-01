@@ -575,8 +575,13 @@ bool slf__do_conversation_wait__str__t::operator()(chuck::vm::vm_stack &stack) {
 // sub_83E400
 bool slf__do_dialog_wait__t::operator()(chuck::vm::vm_stack &stack) {
     if (!stack.thread->entry) {
-        void* allocation = mm::allocate(sizeof(dialog_box));
-        auto* box        = allocation ? (dialog_box*)retail::sub_70BE00((u32*)allocation) : nullptr;
+        void*       allocation = mm::allocate(sizeof(dialog_box));
+        dialog_box* box        = nullptr;
+
+        if (allocation) {
+            box = (dialog_box*)retail::sub_70BE00((u32*)allocation);
+            box->stamp_source_vtables();
+        }
 
         references::frontend.get().igo->set_dialog_box(box, true);
 

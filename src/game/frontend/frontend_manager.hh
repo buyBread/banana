@@ -27,6 +27,8 @@ namespace treyarch {
 
         void draw_igo();
 
+        void refresh_igo_for_input_device(); // nothing before the fonts are loaded
+
         void set_cutscene_texture(const mash::string* name); // an empty name hides the quad
         void display_cutscene(f32 duration, f32 delay);
         void hide_cutscene();

@@ -52,7 +52,7 @@ scene_anim::~scene_anim() {
             ((actor*)ent)->unbind_from_scene_anim();
 
             ent->ext_flags &= ~0x40000;
-            input_mgr::inst()->unk_80c = 0;
+            input_mgr::inst()->playing_scene_anim = false;
 
             if (ent->has_ifc(entity_ifc_physical)) {
                 ent->physical_ifc()->cancel_all_velocity(references::unk_00fd4370.get());
@@ -261,7 +261,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         } else
             ent->ext_flags |= 0x40000;
 
-        input_mgr::inst()->unk_80c = driven;
+        input_mgr::inst()->playing_scene_anim = driven;
 
         // an entry whose entity was released is reused
         scene_anims_info* slot = my_anim_info_list.begin();

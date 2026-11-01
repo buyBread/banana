@@ -15,6 +15,7 @@
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "treyarch/mash/string.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -258,7 +259,7 @@ void ui_frontend::update(f32 time_inc) {
     if (dialog) {
         dialog->update(time_inc);
 
-        if (!dialog->shown && !dialog->unk_168) {
+        if (!dialog->shown && !dialog->unfreeze_delay) {
             delete dialog;
 
             dialog = nullptr;
@@ -454,6 +455,51 @@ void ui_frontend::set_dialog_box(dialog_box* box, bool freeze_hero) { // deletes
 
     dialog = box;
     box->show(freeze_hero);
+}
+
+// sub_717230
+void ui_frontend::rebuild_input_device_widgets() {
+    if (scrapbook)
+        delete scrapbook;
+
+    void* allocation = mm::allocate(sizeof(igo_3d_scrapbook));
+    scrapbook = allocation ? (igo_3d_scrapbook*)retail::sub_715C70((u32*)allocation) : nullptr;
+
+    if (scrapbook) {
+        scrapbook->stamp_source_vtable();
+        scrapbook->unk_024();
+    }
+
+    if (startup_widget_184)
+        retail::sub_7107A0((i32)startup_widget_184);
+
+    if (pauseless_dialog) {
+        delete pauseless_dialog;
+
+        allocation       = mm::allocate(sizeof(igo_3d_pauseless_dialog_widget));
+        pauseless_dialog = allocation ? (igo_3d_pauseless_dialog_widget*)retail::sub_70D830((u32*)allocation) : nullptr;
+
+        if (pauseless_dialog)
+            pauseless_dialog->init();
+    }
+
+    if (conversation_menu_system) {
+        delete conversation_menu_system;
+
+        allocation               = mm::allocate(sizeof(treyarch::conversation_menu_system));
+        conversation_menu_system = allocation ? (treyarch::conversation_menu_system*)retail::sub_70B6D0((i32)allocation) : nullptr;
+
+        if (conversation_menu_system) {
+            conversation_menu_system->stamp_source_vtables();
+            conversation_menu_system->init();
+        }
+    }
+
+    if (startup_widget_17c)
+        retail::sub_6AFE00((u32**)startup_widget_17c);
+
+    if (dialog)
+        retail::sub_70C1F0((u32*)dialog);
 }
 
 // sub_699210

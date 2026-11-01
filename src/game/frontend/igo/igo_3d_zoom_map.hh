@@ -63,7 +63,9 @@ namespace treyarch {
         vc8::vector
             <zoom_map_poi*>     poi_list;                  // the records in use
         i32                     next_free_search;          // claim_poi starts its search here
-        u8                      reserved_8db4[0x1DC];
+        u8                      reserved_8db4[0x10];
+        f32                     unk_8dc4;                  // the scrapbook zeroes it when it opens or closes the map
+        u8                      reserved_8dc8[0x1C8];
         bool                    is_zooming;
         u8                      reserved_8f91;
         bool                    unk_8f92;                  // snap_to_point sets it
@@ -111,6 +113,8 @@ namespace treyarch {
             return is_open || is_zooming;
         }
 
+        void toggle_open(); // the scrapbook opens and closes the map with it
+
         i32  get_selected_poi();
         void unselect_poi(); // raises ZOOM_MAP_POI_UNSELECTED when one was selected
 
@@ -149,6 +153,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_zoom_map, pois,                      0x0100);
     ASSERT_OFFSETOF(igo_3d_zoom_map, poi_list,                  0x8DA0);
     ASSERT_OFFSETOF(igo_3d_zoom_map, next_free_search,          0x8DB0);
+    ASSERT_OFFSETOF(igo_3d_zoom_map, unk_8dc4,                  0x8DC4);
     ASSERT_OFFSETOF(igo_3d_zoom_map, is_zooming,                0x8F90);
     ASSERT_OFFSETOF(igo_3d_zoom_map, unk_8f92,                  0x8F92);
     ASSERT_OFFSETOF(igo_3d_zoom_map, disabled,                  0x8F95);

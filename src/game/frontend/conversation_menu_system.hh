@@ -5,6 +5,7 @@
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/frontend/igo/igo_generic_input_listener.hh"
 #include "treyarch/mash/types.hh"
+#include "treyarch/mash/virtual_base.hh"
 #include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -31,6 +32,12 @@ namespace treyarch {
                                                                                            igo_3d_widget(so_do_nothing) {}
 
         ~conversation_menu_system() override;
+
+        // writes both source vptrs over a system the retail constructor built
+        void stamp_source_vtables() {
+            *(mash::vtable_value_t*)this                 = mash::generate_vtable<conversation_menu_system>();
+            *(mash::vtable_value_t*)(igo_3d_widget*)this = mash::generate_vtable<conversation_menu_system, igo_3d_widget>();
+        }
 
         // inlined into the deleting destructors
         void operator delete(void* allocation) noexcept {

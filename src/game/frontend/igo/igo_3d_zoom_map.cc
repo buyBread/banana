@@ -54,6 +54,23 @@ void zoom_map_poi::set_meta_text(mash::string* text) {
     text->finalize(mash::ALLOCATED);
 }
 
+// inlined @ sub_6D15D0
+// inlined @ sub_6D1930
+void igo_3d_zoom_map::toggle_open() {
+    unk_8dc4 = 0.0f;
+    is_open  = !is_open;
+
+    if (is_open) {
+        brought_up_through_script = false;
+
+        unk_034();
+        retail::sub_6BE510((i32)this);
+    } else {
+        unk_035();
+        retail::sub_6A73F0((u8*)this);
+    }
+}
+
 // sub_690A50
 i32 igo_3d_zoom_map::get_selected_poi() {
     return selected_poi;

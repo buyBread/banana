@@ -1,5 +1,8 @@
 #pragma once
 
+#include <windows.h>
+#include <xinput.h>
+
 #include "game/stringx.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -23,9 +26,9 @@ namespace treyarch {
 
     class input_device {
 
+    public:
         device_id_t device_id;
 
-    public:
         virtual stringx     get_name() const = 0;
         virtual stringx     get_name(i32 axis) const = 0;
         virtual device_id_t get_id() const = 0;
@@ -44,5 +47,17 @@ namespace treyarch {
         virtual u8          unk_03c(i32 text_id) = 0; // xenon_input_device: always false (sub_71FF10)
     };
 
+    // the pc pad, built by its retail constructor
+    class xenon_input_device : public input_device {
+
+    public:
+        u8                  reserved_08[0x20];
+        XINPUT_CAPABILITIES capabilities;
+        u8                  reserved_3c[0x24];
+    };
+
     ASSERT_SIZEOF(input_device, 0x08);
+
+    ASSERT_SIZEOF  (xenon_input_device,               0x60);
+    ASSERT_OFFSETOF(xenon_input_device, capabilities, 0x28);
 } // treyarch

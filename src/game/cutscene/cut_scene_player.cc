@@ -321,7 +321,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
     time      = 0.0f;
     last_time = 0.0f;
 
-    retail::sub_7F7340((u32*)input_mgr::inst()->unk_004);
+    retail::sub_7F7340((u32*)input_mgr::inst()->rumble_ptr);
 
     reset_interfaces(&to_play->entity_class_entries);
 

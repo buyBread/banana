@@ -55,6 +55,12 @@ void frontend_manager::draw_igo() {
     igo->clear_quad_list();
 }
 
+// sub_717CD0
+void frontend_manager::refresh_igo_for_input_device() {
+    if (fonts_loaded)
+        igo->rebuild_input_device_widgets();
+}
+
 // sub_698990
 void frontend_manager::set_cutscene_texture(const mash::string* name) {
     if (name->length() <= 0) {

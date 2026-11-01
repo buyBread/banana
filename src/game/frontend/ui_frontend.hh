@@ -232,6 +232,8 @@ namespace treyarch {
 
         void set_dialog_box(dialog_box* box, bool freeze_hero);
 
+        void rebuild_input_device_widgets(); // the widgets whose button glyphs follow the pad
+
         void fade_blackscreen(bool on, f32 time, bool silent); // fading in freezes the hero until release_hero_freezes
         void release_hero_freezes();
 

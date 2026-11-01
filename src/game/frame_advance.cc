@@ -71,7 +71,7 @@ void game::frame_advance_level(f32 time_inc) {
     input_mgr* input_manager = input_mgr::inst();
 
     references::cameras_handled.write(0);
-    retail::sub_9CC680((u32*)input_manager);
+    input_manager->scan_devices();
 
     i32 state = 0;
 

@@ -1,3 +1,7 @@
+#include <cmath>
+
+#include <windows.h>
+
 #include "retail.hh"
 #include "game/app.hh"
 #include "game/frontend/frontend_manager.hh"
@@ -6,6 +10,7 @@
 #include "game/game.hh"
 #include "game/mission/mission_manager.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/interface/ise_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
@@ -28,9 +33,92 @@ void igo_3d_loading_screen::init() {
     ((void (__thiscall*)(igo_3d_loading_screen*))retail::sub_691FC0)(this);
 }
 
-// slot 2
+// sub_6C5D90
 void igo_3d_loading_screen::update(f32 time_inc) {
-    ((void (__thiscall*)(igo_3d_loading_screen*, f32))retail::sub_6C5D90)(this, time_inc);
+    if (is_shown() && fade_duration > 0.0f) {
+        fade_elapsed = (f32)((f64)fade_elapsed + (f64)time_inc);
+
+        if ((f64)fade_elapsed < (f64)fade_duration) {
+            f64 progress = (f64)fade_elapsed / (f64)fade_duration;
+
+            if (fading_in) {
+                f32 target = (f32)progress;
+                f32 value  = target > fade ? target : fade;
+
+                fade = 1.0f > value ? value : 1.0f;
+            } else {
+                f32 target = (f32)(1.0 - progress);
+                f32 value  = fade > target ? target : fade;
+
+                fade = (f64)value > 0.0 ? value : 0.0f;
+            }
+        } else {
+            if (fading_in) {
+                fade = 1.0f;
+
+                if (!no_hero_freeze) {
+                    references::game.read()->freeze_hero(true);
+                    ++hero_freezes;
+                }
+
+                entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+                if (hero)
+                    hero->ise_ifc()->unk_020();
+            } else {
+                entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+                if (hero && retail::sub_402500((u32*)hero)) // has_player_ifc
+                    hero->player_ifc()->unk_4b8 = 0.0f;
+
+                fade = 0.0f;
+
+                set_shown(false);
+            }
+
+            fade_duration = 0.0f;
+            fade_elapsed  = 0.0f;
+            fading_in     = false;
+        }
+
+        // holds a frame to at least 0.05 seconds while fading
+        if (time_inc < 0.05f)
+            Sleep((DWORD)(i64)((0.05f - time_inc) * 1000.0f));
+    }
+
+    if (is_shown() && fade > 0.9f) {
+        f32 cycle = unk_150;
+
+        if (cycle > 4.0f)
+            muted = true;
+
+        cycle   = (f32)std::fmod((f64)(cycle + time_inc), 4.0);
+        unk_150 = cycle;
+        unk_180 = cycle * 4.71f;
+
+        opaque_time = (f32)((f64)opaque_time + (f64)time_inc);
+
+        if (opaque_time >= opaque_timeout) {
+            opaque_time = 0.0f;
+
+            blackscreen_off(1.0f, true);
+        }
+
+        mission_manager* missions = mission_manager::inst();
+
+        if ((!unk_166 || held) &&
+            unk_150 >= 3.0f &&
+            !missions->is_mission_running() &&
+            !missions->is_mission_ready() &&
+            !missions->is_maloring() &&
+            !retail::sub_97E250((u32*)missions) &&
+            !missions->has_auto_launch_instances() &&
+            missions->get_state() &&
+            retail::sub_902810() && // is_bank_loader_idle
+            retail::sub_77BF80())
+
+            blackscreen_off(1.0f, held);
+    }
 }
 
 // slot 3
