@@ -119,31 +119,37 @@ namespace treyarch {
     // the run-time state of a cross-neighborhood spawn
     struct cross_neighborhood_spawn_unk_d8 {
         active_spawn_item*          active;
-        vc8::vector<u32>            unk_04;
-        vc8::vector<finger_of_god*> radar_markers;
-        vc8::vector<u32>            zoom_map_markers;
-        vc8::vector<f32>            safe_zone_wall_percentages; // the script's percentages times the spawn's unk_98
+        vc8::vector<spawn_point*>   goto_points;           // a record from each of the walls' spawn point lists
+        vc8::vector<finger_of_god*> radar_markers;         // one per goto point
+        vc8::vector<u32>            zoom_map_markers;      // one per goto point
+        vc8::vector<f32>            safe_zone_wall_timers; // one per goto point, starting at the spawn's safe_zone_wall_time
         bool                        quest_event_raised;
         u8                          pad_45[0x03];
-        i32                         safe_zone_wall_index;
+        i32                         safe_zone_wall_index;  // the wall whose timers run down
     };
 
     class cross_neighborhood_spawn : public extra_pack_optional_spawn_item {
 
     public:
-        u32                              unk_94; // an event callback id
-        f32                              unk_98;
-        u8                               unk_9c[0x08];
+        u32                              dialog_callback_id;   // its DIALOG_3D_SELECTION callback
+        f32                              safe_zone_wall_time;  // 0 or less puts radar markers on the goto points instead of timed zoom map ones
+        f32                              unk_9c;               // a timer above this share of safe_zone_wall_time shows marker state 0
+        f32                              unk_a0;               // above this share, state 1; else 2
         mash::vector
-            <mash::vector<mash::string>> unk_a4;
+            <mash::vector<mash::string>> safe_zone_walls;      // each wall's spawn point list names
         mash::string                     quest_event;
-        mash::string                     unk_c4;
-        u8                               unk_d0[0x05];
-        bool                             unk_d5;
+        mash::string                     neighborhood;         // "" for any
+        f32                              radius;               // how close counts as arriving, 0 for the whole neighborhood; also the radar markers' size
+        bool                             arrival_dialog;       // arriving brings up the 3D dialog instead of raising quest_event
+        bool                             arrival_dialog_armed;
         u8                               pad_d6[0x02];
         cross_neighborhood_spawn_unk_d8* unk_d8;
 
         void remove_map_markers();
+
+        bool tick(f32 dt) override;
+
+        void update_arrival(bool arrived);
     };
 
     class static_spawn_item_collection {
@@ -192,21 +198,25 @@ namespace treyarch {
     ASSERT_SIZEOF  (always_on_scripted_spawn_item, 0xA0);
 
     ASSERT_SIZEOF  (cross_neighborhood_spawn_unk_d8,                             0x4C);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, unk_04,                     0x04);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, radar_markers,              0x14);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, zoom_map_markers,           0x24);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_percentages, 0x34);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, quest_event_raised,         0x44);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_index,       0x48);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, goto_points,           0x04);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, radar_markers,         0x14);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, zoom_map_markers,      0x24);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_timers, 0x34);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, quest_event_raised,    0x44);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn_unk_d8, safe_zone_wall_index,  0x48);
 
-    ASSERT_SIZEOF  (cross_neighborhood_spawn,              0xDC);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_94,      0x94);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_98,      0x98);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_a4,      0xA4);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, quest_event, 0xB8);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_c4,      0xC4);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_d5,      0xD5);
-    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_d8,      0xD8);
+    ASSERT_SIZEOF  (cross_neighborhood_spawn,                       0xDC);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, dialog_callback_id,   0x94);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, safe_zone_wall_time,  0x98);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_9c,               0x9C);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_a0,               0xA0);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, safe_zone_walls,      0xA4);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, quest_event,          0xB8);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, neighborhood,         0xC4);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, radius,               0xD0);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, arrival_dialog,       0xD4);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, arrival_dialog_armed, 0xD5);
+    ASSERT_OFFSETOF(cross_neighborhood_spawn, unk_d8,               0xD8);
 
     ASSERT_SIZEOF  (static_spawn_item_collection,              0x18);
     ASSERT_OFFSETOF(static_spawn_item_collection, spawn_items, 0x04);

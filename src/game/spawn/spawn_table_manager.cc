@@ -75,9 +75,9 @@ spawn_table_manager::spawn_table_manager() : unk_004(80),
 // sub_94D260
 spawn_table_manager_unk_04c::spawn_table_manager_unk_04c() : max_active_spawn_items(5), // unk_138 and the fixed entities stay as allocated
                                                              quest_spawn_count(0),
-                                                             unk_008(0),
+                                                             quest_active_count(0),
                                                              city_spawn_count(5),
-                                                             unk_010(0),
+                                                             city_active_count(0),
                                                              chosen_quest_giver_spawn(nullptr),
                                                              table_interface(nullptr),
                                                              no_spawn_zones(nullptr),
@@ -89,7 +89,7 @@ spawn_table_manager_unk_04c::spawn_table_manager_unk_04c() : max_active_spawn_it
                                                              quest_spawn_uncapped(false),
                                                              quest_spawn_cap(0),
                                                              unk_124(0.0f),
-                                                             unk_128(0.0f),
+                                                             activation_timer(0.0f),
                                                              quest_spawn_share(0.0f),
                                                              unk_130(0.0f),
                                                              spawn_count(0),
@@ -219,8 +219,8 @@ void spawn_table_manager::update(f32 dt) { // the spawning steps wait while a mi
 
     unk_04c->pacing_tick(dt);
 
-    retail::sub_9533D0((i32)this);     // despawn_out_of_range
-    retail::sub_954BC0((i32)this, dt); // activate_items
+    retail::sub_9533D0((i32)this); // despawn_out_of_range
+    activate_items(dt);
 
     start_ready_actives();
 }
@@ -265,6 +265,89 @@ void spawn_table_manager::destroy_despawned() { // the givers a quest calls for 
 
     if (region_pack_manager::inst()->hold_quest_giver_spawn(chosen))
         unk_04c->chosen_quest_giver_spawn = chosen;
+}
+
+// sub_954BC0
+void spawn_table_manager::activate_items(f32 dt) { // the pools are drawn from once the pacing's interval has passed
+    region_spawn_manager* spawns = region_spawn_manager::inst();
+
+    if (!mission_manager::inst()->is_idle() && !spawns->populate_mission_with_entities)
+        return;
+
+    region_pack_manager* packs = region_pack_manager::inst();
+
+    if (retail::sub_8248E0((u32*)mission_memory_manager::inst()) || // packs are unloading
+        (packs->state && !packs->unk_0ac))
+
+        return;
+
+    retail::sub_953790((f32*)this, dt); // age_out_items
+
+    if (!unk_049) {
+        spawn_item_collection_unk_38* pacing = unk_04c->mission_pacing_override ?
+            unk_04c->mission_pacing_override : unk_04c->pacing;
+
+        if (pacing && !(pacing->activation_seconds > unk_04c->activation_timer)) {
+            unk_04c->activation_timer = 0.0f;
+
+            for (i32 count = (i32)(unk_04c->city_spawn_count - unk_04c->city_active_count); count > 0; --count)
+                if (unk_04c->city_active_count < unk_04c->city_spawn_count &&
+                    retail::sub_948670((u32*)this, (i32)&unk_04c->spawn_items)) // draws a random item, its active goes pending
+
+                    ++unk_04c->city_active_count;
+
+            if (mission_manager::inst()->is_idle())
+                for (i32 count = (i32)(unk_04c->quest_spawn_count - unk_04c->quest_active_count); count > 0; --count)
+                    if (unk_04c->quest_active_count < unk_04c->quest_spawn_count)
+                        if (auto* active = (active_spawn_item*)retail::sub_948670((u32*)this, (i32)&unk_04c->quest_spawn_items)) {
+                            active->quest_item = true;
+
+                            ++unk_04c->quest_active_count;
+                        }
+
+            // as many random draws as each list holds
+            for (u32 index = 0; index < unk_04c->friendly_spawn_items.size(); ++index)
+                retail::sub_948670((u32*)this, (i32)&unk_04c->friendly_spawn_items);
+
+            for (u32 index = 0; index < unk_04c->stars_mode_spawn_items.size(); ++index)
+                retail::sub_948670((u32*)this, (i32)&unk_04c->stars_mode_spawn_items);
+        }
+    }
+
+    activate_always_on_items(dt);
+}
+
+// sub_9486F0
+void spawn_table_manager::activate_always_on_items(f32 dt) { // a cross-neighborhood spawn's active starts once the hero arrives and ends while he's away
+    if (references::game.read()->game_paused)
+        return;
+
+    for (static_spawn_item** it = unk_04c->always_on_spawn_items.begin(); it != unk_04c->always_on_spawn_items.end(); ++it)
+        if (active_spawn_item* active = (*it)->create_active(0))
+            unk_04c->pending_active_spawn_items.push_back(active);
+
+    if (!mission_manager::inst()->is_idle())
+        return;
+
+    for (static_spawn_item** it = unk_04c->quest_always_on_spawn_items.begin(); it != unk_04c->quest_always_on_spawn_items.end(); ++it)
+        if (active_spawn_item* active = (*it)->create_active(0))
+            unk_04c->pending_active_spawn_items.push_back(active);
+
+    for (cross_neighborhood_spawn** it = unk_04c->cross_neighborhood_spawns.begin(); it != unk_04c->cross_neighborhood_spawns.end(); ++it)
+        if ((*it)->cross_neighborhood_spawn::tick(dt)) {
+            if ((*it)->unk_03c())
+                if (active_spawn_item* active = (*it)->create_active(0))
+                    unk_04c->pending_active_spawn_items.push_back(active);
+        } else if (!(*it)->unk_03c())
+            retail::sub_939900((i32)*it); // ends its active and drops its markers
+
+    for (cross_neighborhood_spawn** it = unk_04c->quest_cross_neighborhood_spawns.begin(); it != unk_04c->quest_cross_neighborhood_spawns.end(); ++it)
+        if ((*it)->cross_neighborhood_spawn::tick(dt)) {
+            if ((*it)->unk_03c())
+                if (active_spawn_item* active = (*it)->create_active(0))
+                    unk_04c->pending_active_spawn_items.push_back(active);
+        } else if (!(*it)->unk_03c())
+            retail::sub_939900((i32)*it); // ends its active and drops its markers
 }
 
 // sub_920810
@@ -773,7 +856,7 @@ void spawn_table_manager_unk_04c::pacing_tick(f32 dt) { // climbs to the high co
             unk_140 = 0.0f;
         }
 
-        unk_128 = (f32)((f64)unk_128 + (f64)dt);
+        activation_timer = (f32)((f64)activation_timer + (f64)dt);
 
         if (pacing_phase == 0) {
             unk_130 = (f32)((f64)unk_130 + (f64)dt);
@@ -984,10 +1067,10 @@ active_spawn_item** spawn_table_manager::deactivate_item(vc8::vector<active_spaw
     retail::sub_934680((u32*)region_pack_manager::inst(), (i32)active, false);
 
     if (!active->item->is_always_on() && !active->item->is_friendly()) {
-        if (active->unk_25 && flag)
-            --unk_04c->unk_008;
+        if (active->quest_item && flag)
+            --unk_04c->quest_active_count;
         else
-            --unk_04c->unk_010;
+            --unk_04c->city_active_count;
     }
 
     // a miss erases at the end
@@ -1002,8 +1085,8 @@ void spawn_table_manager::force_populate_mission_cleanup() {
     for (active_spawn_item** it = unk_04c->pending_active_spawn_items.begin(); it != unk_04c->pending_active_spawn_items.end();)
         it = deactivate_item(&unk_04c->pending_active_spawn_items, *it, true);
 
-    unk_04c->unk_010 = 0;
-    unk_04c->unk_008 = 0;
+    unk_04c->city_active_count  = 0;
+    unk_04c->quest_active_count = 0;
 }
 
 // sub_939240
@@ -1378,13 +1461,13 @@ void spawn_table_manager::toggle_override_spawn_pacing_in_mission(bool on,
         unk_04c->mission_pacing_override = storage ? new (storage) spawn_item_collection_unk_38() : nullptr;
     }
 
-    unk_04c->mission_pacing_override->low_spawn_count  = low_spawn_count;
-    unk_04c->mission_pacing_override->high_spawn_count = high_spawn_count;
-    unk_04c->mission_pacing_override->ramp_seconds     = ramp_seconds;
-    unk_04c->mission_pacing_override->hold_seconds     = hold_seconds;
-    unk_04c->mission_pacing_override->unk_20           = 0.0f;
-    unk_04c->mission_pacing_override->give_up_seconds  = give_up_seconds;
-    unk_04c->mission_pacing_override->step_count       = step_count;
+    unk_04c->mission_pacing_override->low_spawn_count    = low_spawn_count;
+    unk_04c->mission_pacing_override->high_spawn_count   = high_spawn_count;
+    unk_04c->mission_pacing_override->ramp_seconds       = ramp_seconds;
+    unk_04c->mission_pacing_override->hold_seconds       = hold_seconds;
+    unk_04c->mission_pacing_override->activation_seconds = 0.0f;
+    unk_04c->mission_pacing_override->give_up_seconds    = give_up_seconds;
+    unk_04c->mission_pacing_override->step_count         = step_count;
 }
 
 // sub_92ED30

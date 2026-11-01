@@ -98,11 +98,11 @@ namespace treyarch {
         mash::string     expression;
         u32              low_spawn_count;
         u32              high_spawn_count;
-        f32              unk_20;
-        f32              ramp_seconds;    // to climb from the low count to the high one
-        f32              give_up_seconds; // stepping down before climbing again
-        f32              hold_seconds;    // at the low count
-        u32              step_count;      // steps down from the high count
+        f32              activation_seconds; // between activate_items' draws
+        f32              ramp_seconds;       // to climb from the low count to the high one
+        f32              give_up_seconds;    // stepping down before climbing again
+        f32              hold_seconds;       // at the low count
+        u32              step_count;         // steps down from the high count
         quest_condition* condition;
 
         spawn_item_collection_unk_38();

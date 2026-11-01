@@ -32,7 +32,7 @@ namespace treyarch {
         vc8::map<mash::string, arch_base_vhandle> important_entities;
         i32                                       spawn_id;           // what the script natives call a spawn's number
         bool                                      unk_24;             // set once the instance is made
-        bool                                      unk_25;
+        bool                                      quest_item;         // drawn from the quest items
         bool                                      unk_26;
         bool                                      forced_despawn;
         bool                                      unk_28;

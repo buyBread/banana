@@ -17,7 +17,8 @@ namespace treyarch {
     class mission_objective_data;
 
     namespace references {
-        inline util::memory_reference<string_hash> dialog_3d_entered { 0x0102CAA8 };
+        inline util::memory_reference<string_hash> dialog_3d_entered   { 0x0102CAA8 };
+        inline util::memory_reference<string_hash> dialog_3d_selection { 0x0102C52C };
     } // references
 
     // the string slots own their by-value strings

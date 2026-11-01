@@ -58,9 +58,9 @@ namespace treyarch {
     struct spawn_table_manager_unk_04c {
         i32 max_active_spawn_items;
         u32 quest_spawn_count;      // the quest items' share of spawn_count
-        i32 unk_008;
+        u32 quest_active_count;     // actives drawn from quest_spawn_items
         u32 city_spawn_count;       // the rest of spawn_count
-        i32 unk_010;
+        u32 city_active_count;      // actives drawn from spawn_items
 
         vc8::vector
             <quest_giver_spawn*>                      quest_giver_spawns;
@@ -111,7 +111,7 @@ namespace treyarch {
         u8   pad_11d[0x03];
         i32  quest_spawn_cap;
         f32  unk_124;
-        f32  unk_128;
+        f32  activation_timer;       // activate_items draws once it reaches the pacing's activation_seconds
         f32  quest_spawn_share;
         f32  unk_130;
         u32  spawn_count;
@@ -183,6 +183,8 @@ namespace treyarch {
         void load(const char* level_name, amalga::resource_pack_slot* slot);
 
         void destroy_despawned();
+        void activate_items(f32 dt);
+        void activate_always_on_items(f32 dt);
         void stars_mode_damage_tick(f32 dt);
         void end_stars_mode();
         void start_ready_actives();
