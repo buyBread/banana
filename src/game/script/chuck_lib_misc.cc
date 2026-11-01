@@ -7,6 +7,7 @@
 #include "game/script/chuck_lib_misc.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 
@@ -350,12 +351,32 @@ bool slf__get_player_type__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_842410)(this, stack);
 }
 
+// sub_874BE0
 bool slf__malor__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_874BE0)(this, stack);
+    stack.sp -= 0x10;
+
+    auto position = (const vector3d*)&stack.local_uint(0x00);
+
+    references::g_world_ptr.read()->malor_point(*position, stack.local_num(0x0C) != 0.0f, true);
+    retail::sub_77BAB0((u32*)references::g_world_ptr.read()->the_terrain);
+
+    references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_140();
+
+    return true;
 }
 
+// sub_874C50
 bool slf__malor_no_locking__vector3d__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_874C50)(this, stack);
+    stack.sp -= 0x10;
+
+    auto position = (const vector3d*)&stack.local_uint(0x00);
+
+    references::g_world_ptr.read()->malor_point(*position, stack.local_num(0x0C) != 0.0f, false);
+    retail::sub_77BAB0((u32*)references::g_world_ptr.read()->the_terrain);
+
+    references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_140();
+
+    return true;
 }
 
 bool slf__is_in_district__vector3d__uint__t::operator()(chuck::vm::vm_stack &stack) {

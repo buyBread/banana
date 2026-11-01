@@ -6,7 +6,9 @@ namespace treyarch {
     class camera : public actor {
 
     public:
-        u8 reserved_0e8[0x28];
+        u8  reserved_0e8[0x04];
+        i32 unk_0ec;            // raised to at least 1 when the camera becomes the view camera or follows a malor
+        u8  reserved_0f0[0x20];
 
         const vector3d &get_abs_position() const {
             return my_abs_po->get_position();
@@ -73,6 +75,8 @@ namespace treyarch {
 
     ASSERT_SIZEOF(camera,      0x110);
     ASSERT_SIZEOF(game_camera, 0x1C0);
+
+    ASSERT_OFFSETOF(camera, unk_0ec, 0xEC);
 
     ASSERT_OFFSETOF(marky_camera, target,                0x1CC);
     ASSERT_OFFSETOF(marky_camera, roll,                  0x1D8);

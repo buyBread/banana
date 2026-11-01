@@ -18,6 +18,7 @@ void po::identity() {
 }
 
 // sub_424900
+// inlined @ sub_967860
 void po::set_position(const vector3d &v) {
     m.w = vector4d(v.x, v.y, v.z, 1.0f);
 }

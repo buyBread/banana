@@ -50,6 +50,7 @@ namespace treyarch {
 
         // inlined @ sub_863C30
         // inlined @ sub_865420
+        // inlined @ sub_967860
         vector3d slow_xform(const vector3d &point) const { // a point out of this po's frame
             return vector3d((f32)((f64)point.x * m.x.x + (f64)point.y * m.y.x + (f64)point.z * m.z.x + m.w.x),
                             (f32)((f64)point.x * m.x.y + (f64)point.y * m.y.y + (f64)point.z * m.z.y + m.w.y),

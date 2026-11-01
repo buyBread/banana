@@ -269,6 +269,7 @@ void* amalga::resource_manager::get_merged_resource_or_default(string_hash      
 }
 
 // sub_456290
+// inlined @ sub_967E00
 amalga::push_resource_context_stack_object::push_resource_context_stack_object(resource_pack_slot* slot) {
     resource_manager::references::unk_010300a8.get().acquire();
     resource_manager::references::resource_context_stack_mutex.read()->acquire();

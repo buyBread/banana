@@ -1,5 +1,8 @@
 #include "retail.hh"
+#include "game/app.hh"
+#include "game/game.hh"
 #include "game/script/chuck_lib_resource.hh"
+#include "treyarch/mash/string.hh"
 
 using namespace treyarch;
 
@@ -63,8 +66,17 @@ bool slf__purge_district__uint__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_866880)(this, stack);
 }
 
+// sub_8668C0
 bool slf__swap_hero_costume__str__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8668C0)(this, stack);
+    stack.sp -= 0x08;
+
+    bool keep_position = stack.local_num(0x04) != 0.0f;
+
+    mash::string hero_name((const char*)stack.local_uint(0x00));
+
+    references::game.read()->swap_hero_costume(hero_name, keep_position);
+
+    return true;
 }
 
 bool slf__rvb_is_same_surface_as_hero__vector3d__t::operator()(chuck::vm::vm_stack &stack) {

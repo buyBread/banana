@@ -182,6 +182,8 @@ namespace treyarch {
 
         void freeze_hero(bool freeze);
 
+        void swap_hero_costume(const mash::string &new_hero_packfile, bool keep_position);
+
         void enable_marky_cam(bool enable, bool sync = true, f32 priority = -1000.0f, f32 interp_time = 0.0f);
 
         camera_handle get_current_view_camera();

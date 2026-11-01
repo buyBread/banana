@@ -658,7 +658,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
                                                (i32)&player_restart_position,
                                                1);
 
-    retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)&player_restart_position, 0, 1);
+    references::g_world_ptr.read()->malor_point(player_restart_position, false, true);
 
     const vector3d &up     = treyarch::references::unk_00f4d3ac.get();
     const vector3d &facing = player_restart_xz_facing;
@@ -711,7 +711,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
     malor_wait_frames = 0;
 
-    retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)&player_restart_position, 0, 1);
+    references::g_world_ptr.read()->malor_point(player_restart_position, false, true);
 
     vector3d position = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_position();
     position.y = (f32)((f64)position.y + 2.0);

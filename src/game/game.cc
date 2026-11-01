@@ -549,9 +549,9 @@ void game::load_this_level(bool start_only, bool finish_only) {
         mash::string hero_name((const char*)retail::sub_77CBC0((u32*)data));
 
         matrix4x4 start_transform;
-        u64* hero_transform = (u64*)retail::sub_95C730((u32*)the_world, (i32)&start_transform); // the HERO_START transform
+        auto* hero_transform = (po*)retail::sub_95C730((u32*)the_world, (i32)&start_transform); // the HERO_START transform
 
-        retail::sub_967E00(the_world, (u32*)&hero_name, hero_transform); // creates the hero
+        the_world->add_player(hero_name, *hero_transform);
     }
 
     if (i_quit)
@@ -564,8 +564,8 @@ void game::load_this_level(bool start_only, bool finish_only) {
     if (chase) {
         current_view_camera = chase;
 
-        if (chase->is_a_game_camera() && *(i32*)((u8*)chase + 0xEC) < 1)
-            *(i32*)((u8*)chase + 0xEC) = 1;
+        if (chase->is_a_game_camera() && chase->unk_0ec < 1)
+            chase->unk_0ec = 1;
 
         if (!current_game_camera && chase->is_a_game_camera())
             current_game_camera = chase;
@@ -584,4 +584,26 @@ void game::load_this_level(bool start_only, bool finish_only) {
     retail::sub_6627D0();
 
     references::unk_01111391.write(1);
+}
+
+// sub_7371B0
+void game::swap_hero_costume(const mash::string &new_hero_packfile, bool keep_position) {
+    mash::string hero_name(new_hero_packfile);
+
+    po transform;
+    transform.identity();
+
+    po start_transform;
+
+    const po* source = keep_position ?
+        references::g_world_ptr.read()->hero_ptr->my_abs_po :
+        (po*)retail::sub_95C730((u32*)references::g_world_ptr.read(), (i32)&start_transform); // the HERO_START transform
+
+    transform = *source;
+
+    std::strncmp(hero_name.c_str(), "ch_peter", 0xFFFF);
+
+    retail::sub_968320((i32)references::g_world_ptr.read(), 1);
+
+    references::g_world_ptr.read()->add_player(hero_name, transform);
 }

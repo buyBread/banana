@@ -3399,7 +3399,7 @@ bool slf__entity__attach_to_wall__vector3d__t::operator()(chuck::vm::vm_stack &s
     if (!self->has_ifc(entity_ifc_player) || !retail::sub_601C50((u32*)self))
         return true;
 
-    retail::sub_967860((u32*)references::g_world_ptr.read(), (i32)position, 0, 1); // world_dynamics_system::place_hero_at
+    references::g_world_ptr.read()->malor_point(*position, false, true);
     retail::sub_77BAB0((u32*)references::g_world_ptr.read()->the_terrain);
 
     references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_140();
