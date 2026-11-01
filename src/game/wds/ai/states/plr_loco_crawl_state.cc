@@ -153,7 +153,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
     if (can_handle_exit_code(state_exit_code_ranged_hit_switch) && player->unk_260(delta_t))
         return state_exit_code_ranged_hit_switch;
 
-    if (player->unk_461() && !player->unk_462() && can_handle_exit_code(state_exit_code_strength_test))
+    if (player->should_do_strength_test() && !player->is_a_scripted_strength_test() && can_handle_exit_code(state_exit_code_strength_test))
         return state_exit_code_strength_test;
 
     if (can_handle_exit_code(state_exit_code_dodge) && player->should_execute_dodge(delta_t))

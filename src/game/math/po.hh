@@ -59,6 +59,7 @@ namespace treyarch {
 
         // inlined @ sub_844CD0
         // inlined @ sub_846EE0
+        // inlined @ sub_9A57F0
         vector3d non_affine_slow_xform(const vector3d &v) const { // a direction out of this po's frame
             return vector3d((f32)((f64)m.y.x * v.y + (f64)v.x * m.x.x + (f64)m.z.x * v.z + (f64)m.w.x * 0.0),
                             (f32)((f64)m.y.y * v.y + (f64)m.x.y * v.x + (f64)m.z.y * v.z + (f64)m.w.y * 0.0),

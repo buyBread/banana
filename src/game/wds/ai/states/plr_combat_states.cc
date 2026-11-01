@@ -148,7 +148,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
             the_exit_code = state_exit_code_zip;
         } else {
             for (i32 index = 0; index < 2; ++index) {
-                swing_data* swinger = player->unk_399(index);
+                swing_data* swinger = player->get_swinger((e_swinger_hand)index);
 
                 if (swinger->status) {
                     player->unk_368(delta_t, swinger);
@@ -182,7 +182,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
                     }
 
                     if (swing_hand != hand)
-                        player->unk_129(refire);
+                        player->swap_swing_hands(refire);
                 }
             }
         }
@@ -700,7 +700,7 @@ e_state_exit_code plr_trick_state::frame_advance(f32 delta_t) {
         if (can_handle_exit_code(state_exit_code_crawl) && player->unk_264(delta_t, nullptr, 0, 0, 0))
             return state_exit_code_crawl;
 
-        if (can_handle_exit_code(state_exit_code_pole_swing) && player->unk_392(0))
+        if (can_handle_exit_code(state_exit_code_pole_swing) && player->unk_392(false))
             return state_exit_code_pole_swing;
 
         if (can_handle_exit_code(state_exit_code_yoyo) &&

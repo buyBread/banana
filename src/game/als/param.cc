@@ -255,7 +255,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return -1.0f;
 
-            return (f32)the_actor->player_ifc()->unk_401();
+            return (f32)the_actor->player_ifc()->get_als_swing_hand_value();
 
         case param_swing_entry_speed:
             if (!the_actor->has_player_ifc())

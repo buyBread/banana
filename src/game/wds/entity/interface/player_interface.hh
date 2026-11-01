@@ -302,17 +302,17 @@ namespace treyarch {
         virtual i32               unk_122();
         virtual i32               unk_123();
         virtual bool              unk_124();
-        virtual bool              unk_125();
-        virtual bool              unk_126();
+        virtual bool              swing_r_hand() const;
+        virtual bool              swing_l_hand() const;
         virtual bool              swing_any_hand();
         virtual bool              swing_both_hand();
-        virtual bool              unk_129(bool unk);                   // rvb: swaps its two +0x638 records
-        virtual bool              unk_130();
-        virtual bool              unk_131();
+        virtual bool              swap_swing_hands(bool refire);       // rvb: swaps its two +0x638 records
+        virtual bool              swing_r_hand_locked() const;
+        virtual bool              swing_l_hand_locked() const;
         virtual bool              swing_any_hand_locked();
         virtual bool              swing_both_hand_locked();
-        virtual bool              unk_134(i32 unk);
-        virtual bool              unk_135(i32 unk);
+        virtual void              lock_swing_r_hand(bool l);
+        virtual void              lock_swing_l_hand(bool l);
         virtual i32               unk_136();
         virtual bool              on_ground() const;
         virtual bool              on_wall() const;
@@ -373,7 +373,7 @@ namespace treyarch {
         virtual bool              unk_193(bool unk);
         virtual bool              handle_jump_charge(f32 delta_t);
         virtual i32               unk_195();
-        virtual i32               unk_196(i32 unk);
+        virtual vector3d          unk_196();
         virtual i32               unk_197();
         virtual void              unk_198();
         virtual i32               unk_199(i32 unk);
@@ -381,7 +381,7 @@ namespace treyarch {
         virtual i32               unk_201(f32 unk);
         virtual i32               unk_202();
         virtual void              unk_203();
-        virtual i32               unk_204(i32 unk);
+        virtual vector3d          unk_204();
         virtual void*             unk_205(void* unk);
         virtual i32               unk_206(f32 unk, entity* unk_2, i32 unk_3);
         virtual void              unk_207();
@@ -555,14 +555,25 @@ namespace treyarch {
         virtual void              unk_360(i32 unk);
         virtual void              unk_361(i32 unk);
         virtual void              unk_362(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual void*             unk_363(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6);
-        virtual void*             unk_364(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6, void* unk_7);
+        virtual void              get_sweet_spot_params(f32* incline_sin,
+                                                        f32* incline_cos,
+                                                        f32* sweet_cone_cos,
+                                                        f32* distance,
+                                                        f32* min_len_squared,
+                                                        f32* max_len_squared);
+        virtual void              get_dynamic_sweet_spot_params(f32* min_length,
+                                                                f32* max_length,
+                                                                f32* overdrive_length,
+                                                                f32* overdrive_velocity,
+                                                                f32* max_no_anchor_length,
+                                                                f32* min_angle,
+                                                                f32* max_angle);
         virtual i32               unk_365(void* unk, void* unk_2);
         virtual void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4);
         virtual i32               unk_367(void* unk, void* unk_2);
         virtual void              unk_368(f32 unk, swing_data* swinger);
         virtual void              unk_369(i32 unk, i32 unk_2);
-        virtual bool              unk_370(i32 unk, i32 unk_2, i32 unk_3);
+        virtual bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler);
         virtual i32               unk_371(i32 unk, i32 unk_2);
         virtual entity*           get_last_anchor() const;
         virtual i32               unk_373();
@@ -578,28 +589,28 @@ namespace treyarch {
         virtual i32               unk_383();
         virtual bool              unk_384();
         virtual i32               unk_385();
-        virtual i32               unk_386(f32 unk, i32 unk_2);
+        virtual bool              unk_386(f32 unk, bool unk_2);
         virtual void*             unk_387();                           // rvb: the pole it swings on (+0x8CC)
         virtual bool              unk_388();                           // rvb: that pole leans more than 45 degrees off vertical
         virtual bool              unk_389(void* unk, f32 unk_2);
         virtual bool              unk_390();
         virtual bool              unk_391(i32 unk, i32 unk_2);
-        virtual bool              unk_392(i32 unk);
+        virtual bool              unk_392(bool skip);
         virtual bool              unk_393(f32 unk);
         virtual i32               unk_394();
         virtual i32               unk_395();
         virtual i32               unk_396(i32 unk);
         virtual i32               unk_397();
         virtual i32               unk_398(i32 unk);
-        virtual swing_data*       unk_399(i32 index);                  // rvb: its swinger at the index
+        virtual swing_data*       get_swinger(e_swinger_hand i);
         virtual void              unk_400(polytube* tube, f32 radius); // dresses the polytube as the hero's web
-        virtual i32               unk_401();                           // the als's swing_hand
+        virtual i32               get_als_swing_hand_value();          // the als's swing_hand
         virtual i32               unk_402(i32 unk, i32 unk_2);
         virtual f32               unk_403();                           // the als's swing_level_rating
-        virtual f32               unk_404(f32 unk);
-        virtual f32               unk_405(f32 unk);
-        virtual f32               unk_406(f32 unk);
-        virtual f32               unk_407(f32 unk);
+        virtual f32               unk_404(f32 progress);
+        virtual f32               unk_405(f32 progress);
+        virtual f32               unk_406(f32 progress);
+        virtual f32               unk_407(f32 progress);
         virtual void              unk_408(i32 unk, i32 unk_2);
         virtual void              unk_409(i32 unk, i32 unk_2, i32 unk_3);
         virtual void              unk_410(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4);
@@ -653,8 +664,8 @@ namespace treyarch {
         virtual void              unk_458(void* unk, void* unk_2, f32 unk_3);
         virtual i32               unk_459();
         virtual i32               unk_460(f32 unk);
-        virtual bool              unk_461();
-        virtual bool              unk_462();
+        virtual bool              should_do_strength_test() const;
+        virtual bool              is_a_scripted_strength_test() const;
         virtual bool              unk_463();
         virtual i32               unk_464();
         virtual void              unk_465();
@@ -721,12 +732,12 @@ namespace treyarch {
         virtual void              unk_526();
         virtual void              unk_527(f32 delta_t);
         virtual line_info*        unk_528();                           // rvb: a line_info of its own (+0xBA8)
-        virtual void*             unk_529(i32 unk);
-        virtual bool              unk_530(f32 unk);
-        virtual bool              unk_531(i32 unk);
+        virtual void              unk_529(const line_info* line);
+        virtual bool              unk_530(f32 delta_t);
+        virtual bool              unk_531(const line_info* line);
         virtual bool              unk_532(const line_info* unk);       // rvb: null takes that line_info
         virtual i32               unk_533(i32 unk);
-        virtual void              unk_534(i32 unk, f32 unk_2);
+        virtual void              unk_534(arch_base_vhandle target, f32 time);
         virtual entity_base*      select_lockon_target(const vector3d &base_pos,
                                                              f32       min_range,
                                                              f32       max_range,

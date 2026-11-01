@@ -627,58 +627,58 @@ bool player_interface::unk_124() {
 }
 
 // slot 125
-bool player_interface::unk_125() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::swing_r_hand() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 126
-bool player_interface::unk_126() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::swing_l_hand() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // sub_71F900
 bool player_interface::swing_any_hand() {
-    return unk_125() || unk_126();
+    return swing_r_hand() || swing_l_hand();
 }
 
 // sub_71F930
 bool player_interface::swing_both_hand() {
-    return unk_125() && unk_126();
+    return swing_r_hand() && swing_l_hand();
 }
 
 // slot 129
-bool player_interface::unk_129(bool unk) {
-    return ((bool (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, unk);
+bool player_interface::swap_swing_hands(bool refire) {
+    return ((bool (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, refire);
 }
 
 // slot 130
-bool player_interface::unk_130() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::swing_r_hand_locked() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 131
-bool player_interface::unk_131() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::swing_l_hand_locked() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // sub_71F960
 bool player_interface::swing_any_hand_locked() {
-    return unk_130() || unk_131();
+    return swing_r_hand_locked() || swing_l_hand_locked();
 }
 
 // sub_71F990
 bool player_interface::swing_both_hand_locked() {
-    return unk_130() && unk_131();
+    return swing_r_hand_locked() && swing_l_hand_locked();
 }
 
 // slot 134
-bool player_interface::unk_134(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::lock_swing_r_hand(bool l) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, l);
 }
 
 // slot 135
-bool player_interface::unk_135(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::lock_swing_l_hand(bool l) {
+    ((void (__thiscall*)(player_interface*, bool))retail::sub_689610)(this, l);
 }
 
 // slot 136
@@ -982,8 +982,11 @@ i32 player_interface::unk_195() {
 }
 
 // slot 196
-i32 player_interface::unk_196(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71F830)(this, unk);
+vector3d player_interface::unk_196() {
+    vector3d result;
+    ((vector3d* (__thiscall*)(player_interface*, vector3d*))retail::sub_71F830)(this, &result);
+
+    return result;
 }
 
 // slot 197
@@ -1022,8 +1025,11 @@ void player_interface::unk_203() {
 }
 
 // slot 204
-i32 player_interface::unk_204(i32 unk) {
-    return ((i32 (__thiscall*)(player_interface*, i32))retail::sub_71F830)(this, unk);
+vector3d player_interface::unk_204() {
+    vector3d result;
+    ((vector3d* (__thiscall*)(player_interface*, vector3d*))retail::sub_71F830)(this, &result);
+
+    return result;
 }
 
 // slot 205
@@ -2128,20 +2134,39 @@ void player_interface::unk_362(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4) {
 }
 
 // slot 363
-void* player_interface::unk_363(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6) {
-    return ((void* (__thiscall*)(player_interface*, void*, void*, void*, void*, void*, void*))retail::sub_71FF60)(this, unk, unk_2, unk_3, unk_4, unk_5, unk_6);
+void player_interface::get_sweet_spot_params(f32* incline_sin,
+                                             f32* incline_cos,
+                                             f32* sweet_cone_cos,
+                                             f32* distance,
+                                             f32* min_len_squared,
+                                             f32* max_len_squared) {
+
+    ((void (__thiscall*)(player_interface*, f32*, f32*, f32*, f32*, f32*, f32*))retail::sub_71FF60)(this,
+                                                                                                    incline_sin,
+                                                                                                    incline_cos,
+                                                                                                    sweet_cone_cos,
+                                                                                                    distance,
+                                                                                                    min_len_squared,
+                                                                                                    max_len_squared);
 }
 
 // slot 364
-void* player_interface::unk_364(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6, void* unk_7) {
-    return ((void* (__thiscall*)(player_interface*, void*, void*, void*, void*, void*, void*, void*))retail::sub_71FEF0)(this,
-                                                                                                                         unk,
-                                                                                                                         unk_2,
-                                                                                                                         unk_3,
-                                                                                                                         unk_4,
-                                                                                                                         unk_5,
-                                                                                                                         unk_6,
-                                                                                                                         unk_7);
+void player_interface::get_dynamic_sweet_spot_params(f32* min_length,
+                                                     f32* max_length,
+                                                     f32* overdrive_length,
+                                                     f32* overdrive_velocity,
+                                                     f32* max_no_anchor_length,
+                                                     f32* min_angle,
+                                                     f32* max_angle) {
+
+    ((void (__thiscall*)(player_interface*, f32*, f32*, f32*, f32*, f32*, f32*, f32*))retail::sub_71FEF0)(this,
+                                                                                                          min_length,
+                                                                                                          max_length,
+                                                                                                          overdrive_length,
+                                                                                                          overdrive_velocity,
+                                                                                                          max_no_anchor_length,
+                                                                                                          min_angle,
+                                                                                                          max_angle);
 }
 
 // slot 365
@@ -2170,8 +2195,8 @@ void player_interface::unk_369(i32 unk, i32 unk_2) {
 }
 
 // slot 370
-bool player_interface::unk_370(i32 unk, i32 unk_2, i32 unk_3) {
-    return ((bool (__thiscall*)(player_interface*, i32, i32, i32))retail::sub_5FCC20)(this, unk, unk_2, unk_3);
+bool player_interface::break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler) {
+    return ((bool (__thiscall*)(player_interface*, e_swinger_hand, bool, bool))retail::sub_5FCC20)(this, web_to_break, add_momentum, add_dangler);
 }
 
 // slot 371
@@ -2250,8 +2275,8 @@ i32 player_interface::unk_385() {
 }
 
 // slot 386
-i32 player_interface::unk_386(f32 unk, i32 unk_2) {
-    return ((i32 (__thiscall*)(player_interface*, f32, i32))retail::sub_5BD2C0)(this, unk, unk_2);
+bool player_interface::unk_386(f32 unk, bool unk_2) {
+    return ((bool (__thiscall*)(player_interface*, f32, bool))retail::sub_5BD2C0)(this, unk, unk_2);
 }
 
 // slot 387
@@ -2280,8 +2305,8 @@ bool player_interface::unk_391(i32 unk, i32 unk_2) {
 }
 
 // slot 392
-bool player_interface::unk_392(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_71FF10)(this, unk);
+bool player_interface::unk_392(bool skip) {
+    return ((bool (__thiscall*)(player_interface*, bool))retail::sub_71FF10)(this, skip);
 }
 
 // slot 393
@@ -2315,8 +2340,8 @@ i32 player_interface::unk_398(i32 unk) {
 }
 
 // slot 399
-swing_data* player_interface::unk_399(i32 index) {
-    return ((swing_data* (__thiscall*)(player_interface*, i32))retail::sub_A90D90)(this, index);
+swing_data* player_interface::get_swinger(e_swinger_hand i) {
+    return ((swing_data* (__thiscall*)(player_interface*, e_swinger_hand))retail::sub_A90D90)(this, i);
 }
 
 // slot 400
@@ -2325,7 +2350,7 @@ void player_interface::unk_400(polytube* tube, f32 radius) {
 }
 
 // slot 401
-i32 player_interface::unk_401() {
+i32 player_interface::get_als_swing_hand_value() {
     return ((i32 (__thiscall*)(player_interface*))retail::sub_A944D0)(this);
 }
 
@@ -2340,23 +2365,23 @@ f32 player_interface::unk_403() {
 }
 
 // slot 404
-f32 player_interface::unk_404(f32 unk) {
-    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF40)(this, unk);
+f32 player_interface::unk_404(f32 progress) {
+    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF40)(this, progress);
 }
 
 // slot 405
-f32 player_interface::unk_405(f32 unk) {
-    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, unk);
+f32 player_interface::unk_405(f32 progress) {
+    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, progress);
 }
 
 // slot 406
-f32 player_interface::unk_406(f32 unk) {
-    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, unk);
+f32 player_interface::unk_406(f32 progress) {
+    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, progress);
 }
 
 // slot 407
-f32 player_interface::unk_407(f32 unk) {
-    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, unk);
+f32 player_interface::unk_407(f32 progress) {
+    return ((f32 (__thiscall*)(player_interface*, f32))retail::sub_71FF50)(this, progress);
 }
 
 // slot 408
@@ -2625,13 +2650,13 @@ i32 player_interface::unk_460(f32 unk) {
 }
 
 // slot 461
-bool player_interface::unk_461() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::should_do_strength_test() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 462
-bool player_interface::unk_462() {
-    return ((bool (__thiscall*)(player_interface*))retail::sub_71F870)(this);
+bool player_interface::is_a_scripted_strength_test() const {
+    return ((bool (__thiscall*)(const player_interface*))retail::sub_71F870)(this);
 }
 
 // slot 463
@@ -2968,18 +2993,18 @@ line_info* player_interface::unk_528() {
 }
 
 // slot 529
-void* player_interface::unk_529(i32 unk) {
-    return ((void* (__thiscall*)(player_interface*, i32))retail::sub_689610)(this, unk);
+void player_interface::unk_529(const line_info* line) {
+    ((void (__thiscall*)(player_interface*, const line_info*))retail::sub_689610)(this, line);
 }
 
 // slot 530
-bool player_interface::unk_530(f32 unk) {
-    return ((bool (__thiscall*)(player_interface*, f32))retail::sub_71FF10)(this, unk);
+bool player_interface::unk_530(f32 delta_t) {
+    return ((bool (__thiscall*)(player_interface*, f32))retail::sub_71FF10)(this, delta_t);
 }
 
 // slot 531
-bool player_interface::unk_531(i32 unk) {
-    return ((bool (__thiscall*)(player_interface*, i32))retail::sub_71FF10)(this, unk);
+bool player_interface::unk_531(const line_info* line) {
+    return ((bool (__thiscall*)(player_interface*, const line_info*))retail::sub_71FF10)(this, line);
 }
 
 // slot 532
@@ -2993,8 +3018,8 @@ i32 player_interface::unk_533(i32 unk) {
 }
 
 // slot 534
-void player_interface::unk_534(i32 unk, f32 unk_2) {
-    ((void (__thiscall*)(player_interface*, i32, f32))retail::sub_AD2D40)(this, unk, unk_2);
+void player_interface::unk_534(arch_base_vhandle target, f32 time) {
+    ((void (__thiscall*)(player_interface*, arch_base_vhandle, f32))retail::sub_AD2D40)(this, target, time);
 }
 
 // sub_99AFE0

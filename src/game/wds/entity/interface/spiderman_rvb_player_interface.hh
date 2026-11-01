@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/ai/ai_strength_test_info.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/delta_variable.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -33,6 +34,11 @@ namespace treyarch {
         // "wall_explode_recovery", the als base layer param slot 484 tests
         inline util::memory_reference<string_hash> wall_explode_recovery { 0x01112CAC };
 
+        // the web power upgrades slot 21 scales damage by
+        inline util::memory_reference<string_hash> web_upgrade_power_3 { 0x01112CB4 };
+        inline util::memory_reference<string_hash> web_upgrade_power_2 { 0x0111311C };
+        inline util::memory_reference<string_hash> web_upgrade_power_1 { 0x01112DB4 };
+
         // two of the {3.75, 0.0035} pairs at 0x00F4D590, rewritten every hero frame
         inline util::memory_reference<f32> unk_00f4d590 { 0x00F4D590 };
         inline util::memory_reference<f32> unk_00f4d594 { 0x00F4D594 };
@@ -44,6 +50,14 @@ namespace treyarch {
     class spiderman_rvb_player_interface : public player_interface {
 
     public:
+        // a point, an entity or a point in an entity's space
+        struct unk_068c_t {
+            i32               kind;     // 1 the point, 2 the entity, 3 the point in the entity's space
+            i32               unk_04;
+            vector3d          position;
+            arch_base_vhandle handle;
+        };
+
         bool                     rvb_black_mode;                  // the als's player_in_blacksuit_mode
         bool                     suit_locked;
         bool                     suit_mode_locked;
@@ -82,10 +96,10 @@ namespace treyarch {
         f32                      unk_0678;
         f32                      unk_067c;
         u8                       vertical_line_anchor_tune[0x0C]; // a vertical_line_anchor_tune_t
-        u8                       unk_068c[0x18];
-        u8                       unk_06a4[0x18];
+        unk_068c_t               unk_068c;
+        unk_068c_t               unk_06a4;
         vector3d                 unk_06bc;                        // the owner's position as frame_advance left it
-        u8                       unk_06c8[0x18];
+        unk_068c_t               unk_06c8;
         arch_base_vhandle        swing_override_anchor;
         arch_base_vhandle        zip_override_anchor;
         u32                      unk_06e8;                        // the timed target
@@ -175,7 +189,7 @@ namespace treyarch {
         u8                       reserved_0a16[0x06];
         i32                      unk_0a1c;                        // set to 106 every frame
         u8                       reserved_0a20[0x04];
-        u8                       my_strength_test_info[0x20];
+        strength_test_info       my_strength_test_info;
         u8                       my_slingshot_point_info[0x24];
         u8                       my_agility_test_info[0x60];
         u8                       reserved_0ac8[0x04];
@@ -192,7 +206,7 @@ namespace treyarch {
         f32                      unk_0c04;                        // the obstacle hop's hold time
         u8                       reserved_0c08[0x04];
         i32                      unk_0c0c;
-        arch_base_vhandle        unk_0c10;                        // flagged 0x10 through its slot 68 once unk_0c14 runs out
+        arch_base_vhandle        unk_0c10;                        // slot 534 keeps it out of camera collision until unk_0c14 runs out
         f32                      unk_0c14;
         arch_base_vhandle        unk_0c18;
         f32                      unk_0c1c;
@@ -311,13 +325,13 @@ namespace treyarch {
         i32               unk_118() override;
         bool              unk_119(i32 unk) override;
         i32               unk_121() override;
-        bool              unk_125() override;
-        bool              unk_126() override;
-        bool              unk_129(bool unk) override;
-        bool              unk_130() override;
-        bool              unk_131() override;
-        bool              unk_134(i32 unk) override;
-        bool              unk_135(i32 unk) override;
+        bool              swing_r_hand() const override;
+        bool              swing_l_hand() const override;
+        bool              swap_swing_hands(bool refire) override;
+        bool              swing_r_hand_locked() const override;
+        bool              swing_l_hand_locked() const override;
+        void              lock_swing_r_hand(bool l) override;
+        void              lock_swing_l_hand(bool l) override;
         i32               unk_136() override;
         bool              on_ground() const override;
         bool              on_ceiling() const override;
@@ -355,13 +369,13 @@ namespace treyarch {
         bool              unk_193(bool unk) override;
         bool              handle_jump_charge(f32 delta_t) override;
         i32               unk_195() override;
-        i32               unk_196(i32 unk) override;
+        vector3d          unk_196() override;
         i32               unk_197() override;
         void              unk_198() override;
         i32               unk_201(f32 unk) override;
         i32               unk_202() override;
         void              unk_203() override;
-        i32               unk_204(i32 unk) override;
+        vector3d          unk_204() override;
         void*             unk_205(void* unk) override;
         i32               unk_206(f32 unk, entity* unk_2, i32 unk_3) override;
         void              unk_207() override;
@@ -455,14 +469,25 @@ namespace treyarch {
         void              unk_359(i32 unk) override;
         void              unk_360(i32 unk) override;
         void              unk_361(i32 unk) override;
-        void*             unk_363(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6) override;
-        void*             unk_364(void* unk, void* unk_2, void* unk_3, void* unk_4, void* unk_5, void* unk_6, void* unk_7) override;
+        void              get_sweet_spot_params(f32* incline_sin,
+                                                f32* incline_cos,
+                                                f32* sweet_cone_cos,
+                                                f32* distance,
+                                                f32* min_len_squared,
+                                                f32* max_len_squared) override;
+        void              get_dynamic_sweet_spot_params(f32* min_length,
+                                                        f32* max_length,
+                                                        f32* overdrive_length,
+                                                        f32* overdrive_velocity,
+                                                        f32* max_no_anchor_length,
+                                                        f32* min_angle,
+                                                        f32* max_angle) override;
         i32               unk_365(void* unk, void* unk_2) override;
         void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4) override;
         i32               unk_367(void* unk, void* unk_2) override;
         void              unk_368(f32 unk, swing_data* swinger) override;
         void              unk_369(i32 unk, i32 unk_2) override;
-        bool              unk_370(i32 unk, i32 unk_2, i32 unk_3) override;
+        bool              break_web(e_swinger_hand web_to_break, bool add_momentum, bool add_dangler) override;
         i32               unk_371(i32 unk, i32 unk_2) override;
         i32               unk_373() override;
         f32               unk_374() override;
@@ -477,27 +502,27 @@ namespace treyarch {
         i32               unk_383() override;
         bool              unk_384() override;
         i32               unk_385() override;
-        i32               unk_386(f32 unk, i32 unk_2) override;
+        bool              unk_386(f32 unk, bool unk_2) override;
         void*             unk_387() override;
         bool              unk_388() override;
         bool              unk_389(void* unk, f32 unk_2) override;
         bool              unk_390() override;
         bool              unk_391(i32 unk, i32 unk_2) override;
-        bool              unk_392(i32 unk) override;
+        bool              unk_392(bool skip) override;
         bool              unk_393(f32 unk) override;
         i32               unk_394() override;
         i32               unk_395() override;
         i32               unk_396(i32 unk) override;
         i32               unk_398(i32 unk) override;
-        swing_data*       unk_399(i32 index) override;
+        swing_data*       get_swinger(e_swinger_hand i) override;
         void              unk_400(polytube* tube, f32 radius) override;
-        i32               unk_401() override;
+        i32               get_als_swing_hand_value() override;
         i32               unk_402(i32 unk, i32 unk_2) override;
         f32               unk_403() override;
-        f32               unk_404(f32 unk) override;
-        f32               unk_405(f32 unk) override;
-        f32               unk_406(f32 unk) override;
-        f32               unk_407(f32 unk) override;
+        f32               unk_404(f32 progress) override;
+        f32               unk_405(f32 progress) override;
+        f32               unk_406(f32 progress) override;
+        f32               unk_407(f32 progress) override;
         void              unk_408(i32 unk, i32 unk_2) override;
         void              unk_409(i32 unk, i32 unk_2, i32 unk_3) override;
         void              unk_410(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4) override;
@@ -543,8 +568,8 @@ namespace treyarch {
         void              unk_458(void* unk, void* unk_2, f32 unk_3) override;
         i32               unk_459() override;
         i32               unk_460(f32 unk) override;
-        bool              unk_461() override;
-        bool              unk_462() override;
+        bool              should_do_strength_test() const override;
+        bool              is_a_scripted_strength_test() const override;
         bool              unk_463() override;
         i32               unk_464() override;
         void              unk_465() override;
@@ -598,78 +623,82 @@ namespace treyarch {
         void              unk_526() override;
         void              unk_527(f32 delta_t) override;
         line_info*        unk_528() override;
-        void*             unk_529(i32 unk) override;
-        bool              unk_530(f32 unk) override;
-        bool              unk_531(i32 unk) override;
+        void              unk_529(const line_info* line) override;
+        bool              unk_530(f32 delta_t) override;
+        bool              unk_531(const line_info* line) override;
         bool              unk_532(const line_info* unk) override;
-        void              unk_534(i32 unk, f32 unk_2) override;
+        void              unk_534(arch_base_vhandle target, f32 time) override;
 
-        virtual bool  unk_536(i32 unk);
-        virtual bool  unk_537(void* unk);
-        virtual bool  unk_538(i32 unk);
-        virtual f32   unk_539();
-        virtual void  unk_540(f32 delta_t);         // the cut scene player's time step while it plays
-        virtual f32   unk_541(i32 unk);
-        virtual void* unk_542(void* unk, i32 unk_2);
-        virtual bool  unk_543();
-        virtual i32   unk_544(f32 delta_t);
-        virtual bool  unk_545();
-        virtual i32   unk_546(i32 unk);
-        virtual bool  unk_547();
-        virtual f32   unk_548(f32 unk);
-        virtual f32   unk_549(f32 unk);
-        virtual void  unk_550(arch_base_vhandle* out, i32 count);
-        virtual void* unk_551(void* unk);
-        virtual i32   unk_552(void* unk, i32 unk_2);
-        virtual void  unk_553(arch_base_vhandle old_target, arch_base_vhandle new_target, arch_base_vhandle other_target);
-        virtual f32   unk_554();
-        virtual void  unk_555(f32 unk);
-        virtual void* unk_556(void* unk);
-        virtual void* unk_557(i32 unk);
-        virtual void  unk_558(f32 unk);
-        virtual void  unk_559(f32 delta_t);
-        virtual void* unk_560(f32 unk);
-        virtual i32   unk_561(game_button* button, i32* state);
-        virtual f32   unk_562(arch_base_vhandle target);
-        virtual f32   unk_563(f32 level, f32 target_level);
-        virtual i32   unk_564(f32 unk);
-        virtual void  unk_565(f32 delta_t);
-        virtual void  unk_566(i32 unk);
-        virtual void* unk_567(f32 unk);
-        virtual void  unk_568();
-        virtual void  unk_569();
-        virtual bool  unk_570(i32 unk, void* unk_2, i32 unk_3, i32 unk_4, f32 unk_5);
-        virtual i32   unk_571(i32 unk);
-        virtual void  unk_572(f32 unk, bool black); // switches the suit's behaviours
-        virtual i32   unk_573();
-        virtual bool  unk_574();
-        virtual bool  unk_575();
-        virtual bool  unk_576();
-        virtual i32   unk_577();
-        virtual bool  unk_578();
-        virtual i32   unk_579(void* unk, void* unk_2, void* unk_3, i32 unk_4, i32 unk_5);
-        virtual void* unk_580(f32 unk);
-        virtual bool  unk_581(i32 unk, i32 unk_2);
-        virtual i32   unk_582(f32 unk);
-        virtual i32   is_in_webcast_approach();
-        virtual f32   unk_584();
-        virtual void  unk_585();
-        virtual void* unk_586(void* unk);
-        virtual i32   unk_587(i32 unk, i32 unk_2);
-        virtual i32   unk_588(void* unk, i32 unk_2);
-        virtual i32   unk_589(i32 unk, f32 unk_2);
-        virtual void* unk_590(void* unk);
-        virtual i32   unk_591(i32 unk, i32 unk_2);
-        virtual i32   unk_592(void* unk, i32 unk_2);
-        virtual void  unk_593(void* unk, i32 unk_2, f32 unk_3);
-        virtual i32   unk_594(void* unk, i32 unk_2);
-        virtual i32   unk_595(f32 unk);
+        virtual bool     unk_536(i32 unk);
+        virtual bool     unk_537(void* unk);
+        virtual bool     unk_538(i32 unk);
+        virtual f32      unk_539();
+        virtual void     unk_540(f32 delta_t);         // the cut scene player's time step while it plays
+        virtual f32      unk_541(i32 unk);
+        virtual vector3d unk_542(i32 index);
+        virtual bool     unk_543();
+        virtual i32      unk_544(f32 delta_t);
+        virtual bool     unk_545();
+        virtual i32      unk_546(i32 unk);
+        virtual bool     unk_547();
+        virtual f32      unk_548(f32 t);
+        virtual f32      unk_549(f32 t);
+        virtual void     unk_550(arch_base_vhandle* out, i32 count);
+        virtual void*    unk_551(void* unk);
+        virtual i32      unk_552(void* unk, i32 unk_2);
+        virtual void     unk_553(arch_base_vhandle old_target, arch_base_vhandle new_target, arch_base_vhandle other_target);
+        virtual f32      unk_554();
+        virtual void     unk_555(f32 unk);
+        virtual void*    unk_556(void* unk);
+        virtual void*    unk_557(i32 unk);
+        virtual void     unk_558(f32 unk);
+        virtual void     unk_559(f32 delta_t);
+        virtual void*    unk_560(f32 unk);
+        virtual i32      unk_561(game_button* button, i32* state);
+        virtual f32      unk_562(arch_base_vhandle target);
+        virtual f32      unk_563(f32 level, f32 target_level);
+        virtual i32      unk_564(f32 unk);
+        virtual void     unk_565(f32 delta_t);
+        virtual void     unk_566(i32 unk);
+        virtual void*    unk_567(f32 unk);
+        virtual void     unk_568();
+        virtual void     unk_569();
+        virtual bool     unk_570(i32 unk, void* unk_2, i32 unk_3, i32 unk_4, f32 unk_5);
+        virtual i32      unk_571(i32 unk);
+        virtual void     unk_572(f32 unk, bool black); // switches the suit's behaviours
+        virtual i32      unk_573();
+        virtual bool     unk_574();
+        virtual bool     unk_575();
+        virtual bool     unk_576();
+        virtual i32      unk_577();
+        virtual bool     unk_578();
+        virtual i32      unk_579(void* unk, void* unk_2, void* unk_3, i32 unk_4, i32 unk_5);
+        virtual void     unk_580(f32 delta_t);
+        virtual bool     unk_581(i32 unk, i32 unk_2);
+        virtual i32      unk_582(f32 unk);
+        virtual i32      is_in_webcast_approach();
+        virtual f32      unk_584();
+        virtual void     unk_585();
+        virtual void*    unk_586(void* unk);
+        virtual i32      unk_587(i32 unk, i32 unk_2);
+        virtual i32      unk_588(void* unk, i32 unk_2);
+        virtual i32      unk_589(i32 unk, f32 unk_2);
+        virtual void*    unk_590(void* unk);
+        virtual i32      unk_591(i32 unk, i32 unk_2);
+        virtual i32      unk_592(void* unk, i32 unk_2);
+        virtual void     unk_593(void* unk, i32 unk_2, f32 unk_3);
+        virtual i32      unk_594(void* unk, i32 unk_2);
+        virtual i32      unk_595(f32 unk);
 
         static constexpr f32 timed_target_times[4] = { 3.0f, 0.5f, 3.0f, 5.0f }; // by kind
 
         static string_hash my_type_key;
         static bool        mario_jump_pressed; // a mario jump's press waits here for its release
     };
+
+    ASSERT_SIZEOF  (spiderman_rvb_player_interface::unk_068c_t,           0x18);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface::unk_068c_t, position, 0x08);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface::unk_068c_t, handle,   0x14);
 
     ASSERT_SIZEOF  (spiderman_rvb_player_interface,                            0xCB0);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, rvb_black_mode,            0x530);
@@ -685,7 +714,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, swing_leftovers,           0x648);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0674,                  0x674);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, vertical_line_anchor_tune, 0x680);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_068c,                  0x68C);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_06bc,                  0x6BC);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_06c8,                  0x6C8);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, swing_override_anchor,     0x6E0);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_06fe,                  0x6FE);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_071c,                  0x71C);
@@ -720,6 +751,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0ba8,                  0xBA8);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c04,                  0xC04);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c0c,                  0xC0C);
+    ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c10,                  0xC10);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c18,                  0xC18);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c58,                  0xC58);
     ASSERT_OFFSETOF(spiderman_rvb_player_interface, unk_0c70,                  0xC70);
