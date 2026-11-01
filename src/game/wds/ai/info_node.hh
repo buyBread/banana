@@ -6,13 +6,16 @@
 #include "game/als/als.hh"
 #include "game/wds/ai/param_block.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/boolx.hh"
 #include "game/hash/algo.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/vector_basic.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "game/math/po.hh"
+#include "game/line_info.hh"
 #include "game/mutex.hh"
 #include "game/resource_key.hh"
+#include "game/timing/simple_timer.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -20,7 +23,6 @@
 namespace treyarch {
     class actor;
     class ai_core;
-    class line_info;
     class manip_obj_interface;
 
     // baked into each node by its .BAI
@@ -470,7 +472,15 @@ namespace treyarch {
     class crawl_layer_inode : public loco_inode {
 
     public:
-        u8 reserved_0b0[0xC8];
+        line_info    surface_info;
+        line_info    dest_surface_info;
+        simple_timer fall_timer;
+        boolx        transition;
+        boolx        exterior_transition;
+        boolx        exterior_transition_180;
+        boolx        floor_transition;
+        boolx        need_reset;
+        u8           reserved_171[0x07];
 
         void attach_to_surface   (const line_info &lif, const vector3d &desired_forward);
         void release_from_surface(const vector3d &desired_forward);
@@ -499,7 +509,9 @@ namespace treyarch {
     public:
         u8  reserved_030[0x28];
         i32 unk_058;            // above 1, wallsprint_mocomp moves the actor 1/n of the way onto wall_po per frame
-        u8  reserved_05c[0x14];
+        i32 unk_05c;            // the kind of transition the wall sprint states run
+        i32 unk_060;            // unk_05c as the transition state was left
+        u8  reserved_064[0x0C];
         po  wall_po;
         u8  reserved_0b0[0xB0];
 
@@ -558,7 +570,12 @@ namespace treyarch {
     ASSERT_OFFSETOF(std_puppet_inode, goto_destinations, 0x40);
     ASSERT_OFFSETOF(std_puppet_inode, access_lock,       0x50);
 
-    ASSERT_SIZEOF(crawl_layer_inode, 0x178);
+    ASSERT_SIZEOF  (crawl_layer_inode,                   0x178);
+    ASSERT_OFFSETOF(crawl_layer_inode, surface_info,      0x0B0);
+    ASSERT_OFFSETOF(crawl_layer_inode, dest_surface_info, 0x10C);
+    ASSERT_OFFSETOF(crawl_layer_inode, fall_timer,        0x168);
+    ASSERT_OFFSETOF(crawl_layer_inode, transition,        0x16C);
+    ASSERT_OFFSETOF(crawl_layer_inode, floor_transition,  0x16F);
 
     ASSERT_SIZEOF  (std_carry_inode,                0x68);
     ASSERT_OFFSETOF(std_carry_inode, carry_master,  0x30);
@@ -589,5 +606,7 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (wall_sprint_inode,          0x160);
     ASSERT_OFFSETOF(wall_sprint_inode, unk_058, 0x58);
+    ASSERT_OFFSETOF(wall_sprint_inode, unk_05c, 0x5C);
+    ASSERT_OFFSETOF(wall_sprint_inode, unk_060, 0x60);
     ASSERT_OFFSETOF(wall_sprint_inode, wall_po, 0x70);
 } // treyarch

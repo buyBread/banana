@@ -174,10 +174,4 @@ namespace treyarch {
     ASSERT_OFFSETOF(plr_loco_sync_obstacle_avoid_state, unk_170,                         0x170);
     ASSERT_OFFSETOF(plr_loco_sync_obstacle_avoid_state, early_exit_switch_time_callback, 0x174);
     ASSERT_OFFSETOF(plr_loco_sync_obstacle_avoid_state, nav_exit_switch_time_callback,   0x17C);
-
-    namespace references {
-        // the events plr_loco_sync_obstacle_avoid_state counts
-        inline util::memory_reference<string_hash> early_exit_switch_time { 0x0102C63C };
-        inline util::memory_reference<string_hash> nav_exit_switch_time   { 0x0102C53C };
-    } // references
 } // treyarch

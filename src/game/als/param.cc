@@ -375,7 +375,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         case param_height_above_wall: {
             f32 height = FLT_MAX;
 
-            if (!retail::sub_4024C0((u32*)the_actor)) // has_physical_ifc
+            if (!the_actor->has_physical_ifc())
                 return height;
 
             height = (f32)retail::sub_60D730((u32*)the_actor->physical_ifc(), param == param_height_above_floor, param == param_height_above_wall);
@@ -431,19 +431,19 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_phys_stable:
-            if (!retail::sub_4024C0((u32*)the_actor) || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) || retail::sub_600630((i32)the_actor->physical_ifc(), false))
+            if (!the_actor->has_physical_ifc() || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running) || retail::sub_600630((i32)the_actor->physical_ifc(), false))
                 return 1.0f;
 
             return 0.0f;
 
         case param_phys_active:
-            if (!retail::sub_4024C0((u32*)the_actor) || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+            if (!the_actor->has_physical_ifc() || !the_actor->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
                 return 0.0f;
 
             return 1.0f;
 
         case param_phys_allowed:
-            if (!retail::sub_4024C0((u32*)the_actor) || (the_actor->physical_ifc()->flags & 0x40000))
+            if (!the_actor->has_physical_ifc() || (the_actor->physical_ifc()->flags & 0x40000))
                 return 0.0f;
 
             return 1.0f;

@@ -165,6 +165,14 @@ namespace treyarch {
             return is_flagged(gbflag_triggered);
         }
 
+        // inlined @ sub_5745C0
+        bool triggered_or_missed_press(bool ignore_disabled = false) const {
+            if (!ignore_disabled && is_flagged(gbflag_non_responsive))
+                return false;
+
+            return is_flagged(gbflag_triggered | gbflag_missed_press);
+        }
+
         void update(f32 t, bool unk_1, bool unk_2);
         void update_state(f32 t, f32 state, f32 unk_state); // pushes both values, then runs the press and tap logic over t
     };

@@ -5,6 +5,7 @@
 #include "game/boolx.hh"
 #include "game/math/algebra.hh"
 #include "game/math/references.hh"
+#include "game/local_collision.hh"
 #include "treyarch/mash/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
@@ -40,8 +41,30 @@ namespace treyarch {
 
         // sub_4030F0
         // inlined @ sub_5C00F0
+        // inlined @ sub_552EC0
         line_info(const vector3d &s, const vector3d &e) : start(s), end(e), hit_entity(), collision(false), checked_collision(false), queued_for_collision_check(false) {
             clear();
+        }
+
+        line_info(const line_info&) = default;
+
+        // sub_42AD00
+        line_info &operator=(const line_info &other) { // the padding stays
+            start                      = other.start;
+            end                        = other.end;
+            hit_pos                    = other.hit_pos;
+            hit_norm                   = other.hit_norm;
+            local_hit_pos              = other.local_hit_pos;
+            local_hit_norm             = other.local_hit_norm;
+            hit_entity                 = other.hit_entity;
+            hit_obb                    = other.hit_obb;
+            ent_filter                 = other.ent_filter;
+            obb_filter                 = other.obb_filter;
+            collision                  = other.collision;
+            checked_collision          = other.checked_collision;
+            queued_for_collision_check = other.queued_for_collision_check;
+
+            return *this;
         }
 
         // sub_403030
@@ -58,12 +81,6 @@ namespace treyarch {
                 retail::sub_798F10((u8*)this); // remove_to_collision_check_queue
         }
     };
-
-    namespace references {
-        // the filters als::swing_attack_move_and_face's probe checks against
-        inline util::memory_reference<void*> unk_00e7b2a0 { 0x00E7B2A0 };
-        inline util::memory_reference<void*> unk_00e7b2d0 { 0x00E7B2D0 };
-    } // references
 
     ASSERT_SIZEOF  (line_info,                             0x5C);
     ASSERT_OFFSETOF(line_info, end,                        0x0C);

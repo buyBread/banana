@@ -4925,7 +4925,7 @@ void als::sync_move_and_face::activate(animation_logic_system* the_als_core, lay
 
     // standing and physics stay allowed until the post says otherwise
     if (the_actor->has_ifc(entity_ifc_standing))
-        the_actor->standing_ifc()->flags |= 0x4000;
+        the_actor->standing_ifc()->flags |= standing_interface_flag_unk_00004000;
 
     if (the_actor->has_ifc(entity_ifc_physical))
         the_actor->physical_ifc()->flags |= 0x800;
@@ -4941,7 +4941,7 @@ void als::sync_move_and_face::activate(animation_logic_system* the_als_core, lay
 // sub_5C1220
 void als::sync_move_and_face::deactivate() {
     if (the_actor->has_ifc(entity_ifc_standing))
-        the_actor->standing_ifc()->flags &= ~0x4000;
+        the_actor->standing_ifc()->flags &= ~standing_interface_flag_unk_00004000;
 
     if (the_actor->has_ifc(entity_ifc_physical))
         the_actor->physical_ifc()->flags &= ~0x800;
@@ -5077,9 +5077,9 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
         auto* standing = (standing_interface*)actor_a->my_ifc_storage->get_ifc(entity_ifc_standing);
 
         if (allow_standing_a)
-            standing->flags |= 0x4000;
+            standing->flags |= standing_interface_flag_unk_00004000;
         else
-            standing->flags &= ~0x4000;
+            standing->flags &= ~standing_interface_flag_unk_00004000;
     }
 
     if (actor_a->has_ifc(entity_ifc_physical)) {
@@ -5109,9 +5109,9 @@ void als::sync_move_and_face::post_anim_action(f32 delta_t) {
         auto* standing = (standing_interface*)actor_b->my_ifc_storage->get_ifc(entity_ifc_standing);
 
         if (allow_standing_b)
-            standing->flags |= 0x4000;
+            standing->flags |= standing_interface_flag_unk_00004000;
         else
-            standing->flags &= ~0x4000;
+            standing->flags &= ~standing_interface_flag_unk_00004000;
     }
 
     if (actor_b->has_ifc(entity_ifc_physical)) {

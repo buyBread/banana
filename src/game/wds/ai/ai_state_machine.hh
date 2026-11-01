@@ -367,7 +367,6 @@ namespace treyarch {
         inline util::memory_reference<void*> ped_watch_state_vtable                     { 0x00B93F74 };
         inline util::memory_reference<void*> plr_agility_test_state_vtable              { 0x00B947DC };
         inline util::memory_reference<void*> plr_car_combat_state_vtable                { 0x00B94F64 };
-        inline util::memory_reference<void*> plr_loco_crawl_state_vtable                { 0x00B952CC };
         inline util::memory_reference<void*> plr_swim_state_vtable                      { 0x00B94F0C };
         inline util::memory_reference<void*> puppet_movement_state_vtable               { 0x00B91FD4 };
         inline util::memory_reference<void*> raise_event_state_vtable                   { 0x00B91F04 };

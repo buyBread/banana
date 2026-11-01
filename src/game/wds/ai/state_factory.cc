@@ -5,6 +5,9 @@
 #include "game/wds/ai/states/civilian_agressor_states.hh"
 #include "game/wds/ai/states/cpu_combat_states.hh"
 #include "game/wds/ai/states/plr_combat_states.hh"
+#include "game/wds/ai/states/plr_loco_crawl_state.hh"
+#include "game/wds/ai/states/plr_loco_standing_state.hh"
+#include "game/wds/ai/states/plr_loco_wall_sprint_states.hh"
 #include "game/wds/ai/states/sync_anim_state.hh"
 #include "treyarch/mm/mm.hh"
 
@@ -57,7 +60,7 @@ base_state* base_state::create_subclass(mash::virtual_types_key the_class_to_mak
         case 0x98E36A48: // plr_loco_wall_sprint_state
             return construct(0xC4, retail::sub_4D2590);
         case 0x3DC2D412: // plr_loco_wall_sprint_transition_state
-            return construct(0x8C, retail::sub_4D2680);
+            return construct(0x8C, retail::sub_4D2680, source_vtable<plr_loco_wall_sprint_transition_state>());
         case 0x2F6A4BC8: // plr_loco_wallplant_state
             return construct(0x78, retail::sub_5805A0);
         case 0x30805936: // hit_switch_state
@@ -101,7 +104,7 @@ base_state* base_state::create_subclass(mash::virtual_types_key the_class_to_mak
         case 0xB8B1080D: // plr_loco_running_grind_state
             return construct(0x17C, retail::sub_4D6AC0);
         case 0x8417F8D1: // plr_loco_standing_state
-            return construct(0x1E4, retail::sub_4D6920);
+            return construct(0x1E4, retail::sub_4D6920, source_vtable<plr_loco_standing_state>());
         case 0xEEB4561D: // generic_sync_anim_state
             return construct(0x16C, retail::sub_4D0AA0, source_vtable<generic_sync_anim_state>());
         case 0x0C34884F: // ai_obs_hop_sync_state
@@ -434,7 +437,7 @@ base_state* base_state::create_subclass(mash::virtual_types_key the_class_to_mak
         case 0x948553CB: // swift_obstacle_avoid_state
             return enhanced_state::construct_inline(0x68, &references::swift_obstacle_avoid_state_vtable.get());
         case 0x979A9D92: // plr_loco_crawl_state
-            return enhanced_state::construct_inline(0x50, &references::plr_loco_crawl_state_vtable.get());
+            return enhanced_state::construct_inline(0x50, source_vtable<plr_loco_crawl_state>());
         case 0xA4AAA5F9: // civ_beat_up_goto_state
             return enhanced_state::construct_inline(0x44, &references::civ_beat_up_goto_state_vtable.get());
         case 0xA5149C52: // swift_attach_to_wall_state

@@ -31,7 +31,8 @@ namespace treyarch {
         delta_variable<i32>     mode;
         i32                     mode_last_frame;
         i32                     desired_mode;
-        u8                      reserved_250[0x03];
+        bool                    mode_locked;   // the spiderman_lock_mode native sets it
+        u8                      reserved_251[0x02];
         /* cleared by game::freeze_hero on the first freeze and set again on the last unfreeze and by unload_current_level;
            world_dynamics_system::frame_advance runs frame_advance while set and frame_advance_disabled otherwise */
         bool                    enabled;
@@ -278,7 +279,7 @@ namespace treyarch {
         virtual i32               unk_217();
         virtual i32               unk_218();
         virtual void              unk_219(bool unk);
-        virtual bool              unk_220(i32 unk, f32 unk_2);
+        virtual bool              unk_220(f32 delta_t, f32 unk_2);
         virtual i32               unk_221(f32 unk);
         virtual void              unk_222(i32 unk, i32 unk_2, i32 unk_3);
         virtual void              unk_223(i32 unk, i32 unk_2);
@@ -290,7 +291,7 @@ namespace treyarch {
         virtual i32               unk_229();
         virtual void              unk_230(f32 unk);
         virtual bool              unk_231(i32 unk, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5, i32 unk_6);
-        virtual i32               unk_232(i32 unk);
+        virtual bool              unk_232(f32 delta_t);
         virtual i32               unk_233();
         virtual i32               unk_234(void* unk);
         virtual i32               unk_235();
@@ -317,12 +318,12 @@ namespace treyarch {
         virtual void              unk_256();
         virtual bool              unk_257();
         virtual void*             unk_258(void* unk);
-        virtual i32               unk_259(i32 unk);
-        virtual i32               unk_260(i32 unk);
+        virtual bool              unk_259(f32 delta_t);
+        virtual bool              unk_260(f32 delta_t);
         virtual bool              unk_261(void* unk, void* unk_2, void* unk_3);
         virtual i32               unk_262(i32 unk, i32 unk_2);
         virtual bool              unk_263(void* unk, i32 unk_2);
-        virtual bool              unk_264(i32 unk, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
+        virtual bool              unk_264(f32 delta_t, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
         virtual bool              unk_265();
         virtual void              unk_266(i32 unk, i32 unk_2, i32 unk_3);
         virtual void              unk_267();
@@ -377,9 +378,9 @@ namespace treyarch {
         virtual i32               unk_316();
         virtual f32               unk_317();
         virtual f32               unk_318();
-        virtual bool              unk_319(i32 unk, void* unk_2, i32 unk_3);
+        virtual bool              unk_319(f32 delta_t, game_button* button, i32 unk_3);
         virtual void*             unk_320();
-        virtual void*             unk_321(i32 unk);
+        virtual void*             unk_321(const line_info* unk);
         virtual bool              unk_322(i32 unk);
         virtual void*             unk_323(void* unk);
         virtual i32               unk_324(i32 unk);
@@ -398,7 +399,7 @@ namespace treyarch {
         virtual i32               unk_337();
         virtual i32               unk_338();
         virtual i32               unk_339();
-        virtual i32               unk_340();
+        virtual bool              unk_340();
         virtual i32               unk_341();
         virtual i32               unk_342();
         virtual i32               unk_343();
@@ -586,11 +587,11 @@ namespace treyarch {
         virtual i32               unk_525(i32 unk, i32 unk_2);
         virtual i32               unk_526();
         virtual void              unk_527(f32 unk);
-        virtual i32               unk_528();
+        virtual line_info*        unk_528();                           // rvb: a line_info of its own (+0xBA8)
         virtual void*             unk_529(i32 unk);
         virtual bool              unk_530(f32 unk);
         virtual bool              unk_531(i32 unk);
-        virtual bool              unk_532(f32 unk);
+        virtual bool              unk_532(const line_info* unk);       // rvb: null takes that line_info
         virtual i32               unk_533(i32 unk);
         virtual void              unk_534(i32 unk, f32 unk_2);
         virtual i32               unk_535(void* unk, i32 unk_2, i32 unk_3, i32 unk_4, void* unk_5, void* unk_6);
@@ -640,6 +641,7 @@ namespace treyarch {
     ASSERT_SIZEOF  (player_interface,                  0x530);
     ASSERT_OFFSETOF(player_interface, mode,            0x240);
     ASSERT_OFFSETOF(player_interface, desired_mode,    0x24C);
+    ASSERT_OFFSETOF(player_interface, mode_locked,     0x250);
     ASSERT_OFFSETOF(player_interface, enabled,         0x253);
     ASSERT_OFFSETOF(player_interface, control_config,  0x254);
     ASSERT_OFFSETOF(player_interface, control_axis,    0x258);

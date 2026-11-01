@@ -13,11 +13,29 @@
 namespace treyarch {
     // what a state or a machine finished with; 106 codes in all
     enum e_state_exit_code : u32 {
-        state_exit_code_exit_request = 0,
-        state_exit_code_success      = 1,
-        state_exit_code_failure      = 2,
-        state_exit_code_dodge        = 84,
-        state_exit_code_no_exit      = 106
+        state_exit_code_exit_request        = 0,
+        state_exit_code_success             = 1,
+        state_exit_code_failure             = 2,
+        state_exit_code_attack              = 15,
+        state_exit_code_hit_switch          = 16,
+        state_exit_code_ranged_hit_switch   = 17,
+        state_exit_code_transition          = 28,
+        state_exit_code_stand               = 59,
+        state_exit_code_jump                = 60,
+        state_exit_code_fall                = 62,
+        state_exit_code_crawl               = 63,
+        state_exit_code_swing               = 73,
+        state_exit_code_zip                 = 75,
+        state_exit_code_wall_sprint         = 76,
+        state_exit_code_wall_grind          = 77,
+        state_exit_code_yoyo                = 79,
+        state_exit_code_strength_test       = 81,
+        state_exit_code_dodge               = 84,
+        state_exit_code_block               = 85,
+        state_exit_code_wall_evade          = 91,
+        state_exit_code_obstacle_hop        = 96,
+        state_exit_code_sync_obstacle_avoid = 98,
+        state_exit_code_no_exit             = 106
     };
 
     // a state's data in its graph; the running state is a base_state made from my_state_type

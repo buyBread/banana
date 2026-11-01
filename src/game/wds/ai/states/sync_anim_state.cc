@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/ai/states/sync_anim_state.hh"
+#include "game/als/param.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/info_node.hh"
@@ -372,12 +373,12 @@ void plr_loco_sync_obstacle_avoid_state::activate(      ai_state_machine* the_st
     unk_170 = state_exit_code_no_exit;
 
     early_exit_switch_time_callback.add(get_actor()->my_handle,
-                                        references::early_exit_switch_time.read(),
+                                        als::references::early_exit_switch_time.read(),
                                         generic_event_callback::count_raise,
                                         nullptr);
 
     nav_exit_switch_time_callback.add(get_actor()->my_handle,
-                                      references::nav_exit_switch_time.read(),
+                                      als::references::nav_exit_switch_time.read(),
                                       generic_event_callback::count_raise,
                                       nullptr);
 }

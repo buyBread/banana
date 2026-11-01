@@ -98,6 +98,11 @@ namespace treyarch {
             return my_ifc_storage && my_ifc_storage->has_ifc(index);
         }
 
+        // sub_4024C0
+        bool has_physical_ifc() const {
+            return has_ifc(entity_ifc_physical);
+        }
+
         // sub_4024E0
         bool has_standing_ifc() const {
             return has_ifc(entity_ifc_standing);

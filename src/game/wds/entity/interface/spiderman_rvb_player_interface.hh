@@ -196,7 +196,7 @@ namespace treyarch {
         void*             unk_258(void* unk) override;
         i32               unk_262(i32 unk, i32 unk_2) override;
         bool              unk_263(void* unk, i32 unk_2) override;
-        bool              unk_264(i32 unk, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
+        bool              unk_264(f32 delta_t, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
         bool              unk_265() override;
         void              unk_266(i32 unk, i32 unk_2, i32 unk_3) override;
         void              unk_267() override;
@@ -213,9 +213,9 @@ namespace treyarch {
         f32               unk_308() override;
         f32               unk_310() override;
         f32               unk_315() override;
-        bool              unk_319(i32 unk, void* unk_2, i32 unk_3) override;
+        bool              unk_319(f32 delta_t, game_button* button, i32 unk_3) override;
         void*             unk_320() override;
-        void*             unk_321(i32 unk) override;
+        void*             unk_321(const line_info* unk) override;
         bool              unk_322(i32 unk) override;
         void*             unk_323(void* unk) override;
         i32               unk_324(i32 unk) override;
@@ -232,7 +232,7 @@ namespace treyarch {
         i32               unk_337() override;
         i32               unk_338() override;
         i32               unk_339() override;
-        i32               unk_340() override;
+        bool              unk_340() override;
         i32               unk_341() override;
         i32               unk_342() override;
         i32               unk_343() override;
@@ -396,11 +396,11 @@ namespace treyarch {
         i32               unk_525(i32 unk, i32 unk_2) override;
         i32               unk_526() override;
         void              unk_527(f32 unk) override;
-        i32               unk_528() override;
+        line_info*        unk_528() override;
         void*             unk_529(i32 unk) override;
         bool              unk_530(f32 unk) override;
         bool              unk_531(i32 unk) override;
-        bool              unk_532(f32 unk) override;
+        bool              unk_532(const line_info* unk) override;
         void              unk_534(i32 unk, f32 unk_2) override;
 
         virtual bool  unk_536(i32 unk);
