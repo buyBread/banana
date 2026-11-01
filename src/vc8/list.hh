@@ -28,8 +28,10 @@ namespace treyarch { namespace vc8 {
     public:
         using node = list_node<T>;
 
+        // sub_58F4C0
         // sub_79B510
         // sub_7D23C0
+        // sub_9CC540
         list() : sentinel((node*)mm::allocate(sizeof(node))),
                  count(0) {
                     
