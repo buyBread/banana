@@ -2,6 +2,7 @@
 
 #include "game/wds/ai/states/combat_state.hh"
 #include "game/wds/ai/ai_target.hh"
+#include "game/arch_base_vhandle.hh"
 #include "game/boolx.hh"
 #include "game/hash/algo.hh"
 #include "game/timing/simple_timer.hh"
@@ -96,9 +97,23 @@ namespace treyarch {
                   bool               _unk_4b);
 
         // sub_988060
+        // inlined @ sub_9B6B90
+        // inlined @ sub_9B6F00
         bool has_targets() const {
             return targets && !targets->empty();
         }
+
+    protected:
+        bool update_against_own_best(e_combat_move            move,
+                                     const player_interface*  plr_ifc,
+                                     als_inode*               my_als,
+                                     f32                      delta_t,
+                                     f32*                     best_time,
+                                     e_combat_move            current_chosen_move,
+                                     const plr_combat_attack* current_chosen_attack,
+                                     const void*              unk,
+                                     bool                     needs_targets); // the base update against a best time of its own, which then has to reach best_time
+        void push_target(arch_base_vhandle target);                           // scored 1.0
 
     private:
         bool claim_best_time(bool found, f32* best_time, const plr_combat_attack* current_chosen_attack); // without targets only when allow_no_targets

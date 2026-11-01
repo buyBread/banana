@@ -95,6 +95,9 @@ namespace treyarch { namespace vc8 {
               T* end()       noexcept { return last; }
         const T* end() const noexcept { return last; }
 
+              T &front()       noexcept { return *first; }
+        const T &front() const noexcept { return *first; }
+
               T &back()       noexcept { return last[-1]; }
         const T &back() const noexcept { return last[-1]; }
 
@@ -108,6 +111,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_455DB0
+        // inlined @ sub_9C2D60
         bool empty() const noexcept {
             return size() == 0;
         }
@@ -122,6 +126,12 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_99B1A0
         // inlined @ sub_99B200
         // inlined @ sub_99B900
+        // inlined @ sub_9C2C30
+        // inlined @ sub_9C2D60
+        // inlined @ sub_9C2F50
+        // inlined @ sub_9C36C0
+        // inlined @ sub_9C3820
+        // inlined @ sub_9C38E0
         void clear() noexcept {
             erase(first, last);
         }
@@ -132,6 +142,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_99B160
         // inlined @ sub_99B2F0
         // inlined @ sub_99B900
+        // inlined @ sub_9C2F50
         void destroy() noexcept {
             clear();
 
@@ -282,6 +293,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_950450
         // inlined @ sub_94B390
         // inlined @ sub_99B200
+        // inlined @ sub_9C2D60
         T* erase(T* position) noexcept {
             T* result = position;
 

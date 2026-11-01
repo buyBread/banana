@@ -394,7 +394,7 @@ namespace treyarch {
                                                 entity_base*               weapon_entity,
                                                 i32                        usage_type) override;
         arch_base_vhandle unk_243() override;
-        arch_base_vhandle unk_244() override;
+        arch_base_vhandle unk_244() const override;
         i32               unk_245() override;
         f32               unk_246() override;
         f32               unk_247() override;

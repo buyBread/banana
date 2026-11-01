@@ -498,6 +498,55 @@ void plr_combat_attack::init(const game_button* _button,
     clear();
 }
 
+// inlined @ sub_9B6B90
+// inlined @ sub_9B6F00
+// inlined @ sub_9A7470
+// inlined @ sub_9B70C0
+bool plr_combat_attack::update_against_own_best(e_combat_move            move,
+                                                const player_interface*  plr_ifc,
+                                                als_inode*               my_als,
+                                                f32                      delta_t,
+                                                f32*                     best_time,
+                                                e_combat_move            current_chosen_move,
+                                                const plr_combat_attack* current_chosen_attack,
+                                                const void*              unk,
+                                                bool                     needs_targets) {
+
+    f32 own_best = -1.0f;
+
+    if (!plr_combat_attack::update(move,
+                                   plr_ifc,
+                                   my_als,
+                                   delta_t,
+                                   &own_best,
+                                   current_chosen_move,
+                                   current_chosen_attack,
+                                   unk))
+
+        return false;
+
+    if (needs_targets && !has_targets())
+        return false;
+
+    if (!(own_best >= *best_time))
+        return false;
+
+    *best_time = own_best;
+
+    return true;
+}
+
+// inlined @ sub_9C36C0
+// inlined @ sub_9C3820
+// inlined @ sub_9C38E0
+void plr_combat_attack::push_target(arch_base_vhandle target) {
+    ai_target targ;
+    targ.set_target(target);
+    targ.score = 1.0f;
+
+    targets->push_back(targ);
+}
+
 // inlined @ sub_9943C0
 bool plr_combat_attack::claim_best_time(bool found, f32* best_time, const plr_combat_attack* current_chosen_attack) {
     if (!found && !allow_no_targets)

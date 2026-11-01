@@ -1491,9 +1491,9 @@ arch_base_vhandle player_interface::unk_243() {
 }
 
 // slot 244
-arch_base_vhandle player_interface::unk_244() {
+arch_base_vhandle player_interface::unk_244() const {
     arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+    ((arch_base_vhandle* (__thiscall*)(const player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
 
     return result;
 }

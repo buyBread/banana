@@ -528,7 +528,7 @@ namespace treyarch {
         virtual void                     override_block_type(i32 t);
 
         virtual arch_base_vhandle unk_243();
-        virtual arch_base_vhandle unk_244();
+        virtual arch_base_vhandle unk_244() const;
         virtual i32               unk_245();
         virtual f32               unk_246();
         virtual f32               unk_247();

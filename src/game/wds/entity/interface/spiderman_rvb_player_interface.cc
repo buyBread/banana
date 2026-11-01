@@ -1591,7 +1591,7 @@ arch_base_vhandle spiderman_rvb_player_interface::unk_243() {
 }
 
 // sub_721070
-arch_base_vhandle spiderman_rvb_player_interface::unk_244() {
+arch_base_vhandle spiderman_rvb_player_interface::unk_244() const {
     return unk_0764;
 }
 

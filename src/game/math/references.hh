@@ -76,6 +76,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); the player attacks' and swing objects' ZEROVEC
     inline util::memory_reference<vector3d> unk_01111bf0 { 0x01111BF0 };
 
+    // (0, 1, 0), in writable data; the hero's interface and its wall attack read it as up
+    inline util::memory_reference<vector3d> unk_00f4dc6c { 0x00F4DC6C };
+
     // (0, 0, 0); what the player interfaces' vector slots answer without a vector
     inline util::memory_reference<vector3d> unk_0102f9e0 { 0x0102F9E0 };
 
