@@ -118,6 +118,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_4F9FD0
 // inlined @ sub_9925A0
 // inlined @ sub_4BF060
+// inlined @ sub_4E64C0
 // inlined @ sub_4A1DA0
 // inlined @ sub_41F3E0
 // inlined @ sub_580EC0

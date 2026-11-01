@@ -205,11 +205,11 @@ namespace treyarch {
         arch_base_vhandle       combat_vehicle;
         f32                     unk_049c;
         i32                     post_process_flags;
-        bool                    unk_04a4;
+        bool                    in_dodge_move;
         bool                    unk_04a5;      // the rvb's check_for_block tests it
-        bool                    unk_04a6;
+        bool                    in_counter_attack_move;
         u8                      pad_4a7[0x01];
-        arch_base_vhandle       unk_04a8;
+        arch_base_vhandle       combat_move_target;
         f32                     unk_04ac;      // PLR_MIN_TARGET_RANGE
         arch_base_vhandle       unk_4b0;       // an actor the als's target_ai rules read as the hero's target
         u8                      reserved_4b4[0x04];

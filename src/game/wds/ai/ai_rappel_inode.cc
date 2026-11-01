@@ -95,6 +95,11 @@ bool ai_rappel_inode::is_engaged() const {
     return current_rope && current_rope->attached;
 }
 
+// sub_409A20
+bool ai_rappel_inode::is_rappel_requested() const {
+    return current_rope && (current_rope->unk_70 || current_rope->unk_80 || current_rope->attached);
+}
+
 // sub_482710
 void ai_rappel_inode::release_rope(f32 unk_7c, f32 unk_74) {
     if (current_rope) {

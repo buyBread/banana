@@ -1839,7 +1839,7 @@ bool spiderman_rvb_counter_attack::update(e_combat_move            move,
                                           const plr_combat_attack* current_chosen_attack,
                                           const void*              unk) {
 
-    if (plr_ifc && plr_ifc->unk_04a6 && attack_possible(plr_ifc)) {
+    if (plr_ifc && plr_ifc->in_counter_attack_move && attack_possible(plr_ifc)) {
         *best_time = timer;
 
         return true;

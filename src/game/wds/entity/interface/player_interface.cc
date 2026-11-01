@@ -1718,7 +1718,7 @@ bool player_interface::is_current_combat_target(arch_base_vhandle targ) const {
     base_state* state = my_actor->get_ai_core()->my_base_machine->my_curr_state;
 
     if (state && state->get_virtual_type_key() == plr_combat_state::my_type_key.source_hash_code)
-        return ((bool (__thiscall*)(base_state*, arch_base_vhandle))retail::sub_416D60)(state, targ); // the combat state's hit list
+        return ((combat_state*)state)->is_a_target(targ);
 
     return false;
 }

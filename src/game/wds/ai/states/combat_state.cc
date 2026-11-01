@@ -36,20 +36,24 @@ const char* combo_move_data::get_script_obj(bool* exists) const {
     return params.get_optional_pb_fixedstring(script_obj_key, "", exists);
 }
 
+// sub_409140
 f32 combo_move_data::get_script_move_id(bool* exists) const {
-    return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_409140)(this, exists);
+    return params.get_optional_pb_float(script_move_id_key, -1.0f, exists);
 }
 
+// sub_409020
 i32 combo_move_data::get_max_targets(bool* exists) const {
-    return ((i32 (__thiscall*)(const combo_move_data*, bool*))retail::sub_409020)(this, exists);
+    return params.get_optional_pb_int(max_targets_key, 1, exists);
 }
 
+// sub_409050
 f32 combo_move_data::get_jump_launch_force(bool* exists) const {
-    return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_409050)(this, exists);
+    return params.get_optional_pb_float(jump_launch_force_key, 0.0f, exists);
 }
 
+// sub_409180
 f32 combo_move_data::get_strength_test_start_value(bool* exists) const {
-    return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_409180)(this, exists);
+    return params.get_optional_pb_float(strength_test_start_value_key, 0.1f, exists);
 }
 
 als::category_id combo_move_data::get_target_sync_category(bool* exists) const {
@@ -74,20 +78,120 @@ i32 combo_move_data::get_combo_move_type_id(bool* exists) const {
     return params.get_optional_pb_int(combo_move_type_id_key, -1, exists);
 }
 
+// sub_548890
+string_hash combo_move_data::get_combo_move_name(bool* exists) const {
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    return params.get_optional_pb_hash(combo_move_name_key, none, exists);
+}
+
+// sub_4025F0
 f32 combo_move_data::get_combo_counter_value(bool* exists) const {
-    return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_4025F0)(this, exists);
+    return params.get_optional_pb_float(combo_counter_value_key, 1.0f, exists);
 }
 
+// sub_402620
 f32 combo_move_data::get_combo_counter_delay(bool* exists) const {
-    return (f32)((f64 (__thiscall*)(const combo_move_data*, bool*))retail::sub_402620)(this, exists);
+    return params.get_optional_pb_float(combo_counter_delay_key, -1.0f, exists);
 }
 
+// sub_4E2140
 const char* combo_move_data::get_dodge_anim(bool* exists) const {
-    return ((const char* (__thiscall*)(const combo_move_data*, bool*))retail::sub_4E2140)(this, exists);
+    return params.get_optional_pb_fixedstring(dodge_anim_key, "", exists);
 }
 
+// sub_4E20E0
 i32 combo_move_data::get_dodge_type(bool* exists) const {
-    return ((i32 (__thiscall*)(const combo_move_data*, bool*))retail::sub_4E20E0)(this, exists);
+    return params.get_optional_pb_int(dodge_type_key, -1, exists);
+}
+
+// sub_4090C0
+f32 combo_move_data::get_damage_arc(bool* exists) const {
+    return params.get_optional_pb_float(damage_arc_key, 90.0f, exists);
+}
+
+// sub_409100
+f32 combo_move_data::get_attack_time(bool* exists) const {
+    return params.get_optional_pb_float(attack_time_key, -1.0f, exists);
+}
+
+// sub_402750
+string_hash combo_move_data::get_wounded_category(bool* exists) const {
+    string_hash wounded;
+    wounded.initialize(mash::ALLOCATED, nullptr, wounded_key.source_hash_code);
+
+    return params.get_optional_pb_hash(wounded_category_key, wounded, exists);
+}
+
+// sub_409760
+string_hash combo_move_data::get_attack_sound_group(bool* exists) const {
+    string_hash attack;
+    attack.initialize(mash::ALLOCATED, nullptr, attack_key.source_hash_code);
+
+    return params.get_optional_pb_hash(attack_sound_group_key, attack, exists);
+}
+
+// sub_4097B0
+string_hash combo_move_data::get_missed_sound_group(bool* exists) const {
+    string_hash miss;
+    miss.initialize(mash::ALLOCATED, nullptr, miss_key.source_hash_code);
+
+    return params.get_optional_pb_hash(missed_sound_group_key, miss, exists);
+}
+
+// sub_4027F0
+string_hash combo_move_data::get_dodged_sound_group(bool* exists) const {
+    string_hash dodge;
+    dodge.initialize(mash::ALLOCATED, nullptr, dodge_key.source_hash_code);
+
+    return params.get_optional_pb_hash(dodged_sound_group_key, dodge, exists);
+}
+
+// sub_409380
+vector3d combo_move_data::get_self_cancel_velocity_dir(bool* exists) const {
+    return params.get_optional_pb_vector3d(self_cancel_velocity_dir_key, vector3d(0.0f, 0.0f, 0.0f), exists);
+}
+
+// sub_4093D0
+vector3d combo_move_data::get_target_cancel_velocity_dir(bool* exists) const {
+    return params.get_optional_pb_vector3d(target_cancel_velocity_dir_key, vector3d(0.0f, 0.0f, 0.0f), exists);
+}
+
+// sub_409420
+vector3d combo_move_data::get_auto_calc_targets_dir(bool* exists) const {
+    return params.get_optional_pb_vector3d(auto_calc_targets_dir_key, vector3d(0.0f, 0.0f, 1.0f), exists);
+}
+
+// ==== combat moves ==== //
+
+// sub_401300
+f32 treyarch::get_combat_move_script_code(e_combat_move move, i32 script_move) {
+    switch (move) {
+        case combat_move_light_melee:        return 0.0f;
+        case combat_move_heavy_melee:        return 1.0f;
+        case combat_move_special_attack:     return 2.0f;
+        case combat_move_jump_attack:        return 3.0f;
+        case combat_move_bounce_attack:      return 4.0f;
+        case combat_move_counter_attack:     return 7.0f;
+        case combat_move_dodge:              return 20.0f;
+        case combat_move_block:              return 21.0f;
+        case combat_move_save_civ:           return 11.0f;
+        case combat_move_light_ranged:       return 5.0f;
+        case combat_move_heavy_ranged:       return 6.0f;
+        case combat_move_grapple:            return 8.0f;
+        case combat_move_throw_manip:        return 9.0f;
+        case combat_move_grab_civ:           return 10.0f;
+        case combat_move_boss_finisher:      return 12.0f;
+        case combat_move_car_finisher:       return 13.0f;
+        case combat_move_boost_power_attack: return 14.0f;
+        case combat_move_boost_speed_attack: return 15.0f;
+        case combat_move_boost_air_attack:   return 16.0f;
+        case combat_move_boost_web_attack:   return 17.0f;
+        case combat_move_manual_dodge:       return 18.0f;
+        case combat_move_script_move:        return (f32)((f64)(f32)script_move + 22.0);
+        default:                             return -1.0f;
+    }
 }
 
 // ==== combat_state ==== //
@@ -310,7 +414,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
             auto* rappel = (ai_rappel_inode*)get_core()->get_info_node(info_node_type_ai_rappel);
 
-            if (rappel && retail::sub_409A20((u32*)rappel)) // ai_rappel_inode: its current rope asks for the rappel
+            if (rappel && rappel->is_rappel_requested())
                 return can_handle_exit_code(state_exit_code_rappel) ? state_exit_code_rappel : state_exit_code_success;
 
             if (splat)
@@ -527,7 +631,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
                 start_combat_script(delta_t);
                 move_transition(combo_move, by_request);
-                retail::sub_40A050(); // drops the combat hit list lock once
+                wait_for_target_list_lock();
 
                 if (combo_move) {
                     if (get_actor()->has_combo_ifc() && combo_move->flags_1 & combo_flag_clear_combo_count)
@@ -549,7 +653,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                         !(combo_move->flags_3 & combo_flag_ignore_add_incoming_attack) &&
                         (by_request || combo_move->flags_2 & combo_flag_force_add_incoming_attack))
 
-                        retail::sub_4E64C0((i32)target, (i32)get_actor(), (i32)combo_move, by_request + chain_size); // the target's incoming attack
+                        add_incoming_attack(target, get_actor(), combo_move, by_request + chain_size);
 
                     if (target->is_an_actor() && target->has_ifc(entity_ifc_player))
                         target->player_ifc()->unk_222((i32)get_actor(), (i32)combo_move, by_request + chain_size);
@@ -645,7 +749,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
             ((void (__thiscall*)(combat_state*, als_inode*))retail::sub_417000)(this, my_als);
 
-            (*combat_anim_values)[50] = next_move == combat_num_moves ? -1.0f : (f32)retail::sub_401300(next_move, next_script_move_num); // the move's script code
+            (*combat_anim_values)[50] = next_move == combat_num_moves ? -1.0f : get_combat_move_script_code(next_move, next_script_move_num);
 
             f32 strength_test_status = -2.0f;
 
@@ -704,8 +808,8 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 if (cmbt) {
                     f32 amount = ((f32 (__thiscall*)(plr_strength_test*))retail::sub_90C6A0)(strength_test);
 
-                    ((void (__thiscall*)(cpu_combat_inode*, f32))retail::sub_4EB750)(cmbt, amount);               // the script's strength test value
-                    ((void (__thiscall*)(cpu_combat_inode*, f32))retail::sub_4EB770)(cmbt, strength_test_status); // and its status
+                    cmbt->set_script_strength_test_value(amount);
+                    cmbt->set_script_strength_test_status(strength_test_status);
                 }
             }
 
@@ -756,7 +860,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                 if (inst && combat_move_func_id != -1) {
                     chuck::vm::vm_thread* thread = script::create_thread(combat_move_func_id, inst, get_actor());
 
-                    script::push_value(thread, (f32)retail::sub_401300(next_move, next_script_move_num));
+                    script::push_value(thread, get_combat_move_script_code(next_move, next_script_move_num));
                     script::push_value(thread, current_targets->array);
                     script::push_value(thread, combat_anim_values->array);
 
@@ -807,7 +911,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
         get_actor()->damage_ifc()->flags &= ~damage_ifc_flag_unk_08000000;
 
     if (cmbt)
-        ((void (__thiscall*)(cpu_combat_inode*, i32))retail::sub_4EB8B0)(cmbt, chain_size); // the script's chain size
+        cmbt->set_script_chain_size(chain_size);
 
     return the_exit_code;
 }
@@ -1505,8 +1609,76 @@ void combat_state::kill_combat_script(bool unload_exec) {
     ((void (__thiscall*)(combat_state*, bool))retail::sub_410B90)(this, unload_exec);
 }
 
+// sub_41F7B0
 void combat_state::push_target(arch_base_vhandle targ) {
-    ((void (__thiscall*)(combat_state*, arch_base_vhandle))retail::sub_41F7B0)(this, targ);
+    engine_lock_scope lock(&references::target_list_lock.get());
+
+    arch_base* target = targ.resolve();
+
+    if (target && target != get_actor()) {
+        current_targets->push_back(targ);
+
+        if (retail::sub_601C50((u32*)target)) // entity_base::is_hero
+            hero_is_a_target = true;
+    }
+}
+
+// sub_416D60
+bool combat_state::is_a_target(arch_base_vhandle targ) const {
+    engine_lock_scope lock(&references::target_list_lock.get());
+
+    if (current_targets->size())
+        for (auto it = current_targets->begin(); it != current_targets->end(); ++it)
+            if (*it == targ)
+                return true;
+
+    return false;
+}
+
+// sub_410A90
+bool combat_state::is_entity_dodging_or_countering(entity_base* target,
+                                                   entity_base* attacker,
+                                                   bool*        dodging,
+                                                   bool*        countering) {
+
+    arch_base_vhandle against;
+
+    if (!target || !attacker || target == attacker || !target->is_an_actor())
+        return false;
+
+    ai_core* core = ((actor*)target)->get_ai_core();
+
+    if (!core)
+        return false;
+
+    bool in_dodge;
+    bool in_counter;
+
+    if (target->has_player_ifc()) {
+        in_dodge   = target->player_ifc()->in_dodge_move;
+        in_counter = target->player_ifc()->in_counter_attack_move;
+        against    = target->player_ifc()->combat_move_target;
+    } else {
+        auto* cmbt = (cpu_combat_inode*)core->get_info_node(info_node_type_cpu_combat);
+
+        if (!cmbt)
+            return false;
+
+        in_dodge   = cmbt->flags & cpu_combat_inode_flag_in_dodge_move;
+        in_counter = cmbt->flags & cpu_combat_inode_flag_in_counter_attack_move;
+        against    = cmbt->combat_move_target;
+    }
+
+    if (!in_dodge && !in_counter)
+        return false;
+
+    if (dodging)
+        *dodging = in_dodge;
+
+    if (countering)
+        *countering = in_counter;
+
+    return against.null() || against.resolve() == attacker;
 }
 
 i32 combat_state::internal_auto_calc_targets(const combo_move_data* combo_move, vc8::vector<auto_calc_target>* targets) {
@@ -1555,6 +1727,11 @@ void combat_state::advance_combat_script(      f32               delta_t,
                                                                 combo_move,
                                                                 my_als,
                                                                 cmbt);
+}
+
+// sub_40A050
+void combat_state::wait_for_target_list_lock() {
+    engine_lock_scope lock(&references::target_list_lock.get());
 }
 
 resource_key combat_state::get_sync_react_asg(entity* target) const {

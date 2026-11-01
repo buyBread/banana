@@ -23,6 +23,7 @@ namespace treyarch {
     class als_inode;
     class cpu_combat_inode;
     class entity;
+    class entity_base;
     class plr_strength_test;
     class weapon_interface_extender;
     struct hit_react_record;
@@ -76,47 +77,116 @@ namespace treyarch {
         combat_and_tricks_num_moves     = 1005  // no trick
     };
 
-    // SM3's combat_state::eCombatSignal, as far as WoS's are read
+    // the script library's move order
+    f32 get_combat_move_script_code(e_combat_move move, i32 script_move);
+
+    // SM3's combat_state::eCombatSignal and WoS's additions
     enum e_combat_signal : u32 {
         combat_signal_anim_action         = 0x00000001,
+        combat_signal_attack_begin        = 0x00000002,
+        combat_signal_attack_end          = 0x00000004,
+        combat_signal_attack              = 0x00000008,
+        combat_signal_web_shoot           = 0x00000010,
+        combat_signal_web_release         = 0x00000020,
         combat_signal_animated_camera_on  = 0x00000040,
-        combat_signal_animated_camera_off = 0x00000080
+        combat_signal_animated_camera_off = 0x00000080,
+        combat_signal_move_begin          = 0x00000100,
+        combat_signal_move_end            = 0x00000200,
+        combat_signal_rotate_begin        = 0x00000400,
+        combat_signal_rotate_end          = 0x00000800,
+        combat_signal_translate_begin     = 0x00001000,
+        combat_signal_translate_end       = 0x00002000
     };
 
-    // SM3's combo_flags_1, as far as WoS's are read
+    // SM3's combo_flags_1
     enum e_combo_flags_1 : u32 {
-        combo_flag_maintain_prev_targets    = 0x00000004,
-        combo_flag_ignore_standing          = 0x00000020,
-        combo_flag_ignore_target_collisions = 0x00000080,
-        combo_flag_unbreakable              = 0x00000800,
-        combo_flag_allow_flight_thrusters   = 0x00001000,
-        combo_flag_clear_combo_count        = 0x00080000,
-        combo_flag_non_interruptable        = 0x10000000
+        combo_flag_explosive                            = 0x00000001,
+        combo_flag_area_of_effect                       = 0x00000002,
+        combo_flag_maintain_prev_targets                = 0x00000004,
+        combo_flag_non_signal                           = 0x00000008,
+        combo_flag_always_jump                          = 0x00000010,
+        combo_flag_ignore_standing                      = 0x00000020,
+        combo_flag_delay_stun_recovery                  = 0x00000040,
+        combo_flag_ignore_target_collisions             = 0x00000080,
+        combo_flag_recenter_camera                      = 0x00000100,
+        combo_flag_invulnerable_until_attack            = 0x00000200,
+        combo_flag_combo_breaker                        = 0x00000400,
+        combo_flag_unbreakable                          = 0x00000800,
+        combo_flag_allow_flight_thrusters               = 0x00001000,
+        combo_flag_self_connect_cancel_all_velocity     = 0x00002000,
+        combo_flag_target_connect_cancel_all_velocity   = 0x00004000,
+        combo_flag_self_cancel_velocity_dir_both_ways   = 0x00008000,
+        combo_flag_target_cancel_velocity_dir_both_ways = 0x00010000,
+        combo_flag_equalize_velocity                    = 0x00020000,
+        combo_flag_use_target_gravity                   = 0x00040000,
+        combo_flag_clear_combo_count                    = 0x00080000,
+        combo_flag_jump_connect_only_if_button_held     = 0x00100000,
+        combo_flag_instant_kill                         = 0x00200000,
+        combo_flag_auto_kill                            = 0x00400000,
+        combo_flag_instant_stun                         = 0x00800000,
+        combo_flag_auto_stun                            = 0x01000000,
+        combo_flag_dodge                                = 0x02000000,
+        combo_flag_always_hit                           = 0x04000000,
+        combo_flag_invulnerable                         = 0x08000000,
+        combo_flag_non_interruptable                    = 0x10000000,
+        combo_flag_counter_attack                       = 0x20000000,
+        combo_flag_exit_to_crawl                        = 0x40000000,
+        combo_flag_exit_to_jump                         = 0x80000000
     };
 
-    // SM3's combo_flags_2, as far as WoS's are read
+    // SM3's combo_flags_2
     enum e_combo_flags_2 : u32 {
-        combo_flag_maintain_script_obj       = 0x00000001,
-        combo_flag_sync_anim                 = 0x00000008,
-        combo_flag_strength_test             = 0x00000010,
-        combo_flag_force_add_incoming_attack = 0x00000200,
-        combo_flag_maintain_standing         = 0x00000400,
-        combo_flag_buddy_combo               = 0x00200000,
-        combo_flag_cancel_target_stun        = 0x00800000,
-        combo_flag_allow_counter_attack      = 0x04000000,
-        combo_flag_reset_double_jump         = 0x20000000,
-        combo_flag_allow_target_block        = 0x80000000
+        combo_flag_maintain_script_obj          = 0x00000001,
+        combo_flag_awe_inspiring                = 0x00000002,
+        combo_flag_primary_target_movement      = 0x00000004,
+        combo_flag_sync_anim                    = 0x00000008,
+        combo_flag_strength_test                = 0x00000010,
+        combo_flag_auto_draw_weapon             = 0x00000020,
+        combo_flag_auto_holster_weapon          = 0x00000040,
+        combo_flag_kill_sync_anim_on_hit        = 0x00000080,
+        combo_flag_allow_target_dodge           = 0x00000100,
+        combo_flag_force_add_incoming_attack    = 0x00000200,
+        combo_flag_maintain_standing            = 0x00000400,
+        combo_flag_use_weapon_gun               = 0x00000800,
+        combo_flag_use_weapon_grenade           = 0x00001000,
+        combo_flag_use_weapon_rocket            = 0x00002000,
+        combo_flag_use_weapon_melee             = 0x00004000,
+        combo_flag_use_weapon_if_empty          = 0x00008000,
+        combo_flag_use_weapon_2_gun             = 0x00010000,
+        combo_flag_use_weapon_2_grenade         = 0x00020000,
+        combo_flag_use_weapon_2_rocket          = 0x00040000,
+        combo_flag_use_weapon_2_melee           = 0x00080000,
+        combo_flag_use_weapon_2_if_empty        = 0x00100000,
+        combo_flag_buddy_combo                  = 0x00200000,
+        combo_flag_cancel_target_death_immunity = 0x00400000,
+        combo_flag_cancel_target_stun           = 0x00800000,
+        combo_flag_dodge_counts_as_hit          = 0x01000000,
+        combo_flag_kill_buddy_combo_on_hit      = 0x02000000,
+        combo_flag_allow_counter_attack         = 0x04000000,
+        combo_flag_holster_weapon_on_attack     = 0x08000000,
+        combo_flag_holster_weapon_2_on_attack   = 0x10000000,
+        combo_flag_reset_double_jump            = 0x20000000,
+        combo_flag_block                        = 0x40000000,
+        combo_flag_allow_target_block           = 0x80000000
     };
 
-    // SM3's combo_flags_3 and WoS's additions, as far as they're read
+    // SM3's combo_flags_3 and WoS's additions
     enum e_combo_flags_3 : u32 {
-        combo_flag_ignore_add_incoming_attack = 0x00000001,
-        combo_flag_animated_camera            = 0x00000002,
-        combo_flag_strength_test_looping_anim = 0x00000008,
-        combo_flag_3_unk_00000400             = 0x00000400, // the move launches the actor (combat_state slots 56 and 60)
-        combo_flag_3_unk_00020000             = 0x00020000, // a transition into the move re-reads initially_standing
-        combo_flag_3_unk_00800000             = 0x00800000, // a transition into the move picks its targets again
-        combo_flag_3_unk_04000000             = 0x04000000  // so does this one
+        combo_flag_ignore_add_incoming_attack         = 0x00000001,
+        combo_flag_animated_camera                    = 0x00000002,
+        combo_flag_animated_camera_collide_with_world = 0x00000004,
+        combo_flag_strength_test_looping_anim         = 0x00000008,
+        combo_flag_apply_dilation_on_start            = 0x00000010,
+        combo_flag_allow_vertical_movement            = 0x00000020,
+        combo_flag_disable_standing                   = 0x00000040,
+        combo_flag_disable_standing_until_attack      = 0x00000080,
+        combo_flag_apply_jump_launch_on_action        = 0x00000100,
+        combo_flag_3_unk_00000200                     = 0x00000200, // enter_attack_window clears standing flag 0x1000
+        combo_flag_3_unk_00000400                     = 0x00000400, // the move launches the actor (combat_state slots 56 and 60)
+        combo_flag_3_unk_00001000                     = 0x00001000, // enter_attack_window clears physical flag 0x200
+        combo_flag_3_unk_00020000                     = 0x00020000, // a transition into the move re-reads initially_standing
+        combo_flag_3_unk_00800000                     = 0x00800000, // a transition into the move picks its targets again
+        combo_flag_3_unk_04000000                     = 0x04000000  // so does this one
     };
 
     enum e_combo_unk_10_flags : u32 {
@@ -161,19 +231,29 @@ namespace treyarch {
         u8          reserved_1c[0x04];
         param_block params;
 
-        const char*      get_script_exe               (bool* exists) const;
-        const char*      get_script_obj               (bool* exists) const;
-        f32              get_script_move_id           (bool* exists) const;
-        i32              get_max_targets              (bool* exists) const;
-        f32              get_jump_launch_force        (bool* exists) const;
-        f32              get_strength_test_start_value(bool* exists) const;
-        als::category_id get_target_sync_category     (bool* exists) const;
-        als::category_id get_buddy_sync_category      (bool* exists) const;
-        i32              get_combo_move_type_id       (bool* exists) const;
-        f32              get_combo_counter_value      (bool* exists) const;
-        f32              get_combo_counter_delay      (bool* exists) const;
-        const char*      get_dodge_anim               (bool* exists) const;
-        i32              get_dodge_type               (bool* exists) const;
+        const char*      get_script_exe                (bool* exists) const;
+        const char*      get_script_obj                (bool* exists) const;
+        f32              get_script_move_id            (bool* exists) const;
+        i32              get_max_targets               (bool* exists) const;
+        f32              get_jump_launch_force         (bool* exists) const;
+        f32              get_strength_test_start_value (bool* exists) const;
+        als::category_id get_target_sync_category      (bool* exists) const;
+        als::category_id get_buddy_sync_category       (bool* exists) const;
+        i32              get_combo_move_type_id        (bool* exists) const;
+        string_hash      get_combo_move_name           (bool* exists) const;
+        f32              get_combo_counter_value       (bool* exists) const;
+        f32              get_combo_counter_delay       (bool* exists) const;
+        const char*      get_dodge_anim                (bool* exists) const;
+        i32              get_dodge_type                (bool* exists) const;
+        f32              get_damage_arc                (bool* exists) const;
+        f32              get_attack_time               (bool* exists) const;
+        string_hash      get_wounded_category          (bool* exists) const;
+        string_hash      get_attack_sound_group        (bool* exists) const;
+        string_hash      get_missed_sound_group        (bool* exists) const;
+        string_hash      get_dodged_sound_group        (bool* exists) const;
+        vector3d         get_self_cancel_velocity_dir  (bool* exists) const;
+        vector3d         get_target_cancel_velocity_dir(bool* exists) const;
+        vector3d         get_auto_calc_targets_dir     (bool* exists) const;
     };
 
     // what internal_auto_calc_targets finds
@@ -419,6 +499,13 @@ namespace treyarch {
                                            i32                        usage_type,
                                            cpu_combat_inode*          cmbt);
 
+        bool is_a_target(arch_base_vhandle targ) const;
+
+        static bool is_entity_dodging_or_countering(entity_base* target,
+                                                    entity_base* attacker,
+                                                    bool*        dodging    = nullptr,
+                                                    bool*        countering = nullptr);
+
     protected:
         void start_combat_script(f32 delta_t); // the move's script object, kept or bound anew
         void kill_combat_script(bool unload_exec);
@@ -441,6 +528,8 @@ namespace treyarch {
                                          cpu_combat_inode* cmbt);
 
     private:
+        static void wait_for_target_list_lock(); // returns once no other thread holds the lock
+
         resource_key      get_sync_react_asg(entity* target) const;     // "sync_controlled_combat_react" for the hero, else "sync_combat_react"
         void              release_sync_target(actor* target);
         arch_base_vhandle engage_sync_target(arch_base_vhandle target); // null when it couldn't be engaged
@@ -501,9 +590,35 @@ namespace treyarch {
     ASSERT_OFFSETOF(combat_state, time_dilation_mode,                0x224);
     ASSERT_OFFSETOF(combat_state, weapon_to_use,                     0x2F4);
 
-    inline const string_hash script_exe_key                      = string_hash(hash::djb2("script_exe"));
-    inline const string_hash script_obj_key                      = string_hash(hash::djb2("script_obj"));
-    inline const string_hash combo_move_type_id_key              = string_hash(hash::djb2("combo_move_type_id"));
+    // combo_move_data's params
+    inline const string_hash script_exe_key                 = string_hash(hash::djb2("script_exe"));
+    inline const string_hash script_obj_key                 = string_hash(hash::djb2("script_obj"));
+    inline const string_hash script_move_id_key             = string_hash(hash::djb2("script_move_id"));
+    inline const string_hash max_targets_key                = string_hash(hash::djb2("max_targets"));
+    inline const string_hash jump_launch_force_key          = string_hash(hash::djb2("jump_launch_force"));
+    inline const string_hash strength_test_start_value_key  = string_hash(hash::djb2("strength_test_start_value"));
+    inline const string_hash combo_move_type_id_key         = string_hash(hash::djb2("combo_move_type_id"));
+    inline const string_hash combo_move_name_key            = string_hash(hash::djb2("combo_move_name"));
+    inline const string_hash combo_counter_value_key        = string_hash(hash::djb2("combo_counter_value"));
+    inline const string_hash combo_counter_delay_key        = string_hash(hash::djb2("combo_counter_delay"));
+    inline const string_hash dodge_anim_key                 = string_hash(hash::djb2("dodge_anim"));
+    inline const string_hash dodge_type_key                 = string_hash(hash::djb2("dodge_type"));
+    inline const string_hash damage_arc_key                 = string_hash(hash::djb2("damage_arc"));
+    inline const string_hash attack_time_key                = string_hash(hash::djb2("attack_time"));
+    inline const string_hash wounded_category_key           = string_hash(hash::djb2("wounded_category"));
+    inline const string_hash attack_sound_group_key         = string_hash(hash::djb2("attack_sound_group"));
+    inline const string_hash missed_sound_group_key         = string_hash(hash::djb2("missed_sound_group"));
+    inline const string_hash dodged_sound_group_key         = string_hash(hash::djb2("dodged_sound_group"));
+    inline const string_hash self_cancel_velocity_dir_key   = string_hash(hash::djb2("self_cancel_velocity_dir"));
+    inline const string_hash target_cancel_velocity_dir_key = string_hash(hash::djb2("target_cancel_velocity_dir"));
+    inline const string_hash auto_calc_targets_dir_key      = string_hash(hash::djb2("auto_calc_targets_dir"));
+
+    // the defaults of the hash params above
+    inline const string_hash wounded_key = string_hash(hash::djb2("Wounded"));
+    inline const string_hash attack_key  = string_hash(hash::djb2("attack"));
+    inline const string_hash miss_key    = string_hash(hash::djb2("miss"));
+    inline const string_hash dodge_key   = string_hash(hash::djb2("dodge"));
+
     inline const string_hash target_sync_layer_key               = string_hash(hash::djb2("target_sync_layer"));
     inline const string_hash use_multiple_sync_targets_key       = string_hash(hash::djb2("use_multiple_sync_targets"));
     inline const string_hash maintain_previous_throw_target_key  = string_hash(hash::djb2("maintain_previous_throw_target"));
@@ -513,6 +628,9 @@ namespace treyarch {
     namespace references {
         // SM3's combat_state::combat_sync_react_asg, "sync_combat_react"
         inline util::memory_reference<resource_key> combat_sync_react_asg { 0x00FC204C };
+
+        // held around every combat state's current_targets
+        inline util::memory_reference<engine_recursive_lock> target_list_lock { 0x00FC23E0 };
 
         // raised on both sides of a sync anim or buddy combo
         inline util::memory_reference<string_hash> ai_combat_sync_begin { 0x0102CB9C };

@@ -35,7 +35,8 @@ namespace treyarch {
         f32         unk_74;
         f32         unk_78;
         f32         unk_7c;
-        u8          reserved_80[0x04];
+        bool        unk_80;
+        u8          pad_81[0x03];
 
         f32  get_constraint() const;
         void set_rope_length(f32 length);
@@ -64,6 +65,7 @@ namespace treyarch {
         string_hash get_desired_rope_pivot() const;
 
         bool is_engaged() const;
+        bool is_rappel_requested() const;          // the current rope's line is out, attached or unk_80 is set
         void release_rope(f32 unk_7c, f32 unk_74); // hands the current rope over to released_ropes
     };
 
@@ -74,6 +76,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_rappel_rope, rope_length, 0x68);
     ASSERT_OFFSETOF(ai_rappel_rope, unk_70,      0x70);
     ASSERT_OFFSETOF(ai_rappel_rope, unk_7c,      0x7C);
+    ASSERT_OFFSETOF(ai_rappel_rope, unk_80,      0x80);
 
     ASSERT_SIZEOF  (ai_rappel_inode,                 0x50);
     ASSERT_OFFSETOF(ai_rappel_inode, current_rope,   0x30);
