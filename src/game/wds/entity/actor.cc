@@ -29,9 +29,9 @@ void actor::destruct_mashed_class() {
 // slot 3
 void actor::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
     ((void (__thiscall*)(actor*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64D2D0)(this,
-                                                                                                         mash_info,
-                                                                                                         containing_class_ptr,
-                                                                                                         buffer);
+                                                                                                        mash_info,
+                                                                                                        containing_class_ptr,
+                                                                                                        buffer);
 }
 
 // slot 4

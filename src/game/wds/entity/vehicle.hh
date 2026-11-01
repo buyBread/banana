@@ -1,9 +1,12 @@
 #pragma once
 
+#include "game/event/generic_event_callback.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector_basic.hh"
 #include "game/math/algebra/vector3d.hh"
+#include "game/math/po.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -11,15 +14,32 @@ namespace treyarch {
     class ai_vehicle;
     class rigid_body;
 
+    // finalize(FROM_MASH) posts "stop_vehicle" to the sound interface of the entity it holds
+    struct vehicle_unk_1e4 {
+        u8 reserved_00[0x48];
+
+        // inlined @ sub_681E20
+        ~vehicle_unk_1e4() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void finalize(mash::allocation_scope scope);
+    };
+
     class vehicle : public conglomerate {
 
     public:
-        u8                          reserved_198[0x2C];
+        u8                          reserved_198[0x0C];
+        mash::vector_basic<u32>     unk_1a4;
+        mash::vector_basic<po>      unk_1b4;
         bool                        physics_enabled;
         u8                          pad_1c5[0x03];
         u8                          reserved_1c8[0x04];
         rigid_body*                 my_rb;
-        u8                          reserved_1d0[0x60];
+        mash::vector_basic<u32>     unk_1d0;
+        u8                          reserved_1e0[0x04];
+        vehicle_unk_1e4             unk_1e4;
+        u8                          reserved_22c[0x04];
         f32                         my_mass;
         u8                          reserved_234[0x08];
         f32                         self_damage;
@@ -38,8 +58,34 @@ namespace treyarch {
         ai_vehicle*                 my_ai;
         mash::vector_basic<entity*> my_undamaged_members;
         mash::vector_basic<entity*> my_damaged_members;
-        u8                          reserved_2b8[0x28];
+        mash::vector_basic<u32>     unk_2b8;
+        generic_event_callback      unk_2c8;
+        generic_event_callback      unk_2d0;
+        generic_event_callback      unk_2d8;
         i32                         condition;
+        u8                          unk_2e4[0x04];
+        u8                          reserved_2e8[0x2C];
+
+        explicit vehicle(mash::generating_vtable_version so_do_nothing) : conglomerate(so_do_nothing),
+                                                                          unk_2c8(so_do_nothing),
+                                                                          unk_2d0(so_do_nothing),
+                                                                          unk_2d8(so_do_nothing) {}
+
+        ~vehicle() override;
+
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
+
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
+
+        bool is_a_vehicle() const override;
+        bool is_a_placeholder_vehicle() const override;
+        void frame_advance(f32 t) override;
 
         void set_model     (string_hash name);
         void set_mass      (f32 mass);
@@ -55,10 +101,19 @@ namespace treyarch {
         void repair_member     (i32 member_idx);
         void repair_member     (string_hash member_id);
         void repair_all_members();
+
+        static string_hash my_type_key;
     };
 
+    ASSERT_SIZEOF(vehicle_unk_1e4, 0x48);
+
+    ASSERT_SIZEOF  (vehicle,                       0x314);
+    ASSERT_OFFSETOF(vehicle, unk_1a4,              0x1A4);
+    ASSERT_OFFSETOF(vehicle, unk_1b4,              0x1B4);
     ASSERT_OFFSETOF(vehicle, physics_enabled,      0x1C4);
     ASSERT_OFFSETOF(vehicle, my_rb,                0x1CC);
+    ASSERT_OFFSETOF(vehicle, unk_1d0,              0x1D0);
+    ASSERT_OFFSETOF(vehicle, unk_1e4,              0x1E4);
     ASSERT_OFFSETOF(vehicle, my_mass,              0x230);
     ASSERT_OFFSETOF(vehicle, self_damage,          0x23C);
     ASSERT_OFFSETOF(vehicle, other_damage,         0x24C);
@@ -68,5 +123,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(vehicle, my_ai,                0x294);
     ASSERT_OFFSETOF(vehicle, my_undamaged_members, 0x298);
     ASSERT_OFFSETOF(vehicle, my_damaged_members,   0x2A8);
+    ASSERT_OFFSETOF(vehicle, unk_2b8,              0x2B8);
+    ASSERT_OFFSETOF(vehicle, unk_2c8,              0x2C8);
     ASSERT_OFFSETOF(vehicle, condition,            0x2E0);
+    ASSERT_OFFSETOF(vehicle, unk_2e4,              0x2E4);
 } // treyarch

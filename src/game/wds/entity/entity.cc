@@ -28,9 +28,9 @@ void entity::destruct_mashed_class() {
 // slot 3
 void entity::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
     ((void (__thiscall*)(entity*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64D220)(this,
-                                                                                                          mash_info,
-                                                                                                          containing_class_ptr,
-                                                                                                          buffer);
+                                                                                                         mash_info,
+                                                                                                         containing_class_ptr,
+                                                                                                         buffer);
 }
 
 // slot 4

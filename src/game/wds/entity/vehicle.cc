@@ -3,6 +3,65 @@
 
 using namespace treyarch;
 
+string_hash vehicle::my_type_key { 0x6E864420 }; // "vehicle"
+
+void vehicle_unk_1e4::finalize(mash::allocation_scope scope) {
+    ((void (__thiscall*)(vehicle_unk_1e4*, mash::allocation_scope))retail::sub_901A00)(this, scope);
+}
+
+// sub_681E20
+vehicle::~vehicle() {
+    ((void (__thiscall*)(u8*, mash::allocation_scope))retail::sub_689610)(unk_2e4, mash::ALLOCATED); // unk_2e4's destructor
+}
+
+// slot 1
+void vehicle::construct_mashed_class() {
+    ((void (__thiscall*)(vehicle*))retail::sub_682020)(this);
+}
+
+// slot 2
+void vehicle::destruct_mashed_class() {
+    ((void (__thiscall*)(vehicle*))retail::sub_668150)(this);
+}
+
+// slot 3
+void vehicle::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    ((void (__thiscall*)(vehicle*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_65C3C0)(this,
+                                                                                                          mash_info,
+                                                                                                          containing_class_ptr,
+                                                                                                          buffer);
+}
+
+// slot 4
+mash::virtual_types_key vehicle::get_virtual_type_key() const {
+    return ((mash::virtual_types_key (__thiscall*)(const vehicle*))retail::sub_681E00)(this);
+}
+
+// slot 6
+bool vehicle::is_subclass_of(mash::virtual_types_key parent_class) const {
+    return ((bool (__thiscall*)(const vehicle*, mash::virtual_types_key))retail::sub_667DA0)(this, parent_class);
+}
+
+// slot 8
+i32 vehicle::get_mash_sizeof() const {
+    return ((i32 (__thiscall*)(const vehicle*))retail::sub_681E10)(this);
+}
+
+// slot 41
+bool vehicle::is_a_vehicle() const {
+    return ((bool (__thiscall*)(const vehicle*))retail::sub_667F80)(this);
+}
+
+// slot 78
+bool vehicle::is_a_placeholder_vehicle() const {
+    return ((bool (__thiscall*)(const vehicle*))retail::sub_71F870)(this);
+}
+
+// slot 105
+void vehicle::frame_advance(f32 t) {
+    ((void (__thiscall*)(vehicle*, f32))retail::sub_67C440)(this, t);
+}
+
 void vehicle::set_model(string_hash name) {
     retail::sub_6569F0((i32)this, name.source_hash_code);
 }
