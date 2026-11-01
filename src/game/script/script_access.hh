@@ -9,6 +9,7 @@
 #include "treyarch/mash/string.hh"
 #include "game/resource_key.hh"
 #include "game/mutex.hh"
+#include "game/math/algebra/vector3d.hh"
 #include "game/container/fixed_vector.hh"
 #include "treyarch/mm/mm.hh"
 #include "vc8/vector.hh"
@@ -119,6 +120,14 @@ namespace treyarch {
         // sub_842D00
         template<typename T>
         static bool push_value(chuck::vm::vm_thread* thread, T value) {
+            if (thread)
+                thread->dstack.push(&value, sizeof(value));
+
+            return thread != nullptr;
+        }
+
+        // sub_842D30
+        static bool push_value(chuck::vm::vm_thread* thread, const vector3d &value) {
             if (thread)
                 thread->dstack.push(&value, sizeof(value));
 

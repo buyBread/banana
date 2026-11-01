@@ -8,6 +8,7 @@
 #include "game/math/po.hh"
 #include "game/mutex.hh"
 #include "game/resource_key.hh"
+#include "game/spline.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
@@ -126,6 +127,7 @@ namespace treyarch {
                             (b_pt.z - a_pt.z) * blend + a_pt.z);
         }
 
+        void    set_my_entity(entity_base* own);
         entity* get_my_entity() const;
         entity* get_tentacle_parent() const;
 
@@ -136,6 +138,8 @@ namespace treyarch {
 
         void set_visible(bool vis);
         bool is_visible() const;
+
+        void set_spline_type(e_spline_type type);
 
         void frame_advance(f32 delta_t);
         void update_spline(bool ignore_limbo);

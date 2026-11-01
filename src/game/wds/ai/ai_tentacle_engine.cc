@@ -182,6 +182,10 @@ void ai_tentacle_slack::setup(f32                _rope_len,
     ai_tentacle_follow::setup(1.0f, _drag, gravity, _attach_ent, allow_coll, _update_end);
 }
 
+void ai_tentacle_web_curly::setup(actor* _spiderman) {
+    retail::sub_4C1FB0((i32)this, (i32)_spiderman);
+}
+
 void ai_tentacle_web_curly::reset_curl() {
     retail::sub_4BC6D0((i32)this);
 }

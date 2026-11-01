@@ -10,6 +10,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class actor;
     class ai_tentacle_slack;
     class ai_tentacle_web_curly;
     class player_interface;
@@ -57,6 +58,8 @@ namespace treyarch {
         boolx                  for_zip;
         u8                     pad_2d9[0x03];
 
+        void set_my_actor(actor* own); // builds both lines' engines and hides them
+
         bool frame_advance(player_interface* plr_ifc, f32 delta_t, i32 index); // true when the web should break
         void post_process(player_interface* plr_ifc, f32 delta_t, i32 index);
         void anim_started();
@@ -72,6 +75,8 @@ namespace treyarch {
         ai_tentacle_info web;
         recharge_timer   life_time;
         recharge_timer   fade_time;
+
+        void set_my_actor(actor* own);
 
         void frame_advance(f32 delta_t); // the web hangs for life_time, then fades out over fade_time
         void post_process(f32 delta_t);

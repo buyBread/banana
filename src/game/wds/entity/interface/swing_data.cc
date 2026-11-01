@@ -18,6 +18,49 @@
 
 using namespace treyarch;
 
+// sub_9934B0
+void swing_data::set_my_actor(actor* own) {
+    web.set_my_entity(own);
+    web.flags |= ai_tentacle_info::manual_update_spline | ai_tentacle_info::manual_frame_advance;
+
+    curly.set_my_entity(own);
+    curly.flags |= ai_tentacle_info::manual_update_spline | ai_tentacle_info::manual_frame_advance;
+
+    web.set_spline_type(spline_b_spline);
+    web.flags &= ~ai_tentacle_info::check_collisions;
+
+    void* memory = mm::allocate(sizeof(ai_tentacle_slack));
+
+    unk_2d4 = memory ? new (memory) ai_tentacle_slack(&web) : nullptr;
+
+    vector3d gravity(0.0f, -0.0f - references::gravity.read(), 0.0f);
+
+    unk_2d4->setup(0.0f, 1.0f, gravity, arch_base_vhandle(), false, false);
+
+    web.push_engine(unk_2d4);
+    web.set_code_blend(1.0f, 0.0f);
+
+    curly.set_spline_type(spline_b_spline);
+    curly.flags &= ~ai_tentacle_info::check_collisions;
+
+    memory = mm::allocate(sizeof(ai_tentacle_web_curly));
+
+    curly_engine = memory ? ((ai_tentacle_web_curly* (__thiscall*)(void*, ai_tentacle_info*))retail::sub_4C09B0)(memory, &curly) : nullptr; // ai_tentacle_web_curly::ai_tentacle_web_curly
+
+    curly_engine->setup(own);
+
+    curly.push_engine(curly_engine);
+    curly.set_code_blend(1.0f, 0.0f);
+
+    web  .set_visible(false);
+    curly.set_visible(false);
+
+    attach_pendulum.enable(false);
+
+    for_zip = false;
+    status  = swinger_inactive;
+}
+
 // sub_9875D0
 void swing_data::anim_started() {
     status = swinger_animating;
@@ -297,6 +340,18 @@ void swing_leftover::copy(const swing_data* data) { // takes over the swinger's 
 
     life_time.reset();
     fade_time.reset();
+}
+
+// sub_9941B0
+void swing_leftover::set_my_actor(actor* own) {
+    web.set_my_entity(own);
+    web.flags |= ai_tentacle_info::manual_update_spline | ai_tentacle_info::manual_frame_advance;
+
+    web.set_spline_type(spline_b_spline);
+    web.flags &= ~ai_tentacle_info::check_collisions;
+
+    web.stop_dangle(-1.0f);
+    web.set_visible(false);
 }
 
 // sub_987710

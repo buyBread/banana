@@ -10,6 +10,7 @@
 #include "vc8/vector.hh"
 
 namespace treyarch {
+    class actor;
     class ai_tentacle_info;
     class dangler;
 
@@ -214,6 +215,7 @@ namespace treyarch {
         f32                   num_curls;
         i32                   curl_type;
 
+        void setup(actor* _spiderman);
         void reset_curl();
     };
 

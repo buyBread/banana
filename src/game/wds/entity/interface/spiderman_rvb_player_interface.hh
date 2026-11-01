@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/player_web_shooters.hh"
 #include "game/wds/entity/interface/swing_data.hh"
 #include "game/wds/ai/ai_strength_test_info.hh"
 #include "game/arch_base_vhandle.hh"
@@ -13,6 +14,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class event;
     struct region;
 
     namespace references {
@@ -49,6 +51,14 @@ namespace treyarch {
         inline util::memory_reference<f32> unk_00f4d5a4 { 0x00F4D5A4 };
     } // references
 
+    // the events set_owner listens for on the owner
+    inline const string_hash strength_test_request   = string_hash(hash::djb2("STRENGTH_TEST_REQUEST"));
+    inline const string_hash slingshot_point_request = string_hash(hash::djb2("SLINGSHOT_POINT_REQUEST"));
+    inline const string_hash agility_test_request    = string_hash(hash::djb2("AGILITY_TEST_REQUEST"));
+    inline const string_hash remove_scene_entity     = string_hash(hash::djb2("REMOVE_SCENE_ENTITY"));
+    inline const string_hash trick_begin             = string_hash(hash::djb2("TRICK_BEGIN"));
+    inline const string_hash trick_end               = string_hash(hash::djb2("TRICK_END"));
+
     // the swing tune's level-scaled values
     inline f32 linear_formula(f32 base, f32 rate, f32 x) {
         return base + rate * x;
@@ -77,7 +87,7 @@ namespace treyarch {
         f32                      unk_053c;
         f32                      unk_0540;
         u8                       reserved_0544[0x08];
-        u8                       web_shooters[0x28];              // a player_web_shooters
+        player_web_shooters      web_shooters;
         u32                      trick_begin_callback_id;
         u32                      trick_end_callback_id;
         f32                      unk_057c;                        // counted down, held at 0 in mode 8
@@ -702,6 +712,9 @@ namespace treyarch {
         virtual void     unk_593(void* unk, i32 unk_2, f32 unk_3);
         virtual i32      unk_594(void* unk, i32 unk_2);
         virtual i32      unk_595(f32 unk);
+
+        static void als_state_change_event_callback(event* the_event, arch_base_vhandle recipient, void* params);
+        static void trick_window_callback          (event* the_event, arch_base_vhandle recipient, void* params);
 
         static f32 compute_ground_level_at_sweet_spot_position(const vector3d &position, f32 max_web_length, const region* reg); // straight down from the position
 

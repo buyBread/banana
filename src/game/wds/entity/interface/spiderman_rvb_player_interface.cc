@@ -4,6 +4,7 @@
 #include "retail.hh"
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
 #include "game/als/als.hh"
+#include "game/als/animation_logic_system.hh"
 #include "game/als/param.hh"
 #include "game/colgeom.hh"
 #include "game/game.hh"
@@ -94,10 +95,33 @@ bool spiderman_rvb_player_interface::get_ifc_vec(const string_hash &name, vector
     return ((bool (__thiscall*)(spiderman_rvb_player_interface*, const string_hash&, vector3d*, bool))retail::sub_9A67A0)(this, name, value, document);
 }
 
-// slot 18
+// sub_9A4280
 void spiderman_rvb_player_interface::set_owner(actor* owner) {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*, actor*))retail::sub_9A4280)(this, owner);
+    player_interface::set_owner(owner);
+
+    for (i32 i = 0; i < max_swingers; ++i)
+        swingers[i]->set_my_actor(my_actor);
+
+    for (i32 i = 0; i < 8; ++i)
+        swing_leftovers[i]->set_my_actor(my_actor);
+
+    web_shooters.init(owner, "SM_web_shooter", "Spiderman_rvb");
+
+    owner->add_callback(strength_test_request,   (code_event_callback_function)retail::sub_92D3A0, &my_strength_test_info,   false); // strength_test_info::strength_test_event_callback
+    owner->add_callback(slingshot_point_request, (code_event_callback_function)retail::sub_90CE30, &my_slingshot_point_info, false); // slingshot_point_info::slingshot_point_event_callback
+    owner->add_callback(agility_test_request,    (code_event_callback_function)retail::sub_92DA00, &my_agility_test_info,    false); // agility_test_info::agility_test_event_callback
+    owner->add_callback(als::als_state_change,   als_state_change_event_callback,                  nullptr,                  false);
+    owner->add_callback(remove_scene_entity,     (code_event_callback_function)retail::sub_99CD80, nullptr,                  false);
+
+    trick_begin_callback_id = my_actor->add_callback(trick_begin, trick_window_callback, nullptr, false);
+    trick_end_callback_id   = my_actor->add_callback(trick_end,   trick_window_callback, nullptr, false);
 }
+
+// sub_5B4A70
+void spiderman_rvb_player_interface::als_state_change_event_callback(event* the_event, arch_base_vhandle recipient, void* params) {}
+
+// sub_5B4A70
+void spiderman_rvb_player_interface::trick_window_callback(event* the_event, arch_base_vhandle recipient, void* params) {}
 
 // sub_9A4140
 f32 spiderman_rvb_player_interface::unk_021() {
@@ -675,7 +699,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
 
     unk_025(delta_t);
 
-    retail::sub_987AC0((i32*)web_shooters, delta_t); // player_web_shooters::frame_advance
+    web_shooters.frame_advance(delta_t);
 
     unk_153(1);
 
@@ -2211,7 +2235,7 @@ f32 spiderman_rvb_player_interface::unk_375() {
 
 // sub_721570
 player_web_shooters* spiderman_rvb_player_interface::get_web_shooters() {
-    return (player_web_shooters*)web_shooters;
+    return &web_shooters;
 }
 
 // sub_9A5FA0
