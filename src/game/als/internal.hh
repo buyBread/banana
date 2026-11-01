@@ -44,17 +44,21 @@ namespace treyarch { namespace als {
         void correct_category_name(actor* the_actor);
     };
 
+    // a hit sphere; combat_state tests its targets against the current state's
     struct state_unk_44 {
-        string_hash unk_00;
+        string_hash member_name; // the conglomerate member that turns direction, empty for the actor itself
         f32         unk_04;
         f32         unk_08;
         f32         unk_0c;
-        f32         unk_10;
-        f32         unk_14;
-        u32         unk_18;
-        u32         unk_1c;
-        f32         unk_20;
+        f32         radius;
+        f32         max_angle;   // off direction; pi or more takes any direction
+        vector3d    direction;
         u32         unk_24;
+
+        // sub_5FD120
+        string_hash get_member_name() const {
+            return member_name;
+        }
 
         void construct_mashed_class();
         void destruct_mashed_class();
@@ -323,7 +327,10 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(request_data, unk_04,               0x04);
     ASSERT_OFFSETOF(request_data, state_name,           0x08);
 
-    ASSERT_SIZEOF(state_unk_44, 0x28);
+    ASSERT_SIZEOF  (state_unk_44,            0x28);
+    ASSERT_OFFSETOF(state_unk_44, radius,    0x10);
+    ASSERT_OFFSETOF(state_unk_44, direction, 0x18);
+
     ASSERT_SIZEOF(state_unk_58, 0x40);
 
     ASSERT_SIZEOF  (state,                   0x80);

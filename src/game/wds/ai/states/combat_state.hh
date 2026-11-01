@@ -535,15 +535,15 @@ namespace treyarch {
                              const combo_move_data*  combo_move,
                                    als_inode*        my_als,
                                    cpu_combat_inode* cmbt,
-                                   vector3d*         connect_point);
+                                   vector3d*         connect_point); // the hit test against the actor's reach, for a state without hit spheres
 
         virtual bool unk_050(      entity*           target,
                              const combo_move_data*  combo_move,
                                    als_inode*        my_als,
                                    cpu_combat_inode* cmbt,
-                                   vector3d*         connect_point);
+                                   vector3d*         connect_point); // the hit test against the base layer state's hit spheres
 
-        virtual bool unk_051(entity* target, const vector3d* unk, const vector3d* unk_2);
+        virtual bool unk_051(entity* target, const vector3d* target_point, const vector3d* attacker_point); // whether the world blocks the line between the points
 
         virtual bool check_for_target_hit(      entity*           target,
                                           const combo_move_data*  combo_move,
@@ -727,6 +727,8 @@ namespace treyarch {
     inline const string_hash dodge_anim_key                 = string_hash(hash::djb2("dodge_anim"));
     inline const string_hash dodge_type_key                 = string_hash(hash::djb2("dodge_type"));
     inline const string_hash damage_arc_key                 = string_hash(hash::djb2("damage_arc"));
+    inline const string_hash damage_radius_key              = string_hash(hash::djb2("damage_radius"));
+    inline const string_hash connect_range_mod_key          = string_hash(hash::djb2("connect_range_mod"));
     inline const string_hash attack_time_key                = string_hash(hash::djb2("attack_time"));
     inline const string_hash wounded_category_key           = string_hash(hash::djb2("wounded_category"));
     inline const string_hash attack_sound_group_key         = string_hash(hash::djb2("attack_sound_group"));

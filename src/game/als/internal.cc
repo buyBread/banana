@@ -28,17 +28,17 @@ string_hash als::layer_state_machine_shared::my_type_key { 0x943C5AFB }; // "als
 
 // inlined @ sub_5ED320
 void als::state_unk_44::construct_mashed_class() {
-    unk_00.construct_mashed_class();
+    member_name.construct_mashed_class();
 }
 
 // inlined @ sub_7D8DC0
 void als::state_unk_44::destruct_mashed_class() {
-    unk_00.destruct_mashed_class();
+    member_name.destruct_mashed_class();
 }
 
 // inlined @ sub_5EC280
 void als::state_unk_44::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-    unk_00.unmash(mash_info, this, buffer);
+    member_name.unmash(mash_info, this, buffer);
 }
 
 // inlined @ sub_5ED320

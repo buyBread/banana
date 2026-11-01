@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/boolx.hh"
+#include "game/math/algebra/vector3d.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -36,6 +37,26 @@ namespace treyarch {
         }
     };
 
+    // SM3's capsule
+    class capsule {
+
+    public:
+        vector3d base;
+        vector3d end;
+        f32      radius;
+    };
+
+    // SM3's collision_capsule; the capsule is in the owner's frame
+    class collision_capsule : public collision_geometry {
+
+    public:
+        capsule rel_cap;
+    };
+
     ASSERT_OFFSETOF(collision_geometry, owner, 0x04);
     ASSERT_OFFSETOF(collision_geometry, flags, 0x0C);
+
+    ASSERT_SIZEOF(capsule, 0x1C);
+
+    ASSERT_OFFSETOF(collision_capsule, rel_cap, 0x10);
 } // treyarch

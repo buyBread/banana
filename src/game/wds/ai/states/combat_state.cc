@@ -18,9 +18,11 @@
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/interface/time_interface.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/als/als.hh"
+#include "game/als/internal.hh"
 #include "game/als/mocomp.hh"
 #include "game/als/state_machine.hh"
 #include "game/animation/animation_controller.hh"
@@ -1608,69 +1610,369 @@ bool combat_state::unk_048(const combo_move_data*, void*) {
     return false;
 }
 
-// slot 49
+// sub_40BF60
 bool combat_state::unk_049(      entity*           target,
                            const combo_move_data*  combo_move,
                                  als_inode*        my_als,
                                  cpu_combat_inode* cmbt,
                                  vector3d*         connect_point) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                const combo_move_data*,
-                                als_inode*,
-                                cpu_combat_inode*,
-                                vector3d*))retail::sub_40BF60)(this,
-                                                               target,
-                                                               combo_move,
-                                                               my_als,
-                                                               cmbt,
-                                                               connect_point);
+    vector3d target_point;
+
+    retail::sub_439BA0((i32)&target_point, (u32*)target, (u32*)get_actor()); // the target's point closest to the actor
+
+    vector3d near_point = get_actor()->my_abs_po->get_position();
+
+    if (combo_move->flags_1 & combo_flag_area_of_effect) {
+        // within damage_radius and damage_arc of the actor
+        vector3d delta((f32)((f64)target_point.x - near_point.x),
+                       (f32)((f64)target_point.y - near_point.y),
+                       (f32)((f64)target_point.z - near_point.z));
+
+        f32 distance2 = (f32)((f64)delta.y * delta.y + (f64)delta.x * delta.x + (f64)delta.z * delta.z);
+
+        f32 radius       = combo_move->params.get_optional_pb_float(damage_radius_key, 5.0f, nullptr);
+        f32 radius_again = combo_move->params.get_optional_pb_float(damage_radius_key, 5.0f, nullptr);
+
+        if (!((f64)radius_again * radius >= distance2))
+            return false;
+
+        vector3d facing;
+        vector3d up;
+
+        ((vector3d* (__thiscall*)(const combat_state*, vector3d*))retail::sub_4D2450)(this, &facing); // the actor's z row
+        ((vector3d* (__thiscall*)(const combat_state*, vector3d*))retail::sub_4D2480)(this, &up);     // the actor's y row
+
+        f32 arc   = combo_move->params.get_optional_pb_float(damage_arc_key, 90.0f, nullptr);
+        f32 angle = (f32)retail::sub_402120((f32*)&delta, (f32*)&facing); // angle_between
+
+        if (!((f32)(arc * 0.017453293005625408) >= angle))
+            return false;
+    } else {
+        f32 margin    = retail::sub_601C50((u32*)get_actor()) ? 1.25f : 1.0f; // entity_base::is_hero
+        f32 range_mod = combo_move->params.get_optional_pb_float(connect_range_mod_key, 0.0f, nullptr);
+
+        if (last_attack_connected)
+            range_mod = (f32)((f64)range_mod + 0.5);
+
+        // measured from the actor's colgeom point closest to five meters ahead
+        vector3d        position = get_actor()->my_abs_po->get_position();
+        const vector3d &forward  = get_actor()->my_abs_po->get_z_facing();
+
+        vector3d ahead((f32)((f64)(f32)((f64)forward.x * 5.0) + position.x),
+                       (f32)((f64)(f32)((f64)forward.y * 5.0) + position.y),
+                       (f32)((f64)(f32)((f64)forward.z * 5.0) + position.z));
+
+        retail::sub_4375D0((i32)&near_point, (u32*)get_actor(), (f32*)&ahead); // the colgeom point closest to a point
+
+        vector3d delta((f32)((f64)target_point.x - near_point.x),
+                       (f32)((f64)target_point.y - near_point.y),
+                       (f32)((f64)target_point.z - near_point.z));
+
+        f32 distance = (f32)std::sqrt((f64)(f32)((f64)delta.y * delta.y + (f64)delta.x * delta.x + (f64)delta.z * delta.z));
+        f64 reach    = (f64)range_mod + margin;
+
+        if (distance > reach) {
+            // two more tries; with both actors upright, the height between them doesn't count
+            vector3d up = get_actor()->my_abs_po->get_y_facing();
+
+            up.normalize();
+
+            vector3d target_up = target->my_abs_po->get_y_facing();
+
+            target_up.normalize();
+
+            f32  up_dot  = (f32)(up * target_up);
+            bool settled = false;
+
+            if (up_dot > 0.8f                                          &&
+                get_actor()->has_ifc(entity_ifc_standing)              &&
+                get_actor()->standing_ifc()->is_enabled()              &&
+                get_actor()->standing_ifc()->is_effectively_standing() &&
+                target->has_standing_ifc()                             &&
+                target->standing_ifc()->is_enabled()                   &&
+                target->standing_ifc()->is_effectively_standing()) {
+
+                f32 along = (f32)(up * delta);
+
+                vector3d flat((f32)((f64)delta.x - (f32)((f64)up.x * along)),
+                              (f32)((f64)delta.y - (f32)((f64)up.y * along)),
+                              (f32)((f64)delta.z - (f32)((f64)up.z * along)));
+
+                distance = flat.length_float();
+
+                if (!(std::fabs(along) >= 4.0f) && !(distance > reach))
+                    settled = true;
+            }
+
+            if (!settled) {
+                retail::sub_4375D0((i32)&target_point, (u32*)target, (f32*)&near_point); // the colgeom point closest to a point
+
+                delta = vector3d((f32)((f64)target_point.x - near_point.x),
+                                 (f32)((f64)target_point.y - near_point.y),
+                                 (f32)((f64)target_point.z - near_point.z));
+
+                distance = (f32)std::sqrt((f64)(f32)((f64)delta.y * delta.y + (f64)delta.x * delta.x + (f64)delta.z * delta.z));
+
+                if (distance > reach                                       &&
+                    up_dot > 0.8f                                          &&
+                    get_actor()->has_standing_ifc()                        &&
+                    get_actor()->standing_ifc()->is_effectively_standing() &&
+                    target->has_standing_ifc()                             &&
+                    target->standing_ifc()->is_effectively_standing()) {
+
+                    f32 along = (f32)(up * delta);
+
+                    vector3d flat((f32)((f64)delta.x - (f32)((f64)up.x * along)),
+                                  (f32)((f64)delta.y - (f32)((f64)up.y * along)),
+                                  (f32)((f64)delta.z - (f32)((f64)up.z * along)));
+
+                    distance = flat.length_float();
+                }
+            }
+        }
+
+        if (!(reach >= distance))
+            return false;
+
+        vector3d facing;
+        vector3d up;
+
+        ((vector3d* (__thiscall*)(const combat_state*, vector3d*))retail::sub_4D2450)(this, &facing); // the actor's z row
+        ((vector3d* (__thiscall*)(const combat_state*, vector3d*))retail::sub_4D2480)(this, &up);     // the actor's y row
+
+        up.normalize();
+
+        f32 along = (f32)(up * facing);
+
+        vector3d flat_facing((f32)((f64)facing.x - (f32)((f64)up.x * along)),
+                             (f32)((f64)facing.y - (f32)((f64)up.y * along)),
+                             (f32)((f64)facing.z - (f32)((f64)up.z * along)));
+
+        flat_facing.normalize();
+
+        const vector3d &actor_position = get_actor()->my_abs_po->get_position();
+
+        vector3d to_target((f32)((f64)target_point.x - actor_position.x),
+                           (f32)((f64)target_point.y - actor_position.y),
+                           (f32)((f64)target_point.z - actor_position.z));
+
+        // flattened by the flat facing's height, not by the target's
+        f32 skew = (f32)(up * flat_facing);
+
+        vector3d flat_to_target((f32)((f64)to_target.x - (f32)((f64)up.x * skew)),
+                                (f32)((f64)to_target.y - (f32)((f64)up.y * skew)),
+                                (f32)((f64)to_target.z - (f32)((f64)up.z * skew)));
+
+        flat_to_target.normalize();
+
+        // right up close any direction hits
+        if (!(0.25f > distance)) {
+            f32 angle = (f32)retail::sub_402120((f32*)&to_target, (f32*)&facing); // angle_between
+
+            if (!((f32)(combo_move->get_damage_arc(nullptr) * 0.017453293005625408) >= angle)) {
+                f32 flat_angle = (f32)retail::sub_402120((f32*)&flat_to_target, (f32*)&flat_facing); // angle_between
+
+                if (!((f32)(combo_move->get_damage_arc(nullptr) * 0.017453293005625408) >= flat_angle))
+                    return false;
+
+                if (!(4.0f > std::fabs((f32)(to_target * up))))
+                    return false;
+            }
+        }
+    }
+
+    if (unk_051(target, &target_point, &near_point))
+        return false;
+
+    vector3d closest;
+
+    retail::sub_4375D0((i32)&closest, (u32*)target, (f32*)&near_point); // the colgeom point closest to a point
+
+    *connect_point = closest;
+
+    return true;
 }
 
-// slot 50
+// sub_40D290
 bool combat_state::unk_050(      entity*           target,
                            const combo_move_data*  combo_move,
                                  als_inode*        my_als,
                                  cpu_combat_inode* cmbt,
                                  vector3d*         connect_point) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                const combo_move_data*,
-                                als_inode*,
-                                cpu_combat_inode*,
-                                vector3d*))retail::sub_40D290)(this,
-                                                               target,
-                                                               combo_move,
-                                                               my_als,
-                                                               cmbt,
-                                                               connect_point);
+    for (u32 index = 0; index < my_als->my_als->get_als_layer(als::base_layer)->get_num_unk_44(); ++index) {
+        als::state_unk_44* sphere = my_als->my_als->get_als_layer(als::base_layer)->get_unk_44(index);
+
+        vector3d sphere_point = get_actor()->my_abs_po->get_position();
+        f32      radius       = sphere->radius;
+        vector3d target_point;
+
+        if (hit_sphere_prev_valid[index]) {
+            // swept from last frame's position
+            retail::sub_4366E0((i32)&target_point,
+                               (u32*)target,
+                               (i32)&hit_sphere_prev_pos[index],
+                               (i32)&hit_sphere_pos[index]); // the colgeom point closest to a segment
+
+            retail::sub_7E7980((f32*)&target_point,
+                               (f32*)&hit_sphere_prev_pos[index],
+                               (f32*)&hit_sphere_pos[index],
+                               (f32*)&sphere_point); // the segment's point closest to a point
+        } else {
+            retail::sub_4375D0((i32)&target_point, (u32*)target, (f32*)&sphere_point); // the colgeom point closest to a point
+
+            sphere_point = hit_sphere_pos[index];
+        }
+
+        vector3d offset((f32)((f64)target_point.x - sphere_point.x),
+                        (f32)((f64)target_point.y - sphere_point.y),
+                        (f32)((f64)target_point.z - sphere_point.z));
+
+        f32 distance2 = (f32)((f64)offset.y * offset.y + (f64)offset.x * offset.x + (f64)offset.z * offset.z);
+
+        if ((f64)radius * radius >= distance2) {
+            bool hit = true;
+
+            if (math::math_pi > sphere->max_angle) {
+                // the sphere's direction, turned by the actor or by its member
+                po frame;
+
+                frame.identity();
+
+                if (sphere->get_member_name().valid()) {
+                    string_hash member_name = sphere->get_member_name();
+
+                    auto* self = (conglomerate*)get_actor();
+
+                    retail::sub_62FC10((i32)self, (i16)self->get_member_index(member_name), (u64*)&frame, 0); // conglomerate::get_member_abs_po
+                } else
+                    frame = *get_actor()->my_abs_po;
+
+                vector3d direction = frame.non_affine_slow_xform(sphere->direction);
+
+                hit = sphere->max_angle >= (f32)retail::sub_402120((f32*)&offset, (f32*)&direction); // angle_between
+            }
+
+            if (hit) {
+                *connect_point = target_point;
+
+                if (!unk_051(target, &target_point, &sphere_point))
+                    return true;
+
+                continue;
+            }
+        }
+
+        // a capsule target, against the sphere point
+        if (!target->is_an_actor() ||
+            !target->get_colgeom()  ||
+            target->get_colgeom()->get_type() != collision_geometry_type_capsule)
+
+            continue;
+
+        po*   abs_po   = target->my_abs_po;
+        auto* geometry = (collision_capsule*)target->get_colgeom();
+
+        // both ends go through the target's own po, its w column reset in place first
+        matrix4x4 &m = abs_po->get_matrix();
+
+        m.x.w = 0.0f;
+        m.y.w = 0.0f;
+        m.z.w = 0.0f;
+        m.w.w = 1.0f;
+
+        vector3d base = abs_po->slow_xform(geometry->rel_cap.base);
+
+        m.x.w = 0.0f;
+        m.y.w = 0.0f;
+        m.z.w = 0.0f;
+        m.w.w = 1.0f;
+
+        vector3d end = abs_po->slow_xform(geometry->rel_cap.end);
+
+        f32      capsule_radius = geometry->rel_cap.radius;
+        vector3d closest;
+
+        retail::sub_7E7980((f32*)&sphere_point, (f32*)&base, (f32*)&end, (f32*)&closest); // the segment's point closest to a point
+
+        f32 dx = (f32)((f64)closest.x - sphere_point.x);
+        f32 dy = (f32)((f64)closest.y - sphere_point.y);
+        f32 dz = (f32)((f64)closest.z - sphere_point.z);
+
+        if (!((f64)capsule_radius * capsule_radius >= (f32)((f64)dx * dx + (f64)dy * dy + (f64)dz * dz)))
+            continue;
+
+        *connect_point = closest;
+
+        if (!unk_051(target, &target_point, &sphere_point))
+            return true;
+    }
+
+    return false;
 }
 
-// slot 51
-bool combat_state::unk_051(entity* target, const vector3d* unk, const vector3d* unk_2) {
-    return ((bool (__thiscall*)(combat_state*, entity*, const vector3d*, const vector3d*))retail::sub_40DAB0)(this, target, unk, unk_2);
+// sub_40DAB0
+bool combat_state::unk_051(entity* target, const vector3d* target_point, const vector3d* attacker_point) {
+    bool collisions_active = (get_actor()->flags & entity_flag_collisions_active) != 0;
+
+    get_actor()->set_collisions_active(false, false);
+
+    // from the attacker point to a tenth short of the target point
+    vector3d to_target((f32)((f64)target_point->x - attacker_point->x),
+                       (f32)((f64)target_point->y - attacker_point->y),
+                       (f32)((f64)target_point->z - attacker_point->z));
+
+    vector3d dir = math::unitize(to_target);
+
+    vector3d end((f32)((f64)target_point->x - (f32)((f64)dir.x * 0.1000000014901161)),
+                 (f32)((f64)target_point->y - (f32)((f64)dir.y * 0.1000000014901161)),
+                 (f32)((f64)target_point->z - (f32)((f64)dir.z * 0.1000000014901161)));
+
+    line_info line(*attacker_point, end);
+    bool      obstructed = false;
+
+    if (retail::sub_798F50((char*)&line,
+                           (i32)references::entfilter_blocks_beams_no_capsules.read(),
+                           (i32)references::obbfilter_lineseg_test.read(),
+                           nullptr,
+                           0)) { // line_info::check_collision
+
+        // anything but the target or what either is attached to
+        obstructed = true;
+
+        if (line.hit_entity.resolve() &&
+            (line.hit_entity.resolve() == target                                       ||
+             (arch_base*)retail::sub_601910((u32*)target) == line.hit_entity.resolve() || // entity_base::get_attach_root
+             target == (entity*)retail::sub_601910((u32*)line.hit_entity.resolve())))
+
+            obstructed = false;
+    }
+
+    get_actor()->set_collisions_active(collisions_active, false);
+
+    retail::sub_798F10((u8*)&line); // line_info::~line_info
+
+    return obstructed;
 }
 
-// slot 52
+// sub_40DD30
 bool combat_state::check_for_target_hit(      entity*           target,
                                         const combo_move_data*  combo_move,
                                               als_inode*        my_als,
                                               cpu_combat_inode* cmbt,
                                               vector3d*         connect_point) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                const combo_move_data*,
-                                als_inode*,
-                                cpu_combat_inode*,
-                                vector3d*))retail::sub_40DD30)(this,
-                                                               target,
-                                                               combo_move,
-                                                               my_als,
-                                                               cmbt,
-                                                               connect_point);
+    if (target_was_hit(target->my_handle))
+        return false;
+
+    if (combo_move->flags_1 & combo_flag_always_hit)
+        return true;
+
+    if (my_als->my_als->get_als_layer(als::base_layer)->get_num_unk_44())
+        return unk_050(target, combo_move, my_als, cmbt, connect_point);
+
+    return unk_049(target, combo_move, my_als, cmbt, connect_point);
 }
 
 // slot 53
