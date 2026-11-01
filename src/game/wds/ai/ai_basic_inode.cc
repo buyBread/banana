@@ -397,12 +397,12 @@ bool treyarch::rvb_is_crawling(arch_base* the_entity) {
         return swift_surface_layer && (swift_surface_layer->unk_0ac & 0x20);
     }
 
-    if (references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->crawling() ||
-        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_102()  ||
-        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_103()  ||
-        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_104()  ||
-        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_105()  ||
-        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_106()  ||
+    if (references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->crawling()         ||
+        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_102()          ||
+        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->is_crawl_jumping() ||
+        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_104()          ||
+        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_105()          ||
+        references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_106()          ||
         references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->unk_138())
 
         return true;

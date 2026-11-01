@@ -166,7 +166,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
         return state_exit_code_block;
 
     // moving over an edge onto the next surface
-    if (player->unk_084() > 0.0001                                   &&
+    if (player->get_movement_speed() > 0.0001                        &&
         (retail::sub_45B390((i32)crawl, true, false, als::ikcrawl_enabled) || // crawl_layer_inode, a transition check
          retail::sub_45CB60((i32)crawl, true, false, false))         &&
         (!als::ikcrawl_enabled || crawl->floor_transition)) {

@@ -143,7 +143,7 @@ namespace treyarch {
         f32               unk_038() override;
         i32               unk_039(i32 unk) override;
         void*             unk_040(void* unk) override;
-        void*             unk_041(void* unk, i32 unk_2) override;
+        arch_base_vhandle unk_041(i32 index) override;
         i32               unk_042() override;
         void              unk_043(i32 unk) override;
         bool              unk_044(i32 unk) override;
@@ -181,7 +181,7 @@ namespace treyarch {
         arch_base_vhandle unk_080() override;
         void              unk_081(f32 unk) override;
         i32               unk_082(f32 unk) override;
-        f32               unk_084() override;
+        f32               get_movement_speed() const override;
         void              unk_086(i32 unk) override;
         bool              unk_087() override;
         bool              unk_088(i32 unk) override;
@@ -198,9 +198,9 @@ namespace treyarch {
         i32               unk_101() override;
         i32               unk_107() override;
         i32               unk_108(i32 unk) override;
-        i32               unk_113() override;
+        bool              unk_113() override;
         bool              unk_114(i32 unk) override;
-        i32               unk_115() override;
+        bool              unk_115() override;
         bool              unk_116(i32 unk) override;
         i32               unk_118() override;
         bool              unk_119(i32 unk) override;
@@ -402,9 +402,9 @@ namespace treyarch {
         i32               unk_421() override;
         i32               unk_422() override;
         i32               unk_423() override;
-        f32               unk_425() override;
-        f32               unk_427() override;
-        f32               unk_429() override;
+        f32               get_als_swing_angle() override;
+        f32               get_als_swing_side_angle() override;
+        f32               get_als_swing_to_anchor_angle() override;
         f32               unk_432() override;
         f32               unk_433() override;
         f32               unk_434() override;
@@ -443,7 +443,7 @@ namespace treyarch {
         bool              unk_470() override;
         i32               unk_471() override;
         void              unk_472() override;
-        void*             unk_483(void* unk, i32 unk_2) override;
+        arch_base_vhandle unk_483(i32 index) override;
         bool              unk_484() override;
         bool              unk_485() override;
         void              unk_486(bool unk, f32 unk_2) override;
@@ -467,7 +467,7 @@ namespace treyarch {
         bool              unk_504(i32 unk) override;
         void              unk_506(i32 unk) override;
         void*             unk_507(void* unk) override;
-        i32               unk_508(i32 unk) override;
+        vector3d          unk_508() const override;
         i32               unk_509() override;
         void              unk_510(i32 unk) override;
         bool              unk_511() override;

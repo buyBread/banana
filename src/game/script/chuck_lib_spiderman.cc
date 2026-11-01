@@ -1,5 +1,10 @@
 #include "retail.hh"
 #include "game/script/chuck_lib_spiderman.hh"
+#include "game/frontend/ui_frontend.hh"
+#include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 
 using namespace treyarch;
 
@@ -195,36 +200,90 @@ bool slf__spiderman_is_mode_locked__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_841230)(this, stack);
 }
 
+// sub_841280
 bool slf__spiderman_lock_spider_reflexes_on__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841280)(this, stack);
+    if (player_reflexes* reflexes = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_reflexes())
+        reflexes->lock_on();
+
+    return true;
 }
 
+// sub_8412C0
 bool slf__spiderman_lock_spider_reflexes_off__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8412C0)(this, stack);
+    if (player_reflexes* reflexes = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_reflexes())
+        reflexes->lock_off();
+
+    return true;
 }
 
+// sub_841300
 bool slf__spiderman_unlock_spider_reflexes__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841300)(this, stack);
+    if (player_reflexes* reflexes = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_reflexes())
+        reflexes->unlock();
+
+    return true;
 }
 
+// sub_841340
 bool slf__spiderman_is_spider_reflexes_on__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_841340)(this, stack);
+    f32 result = 0.0f;
+
+    if (player_reflexes* reflexes = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_reflexes())
+        result = reflexes->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
+// sub_8729E0
 bool slf__spiderman_lock_spider_senses_on__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8729E0)(this, stack);
+    stack.sp -= 0x04;
+
+    bool unk = stack.local_num(0x00) > 0.5f;
+
+    if (player_spider_senses* senses = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_spider_senses())
+        senses->lock_on(unk);
+
+    return true;
 }
 
+// sub_872A30
 bool slf__spiderman_lock_spider_senses_off__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_872A30)(this, stack);
+    stack.sp -= 0x04;
+
+    bool unk = stack.local_num(0x00) > 0.5f;
+
+    if (player_spider_senses* senses = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_spider_senses())
+        senses->lock_off(unk);
+
+    return true;
 }
 
+// sub_872A80
 bool slf__spiderman_unlock_spider_senses__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_872A80)(this, stack);
+    stack.sp -= 0x04;
+
+    bool unk = stack.local_num(0x00) > 0.5f;
+
+    if (player_spider_senses* senses = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_spider_senses())
+        senses->unlock(unk);
+
+    return true;
 }
 
+// sub_8413D0
 bool slf__spiderman_is_spider_senses_on__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_8413D0)(this, stack);
+    f32 result = 0.0f;
+
+    if (references::spider_senses_on.read())
+        result = 1.0f;
+    else if (player_spider_senses* senses = references::g_world_ptr.read()->get_hero_ptr()->player_ifc()->get_spider_senses())
+        result = senses->is_enabled() ? 1.0f : 0.0f;
+
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 bool slf__set_spider_reflexes_depletion_rate__num__t::operator()(chuck::vm::vm_stack &stack) {

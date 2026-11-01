@@ -81,6 +81,10 @@ namespace treyarch { namespace mash {
             return this->array[index];
         }
 
+        const T &operator[](u32 index) const {
+            return this->array[index];
+        }
+
         void construct_mashed_class() {
             this->initialize_helper_mash(n);
         }

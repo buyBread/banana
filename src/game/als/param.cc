@@ -237,19 +237,19 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->has_player_ifc())
                 return 1.0f;
 
-            return the_actor->player_ifc()->unk_429();
+            return the_actor->player_ifc()->get_als_swing_to_anchor_angle();
 
         case param_swing_angle:
             if (!the_actor->has_player_ifc())
                 return 270.0f;
 
-            return the_actor->player_ifc()->unk_425();
+            return the_actor->player_ifc()->get_als_swing_angle();
 
         case param_swing_side_angle:
             if (!the_actor->has_player_ifc())
                 return 1.0f;
 
-            return the_actor->player_ifc()->unk_427();
+            return the_actor->player_ifc()->get_als_swing_side_angle();
 
         case param_swing_hand:
             if (!the_actor->has_player_ifc())

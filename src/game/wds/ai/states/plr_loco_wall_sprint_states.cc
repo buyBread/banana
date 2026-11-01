@@ -193,7 +193,7 @@ void plr_loco_wall_sprint_transition_state::deactivate(const mashed_state* next_
     player->unk_114(0);
     player->unk_116(0);
     player->unk_119(0);
-    player->unk_112(false, false);
+    player->set_transition(false, false);
 
     if (path) {
         delete path;

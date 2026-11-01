@@ -39,6 +39,17 @@ namespace treyarch {
         void enable(bool val) {
             enabled = val;
         }
+
+        f32 get_force() const {
+            return force.current;
+        }
+    };
+
+    // SM3's player_axis_control; nothing past game_axis is mapped
+    class player_axis_control : public game_axis {
+
+    public:
+        u8 reserved_058[0x90];
     };
 
     ASSERT_SIZEOF  (game_axis,                   0x58);
@@ -48,4 +59,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(game_axis, stick_angle,      0x30);
     ASSERT_OFFSETOF(game_axis, suspended,        0x50);
     ASSERT_OFFSETOF(game_axis, unk_56,           0x56);
+
+    ASSERT_SIZEOF(player_axis_control, 0xE8);
 } // treyarch

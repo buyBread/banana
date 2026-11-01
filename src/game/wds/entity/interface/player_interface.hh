@@ -27,10 +27,15 @@ namespace treyarch {
     class ai_target;
     class entity;
     class entity_base;
-    class player_axis_control;
     class player_combo_counter;
     class polytube;
     class script_object_instance;
+
+    // SM3 ePostProcessAction
+    enum e_post_process_action : i32 {
+        pp_swing_anchor_search = 0x01,
+        pp_swing_avoid_ground  = 0x02
+    };
 
     /* slots 19+ are player_interface's own. SM3's order holds around frame_advance
        (map_controls 89, update_interface 91, frame_advance 92), but WoS inserted slots: SM3 has two getters at 19/20
@@ -75,7 +80,7 @@ namespace treyarch {
         arch_base_vhandle       switch_ent;
         player_reflexes         reflexes;
         player_spider_senses    spider_senses;
-        u8                      reserved_414[0x18];
+        u8                      reserved_41c[0x10];
         player_combo_counter*   unk_042c;
         player_combo_counter*   combo_counter_display;
         simple_timer            combo_counter_delay;
@@ -164,7 +169,7 @@ namespace treyarch {
         virtual f32               unk_038();
         virtual i32               unk_039(i32 unk);
         virtual void*             unk_040(void* unk);
-        virtual void*             unk_041(void* unk, i32 unk_2);
+        virtual arch_base_vhandle unk_041(i32 index);                  // a null handle in player_interface
         virtual i32               unk_042();
         virtual void              unk_043(i32 unk);
         virtual bool              unk_044(i32 unk);
@@ -207,7 +212,7 @@ namespace treyarch {
         virtual void              unk_081(f32 unk);
         virtual i32               unk_082(f32 unk);
         virtual i32               unk_083();
-        virtual f32               unk_084();
+        virtual f32               get_movement_speed() const;
         virtual f32               unk_085();
         virtual void              unk_086(i32 unk);
         virtual bool              unk_087();
@@ -226,21 +231,21 @@ namespace treyarch {
         virtual i32               unk_100();
         virtual i32               unk_101();
         virtual bool              unk_102();                           // rvb_is_crawling asks 102..106 and 138 after crawling
-        virtual bool              unk_103();
+        virtual bool              is_crawl_jumping();
         virtual bool              unk_104();
         virtual bool              unk_105();
         virtual bool              unk_106();
         virtual i32               unk_107();
         virtual i32               unk_108(i32 unk);
-        virtual bool              unk_109();
-        virtual bool              unk_110();
-        virtual bool              unk_111();
-        virtual bool              unk_112(bool unk, bool unk_2);
-        virtual i32               unk_113();
+        virtual bool              is_transition() const;
+        virtual bool              unk_110() const;
+        virtual bool              unk_111() const;
+        virtual void              set_transition(bool t, bool unk);    // unk picks which of unk_0439 / unk_043a goes up with t
+        virtual bool              unk_113();
         virtual bool              unk_114(i32 unk);
-        virtual i32               unk_115();
+        virtual bool              unk_115();
         virtual bool              unk_116(i32 unk);
-        virtual i32               unk_117();
+        virtual bool              interior_transition();
         virtual i32               unk_118();
         virtual bool              unk_119(i32 unk);
         virtual bool              crawling() const;
@@ -250,13 +255,13 @@ namespace treyarch {
         virtual bool              unk_124();
         virtual bool              unk_125();
         virtual bool              unk_126();
-        virtual i32               unk_127();
-        virtual i32               unk_128();
+        virtual bool              swing_any_hand();
+        virtual bool              swing_both_hand();
         virtual bool              unk_129(bool unk);                   // rvb: swaps its two +0x638 records
         virtual bool              unk_130();
         virtual bool              unk_131();
-        virtual i32               unk_132();
-        virtual i32               unk_133();
+        virtual bool              swing_any_hand_locked();
+        virtual bool              swing_both_hand_locked();
         virtual bool              unk_134(i32 unk);
         virtual bool              unk_135(i32 unk);
         virtual i32               unk_136();
@@ -431,10 +436,10 @@ namespace treyarch {
         virtual void              unk_296(i32 unk);
         virtual f32               unk_297();
         virtual void              unk_298(i32 unk);
-        virtual i32               unk_299(i32 unk);
-        virtual void              unk_300(i32 unk, i32 unk_2, i32 unk_3);
-        virtual i32               unk_301(i32 unk);
-        virtual void              unk_302(i32 unk, i32 unk_2, i32 unk_3);
+        virtual vector3d          get_initial_jump_force_applied() const;
+        virtual void              set_initial_jump_force_applied(vector3d f);
+        virtual vector3d          get_jump_start() const;
+        virtual void              set_jump_start(vector3d s);
         virtual void*             unk_303(void* unk);
         virtual i32               unk_304(i32 unk);
         virtual bool              unk_305();                           // black mode, judging by the cut scenes and polytubes
@@ -556,14 +561,14 @@ namespace treyarch {
         virtual i32               unk_421();
         virtual i32               unk_422();
         virtual i32               unk_423();
-        virtual f32               unk_424();
-        virtual f32               unk_425();                           // the als's swing_angle, in degrees
-        virtual f32               unk_426();
-        virtual f32               unk_427();                           // the als's swing_side_angle, in degrees
-        virtual f32               unk_428();
-        virtual f32               unk_429();                           // the als's swing_to_anchor_angle, in degrees
-        virtual void              unk_430();
-        virtual f32               unk_431();
+        virtual f32               compute_swing_angle();
+        virtual f32               get_als_swing_angle();
+        virtual f32               compute_swing_side_angle();
+        virtual f32               get_als_swing_side_angle();
+        virtual f32               compute_swing_to_anchor_angle();
+        virtual f32               get_als_swing_to_anchor_angle();
+        virtual f32               unk_430();
+        virtual f32               unk_431();                           // slot 430 in degrees
         virtual f32               unk_432();                           // the als's swing_entry_speed
         virtual f32               unk_433();                           // the als's swing_exit_speed
         virtual f32               unk_434();
@@ -609,13 +614,13 @@ namespace treyarch {
         virtual void              set_combat_vehicle(arch_base_vhandle v);
         virtual f32               unk_475();
         virtual void              unk_476(i32 unk);
-        virtual i32               unk_477(i32 unk, bool unk_2);
+        virtual void              set_post_process_flag(e_post_process_action f, bool set);
         virtual bool              unk_478(i32 unk);
         virtual bool              unk_479();
         virtual bool              unk_480(bool unk);
         virtual bool              unk_481();
         virtual bool              unk_482(bool unk);
-        virtual void*             unk_483(void* unk, i32 unk_2);
+        virtual arch_base_vhandle unk_483(i32 index);                  // a null handle in player_interface
         virtual bool              unk_484();
         virtual bool              unk_485();
         virtual void              unk_486(bool unk, f32 unk_2);        // rvb: stores both at +0xB5C and +0xB54
@@ -640,7 +645,7 @@ namespace treyarch {
         virtual f32               unk_505();
         virtual void              unk_506(i32 unk);
         virtual void*             unk_507(void* unk);
-        virtual i32               unk_508(i32 unk);
+        virtual vector3d          unk_508() const;                     // the owner's z facing in player_interface
         virtual i32               unk_509();
         virtual void              unk_510(i32 unk);
         virtual bool              unk_511();
