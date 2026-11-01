@@ -13,6 +13,8 @@ namespace treyarch { namespace jq {
     struct full_queue {
         // sub_4E0D10
         // sub_5D41B0
+        // sub_746BB0
+        // sub_758220
         // sub_75F090
         static void init() {
             i32 group = retail::sub_A144D0(); // jq_alloc_batch_group

@@ -85,7 +85,6 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_01030b30 { 0x01030B30 }; // trigger manager update
 
     // peds
-    inline util::memory_reference<engine_recursive_lock> unk_0102ff80 { 0x0102FF80 }; // sub_751C10
     inline util::memory_reference<engine_recursive_lock> unk_01030040 { 0x01030040 }; // spectacle points of interest
     inline util::memory_reference<engine_recursive_lock> unk_01030098 { 0x01030098 }; // ped spawn point search (sub_7482A0)
     inline util::memory_reference<engine_recursive_lock> unk_01032020 { 0x01032020 }; // ped spawn points near a point

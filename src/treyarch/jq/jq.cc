@@ -10,6 +10,7 @@
 #include "game/animation/animation_pose_jq.hh"
 #include "game/event/event_manager.hh"
 #include "game/peds/ped_jq.hh"
+#include "game/peds/ped_manager.hh"
 #include "game/polytube.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_core_jq.hh"
@@ -118,7 +119,7 @@ void jq::jobqueue_init() {
     references::unk_00ffede8.get().reset();
     references::unk_01032020.get().reset();
     references::unk_01030098.get().reset();
-    references::unk_0102ff80.get().reset();
+    treyarch::references::unk_0102ff80.get().reset();
     references::unk_01073f58.get().reset();
     references::unk_01074068.get().reset();
     references::unk_01030030.get().reset();
@@ -174,8 +175,8 @@ void jq::jobqueue_init() {
     retail::sub_822EC0(); // ragdoll_collisions_jq
     retail::sub_683620(); // physical_interface_jq
     ped_jq::init();
-    retail::sub_746BB0(); // vendor_jq
-    retail::sub_758220(); // fake_ped_jq
+    vendor_jq::init();
+    fake_ped_jq::init();
     retail::sub_747090(); // ped_spawn_pos_search_jq
     retail::sub_763330(); // ped_spawn_quad_search_jq
     retail::sub_75E020(); // trigger_enter_jq
