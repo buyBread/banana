@@ -1,3 +1,4 @@
+#include "retail.hh"
 #include "game/wds/ai/ai_team.hh"
 
 using namespace treyarch;
@@ -22,4 +23,18 @@ ai_team::e_team ai_team::get_enum_by_hash(string_hash the_hash) {
         ++team;
 
     return (e_team)team;
+}
+
+// sub_408E70
+void ai_team::add_attack_meter(ai_core* core, f32 amount) {
+    i32 team = retail::sub_42B120((i32)core); // the core's team, num_teams without a core
+
+    retail::sub_436110(team, amount); // ai_team: the team's attack meter
+}
+
+// sub_408E90
+void ai_team::add_hurt_meter(ai_core* core, f32 amount) {
+    i32 team = retail::sub_42B120((i32)core); // the core's team, num_teams without a core
+
+    retail::sub_4361B0(team, amount); // ai_team: the team's hurt meter
 }

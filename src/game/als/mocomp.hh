@@ -169,6 +169,10 @@ namespace als {
         inline util::memory_reference<string_hash> translate_end   { 0x0102C65C };
         inline util::memory_reference<string_hash> attack_begin    { 0x0102C44C };
         inline util::memory_reference<string_hash> attack          { 0x0102CCA8 };
+        inline util::memory_reference<string_hash> attack_end      { 0x0102C37C };
+
+        inline util::memory_reference<string_hash> web_shoot   { 0x0102C5D4 };
+        inline util::memory_reference<string_hash> web_release { 0x0102CB3C };
 
         inline util::memory_reference<string_hash> anim_action       { 0x0102CC70 };
         inline util::memory_reference<string_hash> anim_dest_reached { 0x0102C384 };

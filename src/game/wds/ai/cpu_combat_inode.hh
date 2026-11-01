@@ -60,6 +60,8 @@ namespace treyarch {
         bool unk_037(f32 delta_t) {
             return ((bool (__thiscall*)(cpu_combat_inode*, f32))(*(void***)this)[37])(this, delta_t);
         }
+
+        static string_hash my_type_key;
     };
 
     // the target's cpu combat inode hears of the attack

@@ -6,7 +6,6 @@
 #include "game/math/algebra.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "banana/util/macros/sanity_assert.hh"
-#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
@@ -101,10 +100,4 @@ namespace treyarch {
     ASSERT_OFFSETOF(plr_loco_wall_sprint_transition_state, web_shoot_callback,   0x74);
     ASSERT_OFFSETOF(plr_loco_wall_sprint_transition_state, web_release_callback, 0x7C);
     ASSERT_OFFSETOF(plr_loco_wall_sprint_transition_state, unk_084,              0x84);
-
-    namespace references {
-        // the events the wall sprint transition counts
-        inline util::memory_reference<string_hash> web_shoot   { 0x0102C5D4 };
-        inline util::memory_reference<string_hash> web_release { 0x0102CB3C };
-    } // references
 } // treyarch

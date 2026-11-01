@@ -4,6 +4,8 @@
 
 using namespace treyarch;
 
+string_hash cpu_combat_inode::my_type_key { 0x0D78D18B }; // "cpu_combat_inode"
+
 // sub_4EB8B0
 void cpu_combat_inode::set_script_chain_size(i32 chain_size) {
     (*script_nums)[4] = (f32)chain_size;

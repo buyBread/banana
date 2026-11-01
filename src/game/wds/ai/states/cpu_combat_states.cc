@@ -85,9 +85,11 @@ e_state_exit_code cpu_combat_state::frame_advance(f32 delta_t) {
     return the_exit_code;
 }
 
-// slot 12
+// sub_4E36A0
 void cpu_combat_state::get_info_node_list(info_node_desc_list &the_list) const {
-    ((void (__thiscall*)(const cpu_combat_state*, info_node_desc_list*))retail::sub_4E36A0)(this, &the_list);
+    combat_state::get_info_node_list(the_list);
+
+    the_list.add_entry(cpu_combat_inode::my_type_key);
 }
 
 // slot 20

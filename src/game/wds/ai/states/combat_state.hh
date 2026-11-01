@@ -200,15 +200,21 @@ namespace treyarch {
     enum e_combo_unk_10_flags : u32 {
         combo_unk_10_flag_00000010 = 0x00000010, // the move keeps the actor's own up vector
         combo_unk_10_flag_00000040 = 0x00000040, // the move can end in a ground splat
+        combo_unk_10_flag_00000200 = 0x00000200, // slot 26 builds the up from the direction to the targets
+        combo_unk_10_flag_00000400 = 0x00000400, // slot 26 takes +Y as the up
         combo_unk_10_flag_00008000 = 0x00008000, // the hero raises WALL_HIT on what he hits
         combo_unk_10_flag_00010000 = 0x00010000, // AIR_HIT
         combo_unk_10_flag_00020000 = 0x00020000, // GROUND_HIT
+        combo_unk_10_flag_00100000 = 0x00100000, // slot 26 takes the first target's up
         combo_unk_10_flag_00200000 = 0x00200000, // the hero picks up a friendly ai he hits
         combo_unk_10_flag_00800000 = 0x00800000  // the move looks for a wall ahead
     };
 
-    // the hero's combat frame hands each to the player interface slot beside it
+    // the hero's combat frame hands the player interface slot beside it most of these
     enum e_combo_unk_14_flags : u32 {
+        combo_unk_14_flag_00000001 = 0x00000001, // exit_attack_window clears standing flag 0x800
+        combo_unk_14_flag_00000002 = 0x00000002, // exit_attack_window clears standing flag 0x1000
+        combo_unk_14_flag_00000004 = 0x00000004, // exit_attack_window clears physical flag 0x200
         combo_unk_14_flag_00000040 = 0x00000040, // slot 492, only when set
         combo_unk_14_flag_00000200 = 0x00000200, // slot 506, only when set
         combo_unk_14_flag_00000400 = 0x00000400, // slot 175
@@ -225,6 +231,50 @@ namespace treyarch {
         combo_unk_18_flag_00000008 = 0x00000008, // the launch runs every frame, not only on an anim action
         combo_unk_18_flag_00000010 = 0x00000010, // the hero's hit adds nothing to meter 0
         combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::hit_dilation_pending
+    };
+
+    // SM3's CombatAnimValues; WoS has twelve signals of three elements, the third the time to the signal over the layer's speeds
+    enum e_combat_anim_values : u32 {
+        cmbt_action_signal_raised            = 0,
+        cmbt_time_to_action_signal           = 1,
+        cmbt_attack_signal_raised            = 3,
+        cmbt_time_to_attack_signal           = 4,
+        cmbt_attack_begin_signal_raised      = 6,
+        cmbt_time_to_attack_begin_signal     = 7,
+        cmbt_attack_end_signal_raised        = 9,
+        cmbt_time_to_attack_end_signal       = 10,
+        cmbt_web_shoot_signal_raised         = 12,
+        cmbt_time_to_web_shoot_signal        = 13,
+        cmbt_web_release_signal_raised       = 15,
+        cmbt_time_to_web_release_signal      = 16,
+        cmbt_move_begin_signal_raised        = 18,
+        cmbt_time_to_move_begin_signal       = 19,
+        cmbt_move_end_signal_raised          = 21,
+        cmbt_time_to_move_end_signal         = 22,
+        cmbt_rotate_begin_signal_raised      = 24,
+        cmbt_time_to_rotate_begin_signal     = 25,
+        cmbt_rotate_end_signal_raised        = 27,
+        cmbt_time_to_rotate_end_signal       = 28,
+        cmbt_translate_begin_signal_raised   = 30,
+        cmbt_time_to_translate_begin_signal  = 31,
+        cmbt_translate_end_signal_raised     = 33,
+        cmbt_time_to_translate_end_signal    = 34,
+        cmbt_anim_time                       = 36,
+        cmbt_anim_duration                   = 37,
+        cmbt_normalized_anim_time            = 38,
+        cmbt_damage                          = 39,
+        cmbt_damage_type                     = 40,
+        cmbt_button_jump_triggered           = 41,
+        cmbt_button_light_melee_triggered    = 42,
+        cmbt_button_heavy_melee_triggered    = 43,
+        cmbt_button_grapple_triggered        = 44,
+        cmbt_button_light_ranged_triggered   = 45,
+        cmbt_button_held                     = 46,
+        cmbt_unk_47                          = 47, // always -1
+        cmbt_script_move_id                  = 48,
+        cmbt_strength_test_normalized_amount = 49,
+        cmbt_unk_50                          = 50, // the frame's move, as the script library codes it
+        num_combat_anim_values
     };
 
     // one move of a combat chain
@@ -399,7 +449,11 @@ namespace treyarch {
         f32                             time_dilation_end_scale;
         f32                             time_dilation_scale;
         i32                             time_dilation_mode;                // the move's param, copied by move_transition
-        u8                              reserved_228[0xCC];
+        vector3d                        hit_sphere_pos[8];                 // per hit sphere of the base layer's state
+        vector3d                        hit_sphere_prev_pos[8];
+        bool                            hit_sphere_prev_valid[8];          // both attack window slots clear them
+        bool                            attack_end_pending;                // ATTACK_END inside the window closes it the next frame
+        u8                              pad_2f1[0x03];
         mash::array_replacement
             <string_hash, 2>            weapon_to_use;
 
@@ -431,7 +485,7 @@ namespace treyarch {
         virtual void          move_transition(const combo_move_data* new_combo_move, u32 unk);
         virtual void          add_extra_als_params(als_inode* my_als, const combo_move_data* combo_move);
         virtual void          set_als_facing(als_inode* my_als, const combo_move_data* combo_move);
-        virtual void          unk_026(als_inode* my_als, const combo_move_data* combo_move);
+        virtual void          unk_026(als_inode* my_als, const combo_move_data* combo_move); // the base layer's desired_up_vector
         virtual void          set_als_position(als_inode* my_als, const combo_move_data* combo_move);
 
         virtual void update_combat(f32               delta_t,
@@ -441,7 +495,7 @@ namespace treyarch {
 
         virtual void     fill_combat_anim_values(const combo_move_data* combo_move, als_inode* my_als, f32 delta_t);
         virtual bool     is_combo_cancelled(const combo_move_data* combo_move, als_inode* my_als, f32 delta_t) const;
-        virtual bool     unk_031(f32 unk);
+        virtual bool     unk_031(f32 fall_speed); // whether the fall hurts
         virtual void     clear_targets();
         virtual i32      get_damage_type(const combo_move_data* combo_move, arch_base_vhandle target) const;
         virtual i32      get_damage(const combo_move_data* combo_move, arch_base_vhandle target) const;
@@ -653,6 +707,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(combat_state, time_dilation_start_time,          0x210);
     ASSERT_OFFSETOF(combat_state, time_dilation_scale,               0x220);
     ASSERT_OFFSETOF(combat_state, time_dilation_mode,                0x224);
+    ASSERT_OFFSETOF(combat_state, hit_sphere_pos,                    0x228);
+    ASSERT_OFFSETOF(combat_state, hit_sphere_prev_pos,               0x288);
+    ASSERT_OFFSETOF(combat_state, hit_sphere_prev_valid,             0x2E8);
+    ASSERT_OFFSETOF(combat_state, attack_end_pending,                0x2F0);
     ASSERT_OFFSETOF(combat_state, weapon_to_use,                     0x2F4);
 
     // combo_move_data's params
@@ -696,6 +754,15 @@ namespace treyarch {
     inline const string_hash meta_type_v_look_rate_delta_key = string_hash(hash::djb2("meta_type_v_look_rate_delta"));
     inline const string_hash meta_type_v_look_rate_damp_key  = string_hash(hash::djb2("meta_type_v_look_rate_damp"));
     inline const string_hash meta_type_v_look_rate_mute_key  = string_hash(hash::djb2("meta_type_v_look_rate_mute"));
+
+    inline const string_hash hit_effect_key = string_hash(hash::djb2("hit_effect"));
+
+    // spawn_sound_impact's rtpcs and events
+    inline const string_hash combo_count_key = string_hash(hash::djb2("combo_count"));
+    inline const string_hash damage_key      = string_hash(hash::djb2("damage"));
+    inline const string_hash impact_hero_key = string_hash(hash::djb2("impact_hero"));
+    inline const string_hash impact_key      = string_hash(hash::djb2("impact"));
+    inline const string_hash block_key       = string_hash(hash::djb2("block"));
 
     namespace references {
         // SM3's combat_state::combat_sync_react_asg, "sync_combat_react"

@@ -17,7 +17,6 @@ namespace treyarch {
     class ai_core;
     class ai_state_machine;
     class default_state_transition;
-    class info_node_desc_list;
     class param_block;
     class state_graph_list;
 
@@ -35,6 +34,17 @@ namespace treyarch {
         e_state_exit_code    the_exit_code;
         param_block*         extra_params;
     };
+
+    // the type keys of the info nodes a state needs, filled by its get_info_node_list
+    class info_node_desc_list {
+
+    public:
+        vc8::vector<string_hash> the_list;
+
+        void add_entry(string_hash the_entry); // skipped when the list already holds it
+    };
+
+    ASSERT_SIZEOF(info_node_desc_list, 0x10);
 
     // a machine's running state, made from its mashed_state; no retail vtable of its own, enhanced_state fills every slot
     class base_state : public mash::mash_virtual_base {

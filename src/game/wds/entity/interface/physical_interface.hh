@@ -38,6 +38,7 @@ namespace treyarch {
         physical_interface_flag_collided          = 0x00000020,
         physical_interface_flag_ext_collided      = 0x00000040,
         physical_interface_flag_immobile          = 0x00000100,
+        physical_interface_flag_unk_00000200      = 0x00000200, // WoS; combat_state's attack window slots clear it
         physical_interface_flag_non_biped_physics = 0x00040000,
         physical_interface_flag_biped_running     = 0x00080000,
         physical_interface_flag_bouncy            = 0x10000000,

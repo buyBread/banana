@@ -151,6 +151,53 @@ entity* damage_interface::get_damage_attacker() const {
     return (entity*)dmg_info.attacker.resolve();
 }
 
+bool damage_interface::check_for_dodge(      entity*                    attacker,
+                                             i32                        chain_size,
+                                       const combo_move_data*           combo_move,
+                                             weapon_interface_extender* weapon,
+                                             entity*                    weapon_entity,
+                                             i32                        usage_type) {
+
+    return ((bool (__thiscall*)(damage_interface*,
+                                entity*,
+                                i32,
+                                const combo_move_data*,
+                                weapon_interface_extender*,
+                                entity*,
+                                i32))retail::sub_6085E0)(this,
+                                                         attacker,
+                                                         chain_size,
+                                                         combo_move,
+                                                         weapon,
+                                                         weapon_entity,
+                                                         usage_type);
+}
+
+bool damage_interface::check_for_block(      entity*                    attacker,
+                                             i32                        chain_size,
+                                       const combo_move_data*           combo_move,
+                                             hit_react_record*          react,
+                                             weapon_interface_extender* weapon,
+                                             entity*                    weapon_entity,
+                                             i32                        usage_type) {
+
+    return ((bool (__thiscall*)(damage_interface*,
+                                entity*,
+                                i32,
+                                const combo_move_data*,
+                                hit_react_record*,
+                                weapon_interface_extender*,
+                                entity*,
+                                i32))retail::sub_608740)(this,
+                                                         attacker,
+                                                         chain_size,
+                                                         combo_move,
+                                                         react,
+                                                         weapon,
+                                                         weapon_entity,
+                                                         usage_type);
+}
+
 i32 damage_interface::apply_damage(      entity*           attacker,
                                          entity*           attacker_weapon,
                                          i32               damage,

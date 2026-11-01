@@ -6,6 +6,7 @@
 #include "game/wds/entity/interface/player_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/als/mocomp.hh"
 #include "game/spline.hh"
 
 using namespace treyarch;
@@ -201,8 +202,8 @@ void plr_loco_wall_sprint_transition_state::deactivate(const mashed_state* next_
         path = nullptr;
     }
 
-    web_shoot_callback  .remove(get_actor()->my_handle, references::web_shoot.read());
-    web_release_callback.remove(get_actor()->my_handle, references::web_release.read());
+    web_shoot_callback  .remove(get_actor()->my_handle, als::references::web_shoot.read());
+    web_release_callback.remove(get_actor()->my_handle, als::references::web_release.read());
 
     unk_027();
 }

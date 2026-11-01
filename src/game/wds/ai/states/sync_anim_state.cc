@@ -102,9 +102,9 @@ e_state_exit_code sync_anim_state::frame_advance(f32 delta_t) {
     return ((e_state_exit_code (__thiscall*)(sync_anim_state*, f32))retail::sub_457F20)(this, delta_t);
 }
 
-// slot 12
+// sub_54B5C0
 void sync_anim_state::get_info_node_list(info_node_desc_list &the_list) const {
-    ((void (__thiscall*)(const sync_anim_state*, info_node_desc_list*))retail::sub_54B5C0)(this, &the_list);
+    the_list.add_entry(als_inode::my_type_key);
 }
 
 // slot 24

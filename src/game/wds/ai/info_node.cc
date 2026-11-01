@@ -9,6 +9,8 @@
 
 using namespace treyarch;
 
+string_hash als_inode::my_type_key { 0x489A42CE }; // "als_inode"
+
 // sub_4C3A70
 actor* info_node::get_actor() const {
     return my_ai_core->my_actor;
@@ -113,6 +115,28 @@ i32 als_inode::get_optional_als_pb_int(const string_hash   &parameter,
                                                           &default_value,
                                                           the_layer,
                                                           exists);
+}
+
+string_hash als_inode::get_optional_als_pb_hash(const string_hash   &parameter,
+                                                const string_hash   &default_value,
+                                                      als::layer_id  the_layer,
+                                                      bool*          exists) const {
+
+    string_hash result;
+
+    ((string_hash* (__thiscall*)(const als_inode*,
+                                 string_hash*,
+                                 const string_hash*,
+                                 const string_hash*,
+                                 als::layer_id,
+                                 bool*))retail::sub_44F550)(this,
+                                                            &result,
+                                                            &parameter,
+                                                            &default_value,
+                                                            the_layer,
+                                                            exists);
+
+    return result;
 }
 
 // sub_450480

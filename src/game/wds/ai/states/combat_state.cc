@@ -3,6 +3,7 @@
 
 #include "retail.hh"
 #include "game/wds/ai/states/combat_state.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
 #include "game/wds/ai/ai_target.hh"
@@ -20,6 +21,7 @@
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "game/als/als.hh"
+#include "game/als/mocomp.hh"
 #include "game/als/state_machine.hh"
 #include "game/animation/animation_controller.hh"
 #include "treyarch/chuck/vm/script_executable.hh"
@@ -49,6 +51,7 @@ const char* combo_move_data::get_script_obj(bool* exists) const {
 }
 
 // sub_409140
+// inlined @ sub_410DB0
 f32 combo_move_data::get_script_move_id(bool* exists) const {
     return params.get_optional_pb_float(script_move_id_key, -1.0f, exists);
 }
@@ -761,7 +764,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
             update_time_dilation(my_als);
 
-            (*combat_anim_values)[50] = next_move == combat_num_moves ? -1.0f : get_combat_move_script_code(next_move, next_script_move_num);
+            (*combat_anim_values)[cmbt_unk_50] = next_move == combat_num_moves ? -1.0f : get_combat_move_script_code(next_move, next_script_move_num);
 
             f32 strength_test_status = -2.0f;
 
@@ -927,9 +930,9 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
     return the_exit_code;
 }
 
-// slot 12
+// sub_54B5C0
 void combat_state::get_info_node_list(info_node_desc_list &the_list) const {
-    ((void (__thiscall*)(const combat_state*, info_node_desc_list*))retail::sub_54B5C0)(this, &the_list);
+    the_list.add_entry(als_inode::my_type_key);
 }
 
 // sub_667F80
@@ -962,9 +965,145 @@ void combat_state::set_als_facing(als_inode* my_als, const combo_move_data* comb
     ((void (__thiscall*)(combat_state*, als_inode*, const combo_move_data*))retail::sub_414870)(this, my_als, combo_move);
 }
 
-// slot 26
+// sub_415470
 void combat_state::unk_026(als_inode* my_als, const combo_move_data* combo_move) {
-    ((void (__thiscall*)(combat_state*, als_inode*, const combo_move_data*))retail::sub_415470)(this, my_als, combo_move);
+    if (combo_move                                         &&
+        !(combo_move->unk_10 & combo_unk_10_flag_00000200) &&
+        !(combo_move->unk_10 & combo_unk_10_flag_00000400) &&
+        !(combo_move->unk_10 & combo_unk_10_flag_00100000))
+
+        return;
+
+    vector3d up = get_actor()->my_abs_po->get_y_facing();
+
+    get_actor();
+
+    if (combo_move) {
+        if (combo_move->unk_10 & combo_unk_10_flag_00000400)
+            up = references::unk_00e6049c.get();
+        else if (combo_move->unk_10 & combo_unk_10_flag_00100000) {
+            // the first target that isn't dodging or countering
+            if (!current_targets->empty())
+                for (auto it = current_targets->begin(), end = current_targets->end(); it != end; ++it) {
+                    auto* target = (entity_base*)(*it).resolve();
+
+                    if (target && !is_entity_dodging_or_countering(target, get_actor())) {
+                        up = target->my_abs_po->get_y_facing();
+
+                        break;
+                    }
+                }
+        } else if (!current_targets->empty()) {
+            // the targets' average position, only the first's for a primary target move
+            vector3d average = references::unk_00fc1ee0.get();
+            f32      count   = 0.0f;
+
+            for (auto it = current_targets->begin(), end = current_targets->end(); it != end; ++it) {
+                auto* target = (entity_base*)(*it).resolve();
+
+                if (!target)
+                    continue;
+
+                if (!is_entity_dodging_or_countering(target, get_actor())) {
+                    const vector3d &position = target->my_abs_po->get_position();
+
+                    average = vector3d((f32)((f64)position.x + average.x),
+                                       (f32)((f64)position.y + average.y),
+                                       (f32)((f64)position.z + average.z));
+
+                    count = (f32)((f64)count + 1.0);
+                }
+
+                if (combo_move->flags_2 & combo_flag_primary_target_movement)
+                    break;
+            }
+
+            if (count > 0.0001f) {
+                if (count > 1.01f) {
+                    f32 inv_count = (f32)(1.0 / count);
+
+                    average = vector3d((f32)((f64)inv_count * average.x),
+                                       (f32)((f64)inv_count * average.y),
+                                       (f32)((f64)inv_count * average.z));
+                }
+
+                vector3d toward;
+
+                if (combo_move->flags_2 & combo_flag_primary_target_movement)
+                    toward = average;
+                else {
+                    // the target nearest the average, else the point a meter ahead
+                    f32 nearest = F32_MAX;
+
+                    toward = get_actor()->my_abs_po->get_z_facing();
+
+                    const vector3d &position = get_actor()->my_abs_po->get_position();
+
+                    toward = vector3d((f32)((f64)position.x + toward.x),
+                                      (f32)((f64)position.y + toward.y),
+                                      (f32)((f64)position.z + toward.z));
+
+                    for (auto it = current_targets->begin(), end = current_targets->end(); it != end; ++it) {
+                        auto* target = (entity_base*)(*it).resolve();
+
+                        if (!target)
+                            continue;
+
+                        const vector3d &target_position = target->my_abs_po->get_position();
+
+                        f32 dx = (f32)((f64)target_position.x - average.x);
+                        f32 dy = (f32)((f64)target_position.y - average.y);
+                        f32 dz = (f32)((f64)target_position.z - average.z);
+
+                        f32 distance2 = (f32)((f64)dy * dy + (f64)dx * dx + (f64)dz * dz);
+
+                        if (nearest > distance2) {
+                            toward  = target_position;
+                            nearest = distance2;
+                        }
+                    }
+                }
+
+                const vector3d &position = get_actor()->my_abs_po->get_position();
+
+                vector3d dir((f32)((f64)toward.x - position.x),
+                             (f32)((f64)toward.y - position.y),
+                             (f32)((f64)toward.z - position.z));
+
+                // the z row of a frame facing +Y with the direction as its normal, unless it lines up with the actor's
+                if (dir.length2_float() > 0.0001f) {
+                    dir.normalize();
+
+                    const vector3d &origin = get_actor()->my_abs_po->get_position();
+                    const vector3d &y_axis = references::unk_00e6049c.get();
+
+                    po frame(math::vector4(y_axis.x, y_axis.y, y_axis.z, 0.0f),
+                             math::vector4(dir.x,    dir.y,    dir.z,    0.0f),
+                             math::vector4(origin.x, origin.y, origin.z, 0.0f));
+
+                    vector3d frame_z = frame.get_z_facing();
+
+                    f32 along = std::fabs((f32)(frame_z * get_actor()->my_abs_po->get_z_facing()));
+
+                    if (0.99f > along)
+                        up = frame_z;
+                }
+            }
+        }
+
+        if (get_als_up_func_id != -1)
+            if (chuck::vm::script_instance* inst = script::get_instance(combat_script_inst)) {
+                chuck::vm::vm_thread* thread = script::create_thread(get_als_up_func_id, inst, get_actor());
+
+                script::push_value(thread, up);
+                script::push_value(thread, combo_move->get_script_move_id(nullptr));
+                script::push_value(thread, current_targets->array);
+                script::push_value(thread, combat_anim_values->array);
+                script::run_thread_with_return(thread, &up);
+            }
+    }
+
+    my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_desired_up_vector, up);
 }
 
 // slot 27
@@ -989,19 +1128,119 @@ void combat_state::update_combat(f32               delta_t,
                                                                 cmbt);
 }
 
-// slot 29
+// sub_410DB0
 void combat_state::fill_combat_anim_values(const combo_move_data* combo_move, als_inode* my_als, f32 delta_t) {
-    ((void (__thiscall*)(combat_state*, const combo_move_data*, als_inode*, f32))retail::sub_410DB0)(this, combo_move, my_als, delta_t);
+    f32 duration   = my_als->get_duration(als::base_layer);
+    f32 normalized = my_als->get_current_normalized_time(als::base_layer);
+    f32 anim_time  = (normalized - (i32)normalized) * duration;
+
+    f32 speed = 1.0f;
+
+    if (als::state_machine_interface* layer = my_als->my_als->get_als_layer(als::base_layer))
+        speed = layer->get_speed();
+
+    f32 secondary_speed = 1.0f;
+
+    if (als::state_machine_interface* layer = my_als->my_als->get_als_layer(als::base_layer))
+        secondary_speed = layer->get_secondary_speed();
+
+    f32 inv_speed = (f32)(1.0 / (f32)((f64)secondary_speed * speed));
+
+    (*combat_anim_values)[cmbt_anim_time]            = anim_time;
+    (*combat_anim_values)[cmbt_anim_duration]        = duration;
+    (*combat_anim_values)[cmbt_normalized_anim_time] = normalized;
+
+    // the element after a signal's time to it: that time at the layer's speeds, unless the signal isn't ahead
+    auto scale_time_to_signal = [&](u32 raised) {
+        (*combat_anim_values)[raised + 2] = (*combat_anim_values)[raised + 1] >= 0.0f ?
+            (f32)((f64)(*combat_anim_values)[raised + 1] * inv_speed) :
+            (*combat_anim_values)[raised + 1];
+    };
+
+    auto fill_signal = [&](u32 raised, u32 signal, string_hash evt) {
+        (*combat_anim_values)[raised]     = signal_flags & signal ? 1.0f : 0.0f;
+        (*combat_anim_values)[raised + 1] = my_als->get_time_to_signal(evt, als::base_layer, nullptr, false, nullptr);
+
+        scale_time_to_signal(raised);
+    };
+
+    fill_signal(cmbt_action_signal_raised,          combat_signal_anim_action,     als::references::anim_action.read());
+    fill_signal(cmbt_attack_signal_raised,          combat_signal_attack,          als::references::attack.read());
+    fill_signal(cmbt_attack_begin_signal_raised,    combat_signal_attack_begin,    als::references::attack_begin.read());
+    fill_signal(cmbt_attack_end_signal_raised,      combat_signal_attack_end,      als::references::attack_end.read());
+    fill_signal(cmbt_web_shoot_signal_raised,       combat_signal_web_shoot,       als::references::web_shoot.read());
+    fill_signal(cmbt_web_release_signal_raised,     combat_signal_web_release,     als::references::web_release.read());
+    fill_signal(cmbt_move_begin_signal_raised,      combat_signal_move_begin,      als::references::move_begin.read());
+    fill_signal(cmbt_move_end_signal_raised,        combat_signal_move_end,        als::references::move_end.read());
+    fill_signal(cmbt_rotate_begin_signal_raised,    combat_signal_rotate_begin,    als::references::rotate_begin.read());
+    fill_signal(cmbt_rotate_end_signal_raised,      combat_signal_rotate_end,      als::references::rotate_end.read());
+    fill_signal(cmbt_translate_begin_signal_raised, combat_signal_translate_begin, als::references::translate_begin.read());
+    fill_signal(cmbt_translate_end_signal_raised,   combat_signal_translate_end,   als::references::translate_end.read());
+
+    // a move without signals has its attack at attack_time
+    if (0.0f > (*combat_anim_values)[cmbt_time_to_attack_signal] &&
+        combo_move                                               &&
+        combo_move->flags_1 & combo_flag_non_signal              &&
+        combo_move->get_attack_time(nullptr) >= 0.0f) {
+
+        f32 time_left = combo_move->get_attack_time(nullptr) - anim_time;
+
+        (*combat_anim_values)[cmbt_time_to_attack_signal] = 0.0f > time_left ? -1.0f : time_left;
+
+        scale_time_to_signal(cmbt_attack_signal_raised);
+    }
+
+    (*combat_anim_values)[cmbt_script_move_id] = combo_move ? combo_move->get_script_move_id(nullptr) : -1.0f;
+    (*combat_anim_values)[cmbt_damage]         = (f32)get_damage(combo_move, arch_base_vhandle());
+    (*combat_anim_values)[cmbt_damage_type]    = (f32)get_damage_type(combo_move, arch_base_vhandle());
+
+    for (u32 button = cmbt_button_jump_triggered; button <= cmbt_button_held; ++button)
+        (*combat_anim_values)[button] = 0.0f;
+
+    (*combat_anim_values)[cmbt_unk_47] = -1.0f;
+
+    (*combat_anim_values)[cmbt_strength_test_normalized_amount] = strength_test ?
+        ((f32 (__thiscall*)(plr_strength_test*))retail::sub_90C6B0)(strength_test) : // plr_strength_test: the normalized amount
+        -1.0f;
 }
 
-// slot 30
+// sub_409D90
 bool combat_state::is_combo_cancelled(const combo_move_data* combo_move, als_inode* my_als, f32 delta_t) const {
-    return ((bool (__thiscall*)(const combat_state*, const combo_move_data*, als_inode*, f32))retail::sub_409D90)(this, combo_move, my_als, delta_t);
+    bool cancelled = false;
+
+    if (!combo_move)
+        return cancelled;
+
+    // a sync anim, strength test or buddy combo whose transition failed, unless the hit that kills it already landed
+    if ((combo_move->flags_2 & combo_flag_sync_anim || combo_move->flags_2 & combo_flag_strength_test) &&
+        !in_sync_combo_anim                                                                            &&
+        !my_als->my_als->get_als_layer(als::base_layer)->did_transition_succeed()                      &&
+        (!(combo_move->flags_2 & combo_flag_kill_sync_anim_on_hit) || !attack_applied))
+
+        cancelled = true;
+
+    if (combo_move->flags_2 & combo_flag_buddy_combo                              &&
+        !in_buddy_combo_anim                                                      &&
+        !my_als->my_als->get_als_layer(als::base_layer)->did_transition_succeed() &&
+        (!(combo_move->flags_2 & combo_flag_kill_buddy_combo_on_hit) || !attack_applied))
+
+        return true;
+
+    return cancelled;
 }
 
-// slot 31
-bool combat_state::unk_031(f32 unk) {
-    return ((bool (__thiscall*)(combat_state*, f32))retail::sub_40AD50)(this, unk);
+// sub_40AD50
+bool combat_state::unk_031(f32 fall_speed) {
+    bool hurt = false;
+
+    if (get_actor()->has_ifc(entity_ifc_damage))
+        hurt = retail::sub_6799A0((i32)get_actor()->damage_ifc(), fall_speed, 0.0f, 0, 5) > 0; // damage_interface: fall damage
+
+    auto* my_als = (als_inode*)get_actor()->get_ai_core()->get_info_node(info_node_type_als);
+
+    my_als->my_als->get_als_layer(als::base_layer)->set_desired_param(als::param_fall_speed, fall_speed);
+
+    return hurt;
 }
 
 // slot 32
@@ -1009,9 +1248,44 @@ void combat_state::clear_targets() {
     ((void (__thiscall*)(combat_state*))retail::sub_41A230)(this);
 }
 
-// slot 33
+// sub_40DDD0
 i32 combat_state::get_damage_type(const combo_move_data* combo_move, arch_base_vhandle target) const {
-    return ((i32 (__thiscall*)(const combat_state*, const combo_move_data*, arch_base_vhandle))retail::sub_40DDD0)(this, combo_move, target);
+    i32 type = 3;
+
+    if (!combo_move)
+        return type;
+
+    if (combo_move->flags_1 & combo_flag_explosive)
+        type = 4;
+
+    if (get_damage_type_func_id == -1)
+        return type;
+
+    chuck::vm::script_instance* inst = script::get_instance(combat_script_inst);
+
+    if (!inst)
+        return type;
+
+    // the script's type, within 0..7
+    f32 script_type = (f32)type;
+
+    chuck::vm::vm_thread* thread = script::create_thread(get_damage_type_func_id, inst, get_actor());
+
+    script::push_value(thread, script_type);
+    script::push_value(thread, target);
+    script::push_value(thread, current_targets->array);
+    script::push_value(thread, combat_anim_values->array);
+    script::run_thread_with_return(thread, &script_type);
+
+    type = (i32)script_type;
+
+    if (type < 0)
+        return 0;
+
+    if (type > 7)
+        return 7;
+
+    return type;
 }
 
 // slot 34
@@ -1036,9 +1310,16 @@ void combat_state::enter_custom_camera(const combo_move_data* combo_move) {
     ((void (__thiscall*)(combat_state*, const combo_move_data*))retail::sub_416DF0)(this, combo_move);
 }
 
-// slot 37
+// sub_410CC0
 void combat_state::exit_custom_camera() {
-    ((void (__thiscall*)(combat_state*))retail::sub_410CC0)(this);
+    if (!in_custom_cam)
+        return;
+
+    references::g_world_ptr.read()->camera_mgr.animated_camera->flags &= ~entity_flag_externally_controlled;
+
+    retail::sub_97BC40((i32)references::game.read(), false, 0, 0.3f, 0, (i32)string_hash().source_hash_code, true); // game::enable_animated_cam
+
+    in_custom_cam = false;
 }
 
 // sub_41A060
@@ -1221,7 +1502,7 @@ void combat_state::start_strength_test(const combo_move_data*  combo_move,
                                                   delta_t);
 }
 
-// slot 44
+// sub_40EDC0
 void combat_state::spawn_sound(const combo_move_data* combo_move,
                                      entity*          player,
                                      string_hash      sound_grp,
@@ -1229,22 +1510,28 @@ void combat_state::spawn_sound(const combo_move_data* combo_move,
                                      i32              sound_func_id,
                                      void*            unk) {
 
-    ((void (__thiscall*)(combat_state*,
-                         const combo_move_data*,
-                         entity*,
-                         string_hash,
-                         const vector3d*,
-                         i32,
-                         void*))retail::sub_40EDC0)(this,
-                                                    combo_move,
-                                                    player,
-                                                    sound_grp,
-                                                    connect_point,
-                                                    sound_func_id,
-                                                    unk);
+    chuck::vm::script_instance* inst = script::get_instance(combat_script_inst);
+
+    // the script's sound function, else the entity posts the group
+    if (inst && sound_func_id != -1) {
+        chuck::vm::vm_thread* thread = script::create_thread(sound_func_id, inst, get_actor());
+
+        script::push_entity(thread, player);
+        script::push_value(thread, *connect_point);
+        script::push_value(thread, combat_anim_values->array);
+        script::run_thread(thread);
+
+        return;
+    }
+
+    if (player->has_ifc(entity_ifc_player))
+        player->player_ifc();
+
+    if (player->has_ifc(entity_ifc_sound))
+        retail::sub_65FA00((i32)player->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)sound_grp.source_hash_code, false); // sound_interface: post event
 }
 
-// slot 45
+// sub_40EBA0
 void combat_state::spawn_sound_impact(const combo_move_data* combo_move,
                                             entity*          attacker,
                                             entity*          target,
@@ -1252,19 +1539,44 @@ void combat_state::spawn_sound_impact(const combo_move_data* combo_move,
                                             i32              damage,
                                             bool             blocked) {
 
-    ((void (__thiscall*)(combat_state*,
-                         const combo_move_data*,
-                         entity*,
-                         entity*,
-                         const vector3d*,
-                         i32,
-                         bool))retail::sub_40EBA0)(this,
-                                                   combo_move,
-                                                   attacker,
-                                                   target,
-                                                   connect_point,
-                                                   damage,
-                                                   blocked);
+    if (attacker->has_ifc(entity_ifc_combo) && attacker->has_ifc(entity_ifc_sound))
+        retail::sub_6011E0((i32)attacker->my_ifc_storage->get_ifc(entity_ifc_sound),
+                           (i32)combo_count_key.source_hash_code,
+                           (f32)(attacker->combo_ifc()->combo_counter + 1)); // sound_interface: set rtpc
+
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    string_hash effect = my_als->get_optional_als_pb_hash(hit_effect_key, none, als::base_layer, nullptr);
+
+    if (!target->has_ifc(entity_ifc_sound))
+        return;
+
+    string_hash no_effect;
+    no_effect.initialize(mash::ALLOCATED, "no_effect");
+
+    if (effect == no_effect)
+        return;
+
+    string_hash event;
+
+    if (blocked)
+        event = block_key;
+    else {
+        retail::sub_6011E0((i32)target->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)damage_key.source_hash_code, (f32)damage); // sound_interface: set rtpc
+
+        // the hero tries his own impact first
+        if (retail::sub_601C50((u32*)attacker) &&
+            retail::sub_65FA00((i32)target->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)impact_hero_key.source_hash_code, false))
+
+            return;
+
+        event = impact_key;
+    }
+
+    retail::sub_65FA00((i32)target->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)event.source_hash_code, false); // sound_interface: post event
 }
 
 // slot 46
@@ -1276,9 +1588,19 @@ string_hash combat_state::get_combat_als_category() const {
     return category;
 }
 
-// slot 47
+// sub_40A8F0
 als::layer_id combat_state::get_combat_layer() {
-    return ((als::layer_id (__thiscall*)(combat_state*))retail::sub_40A8F0)(this);
+    als::layer_id layer = als::base_layer;
+
+    if (auto* basic = (ai_basic_inode*)get_core()->get_info_node(info_node_type_ai_basic))
+        layer = basic->combat_layer;
+
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    if (!my_als->my_als->has_als_layer(layer))
+        return als::base_layer;
+
+    return layer;
 }
 
 // sub_5BD2C0
@@ -1411,9 +1733,29 @@ void combat_state::enter_attack_window(const combo_move_data* combo_move, als_in
     ((void (__thiscall*)(combat_state*, const combo_move_data*, als_inode*, cpu_combat_inode*))retail::sub_418960)(this, combo_move, my_als, cmbt);
 }
 
-// slot 62
+// sub_418B40
 void combat_state::exit_attack_window(const combo_move_data* combo_move, als_inode* my_als, cpu_combat_inode* cmbt) {
-    ((void (__thiscall*)(combat_state*, const combo_move_data*, als_inode*, cpu_combat_inode*))retail::sub_418B40)(this, combo_move, my_als, cmbt);
+    attack_end_pending = false;
+
+    for (u32 sphere = 0; sphere < my_als->my_als->get_als_layer(als::base_layer)->get_num_unk_44(); ++sphere)
+        hit_sphere_prev_valid[sphere] = false;
+
+    if (combo_move) {
+        if (get_actor()->has_ifc(entity_ifc_standing)) {
+            if (combo_move->unk_14 & combo_unk_14_flag_00000001)
+                get_actor()->standing_ifc()->flags &= ~standing_interface_flag_combat_disabled;
+
+            if (combo_move->unk_14 & combo_unk_14_flag_00000002)
+                get_actor()->standing_ifc()->flags &= ~standing_interface_flag_unk_00001000;
+        }
+
+        if (get_actor()->has_ifc(entity_ifc_physical) && combo_move->unk_14 & combo_unk_14_flag_00000004)
+            get_actor()->physical_ifc()->flags &= ~physical_interface_flag_unk_00000200;
+    }
+
+    already_hit_targets->clear();
+
+    in_attack_window = false;
 }
 
 // slot 63
@@ -1421,7 +1763,7 @@ void combat_state::unk_063(als_inode* my_als, entity* target) {
     ((void (__thiscall*)(combat_state*, als_inode*, entity*))retail::sub_40F930)(this, my_als, target);
 }
 
-// slot 64
+// sub_40E9E0
 bool combat_state::check_for_dodge(      entity*                    target,
                                          i32                        chain_size,
                                    const combo_move_data*           combo_move,
@@ -1430,24 +1772,27 @@ bool combat_state::check_for_dodge(      entity*                    target,
                                          i32                        usage_type,
                                          cpu_combat_inode*          cmbt) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                i32,
-                                const combo_move_data*,
-                                weapon_interface_extender*,
-                                entity*,
-                                i32,
-                                cpu_combat_inode*))retail::sub_40E9E0)(this,
-                                                                       target,
-                                                                       chain_size,
-                                                                       combo_move,
-                                                                       weapon,
-                                                                       weapon_entity,
-                                                                       usage_type,
-                                                                       cmbt);
+    if (!(combo_move->flags_2 & combo_flag_allow_target_dodge) && !get_actor()->has_ifc(entity_ifc_player))
+        return false;
+
+    if (!target || !target->has_ifc(entity_ifc_damage) || !target->is_alive())
+        return false;
+
+    if (!target->damage_ifc()->check_for_dodge(get_actor(), chain_size, combo_move, weapon, weapon_entity, usage_type))
+        return false;
+
+    if (cmbt)
+        cmbt->flags |= cpu_combat_inode_flag_attack_dodged;
+
+    if (target->is_an_actor() && ((actor*)target)->get_ai_core())
+        ai_team::add_attack_meter(((actor*)target)->get_ai_core(), 1.0f);
+
+    attack_dodged = true;
+
+    return true;
 }
 
-// slot 65
+// sub_40EAD0
 bool combat_state::check_for_block(      entity*                    target,
                                          i32                        chain_size,
                                    const combo_move_data*           combo_move,
@@ -1457,23 +1802,21 @@ bool combat_state::check_for_block(      entity*                    target,
                                          i32                        usage_type,
                                          cpu_combat_inode*          cmbt) {
 
-    return ((bool (__thiscall*)(combat_state*,
-                                entity*,
-                                i32,
-                                const combo_move_data*,
-                                hit_react_record*,
-                                weapon_interface_extender*,
-                                entity*,
-                                i32,
-                                cpu_combat_inode*))retail::sub_40EAD0)(this,
-                                                                       target,
-                                                                       chain_size,
-                                                                       combo_move,
-                                                                       react,
-                                                                       weapon,
-                                                                       weapon_entity,
-                                                                       usage_type,
-                                                                       cmbt);
+    if (!target || !target->has_ifc(entity_ifc_damage) || !target->is_alive())
+        return false;
+
+    if (!target->damage_ifc()->check_for_block(get_actor(), chain_size, combo_move, react, weapon, weapon_entity, usage_type))
+        return false;
+
+    if (cmbt)
+        cmbt->flags |= cpu_combat_inode_flag_attack_blocked;
+
+    if (target->is_an_actor() && ((actor*)target)->get_ai_core())
+        ai_team::add_attack_meter(((actor*)target)->get_ai_core(), 1.0f);
+
+    attack_blocked = true;
+
+    return true;
 }
 
 // sub_411870

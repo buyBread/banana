@@ -8,6 +8,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class ai_core;
+
     class ai_team {
 
     public:
@@ -42,6 +44,10 @@ namespace treyarch {
         static bool   is_enemy        (e_team my_team, e_team other_team);
         static bool   is_friend       (e_team my_team, e_team other_team);
         static e_team get_enum_by_hash(string_hash the_hash);
+
+        // the core's team's meters
+        static void add_attack_meter(ai_core* core, f32 amount);
+        static void add_hurt_meter  (ai_core* core, f32 amount);
     };
 
     ASSERT_SIZEOF  (ai_team,                   0x34);

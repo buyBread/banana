@@ -1,6 +1,5 @@
 #include "retail.hh"
 #include "game/wds/ai/states/plr_combat_states.hh"
-#include "game/wds/ai/states/plr_loco_wall_sprint_states.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/info_node.hh"
@@ -12,6 +11,7 @@
 #include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/als/mocomp.hh"
 #include "game/input/game_button.hh"
 #include "game/game_meter_manager.hh"
 #include "game/math/po.hh"
@@ -172,7 +172,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
                     bool signal_exists = false;
                     bool refire        = false;
 
-                    f32 time_to_shoot = my_als->get_time_to_signal(references::web_shoot.read(), als::base_layer, &signal_exists, true, nullptr);
+                    f32 time_to_shoot = my_als->get_time_to_signal(als::references::web_shoot.read(), als::base_layer, &signal_exists, true, nullptr);
 
                     if (signal_exists && 0.0f > time_to_shoot) {
                         swing_hand = my_als->get_optional_als_pb_int(swing_hand2_key, swing_hand, als::base_layer, nullptr);

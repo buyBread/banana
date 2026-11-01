@@ -8,6 +8,17 @@ using namespace treyarch;
 
 string_hash launch_layer_state::my_type_key { 0x62F59477 }; // "launch_layer_state"
 
+// sub_4DD990
+void info_node_desc_list::add_entry(string_hash the_entry) {
+    u32 size = the_list.size();
+
+    for (u32 index = 0; index < size; ++index)
+        if (the_list[index] == the_entry)
+            return;
+
+    the_list.push_back(the_entry);
+}
+
 // inlined @ sub_4C4AE0
 // inlined @ sub_4D70B0
 void base_state::initialize(mash::allocation_scope) {

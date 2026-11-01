@@ -14,6 +14,7 @@
 
 namespace treyarch {
     class combo_move_data;
+    class weapon_interface_extender;
 
     // SM3's eDamageInterfaceFlags, as far as WoS's are read
     enum e_damage_interface_flags : u32 {
@@ -192,6 +193,21 @@ namespace treyarch {
         f32  get_damage_scale(i32 type) const;
 
         entity* get_damage_attacker() const;
+
+        bool check_for_dodge(      entity*                    attacker,
+                                   i32                        chain_size,
+                             const combo_move_data*           combo_move,
+                                   weapon_interface_extender* weapon,
+                                   entity*                    weapon_entity,
+                                   i32                        usage_type);
+
+        bool check_for_block(      entity*                    attacker,
+                                   i32                        chain_size,
+                             const combo_move_data*           combo_move,
+                                   hit_react_record*          react,
+                                   weapon_interface_extender* weapon,
+                                   entity*                    weapon_entity,
+                                   i32                        usage_type);
 
         i32 apply_damage(      entity*           attacker,
                                entity*           attacker_weapon,

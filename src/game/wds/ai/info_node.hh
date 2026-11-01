@@ -157,6 +157,13 @@ namespace treyarch {
                                     const i32           &default_value,
                                           als::layer_id  the_layer,
                                           bool*          exists) const;
+
+        string_hash get_optional_als_pb_hash(const string_hash   &parameter,
+                                             const string_hash   &default_value,
+                                                   als::layer_id  the_layer,
+                                                   bool*          exists) const;
+
+        static string_hash my_type_key;
     };
 
     inline const string_hash currently_using_swift_key      = string_hash(hash::djb2("currently_using_swift"));

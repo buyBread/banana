@@ -47,7 +47,8 @@ namespace treyarch {
         ai_simple_target*            targets[target_count];
         ai_simple_target_collection* target_collection;
         ai_simple_target*            self_target;                    // made on first use, dropped once the actor dies
-        u8                           reserved_1c4[0x3C];
+        u8                           reserved_1c4[0x38];
+        als::layer_id                combat_layer;                   // what combat_state::get_combat_layer answers when the als has it
         u32                          unk_200;                        // bit 0x40: the generic slim combat state was entered from "Wounded"
         u8                           reserved_204[0x04];
 
@@ -78,6 +79,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(ai_basic_inode, targets,           0x15C);
     ASSERT_OFFSETOF(ai_basic_inode, target_collection, 0x1BC);
     ASSERT_OFFSETOF(ai_basic_inode, self_target,       0x1C0);
+    ASSERT_OFFSETOF(ai_basic_inode, combat_layer,      0x1FC);
     ASSERT_OFFSETOF(ai_basic_inode, unk_200,           0x200);
 
     ai_basic_inode* get_ai_basic_inode(arch_base* the_entity);

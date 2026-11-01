@@ -22,6 +22,7 @@ namespace treyarch {
         standing_interface_flag_swimming                       = 0x00000200,
         standing_interface_flag_wall_sprinting                 = 0x00000400,
         standing_interface_flag_combat_disabled                = 0x00000800,
+        standing_interface_flag_unk_00001000                   = 0x00001000, // WoS; combat_state's attack window slots clear it
         standing_interface_flag_unk_00004000                   = 0x00004000  // WoS; the mocomps and the hero's standing state set it around manage_standing
     };
 
