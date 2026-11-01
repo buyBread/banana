@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include "vc8/vector.hh"
 #include "treyarch/chuck/vm/vm_simple_list.hh"
 #include "game/mutex.hh"
@@ -118,6 +120,24 @@ namespace treyarch { namespace chuck { namespace vm {
         // sub_83D760
         i32 size() const {
             return (i32)array->size();
+        }
+
+        // sub_410D40
+        bool empty() const {
+            return array->empty();
+        }
+
+        // inlined @ sub_41A060
+        void clear() {
+            array->clear();
+        }
+
+        // inlined @ sub_41F3E0
+        void push_back(const T &value) {
+            chuck_dynamic_array_element_t pushed_value;
+            std::memcpy(&pushed_value.stuff[0], &value, sizeof(T));
+
+            array->push_back(pushed_value);
         }
 
         T &operator[](u32 index) {
