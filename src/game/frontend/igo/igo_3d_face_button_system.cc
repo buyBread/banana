@@ -39,7 +39,7 @@ void igo_3d_face_button_system::remove_all_buttons() {
         position = buttons.erase(position);
 
         if (button)
-            button->destroy();
+            delete button;
     }
 }
 
@@ -52,7 +52,7 @@ void igo_3d_face_button_system::remove_button(i32 id) {
 
         if (button && button->id == id) {
             position = buttons.erase(position);
-            button->destroy();
+            delete button;
         } else
             position = position->next;
     }

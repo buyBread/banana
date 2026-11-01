@@ -7,15 +7,6 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class igo_3d_timer_widget;
-
-    struct igo_3d_timer_widget_vtable : igo_3d_widget_vtable {
-        void (__thiscall* set_time_text)(igo_3d_timer_widget* self, f32 seconds, bool hundredths, bool thousandths); // m:ss into text
-        void (__thiscall* set_color32)(igo_3d_timer_widget* self, color32 col);
-        void (__thiscall* show)(igo_3d_timer_widget* self, bool shown, bool shifted, i32 text_frozen);
-        void (__thiscall* set_shown_shifted)(igo_3d_timer_widget* self, bool shown, bool shifted);
-    };
-
     class igo_3d_timer_widget : public igo_3d_widget {
 
     public:
@@ -37,17 +28,10 @@ namespace treyarch {
         igo_3d_text* text;
         u8           reserved_178[0x08];
 
-        igo_3d_timer_widget_vtable* get_vtable() const {
-            return (igo_3d_timer_widget_vtable*)vtable;
-        }
-
-        void show(bool shown, bool shifted, i32 frozen) {
-            get_vtable()->show(this, shown, shifted, frozen);
-        }
-
-        void set_shown_shifted(bool shown, bool shifted) {
-            get_vtable()->set_shown_shifted(this, shown, shifted);
-        }
+        virtual void set_time_text(f32 seconds, bool hundredths, bool thousandths) = 0; // m:ss into text
+        virtual void set_color32(color32 col) = 0;
+        virtual void show(bool shown, bool shifted, i32 text_frozen) = 0;
+        virtual void set_shown_shifted(bool shown, bool shifted) = 0;
 
         void set_time_left(f32 left);      // clamped at 0 from below
         void inc_time_left(f32 time_inc);  // clamped at 0 from below
@@ -58,12 +42,6 @@ namespace treyarch {
 
         static void set_z(f32 z); // on the front end's timer widget
     };
-
-    ASSERT_SIZEOF  (igo_3d_timer_widget_vtable,                    58 * 4);
-    ASSERT_OFFSETOF(igo_3d_timer_widget_vtable, set_time_text,     0x0D8);
-    ASSERT_OFFSETOF(igo_3d_timer_widget_vtable, set_color32,       0x0DC);
-    ASSERT_OFFSETOF(igo_3d_timer_widget_vtable, show,              0x0E0);
-    ASSERT_OFFSETOF(igo_3d_timer_widget_vtable, set_shown_shifted, 0x0E4);
 
     ASSERT_SIZEOF  (igo_3d_timer_widget,                      0x180);
     ASSERT_OFFSETOF(igo_3d_timer_widget, time_left,           0x150);

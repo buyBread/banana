@@ -51,18 +51,6 @@ namespace treyarch {
         void set_meta_text (mash::string* text);  // finalizes the text
     };
 
-    class igo_3d_zoom_map;
-
-    struct igo_3d_zoom_map_vtable : igo_generic_input_listener_vtable {
-        void* reserved_060[3];
-        void  (__thiscall* method_06c)(igo_3d_zoom_map* self); // draws the map overlay
-        void* reserved_070;
-        u8    (__thiscall* test_074)(igo_3d_zoom_map* self);
-        void* reserved_078;
-        void  (__thiscall* set_help_text)(igo_3d_zoom_map* self, mash::string text);
-        void* reserved_080[6];
-    };
-
     class igo_3d_zoom_map : public igo_generic_input_listener {
 
     public:
@@ -100,16 +88,23 @@ namespace treyarch {
         i32                     selected_poi;              // -1 for none
         u8                      reserved_914c[0x24];
 
-        igo_3d_zoom_map_vtable* get_vtable() const {
-            return (igo_3d_zoom_map_vtable*)vtable;
-        }
-
-        void draw_map_overlay() {
-            get_vtable()->method_06c(this);
-        }
+        virtual i32  unk_024() = 0;
+        virtual void unk_025(f32 unk) = 0;
+        virtual i32  unk_026(f32 unk) = 0;
+        virtual void draw_map_overlay() = 0;
+        virtual void unk_028() = 0;
+        virtual u8   unk_029() = 0;
+        virtual i32  unk_030() = 0;
+        virtual void set_help_text(mash::string text) = 0;
+        virtual void unk_032() = 0;
+        virtual i32  unk_033() = 0;
+        virtual void unk_034() = 0;
+        virtual void unk_035() = 0;
+        virtual void unk_036() = 0;
+        virtual void unk_037(i32 unk) = 0;
 
         void set_help_text(const char* text) {
-            get_vtable()->set_help_text(this, mash::string(text));
+            set_help_text(mash::string(text));
         }
 
         bool is_open_or_zooming() const {
@@ -147,11 +142,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(zoom_map_poi, meta_title,    0x34);
     ASSERT_OFFSETOF(zoom_map_poi, meta_text,     0x40);
     ASSERT_OFFSETOF(zoom_map_poi, marker_state,  0x4C);
-
-    ASSERT_SIZEOF  (igo_3d_zoom_map_vtable,                38 * 4);
-    ASSERT_OFFSETOF(igo_3d_zoom_map_vtable, method_06c,    0x06C);
-    ASSERT_OFFSETOF(igo_3d_zoom_map_vtable, test_074,      0x074);
-    ASSERT_OFFSETOF(igo_3d_zoom_map_vtable, set_help_text, 0x07C);
 
     ASSERT_SIZEOF  (igo_3d_zoom_map,                            0x9170);
     ASSERT_OFFSETOF(igo_3d_zoom_map, is_open,                   0x000D);

@@ -67,12 +67,12 @@ void ui_frontend::set_generic_meter_value(f32 value) {
 }
 
 // sub_698E90
-void ui_frontend::set_dialog_box(dialog_box* box, u32 unk) { // deletes the one before and shows the new one
+void ui_frontend::set_dialog_box(dialog_box* box, bool freeze_hero) { // deletes the one before and shows the new one
     if (dialog)
-        dialog->destroy();
+        delete dialog;
 
     dialog = box;
-    box->show(unk);
+    box->show(freeze_hero);
 }
 
 // sub_699210

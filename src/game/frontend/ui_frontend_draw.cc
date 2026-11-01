@@ -174,7 +174,7 @@ void ui_frontend::draw() {
 
                         if (references::optional_widget_group_enabled.read()) {
                             if (optional_widgets_begin) {
-                                for (igo_3d_drawable** widget = optional_widgets_begin;
+                                for (igo_3d_widget** widget = optional_widgets_begin;
                                      widget != optional_widgets_end; ++widget) {
                                     if (*widget)
                                         (*widget)->render();
@@ -254,10 +254,10 @@ void ui_frontend::draw() {
                 region_spawn_manager::draw_text();
 
             if (conversation_menu_system)
-                ((igo_3d_widget*)((u8*)conversation_menu_system + 0x10))->render();
+                conversation_menu_system->render();
 
             if (dialog)
-                dialog->widget.render();
+                dialog->render();
 
             draw_script_widgets();
 

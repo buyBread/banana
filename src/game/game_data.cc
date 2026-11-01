@@ -145,7 +145,7 @@ void game_data::frame_advance() {
             open_scrapbook = false;
 
         if (!references::frontend.get().igo->scrapbook->is_active() && open_scrapbook) {
-            references::frontend.get().igo->scrapbook->activate(0);
+            references::frontend.get().igo->scrapbook->activate(false);
 
             retail::sub_6BC990((u32*)references::frontend.get().igo->scrapbook, 2, 0, 1);
         }

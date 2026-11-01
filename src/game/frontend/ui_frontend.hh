@@ -116,11 +116,11 @@ namespace treyarch {
         ui_frontend_vtable*                 vtable;
         u8                                  reserved_004[0xB4];
         igo_3d_widget*                      special_meter;
-        igo_3d_drawable*                    unknown_widget_0bc;
-        igo_3d_drawable*                    unknown_widget_0c0;
+        igo_3d_widget*                      unknown_widget_0bc;
+        igo_3d_widget*                      unknown_widget_0c0;
         igo_3d_ped_warning_widget*          ped_warning;
-        igo_3d_drawable*                    unknown_widget_0c8;
-        igo_3d_drawable*                    unknown_widget_0cc;
+        igo_3d_widget*                      unknown_widget_0c8;
+        igo_3d_widget*                      unknown_widget_0cc;
         igo_3d_buddy_summon_widget*         buddy_summon;
         igo_3d_widget*                      combo_meter;
         igo_3d_widget*                      hero_health;
@@ -147,12 +147,12 @@ namespace treyarch {
         igo_3d_zoom_map*                    zoom_map;
         igo_3d_loading_screen*              loading_screen;
         igo_3d_widget*                      saving_or_loading_screen;
-        igo_3d_drawable*                    unknown_widget_138;
-        igo_3d_drawable*                    unknown_widget_13c;
-        igo_3d_drawable*                    unknown_widget_140;
+        igo_3d_widget*                      unknown_widget_138;
+        igo_3d_widget*                      unknown_widget_13c;
+        igo_3d_widget*                      unknown_widget_140;
         igo_3d_message_box_widget*          unified_announcement;
         igo_3d_message_box_widget*          unified_announcement_alias;
-        igo_3d_drawable*                    unknown_widget_14c;
+        igo_3d_message_box_widget*          unknown_widget_14c;
         igo_3d_objective_text_widget*       objective_text;
         igo_3d_hint_text_widget*            hint_text;
         igo_3d_letterbox*                   letterbox_widget;
@@ -162,21 +162,21 @@ namespace treyarch {
         u8                                  conversation_state_168;
         u8                                  reserved_169[0x03];
         entity_tracker_manager*             entity_tracker_mgr;
-        igo_3d_drawable*                    unknown_widget_170;
+        igo_3d_widget*                      unknown_widget_170;
         void*                               unknown_widget_174;
         u8                                  reserved_178[0x04];
-        igo_3d_drawable*                    startup_widget_17c;
-        igo_3d_drawable*                    startup_widget_180;
-        igo_3d_drawable*                    startup_widget_184;
+        igo_3d_widget*                      startup_widget_17c;
+        igo_3d_widget*                      startup_widget_180;
+        igo_3d_widget*                      startup_widget_184;
         igo_3d_widget*                      unknown_widget_188;
         igo_3d_camera_widget*               camera_widget;
         u8                                  reserved_190[0x04];
-        igo_3d_drawable**                   optional_widgets_begin;
-        igo_3d_drawable**                   optional_widgets_end;
-        igo_3d_drawable**                   optional_widgets_capacity;
-        igo_3d_drawable*                    optional_widget;
+        igo_3d_widget**                     optional_widgets_begin;
+        igo_3d_widget**                     optional_widgets_end;
+        igo_3d_widget**                     optional_widgets_capacity;
+        igo_3d_widget*                      optional_widget;
         igo_widget_group*                   widget_group_1a4;
-        igo_3d_drawable*                    unknown_widget_1a8;
+        igo_3d_widget*                      unknown_widget_1a8;
         ally_health_widget_t*               ally_health_widget;     // only ever null on pc
         igo_3d_enemy_health_manager*        enemy_health_manager;
         igo_3d_generic_meter_widget*        mission_specific_meter;
@@ -215,7 +215,7 @@ namespace treyarch {
         void draw_hint_text_widget();
         void draw_interface_disabled_script_widgets(bool interface_disabled);
 
-        void set_dialog_box(dialog_box* box, u32 unk);
+        void set_dialog_box(dialog_box* box, bool freeze_hero);
 
         void set_generic_meter_visible(bool visible);
         void set_generic_meter_value  (f32 value);

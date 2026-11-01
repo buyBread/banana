@@ -578,7 +578,7 @@ bool slf__do_dialog_wait__t::operator()(chuck::vm::vm_stack &stack) {
         void* allocation = mm::allocate(sizeof(dialog_box));
         auto* box        = allocation ? (dialog_box*)retail::sub_70BE00((u32*)allocation) : nullptr;
 
-        references::frontend.get().igo->set_dialog_box(box, 1);
+        references::frontend.get().igo->set_dialog_box(box, true);
 
         return false;
     }
@@ -635,14 +635,13 @@ bool slf__city_life_complete_message__num__num__num__t::operator()(chuck::vm::vm
 
         igo_3d_message_box_widget* announcement = references::frontend.get().igo->unified_announcement;
 
-        announcement->get_vtable()->show_message(announcement,
-                                                 text + bonus,
-                                                 10.0f,
-                                                 0,
-                                                 0,
-                                                 0.0f,
-                                                 0.0f,
-                                                 references::city_life_message_color.read());
+        announcement->show_message(text + bonus,
+                                   10.0f,
+                                   0,
+                                   0,
+                                   0.0f,
+                                   0.0f,
+                                   references::city_life_message_color.read());
     }
 
     entity* hero = references::g_world_ptr.read()->hero_ptr;

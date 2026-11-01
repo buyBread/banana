@@ -24,13 +24,6 @@ namespace treyarch {
         inline util::memory_reference<std::array<string_hash, 12>> button_widget_keys { 0x0102CF64 };
     } // references
 
-    class igo_3d_face_button_system;
-
-    struct igo_3d_face_button_system_vtable : igo_generic_input_listener_vtable {
-        void* reserved_060[3];
-        void  (__thiscall* draw_buttons)(igo_3d_face_button_system* self);
-    };
-
     class igo_3d_face_button_system : public igo_generic_input_listener {
 
     public:
@@ -42,13 +35,10 @@ namespace treyarch {
         volatile i32                     last_button_id;
         u8                               reserved_34[0x04];
 
-        igo_3d_face_button_system_vtable* get_vtable() const {
-            return (igo_3d_face_button_system_vtable*)vtable;
-        }
-
-        void draw_buttons() {
-            get_vtable()->draw_buttons(this);
-        }
+        virtual void unk_024() = 0;
+        virtual i32  unk_025(i32 unk_0, i32 unk_1) = 0;
+        virtual void unk_026() = 0;
+        virtual void draw_buttons() = 0;
 
         // inlined @ sub_6B8820
         // inlined @ sub_6B8860
@@ -85,9 +75,6 @@ namespace treyarch {
         string_hash   get_button_widget_key(u32 kind);                                  // the "" hash past the table
         mash::string* get_button_anim_name (mash::string* result, u32 kind, u32 index); // builds into result; "" past the table
     };
-
-    ASSERT_SIZEOF  (igo_3d_face_button_system_vtable,               28 * 4);
-    ASSERT_OFFSETOF(igo_3d_face_button_system_vtable, draw_buttons, 0x06C);
 
     ASSERT_SIZEOF  (igo_3d_face_button_system,                 0x38);
     ASSERT_OFFSETOF(igo_3d_face_button_system, default_button, 0x0C);

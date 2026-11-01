@@ -5,12 +5,12 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    // class unknown; UIFrontEnd +0x1A4 starts null and is drawn as four optional drawables
+    // class unknown; UIFrontEnd +0x1A4 starts null and is drawn as four optional widgets
     class igo_widget_group {
         
     public:
-        u32              unk_00;
-        igo_3d_drawable* widgets[4];
+        u32            unk_00;
+        igo_3d_widget* widgets[4];
 
         void draw();
     };

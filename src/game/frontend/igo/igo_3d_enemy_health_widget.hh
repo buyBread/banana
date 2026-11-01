@@ -1,48 +1,29 @@
 #pragma once
 
-#include "game/frontend/igo/igo_3d_widget.hh"
+#include "game/frontend/igo/igo_3d_slideable_widget.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class igo_3d_enemy_health_widget;
+    class igo_3d_icon_health_widget : public igo_3d_slideable_widget {
 
-    struct igo_3d_enemy_health_widget_vtable : igo_3d_widget_vtable {
-        void* reserved_0d8;
-        void  (__thiscall* set_unk_1c0)(igo_3d_enemy_health_widget* self, bool value);
-        void  (__thiscall* slide_in)(igo_3d_enemy_health_widget* self);  // a timed move to the in position, then shown
-        void  (__thiscall* slide_out)(igo_3d_enemy_health_widget* self); // a timed move to the out position
-        void* reserved_0e8[2];
+    public:
+        virtual f32 unk_054(f32 unk_0, f32 unk_1, f32 unk_2) = 0;
     };
 
-    class igo_3d_enemy_health_widget : public igo_3d_widget {
+    class igo_3d_enemy_health_widget : public igo_3d_icon_health_widget {
 
     public:
         u8 reserved_150[0x70];
         u8 unk_1c0;
         u8 reserved_1c1[0x1F];
 
-        igo_3d_enemy_health_widget_vtable* get_vtable() const {
-            return (igo_3d_enemy_health_widget_vtable*)vtable;
-        }
-
-        void set_unk_1c0(bool value) {
-            get_vtable()->set_unk_1c0(this, value);
-        }
-
-        void slide_in() {
-            get_vtable()->slide_in(this);
-        }
-
-        void slide_out() {
-            get_vtable()->slide_out(this);
-        }
+        virtual void set_unk_1c0(bool value) = 0;
+        virtual void slide_in() = 0;  // a timed move to the in position, then shown
+        virtual void slide_out() = 0; // a timed move to the out position
+        virtual i32  unk_058() = 0;
+        virtual i32  unk_059(i32 unk_0, i32 unk_1, f32* unk_2, i32 unk_3, i32 unk_4, void* unk_5, bool unk_6) = 0;
     };
-
-    ASSERT_SIZEOF  (igo_3d_enemy_health_widget_vtable,              60 * 4);
-    ASSERT_OFFSETOF(igo_3d_enemy_health_widget_vtable, set_unk_1c0, 0x0DC);
-    ASSERT_OFFSETOF(igo_3d_enemy_health_widget_vtable, slide_in,    0x0E0);
-    ASSERT_OFFSETOF(igo_3d_enemy_health_widget_vtable, slide_out,   0x0E4);
 
     ASSERT_SIZEOF  (igo_3d_enemy_health_widget,          0x1E0);
     ASSERT_OFFSETOF(igo_3d_enemy_health_widget, unk_1c0, 0x1C0);

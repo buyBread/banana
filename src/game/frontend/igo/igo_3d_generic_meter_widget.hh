@@ -6,13 +6,6 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class igo_3d_generic_meter_widget;
-
-    struct igo_3d_generic_meter_widget_vtable : igo_3d_widget_vtable {
-        void  (__thiscall* set_value)(igo_3d_generic_meter_widget* self, f32 value);
-        void* reserved_0dc[2];
-    };
-
     class igo_3d_generic_meter_widget : public igo_3d_widget {
 
     public:
@@ -27,17 +20,10 @@ namespace treyarch {
         igo_3d_text* unk_168;
         u8           reserved_16c[0x14];
 
-        igo_3d_generic_meter_widget_vtable* get_vtable() const {
-            return (igo_3d_generic_meter_widget_vtable*)vtable;
-        }
-
-        void set_value(f32 new_value) {
-            get_vtable()->set_value(this, new_value);
-        }
+        virtual void set_value(f32 value) = 0;
+        virtual f32  unk_055(f32 unk_0, f32 unk_1, f32 unk_2) = 0;
+        virtual f32  unk_056(i32 unk) = 0;
     };
-
-    ASSERT_SIZEOF  (igo_3d_generic_meter_widget_vtable,            57 * 4);
-    ASSERT_OFFSETOF(igo_3d_generic_meter_widget_vtable, set_value, 0x0D8);
 
     ASSERT_SIZEOF  (igo_3d_generic_meter_widget,          0x180);
     ASSERT_OFFSETOF(igo_3d_generic_meter_widget, value,   0x158);

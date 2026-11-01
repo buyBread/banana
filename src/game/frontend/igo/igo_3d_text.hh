@@ -8,7 +8,8 @@ namespace treyarch {
     class igo_3d_text;
 
     struct igo_3d_text_vtable {
-        void*         reserved_000[2];
+        igo_3d_text*  (__thiscall* destroy)(igo_3d_text* self, u32 flags);
+        void*         reserved_004;
         void          (__thiscall* set_shown)(igo_3d_text* self, bool shown);
         void*         reserved_00c[4];
         void          (__thiscall* set_dimensions)(igo_3d_text* self, f32 w, f32 h);
@@ -50,6 +51,10 @@ namespace treyarch {
         u8                  reserved_004[0x50];
         bool                typewriter;         // reveals a character every 1/45 s
         u8                  reserved_055[0x23];
+
+        void destroy() {
+            vtable->destroy(this, 1);
+        }
 
         void set_shown(bool shown) {
             vtable->set_shown(this, shown);

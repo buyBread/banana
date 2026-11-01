@@ -28,13 +28,13 @@ void mission_manager::handle_finished_dialog_selection() {
     i32 selection = references::frontend.get().igo->pauseless_dialog->get_selected_button();
 
     if ((!success_screen_type && selection == 2) || success_screen_type == 1) {
-        references::frontend.get().igo->scrapbook->activate(0);
+        references::frontend.get().igo->scrapbook->activate(false);
 
         retail::sub_68FF60((u32*)references::frontend.get().igo->scrapbook);
         retail::sub_6BC990((u32*)references::frontend.get().igo->scrapbook, 1, 1, 0); // set page
         retail::sub_711FB0((u32*)references::frontend.get().igo->scrapbook, 0);
     } else if (success_screen_type == 2) {
-        references::frontend.get().igo->scrapbook->activate(0);
+        references::frontend.get().igo->scrapbook->activate(false);
 
         retail::sub_68FF60((u32*)references::frontend.get().igo->scrapbook);
         retail::sub_6BC990((u32*)references::frontend.get().igo->scrapbook, 1, 1, 0); // set page

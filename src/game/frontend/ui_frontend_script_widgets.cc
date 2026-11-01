@@ -57,7 +57,7 @@ void ui_frontend::destroy_script_widget(igo_3d_script_widget* widget) {
         u32 listed_id = listed->get_instance_id();
 
         if (widget->get_instance_id() == listed_id)
-            widget->destroy();
+            delete widget;
 
         return;
     }
@@ -84,7 +84,7 @@ bool ui_frontend::destroy_mission_text_widget(igo_3d_script_widget* widget) {
         if (widget->get_instance_id() != listed_id)
             return false;
 
-        widget->destroy();
+        delete widget;
 
         return true;
     }
@@ -110,7 +110,7 @@ bool ui_frontend::destroy_hint_text_widget(igo_3d_script_widget* widget) {
         if (widget->get_instance_id() != listed_id)
             return false;
 
-        widget->destroy();
+        delete widget;
 
         return true;
     }
@@ -129,7 +129,7 @@ void ui_frontend::destroy_all_script_widgets() {
 
         if (widget) {
             widget->reset_anim_speeds();
-            widget->destroy();
+            delete widget;
         }
     }
 
@@ -148,7 +148,7 @@ void ui_frontend::destroy_all_mission_text_widgets() {
 
         if (widget) {
             widget->reset_anim_speeds();
-            widget->destroy();
+            delete widget;
         }
     }
 }
@@ -164,7 +164,7 @@ void ui_frontend::destroy_all_hint_text_widgets() {
 
         if (widget) {
             widget->reset_anim_speeds();
-            widget->destroy();
+            delete widget;
         }
     }
 }

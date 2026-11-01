@@ -18,7 +18,7 @@ void igo_3d_boss_meter_system::remove_all_meters() {
         position = meters.erase(position);
 
         if (meter)
-            meter->destroy();
+            delete meter;
     }
 }
 
@@ -29,7 +29,7 @@ void igo_3d_boss_meter_system::remove_meter(i32 id) {
 
         if (meter && meter->id == id) {
             position = meters.erase(position);
-            meter->destroy();
+            delete meter;
         } else
             position = position->next;
     }

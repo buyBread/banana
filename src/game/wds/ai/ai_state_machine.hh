@@ -77,7 +77,7 @@ namespace treyarch {
         // the vtable create_subclass gives a state of source class T in place of its retail one
         template<typename T>
         static void* source_vtable() {
-            return (void*)mash::mash_virtual_base::generate_vtable<T>();
+            return (void*)mash::generate_vtable<T>();
         }
 
     private:

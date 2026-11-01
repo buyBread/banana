@@ -13,6 +13,52 @@
 
 using namespace treyarch;
 
+// sub_6FC080
+igo_3d_loading_screen::~igo_3d_loading_screen() {
+    release_entity();
+
+    if (message_text) {
+        message_text->destroy();
+        message_text = nullptr;
+    }
+}
+
+// slot 1
+void igo_3d_loading_screen::init() {
+    ((void (__thiscall*)(igo_3d_loading_screen*))retail::sub_691FC0)(this);
+}
+
+// slot 2
+void igo_3d_loading_screen::update(f32 time_inc) {
+    ((void (__thiscall*)(igo_3d_loading_screen*, f32))retail::sub_6C5D90)(this, time_inc);
+}
+
+// slot 3
+void igo_3d_loading_screen::render() {
+    ((void (__thiscall*)(igo_3d_loading_screen*))retail::sub_691FE0)(this);
+}
+
+// slot 5
+void igo_3d_loading_screen::set_shown(bool shown) {
+    ((void (__thiscall*)(igo_3d_loading_screen*, bool))retail::sub_6A9EB0)(this, shown);
+}
+
+// slot 42
+void igo_3d_loading_screen::spawn_entity() {
+    ((void (__thiscall*)(igo_3d_loading_screen*))retail::sub_6EDC40)(this);
+}
+
+// slot 44
+i32 igo_3d_loading_screen::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
+    return ((i32 (__thiscall*)(igo_3d_loading_screen*, i32, i32, void*, i32, i32, i32))retail::sub_6A9F80)(this,
+                                                                                                           unk_0,
+                                                                                                           unk_1,
+                                                                                                           unk_2,
+                                                                                                           unk_3,
+                                                                                                           unk_4,
+                                                                                                           unk_5);
+}
+
 // sub_707E90
 void igo_3d_loading_screen::blackscreen_on(f32 time, bool unk, bool hold, bool silent, bool no_freeze, f32 timeout) {
     if (references::frontend.get().igo->controller_disconnect_dialog->is_shown())

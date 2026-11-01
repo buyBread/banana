@@ -14,7 +14,7 @@ using namespace treyarch;
 void stealth_widget_t::set_active(bool active) {
     // slot 54
     if (!active && meter)
-        ((void (__thiscall*)(igo_3d_widget*, i32))((void**)meter->vtable)[54])(meter, 1);
+        ((void (__thiscall*)(igo_3d_widget*, i32))(*(void***)meter)[54])(meter, 1);
 
     if (activated == active)
         return;
@@ -499,14 +499,14 @@ void entity_tracker::set_stealth_widget_color(vector3d color) { // the channels 
 
     // slot 62
     if (igo_3d_widget* meter = stealth_widget->meter)
-        ((void (__thiscall*)(igo_3d_widget*, color32))((void**)meter->vtable)[62])(meter, stealth_widget->color);
+        ((void (__thiscall*)(igo_3d_widget*, color32))(*(void***)meter)[62])(meter, stealth_widget->color);
 }
 
 // sub_692640
 void entity_tracker::set_stealth_timer_values(f32 unk_0, f32 unk_1) {
     // slot 55
     if (igo_3d_widget* meter = stealth_widget->meter)
-        ((void (__thiscall*)(igo_3d_widget*, f32, f32))((void**)meter->vtable)[55])(meter, unk_0, unk_1);
+        ((void (__thiscall*)(igo_3d_widget*, f32, f32))(*(void***)meter)[55])(meter, unk_0, unk_1);
 }
 
 // sub_6D2710

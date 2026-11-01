@@ -74,7 +74,7 @@ void ui_frontend::draw_script_widgets() {
                 widget->set_shown(false);
         }
 
-        if (widget && widget->is_shown() && !widget->unk_0f0())
+        if (widget && widget->is_shown() && !widget->unk_060())
             widget->render();
     }
 
@@ -95,7 +95,7 @@ void ui_frontend::draw_mission_text_widget() {
     for (auto* position = mission_text_widgets.begin(); position != mission_text_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_shown() && !widget->unk_0f0()) {
+        if (widget && widget->is_shown() && !widget->unk_060()) {
             widget->render();
 
             return;
@@ -116,7 +116,7 @@ void ui_frontend::draw_hint_text_widget() {
     for (auto* position = hint_text_widgets.begin(); position != hint_text_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_shown() && !widget->unk_0f0()) {
+        if (widget && widget->is_shown() && !widget->unk_060()) {
             widget->render();
 
             return;
@@ -134,7 +134,7 @@ void ui_frontend::draw_interface_disabled_script_widgets(bool interface_disabled
     for (auto* position = script_widgets.begin(); position != script_widgets.end(); position = position->next) {
         igo_3d_script_widget* widget = position->value;
 
-        if (widget && widget->is_shown() && !widget->unk_0f0() && widget->persistent)
+        if (widget && widget->is_shown() && !widget->unk_060() && widget->persistent)
             widget->render();
     }
 }

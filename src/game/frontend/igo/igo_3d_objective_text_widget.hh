@@ -9,15 +9,6 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class igo_3d_objective_text_widget;
-
-    // the string slot owns its by-value string
-    struct igo_3d_objective_text_widget_vtable : igo_3d_widget_vtable {
-        void  (__thiscall* suspend)(igo_3d_objective_text_widget* self, bool suspended);
-        void  (__thiscall* show_message)(igo_3d_objective_text_widget* self, mash::string text, f32 duration);
-        void* reserved_0e0[3];
-    };
-
     class igo_3d_objective_text_widget : public igo_3d_widget {
 
     public:
@@ -32,30 +23,25 @@ namespace treyarch {
         bool                   suspended;
         u8                     reserved_165[0x1B];
 
-        igo_3d_objective_text_widget_vtable* get_vtable() const {
-            return (igo_3d_objective_text_widget_vtable*)vtable;
-        }
-
-        void suspend(bool on) {
-            get_vtable()->suspend(this, on);
-        }
+        virtual void suspend(bool on) = 0;
+        virtual void show_message(mash::string text, f32 duration) = 0; // owns the string
+        virtual i32  unk_056(i32 unk_0, f32 unk_1) = 0;
+        virtual void unk_057(i32 unk) = 0;
+        virtual bool unk_058() = 0;
 
         void show_message(const char* message, f32 duration) {
-            get_vtable()->show_message(this, mash::string(message), duration);
-        }
-
-        void show_message(const mash::string &message, f32 duration) {
-            get_vtable()->show_message(this, mash::string(message), duration);
+            show_message(mash::string(message), duration);
         }
 
         void clear(bool fade); // fading lets the shown message run out, either way the queue empties
     };
 
-    class igo_3d_hint_text_widget : public igo_3d_objective_text_widget {};
+    class igo_3d_hint_text_widget : public igo_3d_objective_text_widget {
 
-    ASSERT_SIZEOF  (igo_3d_objective_text_widget_vtable,               59 * 4);
-    ASSERT_OFFSETOF(igo_3d_objective_text_widget_vtable, suspend,      0x0D8);
-    ASSERT_OFFSETOF(igo_3d_objective_text_widget_vtable, show_message, 0x0DC);
+    public:
+        virtual i32 unk_059(bool unk_0, i32 unk_1, i32 unk_2, i32 unk_3, f32 unk_4) = 0;
+        virtual i32 unk_060(i32 unk_0, i32 unk_1, f32 unk_2) = 0;
+    };
 
     ASSERT_SIZEOF  (igo_3d_objective_text_widget::queue_entry, 0x10);
 

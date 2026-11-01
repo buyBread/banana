@@ -4,7 +4,7 @@ using namespace treyarch;
 
 // sub_68CAA0
 void igo_widget_group::draw() {
-    for (igo_3d_drawable* widget : widgets) {
+    for (igo_3d_widget* widget : widgets) {
         if (widget)
             widget->render();
     }

@@ -7,13 +7,13 @@
 #include "game/math/algebra.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class igo_3d_drawable;
     class igo_3d_text;
-    class igo_3d_widget;
 
     enum igo_widget_suppression_condition : u32 {
         suppress_when_paused             = 0x01,
@@ -24,65 +24,8 @@ namespace treyarch {
         suppress_when_pauseless_dialog   = 0x20,
     };
 
-    using igo_3d_drawable_test   = u8   (__thiscall*)(igo_3d_drawable* self);
-    using igo_3d_drawable_method = void (__thiscall*)(igo_3d_drawable* self);
+    class alignas(16) igo_3d_widget {
 
-    // the slots source calls on igo objects without a typed class; widgets have igo_3d_widget_vtable
-    struct igo_3d_drawable_vtable {
-        void*                  reserved_000[3];
-        igo_3d_drawable_method render;
-        void*                  reserved_010;
-        igo_3d_drawable_method method_014;
-        void*                  reserved_018[20];
-        igo_3d_drawable_method method_068;
-        igo_3d_drawable_method method_06c;
-        void*                  reserved_070;
-        igo_3d_drawable_test   test_074;
-    };
-
-    struct igo_3d_widget_vtable {
-        igo_3d_widget* (__thiscall* destroy)(igo_3d_widget* self, u32 flags);
-        void           (__thiscall* init)(igo_3d_widget* self);
-        void           (__thiscall* update)(igo_3d_widget* self, f32 time_inc);
-        void           (__thiscall* render)(igo_3d_widget* self);
-        u8             (__thiscall* is_shown)(igo_3d_widget* self);
-        void           (__thiscall* set_shown)(igo_3d_widget* self, bool shown);
-        void           (__thiscall* set_position)(igo_3d_widget* self, f32 x, f32 y, f32 z);
-        void           (__thiscall* set_center_pos)(igo_3d_widget* self, f32 x, f32 y);
-        void           (__thiscall* get_position)(igo_3d_widget* self, f32* x, f32* y);
-        void           (__thiscall* set_position_z)(igo_3d_widget* self, f32 z);
-        void           (__thiscall* set_rotation_angle)(igo_3d_widget* self, f32 angle);
-        void           (__thiscall* set_tilt_angle)(igo_3d_widget* self, f32 angle);
-        void           (__thiscall* set_spin_angle)(igo_3d_widget* self, f32 angle);
-        void           (__thiscall* set_scale)(igo_3d_widget* self, f32 scale);
-        void           (__thiscall* set_scale_offset)(igo_3d_widget* self, f32 x, f32 y, f32 z);
-        void           (__thiscall* set_alpha)(igo_3d_widget* self, f32 alpha);
-        void           (__thiscall* set_widescreen_alignment)(igo_3d_widget* self, igo_3d_widget_parameters::e_wide_align_flags alignment);
-        void           (__thiscall* set_suppression_mask)(igo_3d_widget* self, u32 mask);
-        void           (__thiscall* set_color)(igo_3d_widget* self, f32 r, f32 g, f32 b); // each clamped into [0, 1]
-        void           (__thiscall* set_uv_offset)(igo_3d_widget* self, f32 u, f32 v);
-        void*          reserved_050[2];
-        f32            (__thiscall* get_position_x)(igo_3d_widget* self);
-        f32            (__thiscall* get_position_y)(igo_3d_widget* self);
-        void*          reserved_060[8];
-        u32            (__thiscall* suppression_mask)(igo_3d_widget* self);
-        void*          reserved_084[7];
-        void           (__thiscall* start_timed_move)(igo_3d_widget* self, f32 duration, f32 from_x, f32 from_y, f32 from_z, f32 to_x, f32 to_y, f32 to_z, i32 curve);
-        void           (__thiscall* render_entity)(igo_3d_widget* self); // spawns the entity first
-        void           (__thiscall* spawn_entity)(igo_3d_widget* self);
-        void*          reserved_0ac[11];
-    };
-
-    class igo_3d_drawable {
-    public:
-        igo_3d_drawable_vtable* vtable;
-
-        void render() {
-            vtable->render(this);
-        }
-    };
-
-    class igo_3d_widget : public igo_3d_drawable {
     public:
         u8                            reserved_004[0x0C];
         igo_3d_widget_parameters*     parameters;
@@ -95,7 +38,7 @@ namespace treyarch {
         vector2d                      uv_offset;
         u8                            reserved_044[0x08];
         arch_base_vhandle             entity_vh;
-        u8                            unk_050;             // latched by spawning the entity
+        bool                          entity_spawned;      // spawn_entity latches it, release_entity clears it
         u8                            reserved_051[0x0F];
         matrix4x4                     trans_matrix;
         vc8::map<i32, igo_3d_text*>   member_texts;        // by conglomerate member index
@@ -126,85 +69,77 @@ namespace treyarch {
         i32                           move_curve;
         u8                            reserved_148[0x08];
 
-        igo_3d_widget_vtable* get_vtable() const {
-            return (igo_3d_widget_vtable*)vtable;
+        explicit igo_3d_widget(mash::generating_vtable_version so_do_nothing) : member_texts(so_do_nothing),
+                                                                                member_widgets(so_do_nothing),
+                                                                                unk_0b8(so_do_nothing),
+                                                                                unk_0c4(so_do_nothing) {}
+
+        virtual ~igo_3d_widget();
+
+        // inlined into the deleting destructors
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
         }
 
-        void destroy() {
-            get_vtable()->destroy(this, 1);
-        }
+        virtual void init();
+        virtual void update(f32 time_inc);
+        virtual void render();
+        virtual u8   is_shown();
+        virtual void set_shown(bool shown);
 
-        u8 is_shown() {
-            return get_vtable()->is_shown(this);
-        }
+        virtual void set_position(f32 x, f32 y, f32 z);
+        virtual void set_center_pos(f32 x, f32 y);
+        virtual void get_position(f32* x, f32* y);
+        virtual void set_position_z(f32 z);
+        virtual void set_rotation_angle(f32 angle);
+        virtual void set_tilt_angle(f32 angle);
+        virtual void set_spin_angle(f32 angle);
+        virtual void set_scale(f32 scale);
+        virtual void set_scale_offset(f32 x, f32 y, f32 z);
+        virtual void set_alpha(f32 value);
+        virtual void set_widescreen_alignment(igo_3d_widget_parameters::e_wide_align_flags alignment);
+        virtual void set_suppression_mask(u32 mask);
+        virtual void set_color(f32 r, f32 g, f32 b);
+        virtual void set_uv_offset(f32 u, f32 v);
+        virtual void unk_020(u32 value);
+        virtual void unk_021(u32 value);
 
-        void set_shown(bool shown) {
-            get_vtable()->set_shown(this, shown);
-        }
+        virtual f32  get_position_x();
+        virtual f32  get_position_y();
+        virtual f32  get_position_z();
+        virtual f32  get_rotation_angle();
+        virtual f32  get_tilt_angle();
+        virtual f32  get_spin_angle();
+        virtual f32  get_scale();
+        virtual f32  get_alpha();
+        virtual bool unk_030();
 
-        void set_position(f32 x, f32 y, f32 z) {
-            get_vtable()->set_position(this, x, y, z);
-        }
+        virtual igo_3d_widget_parameters::e_wide_align_flags get_widescreen_alignment();
 
-        void set_center_pos(f32 x, f32 y) {
-            get_vtable()->set_center_pos(this, x, y);
-        }
+        virtual u32  suppression_mask();
+        virtual i32  unk_033();
+        virtual i32  unk_034();
+        virtual void set_scale_factor(f32 factor);
+        virtual f32  get_scale_factor();
+        virtual void set_alpha_factor(f32 factor);
+        virtual f32  get_alpha_factor();
 
-        void get_position(f32* x, f32* y) {
-            get_vtable()->get_position(this, x, y);
-        }
+        virtual void play_sound(string_hash sound);
+        virtual void start_timed_move(f32 duration, f32 from_x, f32 from_y, f32 from_z, f32 to_x, f32 to_y, f32 to_z, i32 curve);
+        virtual void render_entity();
+        virtual void spawn_entity();
 
-        void set_position_z(f32 z) {
-            get_vtable()->set_position_z(this, z);
-        }
-
-        void set_rotation_angle(f32 angle) {
-            get_vtable()->set_rotation_angle(this, angle);
-        }
-
-        void set_tilt_angle(f32 angle) {
-            get_vtable()->set_tilt_angle(this, angle);
-        }
-
-        void set_spin_angle(f32 angle) {
-            get_vtable()->set_spin_angle(this, angle);
-        }
-
-        void set_scale(f32 scale) {
-            get_vtable()->set_scale(this, scale);
-        }
-
-        void set_scale_offset(f32 x, f32 y, f32 z) {
-            get_vtable()->set_scale_offset(this, x, y, z);
-        }
-
-        void set_alpha(f32 value) {
-            get_vtable()->set_alpha(this, value);
-        }
-
-        void set_widescreen_alignment(igo_3d_widget_parameters::e_wide_align_flags alignment) {
-            get_vtable()->set_widescreen_alignment(this, alignment);
-        }
-
-        void set_color(f32 r, f32 g, f32 b) {
-            get_vtable()->set_color(this, r, g, b);
-        }
-
-        void set_uv_offset(f32 u, f32 v) {
-            get_vtable()->set_uv_offset(this, u, v);
-        }
-
-        f32 get_position_x() {
-            return get_vtable()->get_position_x(this);
-        }
-
-        f32 get_position_y() {
-            return get_vtable()->get_position_y(this);
-        }
-
-        u32 suppression_mask() {
-            return get_vtable()->suppression_mask(this);
-        }
+        virtual i32   unk_043(i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3);
+        virtual i32   unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
+        virtual i32   unk_045(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3);
+        virtual i32   unk_046(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   unk_047(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   unk_048(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
+        virtual void  unk_049(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   unk_050();
+        virtual void* unk_051();
+        virtual void  unk_052();
+        virtual void  unk_053();
 
         void fade_in (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay);
         void fade_out(f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
@@ -213,29 +148,11 @@ namespace treyarch {
         void reset_anim_speeds();
         bool is_anim_playing(); // layer 0's newest anim hasn't reached its end
         void reset_entity_po(); // puts the entity back at trans_matrix
+        void release_entity();  // destroys the spawned entity
 
         i32 get_mesh_index(const string_hash &nodename); // invalid_conglom_member without a conglomerate
         i32 find_child    (mash::string*      name);     // always -2; destroys the name
     };
-
-    ASSERT_SIZEOF(igo_3d_drawable, 0x004);
-
-    ASSERT_SIZEOF  (igo_3d_drawable_vtable,                     0x078);
-    ASSERT_OFFSETOF(igo_3d_drawable_vtable, render,             0x00C);
-    ASSERT_OFFSETOF(igo_3d_drawable_vtable, method_014,         0x014);
-    ASSERT_OFFSETOF(igo_3d_drawable_vtable, method_068,         0x068);
-    ASSERT_OFFSETOF(igo_3d_drawable_vtable, method_06c,         0x06C);
-    ASSERT_OFFSETOF(igo_3d_drawable_vtable, test_074,           0x074);
-
-    ASSERT_SIZEOF  (igo_3d_widget_vtable,                       54 * 4);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, render,               0x00C);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, set_shown,            0x014);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, set_uv_offset,        0x04C);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, get_position_x,       0x058);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, get_position_y,       0x05C);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, suppression_mask,     0x080);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, start_timed_move,     0x0A0);
-    ASSERT_OFFSETOF(igo_3d_widget_vtable, spawn_entity,         0x0A8);
 
     ASSERT_SIZEOF  (igo_3d_widget,                              0x150);
     ASSERT_OFFSETOF(igo_3d_widget, parameters,                  0x010);
@@ -244,7 +161,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget, color,                       0x030);
     ASSERT_OFFSETOF(igo_3d_widget, uv_offset,                   0x03C);
     ASSERT_OFFSETOF(igo_3d_widget, entity_vh,                   0x04C);
-    ASSERT_OFFSETOF(igo_3d_widget, unk_050,                     0x050);
+    ASSERT_OFFSETOF(igo_3d_widget, entity_spawned,              0x050);
     ASSERT_OFFSETOF(igo_3d_widget, trans_matrix,                0x060);
     ASSERT_OFFSETOF(igo_3d_widget, member_texts,                0x0A0);
     ASSERT_OFFSETOF(igo_3d_widget, member_widgets,              0x0AC);
