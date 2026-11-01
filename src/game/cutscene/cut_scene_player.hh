@@ -121,6 +121,7 @@ namespace treyarch {
         f32 get_current_segment_start_time() const;
         f32 get_current_segment_end_time() const;
         f32 get_time() const;
+        f32 get_time_remaining() const;
 
         void* operator new(std::size_t size) noexcept {
             return mm::allocate(size);

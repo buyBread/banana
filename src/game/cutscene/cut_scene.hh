@@ -176,7 +176,8 @@ namespace treyarch {
         cut_scene_fade              start_fade;
         cut_scene_fade              end_fade;
         entity_class_entry          hero_entry;        // its events are raised on the hero
-        u8                          unk_110[0x02];
+        bool                        waits_for_press;   // in a toa, a miss pauses the scene anim near its end instead of failing
+        u8                          unk_111;
         bool                        use_focus;         // use focus over the camera's when focus_from_camera is clear
         u8                          unk_113;
         f32                         focus[3];
@@ -234,6 +235,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(cut_scene, start_fade,           0x074);
     ASSERT_OFFSETOF(cut_scene, end_fade,             0x084);
     ASSERT_OFFSETOF(cut_scene, hero_entry,           0x094);
+    ASSERT_OFFSETOF(cut_scene, waits_for_press,      0x110);
     ASSERT_OFFSETOF(cut_scene, use_focus,            0x112);
     ASSERT_OFFSETOF(cut_scene, focus,                0x114);
     ASSERT_OFFSETOF(cut_scene, focus_from_camera,    0x120);

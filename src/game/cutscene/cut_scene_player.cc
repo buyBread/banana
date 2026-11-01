@@ -60,6 +60,10 @@ void cut_scene_player::create_inst() {
 }
 
 // sub_805020
+// inlined @ sub_806B80
+// inlined @ sub_806C50
+// inlined @ sub_806D20
+// inlined @ sub_80A250
 bool cut_scene_player::is_playing() const {
     return (state_flags & playing)  != 0 ||
            (state_flags & skipping) != 0 ||
@@ -1289,4 +1293,19 @@ f32 cut_scene_player::get_time() const {
         t = (f32)((f64)t + (f64)(*segment)->get_duration());
 
     return t;
+}
+
+// sub_805E30
+f32 cut_scene_player::get_time_remaining() const { // the scene anim's time left plus the later segments'
+    if (!current_cut_scene)
+        return 0.0f;
+
+    cut_scene_segment** segment = current_segment + 1;
+
+    f32 remaining = references::g_world_ptr.read()->scene_anim_time_remaining(scene_anim_handle);
+
+    for (; segment != current_cut_scene->segments.end(); segment++)
+        remaining = (f32)((f64)remaining + (f64)(*segment)->get_duration());
+
+    return remaining;
 }

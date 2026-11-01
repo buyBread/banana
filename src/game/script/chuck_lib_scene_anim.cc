@@ -75,7 +75,7 @@ bool slf__wait_run_toa_cutscene__dynamic_array__dynamic_array__dynamic_array__dy
     // returning false keeps the thread waiting here; it comes back with entry set
     if (stack.thread->entry) {
         if (cut_scene_toa_helper::get()->is_running()) {
-            retail::sub_80A250((i32)cut_scene_toa_helper::get(), references::g_world_ptr.read()->time_mgr.time_inc);
+            cut_scene_toa_helper::get()->frame_advance(references::g_world_ptr.read()->time_mgr.time_inc);
 
             return false;
         }

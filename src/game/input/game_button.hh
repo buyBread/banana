@@ -111,6 +111,7 @@ namespace treyarch {
 
         void set_control(i32 ctrl);
 
+        // inlined @ sub_80A250
         void clear() {
             state.force(0.0f);
 
@@ -158,6 +159,8 @@ namespace treyarch {
             return 0.0f;
         }
 
+        // inlined @ sub_806DF0
+        // inlined @ sub_808170
         // inlined @ sub_9BB110
         bool triggered(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))

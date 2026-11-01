@@ -31,7 +31,7 @@ namespace treyarch {
         bool               running;
         bool               cut_scene_started;       // the frame clears it
         bool               succeeded;
-        bool               unk_7d0;
+        bool               window_open;             // the button window was open at the end of the last frame
         bool               fade_endings;            // the last success and the failures keep their fades
         bool               scene_anim_paused;
         u8                 pad_7d3[0x01];
@@ -49,14 +49,52 @@ namespace treyarch {
                    chuck::vm::script_dynamic_array<f32>         end_times,
                    bool                                         with_fades);
         void stop();
+        void frame_advance(f32 time_inc);
 
         // sub_805390
         bool is_running() const {
             return running;
         }
 
+        cut_scene* get_failure_category(i32 sequence);
         cut_scene* get_success_category(i32 sequence);
         i32        get_agility_test_button_corresponding_to_num(i32 num) const;
+        i32        get_button(i32 _current_sequence, i32 index) const;
+
+        static i32 get_num_corresponding_to_agility_test_buttons_t(i32 button);
+
+        // sub_805920
+        // inlined @ sub_806B80
+        f32 get_show_button_time(i32 sequence) const { // -1 out of range
+            if (sequence < 0 || sequence >= (i32)(cutscene_list.size() / 2))
+                return -1.0f;
+
+            return show_button_time_list[sequence];
+        }
+
+        // sub_805960
+        // inlined @ sub_806C50
+        // inlined @ sub_806D20
+        f32 get_end_button_time(i32 sequence) const { // -1 out of range
+            if (sequence < 0 || sequence >= (i32)(cutscene_list.size() / 2))
+                return -1.0f;
+
+            return end_button_time_list[sequence];
+        }
+
+        bool waits_for_press() const;
+        void unpause_scene_anim();
+
+        bool past_show_time() const;
+        bool before_end_time() const;
+        bool past_end_time() const;
+        bool is_window_open() const;
+        bool accepts_press() const;
+        bool missed_window() const;
+        bool wrong_button_pressed() const;
+
+        void step_pressed_buttons();
+        void update_prompt();
     };
 
     namespace references {
@@ -64,7 +102,12 @@ namespace treyarch {
 
         inline util::memory_reference<u32> cut_scene_toa_helper_guard { 0x0108927C };
 
-        inline util::memory_reference<string_hash> cut_scene_toa_begin { 0x0102CC1C };
+        inline util::memory_reference<string_hash> cut_scene_toa_begin              { 0x0102CC1C };
+        inline util::memory_reference<string_hash> cut_scene_toa_button_shown       { 0x0102C2A8 };
+        inline util::memory_reference<string_hash> cut_scene_toa_button_not_shown   { 0x0102C688 };
+        inline util::memory_reference<string_hash> cut_scene_toa_hit_button_success { 0x0102C374 };
+        inline util::memory_reference<string_hash> cut_scene_toa_success            { 0x0102CB70 };
+        inline util::memory_reference<string_hash> cut_scene_toa_failure            { 0x0102C678 };
     } // references
 
     ASSERT_SIZEOF  (cut_scene_toa_helper,                          0x7D4);
@@ -77,6 +120,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(cut_scene_toa_helper, buttons,                 0x060);
     ASSERT_OFFSETOF(cut_scene_toa_helper, failed,                  0x7CC);
     ASSERT_OFFSETOF(cut_scene_toa_helper, running,                 0x7CD);
+    ASSERT_OFFSETOF(cut_scene_toa_helper, window_open,             0x7D0);
     ASSERT_OFFSETOF(cut_scene_toa_helper, fade_endings,            0x7D1);
     ASSERT_OFFSETOF(cut_scene_toa_helper, scene_anim_paused,       0x7D2);
 } // treyarch

@@ -9,9 +9,13 @@ namespace treyarch {
     class igo_3d_agility_test : public igo_3d_widget {
 
     public:
-        u8   reserved_150[0x0C];
-        bool unk_15c;
+        bool unk_150;
+        bool prompt_shown;
+        u8   reserved_152[0x0A];
+        bool waits_for_press; // the current cut scene's
     };
 
-    ASSERT_OFFSETOF(igo_3d_agility_test, unk_15c, 0x15C);
+    ASSERT_OFFSETOF(igo_3d_agility_test, unk_150,         0x150);
+    ASSERT_OFFSETOF(igo_3d_agility_test, prompt_shown,    0x151);
+    ASSERT_OFFSETOF(igo_3d_agility_test, waits_for_press, 0x15C);
 } // treyarch
