@@ -2,9 +2,10 @@
 
 #include <windows.h>
 
-#include "flags.hh"
 #include "banana/util/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
+
+#define SPINLOCK_MUTEX 0
 
 namespace treyarch {
     struct engine_recursive_lock;

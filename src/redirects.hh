@@ -1,6 +1,5 @@
 #pragma once
 
-#include "flags.hh"
 #include "banana/logging.hh"
 #include "game/WinMain.hh"
 #include "game/amalga/resource_handler.hh"

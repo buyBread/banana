@@ -4,13 +4,8 @@
 #include <cstdio>
 #include <mutex>
 
-#include "flags.hh"
-
 namespace util {
     inline void allocate_console() {
-#if !ALLOCATE_CONSOLE
-        return;
-#endif
         static std::once_flag allocate_once;
 
         std::call_once(allocate_once, []{

@@ -1,7 +1,6 @@
 #include <thread>
 #include <chrono>
 
-#include "flags.hh"
 #include "banana/util/macros/debug.hh"
 #include "banana/core.hh"
 #include "banana/lifecycle.hh"
@@ -37,20 +36,9 @@ bool banana::core::init() {
 
     hook_manager.install(HK_DEFAULT_CATEGORY);
 
-    /*
-        devel mode hooks go here too, just add clauses around purely debug mode code;
-        otherwise doing some sort of debug / devel separation sounds like a structural headache...
-    */
+    // devel mode hooks go here too
 #ifndef NDEBUG
     hook_manager.install("debug");
-#else
-#if SPINLOCK_MUTEX
-    /*
-        it's not really what i'd "like" to "ship", but i can't figure out an ezpz variant that truly fixes stutters caused by the mutex...
-        so until that happens, or until we no longer need to hook this (crack dream), it'll do to alleviate the problem somewhat.
-    */
-    hook_manager.enable_hook("debug", "sub_A6C860");
-#endif
 #endif
 
     return true;

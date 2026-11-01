@@ -5,9 +5,10 @@
 
 #include <windows.h>
 
-#include "flags.hh"
 #include "banana/lifecycle.hh"
 #include "banana/core.hh"
+
+#define REL32_GAME_CALLS 1
 
 #if REL32_GAME_CALLS
     #include "redirects.hh"

@@ -13,13 +13,20 @@
 #include <condition_variable>
 #include <filesystem>
 
-#include "flags.hh"
 #include "banana/util/console.hh"
 #include "banana/util/singleton.hh"
 #include "banana/util/appdata_path.hh"
 #include "banana/util/types.hh"
 
+#ifdef DEBUG
+#define PRINT_COLOR_TEST 1
+#define ALWAYS_FLUSH 1
+#define ALLOCATE_CONSOLE 1
+#else
 #define PRINT_COLOR_TEST 0
+#define ALWAYS_FLUSH 0
+#define ALLOCATE_CONSOLE 0
+#endif
 
 class s_logging : public util::singleton<s_logging> {
 
@@ -97,11 +104,6 @@ class s_logging : public util::singleton<s_logging> {
         PRINT(" build mode -- devel");
 #endif
         PRINT(" log file   -- {}", fp.string().c_str());
-        PRINT("----------- flags -----------");
-        PRINT(" ALWAYS_FLUSH     -- {}", ALWAYS_FLUSH);
-        PRINT(" REL32_GAME_CALLS -- {}", REL32_GAME_CALLS);
-        PRINT(" ALLOCATE_CONSOLE -- {}", ALLOCATE_CONSOLE);
-        PRINT(" OPTIMIZE_FLAGS   -- {}", OPTIMIZE_FLAGS);
         PRINT("==================================================");
         PRINT("");
 
