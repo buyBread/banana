@@ -73,6 +73,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0); the hero's player interface resets its forced evade to it
     inline util::memory_reference<vector3d> unk_01112ca0 { 0x01112CA0 };
 
+    // (0, 0, 0); the player attacks' and swing objects' ZEROVEC
+    inline util::memory_reference<vector3d> unk_01111bf0 { 0x01111BF0 };
+
     // (0, 0, 0); what the player interfaces' vector slots answer without a vector
     inline util::memory_reference<vector3d> unk_0102f9e0 { 0x0102F9E0 };
 

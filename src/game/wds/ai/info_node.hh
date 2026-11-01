@@ -144,6 +144,14 @@ namespace treyarch {
                                bool              scale_by_speed,
                                anim_event_param* param);
 
+        f32 get_duration    (als::layer_id the_layer);
+        f32 get_current_time(als::layer_id the_layer);
+
+        f32 get_optional_als_pb_float(const string_hash   &parameter,
+                                      const f32           &default_value,
+                                            als::layer_id  the_layer,
+                                            bool*          exists) const;
+
         i32 get_optional_als_pb_int(const string_hash   &parameter,
                                     const i32           &default_value,
                                           als::layer_id  the_layer,

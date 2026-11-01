@@ -225,7 +225,7 @@ namespace treyarch {
         virtual bool              unk_045();
         virtual void              set_zlock_entity(arch_base_vhandle entity);
         virtual void              unk_047(u32 unk);
-        virtual arch_base_vhandle unk_048();                           // rvb: the zlock entity
+        virtual arch_base_vhandle unk_048() const;                     // rvb: the zlock entity
         virtual bool              unk_049(i32 unk);
         virtual i32               unk_050(arch_base_vhandle target);
         virtual i32               unk_051(i32 unk, i32 unk_2, i32 unk_3);
@@ -686,7 +686,7 @@ namespace treyarch {
         virtual bool              unk_480(bool unk);
         virtual bool              unk_481();
         virtual bool              unk_482(bool unk);
-        virtual arch_base_vhandle unk_483(i32 index);                  // a null handle in player_interface
+        virtual arch_base_vhandle unk_483(const plr_combat_attack* attack) const;
         virtual bool              unk_484();
         virtual bool              unk_485();
         virtual bool              unk_486(bool unk, f32 delay);        // rvb: stores both at +0xB5C and +0xB54

@@ -75,6 +75,25 @@ f32 als_inode::get_time_to_signal(string_hash       evt,
                                                                       param);
 }
 
+// sub_44F430
+f32 als_inode::get_duration(als::layer_id the_layer) {
+    return my_als->get_als_layer(the_layer)->get_duration();
+}
+
+// sub_44F470
+f32 als_inode::get_current_time(als::layer_id the_layer) {
+    return my_als->get_als_layer(the_layer)->get_current_anim_time();
+}
+
+// sub_44F4D0
+f32 als_inode::get_optional_als_pb_float(const string_hash   &parameter,
+                                         const f32           &default_value,
+                                               als::layer_id  the_layer,
+                                               bool*          exists) const {
+
+    return my_als->get_als_layer(the_layer)->get_optional_pb_float(parameter, default_value, exists);
+}
+
 i32 als_inode::get_optional_als_pb_int(const string_hash   &parameter,
                                        const i32           &default_value,
                                              als::layer_id  the_layer,

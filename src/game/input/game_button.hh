@@ -183,6 +183,10 @@ namespace treyarch {
         // inlined @ sub_5745C0
         // inlined @ sub_41F860
         // inlined @ sub_9A98A0
+        // inlined @ sub_9943C0
+        // inlined @ sub_994310
+        // inlined @ sub_9879A0
+        // inlined @ sub_987A80
         bool triggered_or_missed_press(bool ignore_disabled = false) const {
             if (!ignore_disabled && is_flagged(gbflag_non_responsive))
                 return false;

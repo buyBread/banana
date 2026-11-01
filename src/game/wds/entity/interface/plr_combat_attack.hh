@@ -1,7 +1,11 @@
 #pragma once
 
 #include "game/wds/ai/states/combat_state.hh"
+#include "game/wds/ai/ai_target.hh"
 #include "game/boolx.hh"
+#include "game/hash/algo.hh"
+#include "game/timing/simple_timer.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "treyarch/mm/mm.hh"
@@ -11,7 +15,6 @@
 #include "vc8/vector.hh"
 
 namespace treyarch {
-    class ai_target;
     class als_inode;
     class game_button;
     class player_interface;
@@ -39,6 +42,8 @@ namespace treyarch {
               boolx             inside_min_range_ignore_arc;
               boolx             unk_4b;                      // set, update takes a press that ties the best time
 
+        static string_hash my_type_key;
+
         plr_combat_attack();
         ~plr_combat_attack() override;
 
@@ -64,8 +69,8 @@ namespace treyarch {
                                 const plr_combat_attack* current_chosen_attack,
                                 const void*              unk);
         virtual void     clear();
-        virtual bool     has_potential_targets(const player_interface* plr_ifc, bool unk);
-        virtual bool     build_target_list(const player_interface* plr_ifc, const void* unk, bool store_targets, bool unk_4);
+        virtual bool     has_potential_targets(const player_interface* plr_ifc, bool check_possible);
+        virtual bool     build_target_list(const player_interface* plr_ifc, const void* unk, bool store_targets, bool check_possible);
         virtual bool     update_target_list(const player_interface* plr_ifc);
         virtual bool     should_execute(const player_interface* plr_ifc, f32 tolerance);
         virtual void     forced_set_up(const player_interface* plr_ifc, e_combat_move move, const ai_target* targ, i32 script_move);
@@ -78,17 +83,44 @@ namespace treyarch {
         virtual f32      unk_022(e_combat_move move, const player_interface* plr_ifc, als_inode* my_als); // the als's combat_button_begin_time
         virtual f32      unk_023(e_combat_move move, const player_interface* plr_ifc, als_inode* my_als); // the als's combat_button_end_time
 
+        void init(const game_button* _button,
+                  bool               _allow_no_targets,
+                  u32                _target_flags,
+                  f32                _min_range,
+                  f32                _max_range,
+                  f32                _min_dotp,
+                  f32                _min_vert_range,
+                  f32                _max_vert_range,
+                  f32                _min_vert_dotp,
+                  bool               _inside_min_range_ignore_arc,
+                  bool               _unk_4b);
+
+        // sub_988060
+        bool has_targets() const {
+            return targets && !targets->empty();
+        }
+
+    private:
+        bool claim_best_time(bool found, f32* best_time, const plr_combat_attack* current_chosen_attack); // without targets only when allow_no_targets
+
         void initialize(mash::allocation_scope scope);
+        void finalize  (mash::allocation_scope scope);
     };
+
+    inline const string_hash combat_button_begin_time_key = string_hash(hash::djb2("combat_button_begin_time"));
+    inline const string_hash combat_button_end_time_key   = string_hash(hash::djb2("combat_button_end_time"));
+    inline const string_hash maintain_current_target_key  = string_hash(hash::djb2("maintain_current_target"));
 
     // one of player_interface's tricks
     class plr_trick_move : public mash::mash_virtual_base {
 
     public:
         const game_button* button;
-              f32          timer;
+              simple_timer timer;
               boolx        button_held;
               u8           pad_0d[0x03];
+
+        static string_hash my_type_key;
 
         plr_trick_move();
         ~plr_trick_move() override;
@@ -111,6 +143,10 @@ namespace treyarch {
         virtual bool should_execute() const;
 
         void init(const game_button* _button);
+
+    private:
+        void initialize(mash::allocation_scope scope);
+        void finalize  (mash::allocation_scope scope);
     };
 
     ASSERT_SIZEOF  (plr_combat_attack,                   0x4C);

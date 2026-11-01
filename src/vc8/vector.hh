@@ -107,7 +107,10 @@ namespace treyarch { namespace vc8 {
             return first ? (u32)(capacity_end - first) : 0;
         }
 
-        bool empty() const noexcept { return first == last; }
+        // sub_455DB0
+        bool empty() const noexcept {
+            return size() == 0;
+        }
 
         // sub_4CDAB0
         // inlined @ sub_4F21E0
@@ -116,6 +119,9 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_939240
         // inlined @ sub_950450
         // inlined @ sub_9C2810
+        // inlined @ sub_99B1A0
+        // inlined @ sub_99B200
+        // inlined @ sub_99B900
         void clear() noexcept {
             erase(first, last);
         }
@@ -123,6 +129,9 @@ namespace treyarch { namespace vc8 {
         // sub_51D5F0
         // sub_7DCA50
         // inlined @ sub_97A400
+        // inlined @ sub_99B160
+        // inlined @ sub_99B2F0
+        // inlined @ sub_99B900
         void destroy() noexcept {
             clear();
 
@@ -214,6 +223,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_801B00
         // inlined @ sub_950450
         // inlined @ sub_94B390
+        // inlined @ sub_99B7D0
         void push_back(const T &value) {
             if (last == capacity_end)
                 reserve_for_size(size() + 1);
@@ -271,6 +281,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_763520
         // inlined @ sub_950450
         // inlined @ sub_94B390
+        // inlined @ sub_99B200
         T* erase(T* position) noexcept {
             T* result = position;
 
@@ -293,6 +304,7 @@ namespace treyarch { namespace vc8 {
         // sub_6F4C40
         // sub_87E470
         // sub_A188A0
+        // sub_4179B0
         T* erase(T* range_first, T* range_last) noexcept {
             if (range_first == range_last)
                 return range_first;

@@ -4,6 +4,7 @@
 #include "game/delta_variable.hh"
 #include "game/input/input_device.hh"
 #include "game/math/algebra/vector2d.hh"
+#include "game/math/algebra/vector3d.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -45,11 +46,16 @@ namespace treyarch {
         }
     };
 
-    // SM3's player_axis_control; nothing past game_axis is mapped
+    // SM3's player_axis_control
     class player_axis_control : public game_axis {
 
     public:
-        u8 reserved_058[0x90];
+        delta_variable<vector3d> player_dir;
+        u8                       reserved_070[0x78];
+
+        const vector3d &get_player_dir() const {
+            return player_dir.current;
+        }
     };
 
     ASSERT_SIZEOF  (game_axis,                   0x58);
@@ -60,5 +66,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(game_axis, suspended,        0x50);
     ASSERT_OFFSETOF(game_axis, unk_56,           0x56);
 
-    ASSERT_SIZEOF(player_axis_control, 0xE8);
+    ASSERT_SIZEOF  (player_axis_control,             0xE8);
+    ASSERT_OFFSETOF(player_axis_control, player_dir, 0x58);
 } // treyarch

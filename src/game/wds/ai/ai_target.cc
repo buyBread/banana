@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/ai/ai_target.hh"
+#include "game/wds/entity/entity_base.hh"
 
 using namespace treyarch;
 
@@ -7,8 +8,46 @@ ai_target::ai_target() {
     ((ai_target* (__thiscall*)(ai_target*))retail::sub_470C80)(this);
 }
 
+// sub_402DE0
+ai_target::ai_target(arch_base_vhandle _target) : target() {
+    set_target(_target);
+}
+
+// sub_455470
+ai_target &ai_target::operator=(const ai_target &other) {
+    target        = other.target;
+    score         = other.score;
+    threat_level  = other.threat_level;
+    score_results = other.score_results;
+
+    return *this;
+}
+
 void ai_target::set_target(arch_base_vhandle _target) {
     ((void (__thiscall*)(ai_target*, arch_base_vhandle))retail::sub_455490)(this, _target);
+}
+
+// sub_472890
+bool ai_target::target_valid(entity_base* attacker, u32 flags) const {
+    auto* the_target = (entity_base*)target.resolve();
+
+    if (!the_target || the_target == attacker)
+        return false;
+
+    return retail::sub_471D20((u32*)attacker, (u32*)the_target, flags, 0, 0x14); // ai_target::matches_flags
+}
+
+// sub_408F30
+i32 ai_target::compare_score(const void* a, const void* b) {
+    f32 diff = (f32)((f64)((const ai_target*)b)->score - ((const ai_target*)a)->score);
+
+    if (diff > 0.0f)
+        return 1;
+
+    if (0.0f > diff)
+        return -1;
+
+    return 0;
 }
 
 f32 ai_target::compute_score(      entity_base* attacker,

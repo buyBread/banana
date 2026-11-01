@@ -223,9 +223,9 @@ void player_interface::unk_047(u32 unk) {
 }
 
 // slot 48
-arch_base_vhandle player_interface::unk_048() {
+arch_base_vhandle player_interface::unk_048() const {
     arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+    ((arch_base_vhandle* (__thiscall*)(const player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
 
     return result;
 }
@@ -1330,7 +1330,7 @@ bool player_interface::check_for_dodge(      entity_base*               attacker
     dodge->clear();
     dodge->targets->push_back(target);
 
-    f32 als_time = ((f32 (__thiscall*)(als_inode*, als::layer_id))retail::sub_44F470)(my_als, als::base_layer); // als_inode::get_current_time
+    f32 als_time = my_als->get_current_time(als::base_layer);
     dodge->timer = (f32)(als_time + (f64)0.15f);
 
     if (combo_move) {
@@ -2763,7 +2763,7 @@ bool player_interface::unk_482(bool unk) {
 }
 
 // sub_992E00
-arch_base_vhandle player_interface::unk_483(i32 index) {
+arch_base_vhandle player_interface::unk_483(const plr_combat_attack*) const {
     return arch_base_vhandle();
 }
 

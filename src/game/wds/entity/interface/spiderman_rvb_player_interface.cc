@@ -279,9 +279,9 @@ void spiderman_rvb_player_interface::unk_047(u32 unk) {
 }
 
 // slot 48
-arch_base_vhandle spiderman_rvb_player_interface::unk_048() {
+arch_base_vhandle spiderman_rvb_player_interface::unk_048() const {
     arch_base_vhandle result;
-    ((arch_base_vhandle* (__thiscall*)(spiderman_rvb_player_interface*, arch_base_vhandle*))retail::sub_9A7050)(this, &result);
+    ((arch_base_vhandle* (__thiscall*)(const spiderman_rvb_player_interface*, arch_base_vhandle*))retail::sub_9A7050)(this, &result);
 
     return result;
 }
@@ -2376,11 +2376,11 @@ void spiderman_rvb_player_interface::unk_472() {
 }
 
 // sub_9B76B0
-arch_base_vhandle spiderman_rvb_player_interface::unk_483(i32 index) {
+arch_base_vhandle spiderman_rvb_player_interface::unk_483(const plr_combat_attack* attack) const {
     if (unk_048().value)
         return unk_048();
 
-    return player_interface::unk_483(index);
+    return player_interface::unk_483(attack);
 }
 
 // sub_9A75B0

@@ -270,7 +270,7 @@ namespace treyarch {
         bool              unk_045() override;
         void              set_zlock_entity(arch_base_vhandle entity) override;
         void              unk_047(u32 unk) override;
-        arch_base_vhandle unk_048() override;
+        arch_base_vhandle unk_048() const override;
         bool              unk_049(i32 unk) override;
         i32               unk_050(arch_base_vhandle target) override;
         i32               unk_051(i32 unk, i32 unk_2, i32 unk_3) override;
@@ -580,7 +580,7 @@ namespace treyarch {
         bool              unk_470() override;
         i32               unk_471() override;
         void              unk_472() override;
-        arch_base_vhandle unk_483(i32 index) override;
+        arch_base_vhandle unk_483(const plr_combat_attack* attack) const override;
         bool              unk_484() override;
         bool              unk_485() override;
         bool              unk_486(bool unk, f32 delay) override;

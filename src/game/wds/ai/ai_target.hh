@@ -12,6 +12,11 @@ namespace treyarch {
     class ai_target {
 
     public:
+        // SM3's target_flags, as far as retail confirms them
+        enum e_target_flags : u32 {
+            target_allow_dead_target = 0x00008000
+        };
+
         using accept_func = bool (*)(entity_base*    attacker,
                                      entity_base*    target,
                                      const vector3d &direction,
@@ -26,8 +31,15 @@ namespace treyarch {
         i32               score_results;
 
         ai_target();
+        ai_target(arch_base_vhandle _target);
+
+        ai_target &operator=(const ai_target &other);
 
         void set_target(arch_base_vhandle _target); // also resets the score, threat level and results
+
+        bool target_valid(entity_base* attacker, u32 flags) const;
+
+        static i32 compare_score(const void* a, const void* b); // best score first
 
         // SM3's parameters plus three
         f32 compute_score(      entity_base* attacker,
