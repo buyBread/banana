@@ -11,7 +11,6 @@
 namespace treyarch { namespace jq { namespace references {
     // ai
     inline util::memory_reference<engine_recursive_lock> unk_00fc2058 { 0x00FC2058 }; // combat dodge and block checks
-    inline util::memory_reference<engine_recursive_lock> unk_00fc23e0 { 0x00FC23E0 }; // combat_state
     inline util::memory_reference<engine_recursive_lock> unk_00fc3c60 { 0x00FC3C60 }; // ai paths (quad_path_inode, creating and destroying paths)
     inline util::memory_reference<engine_recursive_lock> unk_00fc4968 { 0x00FC4968 }; // std_fear_inode, flee and cower states
     inline util::memory_reference<engine_recursive_lock> unk_00fc4a38 { 0x00FC4A38 }; // ai car list (ai_car_inode, evil car list)

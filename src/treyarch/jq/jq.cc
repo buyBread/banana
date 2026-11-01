@@ -17,6 +17,7 @@
 #include "game/wds/ai/ai_tentacle_engine.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/ai/cpu_combat_pie.hh"
+#include "game/wds/ai/states/combat_state.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/render/references.hh"
 #include "game/wds/subdivision_visitor.hh"
@@ -73,7 +74,7 @@ void jq::jobqueue_init() {
     references::unk_00fc5098.get().writer_depth = 0;
     references::unk_00fc50c8.get().reset();
     references::unk_00fc2058.get().reset();
-    references::unk_00fc23e0.get().reset();
+    treyarch::references::target_list_lock.get().reset();
     references::unk_00fc4968.get().reset();
     references::unk_010031d8.get().reset();
     treyarch::references::all_tentacles_lock.get().reset();
