@@ -9,7 +9,8 @@ namespace treyarch {
     class cpu_combat_state : public combat_state {
 
     public:
-        u8 reserved_2f8[0x08];
+        cpu_combat_inode* unk_2f8;          // the actor's, set by activate
+        u8                reserved_2fc[0x04];
 
         explicit cpu_combat_state(mash::generating_vtable_version so_do_nothing) : combat_state(so_do_nothing) {}
 
@@ -85,7 +86,9 @@ namespace treyarch {
         string_hash   get_combat_als_category() const override;
     };
 
-    ASSERT_SIZEOF(cpu_combat_state,             0x300);
+    ASSERT_SIZEOF  (cpu_combat_state,          0x300);
+    ASSERT_OFFSETOF(cpu_combat_state, unk_2f8, 0x2F8);
+
     ASSERT_SIZEOF(civ_beat_up_cpu_combat_state, 0x300);
     ASSERT_SIZEOF(generic_slim_combat_state,    0x2F8);
 } // treyarch

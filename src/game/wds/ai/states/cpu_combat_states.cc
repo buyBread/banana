@@ -1,5 +1,10 @@
 #include "retail.hh"
 #include "game/wds/ai/states/cpu_combat_states.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/cpu_combat_inode.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/slim/slim_controller.hh"
 
 using namespace treyarch;
 
@@ -60,9 +65,24 @@ void cpu_combat_state::deactivate(const mashed_state* next_mashed_state) {
     ((void (__thiscall*)(cpu_combat_state*, const mashed_state*))retail::sub_4F88A0)(this, next_mashed_state);
 }
 
-// slot 11
+// sub_4F90C0
 e_state_exit_code cpu_combat_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(cpu_combat_state*, f32))retail::sub_4F90C0)(this, delta_t);
+    if ((*unk_2f8->script_nums)[21] > 0.0001f)
+        ((void (__thiscall*)(cpu_combat_state*))retail::sub_4F73E0)(this);
+
+    if (unk_2f8->unk_031(delta_t) || unk_2f8->unk_037(delta_t))
+        ((void (__thiscall*)(cpu_combat_inode*, cpu_combat_state*, bool))retail::sub_4F8630)(unk_2f8, this, true);
+    else if ((*unk_2f8->script_nums)[20] > 0.0001f)
+        ((void (__thiscall*)(cpu_combat_inode*, cpu_combat_state*, bool))retail::sub_4F8630)(unk_2f8, this, false);
+
+    e_state_exit_code the_exit_code = combat_state::frame_advance(delta_t);
+
+    auto* basic = (ai_basic_inode*)get_core()->get_info_node(info_node_type_ai_basic);
+
+    if (the_exit_code == state_exit_code_no_exit && !basic->get_flag(ai_flag_allow_movement_during_attack))
+        get_core()->stop_movement();
+
+    return the_exit_code;
 }
 
 // slot 12
@@ -182,9 +202,50 @@ void generic_slim_combat_state::deactivate(const mashed_state* next_mashed_state
     ((void (__thiscall*)(generic_slim_combat_state*, const mashed_state*))retail::sub_4E3780)(this, next_mashed_state);
 }
 
-// slot 11
-e_state_exit_code generic_slim_combat_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(generic_slim_combat_state*, f32))retail::sub_4F9EA0)(this, delta_t);
+// sub_4F9EA0
+e_state_exit_code generic_slim_combat_state::frame_advance(f32 delta_t) { // the base controller runs the actor's slim machine alongside
+    auto* basic = (ai_basic_inode*)get_core()->get_info_node(info_node_type_ai_basic);
+
+    slim::slim_actor_controller* controller = get_actor()->get_ai_core()->base_controller;
+
+    slim::slim_machine* machine = basic->machines[0];
+
+    if (!machine)
+        machine = basic->unk_068;
+
+    ((void (__thiscall*)(slim::slim_actor_controller*, slim::slim_machine*))retail::sub_511DA0)(controller, machine); // installs it
+
+    bool updating = false;
+
+    if (!(basic->unk_200 & 0x40)) {
+        retail::sub_518380((u32*)controller, delta_t, 0);
+        updating = true;
+    }
+
+    ((void (__thiscall*)(slim::slim_actor_controller*, e_state_exit_code))retail::sub_501420)(controller, combat_state::frame_advance(delta_t));
+
+    if (updating)
+        controller->unk_002(delta_t);
+
+    auto the_exit_code = (e_state_exit_code)controller->unk_07c;
+
+    switch (((i32 (__thiscall*)(slim::slim_actor_controller*))retail::sub_501480)(controller)) {
+        case 0:
+            return state_exit_code_biped_physics;
+
+        case 1:
+            return state_exit_code_attack;
+
+        case 2:
+            return state_exit_code_take_hostage;
+    }
+
+    ((void (__thiscall*)(slim::slim_actor_controller*))retail::sub_501450)(controller);
+
+    if (the_exit_code == state_exit_code_no_exit && !basic->get_flag(ai_flag_allow_movement_during_attack))
+        get_core()->stop_movement();
+
+    return the_exit_code;
 }
 
 // slot 12

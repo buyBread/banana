@@ -2603,7 +2603,7 @@ namespace retail {
     inline auto const sub_4B6140 = (i32 (__thiscall*)(void*self, i32, i32, i32))0x004B6140;
     inline auto const sub_4B6180 = (char (__cdecl*)())0x004B6180;
     inline auto const sub_4B6220 = (u32* (__cdecl*)(u32*, i32, i32, i32, i32, i32, f32*))0x004B6220;
-    inline auto const sub_4B6420 = (u32* (__cdecl*)(f32*, f32))0x004B6420;
+    inline auto const sub_4B6420 = (u32* (__cdecl*)(const f32*, f32, f32))0x004B6420; // manual
     inline auto const sub_4B65D0 = (i32 (__thiscall*)(u32*self))0x004B65D0;
     inline auto const sub_4B6610 = (u32 (__cdecl*)(...))0x004B6610; // prototype unavailable
     inline auto const sub_4B6620 = (i32 (__thiscall*)(u32*self))0x004B6620;

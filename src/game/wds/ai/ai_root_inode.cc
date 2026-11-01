@@ -48,6 +48,8 @@ void ai_root_inode::set_flag(i32 flag, bool value) {
 }
 
 // sub_4F9030
+// inlined @ sub_4F90C0
+// inlined @ sub_4F9EA0
 bool ai_root_inode::get_flag(i32 flag) {
     return flags->get(flag);
 }

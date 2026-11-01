@@ -25,7 +25,9 @@ namespace treyarch { namespace slim {
     class slim_actor_controller : public slim_generic_controller {
 
     public:
-        u8 reserved_06c[0x14];
+        u8  reserved_06c[0x0C];
+        i32 unk_078;            // both take the exit code of the combat frame it runs under
+        i32 unk_07c;
     };
 
     ASSERT_SIZEOF  (slim_generic_controller,          0x6C);
@@ -33,5 +35,6 @@ namespace treyarch { namespace slim {
     ASSERT_OFFSETOF(slim_generic_controller, flags,   0x3C);
     ASSERT_OFFSETOF(slim_generic_controller, unk_04c, 0x4C);
 
-    ASSERT_SIZEOF(slim_actor_controller, 0x80);
+    ASSERT_SIZEOF  (slim_actor_controller,          0x80);
+    ASSERT_OFFSETOF(slim_actor_controller, unk_07c, 0x7C);
 }} // treyarch::slim

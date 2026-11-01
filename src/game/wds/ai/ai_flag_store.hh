@@ -12,15 +12,16 @@ namespace treyarch {
 
     // the flags source reads by index; the name map knows every one by its name
     enum e_ai_flag : i32 {
-        ai_flag_is_inside_car      = 0x001,
-        ai_flag_ai_targetable      = 0x00B,
-        ai_flag_do_capture         = 0x146,
-        ai_flag_frenzy_mode        = 0x18D,
-        ai_flag_is_slim_actor      = 0x21A,
-        ai_flag_pod_is_off_base    = 0x289,
-        ai_flag_can_convert        = 0x3C3,
-        ai_flag_currently_in_car   = 0x3C7,
-        ai_flag_allowed_to_tactics = 0x3F3
+        ai_flag_is_inside_car                = 0x001,
+        ai_flag_ai_targetable                = 0x00B,
+        ai_flag_allow_movement_during_attack = 0x05F,
+        ai_flag_do_capture                   = 0x146,
+        ai_flag_frenzy_mode                  = 0x18D,
+        ai_flag_is_slim_actor                = 0x21A,
+        ai_flag_pod_is_off_base              = 0x289,
+        ai_flag_can_convert                  = 0x3C3,
+        ai_flag_currently_in_car             = 0x3C7,
+        ai_flag_allowed_to_tactics           = 0x3F3
     };
 
     // an ai_root_inode's flags; flag n is bit n & 31 of bits[n >> 5]

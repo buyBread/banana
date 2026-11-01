@@ -68,8 +68,10 @@ als::category_id combo_move_data::get_buddy_sync_category(bool* exists) const {
     return category;
 }
 
+// sub_548530
+// inlined @ sub_54CF20
 i32 combo_move_data::get_combo_move_type_id(bool* exists) const {
-    return ((i32 (__thiscall*)(const combo_move_data*, bool*))retail::sub_548530)(this, exists);
+    return params.get_optional_pb_int(combo_move_type_id_key, -1, exists);
 }
 
 f32 combo_move_data::get_combo_counter_value(bool* exists) const {
@@ -1525,6 +1527,22 @@ void combat_state::update_camera(      f32               delta_t,
                          const combo_move_data*,
                          als_inode*,
                          cpu_combat_inode*))retail::sub_412E30)(this,
+                                                                delta_t,
+                                                                combo_move,
+                                                                my_als,
+                                                                cmbt);
+}
+
+void combat_state::advance_combat_script(      f32               delta_t,
+                                         const combo_move_data*  combo_move,
+                                               als_inode*        my_als,
+                                               cpu_combat_inode* cmbt) {
+
+    ((void (__thiscall*)(combat_state*,
+                         f32,
+                         const combo_move_data*,
+                         als_inode*,
+                         cpu_combat_inode*))retail::sub_4176A0)(this,
                                                                 delta_t,
                                                                 combo_move,
                                                                 my_als,

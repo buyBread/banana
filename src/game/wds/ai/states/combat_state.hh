@@ -47,6 +47,7 @@ namespace treyarch {
         combo_flag_ignore_standing          = 0x00000020,
         combo_flag_ignore_target_collisions = 0x00000080,
         combo_flag_unbreakable              = 0x00000800,
+        combo_flag_allow_flight_thrusters   = 0x00001000,
         combo_flag_clear_combo_count        = 0x00080000,
         combo_flag_non_interruptable        = 0x10000000
     };
@@ -83,7 +84,21 @@ namespace treyarch {
         combo_unk_10_flag_00200000 = 0x00200000  // the hero picks up a friendly ai he hits
     };
 
+    // the hero's combat frame hands each to the player interface slot beside it
+    enum e_combo_unk_14_flags : u32 {
+        combo_unk_14_flag_00000040 = 0x00000040, // slot 492, only when set
+        combo_unk_14_flag_00000200 = 0x00000200, // slot 506, only when set
+        combo_unk_14_flag_00000400 = 0x00000400, // slot 175
+        combo_unk_14_flag_00010000 = 0x00010000, // slot 512, only when set
+        combo_unk_14_flag_00800000 = 0x00800000, // slot 173
+        combo_unk_14_flag_01000000 = 0x01000000, // slot 171
+        combo_unk_14_flag_02000000 = 0x02000000, // slot 169
+        combo_unk_14_flag_04000000 = 0x04000000  // slot 167
+    };
+
     enum e_combo_unk_18_flags : u32 {
+        combo_unk_18_flag_00000001 = 0x00000001, // the hero's combat frame hands it to player slot 177
+        combo_unk_18_flag_00000002 = 0x00000002, // slot 179
         combo_unk_18_flag_00000008 = 0x00000008, // the launch runs every frame, not only on an anim action
         combo_unk_18_flag_00000010 = 0x00000010, // the hero's hit adds nothing to meter 0
         combo_unk_18_flag_00008000 = 0x00008000  // a transition into the move clears combat_state::unk_1f2
@@ -374,6 +389,11 @@ namespace treyarch {
                                  als_inode*        my_als,
                                  cpu_combat_inode* cmbt);
 
+        void advance_combat_script(      f32               delta_t,
+                                   const combo_move_data*  combo_move,
+                                         als_inode*        my_als,
+                                         cpu_combat_inode* cmbt);
+
     private:
         resource_key      get_sync_react_asg(entity* target) const;     // "sync_controlled_combat_react" for the hero, else "sync_combat_react"
         void              release_sync_target(actor* target);
@@ -437,6 +457,7 @@ namespace treyarch {
 
     inline const string_hash script_exe_key                      = string_hash(hash::djb2("script_exe"));
     inline const string_hash script_obj_key                      = string_hash(hash::djb2("script_obj"));
+    inline const string_hash combo_move_type_id_key              = string_hash(hash::djb2("combo_move_type_id"));
     inline const string_hash target_sync_layer_key               = string_hash(hash::djb2("target_sync_layer"));
     inline const string_hash use_multiple_sync_targets_key       = string_hash(hash::djb2("use_multiple_sync_targets"));
     inline const string_hash maintain_previous_throw_target_key  = string_hash(hash::djb2("maintain_previous_throw_target"));

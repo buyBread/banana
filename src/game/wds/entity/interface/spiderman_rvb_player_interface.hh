@@ -36,7 +36,7 @@ namespace treyarch {
 
     // one of the two at +0x638
     struct spiderman_rvb_unk_0638 {
-        u8       reserved_00[0x04];
+        u32      unk_00;            // the hero's combat frame only hands slot 368 a record with it set
         u8       unk_04[0x4C];      // sub_60D3E0 gives its position
         bool     unk_50;            // frame_advance copies the rest into its unk_0ca8 record while set
         u8       pad_51[0x03];
@@ -160,7 +160,7 @@ namespace treyarch {
         void*             unk_055(void* unk) override;
         f32               unk_056() override;
         i32               unk_057() override;
-        i32               unk_060(i32 unk) override;
+        i32               unk_060(arch_base_vhandle target) override;
         arch_base_vhandle unk_061() override;
         void*             unk_062(void* unk) override;
         i32               unk_063(i32 unk) override;
@@ -178,7 +178,7 @@ namespace treyarch {
         i32               unk_077() override;
         void              set_swing_override_anchor(arch_base_vhandle anchor) override;
         void              set_zip_override_anchor(arch_base_vhandle anchor) override;
-        void*             unk_080(void* unk) override;
+        arch_base_vhandle unk_080() override;
         void              unk_081(f32 unk) override;
         i32               unk_082(f32 unk) override;
         f32               unk_084() override;
@@ -207,7 +207,7 @@ namespace treyarch {
         i32               unk_121() override;
         bool              unk_125() override;
         bool              unk_126() override;
-        bool              unk_129(f32 unk) override;
+        bool              unk_129(bool unk) override;
         bool              unk_130() override;
         bool              unk_131() override;
         bool              unk_134(i32 unk) override;
@@ -257,7 +257,7 @@ namespace treyarch {
         void              unk_203() override;
         i32               unk_204(i32 unk) override;
         void*             unk_205(void* unk) override;
-        i32               unk_206(f32 unk, i32 unk_2, i32 unk_3) override;
+        i32               unk_206(f32 unk, entity* unk_2, i32 unk_3) override;
         void              unk_207() override;
         void              unk_208(i32 unk) override;
         void              unk_209(i32 unk) override;
@@ -348,7 +348,7 @@ namespace treyarch {
         i32               unk_365(void* unk, void* unk_2) override;
         void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4) override;
         i32               unk_367(void* unk, void* unk_2) override;
-        void              unk_368(f32 unk, i32 unk_2) override;
+        void              unk_368(f32 unk, void* record) override;
         void              unk_369(i32 unk, i32 unk_2) override;
         bool              unk_370(i32 unk, i32 unk_2, i32 unk_3) override;
         i32               unk_371(i32 unk, i32 unk_2) override;
@@ -377,7 +377,7 @@ namespace treyarch {
         i32               unk_395() override;
         i32               unk_396(i32 unk) override;
         i32               unk_398(i32 unk) override;
-        i32               unk_399(i32 unk) override;
+        void*             unk_399(i32 index) override;
         void              unk_400(polytube* tube, f32 radius) override;
         i32               unk_401() override;
         i32               unk_402(i32 unk, i32 unk_2) override;

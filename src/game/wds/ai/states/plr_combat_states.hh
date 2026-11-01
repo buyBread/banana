@@ -1,17 +1,26 @@
 #pragma once
 
 #include "game/wds/ai/states/combat_state.hh"
+#include "game/boolx.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class game_button;
+    class std_puppet_inode;
+
     // the hero's melee
     class plr_combat_state : public combat_state {
 
     public:
-        u8 reserved_2f8[0x0C];
+              e_combat_move first_move;
+        const game_button*  attack_button;
+              boolx         button_held;    // cleared once attack_button lets go
+              boolx         sped_up_attack;
+              bool          unk_302;
+              u8            pad_303[0x01];
 
         explicit plr_combat_state(mash::generating_vtable_version so_do_nothing) : combat_state(so_do_nothing) {}
 
@@ -86,7 +95,8 @@ namespace treyarch {
     class rhino_ride_state : public plr_combat_state {
 
     public:
-        u8 reserved_304[0x14];
+        std_puppet_inode* unk_304;          // the actor's, set by activate
+        u8                reserved_308[0x10];
 
         explicit rhino_ride_state(mash::generating_vtable_version so_do_nothing) : plr_combat_state(so_do_nothing) {}
 
@@ -112,7 +122,15 @@ namespace treyarch {
     class plr_trick_state : public combat_state {
 
     public:
-        u8 reserved_2f8[0x20];
+              e_combat_move first_move;
+        const game_button*  attack_button;
+              game_button*  unk_300;        // command buttons 9, 11, 1 and 69, set by activate
+              game_button*  unk_304;
+              game_button*  unk_308;
+              game_button*  unk_30c;
+              boolx         button_held;    // cleared once attack_button lets go
+              u8            pad_311[0x03];
+              f32           unk_314;        // the time since activate
 
         explicit plr_trick_state(mash::generating_vtable_version so_do_nothing) : combat_state(so_do_nothing) {}
 
@@ -143,10 +161,20 @@ namespace treyarch {
         virtual void unk_066(actor* the_actor); // the player interface's mode word becomes 14
     };
 
-    ASSERT_SIZEOF(plr_combat_state,            0x304);
+    ASSERT_SIZEOF  (plr_combat_state,                0x304);
+    ASSERT_OFFSETOF(plr_combat_state, attack_button, 0x2FC);
+    ASSERT_OFFSETOF(plr_combat_state, button_held,   0x300);
+
     ASSERT_SIZEOF(plr_car_combat_attack_state, 0x304);
-    ASSERT_SIZEOF(rhino_ride_state,            0x318);
-    ASSERT_SIZEOF(plr_trick_state,             0x318);
+
+    ASSERT_SIZEOF  (rhino_ride_state,          0x318);
+    ASSERT_OFFSETOF(rhino_ride_state, unk_304, 0x304);
+
+    ASSERT_SIZEOF  (plr_trick_state,                0x318);
+    ASSERT_OFFSETOF(plr_trick_state, attack_button, 0x2FC);
+    ASSERT_OFFSETOF(plr_trick_state, unk_300,       0x300);
+    ASSERT_OFFSETOF(plr_trick_state, button_held,   0x310);
+    ASSERT_OFFSETOF(plr_trick_state, unk_314,       0x314);
 
     namespace references {
         // what the hero raises on himself as his move hits
@@ -159,5 +187,9 @@ namespace treyarch {
 
         // 10, the combo counter's delay in frames when the move has none
         inline util::memory_reference<i32> unk_00bb2184 { 0x00BB2184 };
+
+        // 0.3 and 0.2, how fast the trick state brings the hero's gravity multiplier and horizontal drag scale back
+        inline util::memory_reference<f32> unk_00e66f0c { 0x00E66F0C };
+        inline util::memory_reference<f32> unk_00e66f10 { 0x00E66F10 };
     } // references
 } // treyarch

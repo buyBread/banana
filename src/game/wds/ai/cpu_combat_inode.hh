@@ -25,6 +25,16 @@ namespace treyarch {
         i32                                   update_movement_function; // -1 when the script has none
         u8                                    reserved_0dc[0x1C];
         engine_recursive_lock                 script_lock;              // held around the script calls
+
+        // slot 31; a flag the script raises, read under the script lock
+        bool unk_031(f32 delta_t) {
+            return ((bool (__thiscall*)(cpu_combat_inode*, f32))(*(void***)this)[31])(this, delta_t);
+        }
+
+        // slot 37; another one
+        bool unk_037(f32 delta_t) {
+            return ((bool (__thiscall*)(cpu_combat_inode*, f32))(*(void***)this)[37])(this, delta_t);
+        }
     };
 
     // what the combat script's update_movement steers its actor through

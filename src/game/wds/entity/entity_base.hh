@@ -152,6 +152,7 @@ namespace treyarch {
         }
 
         // sub_4024E0
+        // inlined @ sub_57D110
         bool has_standing_ifc() const {
             return has_ifc(entity_ifc_standing);
         }

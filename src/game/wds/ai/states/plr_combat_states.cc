@@ -1,14 +1,20 @@
 #include "retail.hh"
 #include "game/wds/ai/states/plr_combat_states.hh"
+#include "game/wds/ai/states/plr_loco_wall_sprint_states.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
 #include "game/wds/entity/interface/damage_interface.hh"
 #include "game/wds/entity/interface/occupant_interface.hh"
+#include "game/wds/entity/interface/physical_interface.hh"
 #include "game/wds/entity/interface/player_interface.hh"
+#include "game/wds/entity/interface/spiderman_rvb_player_interface.hh"
+#include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/input/game_button.hh"
 #include "game/game_meter_manager.hh"
+#include "game/math/po.hh"
 
 using namespace treyarch;
 
@@ -69,9 +75,127 @@ void plr_combat_state::deactivate(const mashed_state* next_mashed_state) {
     ((void (__thiscall*)(plr_combat_state*, const mashed_state*))retail::sub_54C1A0)(this, next_mashed_state);
 }
 
-// slot 11
+// sub_57D110
 e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(plr_combat_state*, f32))retail::sub_57D110)(this, delta_t);
+    e_state_exit_code the_exit_code = combat_state::frame_advance(delta_t);
+
+    player_interface* player = get_actor()->player_ifc();
+    auto*             my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    retail::sub_548910((i32)get_actor(), (i32)my_als);
+
+    const combo_move_data* combo_move = my_als->get_combo_move(als::base_layer);
+
+    if (combo_move) {
+        player->unk_167((combo_move->unk_14 & combo_unk_14_flag_04000000) != 0);
+        player->unk_169((combo_move->unk_14 & combo_unk_14_flag_02000000) != 0);
+        player->unk_171((combo_move->unk_14 & combo_unk_14_flag_01000000) != 0);
+        player->unk_173((combo_move->unk_14 & combo_unk_14_flag_00800000) != 0);
+        player->unk_175((combo_move->unk_14 & combo_unk_14_flag_00000400) != 0);
+        player->unk_177((combo_move->unk_18 & combo_unk_18_flag_00000001) != 0);
+        player->unk_179((combo_move->unk_18 & combo_unk_18_flag_00000002) != 0);
+
+        if (combo_move->unk_14 & combo_unk_14_flag_00000040)
+            player->unk_492(1);
+
+        if (combo_move->unk_14 & combo_unk_14_flag_00000200)
+            player->unk_506(1);
+
+        if (combo_move->unk_14 & combo_unk_14_flag_00010000)
+            player->unk_512(1);
+    }
+
+    player->unk_060(current_targets->size() > 0 ? (*current_targets)[0] : arch_base_vhandle());
+
+    if (combo_move                                                       &&
+        (combo_move->flags_1 & combo_flag_allow_flight_thrusters)        &&
+        (attack_applied || !current_targets || current_targets->empty()) &&
+        retail::sub_601C50((u32*)get_actor())                            &&
+        get_actor()->has_standing_ifc()                                  &&
+        !get_actor()->standing_ifc()->is_effectively_standing()) {
+
+        entity* nearest = nullptr;
+
+        if (player->unk_077() != 1)
+            nearest = (entity*)retail::sub_4B6420((const f32*)&get_actor()->my_abs_po->get_position(), 10.0f, 0.0f);
+
+        player->unk_206(delta_t, nearest, 0);
+    }
+
+    if (button_held)
+        button_held = attack_button && attack_button->pressed();
+
+    if (the_exit_code != state_exit_code_no_exit && the_exit_code != state_exit_code_damaged) {
+        if (player->unk_485()                           &&
+            can_handle_exit_code(state_exit_code_crawl) &&
+            the_exit_code != state_exit_code_crawl      &&
+            player->unk_264(delta_t, nullptr, 0, 0, 0))
+
+            the_exit_code = state_exit_code_crawl;
+
+        player->unk_486(false, 0.0f);
+    }
+
+    if (the_exit_code == state_exit_code_no_exit) {
+        if (can_handle_exit_code(state_exit_code_zip) &&
+            !player->unk_080().null()                 &&
+            player->unk_080().resolve()               &&
+            player->unk_391(1, 0)) {
+
+            player->unk_158(10);
+            the_exit_code = state_exit_code_zip;
+        } else {
+            for (i32 index = 0; index < 2; ++index) {
+                auto* record = (spiderman_rvb_unk_0638*)player->unk_399(index);
+
+                if (record->unk_00) {
+                    player->unk_368(delta_t, record);
+                    break;
+                }
+            }
+
+            if (player->unk_0251) {
+                if (player->get_command_button(3)->released())
+                    the_exit_code = state_exit_code_swing;
+
+                i32 hand = player->unk_395();
+
+                if (hand != -1) {
+                    static const string_hash swing_hand_key     = string_hash(hash::djb2("swing_hand"));
+                    static const string_hash swing_hand2_key    = string_hash(hash::djb2("swing_hand2"));
+                    static const string_hash refire_on_swap_key = string_hash(hash::djb2("refire_on_swap"));
+
+                    i32 swing_hand = my_als->get_optional_als_pb_int(swing_hand_key, hand, als::base_layer, nullptr);
+
+                    bool signal_exists = false;
+                    bool refire        = false;
+
+                    f32 time_to_shoot = my_als->get_time_to_signal(references::web_shoot.read(), als::base_layer, &signal_exists, true, nullptr);
+
+                    if (signal_exists && 0.0f > time_to_shoot) {
+                        swing_hand = my_als->get_optional_als_pb_int(swing_hand2_key, swing_hand, als::base_layer, nullptr);
+
+                        if (swing_hand != hand)
+                            refire = my_als->get_optional_als_pb_int(refire_on_swap_key, 0, als::base_layer, nullptr) != 0;
+                    }
+
+                    if (swing_hand != hand)
+                        player->unk_129(refire);
+                }
+            }
+        }
+
+        static const string_hash should_stick_to_wall_key = string_hash(hash::djb2("should_stick_to_wall"));
+
+        i32 stick_to_wall = my_als->get_optional_als_pb_int(should_stick_to_wall_key, -1, als::base_layer, nullptr);
+
+        if (stick_to_wall == 1)
+            player->unk_486(true, 0.0f);
+        else if (stick_to_wall == 0)
+            player->unk_486(false, 0.0f);
+    }
+
+    return the_exit_code == state_exit_code_failure ? state_exit_code_fall : the_exit_code;
 }
 
 // slot 12
@@ -325,9 +449,49 @@ void plr_car_combat_attack_state::deactivate(const mashed_state* next_mashed_sta
     ((void (__thiscall*)(plr_car_combat_attack_state*, const mashed_state*))retail::sub_5737A0)(this, next_mashed_state);
 }
 
-// slot 11
-e_state_exit_code plr_car_combat_attack_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(plr_car_combat_attack_state*, f32))retail::sub_57FCD0)(this, delta_t);
+// sub_57FCD0
+e_state_exit_code plr_car_combat_attack_state::frame_advance(f32 delta_t) { // a collision knocks the hero off
+    u32 physical_flags = get_actor()->physical_ifc()->flags;
+
+    if (!(physical_flags & physical_interface_flag_collided) && !(physical_flags & physical_interface_flag_ext_collided))
+        return plr_combat_state::frame_advance(delta_t);
+
+    vector3d up     = get_actor()->my_abs_po->get_y_facing();
+    vector3d normal = get_actor()->physical_ifc()->last_collision_normal;
+
+    vector3d scaled((f32)((f64)normal.x * 5.0),
+                    (f32)((f64)normal.y * 5.0),
+                    (f32)((f64)normal.z * 5.0));
+
+    vector3d override_dir((f32)((f64)scaled.x + up.x),
+                          (f32)((f64)scaled.y + up.y),
+                          (f32)((f64)scaled.z + up.z));
+
+    string_hash wounded_category;
+    wounded_category.initialize(mash::ALLOCATED);
+
+    vector3d dir = get_actor()->physical_ifc()->last_collision_normal;
+
+    const vector3d* position = &get_actor()->my_abs_po->get_position();
+
+    get_actor()->damage_ifc()->apply_damage_with_combo_web_damage(get_actor(),
+                                                                  nullptr,
+                                                                  0,
+                                                                  8,
+                                                                  4,
+                                                                  nullptr,
+                                                                  nullptr,
+                                                                  position,
+                                                                  &dir,
+                                                                  0,
+                                                                  &wounded_category,
+                                                                  &override_dir,
+                                                                  num_rb_phys_bones,
+                                                                  nullptr,
+                                                                  nullptr,
+                                                                  false);
+
+    return state_exit_code_exploded;
 }
 
 // ==== rhino_ride_state ==== //
@@ -387,9 +551,39 @@ void rhino_ride_state::deactivate(const mashed_state* next_mashed_state) {
     ((void (__thiscall*)(rhino_ride_state*, const mashed_state*))retail::sub_573F40)(this, next_mashed_state);
 }
 
-// slot 11
+// sub_573FF0
 e_state_exit_code rhino_ride_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(rhino_ride_state*, f32))retail::sub_573FF0)(this, delta_t);
+    e_state_exit_code the_exit_code = enhanced_state::frame_advance(delta_t);
+
+    if (unk_304->get_start_rhino_ride()) {
+        start_combat_script(delta_t);
+
+        als::layer_id layer  = get_combat_layer();
+        auto*         my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+        auto*         cmbt   = (cpu_combat_inode*)get_core()->get_info_node(info_node_type_cpu_combat);
+
+        const combo_move_data* combo_move = my_als->get_combo_move(layer);
+
+        if (my_als->my_als->get_als_layer(layer)->did_transition_succeed()) {
+            start_sync_anim(combo_move);
+            start_buddy_combo(combo_move);
+        }
+
+        fill_combat_anim_values(combo_move, my_als, delta_t);
+        set_als_position(my_als, combo_move);
+        set_als_facing(my_als, combo_move);
+        unk_026(my_als, combo_move);
+        add_extra_als_params(my_als, combo_move);
+        advance_combat_script(delta_t, combo_move, my_als, cmbt);
+    }
+
+    if (!unk_304)
+        return state_exit_code_failure;
+
+    if (the_exit_code != state_exit_code_no_exit)
+        return the_exit_code;
+
+    return unk_304->get_start_rhino_ride() ? the_exit_code : state_exit_code_success;
 }
 
 // ==== plr_trick_state ==== //
@@ -449,9 +643,84 @@ void plr_trick_state::deactivate(const mashed_state* next_mashed_state) {
     ((void (__thiscall*)(plr_trick_state*, const mashed_state*))retail::sub_54CE50)(this, next_mashed_state);
 }
 
-// slot 11
+// sub_54CF20
 e_state_exit_code plr_trick_state::frame_advance(f32 delta_t) {
-    return ((e_state_exit_code (__thiscall*)(plr_trick_state*, f32))retail::sub_54CF20)(this, delta_t);
+    e_state_exit_code the_exit_code = combat_state::frame_advance(delta_t);
+
+    player_interface* player = get_actor()->player_ifc();
+
+    if (button_held)
+        button_held = attack_button && attack_button->pressed();
+
+    if (get_actor()->physical_ifc()->drag_coefficient_horz_scale < 1.0f) {
+        f32 horz_scale = (f32)((f64)references::unk_00e66f10.read() * delta_t + get_actor()->physical_ifc()->drag_coefficient_horz_scale);
+
+        if (horz_scale < 0.0f)
+            horz_scale = 0.0f;
+        else if (horz_scale > 1.0f)
+            horz_scale = 1.0f;
+
+        get_actor()->physical_ifc()->drag_coefficient_horz_scale = horz_scale;
+    }
+
+    if (references::unk_00f4d590.read() > get_actor()->physical_ifc()->gravity_multiplier) {
+        f32 gravity_multiplier = (f32)((f64)references::unk_00e66f0c.read() * delta_t + get_actor()->physical_ifc()->gravity_multiplier);
+
+        if (gravity_multiplier < 0.0f)
+            gravity_multiplier = 0.0f;
+        else if (gravity_multiplier > references::unk_00f4d590.read())
+            gravity_multiplier = references::unk_00f4d590.read();
+
+        get_actor()->physical_ifc()->gravity_multiplier = gravity_multiplier;
+    }
+
+    unk_314 += delta_t;
+
+    if (the_exit_code == state_exit_code_jump)
+        the_exit_code = state_exit_code_fall;
+
+    auto* my_als = (als_inode*)get_core()->get_info_node(info_node_type_als);
+
+    if (const combo_move_data* combo_move = my_als->get_combo_move(als::base_layer))
+        retail::sub_987560(combo_move->get_combo_move_type_id(nullptr), 0.0f);
+
+    if (the_exit_code == state_exit_code_no_exit) {
+        entity* nearest = nullptr;
+
+        if (player->unk_077() != 1)
+            nearest = (entity*)retail::sub_4B6420((const f32*)&get_actor()->my_abs_po->get_position(), 5.0f, 0.0f);
+
+        player->unk_206(delta_t, nearest, 0);
+
+        if (can_handle_exit_code(state_exit_code_wall_sprint) && player->unk_319(delta_t, unk_300, 0))
+            return state_exit_code_wall_sprint;
+
+        if (can_handle_exit_code(state_exit_code_crawl) && player->unk_264(delta_t, nullptr, 0, 0, 0))
+            return state_exit_code_crawl;
+
+        if (can_handle_exit_code(state_exit_code_pole_swing) && player->unk_392(0))
+            return state_exit_code_pole_swing;
+
+        if (can_handle_exit_code(state_exit_code_yoyo) &&
+            unk_304                                    &&
+            unk_304->triggered()                       &&
+            player->unk_384())
+
+            return state_exit_code_yoyo;
+
+        if (can_handle_exit_code(state_exit_code_jump) &&
+            player->unk_182()                          &&
+            unk_308                                    &&
+            unk_308->triggered()                       &&
+            !(unk_30c && unk_30c->triggered())) {
+
+            player->unk_158(13);
+
+            return state_exit_code_jump;
+        }
+    }
+
+    return the_exit_code;
 }
 
 // slot 20

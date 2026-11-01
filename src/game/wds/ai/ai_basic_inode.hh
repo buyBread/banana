@@ -39,14 +39,17 @@ namespace treyarch {
             machine_count      = 27
         };
 
-        u8                           reserved_068[0x6C];
+        slim::slim_machine*          unk_068;                        // the generic slim combat state runs it when machine 0 is unset
+        u8                           reserved_06c[0x68];
         slim::slim_machine*          machines[machine_count];
         u8                           machine_changed[machine_count]; // bit 0 is set by every store
         u8                           pad_15b;
         ai_simple_target*            targets[target_count];
         ai_simple_target_collection* target_collection;
         ai_simple_target*            self_target;                    // made on first use, dropped once the actor dies
-        u8                           reserved_1c4[0x44];
+        u8                           reserved_1c4[0x3C];
+        u32                          unk_200;                        // bit 0x40: the generic slim combat state was entered from "Wounded"
+        u8                           reserved_204[0x04];
 
         e_simple_target_type get_target_type(u32 slot); // drops a none target first
         void                 clear_target(i32 slot);
@@ -69,12 +72,13 @@ namespace treyarch {
     };
 
     ASSERT_SIZEOF  (ai_basic_inode,                    0x208);
-    ASSERT_OFFSETOF(ai_basic_inode, reserved_068,      0x068);
+    ASSERT_OFFSETOF(ai_basic_inode, unk_068,           0x068);
     ASSERT_OFFSETOF(ai_basic_inode, machines,          0x0D4);
     ASSERT_OFFSETOF(ai_basic_inode, machine_changed,   0x140);
     ASSERT_OFFSETOF(ai_basic_inode, targets,           0x15C);
     ASSERT_OFFSETOF(ai_basic_inode, target_collection, 0x1BC);
     ASSERT_OFFSETOF(ai_basic_inode, self_target,       0x1C0);
+    ASSERT_OFFSETOF(ai_basic_inode, unk_200,           0x200);
 
     ai_basic_inode* get_ai_basic_inode(arch_base* the_entity);
     ai_basic_inode* get_ai_basic_inode_if_slim_actor(arch_base* the_entity);

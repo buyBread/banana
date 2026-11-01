@@ -120,7 +120,7 @@ namespace treyarch {
         virtual i32               unk_057();
         virtual void              unk_058(i32 unk);
         virtual void*             unk_059(void* unk);
-        virtual i32               unk_060(i32 unk);
+        virtual i32               unk_060(arch_base_vhandle target);   // the hero's combat frame hands it its first target
         virtual arch_base_vhandle unk_061();                           // rvb: its +0x728; a null handle in player_interface
         virtual void*             unk_062(void* unk);
         virtual i32               unk_063(i32 unk);
@@ -140,7 +140,7 @@ namespace treyarch {
         virtual i32               unk_077();
         virtual void              set_swing_override_anchor(arch_base_vhandle anchor);
         virtual void              set_zip_override_anchor(arch_base_vhandle anchor);
-        virtual void*             unk_080(void* unk);
+        virtual arch_base_vhandle unk_080();
         virtual void              unk_081(f32 unk);
         virtual i32               unk_082(f32 unk);
         virtual i32               unk_083();
@@ -189,7 +189,7 @@ namespace treyarch {
         virtual bool              unk_126();
         virtual i32               unk_127();
         virtual i32               unk_128();
-        virtual bool              unk_129(f32 unk);
+        virtual bool              unk_129(bool unk);                   // rvb: swaps its two +0x638 records
         virtual bool              unk_130();
         virtual bool              unk_131();
         virtual i32               unk_132();
@@ -266,7 +266,7 @@ namespace treyarch {
         virtual void              unk_203();
         virtual i32               unk_204(i32 unk);
         virtual void*             unk_205(void* unk);
-        virtual i32               unk_206(f32 unk, i32 unk_2, i32 unk_3);
+        virtual i32               unk_206(f32 unk, entity* unk_2, i32 unk_3);
         virtual void              unk_207();
         virtual void              unk_208(i32 unk);
         virtual void              unk_209(i32 unk);
@@ -428,7 +428,7 @@ namespace treyarch {
         virtual i32               unk_365(void* unk, void* unk_2);
         virtual void*             unk_366(void* unk, void* unk_2, void* unk_3, void* unk_4);
         virtual i32               unk_367(void* unk, void* unk_2);
-        virtual void              unk_368(f32 unk, i32 unk_2);
+        virtual void              unk_368(f32 unk, void* record);      // rvb: one of its two +0x638 records
         virtual void              unk_369(i32 unk, i32 unk_2);
         virtual bool              unk_370(i32 unk, i32 unk_2, i32 unk_3);
         virtual i32               unk_371(i32 unk, i32 unk_2);
@@ -459,7 +459,7 @@ namespace treyarch {
         virtual i32               unk_396(i32 unk);
         virtual i32               unk_397();
         virtual i32               unk_398(i32 unk);
-        virtual i32               unk_399(i32 unk);
+        virtual void*             unk_399(i32 index);                  // rvb: its +0x638 record at the index
         virtual void              unk_400(polytube* tube, f32 radius); // dresses the polytube as the hero's web
         virtual i32               unk_401();                           // the als's swing_hand
         virtual i32               unk_402(i32 unk, i32 unk_2);
