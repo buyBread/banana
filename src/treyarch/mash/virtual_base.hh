@@ -12,6 +12,17 @@
 namespace treyarch { namespace mash {
     class mash_info_struct;
 
+    // the vptr of T's `subobject` base (T itself for the one at +0x00), read off a T built with its
+    // generating constructor in scratch memory (never destroyed); T doesn't have to be a mash class
+    template<typename T, typename subobject = T>
+    vtable_value_t generate_vtable() {
+        alignas(T) u8 scratch[sizeof(T)];
+
+        T* object = ::new (scratch) T(GENERATING_VTABLES_VERSION);
+
+        return *(vtable_value_t*)(subobject*)object;
+    }
+
     class mash_virtual_base {
 
     public:
@@ -47,16 +58,6 @@ namespace treyarch { namespace mash {
 
         static bool register_vtable_entry(const vtable_key_t   &key,
                                           const vtable_value_t &value);
-
-        // T's vtable, read off a generating-version one built in scratch memory (never destroyed)
-        template<typename T>
-        static vtable_value_t generate_vtable() {
-            alignas(T) u8 scratch[sizeof(T)];
-
-            T* object = ::new (scratch) T(GENERATING_VTABLES_VERSION);
-
-            return *(vtable_value_t*)object;
-        }
 
         // what the generated registration list does per class
         template<typename T>
