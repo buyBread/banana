@@ -51,10 +51,10 @@ void game::frame_advance(f32 time_inc) {
     averaged_delta = (f32)((f64)averaged_delta / 15.0);
 
     if (advance_region_spawns) {
-        void* manager = region_spawn_manager::inst();
+        region_spawn_manager* manager = region_spawn_manager::inst();
 
         if (manager && this->level_is_loaded && !block_external_updates)
-            retail::sub_956960(manager, averaged_delta);
+            manager->frame_advance(averaged_delta);
     }
 
     this->frame_advance_level(averaged_delta);

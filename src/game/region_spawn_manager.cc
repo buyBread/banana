@@ -2,6 +2,7 @@
 #include "game/amalga/resource_manager.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/neighborhood_interface.hh"
+#include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
 #include "game/resource_key.hh"
 #include "game/spawn/spawn_table_manager.hh"
@@ -40,6 +41,19 @@ void region_spawn_manager::load(const char* level_name, amalga::resource_pack_sl
         region_names[index]            = string_hash();
         regions[index]                 = nullptr;
     }
+}
+
+// sub_956960
+void region_spawn_manager::frame_advance(f32 dt) {
+    retail::sub_956620((i32)this); // follows the hero's district
+    retail::sub_920180((i32)this);
+
+    spawn_table_manager::inst()->update(dt);
+
+    if (references::summon_state.read())
+        retail::sub_9509C0((i32)references::summon_state.read(), dt); // summon_state's frame
+
+    region_pack_manager::inst()->frame_advance(dt);
 }
 
 // sub_90F470

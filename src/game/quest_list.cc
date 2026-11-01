@@ -45,9 +45,9 @@ void quest_giver::construct_mashed_class() {
     locations     .construct_mashed_class();
     name          .construct_mashed_class();
     localized_name.construct_mashed_class();
-    unk_30        .construct_mashed_class();
-    unk_3c        .construct_mashed_class();
-    unk_48        .construct_mashed_class();
+    pack_name     .construct_mashed_class();
+    entity_type   .construct_mashed_class();
+    conversation  .construct_mashed_class();
     unk_58        .construct_mashed_class();
     greeting      .construct_mashed_class();
     unk_70        .construct_mashed_class();
@@ -61,9 +61,9 @@ void quest_giver::destruct_mashed_class() {
     locations     .destruct_mashed_class();
     name          .destruct_mashed_class();
     localized_name.destruct_mashed_class();
-    unk_30        .destruct_mashed_class();
-    unk_3c        .destruct_mashed_class();
-    unk_48        .destruct_mashed_class();
+    pack_name     .destruct_mashed_class();
+    entity_type   .destruct_mashed_class();
+    conversation  .destruct_mashed_class();
     unk_58        .destruct_mashed_class();
     greeting      .destruct_mashed_class();
     unk_70        .destruct_mashed_class();
@@ -75,9 +75,9 @@ void quest_giver::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_
     locations     .unmash(mash_info, this, buffer);
     name          .unmash(mash_info, this, buffer);
     localized_name.unmash(mash_info, this, buffer);
-    unk_30        .unmash(mash_info, this, buffer);
-    unk_3c        .unmash(mash_info, this, buffer);
-    unk_48        .unmash(mash_info, this, buffer);
+    pack_name     .unmash(mash_info, this, buffer);
+    entity_type   .unmash(mash_info, this, buffer);
+    conversation  .unmash(mash_info, this, buffer);
     unk_58        .unmash(mash_info, this, buffer);
     greeting      .unmash(mash_info, this, buffer);
     unk_70        .unmash(mash_info, this, buffer);

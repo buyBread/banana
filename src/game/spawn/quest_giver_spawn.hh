@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/mash/string.hh"
 #include "game/math/algebra.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -22,7 +23,14 @@ namespace treyarch {
         vector3d get_facing();
         vector3d get_marker_offset();
 
+        mash::string get_pack_name();
+        mash::string get_entity_type();
+        bool         giver_unk_2c();
+
         void reselect_location();
+
+        void spawn_entity();
+        void despawn_entity();
     };
 
     ASSERT_SIZEOF  (quest_giver_spawn,                0x1C);

@@ -182,6 +182,7 @@ namespace treyarch {
 
         void load(const char* level_name, amalga::resource_pack_slot* slot);
 
+        void destroy_despawned();
         void stars_mode_damage_tick(f32 dt);
         void end_stars_mode();
         void start_ready_actives();

@@ -45,6 +45,8 @@ namespace treyarch {
 
         void load(const char* level_name, amalga::resource_pack_slot* slot);
 
+        void frame_advance(f32 dt);
+
         mash::string get_neighborhood_name();
         mash::string get_meta_neighborhood_name();
         mash::string get_city_wide_set_name();

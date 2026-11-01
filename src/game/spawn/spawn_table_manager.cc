@@ -20,6 +20,7 @@
 #include "game/mission/mission_memory_manager.hh"
 #include "game/progression_change.hh"
 #include "game/quest_list.hh"
+#include "game/quest_manager.hh"
 #include "game/region_pack_manager.hh"
 #include "game/region_spawn_manager.hh"
 #include "game/resource_key.hh"
@@ -203,8 +204,8 @@ void spawn_table_manager::load(const char*, amalga::resource_pack_slot*) { // al
 
 // sub_9562C0
 void spawn_table_manager::update(f32 dt) { // the spawning steps wait while a mission is running, unless it asks for city life
-    retail::sub_948890(this);       // reposition_fixed_entities
-    retail::sub_92E970((u32*)this); // destroy_despawned
+    retail::sub_948890(this); // reposition_fixed_entities
+    destroy_despawned();
 
     if (unk_04c->stars_mode && !references::game.read()->game_paused)
         stars_mode_damage_tick(dt);
@@ -222,6 +223,48 @@ void spawn_table_manager::update(f32 dt) { // the spawning steps wait while a mi
     retail::sub_954BC0((i32)this, dt); // activate_items
 
     start_ready_actives();
+}
+
+// sub_92E970
+void spawn_table_manager::destroy_despawned() { // the givers a quest calls for come and go, the nearest other one gets its pack asked for
+    vector3d hero = references::g_world_ptr.read()->get_hero_ptr()->my_abs_po->get_position();
+
+    f32                nearest = -1.0f;
+    quest_giver_spawn* chosen  = nullptr;
+
+    for (quest_giver_spawn** it = unk_04c->quest_giver_spawns.begin(); it != unk_04c->quest_giver_spawns.end(); ++it) {
+        quest_giver_spawn* spawn = *it;
+
+        if (!spawn->location)
+            continue;
+
+        if (spawn->giver && spawn->giver->unk_2c) {
+            if (retail::sub_7F1030((i32*)quest_manager::inst(), (i32)&spawn->giver->name)) { // the giver's quest state is 2
+                if (!spawn->spawned_entity && spawn->enabled)
+                    spawn->spawn_entity();
+            } else if (spawn->spawned_entity)
+                spawn->despawn_entity();
+
+            continue;
+        }
+
+        vector3d giver = spawn->get_position();
+
+        // both heights count as 0
+        f32 dx = (f32)((f64)giver.x - (f64)hero.x);
+        f32 dy = (f32)(0.0 - 0.0);
+        f32 dz = (f32)((f64)giver.z - (f64)hero.z);
+
+        f32 distance_squared = (f32)((f64)dx * dx + (f64)dy * dy + (f64)dz * dz);
+
+        if ((0.0f > nearest || nearest > distance_squared) && spawn->enabled) {
+            nearest = distance_squared;
+            chosen  = spawn;
+        }
+    }
+
+    if (region_pack_manager::inst()->hold_quest_giver_spawn(chosen))
+        unk_04c->chosen_quest_giver_spawn = chosen;
 }
 
 // sub_920810
@@ -1293,7 +1336,7 @@ void spawn_table_manager::reset_city_life() {
     if (packs->quest_giver_locked_in_mission) {
         packs->despawn_and_lock_quest_giver_in_mission(false);
 
-        if (!retail::sub_90F6E0((i32)region_pack_manager::inst(), (i32)unk_04c->chosen_quest_giver_spawn))
+        if (!region_pack_manager::inst()->hold_quest_giver_spawn(unk_04c->chosen_quest_giver_spawn))
             unk_04c->chosen_quest_giver_spawn = nullptr;
     }
 

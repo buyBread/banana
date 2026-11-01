@@ -22,29 +22,29 @@ namespace treyarch {
     };
 
     struct spawn_table_unk_68_entry {
-        mash::string unk_00;
+        mash::string pack_name;
         mash::string unk_0c;
         mash::string unk_18;
 
         // inlined @ sub_937950
         void construct_mashed_class() {
-            unk_00.construct_mashed_class();
-            unk_0c.construct_mashed_class();
-            unk_18.construct_mashed_class();
+            pack_name.construct_mashed_class();
+            unk_0c   .construct_mashed_class();
+            unk_18   .construct_mashed_class();
         }
 
         // inlined @ sub_928DB0
         void destruct_mashed_class() {
-            unk_00.destruct_mashed_class();
-            unk_0c.destruct_mashed_class();
-            unk_18.destruct_mashed_class();
+            pack_name.destruct_mashed_class();
+            unk_0c   .destruct_mashed_class();
+            unk_18   .destruct_mashed_class();
         }
 
         // inlined @ sub_937B50
         void unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
-            unk_00.unmash(mash_info, this, buffer);
-            unk_0c.unmash(mash_info, this, buffer);
-            unk_18.unmash(mash_info, this, buffer);
+            pack_name.unmash(mash_info, this, buffer);
+            unk_0c   .unmash(mash_info, this, buffer);
+            unk_18   .unmash(mash_info, this, buffer);
         }
     };
 
