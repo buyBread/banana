@@ -73,7 +73,7 @@ void jq::jobqueue_init() {
     references::unk_00fc5098.get().reset();
     references::unk_00fc5098.get().writer_depth = 0;
     references::unk_00fc50c8.get().reset();
-    references::unk_00fc2058.get().reset();
+    treyarch::references::combat_thread_info_lock.get().reset();
     treyarch::references::target_list_lock.get().reset();
     references::unk_00fc4968.get().reset();
     references::unk_010031d8.get().reset();
