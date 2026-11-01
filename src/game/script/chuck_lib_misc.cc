@@ -1,5 +1,14 @@
 #include "retail.hh"
+#include "game/app.hh"
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_loading_screen.hh"
+#include "game/game.hh"
+#include "game/mission/mission_manager.hh"
 #include "game/script/chuck_lib_misc.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/entity/actor.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 
 using namespace treyarch;
 
@@ -87,20 +96,66 @@ bool slf__inhibit_animated_cam__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_873C30)(this, stack);
 }
 
+// sub_873C70
 bool slf__freeze_hero__num__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_873C70)(this, stack);
+    stack.sp -= 0x04;
+
+    bool freeze;
+
+    // the script's freezes are counted, so it can't thaw past them
+    if (stack.local_num(0x00) != 0.0f) {
+        ++mission_manager::inst()->saved_script_hero_frozen_count;
+
+        freeze = true;
+    } else {
+        freeze = false;
+
+        if (mission_manager::inst()->saved_script_hero_frozen_count <= 0)
+            return true;
+
+        --mission_manager::inst()->saved_script_hero_frozen_count;
+    }
+
+    app::inst()->get_game()->freeze_hero(freeze);
+
+    return true;
 }
 
 bool slf__set_blur__num__t::operator()(chuck::vm::vm_stack &stack) {
     return ((invoke_t)retail::sub_873CD0)(this, stack);
 }
 
+// sub_824CB0
 bool slf__suspend_all_ai__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824CB0)(this, stack);
+    ++mission_manager::inst()->saved_script_hero_ai_disable_count;
+
+    ai_core::push_disable_all(false);
+
+    return true;
 }
 
+// sub_824CD0
 bool slf__unsuspend_all_ai__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_824CD0)(this, stack);
+    --mission_manager::inst()->saved_script_hero_ai_disable_count;
+
+    ai_core::pop_disable_all(false);
+
+    // the hero stays disabled while the loading screen is up
+    if (references::frontend.get().igo->loading_screen->is_shown() &&
+        ((actor*)references::g_world_ptr.read()->hero_ptr)->get_ai_core()) {
+
+        ++mission_manager::inst()->saved_script_hero_ai_disable_count;
+
+        ((actor*)references::g_world_ptr.read()->hero_ptr)->get_ai_core()->push_disable(0);
+    }
+
+    if (mission_manager::inst()->saved_script_hero_ai_disable_count <= 0) {
+        ++mission_manager::inst()->saved_script_hero_ai_disable_count;
+
+        ((actor*)references::g_world_ptr.read()->hero_ptr)->get_ai_core()->push_disable(0);
+    }
+
+    return true;
 }
 
 bool slf__is_dialog_active__t::operator()(chuck::vm::vm_stack &stack) {

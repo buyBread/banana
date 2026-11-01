@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
 
 using namespace treyarch;
@@ -45,6 +46,22 @@ damage_interface* entity::create_damage_ifc() {
 
 time_interface* entity::create_time_ifc() {
     return (time_interface*)retail::sub_65ABE0((i32*)this);
+}
+
+// slot 116; 16 actor classes share actor's body, the rest keep the virtual call
+void entity::suspend(bool update_region) {
+    if (vtable[116] == (void*)retail::sub_602EB0)
+        ((actor*)this)->suspend(update_region);
+    else
+        ((void (__thiscall*)(entity*, bool))vtable[116])(this, update_region);
+}
+
+// slot 117
+void entity::unsuspend(bool update_region) {
+    if (vtable[117] == (void*)retail::sub_602EF0)
+        ((actor*)this)->unsuspend(update_region);
+    else
+        ((void (__thiscall*)(entity*, bool))vtable[117])(this, update_region);
 }
 
 // sub_602010

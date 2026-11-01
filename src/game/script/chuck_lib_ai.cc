@@ -1,6 +1,9 @@
 #include "retail.hh"
 #include "game/arch_base_vhandle.hh"
+#include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/math/references.hh"
+#include "game/mission/mission_manager.hh"
 #include "game/script/chuck_lib_ai.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_rappel_inode.hh"
@@ -881,10 +884,47 @@ bool slf__entity__ai_is_mutation_trans_affect_children__str__t::operator()(chuck
     return ((invoke_t)retail::sub_868AF0)(this, stack);
 }
 
+// sub_868BB0
 bool slf__entity__push_ai_disable__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_868BB0)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    // the hero's are counted, so pop_ai_disable can't go past them
+    if (retail::sub_601C50((u32*)self)) // entity_base::is_hero
+        ++mission_manager::inst()->saved_script_hero_ai_disable_count;
+
+    self->get_ai_core()->push_disable(0);
+
+    return true;
 }
 
+// sub_868C10
 bool slf__entity__pop_ai_disable__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_868C10)(this, stack);
+    stack.sp -= 0x04;
+
+    auto self = (actor*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
+
+    if (!self || !self->is_an_actor() || !self->get_ai_core())
+        return true;
+
+    // the hero stays disabled while the loading screen is up
+    if (references::frontend.get().igo->loading_screen->is_shown() &&
+        retail::sub_601C50((u32*)self))
+
+        return true;
+
+    if (retail::sub_601C50((u32*)self)) {
+        if (mission_manager::inst()->saved_script_hero_ai_disable_count <= 0)
+            return true;
+
+        --mission_manager::inst()->saved_script_hero_ai_disable_count;
+    }
+
+    self->get_ai_core()->pop_disable(0);
+
+    return true;
 }

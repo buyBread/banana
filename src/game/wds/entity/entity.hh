@@ -326,15 +326,9 @@ namespace treyarch {
             return center;
         }
 
-        // slot 116
-        void suspend(bool unk) {
-            ((void (__thiscall*)(entity*, bool))vtable[116])(this, unk);
-        }
-
-        // slot 117
-        void unsuspend(bool unk) {
-            ((void (__thiscall*)(entity*, bool))vtable[117])(this, unk);
-        }
+        // slots 116 / 117; actor's shared body runs in source
+        void suspend  (bool update_region);
+        void unsuspend(bool update_region);
 
         // slot 118
         void set_render_color(color32 color) {

@@ -537,7 +537,7 @@ void mission_manager::process_state_start_unloading() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
     for (; saved_script_hero_suspend_count > 0; --saved_script_hero_suspend_count)
-        ((void (__thiscall*)(entity*, i32))hero->vtable[0x1D4 / 4])(hero, 1);
+        hero->unsuspend(true);
 
     if (((actor*)hero)->get_ai_core()) {
         for (; saved_script_hero_ai_disable_count > 0; --saved_script_hero_ai_disable_count)

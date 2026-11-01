@@ -69,6 +69,10 @@ namespace treyarch {
             return my_base_ai_data != nullptr;
         }
 
+        // slots 116 / 117 of every actor class; entity's wrappers route here
+        void suspend  (bool update_region);
+        void unsuspend(bool update_region);
+
         // slot 136
         bool is_a_rocket() const {
             return ((bool (__thiscall*)(const actor*))vtable[136])(this);
