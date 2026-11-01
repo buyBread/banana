@@ -57,6 +57,7 @@ namespace treyarch { namespace mash {
               T** begin()       { return array; }
         T* const* begin() const { return array; }
 
+        // sub_921CA0
               T** end()       { return array ? array + size : nullptr; }
         T* const* end() const { return array ? array + size : nullptr; }
 

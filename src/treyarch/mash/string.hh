@@ -235,6 +235,7 @@ namespace treyarch { namespace mash {
             return right.is_equal(left);
         }
 
+        // sub_5A80D0
         friend bool operator!=(const string &left, const char* right) {
             return !left.is_equal(right);
         }
