@@ -157,7 +157,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
             }
 
             if (player->unk_0251) {
-                if (player->get_command_button(3)->released())
+                if (player->get_command_button(plr_cmd_swing)->released())
                     the_exit_code = state_exit_code_swing;
 
                 i32 hand = player->unk_395();

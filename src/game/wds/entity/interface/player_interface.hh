@@ -86,6 +86,100 @@ namespace treyarch {
     ASSERT_OFFSETOF(swing_data, unk_54,          0x54);
     ASSERT_OFFSETOF(swing_data, goal_constraint, 0x60);
 
+    // SM3 ePlayerButtonCommand, command_buttons' index; the combat block is 28 + e_combat_move
+    enum e_player_button_command : i32 {
+        plr_cmd_jump,
+        plr_cmd_double_jump,
+        plr_cmd_dual_swing,
+        plr_cmd_swing,
+        plr_cmd_zip,
+        plr_cmd_crawl_attach,
+        plr_cmd_sprint,
+        plr_cmd_swing_boost,
+        plr_cmd_zip_boost,
+        plr_cmd_wall_sprint_attach,
+        plr_cmd_pole_swing_attach,
+        plr_cmd_yoyo,
+        plr_cmd_wallplant,
+        plr_cmd_evade,
+        plr_cmd_air_evade,
+        plr_cmd_block,
+        plr_cmd_black,
+        plr_cmd_parkour,
+        plr_cmd_prop_throw,
+        plr_cmd_trick_mode,
+        plr_cmd_recenter_camera,
+        plr_cmd_engage_freelook,
+        plr_cmd_camera_lockon,
+        plr_cmd_focus_target,
+        plr_cmd_combat_branch_x,
+        plr_cmd_combat_branch_y,
+        plr_cmd_combat_branch_a,
+        plr_cmd_combat_branch_b,
+        plr_cmd_combat_light_melee,
+        plr_cmd_combat_heavy_melee,
+        plr_cmd_combat_special_attack,
+        plr_cmd_combat_jump_attack,
+        plr_cmd_combat_bounce_attack,
+        plr_cmd_combat_counter_attack,
+        plr_cmd_combat_dodge,
+        plr_cmd_combat_block,
+        plr_cmd_combat_shaba_save_civ,
+        plr_cmd_combat_light_ranged,
+        plr_cmd_combat_heavy_ranged,
+        plr_cmd_combat_grapple,
+        plr_cmd_combat_throw_manip,
+        plr_cmd_combat_grab_civ,
+        plr_cmd_combat_boss_finisher,
+        plr_cmd_combat_car_finisher,
+        plr_cmd_combat_boost_power_attack,
+        plr_cmd_combat_boost_speed_attack,
+        plr_cmd_combat_boost_air_attack,
+        plr_cmd_combat_boost_web_attack,
+        plr_cmd_combat_manual_dodge,
+        plr_cmd_combat_script_move,
+        plr_cmd_combat_momentum_light,
+        plr_cmd_combat_momentum_heavy,
+        plr_cmd_combat_momentum_grapple,
+        plr_cmd_combat_stealth_kill,
+        plr_cmd_combat_swing_light,
+        plr_cmd_combat_swing_heavy,
+        plr_cmd_combat_swing_grapple,
+        plr_cmd_combat_light_wall_attack,
+        plr_cmd_combat_heavy_wall_attack,
+        plr_cmd_combat_enemy_swing_light,
+        plr_cmd_combat_enemy_swing_heavy,
+        plr_cmd_combat_enemy_swing_grapple,
+        plr_cmd_combat_pole_swing_light,
+        plr_cmd_combat_pole_swing_heavy,
+        plr_cmd_combat_pole_swing_grapple,
+        plr_cmd_combat_grab_obj,
+        plr_cmd_trick_a,
+        plr_cmd_trick_b,
+        plr_cmd_trick_c,
+        plr_cmd_trick_d,
+        plr_cmd_web_shot,
+        plr_cmd_interact,
+        plr_cmd_dodge,
+        plr_cmd_blacksuit,
+        plr_cmd_redsuit,
+        plr_cmd_ranged_interact,
+        plr_cmd_recover,
+        plr_cmd_reflexes,
+        plr_cmd_senses,
+        plr_cmd_focus_mode,
+        plr_cmd_reel_web,
+        plr_cmd_strength_test_interact,
+        plr_cmd_strength_test_left,
+        plr_cmd_strength_test_right,
+        plr_cmd_strength_test_main,
+        plr_cmd_strength_test_quit,
+        plr_cmd_cinematic_camera_r,
+        plr_cmd_cinematic_camera_l,
+        plr_cmd_pause_game,
+        plr_num_cmd
+    };
+
     /* slots 19+ are player_interface's own. SM3's order holds around frame_advance
        (map_controls 89, update_interface 91, frame_advance 92), but WoS inserted slots: SM3 has two getters at 19/20
        and a single post_process where retail has 93 and 94, so those are named from their retail use */
@@ -217,7 +311,7 @@ namespace treyarch {
         virtual void              set_zip_override_anchor_num(f32 num);
         virtual f32               unk_038();
         virtual i32               unk_039(i32 unk);
-        virtual void*             unk_040(void* unk);
+        virtual arch_base_vhandle unk_040();
         virtual arch_base_vhandle unk_041(i32 index);                  // a null handle in player_interface
         virtual i32               unk_042();
         virtual void              unk_043(i32 unk);
@@ -770,14 +864,14 @@ namespace treyarch {
             buttons[ctrl].enable(v);
         }
 
-        game_button* get_command_button(i32 cmd) {
+        game_button* get_command_button(e_player_button_command cmd) {
             return &command_buttons[cmd];
         }
 
         void clear_buttons();
         void clear_controller(bool unk);
         void override_button(i32 ctrl, f32 value, f32 t);
-        void override_command(i32 cmd, f32 value, f32 t);
+        void override_command(e_player_button_command cmd, f32 value, f32 t);
         void set_button(i32 ctrl, f32 value);
         void set_axis(i32 ctrl, bool ud, f32 value);
 

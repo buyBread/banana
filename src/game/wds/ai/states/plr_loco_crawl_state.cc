@@ -216,7 +216,7 @@ e_state_exit_code plr_loco_crawl_state::frame_advance(f32 delta_t) {
     }
 
     if (can_handle_exit_code(state_exit_code_wall_sprint) &&
-        player->unk_319(delta_t, get_actor()->player_ifc()->get_command_button(9), 0))
+        player->unk_319(delta_t, get_actor()->player_ifc()->get_command_button(plr_cmd_wall_sprint_attach), 0))
 
         return state_exit_code_wall_sprint;
 

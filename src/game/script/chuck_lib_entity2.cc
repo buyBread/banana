@@ -1049,8 +1049,8 @@ bool slf__player_entity__override_command__num__num__num__t::operator()(chuck::v
     auto value   = stack.local_num(0x08);
     auto t       = stack.local_num(0x0C);
 
-    if (self && self->has_ifc(entity_ifc_player) && command >= 0 && command < 89)
-        self->player_ifc()->override_command(command, value, t);
+    if (self && self->has_ifc(entity_ifc_player) && command >= 0 && command < plr_num_cmd)
+        self->player_ifc()->override_command((e_player_button_command)command, value, t);
 
     return true;
 }
@@ -1092,10 +1092,10 @@ bool slf__player_entity__set_command__num__num__t::operator()(chuck::vm::vm_stac
     auto command = (i32)stack.local_num(0x04);
     auto value   = stack.local_num(0x08);
 
-    if (!self || !self->has_ifc(entity_ifc_player) || command < 0 || command >= 89)
+    if (!self || !self->has_ifc(entity_ifc_player) || command < 0 || command >= plr_num_cmd)
         return true;
 
-    game_button* button = self->player_ifc()->get_command_button(command);
+    game_button* button = self->player_ifc()->get_command_button((e_player_button_command)command);
 
     button->state  = value;
     button->unk_1c = value;

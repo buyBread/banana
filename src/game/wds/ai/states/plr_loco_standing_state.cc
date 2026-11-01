@@ -274,7 +274,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
             if (can_handle_exit_code(state_exit_code_transition)          &&
                 unk_1b4 == 2                                              &&
                 !player->is_carrying_or_carried()                         &&
-                player->get_command_button(5)->triggered_or_missed_press()) {
+                player->get_command_button(plr_cmd_crawl_attach)->triggered_or_missed_press()) {
 
                 grinds = true;
 

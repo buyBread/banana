@@ -114,7 +114,7 @@ namespace treyarch {
         u8                       reserved_0710[0x0C];
         arch_base_vhandle        unk_071c;                        // the zlock target
         u8                       reserved_0720[0x04];
-        arch_base_vhandle        unk_0724;
+        arch_base_vhandle        unk_0724;                        // slot 40 answers it
         arch_base_vhandle        unk_0728;
         arch_base_vhandle        unk_072c[2];
         f32                      zip_override_anchor_num;
@@ -262,7 +262,7 @@ namespace treyarch {
         void              set_zip_override_anchor_num(f32 num) override;
         f32               unk_038() override;
         i32               unk_039(i32 unk) override;
-        void*             unk_040(void* unk) override;
+        arch_base_vhandle unk_040() override;
         arch_base_vhandle unk_041(i32 index) override;
         i32               unk_042() override;
         void              unk_043(i32 unk) override;

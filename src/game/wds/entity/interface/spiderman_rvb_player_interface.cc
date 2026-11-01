@@ -18,11 +18,13 @@
 #include "game/wds/entity/interface/gun_weapon_interface.hh"
 #include "game/wds/entity/interface/melee_weapon_interface.hh"
 #include "game/wds/entity/interface/physical_interface.hh"
+#include "game/wds/entity/interface/spiderman_rvb_attacks.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
 #include "game/wds/entity/interface/thrown_weapon_interface.hh"
 #include "game/wds/references.hh"
 #include "game/math/references.hh"
 #include "game/wds/world_dynamics_system.hh"
+#include "treyarch/math/trig.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
@@ -229,9 +231,9 @@ i32 spiderman_rvb_player_interface::unk_039(i32 unk) {
     return ((i32 (__thiscall*)(spiderman_rvb_player_interface*, i32))retail::sub_9A7020)(this, unk);
 }
 
-// slot 40
-void* spiderman_rvb_player_interface::unk_040(void* unk) {
-    return ((void* (__thiscall*)(spiderman_rvb_player_interface*, void*))retail::sub_9A7030)(this, unk);
+// sub_9A7030
+arch_base_vhandle spiderman_rvb_player_interface::unk_040() {
+    return unk_0724;
 }
 
 // slot 41
@@ -533,7 +535,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
     unk_527(delta_t);
     unk_540(delta_t);
 
-    if (get_command_button(74)->triggered())
+    if (get_command_button(plr_cmd_redsuit)->triggered())
         unk_573();
 
     if (auto* als_node = (als_inode*)my_actor->get_ai_core()->get_info_node(info_node_type_als)) {
@@ -695,18 +697,18 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
                            (u32*)&none[6]);
     }
 
-    bool                command_79 = get_command_button(79)->triggered();
+    bool                focus_mode = get_command_button(plr_cmd_focus_mode)->triggered();
     game_meter_manager* meters     = references::game_meter_manager.read();
 
     if (unk_306()) {
-        if (command_79 ||
+        if (focus_mode ||
             retail::sub_9339C0((i32*)meters, 0) ||
             my_actor->damage_ifc()->hit_points.val <= 0)
 
             unk_0ba4 ^= 3;
     } else if (unk_307())
         unk_0ba4 &= ~2u;
-    else if (command_79 && retail::sub_933930((i32*)meters, 0))
+    else if (focus_mode && retail::sub_933930((i32*)meters, 0))
         unk_0ba4 |= 1;
 
     player_interface::frame_advance(delta_t);
@@ -1079,7 +1081,7 @@ bool spiderman_rvb_player_interface::unk_193(bool unk) {
 
 // sub_9A98A0
 bool spiderman_rvb_player_interface::handle_jump_charge(f32 delta_t) {
-    game_button* jump = get_command_button(0);
+    game_button* jump = get_command_button(plr_cmd_jump);
 
     if (!unk_186()) {
         if (!jump->pressed()) {
@@ -1247,9 +1249,257 @@ i32 spiderman_rvb_player_interface::unk_215() {
     return unk_0c0c;
 }
 
-// slot 218
+// sub_9B3DC0
 void spiderman_rvb_player_interface::init_attacks() {
-    ((void (__thiscall*)(spiderman_rvb_player_interface*))retail::sub_9B3DC0)(this);
+    player_interface::init_attacks();
+
+    f32 cone_a = math::cos(math::math_pi / 4.0f);
+    f32 cone_b = math::cos(math::math_pi / 4.0f);
+    f32 cone_c = math::cos(math::math_pi / 4.0f);
+
+    attacks[combat_move_light_melee] = new spiderman_rvb_melee_or_car_combat_attack();
+    attacks[combat_move_light_melee]->init(get_command_button(plr_cmd_combat_light_melee),
+                                           true,
+                                           0x051580C1,
+                                           0.0f,
+                                           5.0f,
+                                           cone_a,
+                                           -5.0f,
+                                           5.0f,
+                                           -1.1f,
+                                           true,
+                                           false);
+
+    attacks[combat_move_heavy_melee] = new spiderman_rvb_melee_or_car_combat_attack();
+    attacks[combat_move_heavy_melee]->init(get_command_button(plr_cmd_combat_heavy_melee),
+                                           true,
+                                           0x051580C1,
+                                           0.0f,
+                                           5.0f,
+                                           cone_a,
+                                           -4.0f,
+                                           4.0f,
+                                           -1.1f,
+                                           true,
+                                           false);
+
+    attacks[combat_move_special_attack] = nullptr;
+
+    attacks[combat_move_grapple] = new spiderman_rvb_grapple_attack();
+    attacks[combat_move_grapple]->init(get_command_button(plr_cmd_combat_grapple),
+                                       false,
+                                       0x009500C1,
+                                       0.0f,
+                                       4.0f,
+                                       cone_a,
+                                       -3.0f,
+                                       3.0f,
+                                       -1.1f,
+                                       false,
+                                       false);
+
+    attacks[combat_move_light_ranged] = new spiderman_rvb_web_yank_attack();
+    attacks[combat_move_light_ranged]->init(get_command_button(plr_cmd_combat_light_ranged),
+                                            true,
+                                            0x009580C1,
+                                            0.0f,
+                                            30.0f,
+                                            -1.1f,
+                                            -30.0f,
+                                            30.0f,
+                                            -1.1f,
+                                            false,
+                                            false);
+
+    attacks[combat_move_boss_finisher] = nullptr;
+
+    attacks[combat_move_car_finisher] = new spiderman_rvb_car_finish_attack();
+    attacks[combat_move_car_finisher]->init(get_command_button(plr_cmd_combat_car_finisher),
+                                            false,
+                                            0x001500E1,
+                                            0.0f,
+                                            15.0f,
+                                            -1.1f,
+                                            -15.0f,
+                                            15.0f,
+                                            -1.1f,
+                                            true,
+                                            false);
+
+    attacks[combat_move_jump_attack] = new spiderman_rvb_air_jump_attack();
+    attacks[combat_move_jump_attack]->init(get_command_button(plr_cmd_combat_jump_attack),
+                                           true,
+                                           0x001580C1,
+                                           0.0f,
+                                           6.0f,
+                                           cone_a,
+                                           -10.0f,
+                                           10.0f,
+                                           -1.1f,
+                                           true,
+                                           true);
+
+    attacks[combat_move_bounce_attack] = nullptr;
+
+    attacks[combat_move_throw_manip] = new spiderman_rvb_throw_manip_attack();
+    attacks[combat_move_throw_manip]->init(get_command_button(plr_cmd_combat_throw_manip),
+                                           true,
+                                           0x001500C1,
+                                           0.0f,
+                                           30.0f,
+                                           cone_a,
+                                           -30.0f,
+                                           30.0f,
+                                           -1.1f,
+                                           false,
+                                           false);
+
+    attacks[combat_move_stealth_kill] = nullptr;
+
+    attacks[combat_move_dodge] = new plr_combat_attack();
+    attacks[combat_move_dodge]->init(nullptr,
+                                     false,
+                                     0,
+                                     0.0f,
+                                     9999.0f,
+                                     -1.1f,
+                                     -9999.0f,
+                                     9999.0f,
+                                     -1.1f,
+                                     true,
+                                     false);
+
+    attacks[combat_move_manual_dodge] = nullptr;
+
+    attacks[combat_move_grab_civ] = nullptr;
+
+    attacks[combat_move_save_civ] = new spiderman_rvb_civ_save_attack();
+    attacks[combat_move_save_civ]->init(get_command_button(plr_cmd_combat_shaba_save_civ),
+                                        false,
+                                        0x005500C4,
+                                        0.0f,
+                                        2.5f,
+                                        -1.0f,
+                                        -2.5f,
+                                        2.5f,
+                                        -1.1f,
+                                        false,
+                                        false);
+
+    attacks[combat_move_boost_power_attack] = new spiderman_rvb_special_y_attack();
+    attacks[combat_move_boost_power_attack]->init(get_command_button(plr_cmd_combat_boost_power_attack),
+                                                  true,
+                                                  0x001500C1,
+                                                  0.0f,
+                                                  10.0f,
+                                                  -1.1f,
+                                                  -10.0f,
+                                                  10.0f,
+                                                  -1.1f,
+                                                  true,
+                                                  false);
+
+    attacks[combat_move_boost_speed_attack] = new spiderman_rvb_special_x_attack();
+    attacks[combat_move_boost_speed_attack]->init(get_command_button(plr_cmd_combat_boost_speed_attack),
+                                                  true,
+                                                  0x001500C1,
+                                                  0.0f,
+                                                  20.0f,
+                                                  -1.1f,
+                                                  -10.0f,
+                                                  10.0f,
+                                                  -1.1f,
+                                                  true,
+                                                  false);
+
+    attacks[combat_move_boost_air_attack] = nullptr;
+
+    attacks[combat_move_boost_web_attack] = new spiderman_rvb_special_b_attack();
+    attacks[combat_move_boost_web_attack]->init(get_command_button(plr_cmd_combat_boost_web_attack),
+                                                true,
+                                                0x001500C1,
+                                                0.0f,
+                                                10.0f,
+                                                -1.1f,
+                                                -10.0f,
+                                                10.0f,
+                                                -1.1f,
+                                                true,
+                                                false);
+
+    attacks[combat_move_momentum_light] = nullptr;
+
+    attacks[combat_move_momentum_heavy] = new spiderman_rvb_momentum_attack();
+    attacks[combat_move_momentum_heavy]->init(get_command_button(plr_cmd_combat_heavy_melee),
+                                              true,
+                                              0x011500D1,
+                                              2.5f,
+                                              30.0f,
+                                              cone_b,
+                                              -30.0f,
+                                              30.0f,
+                                              -1.1f,
+                                              true,
+                                              true);
+
+    attacks[combat_move_momentum_grapple] = nullptr;
+
+    attacks[combat_move_swing_light] = new spiderman_rvb_swing_attack();
+    attacks[combat_move_swing_light]->init(get_command_button(plr_cmd_combat_light_melee),
+                                           true,
+                                           0x011500D1,
+                                           3.0f,
+                                           15.0f,
+                                           cone_c,
+                                           -5.0f,
+                                           5.0f,
+                                           -1.1f,
+                                           true,
+                                           true);
+
+    attacks[combat_move_swing_heavy] = new spiderman_rvb_swing_attack();
+    attacks[combat_move_swing_heavy]->init(get_command_button(plr_cmd_combat_heavy_melee),
+                                           true,
+                                           0x011500D1,
+                                           3.0f,
+                                           15.0f,
+                                           cone_c,
+                                           -5.0f,
+                                           5.0f,
+                                           -1.1f,
+                                           true,
+                                           true);
+
+    attacks[combat_move_swing_grapple] = new spiderman_rvb_swing_attack();
+    attacks[combat_move_swing_grapple]->init(get_command_button(plr_cmd_combat_grapple),
+                                             true,
+                                             0x011500D5,
+                                             3.0f,
+                                             15.0f,
+                                             cone_c,
+                                             -5.0f,
+                                             5.0f,
+                                             -1.1f,
+                                             true,
+                                             true);
+
+    for (i32 move = combat_move_light_wall_attack; move <= combat_move_pole_swing_grapple; ++move)
+        attacks[move] = nullptr;
+
+    attacks[combat_move_counter_attack] = new spiderman_rvb_counter_attack();
+    attacks[combat_move_counter_attack]->init(get_command_button(plr_cmd_combat_counter_attack),
+                                              false,
+                                              0,
+                                              0.0f,
+                                              0.0f,
+                                              0.0f,
+                                              0.0f,
+                                              0.0f,
+                                              -1.1f,
+                                              true,
+                                              true);
+
+    clear_attacks(true);
 }
 
 // sub_9A6680
@@ -1263,7 +1513,7 @@ void spiderman_rvb_player_interface::init_tricks() {
 
     for (i32 index = 0; index < 4; ++index) {
         tricks[index] = new plr_trick_move();
-        tricks[index]->init(get_command_button(66 + index));
+        tricks[index]->init(get_command_button((e_player_button_command)(plr_cmd_trick_a + index)));
     }
 
     clear_tricks();
@@ -1436,14 +1686,14 @@ bool spiderman_rvb_player_interface::unk_264(f32 delta_t, void* unk_2, i32 unk_3
 
 // sub_9B4A60
 bool spiderman_rvb_player_interface::unk_265() {
-    game_button* block_button = get_command_button(15);
+    game_button* block_button = get_command_button(plr_cmd_block);
 
     if (block_button->released() || !block_button->pressed())
         unk_193(true);
 
     return unk_192()                         &&
            unk_077() == 1                    &&
-           get_command_button(15)->pressed() &&
+           get_command_button(plr_cmd_block)->pressed() &&
            !is_carrying_or_carried()         &&
            !(player_axis[0]->get_force() > 0.3f && unk_341());
 }
@@ -1475,7 +1725,7 @@ bool spiderman_rvb_player_interface::unk_270() {
     if (unk_0850)
         return true;
 
-    game_button* evade_button = get_command_button(13);
+    game_button* evade_button = get_command_button(plr_cmd_evade);
 
     if (evade_button->released() || !evade_button->pressed())
         unk_191(true);
@@ -1483,7 +1733,7 @@ bool spiderman_rvb_player_interface::unk_270() {
     return unk_190()                         &&
            !unk_341()                        &&
            unk_077() == 1                    &&
-           get_command_button(13)->pressed() &&
+           get_command_button(plr_cmd_evade)->pressed() &&
            player_axis[0]->get_force() > 0.3f;
 }
 
@@ -1492,7 +1742,7 @@ bool spiderman_rvb_player_interface::unk_271() {
     if (unk_0850)
         return true;
 
-    game_button* evade_button = get_command_button(14);
+    game_button* evade_button = get_command_button(plr_cmd_air_evade);
 
     if (evade_button->released() || !evade_button->pressed())
         unk_191(true);
@@ -1500,7 +1750,7 @@ bool spiderman_rvb_player_interface::unk_271() {
     return unk_190()                         &&
            !unk_341()                        &&
            unk_077() == 1                    &&
-           get_command_button(14)->pressed() &&
+           get_command_button(plr_cmd_air_evade)->pressed() &&
            player_axis[0]->get_force() > 0.3f;
 }
 
@@ -1988,7 +2238,7 @@ bool spiderman_rvb_player_interface::unk_392(bool skip) {
     if (skip)
         return true;
 
-    if (get_command_button(10)->pressed() && !is_carrying_or_carried())
+    if (get_command_button(plr_cmd_pole_swing_attach)->pressed() && !is_carrying_or_carried())
         unk_057c = 0.25f;
 
     if (unk_057c > 0.0f)
@@ -2650,7 +2900,7 @@ void spiderman_rvb_player_interface::unk_527(f32 delta_t) { // the suit mode loc
     if (time >= 0.0f && unk_0540 > 0.0f)
         unk_0540 = (f32)((f64)unk_0540 - (f64)delta_t);
 
-    if (get_command_button(74)->triggered()) {
+    if (get_command_button(plr_cmd_redsuit)->triggered()) {
         unk_0539 = true;
         unk_0540 = 0.0f > time ? 1.0f : time;
     }
@@ -2692,7 +2942,7 @@ bool spiderman_rvb_player_interface::unk_530(f32 delta_t) {
     if (unk_0c04 >= 0.75f)
         return true;
 
-    game_button* hop = get_command_button(17);
+    game_button* hop = get_command_button(plr_cmd_parkour);
 
     return hop && hop->pressed();
 }

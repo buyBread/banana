@@ -183,8 +183,11 @@ i32 player_interface::unk_039(i32 unk) {
 }
 
 // slot 40
-void* player_interface::unk_040(void* unk) {
-    return ((void* (__thiscall*)(player_interface*, void*))retail::sub_720180)(this, unk);
+arch_base_vhandle player_interface::unk_040() {
+    arch_base_vhandle result;
+    ((arch_base_vhandle* (__thiscall*)(player_interface*, arch_base_vhandle*))retail::sub_720180)(this, &result);
+
+    return result;
 }
 
 // sub_992E00
@@ -418,7 +421,7 @@ i32 player_interface::unk_083() {
 f32 player_interface::get_movement_speed() const {
     f32 speed = player_axis[0]->get_force();
 
-    if (speed > 0.55f && command_buttons[6].pressed())
+    if (speed > 0.55f && command_buttons[plr_cmd_sprint].pressed())
         speed = 2.0f;
 
     return speed;
@@ -3082,7 +3085,7 @@ void player_interface::clear_buttons() { // every button but the first of each a
     for (i32 ctrl = 1; ctrl < 25; ++ctrl)
         buttons[ctrl].clear();
 
-    for (i32 cmd = 1; cmd < 89; ++cmd)
+    for (i32 cmd = 1; cmd < plr_num_cmd; ++cmd)
         command_buttons[cmd].clear();
 }
 
@@ -3096,7 +3099,7 @@ void player_interface::override_button(i32 ctrl, f32 value, f32 t) {
 }
 
 // sub_83DA10
-void player_interface::override_command(i32 cmd, f32 value, f32 t) {
+void player_interface::override_command(e_player_button_command cmd, f32 value, f32 t) {
     command_buttons[cmd].update_state(t, value, value);
 }
 

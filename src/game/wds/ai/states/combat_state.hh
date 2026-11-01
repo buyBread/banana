@@ -27,20 +27,53 @@ namespace treyarch {
     class weapon_interface_extender;
     struct hit_react_record;
 
-    // SM3's eCombatMove, as far as WoS's are read; WoS has more moves than SM3
+    // SM3's eCombatMove; WoS has more moves than SM3
     enum e_combat_move : i32 {
-        combat_move_light_melee     = 0x00,
-        combat_move_counter_attack  = 0x05,
-        combat_move_dodge           = 0x06,
-        combat_move_block           = 0x07,
-        combat_move_script_move     = 0x15,
-        combat_num_moves            = 0x26, // no move
-        combat_max_moves            = 1000,
-        combat_move_trick_a         = 1001,
-        combat_move_trick_b         = 1002,
-        combat_move_trick_c         = 1003,
-        combat_move_trick_d         = 1004,
-        combat_and_tricks_num_moves = 1005  // no trick
+        combat_move_light_melee         = 0x00,
+        combat_move_heavy_melee         = 0x01,
+        combat_move_special_attack      = 0x02,
+        combat_move_jump_attack         = 0x03,
+        combat_move_bounce_attack       = 0x04,
+        combat_move_counter_attack      = 0x05,
+        combat_move_dodge               = 0x06,
+        combat_move_block               = 0x07,
+        combat_move_save_civ            = 0x08,
+        combat_move_light_ranged        = 0x09,
+        combat_move_heavy_ranged        = 0x0A,
+        combat_move_grapple             = 0x0B,
+        combat_move_throw_manip         = 0x0C,
+        combat_move_grab_civ            = 0x0D,
+        combat_move_boss_finisher       = 0x0E,
+        combat_move_car_finisher        = 0x0F,
+        combat_move_boost_power_attack  = 0x10,
+        combat_move_boost_speed_attack  = 0x11,
+        combat_move_boost_air_attack    = 0x12,
+        combat_move_boost_web_attack    = 0x13,
+        combat_move_manual_dodge        = 0x14,
+        combat_move_script_move         = 0x15,
+        combat_move_momentum_light      = 0x16,
+        combat_move_momentum_heavy      = 0x17,
+        combat_move_momentum_grapple    = 0x18,
+        combat_move_stealth_kill        = 0x19,
+        combat_move_swing_light         = 0x1A,
+        combat_move_swing_heavy         = 0x1B,
+        combat_move_swing_grapple       = 0x1C,
+        combat_move_light_wall_attack   = 0x1D,
+        combat_move_heavy_wall_attack   = 0x1E,
+        combat_move_enemy_swing_light   = 0x1F,
+        combat_move_enemy_swing_heavy   = 0x20,
+        combat_move_enemy_swing_grapple = 0x21,
+        combat_move_pole_swing_light    = 0x22,
+        combat_move_pole_swing_heavy    = 0x23,
+        combat_move_pole_swing_grapple  = 0x24,
+        combat_move_grab_obj            = 0x25,
+        combat_num_moves                = 0x26, // no move
+        combat_max_moves                = 1000,
+        combat_move_trick_a             = 1001,
+        combat_move_trick_b             = 1002,
+        combat_move_trick_c             = 1003,
+        combat_move_trick_d             = 1004,
+        combat_and_tricks_num_moves     = 1005  // no trick
     };
 
     // SM3's combat_state::eCombatSignal, as far as WoS's are read

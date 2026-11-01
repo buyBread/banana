@@ -408,7 +408,7 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
 
             if (past_early_exit()                                                              &&
                 get_actor()->has_ifc(entity_ifc_player)                                        &&
-                get_actor()->player_ifc()->get_command_button(18)->triggered_or_missed_press() &&
+                get_actor()->player_ifc()->get_command_button(plr_cmd_prop_throw)->triggered_or_missed_press() &&
                 get_actor()->player_ifc()->unk_520())
 
                 return state_exit_code_prop_throw;
