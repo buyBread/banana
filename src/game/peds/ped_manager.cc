@@ -19,6 +19,7 @@
 #include "game/fixed_string.hh"
 #include "game/math/references.hh"
 #include "treyarch/jq/jq.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
 
@@ -465,7 +466,7 @@ bool ped_manager::advance_vendor(actor*          vendor,
 // sub_731730
 void ped_manager::wake_vendor(entity* vendor) {
     if (vendor->flags & entity_flag_suspended)
-        vendor->unsuspend(true);
+        vendor->unsuspend_routed(true);
 
     vendor->set_visible(true, false);
     vendor->set_collisions_active(false, false);
@@ -479,7 +480,7 @@ void ped_manager::sleep_vendor(entity* vendor) {
     vendor->raise_event(references::vendor_asleep.read());
 
     if (!(vendor->flags & entity_flag_suspended))
-        vendor->suspend(true);
+        vendor->suspend_routed(true);
 }
 
 // sub_73F990
@@ -527,7 +528,7 @@ void ped_manager::unspawn_ped(actor* ped) {
     }
 
     if (!(ped->flags & entity_flag_suspended))
-        ped->suspend(true);
+        ped->actor::suspend(true);
 }
 
 // sub_76AEF0
@@ -614,7 +615,7 @@ bool ped_manager::spawn_ped(actor*          ped,
 
     if (!find_spot) {
         if (ped->flags & entity_flag_suspended)
-            ped->entity::unsuspend(true);
+            ped->unsuspend_routed(true);
 
         if (ped->has_ifc(entity_ifc_damage))
             ped->damage_ifc()->set_hit_points(ped->damage_ifc()->get_max_hit_points());
@@ -646,7 +647,7 @@ bool ped_manager::spawn_ped(actor*          ped,
     }
 
     if (ped->flags & entity_flag_suspended)
-        ped->entity::unsuspend(true);
+        ped->unsuspend_routed(true);
 
     ped_path path;
     path.flags  = 0;
@@ -883,7 +884,7 @@ bool ped_manager::place_ped(actor*          ped,
     }
 
     if (ped->flags & entity_flag_suspended)
-        ped->entity::unsuspend(true);
+        ped->unsuspend_routed(true);
 
     return true;
 }
@@ -928,7 +929,7 @@ void ped_manager::replace_fake_ped(fake_ped*       fake,
             if (!candidate || candidate->is_visible())
                 continue;
 
-            bool female = candidate->unk_111()->get_text()[6] == 'f';
+            bool female = candidate->unk_111()->name.get_text()[6] == 'f';
 
             if ((fake->unk_56 || !female) &&
                 (fake->unk_56 != 1 || !female) &&

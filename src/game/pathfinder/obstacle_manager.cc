@@ -7,7 +7,8 @@ using namespace treyarch;
 
 // sub_42D4D0; IDA's DNameNode label is a library false positive
 pathfinder::obstacle_manager::obstacle_manager() {
-    vtable = &references::obstacle_manager_vtable.get();
+    *(void**)this = &references::obstacle_manager_vtable.get();
+
     unk_04 = 0;
 }
 

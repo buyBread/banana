@@ -537,7 +537,7 @@ void mission_manager::process_state_start_unloading() {
     entity* hero = references::g_world_ptr.read()->hero_ptr;
 
     for (; saved_script_hero_suspend_count > 0; --saved_script_hero_suspend_count)
-        hero->unsuspend(true);
+        hero->unsuspend_routed(true);
 
     if (((actor*)hero)->get_ai_core()) {
         for (; saved_script_hero_ai_disable_count > 0; --saved_script_hero_ai_disable_count)
@@ -679,7 +679,7 @@ void mission_manager::process_state_maloring_player_wait_for_blackscreen(f32) {
 
     camera* view = references::g_world_ptr.read()->get_chase_cam_ptr();
 
-    if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
+    if (view && view->is_a_spiderman_camera()) {
         retail::sub_9C4880((u32*)view, 11);
 
         const vector3d &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();
@@ -732,7 +732,7 @@ void mission_manager::process_state_maloring_player_wait_for_district() {
 
     camera* view = references::g_world_ptr.read()->get_chase_cam_ptr();
 
-    if (view && ((bool (__thiscall*)(camera*))view->vtable[0x7C / 4])(view)) {
+    if (view && view->is_a_spiderman_camera()) {
         retail::sub_9C4880((u32*)view, 11);
 
         const vector3d &z_axis = references::g_world_ptr.read()->hero_ptr->my_abs_po->get_z_facing();

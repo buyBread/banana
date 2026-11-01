@@ -18,6 +18,5 @@ namespace treyarch {
     } // references
 
     ASSERT_SIZEOF  (windows_app,         0x08);
-    ASSERT_OFFSETOF(windows_app, vtable, 0x00);
     ASSERT_OFFSETOF(windows_app, window, 0x04);
 } // treyarch

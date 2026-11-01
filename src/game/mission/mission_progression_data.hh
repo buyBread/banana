@@ -33,12 +33,12 @@ namespace treyarch {
 
         // slot 53; clears failed, activated and completed, then tells the registry
         void restart() {
-            ((void (__thiscall*)(mission_progression_data*))vtable[53])(this);
+            ((void (__thiscall*)(mission_progression_data*))(*(void***)this)[53])(this);
         }
 
         // slot 54; a script text id, only objectives keep it
         void set_description(i32 text_id) {
-            ((void (__thiscall*)(mission_progression_data*, i32))vtable[54])(this, text_id);
+            ((void (__thiscall*)(mission_progression_data*, i32))(*(void***)this)[54])(this, text_id);
         }
 
         bool is_flagged(e_mission_progression_flags flag) const {
@@ -74,7 +74,7 @@ namespace treyarch {
 
         // slot 55
         void set_short_description(i32 text_id) {
-            ((void (__thiscall*)(mission_objective_data*, i32))vtable[55])(this, text_id);
+            ((void (__thiscall*)(mission_objective_data*, i32))(*(void***)this)[55])(this, text_id);
         }
 
         void set_actual_score(f32 score);

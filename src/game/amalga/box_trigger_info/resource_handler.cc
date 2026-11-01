@@ -42,9 +42,7 @@ i32 amalga::box_trigger_resource_handler::handle_resource(e_behavior behavior, r
 
     box_trigger_info* info = (box_trigger_info*)descriptor->calculate_adjusted_payload();
 
-    // slot 0
-    if (info->trig)
-        ((void (__thiscall*)(arch_base*, u32))info->trig->vtable[0])(info->trig, 1);
+    delete info->trig;
 
     info->trig = nullptr;
 

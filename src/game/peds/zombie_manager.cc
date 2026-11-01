@@ -84,7 +84,7 @@ void zombie_manager::frame_advance(f32 time_inc) {
     for (arch_base_vhandle* it = zombies.begin(); it != zombies.end(); ++it) {
         auto zombie = (actor*)it->resolve();
 
-        if (!zombie || !retail::sub_4E1FC0((u32*)zombie)) // entity::is_visible
+        if (!zombie || !retail::sub_4E1FC0((u32*)zombie)) // entity::is_still_visible
             continue;
 
         vector3d position = zombie->my_abs_po->get_position();

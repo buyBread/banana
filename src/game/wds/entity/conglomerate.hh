@@ -45,7 +45,6 @@ namespace treyarch {
     class conglomerate : public actor {
 
     public:
-        u8                            reserved_0d8[0x10];
         mash::vector<entity>          members;
         mash::vector
             <ai_tentacle_info>*       tentacles;

@@ -100,9 +100,7 @@ void ui_frontend::destroy_fog(finger_of_god* fog) {
     if (position == radar->fingers_of_god.end())
         return;
 
-    // slot 0
-    if (*position)
-        ((void (__thiscall*)(finger_of_god*, u32))(*position)->vtable[0])(*position, 1);
+    delete *position;
 
     *position = nullptr;
 

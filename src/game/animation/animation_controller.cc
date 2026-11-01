@@ -41,8 +41,7 @@ bool animation_controller::add_pose_jq_batch(scratch_arena* arena, bool immediat
     input.transport_list = the_state->skeleton;
     input.trajectory     = &the_state->trajectory;
 
-    // slot 13
-    ((void (__thiscall*)(entity*))the_state->the_actor->vtable[13])(the_state->the_actor);
+    the_state->the_actor->is_a_conglomerate(); // the answer goes unused
 
     auto fk = (nal::transport_fk*)the_state->skeleton->get_transport(0);
 

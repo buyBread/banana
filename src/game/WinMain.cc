@@ -98,7 +98,7 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     windows_app* application = (windows_app*)mm::allocate(sizeof(windows_app));
 
     if (application) {
-        application->vtable = &references::windows_app_vtable.get();
+        *(void**)application = &references::windows_app_vtable.get();
         application->window = nullptr;
     }
 

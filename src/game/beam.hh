@@ -33,7 +33,6 @@ namespace treyarch {
             no_clipping = no_clip_to_hero | no_clip_to_beamable | no_clip_to_world
         };
 
-        u8                                  reserved_074[0x2C];
         beam*                               next_beam;
         beam*                               prev_beam;
         f32                                 thickness;

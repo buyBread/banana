@@ -1,26 +1,12 @@
 #pragma once
 
-#include "game/arch_base.hh"
-#include "game/wds/entity/interface/card_interface.hh"
-#include "game/wds/entity/interface/combo_interface.hh"
-#include "game/wds/entity/interface/damage_interface.hh"
-#include "game/wds/entity/interface/ise_interface.hh"
-#include "game/wds/entity/interface/manip_obj_interface.hh"
-#include "game/wds/entity/interface/occupant_interface.hh"
-#include "game/wds/entity/interface/physical_interface.hh"
-#include "game/wds/entity/interface/player_interface.hh"
-#include "game/wds/entity/interface/script_data_interface.hh"
-#include "game/wds/entity/interface/standing_interface.hh"
-#include "game/wds/entity/interface/switch_obj_interface.hh"
-#include "game/wds/entity/interface/tentacle_interface.hh"
-#include "game/wds/entity/interface/time_interface.hh"
-#include "game/wds/entity/interface/towing_interface.hh"
-#include "game/wds/entity/interface/variant_interface.hh"
-#include "game/wds/entity/interface_storage.hh"
+#include "game/wds/entity/entity_base.hh"
 #include "game/container/fixed_vector.hh"
 #include "game/color.hh"
 #include "game/mutex.hh"
+#include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
 #include "game/math/po.hh"
 #include "vc8/list.hh"
 #include "banana/util/memory_reference.hh"
@@ -28,364 +14,95 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    class collision_geometry;
     class terrain;
-    struct fixed_string;
     struct region;
 
-    // SM3's entflavors.h order
-    enum e_entity_flavor : i32 {
-        entity_flavor_actor,
-        entity_flavor_camera,
-        entity_flavor_base,
-        entity_flavor_entity,
-        entity_flavor_marker,
-        entity_flavor_mic,
-        entity_flavor_light_source,
-        entity_flavor_particle_generator,
-        entity_flavor_item,
-        entity_flavor_conglomerate,
-        entity_flavor_conglomerate_clone
-    };
+    namespace ngl {
+        struct mesh;
+    } // ngl
 
-    // SM3's EFLAG_*, but 0x800000 and 0x20000000
-    enum e_entity_flags : u32 {
-        entity_flag_in_limbo          = 0x00000001,
-        entity_flag_moving            = 0x00000040,
-        entity_flag_walkable          = 0x00000080,
-        entity_flag_graphics_visible  = 0x00000200,
-        entity_flag_special_target    = 0x00001000,
-        entity_flag_collisions_active = 0x00004000,
-        entity_flag_member            = 0x00008000,
-        entity_flag_nontarget         = 0x00020000,
-        entity_flag_beamable          = 0x00080000,
-        entity_flag_detectable        = 0x00800000, // SM3's GLOWABLE
-        entity_flag_bone_connector    = 0x08000000,
-        entity_flag_allow_lockon      = 0x20000000, // SM3's COLGEOM_INSTANCED
-        entity_flag_suspended         = 0x40000000
-    };
-
-    // SM3's EFLAG_EXT_*, but 0x10000
-    enum e_entity_ext_flags : u32 {
-        entity_ext_flag_spawned                = 0x00000100,
-        entity_ext_flag_is_auto_activate_prop  = 0x00000800,
-        entity_ext_flag_invulnerable           = 0x00004000,
-        entity_ext_flag_noncrawlable           = 0x00008000,
-        entity_ext_flag_shadow_casting         = 0x00010000, // SM3's AI_COVER
-        entity_ext_flag_sync_anim              = 0x00020000,
-        entity_ext_flag_ai_los_see_through     = 0x00100000,
-        entity_ext_flag_attack_damage_unlocked = 0x20000000
-    };
-
-    class entity : public arch_base {
+    class entity : public entity_base {
 
     public:
-        string_hash                         id;
-        po*                                 my_rel_po;
-        po*                                 my_abs_po;
-        u32                                 flags;
-        u32                                 ext_flags;
-        interface_storage*                  my_ifc_storage;
-        entity*                             my_parent;
-        u8                                  reserved_024[0x0C];
-        u32                                 unk_030; // the transform waits report a move (add_moved) only while it's set
-        u8                                  reserved_034[0x06];
-        u8                                  unk_03a; // cleared as scene entities are loaded
-        u8                                  reserved_03b[0x15];
         container::fixed_vector<region*, 8> regions;
+        u8                                  reserved_074[0x1C];
+        u8                                  unk_090[0x0C]; // a mash::string the destructor finalizes
+        u8                                  reserved_09c[0x04];
 
-        // inlined; the milestone's has_<name>_ifc()
-        bool has_ifc(e_entity_ifc index) const {
-            return my_ifc_storage && my_ifc_storage->has_ifc(index);
-        }
+        explicit entity(mash::generating_vtable_version so_do_nothing) : entity_base(so_do_nothing) {}
 
-        // sub_4024C0
-        bool has_physical_ifc() const {
-            return has_ifc(entity_ifc_physical);
-        }
+        ~entity() override;
 
-        // sub_4024E0
-        bool has_standing_ifc() const {
-            return has_ifc(entity_ifc_standing);
-        }
+        void construct_mashed_class() override;
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
 
-        // sub_48E6E0
-        bool has_occupant_ifc() const {
-            return has_ifc(entity_ifc_occupant);
-        }
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
 
-        // sub_402540
-        bool has_sound_ifc() const {
-            return has_ifc(entity_ifc_sound);
-        }
+        bool            is_an_entity() const override;
+        void            set_visible(bool visible, bool from_conglom) override;
+        bool            was_occluded_last_frame() override;
+        e_entity_flavor get_flavor() const override;
+        u32             get_entity_size() const override;
 
-        // sub_48E6C0
-        bool has_card_ifc() const {
-            return has_ifc(entity_ifc_card);
-        }
+        virtual void          clear_region(region* r, i32 i_know_what_i_am_doing);
+        virtual void          compute_sector(terrain* ter, bool use_high_res_intersect, entity* original);
+        virtual void          force_region(region* r);
+        virtual void          force_current_region();
+        virtual void          unforce_regions();
+        virtual void          force_regions(entity* e);
+        virtual void          set_family_visible(bool visible);
+        virtual u32           possibly_render() const;
+        virtual u32           possibly_collide() const;
+        virtual bool          possibly_camera_collide() const;
+        virtual bool          possibly_walkable() const;
+        virtual void          region_update_poss_collide();
+        virtual bool          unk_100();
+        virtual void          unk_101(bool on); // ext flag 0x1000, which also takes the entity in or out of limbo
+        virtual bool          unk_102() const;  // ext flag 0x1000
+        virtual void          unk_103(bool on); // flag 0x200000, then slot 101
+        virtual bool          unk_104() const;  // flag 0x200000
+        virtual void          frame_advance(f32 t);
+        virtual bool          is_still_visible() const;
+        virtual void          render_skeleton();
+        virtual void          unk_108(f32 unk);
+        virtual void          render(f32 camera_distance, f32 entity_translucency_pct);
+        virtual ngl::mesh*    get_mesh() const;
+        virtual ngl::mesh*    unk_111() const;
+        virtual bool          has_mesh() const;
+        virtual f32           get_visual_radius() const;
+        virtual vector3d      get_visual_center() const;
+        virtual vector3d      unk_115();        // slot 114's answer
+        virtual void          suspend(bool update_region);
+        virtual void          unsuspend(bool update_region);
+        virtual void          set_render_color(color32 color);
+        virtual color32       get_render_color() const;
+        virtual void          set_render_alpha_mod(f32 alpha);
+        virtual f32           get_render_alpha_mod() const;
+        virtual void          set_render_scale(const vector3d &scale);
+        virtual vector3d      get_render_scale() const;
+        virtual void          set_render_zbias(f32 zbias);
+        virtual f32           get_render_zbias() const;
+        virtual void*         get_light_set() const;
+        virtual bool          can_be_a_lego() const;
+        virtual bool          can_be_a_conglom_clone() const;
+        virtual f32           get_age() const;
+        virtual void          set_age(f32 age);
+        virtual void          set_recursive_age(f32 age);
+        virtual void          start_recording();
+        virtual void          stop_recording();
+        virtual bool          hates_spiderman();
+        virtual mash::string* get_signaller_owner_name(mash::string* result) const;
 
-        // inlined; the milestone's entity_base::<name>_ifc()
-        damage_interface* damage_ifc() const {
-            return (damage_interface*)my_ifc_storage->get_ifc(entity_ifc_damage);
-        }
-
-        physical_interface* physical_ifc() const {
-            return (physical_interface*)my_ifc_storage->get_ifc(entity_ifc_physical);
-        }
-
-        standing_interface* standing_ifc() const {
-            return (standing_interface*)my_ifc_storage->get_ifc(entity_ifc_standing);
-        }
-
-        script_data_interface* script_data_ifc() const {
-            return (script_data_interface*)my_ifc_storage->get_ifc(entity_ifc_script_data);
-        }
-
-        manip_obj_interface* manip_obj_ifc() const {
-            return (manip_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_manip_obj);
-        }
-
-        time_interface* time_ifc() const {
-            return (time_interface*)my_ifc_storage->get_ifc(entity_ifc_time);
-        }
-
-        player_interface* player_ifc() const {
-            return (player_interface*)my_ifc_storage->get_ifc(entity_ifc_player);
-        }
-
-        combo_interface* combo_ifc() const {
-            return (combo_interface*)my_ifc_storage->get_ifc(entity_ifc_combo);
-        }
-
-        towing_interface* towing_ifc() const {
-            return (towing_interface*)my_ifc_storage->get_ifc(entity_ifc_towing);
-        }
-
-        switch_obj_interface* switch_obj_ifc() const {
-            return (switch_obj_interface*)my_ifc_storage->get_ifc(entity_ifc_switch_obj);
-        }
-
-        variant_interface* variant_ifc() const {
-            return (variant_interface*)my_ifc_storage->get_ifc(entity_ifc_variant);
-        }
-
-        simple_variant_interface* simple_variant_ifc() const {
-            return (simple_variant_interface*)my_ifc_storage->get_ifc(entity_ifc_simple_variant);
-        }
-
-        ise_interface* ise_ifc() const {
-            return (ise_interface*)my_ifc_storage->get_ifc(entity_ifc_ise);
-        }
-
-        tentacle_interface* tentacle_ifc() const {
-            return (tentacle_interface*)my_ifc_storage->get_ifc(entity_ifc_tentacle);
-        }
-
-        occupant_interface* occupant_ifc() const {
-            return (occupant_interface*)my_ifc_storage->get_ifc(entity_ifc_occupant);
-        }
-
-        card_interface* card_ifc() const {
-            return (card_interface*)my_ifc_storage->get_ifc(entity_ifc_card);
-        }
-
-        // unless ext flag 0x1000 vetoes it
-        bool is_visible() const {
-            return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
-        }
-
-        // slot 56; the position is in the entity's space
-        u32 spawn_effect_at_entity_position(string_hash name, const vector4d &position, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[56])(this, name, &position, unk);
-        }
-
-        // slot 57
-        u32 spawn_effect(string_hash name, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[57])(this, name, unk);
-        }
-
-        // slot 58
-        u32 spawn_effect_at_world_position(string_hash name, const vector4d &position, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[58])(this, name, &position, unk);
-        }
-
-        // slot 59; slot 58's flags without a position
-        u32 unk_059(string_hash name, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[59])(this, name, unk);
-        }
-
-        // slot 60
-        u32 spawn_looping_effect_at_entity_position(string_hash name, const vector4d &position, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[60])(this, name, &position, unk);
-        }
-
-        // slot 61; the id is what stop_looping_effect takes
-        u32 spawn_looping_effect(string_hash name, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, i32))vtable[61])(this, name, unk);
-        }
-
-        // slot 62
-        u32 unk_062(string_hash name, const vector4d &position, i32 unk) {
-            return ((u32 (__thiscall*)(entity*, string_hash, const vector4d*, i32))vtable[62])(this, name, &position, unk);
-        }
-
-        // slot 63; only with an ise interface
-        void stop_looping_effect(u32 effect_id) {
-            ((void (__thiscall*)(entity*, u32))vtable[63])(this, effect_id);
-        }
-
-        // slot 64; this and its members
-        void set_flag_recursive(u32 flag, bool on) {
-            ((void (__thiscall*)(entity*, u32, bool))vtable[64])(this, flag, on);
-        }
-
-        // slot 65
-        void set_ext_flag_recursive(u32 flag, bool on) {
-            ((void (__thiscall*)(entity*, u32, bool))vtable[65])(this, flag, on);
-        }
-
-        // slot 66
-        void set_active(bool active) {
-            ((void (__thiscall*)(entity*, bool))vtable[66])(this, active);
-        }
-
-        // slot 67
-        void set_visible(bool visible, bool from_conglom) {
-            ((void (__thiscall*)(entity*, bool, bool))vtable[67])(this, visible, from_conglom);
-        }
-
-        // slot 68
-        collision_geometry* get_colgeom() const {
-            return ((collision_geometry* (__thiscall*)(const entity*))vtable[68])(this);
-        }
-
-        // slot 69; SM3's EFLAG_PHYSICS_COLLISIONS_ACTIVE (0x4000)
-        void set_collisions_active(bool active, bool recursive) {
-            ((void (__thiscall*)(entity*, bool, bool))vtable[69])(this, active, recursive);
-        }
-
-        // slot 70
-        bool are_character_collisions_active() const {
-            return ((bool (__thiscall*)(const entity*))vtable[70])(this);
-        }
-
-        // slot 72
-        void set_character_collisions_active(bool active) {
-            ((void (__thiscall*)(entity*, bool))vtable[72])(this, active);
-        }
-
-        // slot 75
-        bool was_occluded_last_frame() {
-            return ((bool (__thiscall*)(entity*))vtable[75])(this);
-        }
-
-        // slot 76
-        bool is_alive() const {
-            return ((bool (__thiscall*)(const entity*))vtable[76])(this);
-        }
-
-        // slot 77
-        e_entity_flavor get_flavor() const {
-            return ((e_entity_flavor (__thiscall*)(const entity*))vtable[77])(this);
-        }
-
-        // slot 78
-        bool is_a_placeholder_vehicle() const {
-            return ((bool (__thiscall*)(const entity*))vtable[78])(this);
-        }
-
-        // slot 89
-        void compute_sector(terrain* ter, bool use_high_res_intersect, entity* original) {
-            ((void (__thiscall*)(entity*, terrain*, bool, entity*))vtable[89])(this, ter, use_high_res_intersect, original);
-        }
-
-        // slot 91
-        void force_current_region() {
-            ((void (__thiscall*)(entity*))vtable[91])(this);
-        }
-
-        // slot 92
-        void unforce_regions() {
-            ((void (__thiscall*)(entity*))vtable[92])(this);
-        }
-
-        // slot 93
-        void force_regions(entity* e) {
-            ((void (__thiscall*)(entity*, entity*))vtable[93])(this, e);
-        }
-
-        // slot 101; ext flag 0x1000, which also takes the entity in or out of limbo
-        void unk_101(bool on) {
-            ((void (__thiscall*)(entity*, bool))vtable[101])(this, on);
-        }
-
-        // slot 102; ext flag 0x1000
-        bool unk_102() const {
-            return ((bool (__thiscall*)(const entity*))vtable[102])(this);
-        }
-
-        // slot 111
-        fixed_string* unk_111() const {
-            return ((fixed_string* (__thiscall*)(const entity*))vtable[111])(this);
-        }
-
-        // slot 113
-        f32 get_visual_radius() const {
-            return ((f32 (__thiscall*)(const entity*))vtable[113])(this);
-        }
-
-        // slot 114
-        vector3d get_visual_center() const {
-            vector3d center;
-            ((vector3d* (__thiscall*)(const entity*, vector3d*))vtable[114])(this, &center);
-
-            return center;
-        }
-
-        // slots 116 / 117; actor's shared body runs in source
-        void suspend  (bool update_region);
-        void unsuspend(bool update_region);
-
-        // slot 118
-        void set_render_color(color32 color) {
-            ((void (__thiscall*)(entity*, color32))vtable[118])(this, color);
-        }
-
-        // slot 119
-        color32 get_render_color() const {
-            color32 color;
-            ((color32* (__thiscall*)(const entity*, color32*))vtable[119])(this, &color);
-
-            return color;
-        }
-
-        // slot 122
-        void set_render_scale(const vector3d &scale) {
-            ((void (__thiscall*)(entity*, const vector3d*))vtable[122])(this, &scale);
-        }
-
-        // slot 123
-        vector3d get_render_scale() const {
-            vector3d scale;
-            ((vector3d* (__thiscall*)(const entity*, vector3d*))vtable[123])(this, &scale);
-
-            return scale;
-        }
-
-        // slot 134
-        bool hates_spiderman() {
-            return ((bool (__thiscall*)(entity*))vtable[134])(this);
-        }
-
-        // the milestone's entity_base::create_<name>_ifc(); an existing one is answered as is
-        script_data_interface* create_script_data_ifc();
-        physical_interface*    create_physical_ifc();
-        damage_interface*      create_damage_ifc();
-        time_interface*        create_time_ifc();
+        // slots 116 / 117; actor's shared body runs in source, any other the object's own
+        void suspend_routed  (bool update_region);
+        void unsuspend_routed(bool update_region);
 
         void invoke_render_phase();
-
-        generic_interface* find_ifc_by_name(string_hash name);
 
         region* get_primary_region();
 
@@ -399,6 +116,9 @@ namespace treyarch {
         // held while a script reads found_entities
         static void lock_found_entities();
         static void unlock_found_entities();
+
+    private:
+        void finalize(mash::allocation_scope scope);
     };
 
     namespace references {
@@ -408,14 +128,7 @@ namespace treyarch {
         inline util::memory_reference<engine_recursive_lock>       found_entities_lock   { 0x01003240 };
     } // references
 
-    ASSERT_OFFSETOF(entity, id,             0x08);
-    ASSERT_OFFSETOF(entity, my_rel_po,      0x0C);
-    ASSERT_OFFSETOF(entity, my_abs_po,      0x10);
-    ASSERT_OFFSETOF(entity, flags,          0x14);
-    ASSERT_OFFSETOF(entity, ext_flags,      0x18);
-    ASSERT_OFFSETOF(entity, my_ifc_storage, 0x1C);
-    ASSERT_OFFSETOF(entity, my_parent,      0x20);
-    ASSERT_OFFSETOF(entity, unk_030,        0x30);
-    ASSERT_OFFSETOF(entity, unk_03a,        0x3A);
-    ASSERT_OFFSETOF(entity, regions,        0x50);
+    ASSERT_SIZEOF  (entity,          0xA0);
+    ASSERT_OFFSETOF(entity, regions, 0x50);
+    ASSERT_OFFSETOF(entity, unk_090, 0x90);
 } // treyarch

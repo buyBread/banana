@@ -40,8 +40,8 @@ void app::create_inst() {
 // sub_42A760
 app::app() {
     retail::sub_639100((u32*)(arch_base*)this); // arch_base::arch_base
-    arch_base::vtable = (void**)&references::app_arch_base_vtable.get();
-    singleton::vtable = (void**)&references::app_vtable.get();
+    *(void**)(arch_base*)this = &references::app_arch_base_vtable.get();
+    *(void**)(singleton*)this = &references::app_vtable.get();
 
     references::master_clock_is_up.write(1);
 

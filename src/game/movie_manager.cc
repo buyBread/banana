@@ -9,7 +9,8 @@ using namespace treyarch;
 
 // sub_6930C0; `state` is left as allocated
 movie_manager::movie_manager() {
-    vtable  = &references::movie_manager_vtable.get();
+    *(void**)this = &references::movie_manager_vtable.get();
+
     unk_008 = 2;
     bink    = nullptr;
 }

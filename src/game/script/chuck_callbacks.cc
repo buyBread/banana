@@ -133,9 +133,7 @@ void chuck_callbacks::script_instance_created_callback(script_instance*) {}
 void chuck_callbacks::script_instance_destroyed_callback(script_instance* inst) {
     script_instance_shadow* inst_shadow = script::get_script_instance_shadow(inst);
 
-    // slot 0, deleting destructor
-    if (inst_shadow)
-        ((void (__thiscall*)(script_instance_shadow*, u32))inst_shadow->vtable[0])(inst_shadow, 1);
+    delete inst_shadow;
 }
 
 // sub_843140

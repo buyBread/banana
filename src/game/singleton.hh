@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/mm/mm.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
@@ -19,17 +20,31 @@ namespace treyarch {
         static bool is_inst() { return instance() != nullptr; }
     };
 
-    // overlay of the engine's singleton base; its one vtable slot is the deleting destructor
+    /* the engine's singleton base; its one vtable slot is the deleting destructor,
+       and it keeps singleton_instance's statics without deriving from it, so the vptr stays its first word */
     template <class T, u32 address>
-    class singleton : public singleton_instance<T, address> {
+    class singleton {
 
     public:
-        void** vtable;
+        static T*& instance() { return singleton_instance<T, address>::instance(); }
+
+        static T*   inst()    { return instance(); }
+        static bool is_inst() { return instance() != nullptr; }
 
         singleton           (const singleton&) = delete;
         singleton &operator=(const singleton&) = delete;
 
+        // sub_428930
+        virtual ~singleton() = default;
+
+        // inlined into the deleting destructors
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
     protected:
-        singleton() : vtable((void**)&references::singleton_vtable.get()) {}
+        singleton() {
+            *(void**)this = &references::singleton_vtable.get();
+        }
     };
 } // treyarch

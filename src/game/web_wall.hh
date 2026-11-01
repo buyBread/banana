@@ -14,7 +14,7 @@ namespace treyarch {
         // a strand per step
         inline static constexpr i32 built = 0x40;
 
-        u8       reserved_0d8[0x1B4];
+        u8       reserved_0e8[0x1A4];
         vector3d build_point;
         boolx    wall_active;
         u8       pad_299[0x07];

@@ -645,7 +645,7 @@ void ai_core::frame_advance(f32 delta_t) {
         string_hash none;
         none.initialize(mash::ALLOCATED);
 
-        if (my_param_block.get_pb_hash(references::lifetime_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_visible
+        if (my_param_block.get_pb_hash(references::lifetime_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_still_visible
             lifetime_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::lifetime_effect_hash.read()), 0);
     }
 
@@ -658,7 +658,7 @@ void ai_core::frame_advance(f32 delta_t) {
         string_hash none;
         none.initialize(mash::ALLOCATED);
 
-        if (my_param_block.get_pb_hash(references::infected_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_visible
+        if (my_param_block.get_pb_hash(references::infected_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_still_visible
             infected_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::infected_effect_hash.read()), 0);
     }
 

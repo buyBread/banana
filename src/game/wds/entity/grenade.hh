@@ -21,7 +21,7 @@ namespace treyarch {
     class grenade : public actor {
 
     public:
-        u8                       reserved_0d8[0x18];
+        u8                       reserved_0e8[0x08];
         bool                     unk_0f0;             // its cache hands it out again only while it's set
         u8                       reserved_0f1;
         bool                     unk_0f2;
@@ -62,17 +62,17 @@ namespace treyarch {
 
         // slot 166
         void redirect(arch_base_vhandle target, entity* redirector) {
-            ((void (__thiscall*)(grenade*, arch_base_vhandle, entity*))vtable[166])(this, target, redirector);
+            ((void (__thiscall*)(grenade*, arch_base_vhandle, entity*))(*(void***)this)[166])(this, target, redirector);
         }
 
         // slot 167
         void redirect(const vector3d &dir, entity* redirector) {
-            ((void (__thiscall*)(grenade*, const vector3d*, entity*))vtable[167])(this, &dir, redirector);
+            ((void (__thiscall*)(grenade*, const vector3d*, entity*))(*(void***)this)[167])(this, &dir, redirector);
         }
 
         // slot 168
         void disable_guidance() {
-            ((void (__thiscall*)(grenade*))vtable[168])(this);
+            ((void (__thiscall*)(grenade*))(*(void***)this)[168])(this);
         }
     };
 

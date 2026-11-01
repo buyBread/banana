@@ -429,8 +429,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
                     entry->flags &= ~entity_class_entry::collisions_active;
             }
 
-            // slot 13
-            if (((bool (__thiscall*)(entity*))found->vtable[13])(found) && entry->variant.valid()) {
+            if (found->is_a_conglomerate() && entry->variant.valid()) {
                 if (found->has_ifc(entity_ifc_variant)) {
                     retail::sub_65F730((u32*)found->my_ifc_storage->get_ifc(entity_ifc_variant), (i32)entry->variant.source_hash_code);
 
@@ -488,7 +487,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
 
     arch_base_vhandle handle = spawned->my_handle;
 
-    if (((bool (__thiscall*)(entity*))spawned->vtable[41])(spawned)) { // slot 41
+    if (spawned->is_a_vehicle()) {
         retail::sub_6048A0((u32*)spawned);
         ((vehicle*)spawned)->enable_physics(false);
 
@@ -498,7 +497,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
             if (model)
                 ((vehicle*)spawned)->set_model(string_hash(*model));
         }
-    } else if (((bool (__thiscall*)(entity*))spawned->vtable[13])(spawned) && entry->variant.valid()) { // slot 13
+    } else if (spawned->is_a_conglomerate() && entry->variant.valid()) {
         if (retail::sub_5FCB20((u32*)spawned)) {
             retail::sub_65F730((u32*)spawned->my_ifc_storage->get_ifc(entity_ifc_variant), (i32)entry->variant.source_hash_code);
 
@@ -660,12 +659,11 @@ void cut_scene_player::finish() {
 
         auto target = (entity*)retail::sub_7DF6E0((u32*)&id);
 
-        // slot 28
-        if (target && ((bool (__thiscall*)(entity*))target->vtable[28])(target)) {
+        if (target && target->is_a_camera()) {
             auto chase = (spiderman_camera*)references::g_world_ptr.read()->get_chase_cam_ptr();
 
             if (chase->is_a_spiderman_camera())
-                ((void (__thiscall*)(spiderman_camera*, entity*))chase->vtable[158])(chase, target); // slot 158
+                ((void (__thiscall*)(spiderman_camera*, entity*))(*(void***)chase)[158])(chase, target); // slot 158
         }
     }
 
@@ -874,7 +872,7 @@ void cut_scene_player::restore_entities() {
         if (restored->has_ifc(entity_ifc_physical))
             restored->physical_ifc()->cancel_all_velocity(zerovec);
 
-        ((void (__thiscall*)(entity*, terrain*, i32, i32))restored->vtable[89])(restored, references::g_world_ptr.read()->the_terrain, 0, 0); // slot 89
+        restored->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
     }
 }
 
@@ -929,7 +927,7 @@ void cut_scene_player::update_focus() {
 
         using get_focus_method = bool (__thiscall*)(camera* self, bool* unk, f32* distance_1, f32* distance_2);
 
-        if (!((get_focus_method)view_camera->vtable[164])(view_camera, &unk, &distance_1, &distance_2)) // slot 164
+        if (!((get_focus_method)(*(void***)view_camera)[164])(view_camera, &unk, &distance_1, &distance_2)) // slot 164
             return;
 
         f32 scaled_2 = (f32)((f64)distance_2 / 100.0);
@@ -1129,8 +1127,7 @@ void cut_scene_player::hookup_current_segment() {
 
         auto attached = (entity*)retail::sub_7DF6E0((u32*)&id);
 
-        // slot 28
-        if (attached && ((bool (__thiscall*)(entity*))attached->vtable[28])(attached))
+        if (attached && attached->is_a_camera())
             retail::sub_653DA0((u32*)attached, (i32*)references::g_world_ptr.read()->get_hero_ptr()); // entity_base::set_parent
     }
 }

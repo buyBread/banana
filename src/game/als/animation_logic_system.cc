@@ -145,7 +145,7 @@ void als::animation_logic_system::update_matrix_publishing(bool visible, bool ke
     if ((the_state && the_state->unk_128) ||
         get_controller()->state->slaves.size() ||
         keep_publishing ||
-        treyarch::references::g_world_ptr.read()->get_current_camera()->unk_032()) {
+        treyarch::references::g_world_ptr.read()->get_current_camera()->is_an_animated_camera()) {
 
         if (animation_controller_state* state_now = get_controller()->state)
             state_now->job.wants_skip_matrices = false;

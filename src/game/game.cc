@@ -308,9 +308,9 @@ void game::freeze_hero(bool freeze) {
     retail::sub_548450((u32*)hero, freeze); // the invulnerable flag
 
     if (freeze)
-        hero->suspend(true);
+        hero->suspend_routed(true);
     else
-        hero->unsuspend(true);
+        hero->unsuspend_routed(true);
 
     hero->player_ifc()->set_enabled(!freeze);
 
@@ -558,12 +558,10 @@ void game::load_this_level(bool start_only, bool finish_only) {
     if (chase) {
         current_view_camera = chase;
 
-        bool (__thiscall* slot_29)(camera*) = (bool (__thiscall*)(camera*))chase->vtable[0x74 / 4];
-
-        if (slot_29(chase) && *(i32*)((u8*)chase + 0xEC) < 1)
+        if (chase->is_a_game_camera() && *(i32*)((u8*)chase + 0xEC) < 1)
             *(i32*)((u8*)chase + 0xEC) = 1;
 
-        if (!current_game_camera && slot_29(chase))
+        if (!current_game_camera && chase->is_a_game_camera())
             current_game_camera = chase;
 
         retail::sub_96A350();

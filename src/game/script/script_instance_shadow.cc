@@ -14,7 +14,7 @@ using namespace treyarch;
 // inlined @ sub_825600
 script_instance_shadow::script_instance_shadow() {
     retail::sub_639100((u32*)this); // arch_base::arch_base
-    vtable = (void**)&references::script_instance_shadow_vtable.get();
+    *(void**)this = &references::script_instance_shadow_vtable.get();
     m_inst = nullptr;
 }
 

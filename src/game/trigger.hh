@@ -48,36 +48,36 @@ namespace treyarch {
 
         // slot 54
         bool point_inside(const vector3d* point) {
-            return ((bool (__thiscall*)(trigger*, const vector3d*))vtable[54])(this, point);
+            return ((bool (__thiscall*)(trigger*, const vector3d*))(*(void***)this)[54])(this, point);
         }
 
         // slot 56
         bool is_box_trigger() const {
-            return ((bool (__thiscall*)(const trigger*))vtable[56])(this);
+            return ((bool (__thiscall*)(const trigger*))(*(void***)this)[56])(this);
         }
 
         // slot 57
         bool is_sphere_trigger() const {
-            return ((bool (__thiscall*)(const trigger*))vtable[57])(this);
+            return ((bool (__thiscall*)(const trigger*))(*(void***)this)[57])(this);
         }
 
         // slot 59
         f32 get_radius() const {
-            return ((f32 (__thiscall*)(const trigger*))vtable[59])(this);
+            return ((f32 (__thiscall*)(const trigger*))(*(void***)this)[59])(this);
         }
 
         // slot 60
         vector3d get_abs_position() const {
             vector3d result;
 
-            ((vector3d* (__thiscall*)(const trigger*, vector3d*))vtable[60])(this, &result);
+            ((vector3d* (__thiscall*)(const trigger*, vector3d*))(*(void***)this)[60])(this, &result);
 
             return result;
         }
 
         // slot 61
         void set_offset(const vector3d* offset) {
-            ((void (__thiscall*)(trigger*, const vector3d*))vtable[61])(this, offset);
+            ((void (__thiscall*)(trigger*, const vector3d*))(*(void***)this)[61])(this, offset);
         }
 
         bool is_code_owned() const {

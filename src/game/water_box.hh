@@ -11,12 +11,12 @@ namespace treyarch {
     public:
         // slot 158
         bool point_inside(const vector3d &point) {
-            return ((bool (__thiscall*)(water_box*, const vector3d*))vtable[158])(this, &point);
+            return ((bool (__thiscall*)(water_box*, const vector3d*))(*(void***)this)[158])(this, &point);
         }
 
         // slot 160
         bool surface_point_inside(const vector3d &point) {
-            return ((bool (__thiscall*)(water_box*, const vector3d*))vtable[160])(this, &point);
+            return ((bool (__thiscall*)(water_box*, const vector3d*))(*(void***)this)[160])(this, &point);
         }
     };
 } // treyarch

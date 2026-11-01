@@ -50,6 +50,8 @@ namespace treyarch {
     public:
         app();
 
+        using singleton::operator delete;
+
         static void create_inst();
 
         void tick();

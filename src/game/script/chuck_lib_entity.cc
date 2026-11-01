@@ -3409,9 +3409,9 @@ bool slf__entity__attach_to_wall__vector3d__t::operator()(chuck::vm::vm_stack &s
     if (self->flags & entity_flag_suspended)
         self->player_ifc()->set_desired_mode(2);
     else {
-        self->suspend(true);
+        self->suspend_routed(true);
         self->player_ifc()->set_desired_mode(2);
-        self->unsuspend(true);
+        self->unsuspend_routed(true);
     }
 
     return true;
@@ -3431,9 +3431,9 @@ bool slf__entity__attach_to_wall__t::operator()(chuck::vm::vm_stack &stack) {
     if (self->flags & entity_flag_suspended)
         self->player_ifc()->set_desired_mode(2);
     else {
-        self->suspend(true);
+        self->suspend_routed(true);
         self->player_ifc()->set_desired_mode(2);
-        self->unsuspend(true);
+        self->unsuspend_routed(true);
     }
 
     return true;
@@ -4012,7 +4012,7 @@ bool slf__entity__suspend__t::operator()(chuck::vm::vm_stack &stack) {
     if (retail::sub_601C50((u32*)self)) // entity_base::is_hero
         ++mission_manager::inst()->saved_script_hero_suspend_count;
 
-    self->suspend(true);
+    self->suspend_routed(true);
 
     return true;
 }
@@ -4096,7 +4096,7 @@ bool slf__entity__unsuspend__t::operator()(chuck::vm::vm_stack &stack) {
         --mission_manager::inst()->saved_script_hero_suspend_count;
     }
 
-    self->unsuspend(true);
+    self->unsuspend_routed(true);
 
     return true;
 }
@@ -5466,7 +5466,7 @@ bool slf__entity__change_locomotion_machine__str__t::operator()(chuck::vm::vm_st
 
     // the entity stays suspended until the machine has changed, which the recall reports
     if (stack.thread->entry) {
-        target->unsuspend(true);
+        target->unsuspend_routed(true);
 
         result = 1.0f;
         stack.push(&result, sizeof(result));
@@ -5474,7 +5474,7 @@ bool slf__entity__change_locomotion_machine__str__t::operator()(chuck::vm::vm_st
         return true;
     }
 
-    target->suspend(true);
+    target->suspend_routed(true);
 
     string_hash name;
     name.initialize(mash::ALLOCATED, inode_name);
@@ -5482,7 +5482,7 @@ bool slf__entity__change_locomotion_machine__str__t::operator()(chuck::vm::vm_st
     if (core->change_locomotion_machine(name))
         return false;
 
-    target->unsuspend(true);
+    target->unsuspend_routed(true);
 
     stack.push(&result, sizeof(result));
 

@@ -33,9 +33,7 @@ void script_garbage_collection::triggers(script_instance*, stuff_to_delete_list_
     for (garbage_collection_element* stuff = stuff_to_delete.head; stuff; stuff = stuff->vm_simple_list_next) {
         arch_base* trigger = arch_base_vhandle(stuff->element).resolve();
 
-        // slot 0
-        if (trigger)
-            ((void (__thiscall*)(arch_base*, u32))trigger->vtable[0])(trigger, 1);
+        delete trigger;
     }
 }
 

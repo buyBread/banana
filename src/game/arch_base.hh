@@ -3,6 +3,8 @@
 #include "game/event/event_callback.hh"
 #include "game/arch_base_vhandle.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch {
@@ -14,81 +16,71 @@ namespace treyarch {
         class script_instance;
     }}
 
-    class arch_base {
+    // its vtable is mash_virtual_base's, then one is_* test per subclass
+    class arch_base : public mash::mash_virtual_base {
 
     public:
-        void**            vtable;
         arch_base_vhandle my_handle;
 
-        // slot 10
-        bool is_an_entity_base() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[10])(this);
-        }
+        arch_base() = default;
 
-        // slot 11
-        bool is_an_entity() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[11])(this);
-        }
+        explicit arch_base(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing) {}
 
-        // slot 12
-        bool is_an_actor() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[12])(this);
-        }
+        ~arch_base() override;
 
-        // slot 13
-        bool is_a_conglomerate() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[13])(this);
-        }
+        void destruct_mashed_class() override;
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer) override;
 
-        // slot 14
-        bool is_a_conglomerate_clone() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[14])(this);
-        }
+        mash::virtual_types_key get_virtual_type_key() const override;
+        bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
+        i32                     get_mash_sizeof() const override;
 
-        // slot 15
-        bool is_a_dynamic_conglomerate_clone() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[15])(this);
-        }
-
-        // slot 16
-        bool is_a_grenade() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[16])(this);
-        }
-
-        // slot 18
-        bool is_a_particle_generator() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[18])(this);
-        }
-
-        // slot 23
-        bool is_a_marker() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[23])(this);
-        }
-
-        // slot 30
-        bool is_a_marky_camera() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[30])(this);
-        }
-
-        // slot 31
-        bool is_a_spiderman_camera() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[31])(this);
-        }
-
-        // slot 41
-        bool is_a_vehicle() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[41])(this);
-        }
-
-        // slot 45
-        bool is_a_fight_group() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[45])(this);
-        }
-
-        // slot 46
-        bool is_a_fakir() const {
-            return ((bool (__thiscall*)(const arch_base*))vtable[46])(this);
-        }
+        virtual bool is_an_arch_base() const;
+        virtual bool is_an_entity_base() const;
+        virtual bool is_an_entity() const;
+        virtual bool is_an_actor() const;
+        virtual bool is_a_conglomerate() const;
+        virtual bool is_a_conglomerate_clone() const;
+        virtual bool is_a_dynamic_conglomerate_clone() const;
+        virtual bool is_a_grenade() const;
+        virtual bool is_a_beam() const;
+        virtual bool is_a_particle_generator() const;
+        virtual bool is_a_polytube() const;
+        virtual bool is_a_sky() const;
+        virtual bool is_a_sign() const;
+        virtual bool is_a_web_wall() const;
+        virtual bool is_a_marker() const;
+        virtual bool is_an_ai_cover_marker() const;
+        virtual bool is_an_anchor_marker() const;
+        virtual bool is_a_line_marker_base() const;
+        virtual bool is_a_line_anchor() const;
+        virtual bool is_a_camera() const;
+        virtual bool is_a_game_camera() const;
+        virtual bool is_a_marky_camera() const;
+        virtual bool is_a_spiderman_camera() const;
+        virtual bool is_an_animated_camera() const;
+        virtual bool is_a_light_source() const;
+        virtual bool is_a_door() const;
+        virtual bool unk_035() const;
+        virtual bool is_a_trigger() const;
+        virtual bool is_a_box_trigger() const;
+        virtual bool is_a_sphere_trigger() const;
+        virtual bool is_a_double_sphere_trigger() const;
+        virtual bool unk_040() const;
+        virtual bool is_a_vehicle() const;
+        virtual bool is_a_water_box() const;
+        virtual bool unk_043() const;
+        virtual bool unk_044() const;
+        virtual bool is_a_fight_group() const;
+        virtual bool is_a_fakir() const;
+        virtual bool is_a_script_instance_shadow() const;
+        virtual bool is_a_script_controller() const;
+        virtual bool is_a_mission_progression_data() const;
+        virtual bool is_a_mission_stage_data() const;
+        virtual bool is_a_mission_objective_data() const;
+        virtual bool is_a_finger_of_god() const;
 
         void raise_event(string_hash event_type_id);
         void raise_event(event* raised_event);
@@ -108,6 +100,9 @@ namespace treyarch {
         void clear_script_callbacks(chuck::vm::script_executable* script_exe);
         void clear_script_callback(string_hash function_name);
         void clear_script_callback(u32 id);
+
+    private:
+        void finalize(mash::allocation_scope scope);
     };
 
     ASSERT_SIZEOF  (arch_base,            0x08);

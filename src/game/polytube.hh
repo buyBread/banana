@@ -80,7 +80,6 @@ namespace treyarch {
     class polytube : public entity {
 
     public:
-        u8                                 reserved_074[0x2C];
         polytube*                          next_polytube;          // on active_polytubes or inactive_polytubes
         polytube*                          prev_polytube;
         boolx                              reversed;

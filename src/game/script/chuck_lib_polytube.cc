@@ -64,9 +64,8 @@ u32 slc_polytube_t::find_instance(const mash::string &name) const {
 
     auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
 
-    // slot 77
     if (entity)
-        ((void (__thiscall*)(arch_base*))entity->vtable[77])(entity);
+        ((entity_base*)entity)->get_flavor(); // the answer goes unused
 
     return entity->my_handle.value;
 }

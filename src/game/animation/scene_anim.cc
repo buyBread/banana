@@ -35,10 +35,8 @@ scene_anim::scene_anim() : scene_anim_inst(nullptr),
 scene_anim::~scene_anim() {
     references::g_world_ptr.read()->remove_scene_anim(my_name);
 
-    for (scene_anim_light &light : lights) {
-        if (light.light)
-            ((void (__thiscall*)(entity*, u32))light.light->vtable[0])(light.light, 1);
-    }
+    for (scene_anim_light &light : lights)
+        delete light.light;
 
     lights.clear();
 
@@ -50,8 +48,8 @@ scene_anim::~scene_anim() {
 
         if (ent->is_an_actor()) {
             ((actor*)ent)->invalidate_frame_delta();
-            ((void (__thiscall*)(entity*, f32))ent->vtable[139])(ent, 1.0f); // slot 139
-            ((void (__thiscall*)(entity*))ent->vtable[141])(ent);          // unbind_from_scene_anim
+            ((actor*)ent)->set_floor_offset(1.0f);
+            ((actor*)ent)->unbind_from_scene_anim();
 
             ent->ext_flags &= ~0x40000;
             input_mgr::inst()->unk_80c = 0;
@@ -74,7 +72,7 @@ scene_anim::~scene_anim() {
 
             terrain* the_terrain = references::g_world_ptr.read()->the_terrain;
 
-            ((void (__thiscall*)(entity*, terrain*, i32, i32))ent->vtable[89])(ent, the_terrain, 0, 0); // slot 89
+            ent->compute_sector(the_terrain, false, nullptr);
         }
 
         if (ent == references::g_world_ptr.read()->camera_mgr.marky_camera) {
@@ -88,7 +86,7 @@ scene_anim::~scene_anim() {
 
                 camera* chase_cam = references::g_world_ptr.read()->chase_cam_ptr;
 
-                ((void (__thiscall*)(camera*, i32))chase_cam->vtable[165])(chase_cam, 2); // slot 165
+                ((void (__thiscall*)(camera*, i32))(*(void***)chase_cam)[165])(chase_cam, 2); // slot 165
             }
         }
 
@@ -295,7 +293,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         info.name          = name.text;
         info.instance      = instance;
 
-        ((void (__thiscall*)(entity*, nal::scene_anim_instance*, i32))ent->vtable[140])(ent, scene_anim_inst, index); // bind_to_scene_anim
+        ent->bind_to_scene_anim(scene_anim_inst, index);
 
         if (slot == my_anim_info_list.end())
             my_anim_info_list.push_back(info);
