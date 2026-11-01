@@ -3,6 +3,7 @@
 #include "game/arch_base_vhandle.hh"
 #include "game/peds/ped_manager.hh"
 #include "game/script/chuck_lib_peds.hh"
+#include "treyarch/chuck/vm/vm_dynamic_array_manager.hh"
 
 using namespace treyarch;
 
@@ -156,8 +157,29 @@ bool slf__peds_find_ped_near__vector3d__num__num__num__t::operator()(chuck::vm::
     return ((invoke_t)retail::sub_85BAB0)(this, stack);
 }
 
+// sub_881780
 bool slf__peds_find_peds_near__vector3d__num__num__num__dynamic_array__t::operator()(chuck::vm::vm_stack &stack) {
-    return ((invoke_t)retail::sub_881780)(this, stack);
+    stack.sp -= 0x1C;
+
+    u32 found[32] = {};
+
+    i32 count = ped_manager::find_peds_near((const vector3d*)&stack.local_uint(0x00),
+                                            stack.local_num(0x0C),
+                                            (i32)stack.local_num(0x10),
+                                            (i32)stack.local_num(0x14),
+                                            found);
+
+    chuck::vm::script_dynamic_array<u32> peds((chuck::vm::chuck_dynamic_array_t*)stack.local_uint(0x18));
+
+    i32 index = 0;
+
+    for (; index < count; ++index)
+        peds.push_back(found[index]);
+
+    f32 result = (f32)index;
+    stack.push(&result, sizeof(result));
+
+    return true;
 }
 
 // sub_85BB00

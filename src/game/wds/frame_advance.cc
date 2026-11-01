@@ -6,6 +6,7 @@
 #include "game/game_meter_manager.hh"
 #include "game/input/input_mgr.hh"
 #include "game/peds/ped_manager.hh"
+#include "game/peds/zombie_manager.hh"
 #include "game/trigger.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
@@ -13,7 +14,6 @@
 #include "game/wds/entity/interface/morph_interface.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
-#include "game/zombie_manager.hh"
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch {
@@ -72,7 +72,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     ped_manager::frame_advance(time_inc);
 
     if (zombie_manager* zombies = zombie_manager::inst())
-        retail::sub_76C610((i32)zombies, time_inc);
+        zombies->frame_advance(time_inc);
 
     references::unk_010fc550.write(0);
     als::animation_logic_system_interface::frame_advance_all_alses(time_inc);

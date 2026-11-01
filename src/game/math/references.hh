@@ -69,6 +69,9 @@ namespace treyarch { namespace references {
     // (0, 0, 0, 0); a zero up vector's normalized stand-in when a scene anim binds an entity
     inline util::memory_reference<vector4d> unk_00fd4340 { 0x00FD4340 };
 
+    // (0, 0, 0, 0); a zero direction's normalized stand-in when fake peds and zombies are placed and turned
+    inline util::memory_reference<vector4d> unk_0102ff10 { 0x0102FF10 };
+
     // translation unit copies of the SM3 .ii's identity_matrix
     inline util::memory_reference<matrix4x4> identity_matrix { 0x0102F770 };
     inline util::memory_reference<matrix4x4> unk_01031d80    { 0x01031D80 };

@@ -24,6 +24,7 @@ namespace treyarch {
     class actor;
     class ai_core;
     class manip_obj_interface;
+    struct ped_path;
 
     // baked into each node by its .BAI
     enum e_info_node_type : u32 {
@@ -245,6 +246,9 @@ namespace treyarch {
     };
 
     enum e_ai_wander_flags : u32 {
+        ai_wander_flag_unk_00000001 = 0x00000001, // ped_manager::place_ped sets it
+        ai_wander_flag_unk_00000004 = 0x00000004, // ped_manager::place_ped sets it with the destination
+        ai_wander_flag_unk_00000080 = 0x00000080, // ped_manager::spawn_ped only tries the quad search with it
         ai_wander_flag_unk_00000400 = 0x00000400, // survives ped_manager::unspawn_ped
         ai_wander_flag_available    = 0x00000800,
         ai_wander_flag_unk_00080000 = 0x00080000,
@@ -258,18 +262,21 @@ namespace treyarch {
     class ai_wander_inode : public info_node {
 
     public:
-        u8  reserved_030[0x0C];
-        u8* unk_03c;            // with bit 1 of its byte 8 set, the ped work keeps the ped fully running
-        u8  reserved_040[0x24];
-        u32 flags;
-        u8  reserved_068[0x40];
+        u8        reserved_030[0x0C];
+        ped_path* unk_03c;
+        vector3d  unk_040;            // where the ped walks to
+        f32       unk_04c;
+        f32       unk_050;            // scales a spawned ped's path offset
+        u8        reserved_054[0x10];
+        u32       flags;
+        u8        reserved_068[0x40];
     };
 
     class ai_civilian_inode : public info_node {
 
     public:
         u8   reserved_030[0x2C];
-        bool unk_05c;            // ped_manager::unspawn_ped clears it
+        bool unk_05c;            // ped_manager::place_ped sets it, unspawn_ped clears it
         u8   pad_05d[0x03];
     };
 
@@ -560,6 +567,8 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (ai_wander_inode,          0xA8);
     ASSERT_OFFSETOF(ai_wander_inode, unk_03c, 0x3C);
+    ASSERT_OFFSETOF(ai_wander_inode, unk_040, 0x40);
+    ASSERT_OFFSETOF(ai_wander_inode, unk_050, 0x50);
     ASSERT_OFFSETOF(ai_wander_inode, flags,   0x64);
 
     ASSERT_SIZEOF  (ai_civilian_inode,          0x60);

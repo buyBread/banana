@@ -6,6 +6,7 @@
 #include "treyarch/mash/vector_basic.hh"
 #include "game/math/algebra.hh"
 #include "game/resource_key.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -30,7 +31,7 @@ namespace treyarch {
         void* unpacked;
         f32   last_cam_distance;
         u8    unk_2c[7];
-        u8    unk_33;
+        u8    unk_33;      // fake peds placed on the road
 
         mash::array_replacement
             <mash::vector_basic<u16>, 2> traffic_lanes;
@@ -152,6 +153,10 @@ namespace treyarch {
                     void*                   containing_class_ptr,
                     mash::buffer_type       buffer);
     };
+
+    namespace references {
+        inline util::memory_reference<gb_map*> g_gb_map { 0x01086E80 }; // the level's
+    } // references
 
     ASSERT_SIZEOF  (gb_road,                0x38);
     ASSERT_OFFSETOF(gb_road, def,           0x10);

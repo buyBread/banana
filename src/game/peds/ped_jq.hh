@@ -6,7 +6,9 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
-    void ped_jq_callback(jq::batch* batch);
+    void ped_jq_callback     (jq::batch* batch);
+    void vendor_jq_callback  (jq::batch* batch);
+    void fake_ped_jq_callback(jq::batch* batch);
 
     // advances one ped per batch
     struct ped_jq : jq::full_queue<ped_jq> {
@@ -26,8 +28,10 @@ namespace treyarch {
         static inline util::memory_reference<bool> multi_threading   { 0x0102FDFE };
     };
 
-    // advances one vendor per batch; its init and callback are still retail's
+    // advances one vendor per batch
     struct vendor_jq : jq::full_queue<vendor_jq> {
+        static inline constexpr jq::descriptor descriptor = { vendor_jq_callback, "vendor_jqCallback" };
+
         static inline util::memory_reference<jq::batch> static_batch { 0x00E795F8 };
 
         static inline util::memory_reference<i32> group         { 0x0102FD7C };
@@ -40,6 +44,24 @@ namespace treyarch {
         static inline util::memory_reference<bool> profiling         { 0x0102FD80 };
         static inline util::memory_reference<bool> batch_pool_locked { 0x0102FD81 };
         static inline util::memory_reference<bool> multi_threading   { 0x0102FD82 };
+    };
+
+    // advances count fake peds per batch; the fake ped frame runs it
+    struct fake_ped_jq : jq::full_queue<fake_ped_jq> {
+        static inline constexpr jq::descriptor descriptor = { fake_ped_jq_callback, "fake_ped_jqCallback" };
+
+        static inline util::memory_reference<jq::batch> static_batch { 0x00E79628 };
+
+        static inline util::memory_reference<i32> group         { 0x0102FDD8 };
+        static inline util::memory_reference<i32> batches_added { 0x0102FDDC };
+
+        static inline util::memory_reference<jq::batch_callback> inline_callback { 0x0102FDF0 };
+
+        static inline util::memory_reference<bool> workers_awake     { 0x0102FD9D };
+        static inline util::memory_reference<bool> started           { 0x0102FD9E };
+        static inline util::memory_reference<bool> profiling         { 0x0102FD9F };
+        static inline util::memory_reference<bool> batch_pool_locked { 0x0102FDE4 };
+        static inline util::memory_reference<bool> multi_threading   { 0x0102FDE5 };
     };
 
     // lite queues; the pedestrians frame only waits on them

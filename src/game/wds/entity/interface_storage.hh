@@ -56,6 +56,7 @@ namespace treyarch {
         // the first interface with that name
         generic_interface* find_ifc_by_name(string_hash name);
 
+        // sub_4561C0
         // inlined @ sub_5ED8C0
         generic_interface* find_ifc(e_entity_ifc index) { // null when the entity doesn't have it
             ifc_lock.acquire();

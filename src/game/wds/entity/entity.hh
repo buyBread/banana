@@ -30,6 +30,7 @@
 namespace treyarch {
     class collision_geometry;
     class terrain;
+    struct fixed_string;
     struct region;
 
     // SM3's entflavors.h order
@@ -311,6 +312,21 @@ namespace treyarch {
         // slot 93
         void force_regions(entity* e) {
             ((void (__thiscall*)(entity*, entity*))vtable[93])(this, e);
+        }
+
+        // slot 101; ext flag 0x1000, which also takes the entity in or out of limbo
+        void unk_101(bool on) {
+            ((void (__thiscall*)(entity*, bool))vtable[101])(this, on);
+        }
+
+        // slot 102; ext flag 0x1000
+        bool unk_102() const {
+            return ((bool (__thiscall*)(const entity*))vtable[102])(this);
+        }
+
+        // slot 111
+        fixed_string* unk_111() const {
+            return ((fixed_string* (__thiscall*)(const entity*))vtable[111])(this);
         }
 
         // slot 113

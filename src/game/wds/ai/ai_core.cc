@@ -742,7 +742,7 @@ bool ai_core::should_be_in_limbo() const {
             return true;
     }
 
-    return ((bool (__thiscall*)(entity*))owner->vtable[0x198 / 4])(owner);
+    return owner->unk_102();
 }
 
 // sub_4CE030
