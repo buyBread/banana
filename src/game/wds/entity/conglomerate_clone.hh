@@ -11,10 +11,11 @@
 
 namespace treyarch {
     struct conglomerate_clone_copy_data {
-        u8    reserved_00[0x10];
-        void* core_render_members;
-        i32   num_render_members;
-        u8    reserved_18[0x04];
+        u8                reserved_00[0x0C];
+        arch_base_vhandle shared_conglom_vhandle;
+        void*             core_render_members;
+        i32               num_render_members;
+        u8                reserved_18[0x04];
 
         // inlined @ sub_6656E0
         ~conglomerate_clone_copy_data() {
@@ -66,8 +67,10 @@ namespace treyarch {
     class dynamic_conglomerate_clone : public conglomerate_clone {
 
     public:
-        mash::vector_basic<color32> render_colors;
-        u8                          reserved_0fc[0x0C];
+        mash::vector_basic<color32>   render_colors;
+        u8                            reserved_0fc[0x04];
+        last_collision_free_state_t** last_collision_free_states; // one per member, by clone_member_idx
+        u8                            reserved_104[0x04];
 
         explicit dynamic_conglomerate_clone(mash::generating_vtable_version so_do_nothing) : conglomerate_clone(so_do_nothing) {}
 
@@ -95,19 +98,23 @@ namespace treyarch {
         vector3d        get_colgeom_center() const override;
         void            set_clone_members_extra_info() override;
 
+        void save_last_collision_free_state(actor* actor_member, const po &matrix, const capsule &rel_cap);
+
         static string_hash my_type_key;
 
     private:
         void finalize(mash::allocation_scope scope);
     };
 
-    ASSERT_SIZEOF  (conglomerate_clone_copy_data,                      0x1C);
-    ASSERT_OFFSETOF(conglomerate_clone_copy_data, core_render_members, 0x10);
-    ASSERT_OFFSETOF(conglomerate_clone_copy_data, num_render_members,  0x14);
+    ASSERT_SIZEOF  (conglomerate_clone_copy_data,                         0x1C);
+    ASSERT_OFFSETOF(conglomerate_clone_copy_data, shared_conglom_vhandle, 0x0C);
+    ASSERT_OFFSETOF(conglomerate_clone_copy_data, core_render_members,    0x10);
+    ASSERT_OFFSETOF(conglomerate_clone_copy_data, num_render_members,     0x14);
 
     ASSERT_SIZEOF  (conglomerate_clone,            0xEC);
     ASSERT_OFFSETOF(conglomerate_clone, copy_data, 0xE8);
 
-    ASSERT_SIZEOF  (dynamic_conglomerate_clone,                0x108);
-    ASSERT_OFFSETOF(dynamic_conglomerate_clone, render_colors, 0x0EC);
+    ASSERT_SIZEOF  (dynamic_conglomerate_clone,                             0x108);
+    ASSERT_OFFSETOF(dynamic_conglomerate_clone, render_colors,              0x0EC);
+    ASSERT_OFFSETOF(dynamic_conglomerate_clone, last_collision_free_states, 0x100);
 } // treyarch

@@ -94,6 +94,7 @@ namespace treyarch {
         entity_ext_flag_ai_los_see_through              = 0x00100000,
         entity_ext_flag_unk_00200000                    = 0x00200000,
         entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
+        entity_ext_flag_alloc_adv_ptrs                  = 0x02000000,
         entity_ext_flag_attack_damage_unlocked          = 0x20000000,
         entity_ext_flag_does_not_manage_abs_po          = 0x40000000
     };
@@ -129,7 +130,8 @@ namespace treyarch {
         arch_base_vhandle          my_trigger;
         u8                         reserved_034[0x06];
         u8                         fade_timer;
-        u8                         reserved_03b[0x05];
+        u8                         clone_member_idx;
+        u8                         reserved_03c[0x04];
         conglomerate*              my_conglom_root;
         u8                         reserved_044[0x08];
         string_hash                sound_type;
@@ -192,17 +194,20 @@ namespace treyarch {
         }
 
         // sub_4024A0
+        // inlined @ sub_614E90
         bool has_damage_ifc() const {
             return has_ifc(entity_ifc_damage);
         }
 
         // sub_4024C0
+        // inlined @ sub_614190
         bool has_physical_ifc() const {
             return has_ifc(entity_ifc_physical);
         }
 
         // sub_4024E0
         // inlined @ sub_57D110
+        // inlined @ sub_614190
         bool has_standing_ifc() const {
             return has_ifc(entity_ifc_standing);
         }
@@ -440,6 +445,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_base, adopted_children, 0x2C);
     ASSERT_OFFSETOF(entity_base, my_trigger,       0x30);
     ASSERT_OFFSETOF(entity_base, fade_timer,       0x3A);
+    ASSERT_OFFSETOF(entity_base, clone_member_idx, 0x3B);
     ASSERT_OFFSETOF(entity_base, my_conglom_root,  0x40);
     ASSERT_OFFSETOF(entity_base, sound_type,       0x4C);
 

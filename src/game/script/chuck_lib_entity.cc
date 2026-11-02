@@ -4057,7 +4057,7 @@ bool slf__entity__add_collision_ignorance__entity__t::operator()(chuck::vm::vm_s
     auto other = arch_base_vhandle(stack.local_uint(0x04)).resolve();
 
     if (self && other && self->is_an_actor() && other->is_an_actor())
-        retail::sub_65B290((u32**)self, (i32)other->my_handle.value); // actor::add_collision_ignorance
+        ((actor*)self)->add_collision_ignorance(other->my_handle);
 
     return true;
 }
@@ -4070,7 +4070,7 @@ bool slf__entity__remove_collision_ignorance__entity__t::operator()(chuck::vm::v
     auto other = arch_base_vhandle(stack.local_uint(0x04)).resolve();
 
     if (self && other && self->is_an_actor() && other->is_an_actor())
-        retail::sub_64B1D0((u32*)self, (i32)other->my_handle.value); // actor::remove_collision_ignorance
+        ((actor*)self)->remove_collision_ignorance(other->my_handle);
 
     return true;
 }
@@ -8373,7 +8373,7 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
             else if (self->has_player_ifc())
                 result = *self->player_ifc()->unk_095();
             else
-                retail::sub_614190((u32*)self, (f32*)&result);
+                ((actor*)self)->get_velocity(&result);
         } else if (self->is_an_actor()) {
             if (rigid_body_prop_head* head = prop_system::find_rigid_body_prop_head(self)) {
                 if (head->m_first_rbpi) {
@@ -8384,7 +8384,7 @@ bool slf__entity__get_velocity__t::operator()(chuck::vm::vm_stack &stack) {
             } else if (self->has_ifc(entity_ifc_player))
                 result = *self->player_ifc()->unk_095();
             else
-                retail::sub_614190((u32*)self, (f32*)&result);
+                ((actor*)self)->get_velocity(&result);
         }
     }
 

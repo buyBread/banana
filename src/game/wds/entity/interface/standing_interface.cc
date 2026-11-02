@@ -33,3 +33,7 @@ void standing_interface::clear_effectively_standing() {
 void standing_interface::set_control_parent(entity* parent) {
     retail::sub_659160((i32)this, (i32)parent);
 }
+
+entity* standing_interface::get_control_parent() const {
+    return (entity*)retail::sub_60D380((u32*)this);
+}

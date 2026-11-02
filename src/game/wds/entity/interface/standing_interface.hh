@@ -80,7 +80,8 @@ namespace treyarch {
 
         void clear_effectively_standing();
 
-        void set_control_parent(entity* parent); // null lets go of the current one
+        void    set_control_parent(entity* parent); // null lets go of the current one
+        entity* get_control_parent() const;
     };
 
     ASSERT_OFFSETOF(standing_interface, floor_offset_scale, 0x30);

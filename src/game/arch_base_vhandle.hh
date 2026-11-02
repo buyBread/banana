@@ -27,6 +27,9 @@ namespace treyarch {
         explicit constexpr arch_base_vhandle(u32 value) noexcept : value(value) {}
 
         // sub_605300
+        // inlined @ sub_615260
+        // inlined @ sub_64B1D0
+        // inlined @ sub_65B290
         arch_base* resolve() const noexcept {
             if (!value)
                 return nullptr;

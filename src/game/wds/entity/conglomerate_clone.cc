@@ -1,3 +1,5 @@
+#include <new>
+
 #include "retail.hh"
 #include "game/wds/entity/conglomerate_clone.hh"
 
@@ -194,4 +196,28 @@ vector3d dynamic_conglomerate_clone::get_colgeom_center() const {
 // slot 158
 void dynamic_conglomerate_clone::set_clone_members_extra_info() {
     ((void (__thiscall*)(dynamic_conglomerate_clone*))retail::sub_654480)(this);
+}
+
+// sub_615260
+void dynamic_conglomerate_clone::save_last_collision_free_state(actor* actor_member, const po &matrix, const capsule &rel_cap) {
+    if (!copy_data->shared_conglom_vhandle.resolve())
+        return;
+
+    if (!last_collision_free_states) {
+        const u32 bytes = render_colors.size > 0x3FFFFFFF ?
+            0xFFFFFFFF : render_colors.size * sizeof(last_collision_free_state_t*);
+
+        last_collision_free_states = (last_collision_free_state_t**)mm::allocate(bytes);
+
+        for (u32 i = 0; i < render_colors.size; i++)
+            last_collision_free_states[i] = nullptr;
+    }
+
+    const u8 index = actor_member->clone_member_idx;
+
+    if (!last_collision_free_states[index])
+        last_collision_free_states[index] = new (mm::allocate(sizeof(last_collision_free_state_t))) last_collision_free_state_t();
+
+    last_collision_free_states[index]->xform   = matrix;
+    last_collision_free_states[index]->rel_cap = rel_cap;
 }

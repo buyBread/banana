@@ -551,7 +551,7 @@ void ped_manager::add_ped(arch_base_vhandle* ped, bool at_front) {
         arch_base_vhandle* inserted;
         retail::sub_598810((u32*)&peds, (u32*)&inserted, (i32)peds.begin(), (u32*)ped); // vector::insert
     } else
-        retail::sub_59BF30((u32*)&peds, (u32*)ped); // vector::push_back
+        peds.push_back(*ped);
 
     if (ped_entity->is_a_conglomerate())
         retail::sub_603C10((u32*)ped_entity, references::unk_00e770d8.read());

@@ -275,8 +275,8 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
 
     slave->get_actor()->set_collisions_active(false, true);
 
-    retail::sub_65B290((u32**)slave->get_actor(), (i32)get_actor()->my_handle.value); // actor::add_collision_ignorance
-    retail::sub_65B290((u32**)get_actor(), (i32)slave->get_actor()->my_handle.value); // actor::add_collision_ignorance
+    slave->get_actor()->add_collision_ignorance(get_actor()->my_handle);
+    get_actor()->add_collision_ignorance(slave->get_actor()->my_handle);
 
     if (get_actor()->has_ifc(entity_ifc_player))
         get_actor()->player_ifc()->lock_swing_l_hand(true);

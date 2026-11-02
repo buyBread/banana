@@ -136,8 +136,7 @@ void mission_manager::on_icon_entity_acquired(arch_base_vhandle handle) {
     if (owner->adv_ptrs->my_script)
         return;
 
-    string_hash object_name;
-    retail::sub_5FD120((u32*)(owner->adv_ptrs->unk_010 + 4), (u32*)&object_name);
+    string_hash object_name = owner->adv_ptrs->script_pack_slot->pack_name.get_hash();
 
     string_hash filename;
 

@@ -686,9 +686,9 @@ e_state_exit_code combat_state::frame_advance(f32 delta_t) {
                     if (target->is_an_actor()) {
                         if (combo_move && combo_move->flags_1 & combo_flag_ignore_target_collisions) {
                             if (target->get_colgeom() && target->get_colgeom()->get_type() == collision_geometry_type_capsule)
-                                retail::sub_65B290((u32**)get_actor(), (i32)target->my_handle.value); // actor::add_collision_ignorance
+                                get_actor()->add_collision_ignorance(target->my_handle);
                         } else
-                            retail::sub_64B1D0((u32*)get_actor(), (i32)target->my_handle.value); // actor::remove_collision_ignorance
+                            get_actor()->remove_collision_ignorance(target->my_handle);
                     }
 
                     if (combo_move && combo_move->flags_2 & combo_flag_cancel_target_stun && target->has_ifc(entity_ifc_damage))

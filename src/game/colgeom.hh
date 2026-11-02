@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include "game/boolx.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "treyarch/mash/virtual_base.hh"
@@ -58,6 +60,15 @@ namespace treyarch {
         vector3d base;
         vector3d end;
         f32      radius;
+
+        capsule() = default;
+
+        // inlined @ sub_6299F0
+        capsule(const vector3d &b, const vector3d &e, f32 r) {
+            base   = b;
+            end    = e;
+            radius = (f32)std::fabs((f64)r);
+        }
     };
 
     // SM3's collision_capsule; the capsule is in the owner's frame

@@ -1,17 +1,65 @@
 #include <cmath>
+#include <new>
 
 #include "retail.hh"
 #include "game/als/animation_logic_system.hh"
+#include "game/amalga/resource_types.hh"
 #include "game/colgeom.hh"
 #include "game/math/references.hh"
+#include "game/resource_key.hh"
+#include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
+#include "game/wds/ai/ai_team.hh"
+#include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
+#include "game/wds/entity/conglomerate_clone.hh"
+#include "treyarch/jq/jq.hh"
+#include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
 
 string_hash actor::my_type_key { 0x07138E99 }; // "actor"
+
+// sub_602330
+void advanced_entity_ptrs::initialize(mash::allocation_scope scope) {
+    ignore_col_ents  = nullptr;
+    m_render_info    = nullptr;
+    mi               = nullptr;
+    my_script        = nullptr;
+    script_pack_slot = nullptr;
+    unk_01c          = 0;
+
+    if (scope != mash::ALLOCATED)
+        return;
+
+    script_exe_name = new (mm::allocate(sizeof(resource_key))) resource_key();
+
+    string_hash no_name;
+    no_name.initialize(mash::ALLOCATED);
+
+    script_exe_name->set(no_name, (u32)amalga::e_resource_type::script);
+
+    my_als_data = nullptr;
+    unk_024     = 0.0f;
+    unk_028     = -1;
+}
+
+// inlined @ sub_614190
+void movement_info::add_frame_delta_velocity(vector3d* target) const { // the frame delta's translation over the frame time
+    const f32 inverse_time = (f32)(1.0 / (f64)frame_time);
+
+    const vector4d &delta = frame_delta.get_matrix().w;
+
+    const f32 x = (f32)((f64)delta.x * inverse_time);
+    const f32 y = (f32)((f64)delta.y * inverse_time);
+    const f32 z = (f32)((f64)delta.z * inverse_time);
+
+    target->x = (f32)((f64)target->x + x);
+    target->y = (f32)((f64)target->y + y);
+    target->z = (f32)((f64)target->z + z);
+}
 
 // sub_6651E0
 actor::~actor() {
@@ -83,9 +131,14 @@ bool actor::are_character_collisions_active() const {
     return (flags & entity_flag_physics_collide_characters) && get_colgeom() && (get_colgeom()->flags & fi_collide_characters);
 }
 
-// slot 76
+// sub_614E90
 bool actor::is_alive() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_614E90)(this);
+    ai_core* core = get_ai_core();
+
+    if (core)
+        return core->alive;
+
+    return !has_damage_ifc() || damage_ifc()->hit_points.val > 0;
 }
 
 // slot 77
@@ -222,55 +275,51 @@ void actor::unsuspend(bool update_region) {
     flags |= entity_flag_moving;
 }
 
-// slot 118
+// sub_620F50
 void actor::set_render_color(color32 color) {
-    ((void (__thiscall*)(actor*, color32))retail::sub_620F50)(this, color);
+    create_render_info()->render_color = color;
 }
 
-// slot 119
+// sub_6653B0
 color32 actor::get_render_color() const {
-    color32 result;
-    ((color32* (__thiscall*)(const actor*, color32*))retail::sub_6653B0)(this, &result);
-
-    return result;
+    return adv_ptrs && adv_ptrs->m_render_info ? adv_ptrs->m_render_info->render_color : color32(255, 255, 255, 255);
 }
 
-// slot 120
+// sub_620FC0
 void actor::set_render_alpha_mod(f32 alpha) {
-    ((void (__thiscall*)(actor*, f32))retail::sub_620FC0)(this, alpha);
+    create_render_info()->render_alpha_mod = alpha;
 }
 
-// slot 121
+// sub_665270
 f32 actor::get_render_alpha_mod() const {
-    return ((f32 (__thiscall*)(const actor*))retail::sub_665270)(this);
+    return adv_ptrs && adv_ptrs->m_render_info ? adv_ptrs->m_render_info->render_alpha_mod : 1.0f;
 }
 
-// slot 122
+// sub_621040
 void actor::set_render_scale(const vector3d &scale) {
-    ((void (__thiscall*)(actor*, const vector3d&))retail::sub_621040)(this, scale);
+    create_render_info()->render_scale = scale;
 }
 
-// slot 123
+// sub_6652B0
 vector3d actor::get_render_scale() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const actor*, vector3d*))retail::sub_6652B0)(this, &result);
-
-    return result;
+    return adv_ptrs && adv_ptrs->m_render_info ? adv_ptrs->m_render_info->render_scale : vector3d(1.0f, 1.0f, 1.0f);
 }
 
-// slot 124
+// sub_6653F0
 void actor::set_render_zbias(f32 zbias) {
-    ((void (__thiscall*)(actor*, f32))retail::sub_6653F0)(this, zbias);
+    create_render_info()->render_zbias = zbias;
 }
 
-// slot 125
+// sub_665300
 f32 actor::get_render_zbias() const {
-    return ((f32 (__thiscall*)(const actor*))retail::sub_665300)(this);
+    return adv_ptrs && adv_ptrs->m_render_info ? adv_ptrs->m_render_info->render_zbias : 1.0f;
 }
 
-// slot 134
+// sub_602CF0
 bool actor::hates_spiderman() {
-    return ((bool (__thiscall*)(actor*))retail::sub_602CF0)(this);
+    auto team = (ai_team::e_team)retail::sub_42B120((i32)get_ai_core()); // the core's team, num_teams without a core
+
+    return team != ai_team::num_teams && ai_team::is_enemy(team, ai_team::team_spiderman);
 }
 
 // slot 136
@@ -303,9 +352,21 @@ void actor::unbind_from_scene_anim() {
     ((void (__thiscall*)(actor*))retail::sub_602570)(this);
 }
 
-// slot 142
-bool actor::unk_142() {
-    return ((bool (__thiscall*)(actor*))retail::sub_613D10)(this);
+// sub_613D10
+bool actor::is_inside_car() {
+    ai_core* core = get_ai_core();
+
+    if (!core)
+        return false;
+
+    ai_basic_inode* inode = get_ai_basic_inode_if_slim_actor(this);
+
+    if (inode)
+        return inode->is_inside_car();
+
+    auto car = (ai_car_inode*)core->get_info_node(info_node_type_ai_car);
+
+    return car && car->is_in_car;
 }
 
 // sub_602660
@@ -454,6 +515,9 @@ void actor::invalidate_frame_delta() {
 
 // sub_602830
 // inlined @ sub_611A90
+// inlined @ sub_602CF0
+// inlined @ sub_613D10
+// inlined @ sub_614E90
 ai_core* actor::get_ai_core() const {
     return my_base_ai_data ? my_base_ai_data->core : nullptr;
 }
@@ -488,6 +552,181 @@ void actor::set_frame_delta_no_update(const po &bob, f32 t) {
     retail::sub_629340((u32*)this, (f32*)&bob, t);
 }
 
-void actor::save_last_collision_free_state() {
-    retail::sub_6299F0((u32*)this);
+// sub_6299F0
+void actor::save_last_collision_free_state() { // a dynamic clone keeps one per member
+    auto clone = is_a_dynamic_conglomerate_clone() ? (dynamic_conglomerate_clone*)this : nullptr;
+
+    const po* matrix = clone ? clone->my_abs_po : my_abs_po;
+
+    if (!get_colgeom())
+        return;
+
+    capsule rel_cap(references::unk_00ffec30.get(), references::yvec.get(), 1.0f);
+
+    if (get_colgeom()->get_type() == collision_geometry_type_capsule)
+        rel_cap = ((collision_capsule*)get_colgeom())->rel_cap;
+
+    if (clone)
+        clone->save_last_collision_free_state(this, *matrix, rel_cap);
+    else
+        save_last_collision_free_state(*matrix, rel_cap);
+}
+
+// sub_6150C0
+void actor::save_last_collision_free_state(const po &matrix, const capsule &rel_cap) {
+    if (!last_collision_free_state)
+        last_collision_free_state = new (mm::allocate(sizeof(last_collision_free_state_t))) last_collision_free_state_t();
+
+    last_collision_free_state->xform   = matrix;
+    last_collision_free_state->rel_cap = rel_cap;
+
+    if (colgeom)
+        colgeom->get_type(); // asked and dropped
+}
+
+// sub_620ED0
+void actor::create_adv_ptrs() {
+    if (adv_ptrs)
+        return;
+
+    adv_ptrs = new (mm::allocate(sizeof(advanced_entity_ptrs))) advanced_entity_ptrs();
+
+    ext_flags |= entity_ext_flag_alloc_adv_ptrs;
+}
+
+// inlined @ sub_620F50
+// inlined @ sub_620FC0
+// inlined @ sub_621040
+// inlined @ sub_6653F0
+render_info* actor::create_render_info() {
+    create_adv_ptrs();
+
+    if (!adv_ptrs->m_render_info)
+        adv_ptrs->m_render_info = new (mm::allocate(sizeof(render_info))) render_info();
+
+    return adv_ptrs->m_render_info;
+}
+
+// sub_65B290
+void actor::add_collision_ignorance(arch_base_vhandle ent) { // stale handles met on the way are dropped
+    engine_lock_scope lock(&jq::references::unk_01126d10.get());
+
+    if (ent.null())
+        return;
+
+    create_adv_ptrs();
+
+    if (!adv_ptrs->ignore_col_ents) {
+        adv_ptrs->ignore_col_ents = new (mm::allocate(sizeof(vc8::vector<arch_base_vhandle>))) vc8::vector<arch_base_vhandle>();
+
+        adv_ptrs->ignore_col_ents->reserve(2);
+        adv_ptrs->ignore_col_ents->clear();
+    }
+
+    bool found = false;
+
+    arch_base_vhandle* it = adv_ptrs->ignore_col_ents->begin();
+
+    while (it != adv_ptrs->ignore_col_ents->end()) {
+        if (it->resolve()) {
+            if (*it == ent)
+                found = true;
+
+            ++it;
+        } else
+            adv_ptrs->ignore_col_ents->erase(it);
+    }
+
+    if (!found && ent.resolve())
+        adv_ptrs->ignore_col_ents->push_back(ent);
+}
+
+// sub_64B1D0
+void actor::remove_collision_ignorance(arch_base_vhandle ent) { // stale handles met on the way are dropped too
+    engine_lock_scope lock(&jq::references::unk_01126d10.get());
+
+    if (!adv_ptrs || !adv_ptrs->ignore_col_ents || adv_ptrs->ignore_col_ents->empty())
+        return;
+
+    arch_base_vhandle* it = adv_ptrs->ignore_col_ents->begin();
+
+    while (it != adv_ptrs->ignore_col_ents->end()) {
+        if (*it == ent || !it->resolve())
+            adv_ptrs->ignore_col_ents->erase(it);
+        else
+            ++it;
+    }
+}
+
+// sub_614190
+void actor::get_velocity(vector3d* target) const {
+    const entity_base* ancestor = my_parent;
+
+    if (!ancestor) {
+        *target = has_physical_ifc() ? physical_ifc()->get_velocity() : references::unk_00ffec30.get();
+
+        if (adv_ptrs && adv_ptrs->mi && adv_ptrs->mi->frame_delta_valid)
+            adv_ptrs->mi->add_frame_delta_velocity(target);
+
+        return;
+    }
+
+    if (has_physical_ifc()) {
+        *target = physical_ifc()->get_velocity();
+
+        entity* control_parent = has_standing_ifc() ? standing_ifc()->get_control_parent() : nullptr;
+
+        if (adv_ptrs &&
+            adv_ptrs->mi &&
+            adv_ptrs->mi->frame_delta_valid &&
+            control_parent == my_parent)
+
+            adv_ptrs->mi->add_frame_delta_velocity(target);
+    } else
+        *target = references::unk_00ffec30.get();
+
+    // the rel po carried through every ancestor but the root
+    matrix4x4 carried = my_rel_po->get_matrix();
+
+    while (ancestor->my_parent) {
+        const matrix4x4 &abs_matrix = ancestor->my_abs_po->get_matrix();
+
+        matrix4x4 product;
+
+        for (i32 i = 0; i < 4; i++)
+            for (i32 j = 0; j < 4; j++)
+                product[i][j] = (f32)((f64)abs_matrix.x[j] * carried[i].x +
+                                      (f64)abs_matrix.y[j] * carried[i].y +
+                                      (f64)abs_matrix.z[j] * carried[i].z +
+                                      (f64)abs_matrix.w[j] * carried[i].w);
+
+        carried  = product;
+        ancestor = ancestor->my_parent;
+    }
+
+    if (!ancestor->is_an_actor())
+        return;
+
+    vector3d root_velocity = references::unk_00ffec30.get();
+
+    ((const actor*)ancestor)->get_velocity(&root_velocity);
+
+    vector3d angular_velocity = references::unk_00ffec30.get();
+
+    if (ancestor->has_physical_ifc())
+        angular_velocity = ancestor->physical_ifc()->angular_velocity;
+
+    const vector4d &lever = carried.w;
+
+    const f32 cross_x = (f32)((f64)angular_velocity.z * lever.y - (f64)angular_velocity.y * lever.z);
+    const f32 cross_y = (f32)((f64)lever.z * angular_velocity.x - (f64)angular_velocity.z * lever.x);
+    const f32 cross_z = (f32)((f64)angular_velocity.y * lever.x - (f64)lever.y * angular_velocity.x);
+
+    const f32 x = (f32)((f64)root_velocity.x + cross_x);
+    const f32 y = (f32)((f64)root_velocity.y + cross_y);
+    const f32 z = (f32)((f64)root_velocity.z + cross_z);
+
+    target->x = (f32)((f64)target->x + x);
+    target->y = (f32)((f64)target->y + y);
+    target->z = (f32)((f64)target->z + z);
 }

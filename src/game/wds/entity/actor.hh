@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/boolx.hh"
+#include "game/colgeom.hh"
 #include "game/wds/entity/entity.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
@@ -52,37 +53,81 @@ namespace treyarch {
         boolx    frame_delta_valid;
         boolx    last_frame_delta_valid;
         u8       pad_056[0x0A];
+
+        void add_frame_delta_velocity(vector3d* target) const;
+    };
+
+    class render_info {
+
+    public:
+        color32  render_color;
+        vector3d render_scale;
+        f32      render_zbias;
+        f32      render_alpha_mod;
+
+        // inlined @ sub_620F50
+        // inlined @ sub_620FC0
+        // inlined @ sub_621040
+        // inlined @ sub_6653F0
+        render_info() : render_color(255, 255, 255, 255),
+                        render_scale(1.0f, 1.0f, 1.0f),
+                        render_zbias(1.0f),
+                        render_alpha_mod(1.0f) {}
+    };
+
+    struct last_collision_free_state_t {
+        po      xform;
+        capsule rel_cap;
+        i32     last_disable_frame_number;
+
+        // inlined @ sub_6150C0
+        // inlined @ sub_615260
+        last_collision_free_state_t() {
+            xform.identity();
+
+            last_disable_frame_number = -1;
+        }
     };
 
     struct advanced_entity_ptrs {
-        u8                          reserved_000[0x08];
-        movement_info*              mi;
-        chuck::vm::script_instance* my_script;       // the actor's "__enx" instance
-        u8*                         unk_010;         // its script object's name hash sits at +4
-        resource_key*               script_exe_name; // its hash is the script's filename
-        string_hash                 script_obj_name;
-        u8                          reserved_01c[0x04];
-        als::als_res_data*          my_als_data;
-        u8                          reserved_024[0x04];
-        i32                         unk_028;         // set_really_immobile makes it 10, or 0
+        vc8::vector<arch_base_vhandle>* ignore_col_ents;
+        render_info*                    m_render_info;
+        movement_info*                  mi;
+        chuck::vm::script_instance*     my_script;        // the actor's "__enx" instance
+        amalga::resource_pack_slot*     script_pack_slot; // its pack name is the script object's name
+        resource_key*                   script_exe_name;  // its hash is the script's filename
+        string_hash                     script_obj_name;
+        u8                              unk_01c;          // the instance isn't removed with the script while set
+        u8                              pad_01d[0x03];
+        als::als_res_data*              my_als_data;
+        f32                             unk_024;
+        i32                             unk_028;          // set_really_immobile makes it 10, or 0
+
+        // inlined @ sub_620ED0
+        advanced_entity_ptrs() : unk_01c(0) {
+            initialize(mash::ALLOCATED);
+        }
+
+    private:
+        void initialize(mash::allocation_scope scope);
     };
 
     class actor : public entity {
 
     public:
-        u8                          reserved_0a0[0x04];
-        nal::transport_list*        m_skeleton;
-        nal::skeleton_map*          skeleton_map;
-        animation_controller*       anim_ctrl;
-        advanced_entity_ptrs*       adv_ptrs;
-        collision_geometry*         colgeom;
-        ngl::mesh*                  mesh;
-        u8                          reserved_0bc[0x04];
-        amalga::resource_pack_slot* pack_slot; // the one the actor came from; its script threads take it as their resource context
-        mutable vector3d            cached_visual_bounding_sphere_center;
-        base_ai_data*               my_base_ai_data;
-        capsule_alter_sys*          capsule_alter;
-        u8                          reserved_0d8[0x10];
+        u8                           reserved_0a0[0x04];
+        nal::transport_list*         m_skeleton;
+        nal::skeleton_map*           skeleton_map;
+        animation_controller*        anim_ctrl;
+        advanced_entity_ptrs*        adv_ptrs;
+        collision_geometry*          colgeom;
+        ngl::mesh*                   mesh;
+        last_collision_free_state_t* last_collision_free_state;
+        amalga::resource_pack_slot*  pack_slot; // the one the actor came from; its script threads take it as their resource context
+        mutable vector3d             cached_visual_bounding_sphere_center;
+        base_ai_data*                my_base_ai_data;
+        capsule_alter_sys*           capsule_alter;
+        u8                           reserved_0d8[0x10];
 
         explicit actor(mash::generating_vtable_version so_do_nothing) : entity(so_do_nothing) {}
 
@@ -133,7 +178,7 @@ namespace treyarch {
         virtual void             set_floor_offset(f32 offset);
         virtual void*            bind_to_scene_anim(nal::scene_anim_instance* instance, i32 index);
         virtual void             unbind_from_scene_anim();
-        virtual bool             unk_142();
+        virtual bool             is_inside_car();
         virtual void             set_colgeom_flag_recursive(u32 flag, bool set);
         virtual void             update_colgeom(po* replacement_po = nullptr);              // null takes the abs po
         virtual void             invalidate_colgeom();
@@ -169,11 +214,21 @@ namespace treyarch {
 
         void set_frame_delta_no_update(const po &bob, f32 t);
         void save_last_collision_free_state();
+        void save_last_collision_free_state(const po &matrix, const capsule &rel_cap);
+
+        void create_adv_ptrs();
+
+        void add_collision_ignorance(arch_base_vhandle ent);
+        void remove_collision_ignorance(arch_base_vhandle ent);
+
+        void get_velocity(vector3d* target) const;
 
         static string_hash my_type_key;
 
     private:
         void finalize(mash::allocation_scope scope);
+
+        render_info* create_render_info();
     };
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
@@ -185,12 +240,26 @@ namespace treyarch {
     ASSERT_OFFSETOF(movement_info, frame_delta_valid,      0x54);
     ASSERT_OFFSETOF(movement_info, last_frame_delta_valid, 0x55);
 
-    ASSERT_OFFSETOF(advanced_entity_ptrs, mi,              0x08);
-    ASSERT_OFFSETOF(advanced_entity_ptrs, my_script,       0x0C);
-    ASSERT_OFFSETOF(advanced_entity_ptrs, script_exe_name, 0x14);
-    ASSERT_OFFSETOF(advanced_entity_ptrs, script_obj_name, 0x18);
-    ASSERT_OFFSETOF(advanced_entity_ptrs, my_als_data,     0x20);
-    ASSERT_OFFSETOF(advanced_entity_ptrs, unk_028,         0x28);
+    ASSERT_SIZEOF  (render_info,                   0x18);
+    ASSERT_OFFSETOF(render_info, render_scale,     0x04);
+    ASSERT_OFFSETOF(render_info, render_zbias,     0x10);
+    ASSERT_OFFSETOF(render_info, render_alpha_mod, 0x14);
+
+    ASSERT_SIZEOF  (last_collision_free_state_t,                            0x60);
+    ASSERT_OFFSETOF(last_collision_free_state_t, rel_cap,                   0x40);
+    ASSERT_OFFSETOF(last_collision_free_state_t, last_disable_frame_number, 0x5C);
+
+    ASSERT_SIZEOF  (advanced_entity_ptrs,                   0x2C);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, m_render_info,    0x04);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, mi,               0x08);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, my_script,        0x0C);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, script_pack_slot, 0x10);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, script_exe_name,  0x14);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, script_obj_name,  0x18);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, unk_01c,          0x1C);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, my_als_data,      0x20);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, unk_024,          0x24);
+    ASSERT_OFFSETOF(advanced_entity_ptrs, unk_028,          0x28);
 
     ASSERT_SIZEOF  (actor,                                       0xE8);
     ASSERT_OFFSETOF(actor, m_skeleton,                           0xA4);
@@ -199,6 +268,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(actor, adv_ptrs,                             0xB0);
     ASSERT_OFFSETOF(actor, colgeom,                              0xB4);
     ASSERT_OFFSETOF(actor, mesh,                                 0xB8);
+    ASSERT_OFFSETOF(actor, last_collision_free_state,            0xBC);
     ASSERT_OFFSETOF(actor, pack_slot,                            0xC0);
     ASSERT_OFFSETOF(actor, cached_visual_bounding_sphere_center, 0xC4);
     ASSERT_OFFSETOF(actor, my_base_ai_data,                      0xD0);

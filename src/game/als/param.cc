@@ -1070,7 +1070,7 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
                 return *the_actor->player_ifc()->unk_095();
 
             vector3d velocity;
-            retail::sub_614190((u32*)the_actor, (f32*)&velocity);
+            the_actor->get_velocity(&velocity);
 
             return velocity;
         }
