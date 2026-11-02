@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/scene/scene.hh"
 #include "treyarch/base/tl_system.hh"

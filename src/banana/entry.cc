@@ -30,7 +30,6 @@ static_assert(sizeof(void*) == 4, "ensure compile architecture is 32-bit");
 #include "banana/util/gimmie/method.hh"
 #include "banana/util/gimmie/module.hh"
 #include "banana/core.hh"
-#include "banana/logging.hh"
 #include "banana/lifecycle.hh"
 #include "banana/hooks/manager.hh"
 

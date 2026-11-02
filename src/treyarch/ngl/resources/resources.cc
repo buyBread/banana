@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/font/font.hh"
 #include "treyarch/ngl/fx/effect.hh"
 #include "treyarch/ngl/material/material.hh"

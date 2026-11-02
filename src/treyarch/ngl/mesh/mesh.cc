@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/geometry_shader/geometry_shader.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/material/material.hh"

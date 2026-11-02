@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "banana/logging.hh"
+#include "banana/core.hh"
 #include "banana/util/singleton.hh"
 
 #define MH_STRING MH_StatusToString

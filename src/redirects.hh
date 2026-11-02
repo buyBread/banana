@@ -1,6 +1,5 @@
 #pragma once
 
-#include "banana/logging.hh"
 #include "game/WinMain.hh"
 #include "game/amalga/resource_handler.hh"
 #include "game/amalga/worldly_pack_slot.hh"
@@ -12,6 +11,7 @@
 #include "game/spawn/spawn_table_manager.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/ngl.hh"
+#include "banana/core.hh"
 #include "banana/util/redirect_rel32.hh"
 #include "banana/util/thunks.hh"
 #include "banana/util/macros/debug.hh"

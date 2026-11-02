@@ -4,21 +4,16 @@
 #include "banana/util/macros/debug.hh"
 #include "banana/core.hh"
 #include "banana/lifecycle.hh"
-#include "banana/logging.hh"
 #include "banana/hooks/manager.hh"
 #include "banana/imgui/imgui.hh"
 
 void banana::thread() {
-    log.start();
-
     if (core::init())
         core::spin();
 
     imgui::shutdown();
 
     core::shutdown();
-
-    log.close();
 }
 
 bool banana::core::init() {

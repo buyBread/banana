@@ -3,10 +3,10 @@
 #include <format>
 #include <minhook.h>
 
+#include "banana/lifecycle.hh"
+#include "banana/core.hh"
 #include "banana/hooks/manager.hh"
 #include "banana/hooks/signatures.hh"
-#include "banana/lifecycle.hh"
-#include "banana/logging.hh"
 #include "banana/util/type_name.hh"
 #include "banana/util/macros/unique_name.hh"
 

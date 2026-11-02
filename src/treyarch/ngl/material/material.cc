@@ -1,4 +1,3 @@
-#include "banana/logging.hh"
 #include "game/four_cc.hh"
 #include "treyarch/ngl/material/material.hh"
 #include "treyarch/ngl/ngl.hh"

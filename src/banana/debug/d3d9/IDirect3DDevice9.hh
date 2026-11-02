@@ -6,7 +6,7 @@
 
 #pragma comment(lib, "d3dcompiler.lib")
 
-#include "banana/logging.hh"
+#include "banana/core.hh"
 #include "banana/util/types.hh"
 
 class wrapped_IDirect3DDevice9 : public IDirect3DDevice9 {

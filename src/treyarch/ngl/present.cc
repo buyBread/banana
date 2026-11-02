@@ -1,4 +1,3 @@
-#include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/list/list.hh"

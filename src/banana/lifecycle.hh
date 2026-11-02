@@ -3,7 +3,7 @@
 #include <string_view>
 #include <format>
 
-#include "banana/logging.hh"
+#include "banana/core.hh"
 
 /*
     todo: finish banana's state machine, eventually.

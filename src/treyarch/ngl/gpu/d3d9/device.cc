@@ -2,7 +2,6 @@
 #include <d3d9.h>
 #include <windows.h>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/debug/debug.hh"
 #include "treyarch/ngl/frame_lock.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"

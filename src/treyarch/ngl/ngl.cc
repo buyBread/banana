@@ -1,5 +1,4 @@
 #include "retail.hh"
-#include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/version.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"

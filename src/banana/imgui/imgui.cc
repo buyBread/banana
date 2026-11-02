@@ -3,7 +3,6 @@
 #include <imgui_impl_win32.h>
 
 #include "banana/core.hh"
-#include "banana/logging.hh"
 #include "banana/hooks/manager.hh"
 #include "banana/imgui/imgui.hh"
 

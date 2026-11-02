@@ -19,8 +19,6 @@
 #ifdef DEBUG
     #include <unordered_set>
     #include <windows.h>
-
-    #include "banana/logging.hh"
 #endif
 
 using namespace treyarch;

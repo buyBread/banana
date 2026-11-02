@@ -1,6 +1,5 @@
 #include <cstddef>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/shaders/registration.hh"
 #include "treyarch/ngl/shaders/fake_peds/programs.hh"
 #include "treyarch/ngl/shaders/pcuv/programs.hh"

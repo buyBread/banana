@@ -8,6 +8,8 @@
 #include "banana/logging.hh"
 
 namespace banana {
+    inline auto &log = s_logging_manager::get().category("banana");
+
     extern void thread();
 
     inline bool vibe_check() {

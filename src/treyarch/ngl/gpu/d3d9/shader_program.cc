@@ -1,4 +1,3 @@
-#include "banana/logging.hh"
 #include "treyarch/ngl/gpu/d3d9/shader_program.hh"
 #include "treyarch/ngl/gpu/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/shaders/package_data.hh"

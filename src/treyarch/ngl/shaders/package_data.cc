@@ -1,6 +1,5 @@
 #include <windows.h>
 
-#include "banana/logging.hh"
 #include "treyarch/ngl/shaders/package.hh"
 #include "treyarch/ngl/shaders/package_data.hh"
 #include "treyarch/ngl/shaders/resource_ids.hh"

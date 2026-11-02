@@ -1,4 +1,3 @@
-#include "banana/logging.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/gpu/d3d9/device.hh"
 #include "treyarch/ngl/gpu/d3d9/work_buffers.hh"

@@ -5,8 +5,8 @@
 #include <type_traits>
 #include <cassert>
 
+#include "banana/core.hh"
 #include "banana/util/types.hh"
-#include "banana/logging.hh"
 
 template <std::size_t N>
 struct std::formatter<u8[N]> {

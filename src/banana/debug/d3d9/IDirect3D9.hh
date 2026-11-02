@@ -3,7 +3,7 @@
 #include <atomic>
 #include <d3d9.h>
 
-#include "banana/logging.hh"
+#include "banana/core.hh"
 #include "banana/debug/d3d9/IDirect3DDevice9.hh"
 
 class wrapped_IDirect3D9 : public IDirect3D9 {
