@@ -103,6 +103,7 @@ namespace treyarch { namespace vc8 {
         // sub_635E30
         // sub_6CBC90
         // sub_6CBD30
+        // sub_6CBF00
         // sub_749E80
         // sub_A1AB20
         // sub_A6B870
@@ -120,12 +121,20 @@ namespace treyarch { namespace vc8 {
 
         // inlined @ sub_4DE460
         // inlined @ sub_417520
+        // inlined @ sub_70AC10
+        // inlined @ sub_70AD30
+        // inlined @ sub_70AE40
+        // inlined @ sub_70AF40
+        // inlined @ sub_70B050
+        // inlined @ sub_70B290
         node* push_front(const T &value) {
             return insert_before(sentinel->next, value);
         }
 
         // sub_6D5110
         // inlined @ sub_4175F0
+        // inlined @ sub_6D94B0
+        // inlined @ sub_6F86E0
         node* erase(node* position) noexcept { // the sentinel is left alone
             node* next = position->next;
 
@@ -152,6 +161,7 @@ namespace treyarch { namespace vc8 {
         // sub_7FB2F0
         // inlined @ sub_97A400
         // inlined @ sub_99A570
+        // inlined @ sub_701110
         void clear() noexcept {
             node* position = sentinel->next;
 

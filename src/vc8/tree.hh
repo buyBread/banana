@@ -120,6 +120,7 @@ namespace treyarch { namespace vc8 {
         u32       count;
 
     public:
+        // inlined @ sub_700D00
         // inlined @ sub_A1BF80
         tree() : head_node(buy_head_node()),
                  count(0) {
@@ -181,6 +182,7 @@ namespace treyarch { namespace vc8 {
         bool empty()    const noexcept { return count == 0; }
 
         // inlined @ sub_6F83E0
+        // inlined @ sub_700D00
         // inlined @ sub_93D010
         // inlined @ sub_97A400
         void clear() {
@@ -344,6 +346,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_641EC0
         // sub_642300
+        // sub_6D5410
         // sub_6D57A0
         // sub_6D5A60
         // sub_7FB330

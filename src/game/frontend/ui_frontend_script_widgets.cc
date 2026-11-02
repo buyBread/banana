@@ -2,6 +2,94 @@
 
 using namespace treyarch;
 
+// sub_70AC10
+igo_3d_script_widget* ui_frontend::create_script_widget(string_hash key) {
+    engine_lock_scope scope(&references::script_widget_lock.get());
+
+    auto* widget = new igo_3d_script_widget(string_hash(), string_hash());
+
+    if (widget) {
+        widget->init();
+        widget->init_entity(key);
+        widget->set_shown(true);
+        widget->init_anim_controller();
+
+        script_widgets.push_front(widget);
+    }
+
+    return widget;
+}
+
+// sub_70AD30
+igo_3d_script_widget* ui_frontend::create_script_widget_from_parameters(string_hash key) {
+    engine_lock_scope scope(&references::script_widget_lock.get());
+
+    auto* widget = new igo_3d_script_widget(key, string_hash());
+
+    if (widget) {
+        widget->init();
+        widget->set_shown(true);
+        widget->spawn_entity();
+
+        script_widgets.push_front(widget);
+    }
+
+    return widget;
+}
+
+// sub_70AE40
+igo_3d_script_widget* ui_frontend::create_text_widget_from_parameters(string_hash widget_key, string_hash text_key) {
+    engine_lock_scope scope(&references::script_widget_lock.get());
+
+    auto* widget = new igo_3d_script_widget(widget_key, text_key);
+
+    if (widget) {
+        widget->init();
+        widget->set_shown(true);
+        widget->spawn_entity();
+
+        script_widgets.push_front(widget);
+    }
+
+    return widget;
+}
+
+// sub_70AF40
+igo_3d_script_widget* ui_frontend::create_mission_text_widget(string_hash record_key, string_hash widget_key, string_hash text_key) {
+    engine_lock_scope scope(&references::script_widget_lock.get());
+
+    auto* widget = new igo_3d_script_widget(widget_key, text_key);
+
+    if (widget) {
+        widget->init();
+        widget->init_entity(record_key);
+        widget->set_shown(true);
+        widget->init_anim_controller();
+
+        mission_text_widgets.push_front(widget);
+    }
+
+    return widget;
+}
+
+// sub_70B050
+igo_3d_script_widget* ui_frontend::create_hint_text_widget(string_hash record_key, string_hash widget_key, string_hash text_key) {
+    engine_lock_scope scope(&references::script_widget_lock.get());
+
+    auto* widget = new igo_3d_script_widget(widget_key, text_key);
+
+    if (widget) {
+        widget->init();
+        widget->init_entity(record_key);
+        widget->set_shown(true);
+        widget->init_anim_controller();
+
+        hint_text_widgets.push_front(widget);
+    }
+
+    return widget;
+}
+
 // sub_6D85F0
 bool ui_frontend::is_script_widget_valid(igo_3d_script_widget* widget) {
     if (!widget)

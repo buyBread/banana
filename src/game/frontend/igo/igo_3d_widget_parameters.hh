@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstddef>
+
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/vector.hh"
 #include "game/math/algebra.hh"
 #include "treyarch/math/vector.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -96,6 +99,12 @@ namespace treyarch {
             <igo_3d_text_child>   text_children;
         mash::vector
             <igo_3d_widget_child> widget_children;
+
+        igo_3d_widget_parameters();
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
 
         void construct_mashed_class();
         void destruct_mashed_class();

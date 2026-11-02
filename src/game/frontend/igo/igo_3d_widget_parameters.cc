@@ -6,6 +6,13 @@
 
 using namespace treyarch;
 
+// sub_6F24E0
+igo_3d_widget_parameters::igo_3d_widget_parameters() : self(nullptr),
+                                                       anims_enabled(0) {
+
+    retail::sub_6B2CE0((i32)this, 0); // the default values, the matrix
+}
+
 // sub_6F25A0
 void igo_3d_widget_parameters::construct_mashed_class() {
     self = nullptr;

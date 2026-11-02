@@ -4,12 +4,15 @@
 
 #include "retail.hh"
 #include "game/als/meta_anim.hh"
+#include "game/amalga/resource_manager.hh"
+#include "game/amalga/resource_types.hh"
 #include "game/animation/animation_controller.hh"
 #include "game/fixed_string.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/game_meter_manager.hh"
 #include "game/hash/algo.hh"
+#include "game/resource_key.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/references.hh"
@@ -17,12 +20,82 @@
 #include "treyarch/base/tl_fixed_string.hh"
 #include "treyarch/base/tl_system.hh"
 #include "treyarch/jq/native_locks.hh"
+#include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/nal/nal.hh"
 #include "treyarch/ngl/list/list.hh"
 #include "treyarch/ngl/mesh/submission.hh"
 
 using namespace treyarch;
+
+// sub_700D00
+igo_3d_widget::igo_3d_widget(string_hash record_key) : parameters(nullptr),
+                                                       flags(0) {
+
+    ((po*)&trans_matrix)->identity();
+
+    flags     |= flag_shown;
+    entity_vh  = arch_base_vhandle();
+
+    alpha          = 1.0f;
+    scale_factor   = 1.0f;
+    alpha_factor   = 1.0f;
+    entity_spawned = false;
+    scale_offset.x = 1.0f;
+    scale_offset.y = 1.0f;
+    scale_offset.z = 1.0f;
+    color.x        = 1.0f;
+    color.y        = 1.0f;
+    color.z        = 1.0f;
+    uv_offset.x    = 0.0f;
+    uv_offset.y    = 0.0f;
+    unk_044        = -1;
+    unk_048        = -1;
+
+    member_texts.clear();
+    member_widgets.clear();
+
+    unk_0d0             = -2;
+    unk_0d4             = 0;
+    faded_in            = true;
+    fading_in           = false;
+    fading_out          = false;
+    fade_in_remaining   = 0.0f;
+    fade_in_duration    = 1.0f;
+    fade_out_remaining  = 0.0f;
+    fade_out_duration   = 1.0f;
+    fade_in_alpha_span  = 1.0f;
+    fade_in_alpha_base  = 0.0f;
+    fade_out_alpha_span = 1.0f;
+    fade_out_alpha_base = 0.0f;
+    unk_0fc             = 0;
+    unk_100             = 0.0f;
+    unk_104             = 1.0f;
+    unk_118             = 1.0f;
+    unk_108             = 0.0f;
+    unk_10c             = 1.0f;
+    unk_110             = 0;
+    unk_114             = 1;
+    unk_115             = 1;
+    unk_11c             = 0;
+    move_from.x         = 0.0f;
+    move_from.y         = 0.0f;
+    move_from.z         = 0.0f;
+    move_to.x           = 0.0f;
+    move_to.y           = 0.0f;
+    move_to.z           = 0.0f;
+    move_elapsed        = 0.0f;
+    move_duration       = 0.0f;
+    moving              = false;
+    move_curve          = 1;
+
+    if (record_key == string_hash())
+        create_parameters();
+    else
+        load_parameters(record_key);
+
+    unk_11c = parameters->unk_94;
+}
 
 // sub_6F83E0
 igo_3d_widget::~igo_3d_widget() {
@@ -597,16 +670,10 @@ void igo_3d_widget::create_child_texts() {
 // sub_700FC0
 void igo_3d_widget::create_child_widgets() {
     for (igo_3d_widget_child* child : parameters->widget_children) {
-        igo_3d_widget* widget = nullptr;
+        string_hash record;
+        record.initialize(mash::ALLOCATED, child->record_name.c_str());
 
-        void* memory = mm::allocate(sizeof(igo_3d_widget));
-
-        if (memory) {
-            string_hash record;
-            record.initialize(mash::ALLOCATED, child->record_name.c_str());
-
-            widget = (igo_3d_widget*)retail::sub_700D00((i32)memory, (i32)record.source_hash_code); // igo_3d_widget::igo_3d_widget
-        }
+        auto* widget = new igo_3d_widget(record);
 
         if (!widget)
             continue;
@@ -629,6 +696,52 @@ void igo_3d_widget::unk_052() {}
 
 // slot 53
 void igo_3d_widget::unk_053() {}
+
+// sub_6F6490
+void igo_3d_widget::create_parameters() {
+    parameters = new igo_3d_widget_parameters();
+}
+
+// sub_6FDE70
+void igo_3d_widget::load_parameters(string_hash key) {
+    resource_key resource;
+
+    resource.set(key, (u32)amalga::e_resource_type::UIP3DW);
+
+    u32                         size = 0;
+    amalga::resource_pack_slot* slot = nullptr;
+
+    auto* blob = (u8*)retail::sub_762A80((u32*)&resource, &size, (u32*)&slot); // the record's mash image
+
+    mash::mash_info_struct mash_info(mash::UNMASH_MODE, blob, size);
+
+    if (mash_info.get_header()->in_use) {
+        mash_info.dupe_buffers_for_unmash_copies();
+
+        mash_info.get_header()->in_use = 1;
+
+        mash_info.unmash_class(parameters, nullptr, mash::NORMAL_BUFFER);
+
+        mash::mash_info_struct::construct_class(parameters);
+
+        flags &= ~flag_parameters_from_mash;
+    } else {
+        auto* record = (igo_3d_widget_parameters*)amalga::resource_manager::get_resource(resource, nullptr, nullptr);
+
+        flags      |= flag_parameters_from_mash;
+        parameters  = record;
+    }
+
+    set_position(parameters->position.get_x(),
+                 parameters->position.get_y(),
+                 parameters->position.get_z());
+
+    set_rotation_angle(parameters->rotation_angle);
+    set_tilt_angle(parameters->tilt_angle);
+    set_spin_angle(parameters->spin_angle);
+    set_scale(parameters->scale);
+    set_widescreen_alignment(parameters->widescreen_align);
+}
 
 // sub_699C40
 // inlined @ sub_6DE490
@@ -874,4 +987,28 @@ void igo_3d_widget::attach_widget(igo_3d_widget* child, const string_hash &membe
 
     if (index != invalid_conglom_member)
         member_widgets[index] = child;
+}
+
+// sub_6D94B0
+void igo_3d_widget::erase_member_widget(igo_3d_widget* child) {
+    if (member_widgets.size()) {
+        for (auto* position = member_widgets.begin(); position != member_widgets.end(); position = position->next()) {
+            if (position->value.second == child) {
+                member_widgets.erase(position);
+
+                break;
+            }
+        }
+    }
+
+    if (!unattached_widgets.size())
+        return;
+
+    for (auto* position = unattached_widgets.begin(); position != unattached_widgets.end(); position = position->next) {
+        if (position->value == child) {
+            unattached_widgets.erase(position);
+
+            return;
+        }
+    }
 }

@@ -262,6 +262,12 @@ namespace treyarch {
         void set_boss_entity(arch_base_vhandle entity);
         void set_grunt_enabled(bool enabled);
 
+        igo_3d_script_widget* create_script_widget                (string_hash key);
+        igo_3d_script_widget* create_script_widget_from_parameters(string_hash key);
+        igo_3d_script_widget* create_text_widget_from_parameters  (string_hash widget_key, string_hash text_key);
+        igo_3d_script_widget* create_mission_text_widget          (string_hash record_key, string_hash widget_key, string_hash text_key);
+        igo_3d_script_widget* create_hint_text_widget             (string_hash record_key, string_hash widget_key, string_hash text_key);
+
         // listed and its entity still there; a listed widget whose entity is gone gets destroyed
         bool is_script_widget_valid(igo_3d_script_widget* widget);
 

@@ -48,7 +48,7 @@ bool slf__create_3d_widget__str__t::operator()(chuck::vm::vm_stack &stack) {
 
         key.initialize(mash::ALLOCATED, name);
 
-        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AC10)(references::frontend.get().igo, key); // ui_frontend::create_script_widget
+        result = references::frontend.get().igo->create_script_widget(key);
 
         stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     }
@@ -73,7 +73,7 @@ bool slf__create_3d_widget_from_params__str__t::operator()(chuck::vm::vm_stack &
 
         key.initialize(mash::ALLOCATED, name);
 
-        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AD30)(references::frontend.get().igo, key); // ui_frontend::create_script_widget_from_params
+        result = references::frontend.get().igo->create_script_widget_from_parameters(key);
 
         stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     }
@@ -110,10 +110,7 @@ bool slf__create_3d_mission_text_widget__str__t::operator()(chuck::vm::vm_stack 
         widget_key.initialize(mash::ALLOCATED, widget_name->c_str());
         record_key.initialize(mash::ALLOCATED, name);
 
-        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash, string_hash))retail::sub_70AF40)(references::frontend.get().igo, // ui_frontend::create_mission_text_widget
-                                                                                                                              record_key,
-                                                                                                                              widget_key,
-                                                                                                                              text_key);
+        result = references::frontend.get().igo->create_mission_text_widget(record_key, widget_key, text_key);
 
         stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     }
@@ -153,10 +150,7 @@ bool slf__create_3d_hint_text_widget__str__t::operator()(chuck::vm::vm_stack &st
         widget_key.initialize(mash::ALLOCATED, widget_name->c_str());
         record_key.initialize(mash::ALLOCATED, name);
 
-        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash, string_hash))retail::sub_70B050)(references::frontend.get().igo, // ui_frontend::create_hint_text_widget
-                                                                                                                              record_key,
-                                                                                                                              widget_key,
-                                                                                                                              text_key);
+        result = references::frontend.get().igo->create_hint_text_widget(record_key, widget_key, text_key);
 
         stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     }
@@ -187,7 +181,7 @@ bool slf__create_3d_text_widget_from_params__str__str__t::operator()(chuck::vm::
         text_key  .initialize(mash::ALLOCATED, text_name);
         widget_key.initialize(mash::ALLOCATED, widget_name);
 
-        result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash, string_hash))retail::sub_70AE40)(references::frontend.get().igo, widget_key, text_key); // ui_frontend::create_text_widget_from_params
+        result = references::frontend.get().igo->create_text_widget_from_parameters(widget_key, text_key);
 
         stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     }
@@ -240,7 +234,7 @@ bool slf__create_3d_button_widget__num__t::operator()(chuck::vm::vm_stack &stack
     if (igo_3d_face_button_system* buttons = references::frontend.get().igo->face_button_system)
         key = buttons->get_button_widget_key((i32)kind);
 
-    auto result = ((igo_3d_script_widget* (__thiscall*)(ui_frontend*, string_hash))retail::sub_70AC10)(references::frontend.get().igo, key); // ui_frontend::create_script_widget
+    auto result = references::frontend.get().igo->create_script_widget(key);
 
     stack.thread->get_instance(-1)->add_allocated_stuff(chuck::vm::script_garbage_collection_widget_3d, (u32)result);
     stack.push(&result, sizeof(result));

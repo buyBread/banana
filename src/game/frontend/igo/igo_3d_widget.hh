@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include "vc8/list.hh"
 #include "vc8/map.hh"
 #include "game/arch_base_vhandle.hh"
@@ -59,7 +61,8 @@ namespace treyarch {
         vc8::map<i32, igo_3d_widget*> member_widgets;      // by conglomerate member index
         vc8::list<igo_3d_text*>       unattached_texts;
         vc8::list<igo_3d_widget*>     unattached_widgets;
-        u8                            reserved_0d0[0x08];
+        i32                           unk_0d0;
+        u32                           unk_0d4;
         bool                          faded_in;            // either fade sets it, the end of a fade out clears it
         bool                          fading_in;
         bool                          fading_out;
@@ -72,7 +75,17 @@ namespace treyarch {
         f32                           fade_in_alpha_base;
         f32                           fade_out_alpha_span;
         f32                           fade_out_alpha_base;
-        u8                            reserved_0fc[0x20];
+        u8                            unk_0fc;
+        u8                            pad_0fd[0x03];
+        f32                           unk_100;
+        f32                           unk_104;
+        f32                           unk_108;
+        f32                           unk_10c;
+        u32                           unk_110;
+        u8                            unk_114;
+        u8                            unk_115;
+        u8                            pad_116[0x02];
+        f32                           unk_118;
         u32                           unk_11c;             // the parameters' unk_94
         vector3d                      move_from;
         vector3d                      move_to;
@@ -83,12 +96,18 @@ namespace treyarch {
         i32                           move_curve;
         u8                            reserved_148[0x08];
 
+        explicit igo_3d_widget(string_hash record_key); // the empty hash makes default parameters, anything else loads them
+
         explicit igo_3d_widget(mash::generating_vtable_version so_do_nothing) : member_texts(so_do_nothing),
                                                                                 member_widgets(so_do_nothing),
                                                                                 unattached_texts(so_do_nothing),
                                                                                 unattached_widgets(so_do_nothing) {}
 
         virtual ~igo_3d_widget();
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
 
         // inlined into the deleting destructors
         void operator delete(void* allocation) noexcept {
@@ -192,6 +211,9 @@ namespace treyarch {
 
         static f32 move_curve_value(f32 t, i32 curve); // curve 1 eases out, 0 eases in, anything else is linear
 
+        void create_parameters();
+        void load_parameters(string_hash key); // a record already in use gets unmashed into a copy
+
         void fade_in    (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay);
         void fade_out   (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
         void update_fade(f32 dt);
@@ -211,6 +233,8 @@ namespace treyarch {
 
         void attach_text  (igo_3d_text*   child, const string_hash &member); // files it under the conglomerate member, if there is one
         void attach_widget(igo_3d_widget* child, const string_hash &member);
+
+        void erase_member_widget(igo_3d_widget* child); // from member_widgets and unattached_widgets
     };
 
     ASSERT_SIZEOF  (igo_3d_widget,                              0x150);
@@ -228,9 +252,15 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget, member_widgets,              0x0AC);
     ASSERT_OFFSETOF(igo_3d_widget, unattached_texts,            0x0B8);
     ASSERT_OFFSETOF(igo_3d_widget, unattached_widgets,          0x0C4);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_0d0,                     0x0D0);
     ASSERT_OFFSETOF(igo_3d_widget, faded_in,                    0x0D8);
     ASSERT_OFFSETOF(igo_3d_widget, fade_in_remaining,           0x0DC);
     ASSERT_OFFSETOF(igo_3d_widget, fade_out_alpha_base,         0x0F8);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_0fc,                     0x0FC);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_100,                     0x100);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_110,                     0x110);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_114,                     0x114);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_118,                     0x118);
     ASSERT_OFFSETOF(igo_3d_widget, unk_11c,                     0x11C);
     ASSERT_OFFSETOF(igo_3d_widget, move_from,                   0x120);
     ASSERT_OFFSETOF(igo_3d_widget, move_elapsed,                0x138);
