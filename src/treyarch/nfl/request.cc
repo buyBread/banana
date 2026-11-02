@@ -110,3 +110,12 @@ i32 treyarch::nfl::add_request(const request_params* params) {
 
     return id;
 }
+
+// sub_A16260
+void treyarch::nfl::cancel_request(i32 id) {
+    nfs_lock();
+
+    nfs_cancel_request(id);
+
+    nfs_unlock();
+}

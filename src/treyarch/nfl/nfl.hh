@@ -52,7 +52,8 @@ namespace treyarch { namespace nfl {
     i32  open_file(u32 media_mask, const char* path);
     void close_file(i32 id);
 
-    i32 add_request(const request_params* params);
+    i32  add_request(const request_params* params);
+    void cancel_request(i32 id);
 
     e_state get_state();
 

@@ -10,6 +10,7 @@
 #include "game/input/input_mgr.hh"
 #include "game/spawn/spawn_table_manager.hh"
 #include "treyarch/mm/mm.hh"
+#include "treyarch/nfl/nfl.hh"
 #include "treyarch/ngl/ngl.hh"
 #include "banana/core.hh"
 #include "banana/util/redirect_rel32.hh"
@@ -259,6 +260,20 @@ namespace treyarch {
         }
     }
 
+    inline void _redirect_nfl() {
+        banana::log.msg("redirecting nfl public api (resource_pack_streamer hosts, pack abort)");
+
+        if (!util::redirect_rel32(0x0076F039, { 0xE8, 0xA2, 0x6C, 0x2A, 0x00 }, &nfl::open_file)      ||
+            !util::redirect_rel32(0x0076F0F3, { 0xE8, 0x98, 0x6E, 0x2A, 0x00 }, &nfl::add_request)    ||
+            !util::redirect_rel32(0x0076EE4E, { 0xE8, 0x9D, 0x7E, 0x2A, 0x00 }, &nfl::close_file)     ||
+            !util::redirect_rel32(0x0076F4F8, { 0xE8, 0xE3, 0x7E, 0x2A, 0x00 }, &nfl::update)         ||
+            !util::redirect_rel32(0x0076A93C, { 0xE8, 0x1F, 0xC1, 0x2A, 0x00 }, &nfl::get_state)      ||
+            !util::redirect_rel32(0x00739DC8, { 0xE8, 0x93, 0xC4, 0x2D, 0x00 }, &nfl::cancel_request) ||
+            !util::redirect_rel32(0x00739DE2, { 0xE8, 0x09, 0xCF, 0x2D, 0x00 }, &nfl::close_file))
+
+            FATAL_BREAKPOINT();
+    }
+
     inline void redirect_game_calls() {
         _redirect_mm();
 
@@ -307,5 +322,6 @@ namespace treyarch {
             FATAL_BREAKPOINT();
 
         _redirect_event_manager();
+        _redirect_nfl();
     }
 } // treyarch
