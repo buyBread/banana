@@ -30,6 +30,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "vc8/vector.hh"
@@ -363,7 +364,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
         string_hash user_cam_id;
         user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
 
-        auto* user_cam = (entity*)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+        auto* user_cam = (entity*)entity_handle_manager::find_entity(user_cam_id, entity_flavor_camera, false);
 
         const vector3d &facing   = user_cam->my_abs_po->get_z_facing();
         const vector3d &position = user_cam->my_abs_po->get_position();
@@ -459,7 +460,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
                 string_hash user_cam_id;
                 user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
 
-                auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+                auto* user_cam = (camera_handle)entity_handle_manager::find_entity(user_cam_id, entity_flavor_camera, false);
 
                 if (keep_matrix)
                     user_cam->set_rel_po(*current_game_camera->my_abs_po);
@@ -475,7 +476,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
                 string_hash user_cam_id;
                 user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
 
-                auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+                auto* user_cam = (camera_handle)entity_handle_manager::find_entity(user_cam_id, entity_flavor_camera, false);
 
                 user_cam->set_rel_position(current_view_camera->my_rel_po->get_position());
                 retail::sub_97AF20((u32*)this, (u32*)user_cam, true); // game::set_current_camera
@@ -502,7 +503,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
         string_hash scene_analyzer_cam_id;
         scene_analyzer_cam_id.initialize(mash::ALLOCATED, "SCENE_ANALYZER_CAM");
 
-        auto* scene_analyzer_cam = (entity*)retail::sub_640AE0(&scene_analyzer_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+        auto* scene_analyzer_cam = (entity*)entity_handle_manager::find_entity(scene_analyzer_cam_id, entity_flavor_camera, false);
 
         scene_analyzer_cam->set_rel_position(current_game_camera->my_rel_po->get_position());
     }
@@ -513,12 +514,12 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
         string_hash user_cam_id;
         user_cam_id.initialize(mash::ALLOCATED, "USER_CAM");
 
-        auto* user_cam = (entity*)retail::sub_640AE0(&user_cam_id.source_hash_code, 28, false); // entity_handle_manager::find_entity
+        auto* user_cam = (entity*)entity_handle_manager::find_entity(user_cam_id, entity_flavor_ignore, false);
 
         string_hash chase_cam_id;
         chase_cam_id.initialize(mash::ALLOCATED, "CHASE_CAM");
 
-        auto* chase_cam = (entity*)retail::sub_640AE0(&chase_cam_id.source_hash_code, 28, false);
+        auto* chase_cam = (entity*)entity_handle_manager::find_entity(chase_cam_id, entity_flavor_ignore, false);
 
         user_cam->set_rel_po(*chase_cam->my_abs_po);
 
@@ -580,7 +581,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
         string_hash scene_analyzer_cam_id;
         scene_analyzer_cam_id.initialize(mash::ALLOCATED, "SCENE_ANALYZER_CAM");
 
-        auto* scene_analyzer_cam = (camera_handle)retail::sub_640AE0(&scene_analyzer_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+        auto* scene_analyzer_cam = (camera_handle)entity_handle_manager::find_entity(scene_analyzer_cam_id, entity_flavor_camera, false);
 
         scene_analyzer_cam->adjust_geometry_pipe(true);
     }
@@ -589,7 +590,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
         string_hash station_cam_id;
         station_cam_id.initialize(mash::ALLOCATED, "STATION_CAM");
 
-        auto* station_cam = (entity*)retail::sub_640AE0(&station_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
+        auto* station_cam = (entity*)entity_handle_manager::find_entity(station_cam_id, entity_flavor_camera, false);
 
         const vector3d &tracked = base_camera->my_abs_po->get_position();
 

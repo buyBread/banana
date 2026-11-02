@@ -48,12 +48,17 @@ namespace treyarch { namespace ngl {
         f32   range;
     };
 
+    struct mesh_skeleton {
+        u8  reserved_000[0x08];
+        i32 unk_008;            // an actor with one set records
+    };
+
     struct mesh {
         fixed_string              name;
         u32                       flags;
         u32                       section_count;
         mesh_section_table_entry* sections;
-        void*                     skeleton;
+        mesh_skeleton*            skeleton;
         u32                       lod_count;
         mesh_lod*                 lods;
         math::vector4             sphere;

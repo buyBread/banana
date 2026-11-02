@@ -4,6 +4,7 @@
 #include "game/arch_base.hh"
 #include "game/script/chuck_lib_water_box.hh"
 #include "game/water_box.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "treyarch/mash/string_hash.hh"
 
 using namespace treyarch;
@@ -17,7 +18,7 @@ u32 slc_water_box_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     if (!entity)
         return 0;

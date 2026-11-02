@@ -18,6 +18,7 @@
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "game/wds/entity/pendulum.hh"
 #include "game/wds/entity/vehicle.hh"
 #include "game/wds/references.hh"
@@ -42,7 +43,7 @@ u32 slc_player_entity_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     if (!entity)
         return 0;

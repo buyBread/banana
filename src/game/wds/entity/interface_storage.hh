@@ -46,6 +46,10 @@ namespace treyarch {
         u8                              reserved_014[0x04];
         engine_recursive_lock           ifc_lock;
         u32                             ifc_mask;   // bit n is set while the interface with index n exists
+        bool                            dynamic;    // allocated rather than unmashed
+        u8                              pad_02d[0x03];
+
+        void construct_mashed_class();
 
         // inlined; retail reads the mask without taking ifc_lock
         bool has_ifc(e_entity_ifc index) const {
@@ -75,4 +79,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(interface_storage, interfaces, 0x00);
     ASSERT_OFFSETOF(interface_storage, ifc_lock,   0x18);
     ASSERT_OFFSETOF(interface_storage, ifc_mask,   0x28);
+    ASSERT_OFFSETOF(interface_storage, dynamic,    0x2C);
 } // treyarch

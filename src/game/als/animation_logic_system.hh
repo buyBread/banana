@@ -164,6 +164,7 @@ namespace treyarch { namespace als {
         resource_key                      key;
         animation_logic_system_interface* the_als;
 
+        void construct_mashed_class();
         void post_unmash_fixup(actor* owner, u32 unk);
     };
 

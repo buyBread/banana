@@ -12,6 +12,7 @@
 #include "game/wds/ai/ai_team.hh"
 #include "game/wds/ai/info_node.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/capsule_alter_sys.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/conglomerate_clone.hh"
 #include "treyarch/jq/jq.hh"
@@ -22,7 +23,27 @@ using namespace treyarch;
 
 string_hash actor::my_type_key { 0x07138E99 }; // "actor"
 
+// sub_4C4B10
+void base_ai_data::construct_mashed_class() {
+    core_ai_key.construct_mashed_class();
+    overrides  .construct_mashed_class();
+}
+
+// sub_6396A0
+void advanced_entity_ptrs::construct_mashed_class() {
+    script_obj_name.construct_mashed_class();
+
+    if (script_exe_name)
+        script_exe_name->construct_mashed_class();
+
+    if (my_als_data)
+        my_als_data->construct_mashed_class();
+
+    initialize(mash::FROM_MASH);
+}
+
 // sub_602330
+// inlined @ sub_6396A0
 void advanced_entity_ptrs::initialize(mash::allocation_scope scope) {
     ignore_col_ents  = nullptr;
     m_render_info    = nullptr;
@@ -70,9 +91,95 @@ void actor::finalize(mash::allocation_scope scope) {
     ((void (__thiscall*)(actor*, mash::allocation_scope))retail::sub_65AF90)(this, scope);
 }
 
-// slot 1
+// sub_613830
+void actor::initialize(mash::allocation_scope scope) {
+    if (scope == mash::ALLOCATED) {
+        colgeom         = nullptr;
+        mesh            = nullptr;
+        adv_ptrs        = nullptr;
+        m_skeleton      = nullptr;
+        skeleton_map    = nullptr;
+        my_base_ai_data = nullptr;
+        capsule_alter   = nullptr;
+        m_skeleton_name = nullptr;
+        pack_slot       = nullptr;
+        unk_0dc         = 0;
+
+        const u32 seed = references::unk_00e6b258.read() * 1103515245 + 12345;
+
+        references::unk_00e6b258.write(seed);
+
+        u32 tempered = seed ^ (seed >> 11);
+
+        tempered ^= (tempered & 0xFF3A58AD) << 7;
+        tempered ^= (tempered & 0xFFFFDF8C) << 15;
+
+        unk_0e0 = tempered * 1103515245 + 12345;
+        unk_0e4 = 0;
+    } else {
+        if (colgeom)
+            colgeom->owner = this;
+
+        if (has_physical_ifc())
+            flags |= entity_flag_moving;
+
+        if (get_colgeom())
+            set_collisions_active(true, true);
+
+        if (capsule_alter)
+            retail::sub_7E9420((f32*)capsule_alter, (i32)this); // capsule_alter_sys::set_my_actor
+
+        ngl::mesh* my_mesh = unk_111();
+
+        if (my_mesh && my_mesh->skeleton && my_mesh->skeleton->unk_008 > 0)
+            ext_flags |= entity_ext_flag_recordable;
+
+        start_recording();
+    }
+
+    if ((ext_flags & entity_ext_flag_is_auto_activate_prop) && !is_a_conglomerate()) {
+        if (!get_colgeom() ||
+            (get_colgeom()->get_type() != collision_geometry_type_mesh &&
+             get_colgeom()->get_type() != collision_geometry_type_convex_hull))
+
+            ext_flags &= ~entity_ext_flag_is_auto_activate_prop;
+    }
+
+    ext_flags &= ~(entity_ext_flag_added_to_list_of_moved_entities | entity_ext_flag_alloc_adv_ptrs);
+
+    anim_ctrl                 = nullptr;
+    last_collision_free_state = nullptr;
+
+    if (get_colgeom()) {
+        if ((ext_flags & entity_ext_flag_is_auto_activate_prop) ||
+            ((flags & entity_flag_member) && (get_conglom_owner()->ext_flags & entity_ext_flag_is_auto_activate_prop)))
+
+            flags |= entity_flag_walkable;
+    }
+
+    rb_cc = nullptr;
+}
+
+// sub_654100
 void actor::construct_mashed_class() {
-    ((void (__thiscall*)(actor*))retail::sub_654100)(this);
+    entity::construct_mashed_class();
+
+    if (m_skeleton_name)
+        m_skeleton_name->construct_mashed_class();
+
+    if (adv_ptrs)
+        adv_ptrs->construct_mashed_class();
+
+    if (colgeom)
+        mash::mash_info_struct::construct_class(colgeom);
+
+    if (my_base_ai_data)
+        my_base_ai_data->construct_mashed_class();
+
+    if (capsule_alter)
+        capsule_alter->construct_mashed_class();
+
+    initialize(mash::FROM_MASH);
 }
 
 // slot 2

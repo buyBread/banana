@@ -3,6 +3,12 @@
 
 using namespace treyarch;
 
+// sub_7F71F0
+void capsule_alter_sys::construct_mashed_class() {
+    flags    |= capsule_alter_flag_from_mash;
+    prev_mode = mode;
+}
+
 // sub_7F7200
 void capsule_alter_sys::set_mode(u32 new_mode) {
     ((void (__thiscall*)(capsule_alter_sys*, u32))retail::sub_7F7200)(this, new_mode);

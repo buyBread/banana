@@ -40,7 +40,6 @@ void app::create_inst() {
 
 // sub_42A760
 app::app() {
-    retail::sub_639100((u32*)(arch_base*)this); // arch_base::arch_base
     *(void**)(arch_base*)this = &references::app_arch_base_vtable.get();
     *(void**)(singleton*)this = &references::app_vtable.get();
 

@@ -7,7 +7,9 @@
 #include "treyarch/mash/vector_basic.hh"
 #include "treyarch/mash/vector_basic_ref_counted.hh"
 #include "game/math/po.hh"
+#include "vc8/vector.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
@@ -56,7 +58,8 @@ namespace treyarch {
         mash::vector<entity_base>     members;
         mash::vector
             <ai_tentacle_info>*       tentacles;
-        u8                            reserved_100[0x04];
+        mash::vector
+            <entity_base>*            masher_skin_bones;
         mash::vector_basic<po>        member_abs_po;
         mash::vector_basic<po>        all_rel_po;
         mash::vector_basic<po>        all_model_po; // als::biped_physics_mocomp saves and restores them
@@ -179,8 +182,14 @@ namespace treyarch {
         void translate_member_model_position_recurse(const conglomerate_bone_index &bone_index, const vector3d &delta); // no bounds check
 
     private:
+        void initialize(mash::allocation_scope scope);
         void finalize(mash::allocation_scope scope);
     };
+
+    namespace references {
+        // the variant conglomerates waiting for a random variant
+        inline util::memory_reference<vc8::vector<arch_base_vhandle>> random_variant_queue { 0x01003620 };
+    } // references
 
     ASSERT_SIZEOF  (conglomerate_bone_index,                 0x14);
     ASSERT_OFFSETOF(conglomerate_bone_index, model_po_index, 0x04);
@@ -191,6 +200,7 @@ namespace treyarch {
     ASSERT_SIZEOF  (conglomerate,                                      0x198);
     ASSERT_OFFSETOF(conglomerate, members,                             0x0E8);
     ASSERT_OFFSETOF(conglomerate, tentacles,                           0x0FC);
+    ASSERT_OFFSETOF(conglomerate, masher_skin_bones,                   0x100);
     ASSERT_OFFSETOF(conglomerate, member_abs_po,                       0x104);
     ASSERT_OFFSETOF(conglomerate, all_rel_po,                          0x114);
     ASSERT_OFFSETOF(conglomerate, all_model_po,                        0x124);

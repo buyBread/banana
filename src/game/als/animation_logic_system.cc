@@ -1293,6 +1293,13 @@ void als::animation_logic_system::change_mocomp(const state* curr_state, layer_i
     curr_mocomp->transition();
 }
 
+// sub_5B0350
+void als::als_res_data::construct_mashed_class() {
+    key.construct_mashed_class();
+
+    the_als = nullptr;
+}
+
 // sub_5EEF70
 void als::als_res_data::post_unmash_fixup(actor* owner, u32) {
     string_hash none;

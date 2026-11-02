@@ -51,7 +51,8 @@ namespace treyarch {
         entity_flavor_particle_generator,
         entity_flavor_item,
         entity_flavor_conglomerate,
-        entity_flavor_conglomerate_clone
+        entity_flavor_conglomerate_clone,
+        entity_flavor_ignore = 28
     };
 
     // SM3's EFLAG_*, but 0x800000 and 0x20000000
@@ -69,10 +70,12 @@ namespace treyarch {
         entity_flag_collisions_active                    = 0x00004000,
         entity_flag_member                               = 0x00008000,
         entity_flag_nontarget                            = 0x00020000,
+        entity_flag_unk_00040000                         = 0x00040000, // the draw chance passed
         entity_flag_beamable                             = 0x00080000,
         entity_flag_unk_00200000                         = 0x00200000,
         entity_flag_externally_controlled                = 0x00400000,
         entity_flag_detectable                           = 0x00800000, // SM3's GLOWABLE
+        entity_flag_ignore_fading_during_cutscene        = 0x01000000,
         entity_flag_update_regions_every_frame           = 0x02000000,
         entity_flag_bone_connector                       = 0x08000000,
         entity_flag_region_forced                        = 0x10000000,
@@ -83,11 +86,15 @@ namespace treyarch {
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
+        entity_ext_flag_distance_fader_mask             = 0x0000000F,
+        entity_ext_flag_mash_member                     = 0x00000010,
         entity_ext_flag_bounding_sphere_dirty           = 0x00000040,
         entity_ext_flag_spawned                         = 0x00000100,
         entity_ext_flag_is_hero                         = 0x00000200,
+        entity_ext_flag_instance                        = 0x00000400,
         entity_ext_flag_is_auto_activate_prop           = 0x00000800,
         entity_ext_flag_unk_00001000                    = 0x00001000,
+        entity_ext_flag_recordable                      = 0x00002000,
         entity_ext_flag_invulnerable                    = 0x00004000,
         entity_ext_flag_noncrawlable                    = 0x00008000,
         entity_ext_flag_shadow_casting                  = 0x00010000, // SM3's AI_COVER
@@ -97,7 +104,8 @@ namespace treyarch {
         entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
         entity_ext_flag_alloc_adv_ptrs                  = 0x02000000,
         entity_ext_flag_attack_damage_unlocked          = 0x20000000,
-        entity_ext_flag_does_not_manage_abs_po          = 0x40000000
+        entity_ext_flag_does_not_manage_abs_po          = 0x40000000,
+        entity_ext_flag_dynamic_allocated               = 0x80000000
     };
 
     struct fade_range_t {
@@ -113,6 +121,8 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<std::array<fade_range_t, 16>> enx_ranges { 0x00E7B670 };
+
+        inline util::memory_reference<std::array<const char*, 30>> entity_flavor_names { 0x00E6ACF0 };
     } // references
 
     class entity_base : public arch_base {
@@ -129,14 +139,22 @@ namespace treyarch {
         entity_base*               my_brother;
         vc8::vector<entity_base*>* adopted_children;
         arch_base_vhandle          my_trigger;
-        u8                         reserved_034[0x06];
+        u16                        region_idx;
+        u16                        proximity_map_cell_reference_count;
+        u16                        unk_038;                            // the draw chance, 0xFFFF always passes
         u8                         fade_timer;
         u8                         clone_member_idx;
-        u8                         reserved_03c[0x04];
+        void*                      unk_03c;
         conglomerate*              my_conglom_root;
         u8                         bone_idx;
-        u8                         reserved_045[0x07];
+        u8                         terrain_type;
+        u8                         proximity_map_reference_count;
+        u8                         unk_047;
+        u16                        rel_po_idx;
+        u8                         reserved_04a[0x02];
         string_hash                sound_type;
+
+        entity_base(const string_hash &new_id, u32 new_flags);
 
         explicit entity_base(mash::generating_vtable_version so_do_nothing) : arch_base(so_do_nothing) {}
 
@@ -202,6 +220,7 @@ namespace treyarch {
         }
 
         // sub_4024C0
+        // inlined @ sub_613830
         // inlined @ sub_614190
         bool has_physical_ifc() const {
             return has_ifc(entity_ifc_physical);
@@ -250,6 +269,7 @@ namespace treyarch {
         }
 
         // sub_5FCB20
+        // inlined @ sub_65B7C0
         bool has_variant_ifc() const {
             return has_ifc(entity_ifc_variant);
         }
@@ -428,6 +448,7 @@ namespace treyarch {
         generic_interface* find_ifc_by_name(string_hash name);
 
     private:
+        void initialize(mash::allocation_scope scope, u32 new_flags, u32 new_ext_flags, bool create_rel_po);
         void finalize(mash::allocation_scope scope);
 
         template <typename ask_t>
@@ -446,10 +467,15 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_base, my_brother,       0x28);
     ASSERT_OFFSETOF(entity_base, adopted_children, 0x2C);
     ASSERT_OFFSETOF(entity_base, my_trigger,       0x30);
+    ASSERT_OFFSETOF(entity_base, region_idx,       0x34);
+    ASSERT_OFFSETOF(entity_base, unk_038,          0x38);
     ASSERT_OFFSETOF(entity_base, fade_timer,       0x3A);
     ASSERT_OFFSETOF(entity_base, clone_member_idx, 0x3B);
+    ASSERT_OFFSETOF(entity_base, unk_03c,          0x3C);
     ASSERT_OFFSETOF(entity_base, my_conglom_root,  0x40);
     ASSERT_OFFSETOF(entity_base, bone_idx,         0x44);
+    ASSERT_OFFSETOF(entity_base, terrain_type,     0x45);
+    ASSERT_OFFSETOF(entity_base, rel_po_idx,       0x48);
     ASSERT_OFFSETOF(entity_base, sound_type,       0x4C);
 
     void entity_set_abs_po(entity_base* ent, const po &the_po);

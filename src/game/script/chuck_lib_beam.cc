@@ -5,6 +5,7 @@
 #include "game/beam.hh"
 #include "game/script/chuck_lib_beam.hh"
 #include "game/script/script_access.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
 #include "treyarch/mash/string_hash.hh"
 
@@ -19,7 +20,7 @@ u32 slc_beam_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     return entity->my_handle.value;
 }

@@ -24,9 +24,70 @@ void conglomerate::finalize(mash::allocation_scope scope) {
     ((void (__thiscall*)(conglomerate*, mash::allocation_scope))retail::sub_661D70)(this, scope);
 }
 
-// slot 1
+// sub_65B7C0
+void conglomerate::initialize(mash::allocation_scope scope) {
+    lightmgr = nullptr;
+
+    if (scope == mash::ALLOCATED) {
+        conglomerate_flags          = 0;
+        conglomerate_visual_radius  = -1.0f;
+        conglomerate_colgeom_radius = -1.0f;
+        skeleton_name_hash          = string_hash();
+        masher_skin_bones           = nullptr;
+        collision_members           = nullptr;
+        light_members               = nullptr;
+        bone_connectors             = nullptr;
+        tentacles                   = nullptr;
+        attach_index                = invalid_conglom_member;
+    } else {
+        create_parentage_tree();
+
+        ngl::mesh* my_mesh = unk_111();
+
+        if (my_mesh && my_mesh->skeleton && my_mesh->skeleton->unk_008)
+            flags |= entity_flag_active;
+
+        if (!is_a_vehicle())
+            ext_flags |= entity_ext_flag_recordable;
+
+        start_recording();
+    }
+
+    conglomerate_flags |= conglomerate_flag_visual_radius_dirty | conglomerate_flag_colgeom_radius_dirty;
+
+    conglomerate_visual_radius  = -1.0f;
+    conglomerate_colgeom_radius = -1.0f;
+
+    if (has_variant_ifc())
+        references::random_variant_queue.get().push_back(my_handle);
+}
+
+// sub_661C50
 void conglomerate::construct_mashed_class() {
-    ((void (__thiscall*)(conglomerate*))retail::sub_661C50)(this);
+    actor::construct_mashed_class();
+
+    members      .construct_mashed_class();
+    member_abs_po.construct_mashed_class();
+    all_rel_po   .construct_mashed_class();
+    all_model_po .construct_mashed_class();
+
+    original_rel_po.construct_mashed_class();
+    member_parents .construct_mashed_class();
+
+    root_index.name.construct_mashed_class();
+
+    bone_indices.construct_mashed_class();
+    unk_154     .construct_mashed_class();
+
+    skeleton_to_conglom_bone_mapping   .construct_mashed_class();
+    unassigned_skin_bone_rel_pos       .construct_mashed_class();
+    unassigned_skin_bone_indices       .construct_mashed_class();
+    unassigned_skin_bone_parent_indices.construct_mashed_class();
+
+    if (tentacles)
+        retail::sub_6515A0((void**)&tentacles); // the tentacle vector's construct_mashed_class
+
+    initialize(mash::FROM_MASH);
 }
 
 // slot 2
@@ -553,7 +614,7 @@ entity_base* conglomerate::get_member_for_linking(e_conglom_member_index index) 
     entity_base* connector = nullptr;
 
     if (void* memory = mm::allocate(sizeof(entity_base)))
-        connector = ((entity_base* (__thiscall*)(void*, const string_hash&, u32))retail::sub_64AF40)(memory, bone.name, entity_flag_bone_connector | entity_flag_member); // entity_base::entity_base
+        connector = new (memory) entity_base(bone.name, entity_flag_bone_connector | entity_flag_member);
 
     connector->bone_idx  = (u8)bone.model_po_index;
     connector->my_rel_po = &all_model_po.array[connector->bone_idx];

@@ -7,6 +7,7 @@
 #include "game/script/chuck_lib_web_wall.hh"
 #include "game/script/script_access.hh"
 #include "game/web_wall.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "treyarch/mash/string_hash.hh"
 
 using namespace treyarch;
@@ -20,10 +21,10 @@ u32 slc_web_wall_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     if (entity)
-        ((entity_base*)entity)->get_flavor(); // the answer goes unused
+        entity->get_flavor(); // the answer goes unused
 
     return entity->my_handle.value;
 }

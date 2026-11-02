@@ -22,7 +22,7 @@ namespace treyarch {
     public:
         arch_base_vhandle my_handle;
 
-        arch_base() = default;
+        arch_base();
 
         explicit arch_base(mash::generating_vtable_version so_do_nothing) : mash_virtual_base(so_do_nothing) {}
 

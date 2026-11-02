@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <new>
 
 #include "retail.hh"
@@ -7,12 +8,24 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity_base.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "game/wds/entity/moved_entities.hh"
 #include "game/wds/references.hh"
 #include "treyarch/jq/native_locks.hh"
 #include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
+
+// sub_64AF40
+entity_base::entity_base(const string_hash &new_id, u32 new_flags) : my_parent(nullptr),
+                                                                     my_child(nullptr),
+                                                                     my_brother(nullptr),
+                                                                     adopted_children(nullptr) {
+
+    id = new_id;
+
+    initialize(mash::ALLOCATED, new_flags, 0, true);
+}
 
 // sub_4E1D40
 entity_base::~entity_base() {
@@ -25,9 +38,90 @@ void entity_base::finalize(mash::allocation_scope scope) {
     ((void (__thiscall*)(entity_base*, mash::allocation_scope))retail::sub_660F10)(this, scope);
 }
 
-// slot 1
+// sub_64AD70
+void entity_base::initialize(mash::allocation_scope scope, u32 new_flags, u32 new_ext_flags, bool create_rel_po) {
+    if (scope == mash::ALLOCATED) {
+        ext_flags = new_ext_flags | entity_ext_flag_dynamic_allocated;
+        flags     = new_flags;
+
+        bone_idx     = 0xFF;
+        rel_po_idx   = 0xFFFF;
+        unk_038      = 0xFFFF;
+        terrain_type = 0;
+
+        if (!(new_flags & entity_flag_bone_connector))
+            fade_timer = 0xFF;
+
+        my_conglom_root  = nullptr;
+        clone_member_idx = 0xFF;
+        my_ifc_storage   = nullptr;
+
+        if (create_rel_po && !(new_flags & entity_flag_bone_connector) && !(new_flags & entity_flag_member)) {
+            auto* rel_po = (po*)mm::allocate(sizeof(po));
+
+            if (rel_po)
+                rel_po->identity();
+
+            my_rel_po = rel_po;
+        } else
+            my_rel_po = nullptr;
+
+        my_abs_po = my_rel_po;
+        ext_flags = (ext_flags & ~entity_ext_flag_distance_fader_mask) | 10;
+        unk_03c   = nullptr;
+
+        on_fade_distance_changed(10, i_am_not_sure);
+    } else {
+        ext_flags &= ~entity_ext_flag_dynamic_allocated;
+
+        if (!(flags & entity_flag_member))
+            my_abs_po = my_rel_po;
+
+        if ((ext_flags & entity_ext_flag_distance_fader_mask) == entity_ext_flag_distance_fader_mask) {
+            ext_flags |= entity_ext_flag_distance_fader_mask;
+
+            on_fade_distance_changed(15, i_am_not_sure);
+        }
+    }
+
+    flags &= ~entity_flag_needs_collision_proximity_map_update;
+
+    const f32 roll = (f32)((f64)(f32)std::rand() * 3.0518509447574615e-05);
+
+    if (unk_038 == 0xFFFF || (u16)(i32)((f64)roll * 65535.0) <= unk_038)
+        flags |= entity_flag_unk_00040000;
+    else
+        flags &= ~entity_flag_unk_00040000;
+
+    region_idx = 0xFFFF;
+
+    if ((flags & entity_flag_bone_connector) || (flags & entity_flag_member))
+        ext_flags &= ~entity_ext_flag_is_auto_activate_prop;
+    else
+        entity_handle_manager::register_entity(this);
+
+    ext_flags |= entity_ext_flag_bounding_sphere_dirty;
+
+    proximity_map_reference_count      = 0;
+    proximity_map_cell_reference_count = 0;
+}
+
+// sub_653CB0
+// inlined @ sub_653FF0
 void entity_base::construct_mashed_class() {
-    ((void (__thiscall*)(entity_base*))retail::sub_653CB0)(this);
+    id.construct_mashed_class();
+
+    my_parent        = nullptr;
+    my_child         = nullptr;
+    my_brother       = nullptr;
+    adopted_children = nullptr;
+
+    sound_type.construct_mashed_class();
+
+    if (my_ifc_storage)
+        my_ifc_storage->construct_mashed_class();
+
+    initialize(mash::FROM_MASH, 0, 0, true);
 }
 
 // slot 2
@@ -628,6 +722,7 @@ void entity_base::set_fader_override_preset_closest_to_distance(f32 fade_distanc
 }
 
 // sub_6123B0
+// inlined @ sub_64AD70
 // inlined @ sub_66CE80
 void entity_base::on_fade_distance_changed(i32 preset_index, only_if_you_know_what_you_are_doing magic) {
     if (!is_an_entity() || !preset_index)

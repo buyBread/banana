@@ -16,6 +16,7 @@
 namespace treyarch {
     class light_manager;
     class terrain;
+    struct entity_time_visibility_info;
     struct region;
 
     namespace ngl {
@@ -26,10 +27,13 @@ namespace treyarch {
 
     public:
         container::fixed_vector<region*, 8> regions;
-        u8                                  reserved_074[0x18];
+        entity_time_visibility_info*        time_visibility_info;
+        u32                                 visit_index[5];
         u32                                 occlusion_status;
         u8                                  unk_090[0x0C]; // a mash::string the destructor finalizes
         u8                                  reserved_09c[0x04];
+
+        entity(const string_hash &new_id, u32 new_flags);
 
         explicit entity(mash::generating_vtable_version so_do_nothing) : entity_base(so_do_nothing) {}
 
@@ -142,8 +146,10 @@ namespace treyarch {
         inline util::memory_reference<engine_recursive_lock>       found_entities_lock   { 0x01003240 };
     } // references
 
-    ASSERT_SIZEOF  (entity,                   0xA0);
-    ASSERT_OFFSETOF(entity, regions,          0x50);
-    ASSERT_OFFSETOF(entity, occlusion_status, 0x8C);
-    ASSERT_OFFSETOF(entity, unk_090,          0x90);
+    ASSERT_SIZEOF  (entity,                       0xA0);
+    ASSERT_OFFSETOF(entity, regions,              0x50);
+    ASSERT_OFFSETOF(entity, time_visibility_info, 0x74);
+    ASSERT_OFFSETOF(entity, visit_index,          0x78);
+    ASSERT_OFFSETOF(entity, occlusion_status,     0x8C);
+    ASSERT_OFFSETOF(entity, unk_090,              0x90);
 } // treyarch

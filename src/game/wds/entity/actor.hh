@@ -2,6 +2,8 @@
 
 #include "game/boolx.hh"
 #include "game/colgeom.hh"
+#include "game/resource_key.hh"
+#include "game/wds/ai/param_block.hh"
 #include "game/wds/entity/entity.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
@@ -35,12 +37,15 @@ namespace treyarch {
     class ai_core;
     class animation_controller;
     class capsule_alter_sys;
-    struct resource_key;
+    class rb_character_controller;
     struct tl_fixed_string;
 
     struct base_ai_data {
-        u8       reserved_000[0x28];
-        ai_core* core;
+        resource_key core_ai_key; // what the ai_core is built from
+        param_block  overrides;   // what its parameters are overridden with
+        ai_core*     core;
+
+        void construct_mashed_class();
     };
 
     class movement_info {
@@ -108,14 +113,21 @@ namespace treyarch {
             initialize(mash::ALLOCATED);
         }
 
+        void construct_mashed_class();
+
     private:
         void initialize(mash::allocation_scope scope);
     };
 
+    namespace references {
+        // the generator actor's unk_0e0 and the variant interface's random textures draw from
+        inline util::memory_reference<u32> unk_00e6b258 { 0x00E6B258 };
+    } // references
+
     class actor : public entity {
 
     public:
-        u8                           reserved_0a0[0x04];
+        mash::string*                m_skeleton_name;
         nal::transport_list*         m_skeleton;
         nal::skeleton_map*           skeleton_map;
         animation_controller*        anim_ctrl;
@@ -127,7 +139,10 @@ namespace treyarch {
         mutable vector3d             cached_visual_bounding_sphere_center;
         base_ai_data*                my_base_ai_data;
         capsule_alter_sys*           capsule_alter;
-        u8                           reserved_0d8[0x10];
+        rb_character_controller*     rb_cc;
+        u32                          unk_0dc;
+        u32                          unk_0e0;   // the material's random seed
+        u32                          unk_0e4;
 
         explicit actor(mash::generating_vtable_version so_do_nothing) : entity(so_do_nothing) {}
 
@@ -226,12 +241,14 @@ namespace treyarch {
         static string_hash my_type_key;
 
     private:
+        void initialize(mash::allocation_scope scope);
         void finalize(mash::allocation_scope scope);
 
         render_info* create_render_info();
     };
 
-    ASSERT_OFFSETOF(base_ai_data, core, 0x28);
+    ASSERT_OFFSETOF(base_ai_data, overrides, 0x08);
+    ASSERT_OFFSETOF(base_ai_data, core,      0x28);
 
     ASSERT_SIZEOF  (movement_info,                         0x60);
     ASSERT_OFFSETOF(movement_info, frame_time,             0x40);
@@ -262,6 +279,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(advanced_entity_ptrs, unk_028,          0x28);
 
     ASSERT_SIZEOF  (actor,                                       0xE8);
+    ASSERT_OFFSETOF(actor, m_skeleton_name,                      0xA0);
     ASSERT_OFFSETOF(actor, m_skeleton,                           0xA4);
     ASSERT_OFFSETOF(actor, skeleton_map,                         0xA8);
     ASSERT_OFFSETOF(actor, anim_ctrl,                            0xAC);
@@ -273,4 +291,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(actor, cached_visual_bounding_sphere_center, 0xC4);
     ASSERT_OFFSETOF(actor, my_base_ai_data,                      0xD0);
     ASSERT_OFFSETOF(actor, capsule_alter,                        0xD4);
+    ASSERT_OFFSETOF(actor, rb_cc,                                0xD8);
+    ASSERT_OFFSETOF(actor, unk_0e4,                              0xE4);
 } // treyarch

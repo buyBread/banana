@@ -63,6 +63,8 @@ namespace treyarch {
     // the next "SCRIPT_ENT" instance name from a native's own name pool, made on first use
     string_hash next_script_ent_name(const util::memory_reference<void*> &pool, const util::memory_reference<u32> &guard);
 
+    entity* entity_spawn_by_name(mash::string name, string_hash instance_name, bool preregistered); // a preregistered one joins the moved list
+
     class slc_entity_t : public chuck::script_library::script_library_class {
 
     public:

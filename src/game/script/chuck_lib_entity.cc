@@ -5,6 +5,7 @@
 #include "retail.hh"
 #include "game/als/als.hh"
 #include "game/als/param.hh"
+#include "game/amalga/resource_manager.hh"
 #include "game/amalga/resource_types.hh"
 #include "game/arch_base.hh"
 #include "game/event/event.hh"
@@ -33,6 +34,7 @@
 #include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "game/wds/entity/moved_entities.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/grenade.hh"
@@ -224,6 +226,48 @@ void treyarch::set_or_move_rel_position(entity* self, const vector3d* position, 
     }
 }
 
+// sub_83DC00
+entity* treyarch::entity_spawn_by_name(mash::string name, string_hash instance_name, bool preregistered) {
+    resource_key key;
+    retail::sub_739B10((u32*)&key, name.c_str(), (i32)amalga::e_resource_type::entity);
+
+    world_dynamics_system* world = references::g_world_ptr.read();
+
+    const bool hero_model = (!world->hero_ptr->player_ifc()->unk_076()     && !std::strncmp(name.c_str(), "ch_spiderman", 0xFFFF)) ||
+                            (world->hero_ptr->player_ifc()->unk_076() == 1 && !std::strncmp(name.c_str(), "CH_BLACKSUIT", 0xFFFF));
+
+    if (hero_model) {
+        amalga::resource_pack_slot* context = amalga::resource_manager::get_best_context(amalga::resource_partition_common);
+
+        amalga::resource_manager::references::unk_010300a8.get().acquire();
+        amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
+        amalga::resource_manager::push_resource_context(context);
+    }
+
+    auto* spawned = (entity*)retail::sub_8047E0((u32*)&world->ent_mgr, (i32)key.get_hash().source_hash_code, (u32*)&instance_name, 1); // wds_entity_manager's spawn
+
+    if (hero_model) {
+        amalga::resource_manager::pop_resource_context();
+        amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
+        amalga::resource_manager::references::unk_010300a8.get().release();
+    }
+
+    if (spawned) {
+        spawned->set_rel_position(vector3d(-999.0f, -999.0f, -999.0f));
+
+        if (preregistered)
+            moved_entities::add_moved(spawned->my_handle);
+
+        spawned->flags |= entity_flag_ignore_fading_during_cutscene;
+
+        if (!preregistered && spawned->is_a_vehicle())
+            retail::sub_6048A0((u32*)spawned);
+    } else
+        retail::sub_65DFF0((char*)&instance_name); // generated_name_map_erase
+
+    return spawned;
+}
+
 // inlined @ sub_83DDF0
 // inlined @ sub_84AA40
 // inlined @ sub_84ABE0
@@ -251,7 +295,7 @@ u32 slc_entity_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     if (!entity)
         return 0;
@@ -299,7 +343,7 @@ bool slf__create_devopt_entity__num__t::operator()(chuck::vm::vm_stack &stack) {
     if (!name.empty()) {
         string_hash instance_name = next_script_ent_name(references::devopt_entity_script_ent_pool, references::devopt_entity_script_ent_pool_guard);
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, false);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -326,7 +370,7 @@ bool slf__create_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
 
         string_hash instance_name = next_script_ent_name(references::create_entity_script_ent_pool, references::create_entity_script_ent_pool_guard);
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, false);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -363,7 +407,7 @@ bool slf__create_entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
             add  esp, 4
         }
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, false);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -390,7 +434,7 @@ bool slf__create_preregistered_entity__str__t::operator()(chuck::vm::vm_stack &s
 
         string_hash instance_name = next_script_ent_name(references::preregistered_script_ent_pool, references::preregistered_script_ent_pool_guard);
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, true); // spawn by name, preregistered
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, true);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -427,7 +471,7 @@ bool slf__create_preregistered_entity__str__str__t::operator()(chuck::vm::vm_sta
             add  esp, 4
         }
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, true); // spawn by name, preregistered
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, true);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -454,7 +498,7 @@ bool slf__create_next_preregistered_debug_obstacle__t::operator()(chuck::vm::vm_
         for (i32 i = 0; i < 2 && !spawned_one; ++i) {
             string_hash instance_name = next_script_ent_name(references::debug_obstacle_script_ent_pool, references::debug_obstacle_script_ent_pool_guard);
 
-            auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string("only use this if it is enabled."), instance_name, true); // spawn by name, preregistered
+            auto spawned = entity_spawn_by_name(mash::string("only use this if it is enabled."), instance_name, true);
 
             if (spawned) {
                 result = spawned->my_handle;
@@ -482,7 +526,7 @@ bool slf__find_entity__str__t::operator()(chuck::vm::vm_stack &stack) {
 
     arch_base_vhandle result;
 
-    if (auto* found = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true)) // entity_handle_manager::find_entity
+    if (auto* found = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true))
         result = found->my_handle;
 
     stack.push(&result, sizeof(result));
@@ -499,7 +543,7 @@ bool slf__find_entity__uint__t::operator()(chuck::vm::vm_stack &stack) {
 
     arch_base_vhandle result;
 
-    if (auto* found = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true)) // entity_handle_manager::find_entity
+    if (auto* found = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true))
         result = found->my_handle;
 
     stack.push(&result, sizeof(result));
@@ -516,7 +560,7 @@ bool slf__entity_exists__str__t::operator()(chuck::vm::vm_stack &stack) {
     string_hash hash;
     hash.initialize(mash::ALLOCATED, name);
 
-    f32 result = retail::sub_640AE0(&hash.source_hash_code, 28, true) ? 1.0f : 0.0f; // entity_handle_manager::find_entity
+    f32 result = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true) ? 1.0f : 0.0f;
 
     stack.push(&result, sizeof(result));
 
@@ -3943,7 +3987,7 @@ bool slf__entity__entity__str__t::operator()(chuck::vm::vm_stack &stack) {
 
         string_hash instance_name = next_script_ent_name(references::script_ent_pool, references::script_ent_pool_guard);
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, false);
 
         if (spawned) {
             result = spawned->my_handle;
@@ -3980,7 +4024,7 @@ bool slf__entity__entity__str__str__t::operator()(chuck::vm::vm_stack &stack) {
             add  esp, 4
         }
 
-        auto spawned = ((entity* (__cdecl*)(mash::string, string_hash, bool))retail::sub_83DC00)(mash::string(name), instance_name, false); // spawn by name
+        auto spawned = entity_spawn_by_name(mash::string(name), instance_name, false);
 
         if (spawned) {
             result = spawned->my_handle;

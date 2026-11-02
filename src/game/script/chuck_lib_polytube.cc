@@ -11,6 +11,7 @@
 #include "game/wds/ai/ai_tentacle_engine.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/entity_handle_manager.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "treyarch/chuck/vm/vm_thread.hh"
@@ -62,10 +63,10 @@ u32 slc_polytube_t::find_instance(const mash::string &name) const {
 
     hash.initialize(mash::ALLOCATED, name.c_str());
 
-    auto* entity = (arch_base*)retail::sub_640AE0(&hash.source_hash_code, 28, true); // entity_handle_manager::find_entity
+    auto* entity = entity_handle_manager::find_entity(hash, entity_flavor_ignore, true);
 
     if (entity)
-        ((entity_base*)entity)->get_flavor(); // the answer goes unused
+        entity->get_flavor(); // the answer goes unused
 
     return entity->my_handle.value;
 }

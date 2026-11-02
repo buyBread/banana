@@ -2,6 +2,8 @@
 #include "game/arch_base.hh"
 #include "game/event/event_manager.hh"
 #include "game/wds/entity/entity_base.hh"
+#include "treyarch/mash/mash_info.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/memory_reference.hh"
 
 namespace treyarch { namespace references {
@@ -10,26 +12,47 @@ namespace treyarch { namespace references {
 
 using namespace treyarch;
 
+// sub_639100
+arch_base::arch_base() {
+    my_handle.value = retail::sub_6178D0((i32)this); // handle acquire
+}
+
 // sub_428950
 arch_base::~arch_base() {
     finalize(mash::ALLOCATED);
 }
 
+// sub_626770
+// inlined @ sub_639150
 void arch_base::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(arch_base*, mash::allocation_scope))retail::sub_626770)(this, scope);
+    retail::sub_617950(&my_handle.value); // handle release
+
+    my_handle = arch_base_vhandle();
+
+    if (scope != mash::FROM_MASH || !is_an_entity_base())
+        return;
+
+    auto* ent = (entity_base*)this;
+
+    if (ent->ext_flags & entity_ext_flag_mash_member)
+        return;
+
+    if (ent->ext_flags & entity_ext_flag_instance)
+        mm::free(this);
+    else
+        ((mash::mash_info_struct::mash_header*)this - 1)->in_use = 0; // the image's header sits right before the object
 }
 
-// slot 2
+// sub_639150
 void arch_base::destruct_mashed_class() {
-    ((void (__thiscall*)(arch_base*))retail::sub_639150)(this);
+    finalize(mash::FROM_MASH);
 }
 
-// slot 3
-void arch_base::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(arch_base*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_6391B0)(this,
-                                                                                                            mash_info,
-                                                                                                            containing_class_ptr,
-                                                                                                            buffer);
+// sub_6391B0
+void arch_base::unmash(mash::mash_info_struct*, void*, mash::buffer_type) {
+    my_handle = arch_base_vhandle();
+
+    my_handle.value = retail::sub_6178D0((i32)this); // handle acquire
 }
 
 // slot 4

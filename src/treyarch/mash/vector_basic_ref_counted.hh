@@ -38,6 +38,7 @@ namespace treyarch { namespace mash {
         }
 
         // inlined @ sub_64CFB0
+        // inlined @ sub_661C50
         void construct_mashed_class() {
             dynamic = 0;
             inc_ref();
@@ -124,6 +125,7 @@ namespace treyarch { namespace mash {
         const vector_basic<T> &get_vector() const { return *internals->data; }
 
         // inlined @ sub_64CFB0
+        // inlined @ sub_661C50
         void construct_mashed_class() {
             if (internals)
                 mash_info_struct::construct_class(internals);

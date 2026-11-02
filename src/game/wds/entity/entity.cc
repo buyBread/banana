@@ -1,3 +1,5 @@
+#include <new>
+
 #include "retail.hh"
 #include "game/colgeom.hh"
 #include "game/wds/entity/conglomerate.hh"
@@ -11,6 +13,20 @@
 
 using namespace treyarch;
 
+// sub_666E10
+entity::entity(const string_hash &new_id, u32 new_flags) : entity_base(new_id, new_flags) {
+    auto* name = new (unk_090) mash::string();
+
+    time_visibility_info = nullptr;
+
+    for (u32 &index : visit_index)
+        index = 0;
+
+    *name = "";
+
+    regions.clear();
+}
+
 // sub_4E1F00
 entity::~entity() {
     finalize(mash::ALLOCATED);
@@ -22,9 +38,20 @@ void entity::finalize(mash::allocation_scope scope) {
     ((void (__thiscall*)(entity*, mash::allocation_scope))retail::sub_64B080)(this, scope);
 }
 
-// slot 1
+// sub_653FF0
 void entity::construct_mashed_class() {
-    ((void (__thiscall*)(entity*))retail::sub_653FF0)(this);
+    entity_base::construct_mashed_class();
+
+    auto* name = (mash::string*)unk_090;
+
+    name->construct_mashed_class();
+
+    for (u32 &index : visit_index)
+        index = 0;
+
+    *name = "";
+
+    regions.clear();
 }
 
 // slot 2

@@ -6,6 +6,19 @@
 
 using namespace treyarch;
 
+// sub_642B60
+void interface_storage::construct_mashed_class() {
+    interfaces.construct_mashed_class();
+
+    ifc_lock.reset();
+
+    dynamic  = false;
+    ifc_mask = 0;
+
+    for (generic_interface* ifc : interfaces)
+        ifc_mask |= 1 << ifc->get_ifc_id();
+}
+
 // sub_402CC0
 generic_interface* interface_storage::get_ifc(e_entity_ifc index) {
     ifc_lock.acquire();
