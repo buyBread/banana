@@ -30,8 +30,9 @@ namespace treyarch { namespace container {
             size_ = 0;
         }
 
-        // keeps the order
-        void erase(u32 index) {
+        // inlined @ sub_7850F0
+        // inlined @ sub_785150
+        void erase(u32 index) { // keeps the order
             --size_;
 
             for (u32 position = index; position < size_; ++position)

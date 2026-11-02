@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/colgeom.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 
 using namespace treyarch;
@@ -112,9 +113,13 @@ void entity::force_regions(entity* e) {
     ((void (__thiscall*)(entity*, entity*))retail::sub_612E30)(this, e);
 }
 
-// slot 94
+// sub_601E90
 void entity::set_family_visible(bool visible) {
-    ((void (__thiscall*)(entity*, bool))retail::sub_601E90)(this, visible);
+    set_visible(visible, false);
+
+    for (entity_base* child = my_child; child; child = child->my_brother)
+        if (child->is_an_entity())
+            ((entity*)child)->set_family_visible(visible);
 }
 
 // sub_601EE0
@@ -212,17 +217,28 @@ bool entity::has_mesh() const {
     return ((bool (__thiscall*)(const entity*))retail::sub_71F870)(this);
 }
 
-// slot 113
+// sub_601DF0
 f32 entity::get_visual_radius() const {
-    return ((f32 (__thiscall*)(const entity*))retail::sub_601DF0)(this);
+    if (is_a_conglomerate() || (flags & entity_flag_member)) {
+        conglomerate* owner = get_conglom_owner();
+
+        if (owner)
+            return owner->get_visual_radius();
+    }
+
+    return 0.0f;
 }
 
-// slot 114
+// sub_601E30
 vector3d entity::get_visual_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const entity*, vector3d*))retail::sub_601E30)(this, &result);
+    if (is_a_conglomerate() || (flags & entity_flag_member)) {
+        conglomerate* owner = get_conglom_owner();
 
-    return result;
+        if (owner)
+            return owner->get_visual_center();
+    }
+
+    return my_abs_po->get_position();
 }
 
 // sub_4E1FE0
@@ -332,9 +348,7 @@ mash::string entity::get_signaller_owner_name() const {
 
 // loc_602080
 bool entity::get_occluded_last_frame_conglom_member() {
-    auto owner = (entity*)retail::sub_601910((u32*)this);
-
-    return owner->was_occluded_last_frame();
+    return get_conglom_owner()->was_occluded_last_frame();
 }
 
 // sub_602050
@@ -351,14 +365,14 @@ void entity::set_occluded_last_frame(bool occluded) {
 region* entity::get_primary_region() {
     entity* owner = this;
 
-    // flag 0x8000 entities borrow the regions of the first parent without it
-    if (owner->flags & 0x8000) {
+    // a member borrows the regions of the first owner that isn't one
+    if (owner->flags & entity_flag_member) {
         do {
-            owner = (entity*)retail::sub_601910((u32*)owner);
+            owner = owner->get_conglom_owner();
 
             if (!owner)
                 return nullptr;
-        } while (owner->flags & 0x8000);
+        } while (owner->flags & entity_flag_member);
     }
 
     if (owner->regions.size())

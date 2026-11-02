@@ -20,11 +20,13 @@
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
 #include "game/math/po.hh"
+#include "vc8/vector.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
     class collision_geometry;
+    class conglomerate;
     class entity;
     class info_node;
 
@@ -65,6 +67,7 @@ namespace treyarch {
         entity_flag_unk_00200000               = 0x00200000,
         entity_flag_externally_controlled      = 0x00400000,
         entity_flag_detectable                 = 0x00800000, // SM3's GLOWABLE
+        entity_flag_update_regions_every_frame = 0x02000000,
         entity_flag_bone_connector             = 0x08000000,
         entity_flag_region_forced              = 0x10000000,
         entity_flag_allow_lockon               = 0x20000000, // SM3's COLGEOM_INSTANCED
@@ -73,6 +76,7 @@ namespace treyarch {
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
+        entity_ext_flag_bounding_sphere_dirty           = 0x00000040,
         entity_ext_flag_spawned                         = 0x00000100,
         entity_ext_flag_is_hero                         = 0x00000200,
         entity_ext_flag_is_auto_activate_prop           = 0x00000800,
@@ -83,25 +87,30 @@ namespace treyarch {
         entity_ext_flag_sync_anim                       = 0x00020000,
         entity_ext_flag_ai_los_see_through              = 0x00100000,
         entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
-        entity_ext_flag_attack_damage_unlocked          = 0x20000000
+        entity_ext_flag_attack_damage_unlocked          = 0x20000000,
+        entity_ext_flag_does_not_manage_abs_po          = 0x40000000
     };
 
     class entity_base : public arch_base {
 
     public:
-        string_hash        id;
-        po*                my_rel_po;
-        po*                my_abs_po;
-        u32                flags;
-        u32                ext_flags;
-        interface_storage* my_ifc_storage;
-        entity*            my_parent;
-        u8                 reserved_024[0x0C];
-        u32                unk_030; // the transform waits report a move (add_moved) only while it's set
-        u8                 reserved_034[0x06];
-        u8                 unk_03a; // cleared as scene entities are loaded
-        u8                 reserved_03b[0x11];
-        string_hash        sound_type;
+        string_hash                id;
+        po*                        my_rel_po;
+        po*                        my_abs_po;
+        u32                        flags;
+        u32                        ext_flags;
+        interface_storage*         my_ifc_storage;
+        entity_base*               my_parent;
+        entity_base*               my_child;
+        entity_base*               my_brother;
+        vc8::vector<entity_base*>* adopted_children;
+        arch_base_vhandle          my_trigger;
+        u8                         reserved_034[0x06];
+        u8                         unk_03a; // cleared as scene entities are loaded
+        u8                         reserved_03b[0x05];
+        conglomerate*              my_conglom_root;
+        u8                         reserved_044[0x08];
+        string_hash                sound_type;
 
         explicit entity_base(mash::generating_vtable_version so_do_nothing) : arch_base(so_do_nothing) {}
 
@@ -348,6 +357,30 @@ namespace treyarch {
         void set_hero(bool hero);
         void set_invulnerable(bool invulnerable);
 
+        void set_parent(entity_base* new_parent); // null clears
+        void clear_parent();                      // a child missing from its parent's chain keeps its links
+
+        conglomerate* get_conglom_owner() const; // a conglomerate is its own, a member asks its parent
+        entity_base*  get_highest_parent() const;
+        bool          is_a_parent(const entity_base* par) const;
+
+        void update_abs_po_from_model_po();
+        void update_child_abs_po();
+        void update_attached_abs_pos();
+
+        // sub_6075F0
+        bool has_adopted_children() const {
+            return adopted_children && !adopted_children->empty();
+        }
+
+        void add_adopted_child(entity_base* child);
+        void remove_adopted_child(entity_base* child);
+        void remove_child(entity_base* bad_kid);
+        void clear_adopted_children();
+        void dirty_adopted_children();
+
+        bool set_flag_in_the_moved_list(); // true when this call set it
+
         // the milestone's entity_base::create_<name>_ifc(); an existing one is answered as is
         script_data_interface* create_script_data_ifc();
         physical_interface*    create_physical_ifc();
@@ -363,15 +396,19 @@ namespace treyarch {
         bool ask_ifcs(ask_t ask);
     };
 
-    ASSERT_SIZEOF  (entity_base,                 0x50);
-    ASSERT_OFFSETOF(entity_base, id,             0x08);
-    ASSERT_OFFSETOF(entity_base, my_rel_po,      0x0C);
-    ASSERT_OFFSETOF(entity_base, my_abs_po,      0x10);
-    ASSERT_OFFSETOF(entity_base, flags,          0x14);
-    ASSERT_OFFSETOF(entity_base, ext_flags,      0x18);
-    ASSERT_OFFSETOF(entity_base, my_ifc_storage, 0x1C);
-    ASSERT_OFFSETOF(entity_base, my_parent,      0x20);
-    ASSERT_OFFSETOF(entity_base, unk_030,        0x30);
-    ASSERT_OFFSETOF(entity_base, unk_03a,        0x3A);
-    ASSERT_OFFSETOF(entity_base, sound_type,     0x4C);
+    ASSERT_SIZEOF  (entity_base,                   0x50);
+    ASSERT_OFFSETOF(entity_base, id,               0x08);
+    ASSERT_OFFSETOF(entity_base, my_rel_po,        0x0C);
+    ASSERT_OFFSETOF(entity_base, my_abs_po,        0x10);
+    ASSERT_OFFSETOF(entity_base, flags,            0x14);
+    ASSERT_OFFSETOF(entity_base, ext_flags,        0x18);
+    ASSERT_OFFSETOF(entity_base, my_ifc_storage,   0x1C);
+    ASSERT_OFFSETOF(entity_base, my_parent,        0x20);
+    ASSERT_OFFSETOF(entity_base, my_child,         0x24);
+    ASSERT_OFFSETOF(entity_base, my_brother,       0x28);
+    ASSERT_OFFSETOF(entity_base, adopted_children, 0x2C);
+    ASSERT_OFFSETOF(entity_base, my_trigger,       0x30);
+    ASSERT_OFFSETOF(entity_base, unk_03a,          0x3A);
+    ASSERT_OFFSETOF(entity_base, my_conglom_root,  0x40);
+    ASSERT_OFFSETOF(entity_base, sound_type,       0x4C);
 } // treyarch

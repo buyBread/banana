@@ -9,6 +9,7 @@
 #include "game/wds/ai/ai_tentacle_engine.hh"
 #include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 
@@ -172,7 +173,7 @@ void ai_tentacle_info::create_tentacle(polytube* owner) { // without an owner th
 
     tentacle->the_spline.set_force_start(true);
 
-    retail::sub_653DA0((u32*)tentacle, (i32*)get_tentacle_parent());          // entity_base::set_parent
+    tentacle->set_parent(get_tentacle_parent());
     retail::sub_626BE0((i32)tentacle, (u64*)&references::unk_00fc4f60.get()); // entity_base::set_rel_po
 
     i32 points = (i32)positions.size + 2;
@@ -261,7 +262,7 @@ void ai_tentacle_info::init_num_positions(i32 num_pos, entity* _base_node, entit
 
     if (base_node &&
         (base_node->flags & entity_flag_member) &&
-        (entity*)retail::sub_601910((u32*)base_node) == get_my_entity()) { // entity_base::get_attach_root
+        base_node->get_conglom_owner() == get_my_entity()) {
 
         flags        |= base_node_is_member;
         base_node_id  = base_node->id;
@@ -272,7 +273,7 @@ void ai_tentacle_info::init_num_positions(i32 num_pos, entity* _base_node, entit
 
     if (end_node &&
         (end_node->flags & entity_flag_member) &&
-        (entity*)retail::sub_601910((u32*)end_node) == get_my_entity()) { // entity_base::get_attach_root
+        end_node->get_conglom_owner() == get_my_entity()) {
 
         flags       |= end_node_is_member;
         end_node_id  = end_node->id;
@@ -334,8 +335,8 @@ entity* ai_tentacle_info::get_my_entity() const { // an external polytube stands
 
 // sub_491520
 // inlined @ sub_4B77A0
-entity* ai_tentacle_info::get_tentacle_parent() const {
-    entity* parent = get_my_entity();
+entity_base* ai_tentacle_info::get_tentacle_parent() const {
+    entity_base* parent = get_my_entity();
 
     if ((flags & external_polytube) && tentacle)
         return tentacle->my_parent;
@@ -874,7 +875,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                 if (!end_node)
                     end_pos = corrected;
                 else if (end_node->flags & entity_flag_bone_connector) {
-                    auto root = (conglomerate*)retail::sub_601910((u32*)end_node); // entity_base::get_attach_root
+                    auto* root = end_node->get_conglom_owner();
 
                     retail::sub_6410F0((i32)root, root->get_member_index(end_node->id), (f32*)&end_po, 0); // conglomerate::set_member_abs_po
                 } else
@@ -885,7 +886,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                 // a bone connector is placed through its conglomerate
                 auto place = [](entity* node, po* node_po) {
                     if (node->flags & entity_flag_bone_connector) {
-                        auto root = (u32*)retail::sub_601910((u32*)node); // entity_base::get_attach_root
+                        auto root = (u32*)node->get_conglom_owner();
 
                         retail::sub_48E860(root, &node->id.source_hash_code, (f32*)node_po, 0); // conglomerate::set_member_abs_po
                     } else
@@ -941,11 +942,11 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
             retail::sub_798F10((u8*)&node_lif); // line_info::~line_info
         }
 
-        entity* parent = get_tentacle_parent();
+        entity_base* parent = get_tentacle_parent();
 
         if (tentacle && !(flags & external_polytube) && parent != tentacle) {
             retail::sub_626BE0((i32)tentacle, (u64*)&references::unk_00fc4f60.get()); // entity_base::set_rel_po
-            retail::sub_653DA0((u32*)tentacle, (i32*)parent);                          // entity_base::set_parent
+            tentacle->set_parent(parent);
         }
 
         po to_local = references::unk_00fc4f60.get();
@@ -1041,7 +1042,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
             if (tentacle->the_spline.need_rebuild)
                 retail::sub_96F000((i32)&tentacle->the_spline); // spline::rebuild_helper
 
-            retail::sub_796C70((i32)tentacle->my_handle.value); // add_moved
+            moved_entities::add_moved(tentacle->my_handle);
         }
     }
 

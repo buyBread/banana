@@ -146,6 +146,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_9C2F50
         // inlined @ sub_41C930
         // inlined @ sub_4F7470
+        // inlined @ sub_65AD10
         void destroy() noexcept {
             clear();
 
@@ -220,6 +221,7 @@ namespace treyarch { namespace vc8 {
         // sub_5F6D70
         // sub_5F7130
         // sub_650850
+        // sub_6508A0
         // sub_685A70
         // sub_76B550
         // sub_940A80
@@ -310,6 +312,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_99B200
         // inlined @ sub_9C2D60
         // inlined @ sub_417910
+        // inlined @ sub_6407B0
         T* erase(T* position) noexcept {
             T* result = position;
 

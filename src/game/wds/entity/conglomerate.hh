@@ -71,7 +71,8 @@ namespace treyarch {
         mash::vector_basic_ref_counted
             <u8>                      unassigned_skin_bone_parent_indices;
         string_hash                   skeleton_name_hash;
-        u8                            reserved_178[0x18];
+        vc8::vector<entity_base*>*    bone_connectors;
+        u8                            reserved_17c[0x14];
         u32                           conglomerate_flags;
         u8                            reserved_194[0x04];
 
@@ -155,5 +156,6 @@ namespace treyarch {
     ASSERT_OFFSETOF(conglomerate, unassigned_skin_bone_indices,        0x16C);
     ASSERT_OFFSETOF(conglomerate, unassigned_skin_bone_parent_indices, 0x170);
     ASSERT_OFFSETOF(conglomerate, skeleton_name_hash,                  0x174);
+    ASSERT_OFFSETOF(conglomerate, bone_connectors,                     0x178);
     ASSERT_OFFSETOF(conglomerate, conglomerate_flags,                  0x190);
 } // treyarch

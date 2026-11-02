@@ -33,6 +33,7 @@
 #include "game/wds/camera/camera.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/conglomerate.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/grenade.hh"
 #include "game/wds/entity/interface/standing_interface.hh"
@@ -1543,9 +1544,9 @@ bool slf__entity__set_parent__entity__t::operator()(chuck::vm::vm_stack &stack) 
         return true;
 
     if (!parent)
-        retail::sub_640910((u32*)self); // entity_base::clear_parent
+        self->clear_parent();
     else {
-        retail::sub_653DA0((u32*)self, (i32*)parent);                          // entity_base::set_parent
+        self->set_parent(parent);
         retail::sub_626CA0((u32*)self, (u32*)&references::unk_010f7140.get()); // entity_base::set_rel_position
     }
 
@@ -1597,7 +1598,7 @@ bool slf__entity__get_vehicle__t::operator()(chuck::vm::vm_stack &stack) {
             auto vehicle = (entity*)arch_base_vhandle(self->my_parent->my_handle.value).resolve();
 
             if (vehicle && (vehicle->flags & entity_flag_member))
-                vehicle = (entity*)retail::sub_601910((u32*)vehicle); // entity_base::get_attach_root
+                vehicle = vehicle->get_conglom_owner();
 
             if (vehicle && vehicle->is_a_vehicle())
                 result = vehicle->my_handle.value;
@@ -1630,9 +1631,9 @@ bool slf__entity__get_conglom_owner__t::operator()(chuck::vm::vm_stack &stack) {
 
     u32 result = 0;
 
-    // the attach root's handle, or the entity's own without one
+    // the owner's handle, or the entity's own without one
     if (self) {
-        auto root = (entity*)retail::sub_601910((u32*)self); // entity_base::get_attach_root
+        auto* root = self->get_conglom_owner();
 
         result = root && root->my_handle.value ? root->my_handle.value : self->my_handle.value;
     }
@@ -1941,13 +1942,13 @@ bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_s
     if (!self)
         return true;
 
-    auto root = (entity*)retail::sub_601910((u32*)self); // entity_base::get_attach_root
+    auto* root = self->get_conglom_owner();
 
     if (root) {
-        if (root->unk_030)
-            retail::sub_796C70(root->my_handle.value); // add_moved
-    } else if (self->unk_030)
-        retail::sub_796C70(self->my_handle.value);
+        if (root->my_trigger.value)
+            moved_entities::add_moved(root->my_handle);
+    } else if (self->my_trigger.value)
+        moved_entities::add_moved(self->my_handle);
 
     // a short enough turn happens at once
     if (duration <= 0.0001) {
@@ -2026,13 +2027,13 @@ bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(c
     if (!self)
         return true;
 
-    auto root = (entity*)retail::sub_601910((u32*)self); // entity_base::get_attach_root
+    auto* root = self->get_conglom_owner();
 
     if (root) {
-        if (root->unk_030)
-            retail::sub_796C70(root->my_handle.value); // add_moved
-    } else if (self->unk_030)
-        retail::sub_796C70(self->my_handle.value);
+        if (root->my_trigger.value)
+            moved_entities::add_moved(root->my_handle);
+    } else if (self->my_trigger.value)
+        moved_entities::add_moved(self->my_handle);
 
     // a short enough turn is over before it starts
     if (!stack.thread->entry)
@@ -2138,7 +2139,7 @@ bool slf__entity__wait_translate__vector3d__num__t::operator()(chuck::vm::vm_sta
             ((actor*)self)->set_frame_delta(translation, step);
 
         fast_po_mul(translation, *self->my_rel_po, translation);
-        retail::sub_796C70(stack.local_uint(0x00)); // add_moved
+        moved_entities::add_moved(arch_base_vhandle(stack.local_uint(0x00)));
 
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();
@@ -2301,7 +2302,7 @@ bool slf__entity__wait_translate_abs__vector3d__num__t::operator()(chuck::vm::vm
         if (self->is_an_actor())
             ((actor*)self)->update_colgeom();
 
-        retail::sub_796C70(stack.local_uint(0x00)); // add_moved
+        moved_entities::add_moved(arch_base_vhandle(stack.local_uint(0x00)));
 
         if (self->has_ifc(entity_ifc_player))
             self->player_ifc()->unk_140();

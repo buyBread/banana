@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/entity/pendulum.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/math/po.hh"
 
@@ -58,7 +59,7 @@ bool pendulum::has_a_moving_anchor() const {
             return true;
 
         anchor = anchor->flags & entity_flag_member ?
-            (entity_base*)retail::sub_601910((u32*)anchor) : // entity_base::get_attach_root
+            anchor->get_conglom_owner() :
             anchor->my_parent;
     }
 

@@ -14,6 +14,9 @@ namespace treyarch {
 
         po(const math::vector4 &desired_forward, const math::vector4 &normal, const math::vector4 &pos);
 
+        // sub_424C00
+        po(const po&) = default;
+
         // sub_583280
         po &operator=(const po&) = default;
 

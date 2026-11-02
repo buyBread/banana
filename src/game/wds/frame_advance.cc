@@ -49,7 +49,7 @@ namespace treyarch {
 
         // inlined into sub_978CF0
         void apply_hero_rel_po_override(entity* hero) {
-            retail::sub_640910((u32*)hero);                                       // entity_base::clear_parent
+            hero->clear_parent();
             retail::sub_626BE0((i32)hero, (u64*)references::unk_010fc580.read()); // entity_base::set_rel_po
         }
     } // helpers

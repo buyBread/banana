@@ -129,7 +129,7 @@ namespace treyarch {
 
         void    set_my_entity(entity_base* own);
         entity* get_my_entity() const;
-        entity* get_tentacle_parent() const;
+        entity_base* get_tentacle_parent() const;
 
         void create_tentacle(polytube* owner);
         void destroy_tentacle(bool keep_render_info);

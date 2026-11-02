@@ -6,6 +6,7 @@
 #include "game/fixed_string.hh"
 #include "game/hash/algo.hh"
 #include "game/math/references.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "treyarch/math/trig.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/shaders/pcuv/render_node.hh"
@@ -103,7 +104,7 @@ void beam::set_point_to_point(const vector3d &from, const vector3d &to) { // tur
 
     clear_flag(last_frame_valid);
 
-    retail::sub_796C70((i32)my_handle.value); // add_moved
+    moved_entities::add_moved(my_handle);
 }
 
 // sub_736630

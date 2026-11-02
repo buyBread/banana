@@ -234,7 +234,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
     world_dynamics_system* world = references::g_world_ptr.read();
 
     if (world->camera_mgr.marky_camera)
-        retail::sub_640910((u32*)world->camera_mgr.marky_camera); // entity_base::clear_parent
+        world->camera_mgr.marky_camera->clear_parent();
 
     entity* hero = references::g_world_ptr.read()->get_hero_ptr();
 
@@ -1132,7 +1132,7 @@ void cut_scene_player::hookup_current_segment() {
         auto attached = (entity*)retail::sub_7DF6E0((u32*)&id);
 
         if (attached && attached->is_a_camera())
-            retail::sub_653DA0((u32*)attached, (i32*)references::g_world_ptr.read()->get_hero_ptr()); // entity_base::set_parent
+            attached->set_parent(references::g_world_ptr.read()->get_hero_ptr());
     }
 }
 

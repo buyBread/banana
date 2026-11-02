@@ -2319,9 +2319,9 @@ bool combat_state::unk_051(entity* target, const vector3d* target_point, const v
         obstructed = true;
 
         if (line.hit_entity.resolve() &&
-            (line.hit_entity.resolve() == target                                       ||
-             (arch_base*)retail::sub_601910((u32*)target) == line.hit_entity.resolve() || // entity_base::get_attach_root
-             target == (entity*)retail::sub_601910((u32*)line.hit_entity.resolve())))
+            (line.hit_entity.resolve() == target                      ||
+             target->get_conglom_owner() == line.hit_entity.resolve() ||
+             target == ((entity_base*)line.hit_entity.resolve())->get_conglom_owner()))
 
             obstructed = false;
     }

@@ -1,8 +1,14 @@
+#include <algorithm>
+#include <new>
+
 #include "retail.hh"
 #include "game/wds/ai/ai_core.hh"
-#include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity_base.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "game/wds/references.hh"
+#include "treyarch/jq/native_locks.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -10,7 +16,7 @@ using namespace treyarch;
 entity_base::~entity_base() {
     finalize(mash::ALLOCATED);
 
-    ((void (__thiscall*)(entity**, mash::allocation_scope))retail::sub_689610)(&my_parent, mash::ALLOCATED); // my_parent's destructor
+    ((void (__thiscall*)(entity_base**, mash::allocation_scope))retail::sub_689610)(&my_parent, mash::ALLOCATED); // my_parent's destructor
 }
 
 void entity_base::finalize(mash::allocation_scope scope) {
@@ -319,6 +325,281 @@ void entity_base::set_invulnerable(bool invulnerable) {
         ext_flags |= entity_ext_flag_invulnerable;
     else
         ext_flags &= ~entity_ext_flag_invulnerable;
+}
+
+// sub_653DA0
+void entity_base::set_parent(entity_base* new_parent) {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!new_parent) {
+        clear_parent();
+
+        return;
+    }
+
+    if (new_parent == my_parent)
+        return;
+
+    if (my_parent)
+        clear_parent();
+
+    // a child sharing one po gets its own abs po
+    if (!(ext_flags & entity_ext_flag_does_not_manage_abs_po) && my_abs_po == my_rel_po)
+        my_abs_po = new (mm::allocate(sizeof(po))) po(*my_rel_po);
+
+    if (!new_parent->my_child)
+        new_parent->my_child = this;
+    else {
+        entity_base* last = new_parent->my_child;
+
+        while (last->my_brother)
+            last = last->my_brother;
+
+        last->my_brother = this;
+    }
+
+    my_parent  = new_parent;
+    my_brother = nullptr;
+
+    update_abs_po_from_model_po();
+
+    if (flags & entity_flag_member)
+        return;
+
+    entity_base* owner = new_parent->flags & entity_flag_member ? new_parent->get_conglom_owner() : new_parent;
+
+    owner->add_adopted_child(this);
+}
+
+// sub_640910
+void entity_base::clear_parent() {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!my_parent)
+        return;
+
+    if (!(flags & entity_flag_member)) {
+        entity_base* owner = my_parent->flags & entity_flag_member ? my_parent->get_conglom_owner() : my_parent;
+
+        if (owner)
+            owner->remove_adopted_child(this);
+    }
+
+    if (my_parent->my_child == this) {
+        my_parent->my_child = my_brother;
+
+        my_brother = nullptr;
+        my_parent  = nullptr;
+    } else {
+        entity_base* previous = my_parent->my_child;
+        entity_base* current  = previous->my_brother;
+
+        while (current && current != this) {
+            previous = current;
+            current  = current->my_brother;
+        }
+
+        if (current) {
+            previous->my_brother = my_brother;
+
+            my_brother = nullptr;
+            my_parent  = nullptr;
+        }
+    }
+
+    update_abs_po_from_model_po();
+}
+
+// sub_601910
+conglomerate* entity_base::get_conglom_owner() const {
+    if (!(flags & entity_flag_member) && !is_a_conglomerate())
+        return nullptr;
+
+    if (my_conglom_root)
+        return my_conglom_root;
+
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (is_a_conglomerate())
+        return (conglomerate*)this;
+
+    if ((flags & entity_flag_member) && my_parent)
+        return my_parent->get_conglom_owner();
+
+    return nullptr;
+}
+
+// sub_601A10
+entity_base* entity_base::get_highest_parent() const {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if ((flags & entity_flag_member) && my_parent)
+        return my_parent->get_highest_parent();
+
+    return (entity_base*)this;
+}
+
+// sub_601AB0
+bool entity_base::is_a_parent(const entity_base* par) const {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    return my_parent && (my_parent == par || my_parent->is_a_parent(par));
+}
+
+// sub_626820
+void entity_base::update_abs_po_from_model_po() {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    update_child_abs_po();
+}
+
+// sub_611B60
+// inlined @ sub_626820
+void entity_base::update_child_abs_po() {
+    if (my_abs_po != my_rel_po) {
+        const vector3d last_position = my_abs_po->get_position();
+
+        if (my_parent)
+            fast_po_mul(*my_abs_po, *my_rel_po, *my_parent->my_abs_po);
+        else
+            *my_abs_po = *my_rel_po;
+
+        // a bone connector squares up and keeps its translation
+        if (flags & entity_flag_bone_connector) {
+            const vector3d translation = my_abs_po->get_position();
+
+            my_abs_po->fixup();
+            my_abs_po->set_position(translation);
+        }
+
+        const vector3d &position = my_abs_po->get_position();
+
+        if ((last_position.x != position.x ||
+             last_position.y != position.y ||
+             last_position.z != position.z) &&
+            is_an_entity()                  &&
+            !(flags & entity_flag_member))
+
+            moved_entities::add_moved(my_handle);
+    }
+
+    for (entity_base* child = my_child; child; child = child->my_brother)
+        child->update_child_abs_po();
+
+    if (is_an_actor()) {
+        ((actor*)this)->update_colgeom(nullptr);
+        ((actor*)this)->radius_changed(true);
+    } else
+        ext_flags |= entity_ext_flag_bounding_sphere_dirty;
+
+    if (flags & entity_flag_member)
+        my_conglom_root->radius_changed(true);
+}
+
+// sub_640830
+void entity_base::update_attached_abs_pos() {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (is_a_conglomerate() && ((conglomerate*)this)->bone_connectors)
+        for (entity_base* connector : *((conglomerate*)this)->bone_connectors)
+            connector->update_abs_po_from_model_po();
+
+    if (adopted_children)
+        for (entity_base* child : *adopted_children) {
+            child->update_abs_po_from_model_po();
+
+            moved_entities::add_moved(child->my_handle);
+        }
+}
+
+// sub_653CF0
+void entity_base::add_adopted_child(entity_base* child) {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!adopted_children)
+        adopted_children = new (mm::allocate(sizeof(vc8::vector<entity_base*>))) vc8::vector<entity_base*>();
+
+    if (std::find(adopted_children->begin(), adopted_children->end(), child) == adopted_children->end())
+        adopted_children->push_back(child);
+}
+
+// sub_6407B0
+void entity_base::remove_adopted_child(entity_base* child) {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!adopted_children)
+        return;
+
+    entity_base** found = std::find(adopted_children->begin(), adopted_children->end(), child);
+
+    if (found != adopted_children->end())
+        adopted_children->erase(found);
+}
+
+// sub_65AF10
+void entity_base::remove_child(entity_base* bad_kid) {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (bad_kid->flags & entity_flag_member)
+        bad_kid->clear_parent();
+    else
+        retail::sub_653EB0((u32*)bad_kid, 0); // entity_set_abs_parent
+}
+
+// sub_65AD10
+void entity_base::clear_adopted_children() { // a child with no parent is never removed, so this spins on it
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!adopted_children)
+        return;
+
+    while (!adopted_children->empty()) {
+        entity_base* child = adopted_children->front();
+
+        if (!child->my_parent)
+            continue;
+
+        po world_po = *child->my_abs_po;
+
+        child->clear_parent();
+        retail::sub_626BE0((i32)child, (u64*)&world_po); // entity_base::set_rel_po
+    }
+
+    if (adopted_children) {
+        adopted_children->destroy();
+
+        mm::free(adopted_children);
+    }
+
+    adopted_children = nullptr;
+}
+
+// sub_639270
+void entity_base::dirty_adopted_children() {
+    engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+    if (!adopted_children)
+        return;
+
+    for (entity_base* child : *adopted_children)
+        if (child->is_an_entity())
+            moved_entities::add_moved(child->my_handle);
+}
+
+// sub_601CA0
+bool entity_base::set_flag_in_the_moved_list() {
+    for (;;) {
+        const u32 seen = ext_flags;
+
+        if (seen & entity_ext_flag_added_to_list_of_moved_entities)
+            return false;
+
+        if ((u32)_InterlockedCompareExchange((volatile long*)&ext_flags,
+                                             (long)(seen | entity_ext_flag_added_to_list_of_moved_entities),
+                                             (long)seen) == seen)
+
+            return true;
+    }
 }
 
 // sub_6267E0

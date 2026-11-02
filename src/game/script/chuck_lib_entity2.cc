@@ -113,7 +113,7 @@ entity* treyarch::get_vehicle_of_seated_actor(entity* the_entity) {
         return nullptr;
 
     if (vehicle->flags & entity_flag_member)
-        vehicle = (entity*)retail::sub_601910((u32*)vehicle); // entity_base::get_attach_root
+        vehicle = vehicle->get_conglom_owner();
 
     if (!vehicle || !vehicle->is_a_vehicle())
         return nullptr;

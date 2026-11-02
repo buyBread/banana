@@ -12,6 +12,7 @@
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "treyarch/nal/nal.hh"
@@ -398,7 +399,7 @@ void scene_anim::frame_advance(f32 delta_t) {
         ctrl->state->pose_input.result_matrices = matrices;
         ctrl->state->combined_pose.copy(pose);
 
-        retail::sub_796C70((i32)info.ent.value);
+        moved_entities::add_moved(info.ent);
 
         ctrl->get_matrix_data_from_pose(true);
     }

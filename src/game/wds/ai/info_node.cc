@@ -199,7 +199,7 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
     collision_geometry* colgeom = slave->get_actor()->get_colgeom();
 
     if (slave->get_actor()->flags & entity_flag_member)
-        colgeom = ((entity*)retail::sub_601910((u32*)slave->get_actor()))->get_colgeom(); // entity_base::get_attach_root
+        colgeom = slave->get_actor()->get_conglom_owner()->get_colgeom();
 
     if (colgeom)
         colgeom->flags = (colgeom->flags & ~fi_collide_camera) | fi_collide_camera_see_thru;
