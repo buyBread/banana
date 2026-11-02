@@ -260,7 +260,7 @@ void zombie_manager::place_zombie(actor* zombie, const fake_zombie* fake) {
     zombie->get_als()->reset_animation_player();
     core->restart_base_machine();
 
-    retail::sub_627180((i32)zombie, (f32*)&fake->abs_po); // entity_base::set_abs_po
+    entity_set_abs_po(zombie, fake->abs_po);
     zombie->save_last_collision_free_state();
 
     if (zombie->has_ifc(entity_ifc_physical))

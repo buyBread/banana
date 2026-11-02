@@ -318,7 +318,7 @@ bool cut_scene_player::play(cut_scene* to_play) {
         if (shown) {
             shown->ext_flags |= 0xF;
 
-            retail::sub_6123B0((u32*)shown, 0xF, (i32)0xDEADBEEF);
+            shown->on_fade_distance_changed(0xF, i_know_what_i_am_doing);
         }
     }
 
@@ -415,7 +415,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
     if (found) {
         vector3d far_away(-999.0f);
 
-        retail::sub_626CA0((u32*)found, (u32*)&far_away);
+        found->set_rel_position(far_away);
 
         found->flags |= 0x1000000;
 
@@ -530,7 +530,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
 
     vector3d far_away(-999.0f);
 
-    retail::sub_626CA0((u32*)spawned, (u32*)&far_away);
+    spawned->set_rel_position(far_away);
 
     spawned->flags |= 0x1000000;
 
@@ -853,7 +853,7 @@ void cut_scene_player::restore_entities() {
             po transform;
 
             retail::sub_606F80((u64*)&transform, (i32)&position, (f32*)&rotation, 1.0f);
-            retail::sub_627180((i32)restored, (f32*)&transform);
+            entity_set_abs_po(restored, transform);
 
             if (restored->is_an_actor() && ((actor*)restored)->get_ai_core()) {
                 auto als = (als_inode*)((actor*)restored)->get_ai_core()->get_info_node(info_node_type_als);

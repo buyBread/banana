@@ -292,12 +292,12 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
 void std_carry_inode::attach_slave(std_carry_inode* slave, const string_hash &bone) { // onto the bone of a conglomerate that has it, else onto the carrier
     if (get_actor()->is_a_conglomerate() && ((conglomerate*)get_actor())->has_member_for_linking(bone)) {
         auto* body   = (conglomerate*)get_actor();
-        auto  member = retail::sub_655D80((i32)body, body->get_member_index(bone)); // conglomerate::get_member_for_linking
+        auto  member = (entity_base*)retail::sub_655D80((i32)body, body->get_member_index(bone)); // conglomerate::get_member_for_linking
 
-        retail::sub_653EB0((u32*)slave->get_actor(), (i32)member); // attaches it keeping its world po
-        retail::sub_626BE0((i32)slave->get_actor(), (u64*)&references::unk_00fc4f60.get()); // entity_base::set_rel_po
+        entity_set_abs_parent(slave->get_actor(), member);
+        slave->get_actor()->set_rel_po(references::unk_00fc4f60.get());
     } else
-        retail::sub_653EB0((u32*)slave->get_actor(), (i32)get_actor()); // attaches it keeping its world po
+        entity_set_abs_parent(slave->get_actor(), get_actor());
 }
 
 void std_carry_inode::remove_slave(std_carry_inode* slave, bool kill_slave_mode) {

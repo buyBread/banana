@@ -1312,7 +1312,7 @@ bool spiderman_rvb_wall_attack::update(e_combat_move            move,
     po facing;
     facing.set_po(facing_dir, facing_up, facing_pos);
 
-    retail::sub_627180((i32)owner, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(owner, facing);
 
     return true;
 }

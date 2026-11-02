@@ -127,7 +127,7 @@ bool thrown_weapon_interface::spawn_grenade(      arch_base_vhandle  target,
         po the_po = references::unk_010038a0.get();
         the_po.set_facing(math::vector4(dir.x, dir.y, dir.z, 0.0f));
 
-        retail::sub_626BE0((i32)last_grenade_spawned, (u64*)&the_po); // entity_base::set_rel_po
+        last_grenade_spawned->set_rel_po(the_po);
 
         const f32 x = random_two();
         const f32 y = random_two();
@@ -172,7 +172,7 @@ bool thrown_weapon_interface::spawn_grenade(      arch_base_vhandle  target,
         po the_po = references::unk_010038a0.get();
         the_po.set_facing(math::vector4(dir.x, dir.y, dir.z, 0.0f));
 
-        retail::sub_626BE0((i32)last_grenade_spawned, (u64*)&the_po); // entity_base::set_rel_po
+        last_grenade_spawned->set_rel_po(the_po);
     } else {
         const f32 x = random_two();
         const f32 y = random_two();
@@ -194,16 +194,16 @@ bool thrown_weapon_interface::spawn_grenade(      arch_base_vhandle  target,
     if (use_pos) {
         last_grenade_spawned->unk_0f5 = false;
 
-        retail::sub_626CA0((u32*)last_grenade_spawned, (u32*)&pos); // entity_base::set_rel_position
+        last_grenade_spawned->set_rel_position(pos);
     } else
-        retail::sub_626CA0((u32*)last_grenade_spawned, (u32*)&my_entity->my_abs_po->get_position()); // entity_base::set_rel_position
+        last_grenade_spawned->set_rel_position(my_entity->my_abs_po->get_position());
 
     last_grenade_spawned->invalidate_frame_delta();
 
     last_grenade_spawned->unk_194 = last_grenade_spawned->my_abs_po->get_position();
 
     if (entity* visual = last_grenade_spawned->get_visual_entity()) {
-        retail::sub_626BE0((i32)visual, (u64*)last_grenade_spawned->my_abs_po); // entity_base::set_rel_po
+        visual->set_rel_po(*last_grenade_spawned->my_abs_po);
 
         visual->set_active(true);
         visual->set_visible(false, false);
@@ -211,12 +211,8 @@ bool thrown_weapon_interface::spawn_grenade(      arch_base_vhandle  target,
 
         f32 fade_distance = unk_268;
 
-        if (fade_distance > 0.0f) {
-            i32 preset = retail::sub_77F090(fade_distance); // the fader preset closest to the distance
-
-            visual->ext_flags = preset | (visual->ext_flags & ~0xFu);
-            retail::sub_6123B0((u32*)visual, preset, (i32)i_am_not_sure);
-        }
+        if (fade_distance > 0.0f)
+            visual->set_fader_override_preset_closest_to_distance(fade_distance, i_am_not_sure);
 
         visual->flags |= entity_flag_moving;
 

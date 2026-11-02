@@ -116,7 +116,7 @@ void world_dynamics_system::add_player(const mash::string &filename, const po &t
                     (f32)((f64)position.y + (f64)lift.y),
                     (f32)((f64)position.z + (f64)lift.z));
 
-    retail::sub_626CA0((u32*)hero_ptr, (u32*)&lifted); // entity_base::set_rel_position
+    hero_ptr->set_rel_position(lifted);
 
     {
         mash::string chase_cam_name("CHASE_CAM");
@@ -244,7 +244,7 @@ void world_dynamics_system::malor_point(const vector3d &xyz, bool translate_cam,
     if (hero_ptr->my_parent)
         fast_po_mul(new_po, new_po, hero_ptr->my_parent->my_abs_po->inverse());
 
-    retail::sub_626BE0((i32)hero_ptr, (u64*)&new_po); // entity_base::set_rel_po
+    hero_ptr->set_rel_po(new_po);
 
     ((actor*)hero_ptr)->save_last_collision_free_state();
     ((actor*)hero_ptr)->invalidate_frame_delta();
@@ -261,7 +261,7 @@ void world_dynamics_system::malor_point(const vector3d &xyz, bool translate_cam,
                        (f32)((f64)camera_position.y + (f64)delta.y),
                        (f32)((f64)camera_position.z + (f64)delta.z));
 
-        retail::sub_626CA0((u32*)chase_cam_ptr, (u32*)&moved); // entity_base::set_rel_position
+        chase_cam_ptr->set_rel_position(moved);
     } else {
         vector3d forward = math::unitize(new_po.get_z_facing());
 
@@ -277,7 +277,7 @@ void world_dynamics_system::malor_point(const vector3d &xyz, bool translate_cam,
 
         vector3d behind = hero_ptr->my_abs_po->slow_xform(offset);
 
-        retail::sub_626CA0((u32*)chase_cam_ptr, (u32*)&behind); // entity_base::set_rel_position
+        chase_cam_ptr->set_rel_position(behind);
     }
 
     chase_cam_ptr->invalidate();

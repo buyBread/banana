@@ -114,7 +114,7 @@ void ai_tentacle_info::initialize(mash::allocation_scope scope) { // onto all_te
 
             vector3d parked(-999.0f, -999.0f, -999.0f);
 
-            retail::sub_626CA0((u32*)render_ent, (u32*)&parked); // entity_base::set_rel_position
+            render_ent->set_rel_position(parked);
             retail::sub_612D70((u32*)render_ent, true);          // entity_base::remove_from_regions
 
             misc_render_ent = render_ent->my_handle;
@@ -174,7 +174,7 @@ void ai_tentacle_info::create_tentacle(polytube* owner) { // without an owner th
     tentacle->the_spline.set_force_start(true);
 
     tentacle->set_parent(get_tentacle_parent());
-    retail::sub_626BE0((i32)tentacle, (u64*)&references::unk_00fc4f60.get()); // entity_base::set_rel_po
+    tentacle->set_rel_po(references::unk_00fc4f60.get());
 
     i32 points = (i32)positions.size + 2;
 
@@ -879,7 +879,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                     retail::sub_6410F0((i32)root, root->get_member_index(end_node->id), (f32*)&end_po, 0); // conglomerate::set_member_abs_po
                 } else
-                    retail::sub_627180((i32)end_node, (f32*)&end_po); // entity_base::set_abs_po
+                    entity_set_abs_po(end_node, end_po);
             }
 
             if (need_po) {
@@ -890,7 +890,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                         retail::sub_48E860(root, &node->id.source_hash_code, (f32*)node_po, 0); // conglomerate::set_member_abs_po
                     } else
-                        retail::sub_627180((i32)node, (f32*)node_po); // entity_base::set_abs_po
+                        entity_set_abs_po(node, *node_po);
                 };
 
                 const po &end_source = end_node ? *end_node->my_abs_po : end_po;
@@ -945,7 +945,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
         entity_base* parent = get_tentacle_parent();
 
         if (tentacle && !(flags & external_polytube) && parent != tentacle) {
-            retail::sub_626BE0((i32)tentacle, (u64*)&references::unk_00fc4f60.get()); // entity_base::set_rel_po
+            tentacle->set_rel_po(references::unk_00fc4f60.get());
             tentacle->set_parent(parent);
         }
 

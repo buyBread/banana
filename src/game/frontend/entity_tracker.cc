@@ -451,10 +451,7 @@ void entity_tracker::set_fog_distance_clip(f32 fade_distance) {
     if (!fog)
         return;
 
-    i32 preset = retail::sub_77F090(fade_distance); // the fader preset closest to the distance
-
-    fog->ext_flags = preset | (fog->ext_flags & ~0xFu);
-    retail::sub_6123B0((u32*)fog, preset, (i32)0xCBADF00D);
+    fog->set_fader_override_preset_closest_to_distance(fade_distance, i_am_not_sure);
 }
 
 // sub_692600

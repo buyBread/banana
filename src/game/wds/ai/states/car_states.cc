@@ -154,7 +154,7 @@ void exit_car_state::activate(      ai_state_machine* the_state_machine,
     selected_car  = car->selected_car.resolve() ? car->selected_car.resolve()->my_handle : arch_base_vhandle();
     selected_seat = car->selected_seat;
 
-    retail::sub_653EB0((u32*)the_state_machine->get_core()->get_actor(), 0); // attaches it to nothing, keeping its world po
+    entity_set_abs_parent(the_state_machine->get_core()->get_actor(), nullptr);
 
     sync_anim_state::activate(the_state_machine, the_mashed_state, prev_mashed_state, extra_params);
 

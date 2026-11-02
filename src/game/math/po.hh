@@ -73,6 +73,7 @@ namespace treyarch {
         // inlined @ sub_8637C0
         // inlined @ sub_8639F0
         // inlined @ sub_456450
+        // inlined @ sub_6271F0
         vector3d inverse_xform(const vector3d &point) const { // a point into this po's frame, the rotation taken as orthonormal
             const vector3d &t = m.wrow();
 

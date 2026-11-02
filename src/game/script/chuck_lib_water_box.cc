@@ -37,7 +37,7 @@ bool slf__water_box__set_rel_position__vector3d__t::operator()(chuck::vm::vm_sta
     auto position = (const vector3d*)&stack.local_uint(0x04);
 
     if (self)
-        retail::sub_626CA0((u32*)self, (u32*)position); // entity_base::set_rel_position
+        self->set_rel_position(*position);
 
     return true;
 }

@@ -141,7 +141,7 @@ void quest_giver_spawn::spawn_entity() { // made inside the giver's pack, placed
     placement.set_facing(math::vector4(facing.x, facing.y, facing.z, 0.0f));
     placement.fixup();
 
-    retail::sub_626BE0((i32)spawned_entity, (u64*)&placement); // entity_base::set_rel_po
+    spawned_entity->set_rel_po(placement);
 
     location->unk_024(this, true);
 

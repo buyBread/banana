@@ -411,8 +411,8 @@ bool igo_3d_widget::is_anim_playing() {
 
 // sub_68A900
 void igo_3d_widget::reset_entity_po() {
-    if (arch_base* ent = entity_vh.resolve())
-        retail::sub_626BE0((i32)ent, (u64*)&trans_matrix); // entity_base::set_rel_po
+    if (auto ent = (entity_base*)entity_vh.resolve())
+        ent->set_rel_po(*(const po*)&trans_matrix);
 }
 
 // sub_6899A0

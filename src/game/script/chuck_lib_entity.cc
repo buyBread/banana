@@ -1547,7 +1547,7 @@ bool slf__entity__set_parent__entity__t::operator()(chuck::vm::vm_stack &stack) 
         self->clear_parent();
     else {
         self->set_parent(parent);
-        retail::sub_626CA0((u32*)self, (u32*)&references::unk_010f7140.get()); // entity_base::set_rel_position
+        self->set_rel_position(references::unk_010f7140.get());
     }
 
     if (self->is_an_entity()) {
@@ -1575,7 +1575,7 @@ bool slf__entity__set_parent_rel__entity__t::operator()(chuck::vm::vm_stack &sta
     if ((self->flags & entity_flag_member) || !marky_camera_allows(self, stack))
         return true;
 
-    retail::sub_653EB0((u32*)self, (i32)parent); // attaches it keeping its world po
+    entity_set_abs_parent(self, parent);
 
     if (self->is_an_actor())
         ((actor*)self)->save_last_collision_free_state();
@@ -1728,7 +1728,7 @@ bool slf__entity__look_at__vector3d__t::operator()(chuck::vm::vm_stack &stack) {
         return true;
 
     if (marky_camera_allows(self, stack))
-        retail::sub_626E30((u32*)self, (f32*)target);
+        self->look_at(*target);
 
     return true;
 }
@@ -1772,7 +1772,7 @@ bool slf__entity__set_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
     po rel_po;
     rel_po.set_po(x_facing, up, z_facing, self->my_rel_po->get_position());
     rel_po.fixup();
-    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+    self->set_rel_po(rel_po);
 
     update_als_facing(self);
 
@@ -1812,7 +1812,7 @@ bool slf__entity__set_facing__vector3d__vector3d__t::operator()(chuck::vm::vm_st
     po rel_po;
     rel_po.set_po(x_facing, y_facing, z_facing, self->my_rel_po->get_position());
     rel_po.fixup();
-    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+    self->set_rel_po(rel_po);
 
     update_als_facing(self);
 
@@ -1845,7 +1845,7 @@ bool slf__entity__set_abs_xz_facing__vector3d__t::operator()(chuck::vm::vm_stack
 
     po abs_po;
     abs_po.set_po(x_facing, up, z_facing, position);
-    retail::sub_627180((i32)self, (f32*)&abs_po); // entity_base::set_abs_po
+    entity_set_abs_po(self, abs_po);
 
     update_als_facing(self);
 
@@ -1877,7 +1877,7 @@ bool slf__entity__set_po_facing__vector3d__t::operator()(chuck::vm::vm_stack &st
 
     abs_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_627180((i32)self, (f32*)&abs_po); // entity_base::set_abs_po
+    entity_set_abs_po(self, abs_po);
 
     update_als_facing(self);
 
@@ -1909,7 +1909,7 @@ bool slf__entity__set_rel_po_facing__vector3d__t::operator()(chuck::vm::vm_stack
 
     rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+    self->set_rel_po(rel_po);
 
     update_als_facing(self);
 
@@ -1965,7 +1965,7 @@ bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_s
             ((actor*)self)->set_frame_delta(rotation, 1.0f);
 
         fast_po_mul(rotation, rotation, *self->my_rel_po);
-        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+        self->set_rel_po(rotation);
 
         update_als_facing(self);
 
@@ -1999,7 +1999,7 @@ bool slf__entity__wait_rotate__vector3d__num__num__t::operator()(chuck::vm::vm_s
             ((actor*)self)->set_frame_delta_no_update(rotation, step);
 
         fast_po_mul(rotation, rotation, *self->my_rel_po);
-        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+        self->set_rel_po(rotation);
 
         update_als_facing(self);
     }
@@ -2059,7 +2059,7 @@ bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(c
                         (f32)((f64)position.y - pivot->y),
                         (f32)((f64)position.z - pivot->z));
 
-        retail::sub_626CA0((u32*)self, (u32*)&offset); // entity_base::set_rel_position
+        self->set_rel_position(offset);
 
         po rotation;
         rotation.identity();
@@ -2071,7 +2071,7 @@ bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(c
             ((actor*)self)->set_frame_delta(rotation, step);
 
         fast_po_mul(rotation, *self->my_rel_po, rotation);
-        retail::sub_626BE0((i32)self, (u64*)&rotation); // entity_base::set_rel_po
+        self->set_rel_po(rotation);
 
         const vector3d &turned = self->my_rel_po->get_position();
 
@@ -2079,7 +2079,7 @@ bool slf__entity__wait_rotate_WCS__vector3d__vector3d__num__num__t::operator()(c
                       (f32)((f64)turned.y + pivot->y),
                       (f32)((f64)turned.z + pivot->z));
 
-        retail::sub_626CA0((u32*)self, (u32*)&back); // entity_base::set_rel_position
+        self->set_rel_position(back);
 
         update_als_facing(self);
     }
@@ -2144,7 +2144,7 @@ bool slf__entity__wait_translate__vector3d__num__t::operator()(chuck::vm::vm_sta
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();
         else
-            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+            self->set_rel_po(translation);
 
         if (self->is_an_actor())
             ((actor*)self)->update_colgeom();
@@ -2212,7 +2212,7 @@ bool slf__entity__wait_translate_with_compute_sector__vector3d__num__t::operator
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();
         else
-            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+            self->set_rel_po(translation);
 
         if (self->is_an_entity() && !(self->flags & entity_flag_member)) {
             self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
@@ -2297,7 +2297,7 @@ bool slf__entity__wait_translate_abs__vector3d__num__t::operator()(chuck::vm::vm
         if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
             self->physical_ifc()->get_biped_system();
         else
-            retail::sub_626BE0((i32)self, (u64*)&translation); // entity_base::set_rel_po
+            self->set_rel_po(translation);
 
         if (self->is_an_actor())
             ((actor*)self)->update_colgeom();
@@ -2691,10 +2691,7 @@ bool slf__entity__set_distance_clip__num__t::operator()(chuck::vm::vm_stack &sta
     if (!self)
         return true;
 
-    i32 preset = retail::sub_77F090(distance); // the fader preset closest to the distance
-
-    self->ext_flags = preset | (self->ext_flags & ~0xFu);
-    retail::sub_6123B0((u32*)self, preset, (i32)i_am_not_sure);
+    self->set_fader_override_preset_closest_to_distance(distance, i_am_not_sure);
 
     if (auto* record = (u32*)retail::sub_92BB10(self->my_handle.value)) // tracker record lookup
         retail::sub_905ED0(record, distance);
@@ -2712,10 +2709,7 @@ bool slf__entity__set_distance_clip_far__num__t::operator()(chuck::vm::vm_stack 
     if (!self)
         return true;
 
-    i32 preset = retail::sub_77F090(distance); // the fader preset closest to the distance
-
-    self->ext_flags = preset | (self->ext_flags & ~0xFu);
-    retail::sub_6123B0((u32*)self, preset, (i32)i_know_what_i_am_doing);
+    self->set_fader_override_preset_closest_to_distance(distance, i_know_what_i_am_doing);
 
     if (auto* record = (u32*)retail::sub_92BB10(self->my_handle.value)) // tracker record lookup
         retail::sub_905ED0(record, distance);
@@ -3600,7 +3594,7 @@ bool slf__entity__snap_to__entity__t::operator()(chuck::vm::vm_stack &stack) {
     if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
         self->physical_ifc()->get_biped_system();
     else {
-        retail::sub_626BE0((i32)self, (u64*)target->my_abs_po); // entity_base::set_rel_po
+        self->set_rel_po(*target->my_abs_po);
 
         update_als_facing(self);
     }
@@ -3640,7 +3634,7 @@ bool slf__entity__abs_snap_to__entity__t::operator()(chuck::vm::vm_stack &stack)
     if (self->has_ifc(entity_ifc_physical) && self->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
         self->physical_ifc()->get_biped_system();
     else {
-        retail::sub_627180((i32)self, (f32*)target->my_abs_po); // entity_base::set_abs_po
+        entity_set_abs_po(self, *target->my_abs_po);
 
         update_als_facing(self);
     }

@@ -827,7 +827,7 @@ bool slf__entity__set_scale__num__t::operator()(chuck::vm::vm_stack &stack) {
     fast_po_mul(rel_po, rel_po, scaling);
     rel_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+    self->set_rel_po(rel_po);
 
     return true;
 }
@@ -3925,7 +3925,7 @@ bool slf__entity__orbit__vector3d__num__num__num__t::operator()(chuck::vm::vm_st
     math::vector4 center_4(center->x, center->y, center->z, 0.0f);
     rel_po.set_facing(center_4);
 
-    retail::sub_626BE0((i32)self, (u64*)&rel_po); // entity_base::set_rel_po
+    self->set_rel_po(rel_po);
 
     update_als_facing(self);
 

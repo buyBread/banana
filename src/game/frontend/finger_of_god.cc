@@ -3,6 +3,7 @@
 #include "game/frontend/frontend_manager.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/trigger.hh"
+#include "game/wds/entity/entity_base.hh"
 
 using namespace treyarch;
 
@@ -26,8 +27,8 @@ void finger_of_god::set_pos(vector3d new_position) {
     }
 
     if (!ent.null())
-        if (arch_base* moved = ent.resolve())
-            retail::sub_626CA0((u32*)moved, (u32*)&new_position); // entity_base::set_rel_position
+        if (auto moved = (entity_base*)ent.resolve())
+            moved->set_rel_position(new_position);
 
     position = new_position;
 }

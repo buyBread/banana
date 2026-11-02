@@ -61,10 +61,10 @@ i32 amalga::scene_entity_container_resource_handler::handle_resource(e_behavior 
 
             u32 flags = ent->ext_flags;
 
-            ent->unk_03a = 0;
+            ent->fade_timer = 0;
             ent->ext_flags = flags; // stored back unchanged
 
-            retail::sub_6123B0((u32*)ent, (i32)(flags & 0xF), (i32)0xCBADF00D);
+            ent->on_fade_distance_changed((i32)(flags & 0xF), i_am_not_sure);
 
             worldly_entity_instances* instances = ((worldly_pack_slot*)pack_slot)->entity_instances;
 

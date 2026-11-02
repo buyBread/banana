@@ -1,6 +1,9 @@
 #pragma once
 
+#include <array>
+
 #include "game/arch_base.hh"
+#include "game/global.hh"
 #include "game/wds/entity/interface/card_interface.hh"
 #include "game/wds/entity/interface/combo_interface.hh"
 #include "game/wds/entity/interface/damage_interface.hh"
@@ -22,9 +25,11 @@
 #include "game/math/po.hh"
 #include "vc8/vector.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class actor;
     class collision_geometry;
     class conglomerate;
     class entity;
@@ -86,10 +91,26 @@ namespace treyarch {
         entity_ext_flag_shadow_casting                  = 0x00010000, // SM3's AI_COVER
         entity_ext_flag_sync_anim                       = 0x00020000,
         entity_ext_flag_ai_los_see_through              = 0x00100000,
+        entity_ext_flag_unk_00200000                    = 0x00200000,
         entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
         entity_ext_flag_attack_damage_unlocked          = 0x20000000,
         entity_ext_flag_does_not_manage_abs_po          = 0x40000000
     };
+
+    struct fade_range_t {
+        f32 fade_radius_threshold;
+        f32 fade_min_dist;
+        f32 fade_max_dist;
+        f32 fade_min_dist_squared;
+        f32 fade_max_dist_squared;
+        f32 inverse_length;
+    };
+
+    ASSERT_SIZEOF(fade_range_t, 0x18);
+
+    namespace references {
+        inline util::memory_reference<std::array<fade_range_t, 16>> enx_ranges { 0x00E7B670 };
+    } // references
 
     class entity_base : public arch_base {
 
@@ -106,7 +127,7 @@ namespace treyarch {
         vc8::vector<entity_base*>* adopted_children;
         arch_base_vhandle          my_trigger;
         u8                         reserved_034[0x06];
-        u8                         unk_03a; // cleared as scene entities are loaded
+        u8                         fade_timer;
         u8                         reserved_03b[0x05];
         conglomerate*              my_conglom_root;
         u8                         reserved_044[0x08];
@@ -368,6 +389,13 @@ namespace treyarch {
         void update_child_abs_po();
         void update_attached_abs_pos();
 
+        void set_rel_po(const po &the_po);
+        void set_rel_position(const vector3d &p); // w is forced to 1
+        void look_at(const vector3d &abs_pos);
+
+        void set_fader_override_preset_closest_to_distance(f32 fade_distance, only_if_you_know_what_you_are_doing magic);
+        void on_fade_distance_changed(i32 preset_index, only_if_you_know_what_you_are_doing magic);
+
         // sub_6075F0
         bool has_adopted_children() const {
             return adopted_children && !adopted_children->empty();
@@ -408,7 +436,12 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_base, my_brother,       0x28);
     ASSERT_OFFSETOF(entity_base, adopted_children, 0x2C);
     ASSERT_OFFSETOF(entity_base, my_trigger,       0x30);
-    ASSERT_OFFSETOF(entity_base, unk_03a,          0x3A);
+    ASSERT_OFFSETOF(entity_base, fade_timer,       0x3A);
     ASSERT_OFFSETOF(entity_base, my_conglom_root,  0x40);
     ASSERT_OFFSETOF(entity_base, sound_type,       0x4C);
+
+    void entity_set_abs_po(entity_base* ent, const po &the_po);
+    void entity_set_abs_position(entity_base* ent, const vector3d &pos);
+    void entity_set_abs_parent(entity_base* me, entity_base* parent); // keeps the world po
+    void entity_set_facing_and_up(actor* ent, const vector3d &facing, const vector3d &up, bool force);
 } // treyarch

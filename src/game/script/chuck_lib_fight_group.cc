@@ -256,14 +256,14 @@ bool slf__fight_group__rvb_get_target_entity__num__t::operator()(chuck::vm::vm_s
             if (target->get_type() == simple_target_type_entity)
                 result = ((ai_simple_target_entity*)target)->resolve()->my_handle.value; // a gone entity faults
             else if (target->get_type() == simple_target_type_location) {
-                auto marker = (arch_base*)retail::sub_804740((u32*)&references::g_world_ptr.read()->ent_mgr,
-                                                             (i32)hash::djb2("inviso_nullo"),
-                                                             nullptr); // wds_entity_manager::spawn_entity_autoname
+                auto marker = (entity_base*)retail::sub_804740((u32*)&references::g_world_ptr.read()->ent_mgr,
+                                                               (i32)hash::djb2("inviso_nullo"),
+                                                               nullptr); // wds_entity_manager::spawn_entity_autoname
 
                 vector3d position = target->get_position(string_hash());
 
                 // so does a failed spawn
-                retail::sub_626CA0((u32*)marker, (u32*)&position); // entity_base::set_rel_position
+                marker->set_rel_position(position);
 
                 if (marker && marker->is_an_entity())
                     result = marker->my_handle.value;

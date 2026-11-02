@@ -82,8 +82,7 @@ scene_anim::~scene_anim() {
             references::g_world_ptr.read()->camera_mgr.marky_camera->flags &= ~0x400000;
 
             if (references::g_world_ptr.read()->chase_cam_ptr) {
-                retail::sub_626CA0((u32*)references::g_world_ptr.read()->chase_cam_ptr,
-                                   (u32*)&references::g_world_ptr.read()->camera_mgr.marky_camera->my_rel_po->get_position());
+                references::g_world_ptr.read()->chase_cam_ptr->set_rel_position(references::g_world_ptr.read()->camera_mgr.marky_camera->my_rel_po->get_position());
 
                 camera* chase_cam = references::g_world_ptr.read()->chase_cam_ptr;
 
@@ -204,7 +203,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
         math::vector4 direction(data[4], data[5], data[6], 0.0f);
 
         light_po.set_facing(direction);
-        retail::sub_626BE0((i32)light, (u64*)&light_po); // entity_base::set_rel_po
+        ((entity*)light)->set_rel_po(light_po);
 
         lights.push_back({ (entity*)light, instance, index });
     } else {
@@ -360,7 +359,7 @@ void scene_anim::frame_advance(f32 delta_t) {
         light_po.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
         fast_po_mul(light_po, *(const po*)&matrices[fk->trajectory_bone], light_po);
-        retail::sub_626BE0((i32)light_entity, (u64*)&light_po); // entity_base::set_rel_po
+        light_entity->set_rel_po(light_po);
     }
 
     for (u32 i = 0; i < my_anim_info_list.size(); i++) {

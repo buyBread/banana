@@ -622,7 +622,7 @@ bool ped_manager::spawn_ped(actor*          ped,
 
         ped->set_visible(true, false);
         ped->set_collisions_active(true, false);
-        ped->unk_03a = 0;
+        ped->fade_timer = 0;
 
         wander->flags |= ai_wander_flag_unk_02000000;
 
@@ -802,7 +802,7 @@ bool ped_manager::place_ped(actor*          ped,
     po placed;
     placed.set_po(forward, normal, at);
 
-    retail::sub_627180((i32)ped, (f32*)&placed); // entity_base::set_abs_po
+    entity_set_abs_po(ped, placed);
     ped->save_last_collision_free_state();
 
     if (animation_controller* anim_ctrl = ped->anim_ctrl) {
@@ -816,7 +816,7 @@ bool ped_manager::place_ped(actor*          ped,
     ped->set_visible(true, false);
     ped->set_occluded_last_frame(false);
     ped->set_collisions_active(true, false);
-    ped->unk_03a = 0;
+    ped->fade_timer = 0;
 
     if (ped->has_ifc(entity_ifc_damage))
         ped->damage_ifc()->set_hit_points(ped->damage_ifc()->get_max_hit_points());

@@ -511,7 +511,7 @@ void als::motion_compensator::get_po_curr_offset(po &curr_offset) {
 void als::motion_compensator::set_po_curr_offset(actor* target, po &curr_offset) {
     fast_po_mul(curr_offset, curr_offset, *target->my_rel_po);
     curr_offset.fixup();
-    retail::sub_626BE0((i32)target, (u64*)&curr_offset); // entity_base::set_rel_po
+    target->set_rel_po(curr_offset);
 }
 
 // sub_5ADFF0
@@ -975,7 +975,7 @@ void als::simple_orientation::apply_rotation(po*, f32, f32 heading_change, const
 
     po facing;
     facing.set_po(turned, up, origin);
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 }
 
 // sub_5C57C0
@@ -997,7 +997,7 @@ void als::simple_orientation::face_desired_direction() {
 
         po facing;
         facing.set_po(basis_dir, basis_up, origin);
-        retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+        entity_set_abs_po(the_actor, facing);
     }
 }
 
@@ -1055,7 +1055,7 @@ void als::strafe_mocomp::other_po_changes(f32 delta_t, po* curr_offset) {
     const vector3d &position = the_actor->my_abs_po->get_position();
     vector3d        moved(unit.x * speed + position.x, unit.y * speed + position.y, position.z + unit.z * speed);
 
-    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+    entity_set_abs_position(the_actor, moved);
 
     // only the height is left for the offset
     curr_offset->get_matrix().w = vector4d(0.0f, offset.y, 0.0f, 1.0f);
@@ -1357,7 +1357,7 @@ void als::simple_orientation_on_foot::rotate_about_point(      po*,
     turned.fixup();
 
     turned.get_matrix().w = vector4d(moved.x, moved.y, moved.z, 1.0f);
-    retail::sub_627180((i32)target, (f32*)&turned); // entity_base::set_abs_po
+    entity_set_abs_po(target, turned);
 }
 
 // sub_7191F0
@@ -1407,7 +1407,7 @@ void als::strafe_mocomp_on_foot::other_po_changes(f32 delta_t, po* curr_offset) 
     const vector3d &position = the_actor->my_abs_po->get_position();
     vector3d        moved(unit.x * speed + position.x, unit.y * speed + position.y, position.z + unit.z * speed);
 
-    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+    entity_set_abs_position(the_actor, moved);
 
     // only the height is left for the offset
     curr_offset->get_matrix().w = vector4d(0.0f, offset.y, 0.0f, 1.0f);
@@ -1963,7 +1963,7 @@ void als::strict_simple_orientation::other_po_changes(f32 delta_t, po*) {
     const vector3d &position = the_actor->my_abs_po->get_position();
     vector3d        moved(step * unit.x + position.x, unit.y * step + position.y, position.z + unit.z * step);
 
-    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+    entity_set_abs_position(the_actor, moved);
 }
 
 // sub_5AE390
@@ -2019,7 +2019,7 @@ void als::direct_mocomp::other_po_changes(f32 delta_t, po*) {
     const vector3d &position = the_actor->my_abs_po->get_position();
     vector3d        moved(des_move_dir.x * step + position.x, des_move_dir.y * step + position.y, position.z + des_move_dir.z * step);
 
-    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+    entity_set_abs_position(the_actor, moved);
 }
 
 // sub_5F3EC0
@@ -2152,7 +2152,7 @@ void als::input_orientation::other_po_changes(f32 delta_t, po* curr_offset) {
     const vector3d &position = the_actor->my_abs_po->get_position();
     vector3d        moved(step * move_dir.x + position.x, position.y + move_dir.y * step, position.z + move_dir.z * step);
 
-    retail::sub_6271F0((u32*)the_actor, (i32)&moved); // entity_base::set_abs_position
+    entity_set_abs_position(the_actor, moved);
 }
 
 // sub_5AEFE0
@@ -2209,14 +2209,14 @@ void als::towed_orientation::post_anim_action(f32 delta_t) {
 
         vector3d prev_position = the_actor->my_abs_po->get_position();
 
-        retail::sub_627180((i32)the_actor, (f32*)&towed); // entity_base::set_abs_po
+        entity_set_abs_po(the_actor, towed);
 
         const vector3d &moved = the_actor->my_abs_po->get_position();
 
         vector3d delta(moved.x - prev_position.x, moved.y - prev_position.y, moved.z - prev_position.z);
         vector3d settled(delta.x + prev_position.x, delta.y + prev_position.y, delta.z + prev_position.z);
 
-        retail::sub_6271F0((u32*)the_actor, (i32)&settled); // entity_base::set_abs_position
+        entity_set_abs_position(the_actor, settled);
 
         the_actor->set_frame_delta_trans(delta, delta_t);
     }
@@ -2415,7 +2415,7 @@ void als::wallsprint_mocomp::post_anim_action(f32 delta_t) {
         placed.get_matrix().w = vector4d(position.x, position.y, position.z, 0.0f);
     }
 
-    retail::sub_627180((i32)the_actor, (f32*)&placed); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, placed);
 
     vector3d prev_position = the_actor->my_abs_po->get_position();
 
@@ -2523,7 +2523,7 @@ void als::wallsprint_mocomp::face_desired_direction() {
 
     po facing;
     facing.set_po(basis_dir, basis_up, origin);
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 
     wall_sprint_inode* wall = (wall_sprint_inode*)the_actor->get_ai_core()->get_info_node(info_node_type_wall_sprint);
 
@@ -3492,7 +3492,7 @@ void als::move_and_face::face_and_arrive_by(f32 delta_t) {
         return;
     }
 
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 
     const vector3d &moved_to   = the_actor->my_abs_po->get_position();
     const vector3d &moved_from = old_po.get_position();
@@ -4377,7 +4377,7 @@ void als::crawl_transition::activate(animation_logic_system* the_als_core, layer
 
             po facing;
             facing.set_po(basis_dir, basis_up, origin);
-            retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+            entity_set_abs_po(the_actor, facing);
         }
     }
 
@@ -4494,7 +4494,7 @@ void als::rvb_crawl_transition::activate(animation_logic_system* the_als_core, l
         vector3d side = cross(desired_facing, desired_up);
 
         if (!((side - zero).length2() <= 0.00000001f))
-            retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+            entity_set_abs_po(the_actor, facing);
     }
 
     if (use_anim_translation) {
@@ -4606,7 +4606,7 @@ void als::attach_hand_to_point::post_anim_action(f32 delta_t) {
     if (dest_reached && destination_lock) {
         set_destination_point();
 
-        retail::sub_6271F0((u32*)the_actor, (i32)&destination_point); // entity_base::set_abs_position
+        entity_set_abs_position(the_actor, destination_point);
     }
 }
 
@@ -4675,7 +4675,7 @@ void als::attach_hand_to_point::face_and_arrive_by(f32 delta_t) {
 
     facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 
     const vector3d &moved_to   = the_actor->my_abs_po->get_position();
     const vector3d &moved_from = old_po.get_position();
@@ -4758,7 +4758,7 @@ void als::constant_move_hand_to_point::face_and_arrive_by(f32 delta_t) {
 
         facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-        retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+        entity_set_abs_po(the_actor, facing);
 
         const vector3d &moved_to   = the_actor->my_abs_po->get_position();
         const vector3d &moved_from = old_po.get_position();
@@ -5332,7 +5332,7 @@ void als::sync_move_and_face::reorient_to_vertical(actor* actor_a, state_machine
         }
 
         abs_po.set_position(position);
-        retail::sub_627180((i32)target, (f32*)&abs_po); // entity_base::set_abs_po
+        entity_set_abs_po(target, abs_po);
     };
 
     // a's speed comes from b's layer, as retail has it
@@ -5487,7 +5487,7 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
         vector3d move     = (*pos_a - position_b) * pos_weight;
         vector3d moved_to = actor_b->my_abs_po->get_position() + move;
 
-        retail::sub_6271F0((u32*)actor_b, (i32)&moved_to); // entity_base::set_abs_position
+        entity_set_abs_position(actor_b, moved_to);
 
         actor_b->set_frame_delta_trans(move, delta_t);
 
@@ -5545,7 +5545,7 @@ void als::sync_move_and_face::sync_entities(f32       delta_t,
             actor_b->set_frame_delta_trans(position - actor_b->my_abs_po->get_position(), delta_t);
         }
 
-        retail::sub_627180((i32)actor_b, (f32*)&moved); // entity_base::set_abs_po
+        entity_set_abs_po(actor_b, moved);
     }
 
     if (actor_b->has_ifc(entity_ifc_physical) && !(actor_b->physical_ifc()->flags & 0x800))
@@ -5691,7 +5691,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
 
                 turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-                retail::sub_627180((i32)actor_a, (f32*)&turned); // entity_base::set_abs_po
+                entity_set_abs_po(actor_a, turned);
             }
 
             if (apply_turn & 2) {
@@ -5699,7 +5699,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
 
                 turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-                retail::sub_627180((i32)actor_b, (f32*)&turned);
+                entity_set_abs_po(actor_b, turned);
             }
         }
 
@@ -5721,7 +5721,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
                 vector3d position = po_a.get_position() + step;
 
                 po_a.set_position(position);
-                retail::sub_627180((i32)actor_a, (f32*)&po_a);
+                entity_set_abs_po(actor_a, po_a);
 
                 actor_a->set_frame_delta_trans(step, delta_t);
             }
@@ -5739,7 +5739,7 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
                 vector3d position = po_b.get_position() + step;
 
                 po_b.set_position(position);
-                retail::sub_627180((i32)actor_b, (f32*)&po_b);
+                entity_set_abs_po(actor_b, po_b);
 
                 actor_b->set_frame_delta_trans(step, delta_t);
             }
@@ -5759,10 +5759,10 @@ void als::momentum_sync_move_and_face::post_anim_action(f32 delta_t) {
             po_a.get_matrix().w = vector4d(position_a.x, position_a.y, position_a.z, 1.0f);
             po_b.get_matrix().w = vector4d(position_b.x, position_b.y, position_b.z, 1.0f);
 
-            retail::sub_627180((i32)actor_a, (f32*)&po_a);
+            entity_set_abs_po(actor_a, po_a);
             actor_a->set_frame_delta_trans(move, delta_t);
 
-            retail::sub_627180((i32)actor_b, (f32*)&po_b);
+            entity_set_abs_po(actor_b, po_b);
             actor_b->set_frame_delta_trans(move, delta_t);
         }
     }
@@ -6198,7 +6198,7 @@ void als::combat_radial_move_and_face::post_anim_action(f32 delta_t) {
 
     facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 
     const vector3d &moved_to = the_actor->my_abs_po->get_position();
 
@@ -6733,7 +6733,7 @@ void als::swing_attack_move_and_face::post_anim_action(f32 delta_t) {
 
     turned.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_627180((i32)the_actor, (f32*)&turned); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, turned);
 }
 
 // sub_5B2DE0
@@ -7029,7 +7029,7 @@ void als::momentum_combat_move_and_face::post_anim_action(f32 delta_t) {
 
     facing.get_matrix().w = vector4d(position.x, position.y, position.z, 1.0f);
 
-    retail::sub_627180((i32)the_actor, (f32*)&facing); // entity_base::set_abs_po
+    entity_set_abs_po(the_actor, facing);
 
     const vector3d &moved_to = the_actor->my_abs_po->get_position();
 

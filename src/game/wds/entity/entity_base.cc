@@ -1,7 +1,9 @@
 #include <algorithm>
+#include <cmath>
 #include <new>
 
 #include "retail.hh"
+#include "game/math/references.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity_base.hh"
@@ -512,6 +514,235 @@ void entity_base::update_attached_abs_pos() {
         }
 }
 
+// sub_626BE0
+void entity_base::set_rel_po(const po &the_po) {
+    const vector3d last_position = my_abs_po->get_position();
+
+    *my_rel_po = the_po;
+
+    update_abs_po_from_model_po();
+
+    if (my_abs_po != my_rel_po)
+        return;
+
+    const vector3d &position = my_abs_po->get_position();
+
+    if ((last_position.x != position.x ||
+         last_position.y != position.y ||
+         last_position.z != position.z) &&
+        is_an_entity()                  &&
+        !(flags & entity_flag_member))
+
+        moved_entities::add_moved(my_handle);
+}
+
+// sub_626CA0
+void entity_base::set_rel_position(const vector3d &p) {
+    const vector3d last_position = my_abs_po->get_position();
+
+    my_rel_po->set_position(p);
+
+    update_abs_po_from_model_po();
+
+    if (my_abs_po != my_rel_po)
+        return;
+
+    const vector3d &position = my_abs_po->get_position();
+
+    if ((last_position.x != position.x ||
+         last_position.y != position.y ||
+         last_position.z != position.z) &&
+        is_an_entity()                  &&
+        !(flags & entity_flag_member))
+
+        moved_entities::add_moved(my_handle);
+}
+
+// sub_626E30
+void entity_base::look_at(const vector3d &abs_pos) { // an up that comes out too short leaves the po alone
+    const vector3d &from = my_abs_po->get_position();
+
+    const vector3d to_target((f32)((f64)abs_pos.x - from.x),
+                             (f32)((f64)abs_pos.y - from.y),
+                             (f32)((f64)abs_pos.z - from.z));
+
+    const f32 distance = (f32)std::sqrt((f64)to_target.length2());
+
+    vector3d forward;
+
+    if (distance > 0.001f) {
+        const f32 inverse = (f32)(1.0 / distance);
+
+        forward = vector3d((f32)((f64)to_target.x * inverse),
+                           (f32)((f64)to_target.y * inverse),
+                           (f32)((f64)to_target.z * inverse));
+    } else
+        forward = references::zvec.get();
+
+    // world up crossed with the forward
+    const vector3d level(forward.z, 0.0f, -0.0f - forward.x);
+
+    const f32 level_length = (f32)std::sqrt((f64)level.length2());
+
+    vector3d side;
+
+    if (level_length > 0.00001f) {
+        const f32 inverse = (f32)(1.0 / level_length);
+
+        side = vector3d((f32)((f64)level.x * inverse),
+                        (f32)((f64)level.y * inverse),
+                        (f32)((f64)level.z * inverse));
+    } else
+        side = references::xvec.get();
+
+    const vector3d up((f32)((f64)side.z * forward.y - (f64)side.y * forward.z),
+                      (f32)((f64)side.x * forward.z - (f64)side.z * forward.x),
+                      (f32)((f64)side.y * forward.x - (f64)side.x * forward.y));
+
+    if (0.01f > up.length2())
+        return;
+
+    po new_po;
+    new_po.set_po(side, up, forward, references::unk_00ffec30.get());
+
+    if (my_parent)
+        fast_po_mul(new_po, new_po, my_parent->my_abs_po->inverse());
+
+    new_po.fixup();
+    new_po.set_position(my_rel_po->get_position());
+
+    set_rel_po(new_po);
+}
+
+// sub_583770
+// inlined @ sub_66CE80
+// inlined @ sub_6AAD80
+// inlined @ sub_847920
+// inlined @ sub_847990
+void entity_base::set_fader_override_preset_closest_to_distance(f32 fade_distance, only_if_you_know_what_you_are_doing magic) {
+    const i32 preset_index = retail::sub_77F090(fade_distance); // distance_fader::get_enx_range_index_by_fading_distance
+
+    ext_flags = preset_index | (ext_flags & ~0xFu);
+
+    on_fade_distance_changed(preset_index, magic);
+}
+
+// sub_6123B0
+// inlined @ sub_66CE80
+void entity_base::on_fade_distance_changed(i32 preset_index, only_if_you_know_what_you_are_doing magic) {
+    if (!is_an_entity() || !preset_index)
+        return;
+
+    if (references::enx_ranges.get()[preset_index & 0xF].fade_min_dist > 250.0) {
+        ext_flags |= entity_ext_flag_unk_00200000;
+
+        retail::sub_979700(my_handle.value, magic == i_know_what_i_am_doing); // highlight_list_add
+        retail::sub_979700(my_handle.value, false);
+    } else
+        ext_flags &= ~entity_ext_flag_unk_00200000;
+}
+
+// sub_627180
+void treyarch::entity_set_abs_po(entity_base* ent, const po &the_po) {
+    if (!ent->my_parent) {
+        ent->set_rel_po(the_po);
+
+        return;
+    }
+
+    po new_po;
+    new_po.identity();
+
+    fast_po_mul(new_po, the_po, ent->my_parent->my_abs_po->inverse());
+
+    ent->set_rel_po(new_po);
+}
+
+// sub_6271F0
+void treyarch::entity_set_abs_position(entity_base* ent, const vector3d &pos) {
+    if (!ent->my_parent) {
+        ent->set_rel_position(pos);
+
+        return;
+    }
+
+    ent->set_rel_position(ent->my_parent->my_abs_po->inverse_xform(pos));
+}
+
+// sub_653EB0
+void treyarch::entity_set_abs_parent(entity_base* me, entity_base* parent) {
+    if (parent) {
+        if (me->my_parent == parent)
+            return;
+
+        po world_po = *me->my_abs_po;
+
+        me->set_parent(parent);
+
+        fast_po_mul(world_po, world_po, parent->my_abs_po->inverse());
+
+        me->set_rel_po(world_po);
+    } else if (me->my_parent) {
+        po world_po = *me->my_abs_po;
+
+        me->clear_parent();
+        me->set_rel_po(world_po);
+    }
+}
+
+// sub_42EA60
+void treyarch::entity_set_facing_and_up(actor* ent, const vector3d &facing, const vector3d &up, bool force) {
+    if (ent->anim_ctrl && retail::sub_5AD250(ent->anim_ctrl)) // animation_controller::scene_animation_playing
+        return;
+
+    if ((ent->ext_flags & entity_ext_flag_sync_anim) && !force)
+        return;
+
+    if (ent->has_ifc(entity_ifc_physical) && ent->physical_ifc()->is_flagged(physical_interface_flag_biped_running))
+        return;
+
+    vector3d new_facing     = facing;
+    vector3d new_up         = up;
+    bool     facing_from_po = false;
+
+    if (0.0001f > new_facing.length2()) {
+        new_facing     = ent->my_abs_po->get_z_facing();
+        facing_from_po = true;
+    }
+
+    if (0.0001f > new_up.length2())
+        new_up = ent->my_abs_po->get_y_facing();
+
+    new_up     = math::unitize(new_up);
+    new_facing = math::unitize(new_facing);
+
+    f32 dot = new_facing * new_up;
+
+    if (std::fabs(dot) > 0.9f && !facing_from_po) {
+        new_facing = ent->my_abs_po->get_z_facing();
+        new_facing.normalize();
+
+        dot = new_facing * new_up;
+    }
+
+    // still along the up, so one of the po's own axes stands in
+    if (dot > 0.9f) {
+        const vector3d &y = ent->my_abs_po->get_y_facing();
+
+        new_facing = vector3d(-0.0f - y.x, -0.0f - y.y, -0.0f - y.z);
+    } else if (-0.9f > dot)
+        new_facing = ent->my_abs_po->get_y_facing();
+
+    const vector3d &position = ent->my_abs_po->get_position();
+
+    po new_po;
+    new_po.set_po(math::vector4(new_facing.x, new_facing.y, new_facing.z, 0.0f),
+                  math::vector4(new_up.x,     new_up.y,     new_up.z,     0.0f),
+                  math::vector4(position.x,   position.y,   position.z,   0.0f));
+
+    entity_set_abs_po(ent, new_po);
+}
+
 // sub_653CF0
 void entity_base::add_adopted_child(entity_base* child) {
     engine_lock_scope lock(&jq::references::unk_00ffece0.get());
@@ -543,7 +774,7 @@ void entity_base::remove_child(entity_base* bad_kid) {
     if (bad_kid->flags & entity_flag_member)
         bad_kid->clear_parent();
     else
-        retail::sub_653EB0((u32*)bad_kid, 0); // entity_set_abs_parent
+        entity_set_abs_parent(bad_kid, nullptr);
 }
 
 // sub_65AD10
@@ -562,7 +793,7 @@ void entity_base::clear_adopted_children() { // a child with no parent is never 
         po world_po = *child->my_abs_po;
 
         child->clear_parent();
-        retail::sub_626BE0((i32)child, (u64*)&world_po); // entity_base::set_rel_po
+        child->set_rel_po(world_po);
     }
 
     if (adopted_children) {

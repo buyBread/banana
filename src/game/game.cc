@@ -462,7 +462,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
                 auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
 
                 if (keep_matrix)
-                    retail::sub_626BE0((i32)user_cam, (u64*)current_game_camera->my_abs_po); // entity_base::set_rel_po
+                    user_cam->set_rel_po(*current_game_camera->my_abs_po);
 
                 retail::sub_97AF20((u32*)this, (u32*)user_cam, true); // game::set_current_camera
 
@@ -477,8 +477,8 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
 
                 auto* user_cam = (camera_handle)retail::sub_640AE0(&user_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
 
-                retail::sub_626CA0((u32*)user_cam, (u32*)&current_view_camera->my_rel_po->get_position()); // entity_base::set_rel_position
-                retail::sub_97AF20((u32*)this, (u32*)user_cam, true);                                      // game::set_current_camera
+                user_cam->set_rel_position(current_view_camera->my_rel_po->get_position());
+                retail::sub_97AF20((u32*)this, (u32*)user_cam, true); // game::set_current_camera
 
                 message = "New Camera: Edit Cam";
 
@@ -504,7 +504,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
 
         auto* scene_analyzer_cam = (entity*)retail::sub_640AE0(&scene_analyzer_cam_id.source_hash_code, entity_flavor_camera, false); // entity_handle_manager::find_entity
 
-        retail::sub_626CA0((u32*)scene_analyzer_cam, (u32*)&current_game_camera->my_rel_po->get_position()); // entity_base::set_rel_position
+        scene_analyzer_cam->set_rel_position(current_game_camera->my_rel_po->get_position());
     }
 
     if (retail::sub_96EBF0((i32)input_manager, 62, 11, 0, 0) == 1.0 ||
@@ -520,7 +520,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
 
         auto* chase_cam = (entity*)retail::sub_640AE0(&chase_cam_id.source_hash_code, 28, false);
 
-        retail::sub_626BE0((i32)user_cam, (u64*)chase_cam->my_abs_po); // entity_base::set_rel_po
+        user_cam->set_rel_po(*chase_cam->my_abs_po);
 
         references::camera_changed.write(1);
     }
@@ -607,7 +607,7 @@ void game::handle_cameras(input_mgr* input_manager, f32* time_inc) {
                        (f32)((f64)station_position.y + (f64)dy),
                        (f32)((f64)station_position.z + (f64)dz));
 
-        retail::sub_626CA0((u32*)station_cam, (u32*)&moved); // entity_base::set_rel_position
+        station_cam->set_rel_position(moved);
     }
 }
 
@@ -659,9 +659,9 @@ void game::load_complete() {
     world_dynamics_system* world = references::g_world_ptr.read();
 
     if (world->hero_ptr)
-        retail::sub_626BE0((i32)world->hero_ptr, (u64*)&transform); // entity_base::set_rel_po
+        world->hero_ptr->set_rel_po(transform);
     else if (world->camera_mgr.marky_camera)
-        retail::sub_626BE0((i32)world->camera_mgr.marky_camera, (u64*)&transform);
+        world->camera_mgr.marky_camera->set_rel_po(transform);
 
     the_game->level.load_complete_called = 1;
 }

@@ -217,7 +217,7 @@ e_state_exit_code plr_loco_standing_state::frame_advance(f32 delta_t) {
 
                 did_anim_request = true;
 
-                retail::sub_42EA60((u32*)get_actor(), (i32)&references::unk_00fc6a60.get(), (i32)&references::unk_00e66e1c.get(), false);
+                entity_set_facing_and_up(get_actor(), references::unk_00fc6a60.get(), references::unk_00e66e1c.get(), false);
 
                 if (unk_1b0)
                     retail::sub_4029A0((u32**)als_node, als::param_fall_speed, -0.0f - unk_164.y, 0); // als_inode::set_desired_param

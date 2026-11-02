@@ -1729,7 +1729,7 @@ void combat_state::start_sync_anim(const combo_move_data* combo_move) {
         return;
 
     if (!(combo_move->unk_10 & combo_unk_10_flag_00000010))
-        retail::sub_42EA60((u32*)get_actor(), (i32)&references::unk_00fc1ee0.get(), (i32)&references::unk_00e6049c.get(), false);
+        entity_set_facing_and_up(get_actor(), references::unk_00fc1ee0.get(), references::unk_00e6049c.get(), false);
 
     als::category_id target_category = combo_move->get_target_sync_category(nullptr);
     auto             layer           = (als::layer_id)combo_move->params.get_optional_pb_int(target_sync_layer_key, 0, nullptr);

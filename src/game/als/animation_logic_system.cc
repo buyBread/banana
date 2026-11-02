@@ -794,10 +794,10 @@ void als::animation_logic_system::enter_biped_physics(state_machine** machines, 
 
         ((void (__cdecl*)(f32))retail::sub_80EC50)(0.033333335f); // biped physics: the step it starts with
 
-        retail::sub_6271F0((u32*)entering, (i32)&position); // entity_base::set_abs_position
+        entity_set_abs_position(entering, position);
     }
 
-    retail::sub_6271F0((u32*)entering, (i32)&actor_position);
+    entity_set_abs_position(entering, actor_position);
 
     retail::sub_67FB10((u32*)entering->physical_ifc()); // physical_interface::start_biped_physics
 }
