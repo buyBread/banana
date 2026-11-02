@@ -18,6 +18,12 @@ namespace treyarch {
     struct collision_map_t;
     struct hierarchical_entity_proximity_map;
 
+    namespace references {
+        // no region holds it; the byte is set while it's built
+        inline util::memory_reference<collision_map_t> world_collision_map       { 0x0102FFF4 };
+        inline util::memory_reference<u8>              world_collision_map_built { 0x0102FEC1 };
+    } // references
+
     namespace amalga {
         struct worldly_pack_slot;
     } // amalga

@@ -1,5 +1,6 @@
 #include <new>
 
+#include "retail.hh"
 #include "game/trigger.hh"
 #include "treyarch/mm/mm.hh"
 
@@ -40,4 +41,8 @@ void trigger_manager::create_inst() {
     trigger_manager::instance() = allocation ? new (allocation) trigger_manager() : nullptr;
 
     // retail ends with an empty call (nullsub_1)
+}
+
+void trigger_manager::remove_all_tied_triggers(entity_base* ent, bool unk, bool unk_2) {
+    ((void (__thiscall*)(trigger_manager*, entity_base*, bool, bool))retail::sub_739460)(this, ent, unk, unk_2);
 }

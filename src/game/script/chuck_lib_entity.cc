@@ -263,7 +263,7 @@ entity* treyarch::entity_spawn_by_name(mash::string name, string_hash instance_n
         if (!preregistered && spawned->is_a_vehicle())
             retail::sub_6048A0((u32*)spawned);
     } else
-        retail::sub_65DFF0((char*)&instance_name); // generated_name_map_erase
+        generated_name_map_erase(instance_name);
 
     return spawned;
 }

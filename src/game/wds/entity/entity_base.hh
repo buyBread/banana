@@ -425,6 +425,7 @@ namespace treyarch {
         void on_fade_distance_changed(i32 preset_index, only_if_you_know_what_you_are_doing magic);
 
         // sub_6075F0
+        // inlined @ sub_661D70
         bool has_adopted_children() const {
             return adopted_children && !adopted_children->empty();
         }
@@ -446,6 +447,11 @@ namespace treyarch {
         time_interface*        create_time_ifc();
 
         generic_interface* find_ifc_by_name(string_hash name);
+
+    protected:
+        void destroy_ifc_storage();
+
+        static void detach_subtree(entity_base* ent); // children first; nothing is destroyed, only unlinked
 
     private:
         void initialize(mash::allocation_scope scope, u32 new_flags, u32 new_ext_flags, bool create_rel_po);

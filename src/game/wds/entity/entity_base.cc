@@ -5,6 +5,7 @@
 
 #include "retail.hh"
 #include "game/math/references.hh"
+#include "game/trigger.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity_base.hh"
@@ -31,11 +32,78 @@ entity_base::entity_base(const string_hash &new_id, u32 new_flags) : my_parent(n
 entity_base::~entity_base() {
     finalize(mash::ALLOCATED);
 
-    ((void (__thiscall*)(entity_base**, mash::allocation_scope))retail::sub_689610)(&my_parent, mash::ALLOCATED); // my_parent's destructor
+    retail::sub_689610(mash::ALLOCATED); // +0x20's destructor, empty
 }
 
+// sub_660F10
 void entity_base::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(entity_base*, mash::allocation_scope))retail::sub_660F10)(this, scope);
+    destroy_ifc_storage();
+
+    {
+        engine_lock_scope lock(&jq::references::unk_00ffece0.get());
+
+        while (my_child)
+            remove_child(my_child);
+
+        clear_parent();
+        clear_adopted_children();
+    }
+
+    if (!(ext_flags & entity_ext_flag_does_not_manage_abs_po) && my_abs_po != my_rel_po) {
+        mm::free(my_abs_po);
+
+        my_abs_po = nullptr;
+    }
+
+    if (!(flags & entity_flag_member) && !(flags & entity_flag_bone_connector))
+        entity_handle_manager::deregister_entity(this);
+
+    if (retail::sub_63E6C0((u32*)&id)) // the generated name map's find
+        generated_name_map_erase(id);
+
+    trigger_manager::inst()->remove_all_tied_triggers(this, false, true);
+
+    if (unk_03c)
+        mm::free(unk_03c);
+
+    unk_03c = nullptr;
+
+    if (scope == mash::ALLOCATED &&
+        !(flags & entity_flag_member) &&
+        my_rel_po &&
+        !(flags & entity_flag_bone_connector)) {
+
+        mm::free(my_rel_po);
+
+        my_rel_po = nullptr;
+    }
+}
+
+// inlined @ sub_660F10
+// inlined @ sub_64B080
+// inlined @ sub_661D70
+void entity_base::destroy_ifc_storage() {
+    interface_storage* storage = my_ifc_storage;
+
+    if (!storage)
+        return;
+
+    if (storage->dynamic) {
+        retail::sub_642A40((i32)storage); // interface_storage's destructor
+
+        mm::free(storage);
+    } else
+        retail::sub_642BB0((i32***)storage); // interface_storage::destruct_mashed_class
+
+    my_ifc_storage = nullptr;
+}
+
+// sub_640E70
+void entity_base::detach_subtree(entity_base* ent) {
+    while (ent->my_child)
+        detach_subtree(ent->my_child);
+
+    ent->clear_parent();
 }
 
 // sub_64AD70
@@ -124,9 +192,21 @@ void entity_base::construct_mashed_class() {
     initialize(mash::FROM_MASH, 0, 0, true);
 }
 
-// slot 2
+// sub_666A80
+// inlined @ sub_666DB0
 void entity_base::destruct_mashed_class() {
-    ((void (__thiscall*)(entity_base*))retail::sub_666A80)(this);
+    finalize(mash::FROM_MASH);
+
+    id        .destruct_mashed_class();
+    sound_type.destruct_mashed_class();
+
+    if (my_ifc_storage) {
+        retail::sub_642BB0((i32***)my_ifc_storage); // interface_storage::destruct_mashed_class
+
+        my_ifc_storage = nullptr;
+    }
+
+    arch_base::destruct_mashed_class();
 }
 
 // slot 3

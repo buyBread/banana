@@ -2,9 +2,18 @@
 
 #include "game/math/algebra.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class actor;
+
+    namespace references {
+        inline util::memory_reference<u8> unk_00ed61c0 { 0x00ED61C0 };
+    } // references
+
+    void moving_body_cache_erase(actor* the_actor);
+
     class rigid_body {
 
     public:

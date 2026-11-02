@@ -255,6 +255,7 @@ namespace treyarch { namespace vc8 {
             return position;
         }
 
+        // sub_641E00
         // sub_6E62E0
         // sub_759870
         // sub_759930
@@ -339,6 +340,8 @@ namespace treyarch { namespace vc8 {
             return insert(value).first;
         }
 
+        // sub_641EC0
+        // sub_642300
         // sub_6D57A0
         // sub_6D5A60
         // sub_7FB330
@@ -628,6 +631,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_58F9C0
+        // sub_6354E0
         // sub_79B4D0
         // sub_7F85B0
         // sub_802690
@@ -649,6 +653,7 @@ namespace treyarch { namespace vc8 {
             return result;
         }
 
+        // sub_63D030
         // sub_6D6210
         // sub_7549C0
         // sub_754BC0

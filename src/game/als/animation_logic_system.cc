@@ -1300,6 +1300,33 @@ void als::als_res_data::construct_mashed_class() {
     the_als = nullptr;
 }
 
+// sub_5B0310
+void als::als_res_data::finalize(mash::allocation_scope scope) {
+    if (scope != mash::FROM_MASH)
+        return;
+
+    if (the_als) {
+        the_als->delete_instance_data();
+
+        delete the_als;
+    }
+
+    the_als = nullptr;
+}
+
+// sub_5B0370
+void als::als_res_data::destruct_mashed_class() {
+    if (the_als) {
+        the_als->delete_instance_data();
+
+        delete the_als;
+    }
+
+    the_als = nullptr;
+
+    key.destruct_mashed_class();
+}
+
 // sub_5EEF70
 void als::als_res_data::post_unmash_fixup(actor* owner, u32) {
     string_hash none;

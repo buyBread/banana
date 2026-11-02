@@ -17,6 +17,10 @@ rigid_body_prop_head* prop_system::find_rigid_body_prop_head(entity* e) {
     return (rigid_body_prop_head*)retail::sub_811DA0((u32*)e);
 }
 
+void prop_system::destroy_prop(rigid_body_prop_head* rbph) {
+    retail::sub_81C980((u32*)rbph);
+}
+
 bool prop_system::is_stable(rigid_body_prop_head* rbph) {
     return retail::sub_80FAD0((i32)rbph);
 }

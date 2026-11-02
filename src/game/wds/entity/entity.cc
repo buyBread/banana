@@ -2,6 +2,8 @@
 
 #include "retail.hh"
 #include "game/colgeom.hh"
+#include "game/event/default_callbacks.hh"
+#include "game/event/event_manager.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/limbo.hh"
@@ -10,6 +12,7 @@
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -34,8 +37,26 @@ entity::~entity() {
     ((mash::string*)unk_090)->finalize(mash::ALLOCATED);
 }
 
+// sub_64B080
 void entity::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(entity*, mash::allocation_scope))retail::sub_64B080)(this, scope);
+    if (scope == mash::ALLOCATED && time_visibility_info) {
+        mm::free(time_visibility_info);
+
+        time_visibility_info = nullptr;
+    }
+
+    remove_from_regions(false);
+
+    if (flags & entity_flag_in_limbo)
+        limbo::remove_limbo_entity(this);
+
+    if (!(flags & entity_flag_member))
+        event_manager::raise_event(references::deleted.read(), my_handle);
+
+    if (flags & entity_flag_update_regions_every_frame)
+        moved_entities::unregister_entity_to_update_every_frame(this);
+
+    destroy_ifc_storage();
 }
 
 // sub_653FF0
@@ -54,9 +75,16 @@ void entity::construct_mashed_class() {
     regions.clear();
 }
 
-// slot 2
+// sub_666DB0
 void entity::destruct_mashed_class() {
-    ((void (__thiscall*)(entity*))retail::sub_666DB0)(this);
+    finalize(mash::FROM_MASH);
+
+    ((mash::string*)unk_090)->destruct_mashed_class();
+
+    if (time_visibility_info)
+        time_visibility_info = nullptr;
+
+    entity_base::destruct_mashed_class();
 }
 
 // slot 3
@@ -531,6 +559,8 @@ void entity::update_regions(region** new_regions, i32 count) { // a set equal to
 // sub_612D70
 // inlined @ sub_612DB0
 // inlined @ sub_612E30
+// inlined @ sub_64B080
+// inlined @ sub_661D70
 void entity::remove_from_regions(bool update_limbo) {
     if (references::g_world_ptr.read()) {
         while (regions.size())

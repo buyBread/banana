@@ -7,6 +7,7 @@
 #include "game/wds/entity/entity.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -45,7 +46,19 @@ namespace treyarch {
         param_block  overrides;   // what its parameters are overridden with
         ai_core*     core;
 
+        // sub_64B170
+        ~base_ai_data() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
+        void finalize(mash::allocation_scope scope); // core keeps pointing at what it freed
+
         void construct_mashed_class();
+        void destruct_mashed_class();
     };
 
     class movement_info {
@@ -113,10 +126,16 @@ namespace treyarch {
             initialize(mash::ALLOCATED);
         }
 
+        void finalize(mash::allocation_scope scope);
+
         void construct_mashed_class();
+        void destruct_mashed_class();
+
+        void release_script();
 
     private:
         void initialize(mash::allocation_scope scope);
+        void free_records();
     };
 
     namespace references {
@@ -239,6 +258,10 @@ namespace treyarch {
         void get_velocity(vector3d* target) const;
 
         static string_hash my_type_key;
+
+    protected:
+        void release_base_ai_data(mash::allocation_scope scope);
+        void destroy_als(bool allocated);
 
     private:
         void initialize(mash::allocation_scope scope);

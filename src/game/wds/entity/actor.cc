@@ -3,9 +3,14 @@
 
 #include "retail.hh"
 #include "game/als/animation_logic_system.hh"
+#include "game/amalga/resource_manager.hh"
 #include "game/amalga/resource_types.hh"
 #include "game/colgeom.hh"
+#include "game/frontend/frontend_manager.hh"
 #include "game/math/references.hh"
+#include "game/physics/physics_system.hh"
+#include "game/physics/rb_character_controller.hh"
+#include "game/physics/rigid_body_prop_system.hh"
 #include "game/resource_key.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
@@ -15,6 +20,10 @@
 #include "game/wds/entity/capsule_alter_sys.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/conglomerate_clone.hh"
+#include "game/wds/region.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/chuck/vm/script_manager.hh"
+#include "treyarch/chuck/vm/script_object.hh"
 #include "treyarch/jq/jq.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
@@ -27,6 +36,27 @@ string_hash actor::my_type_key { 0x07138E99 }; // "actor"
 void base_ai_data::construct_mashed_class() {
     core_ai_key.construct_mashed_class();
     overrides  .construct_mashed_class();
+}
+
+// sub_4DAC90
+void base_ai_data::finalize(mash::allocation_scope) {
+    if (core) {
+        retail::sub_4D1C30((i32)core); // ai_core's destructor
+
+        mm::free(core);
+    }
+}
+
+// sub_4DACB0
+void base_ai_data::destruct_mashed_class() {
+    if (core) {
+        retail::sub_4D1C30((i32)core); // ai_core's destructor
+
+        mm::free(core);
+    }
+
+    core_ai_key.destruct_mashed_class();
+    overrides  .destruct_mashed_class();
 }
 
 // sub_6396A0
@@ -67,6 +97,91 @@ void advanced_entity_ptrs::initialize(mash::allocation_scope scope) {
     unk_028     = -1;
 }
 
+// inlined @ sub_654070
+// inlined @ sub_64D480
+void advanced_entity_ptrs::free_records() {
+    if (m_render_info) {
+        mm::free(m_render_info);
+
+        m_render_info = nullptr;
+    }
+
+    if (mi) {
+        mm::free(mi);
+
+        mi = nullptr;
+    }
+
+    if (ignore_col_ents) {
+        ignore_col_ents->destroy();
+
+        mm::free(ignore_col_ents);
+
+        ignore_col_ents = nullptr;
+    }
+}
+
+// sub_64D480
+void advanced_entity_ptrs::finalize(mash::allocation_scope scope) {
+    free_records();
+    release_script();
+
+    if (scope != mash::ALLOCATED)
+        return;
+
+    if (script_exe_name)
+        mm::free(script_exe_name);
+
+    script_exe_name = nullptr;
+
+    if (als::als_res_data* als_data = my_als_data) {
+        als_data->finalize(mash::ALLOCATED);
+
+        mm::free(als_data);
+    }
+
+    my_als_data = nullptr;
+}
+
+// sub_654070
+void advanced_entity_ptrs::destruct_mashed_class() {
+    free_records();
+    release_script();
+
+    script_obj_name.destruct_mashed_class();
+
+    if (script_exe_name) {
+        script_exe_name->destruct_mashed_class();
+
+        script_exe_name = nullptr;
+    }
+
+    if (my_als_data) {
+        my_als_data->destruct_mashed_class();
+
+        my_als_data = nullptr;
+    }
+}
+
+// sub_6023E0
+void advanced_entity_ptrs::release_script() {
+    if (!my_script && !unk_01c)
+        return;
+
+    retail::sub_5B4A70(this);
+
+    if (!unk_01c)
+        my_script->parent->remove_instance(my_script, true);
+
+    string_hash key_prefix = script_pack_slot->pack_name.get_hash();
+
+    my_script = nullptr;
+
+    chuck::vm::script_manager::inst()->un_load(script_exe_name->get_hash(), false, key_prefix);
+
+    retail::sub_5B4A70(this);
+}
+
 // inlined @ sub_614190
 void movement_info::add_frame_delta_velocity(vector3d* target) const { // the frame delta's translation over the frame time
     const f32 inverse_time = (f32)(1.0 / (f64)frame_time);
@@ -87,8 +202,135 @@ actor::~actor() {
     finalize(mash::ALLOCATED);
 }
 
+// sub_65AF90
 void actor::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(actor*, mash::allocation_scope))retail::sub_65AF90)(this, scope);
+    if (pack_slot) {
+        amalga::resource_manager::references::unk_010300a8.get().acquire();
+        amalga::resource_manager::references::resource_context_stack_mutex.read()->acquire();
+
+        amalga::resource_manager::push_resource_context(pack_slot);
+    }
+
+    release_base_ai_data(scope);
+
+    if (ext_flags & entity_ext_flag_spawned) {
+        physical_interface* physical = has_physical_ifc() ? physical_ifc() : nullptr;
+
+        if (physical)
+            physical->stop_prop_physics(false);
+        else
+            prop_system::destroy_prop(prop_system::find_rigid_body_prop_head(this));
+    }
+
+    if (references::world_collision_map_built.read() && (flags & entity_flag_needs_collision_proximity_map_update)) {
+        flags &= ~entity_flag_needs_collision_proximity_map_update;
+
+        retail::sub_975020((i32*)&references::world_collision_map.get(), (u32)this); // collision map remove
+    }
+
+    if (rb_cc) {
+        rb_character_controller_pool_free(rb_cc);
+
+        rb_cc = nullptr;
+    }
+
+    moving_body_cache_erase(this);
+
+    replace_colgeom(nullptr);
+
+    if (capsule_alter && !(capsule_alter->flags & capsule_alter_flag_from_mash)) {
+        delete capsule_alter;
+
+        capsule_alter = nullptr;
+    }
+
+    if (last_collision_free_state) {
+        mm::free(last_collision_free_state);
+
+        last_collision_free_state = nullptr;
+    }
+
+    destroy_als(scope == mash::ALLOCATED);
+
+    if (adv_ptrs) {
+        if (ext_flags & entity_ext_flag_alloc_adv_ptrs) {
+            adv_ptrs->finalize(mash::ALLOCATED);
+
+            mm::free(adv_ptrs);
+        } else
+            adv_ptrs->destruct_mashed_class();
+
+        adv_ptrs = nullptr;
+    }
+
+    if (anim_ctrl) {
+        retail::sub_5F6EE0(anim_ctrl); // animation_controller's destructor
+
+        mm::free(anim_ctrl);
+
+        anim_ctrl = nullptr;
+    }
+
+    if (scope == mash::ALLOCATED) {
+        if (m_skeleton_name) {
+            m_skeleton_name->finalize(mash::ALLOCATED);
+
+            mm::free(m_skeleton_name);
+        }
+
+        m_skeleton_name = nullptr;
+    }
+
+    stop_recording();
+
+    mesh = nullptr;
+
+    if (references::frontend.get().igo) {
+        retail::sub_6D90F0((u32*)references::frontend.get().igo, my_handle.value); // glow record removal
+        retail::sub_6D9260((i32)references::frontend.get().igo, my_handle.value);  // target icon removal
+    }
+
+    if (pack_slot) {
+        amalga::resource_manager::pop_resource_context();
+
+        amalga::resource_manager::references::resource_context_stack_mutex.read()->release();
+        amalga::resource_manager::references::unk_010300a8.get().release();
+    }
+}
+
+// inlined @ sub_65AF90
+// inlined @ sub_661D70
+void actor::release_base_ai_data(mash::allocation_scope scope) {
+    if (my_base_ai_data) {
+        retail::sub_5B4A70(my_base_ai_data);
+
+        if (scope == mash::ALLOCATED)
+            delete my_base_ai_data;
+        else
+            my_base_ai_data->destruct_mashed_class();
+    }
+
+    my_base_ai_data = nullptr;
+}
+
+// sub_602450
+void actor::destroy_als(bool allocated) {
+    if (!adv_ptrs)
+        return;
+
+    als::als_res_data* als_data = adv_ptrs->my_als_data;
+
+    if (!als_data)
+        return;
+
+    if (allocated) {
+        als_data->finalize(mash::ALLOCATED);
+
+        mm::free(als_data);
+    } else
+        als_data->destruct_mashed_class();
+
+    adv_ptrs->my_als_data = nullptr;
 }
 
 // sub_613830
@@ -182,9 +424,41 @@ void actor::construct_mashed_class() {
     initialize(mash::FROM_MASH);
 }
 
-// slot 2
+// sub_667470
 void actor::destruct_mashed_class() {
-    ((void (__thiscall*)(actor*))retail::sub_667470)(this);
+    finalize(mash::FROM_MASH);
+
+    if (m_skeleton_name) {
+        m_skeleton_name->destruct_mashed_class();
+
+        m_skeleton_name = nullptr;
+    }
+
+    if (adv_ptrs) {
+        adv_ptrs->destruct_mashed_class();
+
+        adv_ptrs = nullptr;
+    }
+
+    if (colgeom) {
+        colgeom->destruct_mashed_class();
+
+        colgeom = nullptr;
+    }
+
+    if (my_base_ai_data) {
+        my_base_ai_data->destruct_mashed_class();
+
+        my_base_ai_data = nullptr;
+    }
+
+    if (capsule_alter) {
+        capsule_alter->destruct_mashed_class();
+
+        capsule_alter = nullptr;
+    }
+
+    entity::destruct_mashed_class();
 }
 
 // slot 3

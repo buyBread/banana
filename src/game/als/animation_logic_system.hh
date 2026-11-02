@@ -164,7 +164,11 @@ namespace treyarch { namespace als {
         resource_key                      key;
         animation_logic_system_interface* the_als;
 
+        void finalize(mash::allocation_scope scope); // only from mash drops the als
+
         void construct_mashed_class();
+        void destruct_mashed_class();
+
         void post_unmash_fixup(actor* owner, u32 unk);
     };
 

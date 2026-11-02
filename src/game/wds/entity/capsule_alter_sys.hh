@@ -1,6 +1,8 @@
 #pragma once
 
 #include "game/math/algebra/vector3d.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -26,7 +28,21 @@ namespace treyarch {
         u8       reserved_064[0x48];
         u32      flags;
 
+        ~capsule_alter_sys() {
+            finalize(mash::ALLOCATED);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
+
+        // sub_689610
+        void finalize(mash::allocation_scope) {}
+
         void construct_mashed_class();
+
+        // sub_5B4A70
+        void destruct_mashed_class() {}
 
         void set_mode(u32 new_mode);
         void set_custom_capsule(const vector3d &base, const vector3d &end, f32 radius);

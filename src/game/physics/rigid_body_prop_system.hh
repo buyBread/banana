@@ -43,6 +43,8 @@ namespace treyarch {
 
         static rigid_body_prop_head* find_rigid_body_prop_head(entity* e);
 
+        static void destroy_prop(rigid_body_prop_head* rbph);
+
         static bool is_stable(rigid_body_prop_head* rbph); // every piece's body group-stable
     };
 

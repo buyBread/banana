@@ -3,11 +3,16 @@
 #include <new>
 
 #include "retail.hh"
+#include "game/event/default_callbacks.hh"
+#include "game/event/event_manager.hh"
 #include "game/math/references.hh"
+#include "game/trigger.hh"
+#include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/limbo.hh"
 #include "game/wds/entity/moved_entities.hh"
 #include "game/binary_search.hh"
+#include "treyarch/jq/native_locks.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 
@@ -20,8 +25,81 @@ conglomerate::~conglomerate() {
     finalize(mash::ALLOCATED);
 }
 
+// sub_661D70
 void conglomerate::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(conglomerate*, mash::allocation_scope))retail::sub_661D70)(this, scope);
+    if (scope == mash::ALLOCATED && tentacles) {
+        tentacles->clear();
+
+        mm::free(tentacles);
+
+        tentacles = nullptr;
+    }
+
+    if (has_occupant_ifc()) {
+        occupant_interface* occupant = occupant_ifc();
+
+        {
+            engine_lock_scope lock(&jq::references::unk_01003138.get());
+
+            if (occupant->unk_044.resolve()) {
+                event_manager::raise_event(references::car_combat_disengaged.read(), occupant->unk_044.resolve()->my_handle);
+
+                retail::sub_610D70((i32)occupant->unk_044.resolve(), (i32)occupant->my_conglomerate);
+            }
+
+            occupant->unk_044 = arch_base_vhandle();
+        }
+
+        retail::sub_6537D0((u32*)occupant_ifc()); // removes every occupant
+    }
+
+    if (has_adopted_children())
+        clear_adopted_children();
+
+    remove_from_regions(!(conglomerate_flags & conglomerate_flag_is_cloned));
+
+    if (adv_ptrs)
+        adv_ptrs->release_script();
+
+    release_base_ai_data(scope);
+    destroy_ifc_storage();
+    destroy_als(scope == mash::ALLOCATED);
+
+    while (my_child)
+        detach_subtree(my_child);
+
+    clear_parent();
+
+    if (bone_connectors) {
+        for (entity_base** connector = bone_connectors->begin(); connector != bone_connectors->end(); ++connector)
+            delete *connector;
+
+        if (bone_connectors) {
+            bone_connectors->destroy();
+
+            mm::free(bone_connectors);
+        }
+
+        bone_connectors = nullptr;
+    }
+
+    trigger_manager::inst()->remove_all_tied_triggers(this, true, false);
+
+    if (collision_members) {
+        collision_members->destroy();
+
+        mm::free(collision_members);
+    }
+
+    collision_members = nullptr;
+
+    if (light_members) {
+        light_members->destroy();
+
+        mm::free(light_members);
+    }
+
+    light_members = nullptr;
 }
 
 // sub_65B7C0

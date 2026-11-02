@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <utility>
 
-#include "retail.hh"
 #include "game/wds/entity/entity_handle_manager.hh"
+#include "treyarch/jq/native_locks.hh"
 #include "treyarch/mash/string.hh"
 
 using namespace treyarch;
@@ -36,7 +36,33 @@ void entity_handle_manager::register_entity(entity_base* e) {
 
     std::pair<const string_hash, entity_base*> value(e->id, e);
 
-    alignas(4) u8 inserted[8];
+    references::the_map.get().insert(value);
+}
 
-    retail::sub_641E00((i32*)&references::the_map.get(), (i32)inserted, (u32*)&value); // the map's insert
+// sub_644F20
+void entity_handle_manager::deregister_entity(entity_base* e) {
+    if (e->id == string_hash()) // SM3's generic_id::empty_id
+        return;
+
+    vc8::map<string_hash, entity_base*> &the_map = references::the_map.get();
+
+    auto* found = the_map.find(e->id);
+
+    if (found != the_map.end())
+        the_map.erase(found);
+}
+
+// sub_65DFF0
+void treyarch::generated_name_map_erase(const string_hash &id) {
+    engine_lock_scope lock(jq::references::entity_id_manager_allocation_lock.read());
+
+    vc8::map<string_hash, name_pool*> &generated_name_map = references::generated_name_map.get();
+
+    auto* found = generated_name_map.find(id);
+
+    if (found != generated_name_map.end()) {
+        found->value.second->recycled_names.push_back(id);
+
+        generated_name_map.erase(found);
+    }
 }

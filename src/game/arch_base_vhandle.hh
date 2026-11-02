@@ -30,6 +30,7 @@ namespace treyarch {
         // inlined @ sub_615260
         // inlined @ sub_64B1D0
         // inlined @ sub_65B290
+        // inlined @ sub_661D70
         arch_base* resolve() const noexcept {
             if (!value)
                 return nullptr;

@@ -11,6 +11,8 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class entity_base;
+
     namespace references {
         inline util::memory_reference<string_hash> enter { 0x0102C6A8 };
         inline util::memory_reference<string_hash> leave { 0x0102C744 };
@@ -108,6 +110,8 @@ namespace treyarch {
         trigger_manager();
 
         static void create_inst();
+
+        void remove_all_tied_triggers(entity_base* ent, bool unk, bool unk_2);
     };
 
     ASSERT_SIZEOF  (trigger,                 0x38);
