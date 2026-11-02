@@ -32,8 +32,6 @@ namespace treyarch {
         inline util::memory_reference<u8>                  video_confirmation_running { 0x00F4E295 };
         inline util::memory_reference<tl_system_callbacks> system_callbacks           { 0x00F4E2B0 };
         inline util::memory_reference<HINSTANCE>           application_instance       { 0x011136FC };
-        inline util::memory_reference<void*>               nfl_work_space             { 0x01113700 };
-        inline util::memory_reference<u32>                 nfl_work_space_size        { 0x01113704 };
     } // references
 } // treyarch
 
@@ -139,9 +137,11 @@ int WINAPI treyarch::WinMain(HINSTANCE instance, HINSTANCE, LPSTR command_line, 
     jq::jobqueue_init();
 
     const nfl::init_params nfl_params { references::pack_mode.read() ? 1024 : 128, 64, 64, 3, 1 };
-    references::nfl_work_space_size.write(nfl::init(&nfl_params));
-    references::nfl_work_space.write(mm::allocate(references::nfl_work_space_size.read()));
-    nfl::start(references::nfl_work_space.read());
+
+    const u32 nfl_work_space_size = nfl::init(&nfl_params);
+    void*     nfl_work_space      = mm::allocate(nfl_work_space_size);
+
+    nfl::start(nfl_work_space);
 
     std::srand(_time32(nullptr));
 
