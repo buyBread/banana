@@ -90,8 +90,8 @@ namespace treyarch {
         void update(f32 time_inc) override;
         void render() override;
         void spawn_entity() override;
-        i32  unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
-        i32  unk_047(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) override;
+        i32  render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
+        i32  render_child_widget(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) override;
 
         bool is_conversation_active();
 

@@ -36,7 +36,8 @@ namespace treyarch {
         vector3d                      scale_offset;
         vector3d                      color;
         vector2d                      uv_offset;
-        u8                            reserved_044[0x08];
+        i32                           unk_044;
+        i32                           unk_048;
         arch_base_vhandle             entity_vh;
         bool                          entity_spawned;      // spawn_entity latches it, release_entity clears it
         u8                            reserved_051[0x0F];
@@ -101,8 +102,8 @@ namespace treyarch {
         virtual void set_suppression_mask(u32 mask);
         virtual void set_color(f32 r, f32 g, f32 b);
         virtual void set_uv_offset(f32 u, f32 v);
-        virtual void unk_020(u32 value);
-        virtual void unk_021(u32 value);
+        virtual void unk_020(i32 value);
+        virtual void unk_021(i32 value);
 
         virtual f32  get_position_x();
         virtual f32  get_position_y();
@@ -129,15 +130,15 @@ namespace treyarch {
         virtual void render_entity();
         virtual void spawn_entity();
 
-        virtual i32   unk_043(i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3);
-        virtual i32   unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
-        virtual i32   unk_045(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3);
-        virtual i32   unk_046(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   unk_047(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   unk_048(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
-        virtual void  unk_049(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   unk_050();
-        virtual void* unk_051();
+        virtual i32   render_mesh                (i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3);
+        virtual i32   render_congomerate_mesh    (i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
+        virtual i32   render_mesh_from_parameters(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3);
+        virtual i32   render_text                (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   render_child_widget        (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   render_value_mesh          (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
+        virtual void  render_value_text          (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
+        virtual i32   create_child_texts();
+        virtual void* create_child_widgets();
         virtual void  unk_052();
         virtual void  unk_053();
 
@@ -160,6 +161,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget, scale_offset,                0x024);
     ASSERT_OFFSETOF(igo_3d_widget, color,                       0x030);
     ASSERT_OFFSETOF(igo_3d_widget, uv_offset,                   0x03C);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_044,                     0x044);
+    ASSERT_OFFSETOF(igo_3d_widget, unk_048,                     0x048);
     ASSERT_OFFSETOF(igo_3d_widget, entity_vh,                   0x04C);
     ASSERT_OFFSETOF(igo_3d_widget, entity_spawned,              0x050);
     ASSERT_OFFSETOF(igo_3d_widget, trans_matrix,                0x060);

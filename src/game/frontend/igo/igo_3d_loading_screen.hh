@@ -51,7 +51,7 @@ namespace treyarch {
         void render() override;
         void set_shown(bool shown) override;
         void spawn_entity() override;
-        i32  unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
+        i32  render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
 
         void blackscreen_on (f32 time, bool unk, bool hold, bool silent, bool no_freeze, f32 timeout);
         void blackscreen_off(f32 time, bool force); // nothing while held, unless forced or a mission is running

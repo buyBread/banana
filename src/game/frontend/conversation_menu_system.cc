@@ -297,7 +297,7 @@ void conversation_menu_system::spawn_entity() {
 }
 
 // +0x10 slot 44
-i32 conversation_menu_system::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
+i32 conversation_menu_system::render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, void*, i32, i32, i32))retail::sub_6B40F0)((igo_3d_widget*)this,
                                                                                                    unk_0,
                                                                                                    unk_1,
@@ -308,7 +308,7 @@ i32 conversation_menu_system::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk
 }
 
 // +0x10 slot 47
-i32 conversation_menu_system::unk_047(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
+i32 conversation_menu_system::render_child_widget(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32, i32))retail::sub_68C200)((igo_3d_widget*)this,
                                                                                             unk_0,
                                                                                             unk_1,

@@ -137,7 +137,7 @@ void igo_3d_loading_screen::spawn_entity() {
 }
 
 // slot 44
-i32 igo_3d_loading_screen::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
+i32 igo_3d_loading_screen::render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
     return ((i32 (__thiscall*)(igo_3d_loading_screen*, i32, i32, void*, i32, i32, i32))retail::sub_6A9F80)(this,
                                                                                                            unk_0,
                                                                                                            unk_1,

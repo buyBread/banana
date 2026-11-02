@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "retail.hh"
 #include "game/animation/animation_controller.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
@@ -33,9 +35,7 @@ igo_3d_widget::~igo_3d_widget() {
 }
 
 // slot 1
-void igo_3d_widget::init() {
-    ((void (__thiscall*)(igo_3d_widget*))retail::sub_5B4A70)(this);
-}
+void igo_3d_widget::init() {}
 
 // slot 2
 void igo_3d_widget::update(f32 time_inc) {
@@ -52,19 +52,29 @@ u8 igo_3d_widget::is_shown() {
     return ((u8 (__thiscall*)(igo_3d_widget*))retail::sub_698430)(this);
 }
 
-// slot 5
+// sub_6AE420
 void igo_3d_widget::set_shown(bool shown) {
-    ((void (__thiscall*)(igo_3d_widget*, bool))retail::sub_6AE420)(this, shown);
+    if (shown)
+        flags |= 1;
+    else
+        flags &= ~1;
 }
 
-// slot 6
+// sub_6B1C30
 void igo_3d_widget::set_position(f32 x, f32 y, f32 z) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32, f32))retail::sub_6B1C30)(this, x, y, z);
+    parameters->position.set_x(x);
+    parameters->position.set_y(y);
+    parameters->position.set_z(z);
+
+    parameters->update_transform_matrix();
 }
 
-// slot 7
+// sub_6B1C00
 void igo_3d_widget::set_center_pos(f32 x, f32 y) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32))retail::sub_6B1C00)(this, x, y);
+    parameters->position.set_x(x);
+    parameters->position.set_y(y);
+
+    parameters->update_transform_matrix();
 }
 
 // slot 8
@@ -72,69 +82,84 @@ void igo_3d_widget::get_position(f32* x, f32* y) {
     ((void (__thiscall*)(igo_3d_widget*, f32*, f32*))retail::sub_689890)(this, x, y);
 }
 
-// slot 9
+// sub_6B1C70
 void igo_3d_widget::set_position_z(f32 z) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6B1C70)(this, z);
+    parameters->position.set_z(z);
+
+    parameters->update_transform_matrix();
 }
 
-// slot 10
+// sub_6B1C90
 void igo_3d_widget::set_rotation_angle(f32 angle) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6B1C90)(this, angle);
+    parameters->rotation_angle = angle;
+
+    parameters->update_transform_matrix();
 }
 
-// slot 11
+// sub_6B1CB0
 void igo_3d_widget::set_tilt_angle(f32 angle) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6B1CB0)(this, angle);
+    parameters->tilt_angle = angle;
+
+    parameters->update_transform_matrix();
 }
 
-// slot 12
+// sub_6B1CD0
 void igo_3d_widget::set_spin_angle(f32 angle) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6B1CD0)(this, angle);
+    parameters->spin_angle = angle;
+
+    parameters->update_transform_matrix();
 }
 
-// slot 13
+// sub_68FAD0
 void igo_3d_widget::set_scale(f32 scale) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_68FAD0)(this, scale);
+    parameters->scale = scale;
 }
 
-// slot 14
+// sub_6898B0
 void igo_3d_widget::set_scale_offset(f32 x, f32 y, f32 z) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32, f32))retail::sub_6898B0)(this, x, y, z);
+    scale_offset.x = x;
+    scale_offset.y = z;
+    scale_offset.z = y;
 }
 
-// slot 15
+// sub_6898E0
 void igo_3d_widget::set_alpha(f32 value) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6898E0)(this, value);
+    alpha = value;
 }
 
-// slot 16
+// sub_6B1CF0
 void igo_3d_widget::set_widescreen_alignment(igo_3d_widget_parameters::e_wide_align_flags alignment) {
-    ((void (__thiscall*)(igo_3d_widget*, igo_3d_widget_parameters::e_wide_align_flags))retail::sub_6B1CF0)(this, alignment);
+    parameters->widescreen_align = alignment;
+
+    parameters->update_transform_matrix();
 }
 
-// slot 17
+// sub_6898F0
 void igo_3d_widget::set_suppression_mask(u32 mask) {
-    ((void (__thiscall*)(igo_3d_widget*, u32))retail::sub_6898F0)(this, mask);
+    parameters->suppression_mask = mask;
 }
 
-// slot 18
+// sub_689900
 void igo_3d_widget::set_color(f32 r, f32 g, f32 b) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32, f32))retail::sub_689900)(this, r, g, b);
+    color.x = std::clamp(r, 0.0f, 1.0f);
+    color.y = std::clamp(g, 0.0f, 1.0f);
+    color.z = std::clamp(b, 0.0f, 1.0f);
 }
 
-// slot 19
+// sub_689980
 void igo_3d_widget::set_uv_offset(f32 u, f32 v) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32))retail::sub_689980)(this, u, v);
+    uv_offset.x = u;
+    uv_offset.y = v;
 }
 
 // slot 20
-void igo_3d_widget::unk_020(u32 value) {
-    ((void (__thiscall*)(igo_3d_widget*, u32))retail::sub_5B00D0)(this, value);
+void igo_3d_widget::unk_020(i32 value) {
+    unk_044 = value;
 }
 
-// slot 21
-void igo_3d_widget::unk_021(u32 value) {
-    ((void (__thiscall*)(igo_3d_widget*, u32))retail::sub_4F8A30)(this, value);
+// sub_4F8A30
+void igo_3d_widget::unk_021(i32 value) {
+    unk_048 = value;
 }
 
 // slot 22
@@ -202,9 +227,9 @@ i32 igo_3d_widget::unk_034() {
     return ((i32 (__thiscall*)(igo_3d_widget*))retail::sub_699BC0)(this);
 }
 
-// slot 35
+// sub_6F6750
 void igo_3d_widget::set_scale_factor(f32 factor) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6F6750)(this, factor);
+    scale_factor = factor;
 }
 
 // slot 36
@@ -212,9 +237,9 @@ f32 igo_3d_widget::get_scale_factor() {
     return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F85E0)(this);
 }
 
-// slot 37
+// sub_6F85F0
 void igo_3d_widget::set_alpha_factor(f32 factor) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_6F85F0)(this, factor);
+    alpha_factor = factor;
 }
 
 // slot 38
@@ -222,22 +247,27 @@ f32 igo_3d_widget::get_alpha_factor() {
     return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F6760)(this);
 }
 
-// slot 39
+// sub_68AC20
 void igo_3d_widget::play_sound(string_hash sound) {
-    ((void (__thiscall*)(igo_3d_widget*, string_hash))retail::sub_68AC20)(this, sound);
+    if (is_shown())
+        retail::sub_900D60(sound.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
 }
 
-// slot 40
+// sub_68AC60
 void igo_3d_widget::start_timed_move(f32 duration, f32 from_x, f32 from_y, f32 from_z, f32 to_x, f32 to_y, f32 to_z, i32 curve) {
-    ((void (__thiscall*)(igo_3d_widget*, f32, f32, f32, f32, f32, f32, f32, i32))retail::sub_68AC60)(this,
-                                                                                                     duration,
-                                                                                                     from_x,
-                                                                                                     from_y,
-                                                                                                     from_z,
-                                                                                                     to_x,
-                                                                                                     to_y,
-                                                                                                     to_z,
-                                                                                                     curve);
+    if (is_anim_playing() || 0.0f > duration)
+        return;
+
+    move_elapsed  = 0.0f;
+    move_duration = duration;
+    move_from.x   = from_x;
+    move_from.y   = from_y;
+    move_from.z   = from_z;
+    move_to.x     = to_x;
+    move_to.y     = to_y;
+    move_to.z     = to_z;
+    moving        = true;
+    move_curve    = curve;
 }
 
 // slot 41
@@ -251,12 +281,12 @@ void igo_3d_widget::spawn_entity() {
 }
 
 // slot 43
-i32 igo_3d_widget::unk_043(i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3) {
+i32 igo_3d_widget::render_mesh(i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, void*, i32, i32))retail::sub_689A40)(this, unk_0, unk_1, unk_2, unk_3);
 }
 
 // slot 44
-i32 igo_3d_widget::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
+i32 igo_3d_widget::render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, void*, i32, i32, i32))retail::sub_689AD0)(this,
                                                                                                    unk_0,
                                                                                                    unk_1,
@@ -267,22 +297,22 @@ i32 igo_3d_widget::unk_044(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk
 }
 
 // slot 45
-i32 igo_3d_widget::unk_045(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3) {
+i32 igo_3d_widget::render_mesh_from_parameters(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32))retail::sub_68A130)(this, unk_0, unk_1, unk_2, unk_3);
 }
 
 // slot 46
-i32 igo_3d_widget::unk_046(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
+i32 igo_3d_widget::render_text(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32, i32))retail::sub_68A1C0)(this, unk_0, unk_1, unk_2, unk_3, unk_4);
 }
 
 // slot 47
-i32 igo_3d_widget::unk_047(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
+i32 igo_3d_widget::render_child_widget(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32, i32))retail::sub_68A1E0)(this, unk_0, unk_1, unk_2, unk_3, unk_4);
 }
 
 // slot 48
-i32 igo_3d_widget::unk_048(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
+i32 igo_3d_widget::render_value_mesh(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
     return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32, i32, i32))retail::sub_6B1E40)(this,
                                                                                                  unk_0,
                                                                                                  unk_1,
@@ -293,30 +323,25 @@ i32 igo_3d_widget::unk_048(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4
 }
 
 // slot 49
-void igo_3d_widget::unk_049(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
+void igo_3d_widget::render_value_text(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4) {
     ((void (__thiscall*)(igo_3d_widget*, i32, i32, i32, i32, i32))retail::sub_6997E0)(this, unk_0, unk_1, unk_2, unk_3, unk_4);
 }
 
 // slot 50
-i32 igo_3d_widget::unk_050() {
+i32 igo_3d_widget::create_child_texts() {
     return ((i32 (__thiscall*)(igo_3d_widget*))retail::sub_70B160)(this);
 }
 
 // slot 51
-void* igo_3d_widget::unk_051() {
+void* igo_3d_widget::create_child_widgets() {
     return ((void* (__thiscall*)(igo_3d_widget*))retail::sub_700FC0)(this);
 }
 
 // slot 52
-void igo_3d_widget::unk_052() {
-    ((void (__thiscall*)(igo_3d_widget*))retail::sub_5B4A70)(this);
-}
+void igo_3d_widget::unk_052() {}
 
 // slot 53
-void igo_3d_widget::unk_053() {
-    ((void (__thiscall*)(igo_3d_widget*))retail::sub_5B4A70)(this);
-}
-
+void igo_3d_widget::unk_053() {}
 
 // sub_699C40
 // inlined @ sub_6DE490
