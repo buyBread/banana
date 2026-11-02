@@ -655,10 +655,10 @@ bool slf__bring_up_3d_dialog__num__num__num__t::operator()(chuck::vm::vm_stack &
 
         igo_3d_pauseless_dialog_widget* dialog = references::frontend.get().igo->pauseless_dialog;
 
-        retail::sub_6A2280((u32*)dialog, 410); // button 2 text
-        retail::sub_6A2260((u32*)dialog, 344); // button 1 text
-        retail::sub_68E950((i32)dialog, show_button_2 != 0.0f);
-        retail::sub_68E920((i32)dialog, show_button_1 != 0.0f);
+        dialog->set_button_2_text(410);
+        dialog->set_button_1_text(344);
+        dialog->show_button_2(show_button_2 != 0.0f);
+        dialog->show_button_1(show_button_1 != 0.0f);
         dialog->igo_3d_dialog_widget::bring_up(2);
 
         return false;
@@ -1747,22 +1747,22 @@ bool slf__show_mission_success_screen__num__num__t::operator()(chuck::vm::vm_sta
     dialog->unk_22c = 0;
 
     if (type == 0.0f) {
-        retail::sub_6A2260((u32*)dialog, 410); // button 1 text
-        retail::sub_68E920((i32)dialog, 1);
-        retail::sub_6A2280((u32*)dialog, 689); // button 2 text
-        retail::sub_68E950((i32)dialog, 1);
+        dialog->set_button_1_text(410);
+        dialog->show_button_1(true);
+        dialog->set_button_2_text(689);
+        dialog->show_button_2(true);
     } else {
-        retail::sub_68E920((i32)dialog, 0);
+        dialog->show_button_1(false);
 
         if (type == 1.0f) {
-            retail::sub_6A2280((u32*)dialog, 689);
-            retail::sub_68E950((i32)dialog, 1);
+            dialog->set_button_2_text(689);
+            dialog->show_button_2(true);
         } else if (type == 2.0f) {
-            retail::sub_6A2280((u32*)dialog, 3043);
-            retail::sub_68E950((i32)dialog, 1);
+            dialog->set_button_2_text(3043);
+            dialog->show_button_2(true);
         } else if (type == 3.0f) {
-            retail::sub_6A2280((u32*)dialog, 410);
-            retail::sub_68E950((i32)dialog, 1);
+            dialog->set_button_2_text(410);
+            dialog->show_button_2(true);
         }
     }
 

@@ -19,7 +19,10 @@ namespace treyarch {
         void          (__thiscall* set_h_justification)(igo_3d_text* self, i32 just_flags);
         void          (__thiscall* set_v_justification)(igo_3d_text* self, i32 just_flags);
         void          (__thiscall* set_word_wrap)(igo_3d_text* self, bool wrap);
-        void*         reserved_02c[4];
+        void*         reserved_02c;
+        void          (__thiscall* set_unk_18)(igo_3d_text* self, bool value);
+        void*         reserved_034;
+        void          (__thiscall* set_text_by_id)(igo_3d_text* self, u32 text_id);
         void          (__thiscall* set_text_no_localize)(igo_3d_text* self, mash::string text); // owns the string
         void          (__thiscall* set_font)(igo_3d_text* self, i32 font, i32 mat_type);
         void*         reserved_044;
@@ -89,6 +92,14 @@ namespace treyarch {
 
         void set_word_wrap(bool wrap) {
             vtable->set_word_wrap(this, wrap);
+        }
+
+        void set_unk_18(bool value) {
+            vtable->set_unk_18(this, value);
+        }
+
+        void set_text_by_id(u32 text_id) {
+            vtable->set_text_by_id(this, text_id);
         }
 
         void set_text_no_localize(const char* text) { // the slot owns the string built here

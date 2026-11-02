@@ -784,14 +784,14 @@ void mission_manager::process_state_start_mission_failed_dialog() {
     dialog->unk_22c = 0;
 
     if (is_quitable) {
-        retail::sub_6A2260((u32*)dialog, 347);
-        retail::sub_68E920((i32)dialog, 1);
-        retail::sub_6A2280((u32*)dialog, 344);
-        retail::sub_68E950((i32)dialog, 1);
+        dialog->set_button_1_text(347);
+        dialog->show_button_1(true);
+        dialog->set_button_2_text(344);
+        dialog->show_button_2(true);
     } else {
-        retail::sub_6A2280((u32*)dialog, 347);
-        retail::sub_68E950((i32)dialog, 1);
-        retail::sub_68E920((i32)dialog, 0);
+        dialog->set_button_2_text(347);
+        dialog->show_button_2(true);
+        dialog->show_button_1(false);
     }
 
     dialog->igo_3d_dialog_widget::bring_up(1);

@@ -176,14 +176,14 @@ void cross_neighborhood_spawn::update_arrival(bool arrived) { // marks the goto 
 
             references::frontend.get().igo->pauseless_dialog->clear();
 
-            retail::sub_6A2280((u32*)references::frontend.get().igo->pauseless_dialog, 410); // button 2 text
-            retail::sub_68E950((i32)references::frontend.get().igo->pauseless_dialog, 1);    // shows button 2
-            retail::sub_6A2260((u32*)references::frontend.get().igo->pauseless_dialog, 234); // button 1 text
-            retail::sub_68E920((i32)references::frontend.get().igo->pauseless_dialog, 1);    // shows button 1
+            references::frontend.get().igo->pauseless_dialog->set_button_2_text(410);
+            references::frontend.get().igo->pauseless_dialog->show_button_2(true);
+            references::frontend.get().igo->pauseless_dialog->set_button_1_text(234);
+            references::frontend.get().igo->pauseless_dialog->show_button_1(true);
 
             references::frontend.get().igo->pauseless_dialog->set_title_by_id(3330);
             references::frontend.get().igo->pauseless_dialog->set_text("");
-            references::frontend.get().igo->pauseless_dialog->unk_076(2);
+            references::frontend.get().igo->pauseless_dialog->select_button(2);
             references::frontend.get().igo->pauseless_dialog->igo_3d_dialog_widget::bring_up(1);
 
             dialog_callback_id = event_manager::add_default_callback(references::dialog_3d_selection.read(),

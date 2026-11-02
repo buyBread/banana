@@ -385,9 +385,9 @@ void ui_frontend::on_player_faded_out() {
     references::frontend.get().igo->pauseless_dialog->set_text("");
     references::frontend.get().igo->pauseless_dialog->set_title_by_id(3234);
 
-    retail::sub_6A2280((u32*)references::frontend.get().igo->pauseless_dialog, 410); // button 2 text
-    retail::sub_68E950((i32)references::frontend.get().igo->pauseless_dialog, 1);    // shows button 2
-    retail::sub_68E920((i32)references::frontend.get().igo->pauseless_dialog, 0);    // hides button 1
+    references::frontend.get().igo->pauseless_dialog->set_button_2_text(410);
+    references::frontend.get().igo->pauseless_dialog->show_button_2(true);
+    references::frontend.get().igo->pauseless_dialog->show_button_1(false);
 
     references::frontend.get().igo->pauseless_dialog->igo_3d_dialog_widget::bring_up(2);
 
@@ -479,8 +479,10 @@ void ui_frontend::rebuild_input_device_widgets() {
         allocation       = mm::allocate(sizeof(igo_3d_pauseless_dialog_widget));
         pauseless_dialog = allocation ? (igo_3d_pauseless_dialog_widget*)retail::sub_70D830((u32*)allocation) : nullptr;
 
-        if (pauseless_dialog)
+        if (pauseless_dialog) {
+            pauseless_dialog->stamp_source_vtables();
             pauseless_dialog->init();
+        }
     }
 
     if (conversation_menu_system) {

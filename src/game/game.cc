@@ -193,6 +193,7 @@ void game::one_time_init_stuff() {
     frontend.igo->objective_text->stamp_source_vtable();
     frontend.igo->hint_text->stamp_source_vtable();
     frontend.igo->radar_widget->stamp_source_vtable();
+    frontend.igo->pauseless_dialog->stamp_source_vtables();
 
     if (!references::pack_mode.read())
         retail::sub_9874E0();
