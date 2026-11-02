@@ -47,16 +47,26 @@ namespace treyarch {
         bool                                   unk_09e;
         u8                                     pad_09f;
         sound_response                         unk_0a0;
-        u8                                     reserved_0b0[0x14];
+        bool                                   sliding;                  // the main panel slides from slide_from to slide_to
+        u8                                     pad_0b1[0x03];
+        f32                                    slide_elapsed;
+        f32                                    slide_to;
+        f32                                    slide_from;
+        f32                                    main_panel_x;             // the main panel's x at construction
         f32                                    unk_0c4;
 
         explicit igo_3d_scrapbook(mash::generating_vtable_version so_do_nothing) : igo_generic_input_listener(so_do_nothing) {}
 
         ~igo_3d_scrapbook() override;
 
-        // writes the source vptr over a scrapbook the retail constructor built
+        // writes the source vptrs over a scrapbook the retail constructor built, its tab pages included
         void stamp_source_vtable() {
             *(mash::vtable_value_t*)this = mash::generate_vtable<igo_3d_scrapbook>();
+
+            tab_pages->stamp_source_vtable();
+            sub_tab_pages->stamp_source_vtable();
+
+            ((igo_3d_scrapbook_skills*)stations[1])->tab_pages->stamp_source_vtable();
         }
 
         void unk_001(i32 unk) override;
@@ -83,7 +93,16 @@ namespace treyarch {
         virtual void unk_028();
         virtual u8   is_active();
         virtual bool unk_030();
-        virtual bool unk_031();
+        virtual bool can_open();
+
+        igo_3d_scrapbook_station_widget* current_station(); // null when current_page is out of range
+
+        bool is_background_fading(); // the dialog background is fading in or out
+
+        void set_page(i32 request, bool animate, i32 unlock); // moves to the first unlocked page the request reaches
+        i32  first_unlocked_page(i32 request, i32 unlock);
+        void clear_page_unlocks();
+        bool is_any_page_locked();
     };
 
     ASSERT_SIZEOF  (igo_3d_scrapbook,                  0xC8);
@@ -98,5 +117,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_scrapbook, unk_080,         0x80);
     ASSERT_OFFSETOF(igo_3d_scrapbook, unk_09c,         0x9C);
     ASSERT_OFFSETOF(igo_3d_scrapbook, unk_0a0,         0xA0);
+    ASSERT_OFFSETOF(igo_3d_scrapbook, sliding,         0xB0);
+    ASSERT_OFFSETOF(igo_3d_scrapbook, slide_elapsed,   0xB4);
+    ASSERT_OFFSETOF(igo_3d_scrapbook, slide_to,        0xB8);
+    ASSERT_OFFSETOF(igo_3d_scrapbook, slide_from,      0xBC);
+    ASSERT_OFFSETOF(igo_3d_scrapbook, main_panel_x,    0xC0);
     ASSERT_OFFSETOF(igo_3d_scrapbook, unk_0c4,         0xC4);
 } // treyarch

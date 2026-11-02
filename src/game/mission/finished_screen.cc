@@ -31,13 +31,13 @@ void mission_manager::handle_finished_dialog_selection() {
         references::frontend.get().igo->scrapbook->activate(false);
 
         retail::sub_68FF60((u32*)references::frontend.get().igo->scrapbook);
-        retail::sub_6BC990((u32*)references::frontend.get().igo->scrapbook, 1, 1, 0); // set page
+        references::frontend.get().igo->scrapbook->set_page(1, true, 0);
         retail::sub_711FB0((u32*)references::frontend.get().igo->scrapbook, 0);
     } else if (success_screen_type == 2) {
         references::frontend.get().igo->scrapbook->activate(false);
 
         retail::sub_68FF60((u32*)references::frontend.get().igo->scrapbook);
-        retail::sub_6BC990((u32*)references::frontend.get().igo->scrapbook, 1, 1, 0); // set page
+        references::frontend.get().igo->scrapbook->set_page(1, true, 0);
         retail::sub_711FB0((u32*)references::frontend.get().igo->scrapbook, 2);
         retail::sub_6BCC90((u32*)references::frontend.get().igo->scrapbook, success_screen_parameter);
     }

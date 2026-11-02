@@ -916,6 +916,7 @@ void igo_3d_widget::reset_anim_speeds() {
 // inlined @ sub_6F9470
 // inlined @ sub_6F90E0
 // inlined @ sub_6F9A90
+// inlined @ sub_6FAFF0
 // inlined @ sub_6FBD30
 // inlined @ sub_6FC080
 void igo_3d_widget::release_entity() {

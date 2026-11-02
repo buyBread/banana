@@ -11,6 +11,8 @@
 #include "game/mission/mission_manager.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/soap/online.hh"
+#include "treyarch/soap/soap.hh"
+#include "treyarch/soap/storage.hh"
 
 using namespace treyarch;
 
@@ -51,9 +53,15 @@ void igo_3d_scrapbook::unk_001(i32 unk) {
     ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_7160E0)(this, unk);
 }
 
-// slot 2
+// sub_6BC560
 void igo_3d_scrapbook::unk_002(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC560)(this, unk);
+    if (is_background_fading())
+        return;
+
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (station && station->unk_082() && unk_0c4 > 0.5f)
+        unk_028();
 }
 
 // slot 3
@@ -91,19 +99,35 @@ void igo_3d_scrapbook::unk_009(i32 unk) {
     ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC830)(this, unk);
 }
 
-// slot 10
+// sub_6BC870
 void igo_3d_scrapbook::unk_010(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC870)(this, unk);
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (unk_09d) {
+        if (!is_background_fading() && unk_0c4 > 0.5f)
+            unk_028();
+
+        return;
+    }
+
+    if (station)
+        station->page_on_cancel(unk);
 }
 
-// slot 11
+// sub_6BC8F0
 void igo_3d_scrapbook::unk_011(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC8F0)(this, unk);
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (station && !station->has_open_dialog())
+        station->select_previous(unk);
 }
 
-// slot 12
+// sub_6BC940
 void igo_3d_scrapbook::unk_012(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC940)(this, unk);
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (station && !station->has_open_dialog())
+        station->select_next(unk);
 }
 
 // slot 13
@@ -116,14 +140,24 @@ void igo_3d_scrapbook::unk_014(i32 unk) {
     ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6D1D40)(this, unk);
 }
 
-// slot 15
+// sub_6BC5D0
 void igo_3d_scrapbook::unk_015(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC5D0)(this, unk);
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (station && station->unk_078())
+        station->unk_071(unk);
+    else
+        unk_003(unk);
 }
 
-// slot 16
+// sub_6BC680
 void igo_3d_scrapbook::unk_016(i32 unk) {
-    ((void (__thiscall*)(igo_3d_scrapbook*, i32))retail::sub_6BC680)(this, unk);
+    igo_3d_scrapbook_station_widget* station = current_station();
+
+    if (station && station->unk_078())
+        station->unk_072(unk);
+    else
+        unk_004(unk);
 }
 
 // slot 24
@@ -136,9 +170,22 @@ void igo_3d_scrapbook::unk_025(f32 unk) {
     ((void (__thiscall*)(igo_3d_scrapbook*, f32))retail::sub_6D1170)(this, unk);
 }
 
-// slot 26
+// sub_68FF10
 void igo_3d_scrapbook::draw_pages() {
-    ((void (__thiscall*)(igo_3d_scrapbook*))retail::sub_68FF10)(this);
+    if (!active)
+        return;
+
+    if (tab_pages)
+        tab_pages->render();
+
+    if (sub_tab_pages)
+        sub_tab_pages->render();
+
+    if (main_panel)
+        main_panel->render();
+
+    if (pause_bar)
+        pause_bar->render();
 }
 
 // sub_6D15D0
@@ -186,7 +233,7 @@ void igo_3d_scrapbook::activate(bool unk) {
     for (u32 index = 0; index < stations.size(); ++index) {
         if (stations[index]) {
             stations[index]->unk_054();
-            stations[index]->unk_057();
+            stations[index]->put_away();
         }
     }
 
@@ -205,7 +252,7 @@ void igo_3d_scrapbook::activate(bool unk) {
 
     current_page = -1;
 
-    retail::sub_6BC990((u32*)this, 0, 0, 0); // switches to the first unlocked page
+    set_page(0, false, 0);
 
     unk_09d = unk;
 
@@ -305,7 +352,116 @@ bool igo_3d_scrapbook::unk_030() {
     return ((bool (__thiscall*)(igo_3d_scrapbook*))retail::sub_690030)(this);
 }
 
-// slot 31
-bool igo_3d_scrapbook::unk_031() {
-    return ((bool (__thiscall*)(igo_3d_scrapbook*))retail::sub_68FF90)(this);
+// sub_68FF90
+bool igo_3d_scrapbook::can_open() {
+    ui_frontend* frontend = references::frontend.get().igo;
+
+    if (frontend->zoom_map && frontend->zoom_map->is_zooming)
+        return false;
+
+    if (frontend->modal_save_dialog && frontend->modal_save_dialog->is_shown())
+        return false;
+
+    if (frontend->generic_modal_dialog && frontend->generic_modal_dialog->is_shown())
+        return false;
+
+    if (soap::storage::inst()->busy() == 1 && soap::references::enable_storage.read())
+        return false;
+
+    game* the_game = references::game.read();
+
+    if (the_game && the_game->data && retail::sub_77CA40((u32*)the_game->data))
+        return false;
+
+    return !sliding;
+}
+
+// inlined @ sub_6BC560
+// inlined @ sub_6BC5D0
+// inlined @ sub_6BC680
+// inlined @ sub_6BC870
+// inlined @ sub_6BC8F0
+// inlined @ sub_6BC940
+igo_3d_scrapbook_station_widget* igo_3d_scrapbook::current_station() {
+    if (current_page < 0 || current_page >= (i32)stations.size())
+        return nullptr;
+
+    return stations[current_page];
+}
+
+// inlined @ sub_6BC560
+// inlined @ sub_6BC870
+bool igo_3d_scrapbook::is_background_fading() {
+    u32 mode = references::frontend.get().igo->background_effect_mode;
+
+    return mode == 2 || mode == 3;
+}
+
+// sub_6BC990
+void igo_3d_scrapbook::set_page(i32 request, bool animate, i32 unlock) {
+    i32 page     = first_unlocked_page(request, unlock);
+    i32 old_page = current_page;
+
+    if (page == old_page)
+        return;
+
+    if (old_page >= 0 && old_page < (i32)stations.size() && stations[old_page])
+        stations[old_page]->put_away();
+
+    current_page = page;
+
+    retail::sub_9EB5D0((u32*)soap::online::inst(), 4, current_page); // online::set_context
+
+    soap::online::inst()->method_024(1);
+
+    if (current_page >= 0 && current_page < (i32)stations.size() && stations[current_page])
+        stations[current_page]->bring_up();
+
+    // the pages sit in a strip, the last one at main_panel_x
+    f32 from = (f32)(stations.size() - old_page - 1) * -803.0f + main_panel_x + 0.0f;
+    f32 to   = (f32)(stations.size() - page - 1)     * -803.0f + main_panel_x + 0.0f;
+
+    if (animate) {
+        slide_elapsed = 0.0f;
+        slide_from    = from;
+        sliding       = true;
+        slide_to      = to;
+    } else if (main_panel) {
+        f32 z = main_panel->get_position_z();
+        f32 y = main_panel->get_position_y();
+
+        main_panel->set_position(to, y, z);
+    }
+
+    if (tab_pages)
+        tab_pages->set_current_tab(current_page);
+}
+
+// sub_6A5290
+i32 igo_3d_scrapbook::first_unlocked_page(i32 request, i32 unlock) {
+    if (request == 0) {
+        if (stations[0]->is_unlocked(unlock))
+            return 0;
+    } else if (request != 1)
+        return 2;
+
+    return stations[1]->is_unlocked(unlock) ? 1 : 2;
+}
+
+// sub_6A5570
+void igo_3d_scrapbook::clear_page_unlocks() {
+    for (u32 index = 0; index < stations.size(); ++index) {
+        if (stations[index])
+            stations[index]->page_unlocked = false;
+    }
+}
+
+// sub_6A55B0
+bool igo_3d_scrapbook::is_any_page_locked() {
+    bool locked = false;
+
+    for (i32 index = 0; index < 3; ++index)
+        locked = locked || !stations[index]->is_unlocked(false);
+
+    return locked;
 }
