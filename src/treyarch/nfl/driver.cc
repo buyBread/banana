@@ -143,5 +143,5 @@ void treyarch::nfl::driver::close_file(i32 id) {
     if (handle)
         driver->file_operations->close(handle);
 
-    tx::slot_free(&system::references::files_pool.get(), id);
+    tx::slot_free(&system::files_pool, id);
 }

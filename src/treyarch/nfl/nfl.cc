@@ -5,24 +5,21 @@
 #include "retail.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
-#include "treyarch/nfl/win32/driver.hh"
 
 using namespace treyarch;
 
 // sub_A15470
 u32 treyarch::nfl::init(const init_params* params) {
-    system::references::drivers.write(system::win32_drivers);
-
-    references::current_platform_settings.write(&references::default_platform_settings.get());
+    system::platform_settings = &system::default_platform_settings;
 
     if (params)
-        system::references::init_params.write(*params);
+        system::init_params = *params;
 
-    for (i32 index = 0; index < system::references::drivers_count.read(); ++index) {
-        driver::driver_t* driver = system::references::drivers.read()[index];
+    for (i32 index = 0; index < system::drivers_count; ++index) {
+        driver::driver_t* driver = system::drivers[index];
 
-        if (system::references::init_params.get().buffer_mode != -1)
-            driver->init->buffer_mode = system::references::init_params.get().buffer_mode;
+        if (system::init_params.buffer_mode != -1)
+            driver->init->buffer_mode = system::init_params.buffer_mode;
 
         if (driver->init->initialize)
             driver->init->initialize(driver);
@@ -34,7 +31,7 @@ u32 treyarch::nfl::init(const init_params* params) {
                      driver->init->buffer_mode);
     }
 
-    for (system::decompress_batch_group_t &group : system::references::decompress_batch_groups.get()) {
+    for (system::decompress_batch_group_t &group : system::decompress_batch_groups) {
         group.decompress_group_handle = retail::sub_A144D0(); // jq_alloc_batch_group
         group.locked                  = 0;
     }
@@ -42,14 +39,12 @@ u32 treyarch::nfl::init(const init_params* params) {
     // with no work space this only measures it
     const u32 work_space_size = system::pre_allocate_work_space(nullptr);
 
-    const init_params &system_params = system::references::init_params.get();
-
     nfl::log.msg("files: {} | requests: {} | chunk jobs: {} | buffer mode: {} | thread mode: {} | work space: 0x{:X} bytes",
-                 system_params.file_count,
-                 system_params.request_count,
-                 system_params.chunk_decompress_job_count,
-                 system_params.buffer_mode,
-                 system_params.thread_mode,
+                 system::init_params.file_count,
+                 system::init_params.request_count,
+                 system::init_params.chunk_decompress_job_count,
+                 system::init_params.buffer_mode,
+                 system::init_params.thread_mode,
                  work_space_size);
 
     return work_space_size;
@@ -62,20 +57,20 @@ void treyarch::nfl::start(void* work_space) {
 
     system::pre_allocate_work_space((u8*)work_space);
 
-    tx::slot_pool_init(&system::references::requests_pool.get(),
-                      &system::references::requests.read()->entry,
-                      system::references::init_params.get().request_count,
-                      sizeof(system::request_t));
+    tx::slot_pool_init(&system::requests_pool,
+                       &system::requests->entry,
+                       system::init_params.request_count,
+                       sizeof(system::request_t));
 
-    tx::slot_pool_init(&references::chunk_decompress_job_pool.get(),
-                      &references::chunk_decompress_jobs.read()->entry,
-                      system::references::init_params.get().chunk_decompress_job_count,
-                      sizeof(system::chunk_decompress_job));
+    tx::slot_pool_init(&system::chunk_decompress_job_pool,
+                       &system::chunk_decompress_jobs->entry,
+                       system::init_params.chunk_decompress_job_count,
+                       sizeof(system::chunk_decompress_job));
 
-    tx::slot_pool_init(&system::references::files_pool.get(),
-                      &system::references::files.read()->entry,
-                      system::references::init_params.get().file_count,
-                      sizeof(system::file_t));
+    tx::slot_pool_init(&system::files_pool,
+                       &system::files->entry,
+                       system::init_params.file_count,
+                       sizeof(system::file_t));
 
     const i32 lzo_result = lzo_init();
 
@@ -83,47 +78,45 @@ void treyarch::nfl::start(void* work_space) {
         nfl::log.err("lzo_init failed -- error {}", lzo_result);
 
     nfl::log.msg("read buffers: 2 x 0x{:X} | lzo {} | i/o thread priority: {}",
-                 references::current_platform_settings.read()->buffer_size,
+                 system::platform_settings->buffer_size,
                  lzo_version_string(),
-                 references::thread_priority.read());
+                 system::thread_priority);
 
-    if (system::references::init_params.get().thread_mode != 1)
+    if (system::init_params.thread_mode != 1)
         return;
 
-    system::references::mutex.write(CreateMutexA(nullptr, FALSE, nullptr));
-    system::references::event.write(CreateEventA(nullptr, FALSE, FALSE, nullptr));
-    references::cancel_event.write(CreateEventA(nullptr, FALSE, FALSE, nullptr));
+    system::mutex        = CreateMutexA(nullptr, FALSE, nullptr);
+    system::event        = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+    system::cancel_event = CreateEventA(nullptr, FALSE, FALSE, nullptr);
 
     // retail checks the mode a second time
-    if (system::references::init_params.get().thread_mode != 1)
+    if (system::init_params.thread_mode != 1)
         return;
 
-    system::references::thread.write(CreateThread(nullptr,
-                                                  0x2000,
-                                                  system::update_thread,
-                                                  nullptr,
-                                                  CREATE_SUSPENDED,
-                                                  nullptr));
+    system::thread = CreateThread(nullptr,
+                                  0x2000,
+                                  system::update_thread,
+                                  nullptr,
+                                  CREATE_SUSPENDED,
+                                  nullptr);
 
-    if (!system::references::thread.read())
+    if (!system::thread)
         nfl::log.err("failed to create the i/o thread -- win32 error {}", GetLastError());
 
-    SetThreadPriority(system::references::thread.read(), references::thread_priority.read());
-    ResumeThread(system::references::thread.read());
+    SetThreadPriority(system::thread, system::thread_priority);
+    ResumeThread(system::thread);
 }
 
 // sub_A173E0
 void treyarch::nfl::update() {
-    system::references::call_requests_count.write(0);
+    system::call_requests_count = 0;
 
     system::lock();
 
-    tx::slot_pool* requests_pool = &system::references::requests_pool.get();
-
-    for (i32 id = tx::slot_first(requests_pool); id != -1;) {
+    for (i32 id = tx::slot_first(&system::requests_pool); id != -1;) {
         system::request_t* request = system::get_request(id);
 
-        id = tx::slot_next(requests_pool, id);
+        id = tx::slot_next(&system::requests_pool, id);
 
         const clock_t now = clock();
 
@@ -141,8 +134,7 @@ void treyarch::nfl::update() {
 
             case system::request_state_workdone:
             case system::request_state_canceled: {
-                system::request_cb_t &call_request =
-                    system::references::call_requests.read()[system::references::call_requests_count.get()++];
+                system::request_cb_t &call_request = system::call_requests[system::call_requests_count++];
 
                 call_request.state    = system::export_request_state(request->state);
                 call_request.request  = request->entry.id;
@@ -182,8 +174,7 @@ void treyarch::nfl::update() {
                              request->driver->io_state == driver::io_state_error ? ", streaming stopped until it's canceled" : "");
 
                 if (request->callback) {
-                    system::request_cb_t &call_request =
-                        system::references::call_requests.read()[system::references::call_requests_count.get()++];
+                    system::request_cb_t &call_request = system::call_requests[system::call_requests_count++];
 
                     call_request.state    = system::export_request_state(request->state);
                     call_request.request  = request->entry.id;
@@ -196,11 +187,11 @@ void treyarch::nfl::update() {
         }
     }
 
-    if (system::references::call_requests_count.read()) {
+    if (system::call_requests_count) {
         system::unlock();
 
-        for (i32 index = 0; index < system::references::call_requests_count.read(); ++index) {
-            system::request_cb_t &call_request = system::references::call_requests.read()[index];
+        for (i32 index = 0; index < system::call_requests_count; ++index) {
+            system::request_cb_t &call_request = system::call_requests[index];
 
             if (call_request.callback)
                 call_request.callback(call_request.state, call_request.request, call_request.user);
@@ -209,8 +200,8 @@ void treyarch::nfl::update() {
         system::lock();
     }
 
-    for (i32 index = 0; index < system::references::call_requests_count.read(); ++index) {
-        system::request_cb_t &call_request = system::references::call_requests.read()[index];
+    for (i32 index = 0; index < system::call_requests_count; ++index) {
+        system::request_cb_t &call_request = system::call_requests[index];
 
         if (!call_request.release)
             continue;
@@ -218,7 +209,7 @@ void treyarch::nfl::update() {
         system::request_t* request = system::get_request(call_request.request);
 
         if (request->group_handle != -1) {
-            for (system::decompress_batch_group_t &group : system::references::decompress_batch_groups.get()) {
+            for (system::decompress_batch_group_t &group : system::decompress_batch_groups) {
                 if (group.decompress_group_handle == request->group_handle) {
                     group.locked = 0;
 
@@ -232,14 +223,14 @@ void treyarch::nfl::update() {
         if (file && file->as.native.flags & driver::file_flag_deferred_close && !--file->as.native.pending_requests)
             driver::close_file(request->file);
 
-        tx::slot_free(requests_pool, call_request.request);
+        tx::slot_free(&system::requests_pool, call_request.request);
     }
 
-    system::references::call_requests_count.write(0);
+    system::call_requests_count = 0;
 
     system::unlock();
 
-    if (!system::references::init_params.get().thread_mode)
+    if (!system::init_params.thread_mode)
         system::update();
 }
 
@@ -269,13 +260,13 @@ i32 treyarch::nfl::add_request(const request_params* params) {
 
     system::lock();
 
-    const i32 id = tx::slot_new(&system::references::requests_pool.get());
+    const i32 id = tx::slot_new(&system::requests_pool);
 
     if (id == -1) {
         system::unlock();
 
         nfl::log.err("out of request slots ({}) -- \"{}\"",
-                     system::references::requests_pool.get().count,
+                     system::requests_pool.count,
                      system::file_path(params->file_id));
 
         return -1;
@@ -322,12 +313,12 @@ i32 treyarch::nfl::add_request(const request_params* params) {
                      id,
                      system::file_path(params->file_id));
 
-    if (system::references::init_params.get().thread_mode == 1) {
-        ReleaseMutex(system::references::mutex.read());
+    if (system::init_params.thread_mode == 1) {
+        ReleaseMutex(system::mutex);
 
         // retail checks the mode a second time
-        if (system::references::init_params.get().thread_mode == 1)
-            SetEvent(system::references::event.read());
+        if (system::init_params.thread_mode == 1)
+            SetEvent(system::event);
     }
 
     nfl::log.dbg("add {} \"{}\" -- offset 0x{:X}, read 0x{:X}, output 0x{:X}, priority {}, decompress {}",
@@ -356,8 +347,8 @@ nfl::e_state treyarch::nfl::get_state() {
     // the worst state across the drivers, invalid with none
     e_state state = state_invalid;
 
-    for (i32 index = 0; index < system::references::drivers_count.read(); ++index) {
-        switch (system::references::drivers.read()[index]->io_state) {
+    for (i32 index = 0; index < system::drivers_count; ++index) {
+        switch (system::drivers[index]->io_state) {
             case driver::io_state_idle:
             case driver::io_state_workdone:
             case driver::io_state_canceled:

@@ -21,14 +21,14 @@ nfl::driver::e_error treyarch::nfl::driver::win32_media_bind(i32 media, const ch
 
 // sub_A17D40
 nfl::driver::e_error treyarch::nfl::driver::win32_initialize(driver_t* driver) {
-    references::win32_io_work.get().io_event = CreateEventA(nullptr, FALSE, FALSE, nullptr);
+    win32_io_work.io_event = CreateEventA(nullptr, FALSE, FALSE, nullptr);
 
     return error_noerror;
 }
 
 // sub_A17D60
 nfl::driver::e_error treyarch::nfl::driver::win32_shutdown() {
-    CloseHandle(references::win32_io_work.get().io_event);
+    CloseHandle(win32_io_work.io_event);
 
     return error_noerror;
 }
@@ -87,31 +87,27 @@ nfl::driver::e_error treyarch::nfl::driver::win32_file_handle(void* handle, void
 
 // sub_A17CD0
 void __stdcall treyarch::nfl::driver::win32_io_completion_routine(DWORD error_code, DWORD bytes_transferred, OVERLAPPED* overlapped) {
-    win32_io_work_t &work = references::win32_io_work.get();
+    io_complete(win32_io_work.driver, bytes_transferred, error_code);
 
-    io_complete(work.driver, bytes_transferred, error_code);
-
-    work.overlapped.hEvent = nullptr;
+    win32_io_work.overlapped.hEvent = nullptr;
 }
 
 // sub_A17D70
 nfl::driver::e_error treyarch::nfl::driver::win32_io_execute(driver_t* driver, void* file_handle, i32 type, u32 offset, void* buffer, u32 size) {
-    win32_io_work_t &work = references::win32_io_work.get();
-
-    work.overlapped.hEvent     = work.io_event;
-    work.driver                = driver;
-    work.overlapped.Offset     = offset;
-    work.overlapped.OffsetHigh = 0;
+    win32_io_work.overlapped.hEvent     = win32_io_work.io_event;
+    win32_io_work.driver                = driver;
+    win32_io_work.overlapped.Offset     = offset;
+    win32_io_work.overlapped.OffsetHigh = 0;
 
     BOOL ok;
 
     for (;;) {
         ok = type == 1 ?
-            WriteFileEx(*(HANDLE*)file_handle, buffer, size, &work.overlapped, win32_io_completion_routine) :
-            ReadFileEx (*(HANDLE*)file_handle, buffer, (size + 0x7FF) & ~0x7FF, &work.overlapped, win32_io_completion_routine);
+            WriteFileEx(*(HANDLE*)file_handle, buffer, size, &win32_io_work.overlapped, win32_io_completion_routine) :
+            ReadFileEx (*(HANDLE*)file_handle, buffer, (size + 0x7FF) & ~0x7FF, &win32_io_work.overlapped, win32_io_completion_routine);
 
         if (ok) {
-            if (!nfl::references::always_report.read())
+            if (!always_report)
                 return error_noerror;
 
             break;
@@ -154,7 +150,7 @@ nfl::driver::e_error treyarch::nfl::driver::win32_io_cancel(void* file_handle) {
 
 // sub_A17D20
 nfl::driver::e_error treyarch::nfl::driver::win32_io_update() { // completions run in here
-    if (!nfl::references::alertable_wait.read())
+    if (!system::alertable_wait)
         SleepEx(0, TRUE);
 
     return error_noerror;

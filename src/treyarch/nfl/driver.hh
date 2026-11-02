@@ -1,7 +1,6 @@
 #pragma once
 
 #include "banana/util/macros/sanity_assert.hh"
-#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
@@ -170,14 +169,6 @@ namespace treyarch { namespace nfl {
         ASSERT_OFFSETOF(driver_t, disk_read,             0x1C);
         ASSERT_OFFSETOF(driver_t, io_state,              0x48);
     } // driver
-
-    namespace references {
-        // the first of three rows, only this one is ever selected
-        inline util::memory_reference<platform_settings>  default_platform_settings { 0x00FB8538 };
-        inline util::memory_reference<platform_settings*> current_platform_settings { 0x01124728 };
-
-        inline util::memory_reference<i32> alertable_wait { 0x01124640 };
-    } // references
 
     ASSERT_SIZEOF  (platform_settings,              0x24);
     ASSERT_OFFSETOF(platform_settings, buffer_size, 0x1C);

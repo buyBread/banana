@@ -1,12 +1,10 @@
 #pragma once
 
-#include <array>
 #include <windows.h>
 
 #include "treyarch/nfl/driver.hh"
 #include "treyarch/tx/slot_pool.hh"
 #include "banana/util/macros/sanity_assert.hh"
-#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
@@ -159,32 +157,47 @@ namespace treyarch { namespace nfl {
         const char* request_path(i32 id);
         const char* file_handle_path(const void* handle);
 
-        namespace references {
-            inline util::memory_reference<u8*> mem { 0x01124644 };
+        inline i32 thread_priority = 1;
+        inline u32 thread_sleep    = 5;
 
-            inline util::memory_reference<u32> mem_used { 0x01124648 };
-            inline util::memory_reference<u32> mem_free { 0x0112464C };
+        // 0 runs the chunk decompression inline on the i/o thread
+        inline i32 decompress_on_jq = 1;
 
-            inline util::memory_reference<tx::slot_pool> requests_pool { 0x01124650 };
-            inline util::memory_reference<tx::slot_pool> files_pool    { 0x01124678 };
+        // nothing ever writes these two
+        inline i32 alertable_wait;
+        inline i32 thread_exit;
 
-            inline util::memory_reference<request_t*>    requests      { 0x011246C8 };
-            inline util::memory_reference<request_cb_t*> call_requests { 0x011246D8 };
-            inline util::memory_reference<file_t*>       files         { 0x011246DC };
-            inline util::memory_reference<u8*>           file_handles  { 0x011246E0 };
+        inline u8* mem;
+        inline u32 mem_used;
+        inline u32 mem_free;
 
-            inline util::memory_reference<u32> file_handle_size    { 0x011246E4 };
-            inline util::memory_reference<i32> call_requests_count { 0x011246D4 };
+        inline tx::slot_pool requests_pool;
+        inline tx::slot_pool files_pool;
+        inline tx::slot_pool chunk_decompress_job_pool;
 
-            inline util::memory_reference<std::array<decompress_batch_group_t, 8>> decompress_batch_groups { 0x011246E8 };
+        inline request_t*            requests;
+        inline chunk_decompress_job* chunk_decompress_jobs;
+        inline request_cb_t*         call_requests;
+        inline file_t*               files;
+        inline u8*                   file_handles;
 
-            inline util::memory_reference<HANDLE> event  { 0x01124630 };
-            inline util::memory_reference<HANDLE> thread { 0x01124634 };
-            inline util::memory_reference<HANDLE> mutex  { 0x01124638 };
+        inline u32 file_handle_size;
+        inline i32 call_requests_count;
 
-            inline util::memory_reference<driver::driver_t**> drivers       { 0x00FB8534 };
-            inline util::memory_reference<i32>                drivers_count { 0x00FB8530 };
-        } // references
+        inline decompress_batch_group_t decompress_batch_groups[8];
+
+        inline HANDLE event;
+        inline HANDLE thread;
+        inline HANDLE mutex;
+        inline HANDLE cancel_event;
+
+        extern driver::driver_t** drivers;
+        inline i32                drivers_count = 1;
+
+        // the first of three rows, only this one is ever selected
+        inline nfl::platform_settings default_platform_settings = { 0, 0x7FFFFFFF, 0x80000, 0x2000, 0x7FFE0, 1, 1, 0x80000, 0x1000 };
+
+        inline nfl::platform_settings* platform_settings;
 
         ASSERT_SIZEOF  (request_t,                         0x70);
         ASSERT_OFFSETOF(request_t, destination,            0x24);
@@ -224,13 +237,4 @@ namespace treyarch { namespace nfl {
 
         ASSERT_SIZEOF(decompress_batch_group_t, 0x08);
     } // system
-
-    namespace references {
-        inline util::memory_reference<tx::slot_pool>                 chunk_decompress_job_pool { 0x011246A0 };
-        inline util::memory_reference<system::chunk_decompress_job*> chunk_decompress_jobs     { 0x011246CC };
-
-        inline util::memory_reference<i32> thread_exit { 0x011246D0 };
-
-        inline util::memory_reference<HANDLE> cancel_event { 0x0112463C };
-    } // references
 }} // treyarch::nfl

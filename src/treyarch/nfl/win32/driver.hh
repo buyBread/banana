@@ -4,7 +4,6 @@
 
 #include "treyarch/nfl/driver.hh"
 #include "banana/util/macros/sanity_assert.hh"
-#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
@@ -53,9 +52,10 @@ namespace treyarch { namespace nfl {
                                          &win32_io,
                                          &win32_buffer };
 
-        namespace references {
-            inline util::memory_reference<win32_io_work_t> win32_io_work { 0x01124734 };
-        } // references
+        inline win32_io_work_t win32_io_work;
+
+        // nothing ever writes it
+        inline bool always_report;
 
         ASSERT_SIZEOF  (win32_io_work_t,           0x1C);
         ASSERT_OFFSETOF(win32_io_work_t, io_event, 0x14);
@@ -65,8 +65,4 @@ namespace treyarch { namespace nfl {
     namespace system {
         inline driver::driver_t* win32_drivers[] = { &driver::win32_driver };
     } // system
-
-    namespace references {
-        inline util::memory_reference<bool> always_report { 0x00FC2F88 };
-    } // references
 }} // treyarch::nfl

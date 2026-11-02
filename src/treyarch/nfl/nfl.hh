@@ -4,7 +4,6 @@
 #include "treyarch/nfl/system.hh"
 #include "banana/logging.hh"
 #include "banana/util/macros/sanity_assert.hh"
-#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
@@ -65,17 +64,9 @@ namespace treyarch { namespace nfl {
 
     inline constexpr jq::descriptor nfl_jq_decompress_descriptor = { nfl_jq_decompress_module, "nflJqDecompressModule" };
 
-    namespace system { namespace references {
-        inline util::memory_reference<init_params> init_params { 0x00FB84B0 };
-    }} // system::references
-
-    namespace references {
-        inline util::memory_reference<i32> thread_priority { 0x00FB84A4 };
-        inline util::memory_reference<u32> thread_sleep    { 0x00FB84A8 };
-
-        // 0 runs the chunk decompression inline on the i/o thread
-        inline util::memory_reference<i32> decompress_on_jq { 0x00FB84AC };
-    } // references
+    namespace system {
+        inline nfl::init_params init_params = { 0x40, 0x100, 0, 3, 0 };
+    } // system
 
     ASSERT_SIZEOF  (init_params,                             0x14);
     ASSERT_OFFSETOF(init_params, request_count,              0x04);
