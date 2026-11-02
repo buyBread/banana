@@ -14,11 +14,11 @@ bool treyarch::nfl::nfs_validate_destination(u8* destination) {
 
 // sub_A15EF0
 i32 treyarch::nfl::nfs_allocate_decompress_batch_job() {
-    for (decompress_group &group : references::decompress_groups.get()) {
-        if (!group.in_use) {
-            group.in_use = 1;
+    for (nfs_decompress_batch_group &group : references::nfs_decompress_batch_groups.get()) {
+        if (!group.locked) {
+            group.locked = 1;
 
-            return group.group;
+            return group.decompress_group_handle;
         }
     }
 

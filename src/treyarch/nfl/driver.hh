@@ -105,13 +105,13 @@ namespace treyarch { namespace nfl {
         nfd_file*      file_operations;
         nfd_io*        io_operations;
         nfd_buffer*    buffers_object;
-        i32            chunk_jobs;
+        i32            chunk_decompress_jobs;
         disk_read_t    disk_read;
         e_nfd_io_state io_state;
     };
 
     struct platform_settings {
-        u32 unk_00;
+        u32 compression_type; // NFL_COMPRESSION_TYPE_LZO is 0
         u32 unk_04;
         u32 unk_08;
         u32 unk_0c;
@@ -162,13 +162,13 @@ namespace treyarch { namespace nfl {
     ASSERT_OFFSETOF(disk_read_t, bytes_completed, 0x04);
     ASSERT_OFFSETOF(disk_read_t, io_command,      0x0C);
 
-    ASSERT_SIZEOF  (nfd_driver,                  0x4C);
-    ASSERT_OFFSETOF(nfd_driver, init,            0x04);
-    ASSERT_OFFSETOF(nfd_driver, file_operations, 0x0C);
-    ASSERT_OFFSETOF(nfd_driver, buffers_object,  0x14);
-    ASSERT_OFFSETOF(nfd_driver, chunk_jobs,      0x18);
-    ASSERT_OFFSETOF(nfd_driver, disk_read,       0x1C);
-    ASSERT_OFFSETOF(nfd_driver, io_state,        0x48);
+    ASSERT_SIZEOF  (nfd_driver,                        0x4C);
+    ASSERT_OFFSETOF(nfd_driver, init,                  0x04);
+    ASSERT_OFFSETOF(nfd_driver, file_operations,       0x0C);
+    ASSERT_OFFSETOF(nfd_driver, buffers_object,        0x14);
+    ASSERT_OFFSETOF(nfd_driver, chunk_decompress_jobs, 0x18);
+    ASSERT_OFFSETOF(nfd_driver, disk_read,             0x1C);
+    ASSERT_OFFSETOF(nfd_driver, io_state,              0x48);
 
     ASSERT_SIZEOF  (platform_settings,             0x24);
     ASSERT_OFFSETOF(platform_settings, buffer_size, 0x1C);

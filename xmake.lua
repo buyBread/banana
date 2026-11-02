@@ -73,6 +73,8 @@ if has_config("game") then
                  { configs = { win32 = true,
                                dx9   = true } })
 
+    add_requires("lzo")
+
     rule("ngl.shader.package")
         before_build(function (target)
             local compiler = target:dep("ngl_shader_compiler"):targetfile()
@@ -110,7 +112,9 @@ if has_config("game") then
 
         add_deps    ("ngl_shader_compiler")
         add_rules   ("ngl.shader.package")
-        add_packages("minhook", "imgui")
+        add_packages("minhook", "imgui", "lzo")
+
+        set_policy("check.target_package_licenses", false)
 
         add_defines("_CRT_SECURE_NO_WARNINGS")
 

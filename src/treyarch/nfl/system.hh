@@ -3,6 +3,7 @@
 #include <array>
 #include <windows.h>
 
+#include "treyarch/jq/jq.hh"
 #include "treyarch/nfl/driver.hh"
 #include "treyarch/tx/slot_pool.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -66,12 +67,24 @@ namespace treyarch { namespace nfl {
         i32              last_progress_time;
     };
 
-    struct chunk_job {
+    // sits at the start of each record in a read buffer, the payload ends at the record's span
+    struct chunk_header {
+        char chunk_id[4];           // "NCH", nothing on pc checks it
+        u32  stored_size;
+        u32  unk_08;
+        u32  output_size;
+        u32  prior_output;          // where the output goes in the destination
+        u32  unk_14;
+        u32  span;                  // to the next record
+        i32  num_chunks_in_segment; // only read from a buffer's first record
+    };
+
+    struct chunk_decompress_job {
         i32            request;
-        u8*            record;
+        chunk_header*  record;
         u8*            output;
-        i32            state;
-        u8             header[0x20];
+        i32            state;   // 0 new, 1 submitted
+        chunk_header   header;
         tx::slot_entry entry;
     };
 
@@ -108,9 +121,9 @@ namespace treyarch { namespace nfl {
         e_nfs_file_type file_type;
     };
 
-    struct decompress_group {
-        i32 group;
-        i32 in_use;
+    struct nfs_decompress_batch_group {
+        i32 decompress_group_handle;
+        i32 locked;
     };
 
     u32 nfs_pre_allocate_work_space(u8* work_space);
@@ -144,27 +157,37 @@ namespace treyarch { namespace nfl {
     i32         nfs_schedule_request(nfd_driver* driver);
     e_nfd_error nfs_execute_request(nfd_driver* driver, i32 id);
 
+    chunk_decompress_job* get_chunk_decompress_job(i32 id);
+
+    void nfs_begin_segment_decompress(nfd_driver* driver, nfs_request* request);
+    void nfs_update_chunk_decompression_jobs(nfd_driver* driver);
+    void nfs_create_jq_decompress_job(chunk_decompress_job* job, nfs_request* request);
+
+    void nfl_jq_decompress_module(jq::batch* batch);
+
+    inline constexpr jq::descriptor nfl_jq_decompress_descriptor = { nfl_jq_decompress_module, "nflJqDecompressModule" };
+
     namespace references {
         inline util::memory_reference<u8*> nfs_mem { 0x01124644 };
 
         inline util::memory_reference<u32> nfs_mem_used { 0x01124648 };
         inline util::memory_reference<u32> nfs_mem_free { 0x0112464C };
 
-        inline util::memory_reference<tx::slot_pool> nfs_requests_pool { 0x01124650 };
-        inline util::memory_reference<tx::slot_pool> nfs_files_pool    { 0x01124678 };
-        inline util::memory_reference<tx::slot_pool> chunk_job_pool    { 0x011246A0 };
+        inline util::memory_reference<tx::slot_pool> nfs_requests_pool         { 0x01124650 };
+        inline util::memory_reference<tx::slot_pool> nfs_files_pool            { 0x01124678 };
+        inline util::memory_reference<tx::slot_pool> chunk_decompress_job_pool { 0x011246A0 };
 
-        inline util::memory_reference<nfs_request*>    nfs_requests      { 0x011246C8 };
-        inline util::memory_reference<chunk_job*>      chunk_jobs        { 0x011246CC };
-        inline util::memory_reference<nfs_request_cb*> nfs_call_requests { 0x011246D8 };
-        inline util::memory_reference<nfs_file*>       nfs_files         { 0x011246DC };
-        inline util::memory_reference<u8*>             nfs_file_handles  { 0x011246E0 };
+        inline util::memory_reference<nfs_request*>          nfs_requests          { 0x011246C8 };
+        inline util::memory_reference<chunk_decompress_job*> chunk_decompress_jobs { 0x011246CC };
+        inline util::memory_reference<nfs_request_cb*>       nfs_call_requests     { 0x011246D8 };
+        inline util::memory_reference<nfs_file*>             nfs_files             { 0x011246DC };
+        inline util::memory_reference<u8*>                   nfs_file_handles      { 0x011246E0 };
 
         inline util::memory_reference<u32> nfs_file_handle_size    { 0x011246E4 };
         inline util::memory_reference<i32> nfs_call_requests_count { 0x011246D4 };
         inline util::memory_reference<i32> thread_exit             { 0x011246D0 };
 
-        inline util::memory_reference<std::array<decompress_group, 8>> decompress_groups { 0x011246E8 };
+        inline util::memory_reference<std::array<nfs_decompress_batch_group, 8>> nfs_decompress_batch_groups { 0x011246E8 };
 
         inline util::memory_reference<HANDLE> nfs_event    { 0x01124630 };
         inline util::memory_reference<HANDLE> nfs_thread   { 0x01124634 };
@@ -183,9 +206,16 @@ namespace treyarch { namespace nfl {
     ASSERT_OFFSETOF(nfs_request, entry,                  0x5C);
     ASSERT_OFFSETOF(nfs_request, last_progress_time,     0x6C);
 
-    ASSERT_SIZEOF  (chunk_job,         0x3C);
-    ASSERT_OFFSETOF(chunk_job, header, 0x10);
-    ASSERT_OFFSETOF(chunk_job, entry,  0x30);
+    ASSERT_SIZEOF  (chunk_header,                        0x20);
+    ASSERT_OFFSETOF(chunk_header, stored_size,           0x04);
+    ASSERT_OFFSETOF(chunk_header, output_size,           0x0C);
+    ASSERT_OFFSETOF(chunk_header, prior_output,          0x10);
+    ASSERT_OFFSETOF(chunk_header, span,                  0x18);
+    ASSERT_OFFSETOF(chunk_header, num_chunks_in_segment, 0x1C);
+
+    ASSERT_SIZEOF  (chunk_decompress_job,         0x3C);
+    ASSERT_OFFSETOF(chunk_decompress_job, header, 0x10);
+    ASSERT_OFFSETOF(chunk_decompress_job, entry,  0x30);
 
     ASSERT_SIZEOF  (nfs_request_cb,          0x14);
     ASSERT_OFFSETOF(nfs_request_cb, release, 0x10);
@@ -201,5 +231,5 @@ namespace treyarch { namespace nfl {
     ASSERT_OFFSETOF(nfs_file, entry,                      0x118);
     ASSERT_OFFSETOF(nfs_file, file_type,                  0x124);
 
-    ASSERT_SIZEOF(decompress_group, 0x08);
+    ASSERT_SIZEOF(nfs_decompress_batch_group, 0x08);
 }} // treyarch::nfl

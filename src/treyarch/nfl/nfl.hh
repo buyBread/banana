@@ -9,9 +9,9 @@ namespace treyarch { namespace nfl {
     struct init_params {
         i32 file_count;
         i32 request_count;
-        i32 chunk_job_count;
-        i32 buffer_mode;    // -1 keeps each driver's own mode
-        i32 thread_mode;    // 1 runs the drivers on a background thread
+        i32 chunk_decompress_job_count;
+        i32 buffer_mode;                // -1 keeps each driver's own mode
+        i32 thread_mode;                // 1 runs the drivers on a background thread
     };
 
     // NFL_REQUEST_STATE_*, what callbacks receive
@@ -62,13 +62,16 @@ namespace treyarch { namespace nfl {
 
         inline util::memory_reference<i32> thread_priority { 0x00FB84A4 };
         inline util::memory_reference<u32> thread_sleep    { 0x00FB84A8 };
+
+        // 0 runs the chunk decompression inline on the i/o thread
+        inline util::memory_reference<i32> decompress_on_jq { 0x00FB84AC };
     } // references
 
-    ASSERT_SIZEOF  (init_params,                  0x14);
-    ASSERT_OFFSETOF(init_params, request_count,   0x04);
-    ASSERT_OFFSETOF(init_params, chunk_job_count, 0x08);
-    ASSERT_OFFSETOF(init_params, buffer_mode,     0x0C);
-    ASSERT_OFFSETOF(init_params, thread_mode,     0x10);
+    ASSERT_SIZEOF  (init_params,                             0x14);
+    ASSERT_OFFSETOF(init_params, request_count,              0x04);
+    ASSERT_OFFSETOF(init_params, chunk_decompress_job_count, 0x08);
+    ASSERT_OFFSETOF(init_params, buffer_mode,                0x0C);
+    ASSERT_OFFSETOF(init_params, thread_mode,                0x10);
 
     ASSERT_SIZEOF  (request_params,             0x2C);
     ASSERT_OFFSETOF(request_params, offset,     0x10);

@@ -1,5 +1,6 @@
 #include <cstring>
 #include <ctime>
+#include <lzo/lzo1x.h>
 
 #include "retail.hh"
 #include "treyarch/nfl/nfl.hh"
@@ -28,9 +29,9 @@ u32 treyarch::nfl::init(const init_params* params) {
             driver->init->initialize(driver);
     }
 
-    for (decompress_group &group : references::decompress_groups.get()) {
-        group.group  = retail::sub_A144D0(); // jq_alloc_batch_group
-        group.in_use = 0;
+    for (nfs_decompress_batch_group &group : references::nfs_decompress_batch_groups.get()) {
+        group.decompress_group_handle = retail::sub_A144D0(); // jq_alloc_batch_group
+        group.locked                  = 0;
     }
 
     // with no work space this only measures it
@@ -49,17 +50,17 @@ void treyarch::nfl::start(void* work_space) {
                       references::nfs_init_params.get().request_count,
                       sizeof(nfs_request));
 
-    tx::slot_pool_init(&references::chunk_job_pool.get(),
-                      &references::chunk_jobs.read()->entry,
-                      references::nfs_init_params.get().chunk_job_count,
-                      sizeof(chunk_job));
+    tx::slot_pool_init(&references::chunk_decompress_job_pool.get(),
+                      &references::chunk_decompress_jobs.read()->entry,
+                      references::nfs_init_params.get().chunk_decompress_job_count,
+                      sizeof(chunk_decompress_job));
 
     tx::slot_pool_init(&references::nfs_files_pool.get(),
                       &references::nfs_files.read()->entry,
                       references::nfs_init_params.get().file_count,
                       sizeof(nfs_file));
 
-    retail::sub_A17E70(0x2020, 2, 4, 4, 4, 4, 4, 4, 4, 24); // lzo_init (2.02)
+    lzo_init();
 
     if (references::nfs_init_params.get().thread_mode != 1)
         return;
@@ -132,16 +133,16 @@ u32 treyarch::nfl::nfs_pre_allocate_work_space(u8* work_space) {
 
     const init_params &params = references::nfs_init_params.get();
 
-    nfs_request*    requests      = (nfs_request*)   nfs_pre_allocate(sizeof(nfs_request)    * params.request_count,   0x40);
-    chunk_job*      chunk_jobs    = (chunk_job*)     nfs_pre_allocate(sizeof(chunk_job)      * params.chunk_job_count, 0x40);
-    nfs_request_cb* call_requests = (nfs_request_cb*)nfs_pre_allocate(sizeof(nfs_request_cb) * params.request_count,   0x04);
-    nfs_file*       files         = (nfs_file*)      nfs_pre_allocate(sizeof(nfs_file)       * params.file_count,      0x40);
-    u8*             handles       =                  nfs_pre_allocate(handle_stride          * params.file_count,      handle_alignment);
+    nfs_request*          requests      = (nfs_request*)         nfs_pre_allocate(sizeof(nfs_request)          * params.request_count,              0x40);
+    chunk_decompress_job* jobs          = (chunk_decompress_job*)nfs_pre_allocate(sizeof(chunk_decompress_job) * params.chunk_decompress_job_count, 0x40);
+    nfs_request_cb*       call_requests = (nfs_request_cb*)      nfs_pre_allocate(sizeof(nfs_request_cb)       * params.request_count,              0x04);
+    nfs_file*             files         = (nfs_file*)            nfs_pre_allocate(sizeof(nfs_file)             * params.file_count,                 0x40);
+    u8*                   handles       =                        nfs_pre_allocate(handle_stride                * params.file_count,                 handle_alignment);
 
-    if (!work_space || !requests || !chunk_jobs || !call_requests || !files || !handles || failed_drivers)
+    if (!work_space || !requests || !jobs || !call_requests || !files || !handles || failed_drivers)
         return references::nfs_mem_used.read();
 
-    references::chunk_jobs.write(chunk_jobs);
+    references::chunk_decompress_jobs.write(jobs);
     references::nfs_file_handles.write(handles);
     references::nfs_requests.write(requests);
     references::nfs_files.write(files);
@@ -365,9 +366,9 @@ void treyarch::nfl::update() {
         nfs_request* request = nfs_get_request(call_request.request);
 
         if (request->group_handle != -1) {
-            for (decompress_group &group : references::decompress_groups.get()) {
-                if (group.group == request->group_handle) {
-                    group.in_use = 0;
+            for (nfs_decompress_batch_group &group : references::nfs_decompress_batch_groups.get()) {
+                if (group.decompress_group_handle == request->group_handle) {
+                    group.locked = 0;
 
                     break;
                 }
@@ -449,7 +450,7 @@ i32 treyarch::nfl::nfs_update() { // 1 while a driver has I/O going, 2 while chu
         if (drivers[index]->io_state)
             result = 1;
 
-        if (drivers[index]->chunk_jobs)
+        if (drivers[index]->chunk_decompress_jobs)
             result = 2;
     }
 
@@ -458,7 +459,7 @@ i32 treyarch::nfl::nfs_update() { // 1 while a driver has I/O going, 2 while chu
 
 // sub_A16FA0
 i32 treyarch::nfl::nfs_update_driver(nfd_driver* driver) { // nonzero when the driver can take a new command
-    retail::sub_A16D60((u32*)driver); // nfs_update_chunk_decompression_jobs
+    nfs_update_chunk_decompression_jobs(driver);
 
     if (!driver->io_state)
         return 1;
@@ -497,8 +498,8 @@ i32 treyarch::nfl::nfs_update_driver(nfd_driver* driver) { // nonzero when the d
                         if (request->bytes_scheduled >= request->output_size)
                             nfd_unlock_read_buffer(driver, id, request->read_buffer_slot);
                         else {
-                            retail::sub_A16380((u32*)driver, (u32*)request); // nfs_begin_segment_decompress
-                            retail::sub_A16D60((u32*)driver);                // nfs_update_chunk_decompression_jobs
+                            nfs_begin_segment_decompress(driver, request);
+                            nfs_update_chunk_decompression_jobs(driver);
                         }
                     } else {
                         std::memcpy(request->destination + request->bytes_read, disk_read.io_command.buffer, disk_read.bytes_completed);
