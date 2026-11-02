@@ -164,6 +164,7 @@ void po::fixup() { // x kept, then z and y rebuilt square to it
 }
 
 // sub_48E2C0
+// sub_5AAA90
 // inlined @ sub_4B77A0
 po po::inverse() const { // the rotation turned back and the translation undone
     matrix4x4 transposed;

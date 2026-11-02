@@ -246,7 +246,7 @@ void swing_data::post_process(player_interface* plr_ifc, f32 delta_t, i32 index)
 
     const string_hash &hand_name = index ? als::references::bip01_prop_l_hand.get() : als::references::bip01_prop_r_hand.get();
 
-    retail::sub_62FA60((i32)owner, ((conglomerate*)owner)->get_member_index(hand_name), (f32*)&hand, 0); // conglomerate::get_member_abs_position
+    ((conglomerate*)owner)->get_member_abs_position(((conglomerate*)owner)->get_member_index(hand_name), &hand);
 
     vector3d target = unk_54;
 

@@ -1223,10 +1223,10 @@ void als::simple_orientation_on_foot::activate(animation_logic_system* the_als_c
     foot.identity();
 
     for (u32 index = 0; index < 2; ++index) {
-        if (foot_index[index] == -2)
+        if (foot_index[index] == invalid_conglom_member)
             continue;
 
-        retail::sub_62FC10((i32)the_actor, foot_index[index], (u64*)&foot, 0); // conglomerate::get_member_abs_po
+        ((conglomerate*)the_actor)->get_member_abs_po(foot_index[index], &foot);
 
         foot_world_facing[index] = foot.get_z_facing();
         foot_world_pos[index]    = foot.get_position();
@@ -1258,7 +1258,7 @@ void als::simple_orientation_on_foot::apply_rotation(      po*       curr_offset
                                                      const vector3d &desired_up,
                                                      const vector3d &desired_dir) {
 
-    if (foot_index[1] == -2 || foot_index[0] == -2 ||
+    if (foot_index[1] == invalid_conglom_member || foot_index[0] == invalid_conglom_member ||
         !rotate_about_foot(curr_offset, the_actor, delta_t, heading_change, curr_up, curr_dir, desired_up, desired_dir, foot_index[1], foot_index[0], lock_foot, &rot_foot)) {
 
         rot_foot = -1;
@@ -1268,24 +1268,25 @@ void als::simple_orientation_on_foot::apply_rotation(      po*       curr_offset
 }
 
 // sub_5C4580
-bool als::simple_orientation_on_foot::rotate_about_foot(      po*       curr_offset,
-                                                              actor*    target,
-                                                              f32       delta_t,
-                                                              f32       heading_change,
-                                                        const vector3d &,
-                                                        const vector3d &curr_dir,
-                                                        const vector3d &desired_up,
-                                                        const vector3d &,
-                                                              i16       left_foot,
-                                                              i16       right_foot,
-                                                              i32       lock,
-                                                              i32*      pivot_foot) {
+bool als::simple_orientation_on_foot::rotate_about_foot(      po*                     curr_offset,
+                                                              actor*                  target,
+                                                              f32                     delta_t,
+                                                              f32                     heading_change,
+                                                        const vector3d               &,
+                                                        const vector3d               &curr_dir,
+                                                        const vector3d               &desired_up,
+                                                        const vector3d               &,
+                                                              e_conglom_member_index  left_foot,
+                                                              e_conglom_member_index  right_foot,
+                                                              i32                     lock,
+                                                              i32*                    pivot_foot) {
 
     vector3d foot_positions[2];
 
     if (!target->is_a_conglomerate() ||
-        !retail::sub_62FA60((i32)target, right_foot, (f32*)&foot_positions[0], 0) || // conglomerate::get_member_abs_position
-        !retail::sub_62FA60((i32)target, left_foot,  (f32*)&foot_positions[1], 0))
+        !((conglomerate*)target)->get_member_abs_position(right_foot, &foot_positions[0]) ||
+        !((conglomerate*)target)->get_member_abs_position(left_foot,  &foot_positions[1]))
+
         return false;
 
     po inverse = target->my_abs_po->inverse();
@@ -4622,11 +4623,11 @@ void als::attach_hand_to_point::set_destination_point() {
 
     // the player's prop hand onto the point, the body following
     if (the_actor->has_ifc(entity_ifc_player)) {
-        arch_base*   body = the_actor->my_handle.resolve();
+        auto*        body = (conglomerate*)the_actor->my_handle.resolve();
         string_hash* hand = anchor_hand ? &references::bip01_prop_r_hand.get() : &references::bip01_prop_l_hand.get();
 
         vector3d hand_position;
-        retail::sub_62FA60((i32)body, ((conglomerate*)body)->get_member_index(*hand), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+        body->get_member_abs_position(body->get_member_index(*hand), &hand_position);
 
         destination_point = vector3d(point.x + (destination_point.x - hand_position.x),
                                      point.y + (destination_point.y - hand_position.y),
@@ -4848,10 +4849,10 @@ void als::combat_pole_swing_attach::set_destination_point() {
 
     // the player's right prop hand onto the pole, the body following
     if (the_actor->has_ifc(entity_ifc_player)) {
-        actor* body = the_actor->player_ifc()->my_actor;
+        auto* body = (conglomerate*)the_actor->player_ifc()->my_actor;
 
         vector3d hand_position;
-        retail::sub_62FA60((i32)body, ((conglomerate*)body)->get_member_index(references::bip01_prop_r_hand.get()), (f32*)&hand_position, 0); // conglomerate::get_member_abs_position
+        body->get_member_abs_position(body->get_member_index(references::bip01_prop_r_hand.get()), &hand_position);
 
         destination_point = vector3d(destination_point.x + (pole_point.x - hand_position.x),
                                      destination_point.y + (pole_point.y - hand_position.y),
@@ -4915,9 +4916,9 @@ void als::sync_move_and_face::activate(animation_logic_system* the_als_core, lay
     tween_pos          = 0.0f;
     tween_orient       = 0.0f;
     sync_index_actor_a = nullptr;
-    sync_index_a       = -2;
+    sync_index_a       = invalid_conglom_member;
     sync_index_actor_b = nullptr;
-    sync_index_b       = -2;
+    sync_index_b       = invalid_conglom_member;
     lock_pos_a         = false;
     lock_pos_b         = false;
     lock_orient_a      = false;
@@ -5254,12 +5255,12 @@ bool als::sync_move_and_face::get_sync_actors(actor** actor_a, actor** actor_b) 
 
 // sub_5B3B40
 void als::sync_move_and_face::get_sync_bone_po(actor* actor_a, po* po_a, actor* actor_b, po* po_b) {
-    bool found = sync_index_a != -2 && sync_index_b != -2;
+    bool found = sync_index_a != invalid_conglom_member && sync_index_b != invalid_conglom_member;
 
     // found for this pair, or for it the other way round
     if (!found || sync_index_actor_a != actor_a || sync_index_actor_b != actor_b) {
         if (found && sync_index_actor_a == actor_b && sync_index_actor_b == actor_a) {
-            i16 index_a = sync_index_a;
+            e_conglom_member_index index_a = sync_index_a;
 
             sync_index_a       = sync_index_b;
             sync_index_b       = index_a;
@@ -5274,12 +5275,12 @@ void als::sync_move_and_face::get_sync_bone_po(actor* actor_a, po* po_a, actor* 
     }
 
     if (sync_index_a >= 0)
-        retail::sub_62FC10((i32)actor_a, sync_index_a, (u64*)po_a, 0); // conglomerate::get_member_abs_po
+        ((conglomerate*)actor_a)->get_member_abs_po(sync_index_a, po_a);
     else
         *po_a = *actor_a->my_abs_po;
 
     if (sync_index_b >= 0)
-        retail::sub_62FC10((i32)actor_b, sync_index_b, (u64*)po_b, 0);
+        ((conglomerate*)actor_b)->get_member_abs_po(sync_index_b, po_b);
     else
         *po_b = *actor_b->my_abs_po;
 }
@@ -5409,26 +5410,26 @@ void als::sync_move_and_face::apply_axis_slides(actor*                   actor_a
 }
 
 // sub_5B38C0
-void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* actor_b, i16* index_a, i16* index_b) {
-    i16 best_index_a = -2;
-    i16 best_index_b = -2;
-    f32 best_dist2   = 3.4028235e38f;
+void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* actor_b, e_conglom_member_index* index_a, e_conglom_member_index* index_b) {
+    e_conglom_member_index best_index_a = invalid_conglom_member;
+    e_conglom_member_index best_index_b = invalid_conglom_member;
+    f32                    best_dist2   = 3.4028235e38f;
 
     for (i32 a = 0; a < 10; ++a) {
-        vector3d pos_a;
-        i16      bone_a = get_sync_bone_index_and_pos(sync_bone_ids[a], actor_a, &pos_a);
+        vector3d               pos_a;
+        e_conglom_member_index bone_a = get_sync_bone_index_and_pos(sync_bone_ids[a], actor_a, &pos_a);
 
-        if (a > 0 && bone_a == -1)
+        if (a > 0 && bone_a == base_conglom_index)
             break;
 
         for (i32 b = 0; b < 10; ++b) {
-            if (best_index_b == -1)
+            if (best_index_b == base_conglom_index)
                 break;
 
-            vector3d pos_b;
-            i16      bone_b = get_sync_bone_index_and_pos(sync_bone_ids[b], actor_b, &pos_b);
+            vector3d               pos_b;
+            e_conglom_member_index bone_b = get_sync_bone_index_and_pos(sync_bone_ids[b], actor_b, &pos_b);
 
-            if (b > 0 && bone_b == -1)
+            if (b > 0 && bone_b == base_conglom_index)
                 break;
 
             f32 dist2 = (pos_b - pos_a).length2();
@@ -5439,11 +5440,11 @@ void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* act
                 best_dist2   = dist2;
             }
 
-            if (bone_b == -1)
+            if (bone_b == base_conglom_index)
                 break;
         }
 
-        if (bone_a == -1)
+        if (bone_a == base_conglom_index)
             break;
     }
 
@@ -5452,12 +5453,12 @@ void als::sync_move_and_face::compute_best_sync_bones(actor* actor_a, actor* act
 }
 
 // inlined @ sub_5B38C0
-i16 als::sync_move_and_face::get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos) {
+e_conglom_member_index als::sync_move_and_face::get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos) {
     if (the_actor->is_a_conglomerate()) {
-        i16 index = ((conglomerate*)the_actor)->get_member_index(bone);
+        e_conglom_member_index index = ((conglomerate*)the_actor)->get_member_index(bone);
 
         if (index >= 0) {
-            retail::sub_62FA60((i32)the_actor, index, (f32*)pos, 0); // conglomerate::get_member_abs_position
+            ((conglomerate*)the_actor)->get_member_abs_position(index, pos);
 
             return index;
         }
@@ -5465,7 +5466,7 @@ i16 als::sync_move_and_face::get_sync_bone_index_and_pos(const string_hash &bone
 
     *pos = the_actor->my_abs_po->get_position();
 
-    return -1;
+    return base_conglom_index;
 }
 
 // sub_5C1AE0
@@ -5571,17 +5572,17 @@ void als::sync_move_and_face::sync_actors(actor* actor_a,
     po_a.identity();
     po_b.identity();
 
-    i16 index_a;
-    i16 index_b;
+    e_conglom_member_index index_a;
+    e_conglom_member_index index_b;
     compute_best_sync_bones(actor_a, actor_b, &index_a, &index_b);
 
     if (index_a >= 0)
-        retail::sub_62FC10((i32)actor_a, index_a, (u64*)&po_a, 0); // conglomerate::get_member_abs_po
+        ((conglomerate*)actor_a)->get_member_abs_po(index_a, &po_a);
     else
         po_a = *actor_a->my_abs_po;
 
     if (index_b >= 0)
-        retail::sub_62FC10((i32)actor_b, index_b, (u64*)&po_b, 0);
+        ((conglomerate*)actor_b)->get_member_abs_po(index_b, &po_b);
     else
         po_b = *actor_b->my_abs_po;
 

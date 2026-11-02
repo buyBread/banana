@@ -3440,13 +3440,13 @@ bool slf__entity__get_marker_names__dynamic_array__t::operator()(chuck::vm::vm_s
     i32 count = (i32)self->members.size;
 
     for (i32 i = 0; i < count; ++i) {
-        entity* member = self->members.array[i];
+        entity_base* member = self->members.array[i];
 
         if (!member || !member->is_a_marker())
             continue;
 
         // the name is looked up and dropped; every entry is an empty string
-        retail::sub_62F970((i32)self, (i16)i); // conglomerate::get_member_id
+        self->get_member_id((e_conglom_member_index)i);
 
         chuck::vm::chuck_dynamic_array_element_t element;
 

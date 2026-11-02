@@ -20,17 +20,21 @@ namespace treyarch {
     };
 
     struct conglomerate_bone_index {
-        string_hash name;
-        i32         model_po_index;
-        u8          reserved_08[0x0C];
+        string_hash            name;
+        i32                    model_po_index;
+        i32                    parent_index;
+        u16                    unk_0c;
+        u16                    unk_0e;
+        e_conglom_member_index child_index;
+        e_conglom_member_index sibling_index;
 
         friend bool operator<(string_hash lhs, const conglomerate_bone_index &rhs) { return lhs < rhs.name; }
         friend bool operator>(string_hash lhs, const conglomerate_bone_index &rhs) { return rhs.name < lhs; }
     };
 
-    // members are kept sorted by id
-    inline bool operator<(string_hash lhs, const entity &rhs) { return lhs < rhs.id; }
-    inline bool operator>(string_hash lhs, const entity &rhs) { return rhs.id < lhs; }
+    // members and bone connectors are kept sorted by id
+    inline bool operator<(string_hash lhs, const entity_base &rhs) { return lhs < rhs.id; }
+    inline bool operator>(string_hash lhs, const entity_base &rhs) { return rhs.id < lhs; }
 
     // SM3's conglomerate_flags_t, but 0x100
     enum e_conglomerate_flags : u32 {
@@ -41,13 +45,13 @@ namespace treyarch {
         conglomerate_flag_possibly_render_valid = 0x00000010,
         conglomerate_flag_possibly_render       = 0x00000020,
         conglomerate_flag_is_cloned             = 0x00000040,
-        conglomerate_flag_unk_00000100          = 0x00000100 // ped_manager::add_ped sets it with the float at +0x188
+        conglomerate_flag_unk_00000100          = 0x00000100 // ped_manager::add_ped sets it with conglomerate_visual_radius
     };
 
     class conglomerate : public actor {
 
     public:
-        mash::vector<entity>          members;
+        mash::vector<entity_base>     members;
         mash::vector
             <ai_tentacle_info>*       tentacles;
         u8                            reserved_100[0x04];
@@ -126,12 +130,32 @@ namespace treyarch {
         virtual void frame_done_including_members();
 
         e_conglom_member_index get_member_index(const string_hash &nodename) const;
-        entity*                get_member      (e_conglom_member_index index) const;
+        entity_base*           get_member      (e_conglom_member_index index) const;
+        entity_base*           get_member      (const string_hash &nodename) const;
+        const string_hash     &get_member_id   (e_conglom_member_index index) const;
 
         bool has_member            (const string_hash &nodename) const;
         bool has_member_for_linking(const string_hash &nodename) const;
 
+        entity_base* get_member_for_linking(e_conglom_member_index index); // a bone gets its connector the first time
+        entity_base* get_member_for_linking(const string_hash &nodename);
+
+        bool get_member_abs_position(e_conglom_member_index index, vector3d* pos, const po* model_po_override = nullptr) const;
+        bool get_member_abs_position(const string_hash &nodename, vector3d* pos, const po* model_po_override = nullptr) const;
+        bool get_member_abs_po      (e_conglom_member_index index, po* the_po, const po* model_po_override = nullptr) const;
+        bool get_member_abs_po      (const string_hash &nodename, po* the_po, const po* model_po_override = nullptr) const;
+
+        bool set_member_abs_position(e_conglom_member_index index, const vector3d &pos);
+        bool set_member_abs_po      (e_conglom_member_index index, const po &the_po, po* model_po_override = nullptr);
+        bool set_member_abs_po      (const string_hash &nodename, const po &the_po, po* model_po_override = nullptr);
+
+        void dirty_bone_connectors(bool force_entire_tree = false);
+        void create_parentage_tree();
+
         static string_hash my_type_key;
+
+    protected:
+        void translate_member_model_position_recurse(const conglomerate_bone_index &bone_index, const vector3d &delta); // no bounds check
 
     private:
         void finalize(mash::allocation_scope scope);
@@ -139,6 +163,9 @@ namespace treyarch {
 
     ASSERT_SIZEOF  (conglomerate_bone_index,                 0x14);
     ASSERT_OFFSETOF(conglomerate_bone_index, model_po_index, 0x04);
+    ASSERT_OFFSETOF(conglomerate_bone_index, parent_index,   0x08);
+    ASSERT_OFFSETOF(conglomerate_bone_index, child_index,    0x10);
+    ASSERT_OFFSETOF(conglomerate_bone_index, sibling_index,  0x12);
 
     ASSERT_SIZEOF  (conglomerate,                                      0x198);
     ASSERT_OFFSETOF(conglomerate, members,                             0x0E8);

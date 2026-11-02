@@ -3556,7 +3556,7 @@ f32 spiderman_rvb_player_interface::unk_562(arch_base_vhandle target) {
 
         vector3d found;
 
-        if (retail::sub_62FA60((i32)target_entity, ((conglomerate*)target_entity)->get_member_index(webcast_key), (f32*)&found, 0)) { // conglomerate::get_member_abs_position
+        if (((conglomerate*)target_entity)->get_member_abs_position(((conglomerate*)target_entity)->get_member_index(webcast_key), &found)) {
             member_position = found;
             has_member      = true;
         }

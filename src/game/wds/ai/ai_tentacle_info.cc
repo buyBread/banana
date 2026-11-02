@@ -806,7 +806,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                     }
                 }
             } else {
-                entity* owner = get_my_entity();
+                auto* owner = (conglomerate*)get_my_entity();
 
                 if (need_po) {
                     *node_po_storage.array = *base_node->my_abs_po;
@@ -819,7 +819,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                     for (e_conglom_member_index* member = node_indices.begin(); member != node_indices.end(); ++member) {
                         vector3d member_pos = owner->my_abs_po->get_position();
 
-                        retail::sub_62FA60((i32)owner, *member, (f32*)&member_pos, 0); // conglomerate::get_member_abs_position
+                        owner->get_member_abs_position(*member, &member_pos);
                     }
                 }
 
@@ -835,18 +835,18 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                         vector3d member_pos = owner->my_abs_po->get_position();
 
-                        retail::sub_62FA60((i32)owner, *member, (f32*)&member_pos, 0); // conglomerate::get_member_abs_position
+                        owner->get_member_abs_position(*member, &member_pos);
 
                         node_lif.end   = compute_blend_pos(member_pos, target, code_blend);
                         node_lif.start = correct();
 
-                        retail::sub_640EA0((u32*)owner, *member, (f32*)&node_lif.start); // conglomerate::set_member_abs_position
+                        owner->set_member_abs_position(*member, node_lif.start);
                     }
 
                     if (need_po) {
                         po member_po = *owner->my_abs_po;
 
-                        retail::sub_62FC10((i32)owner, *member, (u64*)&member_po, 0); // conglomerate::get_member_abs_po
+                        owner->get_member_abs_po(*member, &member_po);
 
                         node_po_storage.array[po_index++] = member_po;
                     }
@@ -877,7 +877,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                 else if (end_node->flags & entity_flag_bone_connector) {
                     auto* root = end_node->get_conglom_owner();
 
-                    retail::sub_6410F0((i32)root, root->get_member_index(end_node->id), (f32*)&end_po, 0); // conglomerate::set_member_abs_po
+                    root->set_member_abs_po(root->get_member_index(end_node->id), end_po);
                 } else
                     entity_set_abs_po(end_node, end_po);
             }
@@ -885,11 +885,9 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
             if (need_po) {
                 // a bone connector is placed through its conglomerate
                 auto place = [](entity* node, po* node_po) {
-                    if (node->flags & entity_flag_bone_connector) {
-                        auto root = (u32*)node->get_conglom_owner();
-
-                        retail::sub_48E860(root, &node->id.source_hash_code, (f32*)node_po, 0); // conglomerate::set_member_abs_po
-                    } else
+                    if (node->flags & entity_flag_bone_connector)
+                        node->get_conglom_owner()->set_member_abs_po(node->id, *node_po);
+                    else
                         entity_set_abs_po(node, *node_po);
                 };
 
@@ -897,7 +895,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
 
                 node_po_storage.array[po_index] = end_source;
 
-                entity* owner = get_my_entity();
+                auto* owner = (conglomerate*)get_my_entity();
 
                 // each po's z turned at the next one
                 for (u32 i = 0; i < node_po_storage.size; ++i) {
@@ -912,7 +910,7 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
                         update_node_facing(node_po, node_po[-1], node_po[1].get_position());
 
                         if (update_po && !hold_nodes)
-                            retail::sub_6410F0((i32)owner, node_indices.array[i - 1], (f32*)node_po, 0); // conglomerate::set_member_abs_po
+                            owner->set_member_abs_po(node_indices.array[i - 1], *node_po);
                     } else if (i == node_po_storage.size - 1) {
                         const vector3d &at    = node_po->get_position();
                         const vector3d &reach = node_po[-1].get_z_facing();
@@ -993,11 +991,11 @@ void ai_tentacle_info::update_spline(bool ignore_limbo) { // the polytube's cont
             }
         } else {
             for (e_conglom_member_index* member = node_indices.begin(); member != node_indices.end(); ++member) {
-                entity* owner = get_my_entity();
+                auto* owner = (conglomerate*)get_my_entity();
 
                 vector3d member_pos = owner->my_abs_po->get_position();
 
-                retail::sub_62FA60((i32)owner, *member, (f32*)&member_pos, 0); // conglomerate::get_member_abs_position
+                owner->get_member_abs_position(*member, &member_pos);
 
                 const vector3d point = to_local.slow_xform(member_pos);
 

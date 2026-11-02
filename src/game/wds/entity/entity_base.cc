@@ -743,6 +743,17 @@ void treyarch::entity_set_facing_and_up(actor* ent, const vector3d &facing, cons
     entity_set_abs_po(ent, new_po);
 }
 
+// sub_6018E0
+i32 treyarch::compare_entity_base_ptr_entity_id(const void* x1, const void* x2) {
+    u32 id_1 = (*(entity_base* const*)x1)->id.source_hash_code;
+    u32 id_2 = (*(entity_base* const*)x2)->id.source_hash_code;
+
+    if (id_1 > id_2)
+        return 1;
+
+    return id_1 < id_2 ? -1 : 0;
+}
+
 // sub_653CF0
 void entity_base::add_adopted_child(entity_base* child) {
     engine_lock_scope lock(&jq::references::unk_00ffece0.get());

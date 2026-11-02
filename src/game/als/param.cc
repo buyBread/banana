@@ -711,15 +711,13 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
 
             vector3d velocity = physical->get_velocity();
 
-            using get_member_abs_position_t = bool (__thiscall*)(actor*, const string_hash*, vector3d*, i32);
-
             // the pelvis toward the head when it has both, else the velocity
             vector3d facing = velocity;
             vector3d head;
             vector3d pelvis;
 
-            if (((get_member_abs_position_t)retail::sub_402560)(the_actor, &references::bip01_head.get(), &head, 0) && // conglomerate::get_member_abs_position
-                ((get_member_abs_position_t)retail::sub_402560)(the_actor, &references::bip01_pelvis.get(), &pelvis, 0)) {
+            if (((conglomerate*)the_actor)->get_member_abs_position(references::bip01_head.get(), &head) &&
+                ((conglomerate*)the_actor)->get_member_abs_position(references::bip01_pelvis.get(), &pelvis)) {
 
                 facing.x = head.x - pelvis.x;
                 facing.z = head.z - pelvis.z;
@@ -1078,12 +1076,10 @@ vector3d als::internal_parameter_cache::calculate_internal_vector(animation_logi
         case param_pelvis_facing:
             // the pelvis bone's z row reversed, else the forward row
             if (the_actor->is_a_conglomerate()) {
-                using get_member_abs_po_t = bool (__thiscall*)(actor*, const string_hash*, po*, i32);
-
                 po pelvis;
                 pelvis.identity();
 
-                if (((get_member_abs_po_t)retail::sub_402590)(the_actor, &references::bip01_pelvis.get(), &pelvis, 0)) { // conglomerate::get_member_abs_po
+                if (((conglomerate*)the_actor)->get_member_abs_po(references::bip01_pelvis.get(), &pelvis)) {
                     const vector3d &z_row = pelvis.get_z_facing();
 
                     math::vector4 facing(z_row.x, z_row.y, z_row.z, 0.0f);

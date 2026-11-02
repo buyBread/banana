@@ -3771,7 +3771,7 @@ bool slf__entity__get_member__str__t::operator()(chuck::vm::vm_stack &stack) {
             string_hash member_name;
             member_name.initialize(mash::ALLOCATED, name);
 
-            if (entity* member = self->get_member(self->get_member_index(member_name)))
+            if (entity_base* member = self->get_member(self->get_member_index(member_name)))
                 result = member->my_handle;
         } else
             self->is_a_conglomerate_clone(); // the answer is dropped
@@ -3817,7 +3817,7 @@ bool slf__entity__get_member_for_linking__str__t::operator()(chuck::vm::vm_stack
             string_hash member_name;
             member_name.initialize(mash::ALLOCATED, name);
 
-            auto member = (entity*)retail::sub_655D80((i32)self, self->get_member_index(member_name)); // conglomerate::get_member_for_linking
+            auto* member = self->get_member_for_linking(self->get_member_index(member_name));
 
             if (member)
                 result = member->my_handle;
@@ -3844,10 +3844,10 @@ bool slf__entity__get_trigger_member_for_linking__str__t::operator()(chuck::vm::
             string_hash member_name;
             member_name.initialize(mash::ALLOCATED, name);
 
-            auto member = (entity*)retail::sub_655D80((i32)self, self->get_member_index(member_name)); // conglomerate::get_member_for_linking
+            auto* member = self->get_member_for_linking(self->get_member_index(member_name));
 
             if (member) {
-                auto found = ((trigger* (__thiscall*)(trigger_manager*, entity*))retail::sub_72D5F0)(trigger_manager::inst(), member); // trigger_manager::find_instance
+                auto found = ((trigger* (__thiscall*)(trigger_manager*, entity_base*))retail::sub_72D5F0)(trigger_manager::inst(), member); // trigger_manager::find_instance
 
                 if (found)
                     result = found->my_handle;
@@ -3896,7 +3896,7 @@ bool slf__entity__get_member_abs_position__str__t::operator()(chuck::vm::vm_stac
         member_name.initialize(mash::ALLOCATED, name);
 
         // an unknown member leaves the result unset
-        retail::sub_62FA60((i32)self, self->get_member_index(member_name), (f32*)&result, 0); // conglomerate::get_member_abs_position
+        self->get_member_abs_position(self->get_member_index(member_name), &result);
     } else {
         if (self)
             self->is_a_conglomerate_clone(); // the answer is dropped
@@ -4212,7 +4212,7 @@ bool slf__entity__update_member_visible__str__num__t::operator()(chuck::vm::vm_s
     } else if (self->is_a_conglomerate()) {
         member_name.initialize(mash::ALLOCATED, name);
 
-        entity* member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
+        entity_base* member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
         member->set_visible(visible != 0.0f, false);
     }
@@ -4235,8 +4235,8 @@ bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::
     string_hash member_name;
     member_name.initialize(mash::ALLOCATED, name);
 
-    entity* member = nullptr;
-    color32 color;
+    entity_base* member = nullptr;
+    color32      color;
 
     // the current colour is read, then every channel overwritten
     if (self->is_a_dynamic_conglomerate_clone()) {
@@ -4246,7 +4246,7 @@ bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::
         member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
         if (member->is_an_actor())
-            color = member->get_render_color();
+            color = ((actor*)member)->get_render_color();
     }
 
     color.set_red_float  (rgb->x);
@@ -4257,7 +4257,7 @@ bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::
     if (self->is_a_dynamic_conglomerate_clone())
         retail::sub_639950((u32*)self, &member_name.source_hash_code, (u32*)&color); // the clone's member colour
     else if (self->is_a_conglomerate() && member->is_an_actor())
-        member->set_render_color(color);
+        ((actor*)member)->set_render_color(color);
 
     return true;
 }
@@ -4265,9 +4265,9 @@ bool slf__entity__update_member_color__str__vector3d__num__t::operator()(chuck::
 // sub_84BE70
 bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator()(chuck::vm::vm_stack &stack) {
     struct wait_state {
-        entity* member;
-        color   start;
-        f32     elapsed;
+        entity_base* member;
+        color        start;
+        f32          elapsed;
     };
 
     auto* state = pop_wait_arguments<wait_state>(stack, 0x1C);
@@ -4292,7 +4292,7 @@ bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator
         auto member_color = std::bit_cast<color32>(member_name);
 
         if (self->is_a_dynamic_conglomerate_clone()) {
-            state->member = (entity*)retail::sub_639A90((u32*)self, &member_name.source_hash_code); // the clone's member
+            state->member = (entity_base*)retail::sub_639A90((u32*)self, &member_name.source_hash_code); // the clone's member
 
             color32 current;
             member_color = *(color32*)retail::sub_62A580((u32*)self, (i32)&current, (i32)state->member); // the clone's member colour
@@ -4300,7 +4300,7 @@ bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator
             state->member = ((conglomerate*)self)->get_member(((conglomerate*)self)->get_member_index(member_name));
 
             if (state->member->is_an_actor())
-                member_color = state->member->get_render_color();
+                member_color = ((actor*)state->member)->get_render_color();
         }
 
         state->elapsed = 0.0f;
@@ -4350,7 +4350,7 @@ bool slf__entity__wait_update_member_color__str__vector3d__num__num__t::operator
         color32 packed(current);
         retail::sub_6153D0((u32*)self, (i32)state->member, (u32*)&packed); // the clone's member colour
     } else if (state->member->is_an_actor())
-        state->member->set_render_color(color32(current));
+        ((actor*)state->member)->set_render_color(color32(current));
 
     if (duration > state->elapsed)
         return false;
@@ -6017,12 +6017,12 @@ bool slf__entity__begin_slingshot_point_test__entity__vector3d__entity__num__t::
     string_hash point_1;
     point_1.initialize(mash::ALLOCATED, "WEB_ATTACH_POINT1");
 
-    entity* web_attach_point_1 = object->get_member(object->get_member_index(point_1));
+    entity_base* web_attach_point_1 = object->get_member(object->get_member_index(point_1));
 
     string_hash point_2;
     point_2.initialize(mash::ALLOCATED, "WEB_ATTACH_POINT2");
 
-    entity* web_attach_point_2 = object->get_member(object->get_member_index(point_2));
+    entity_base* web_attach_point_2 = object->get_member(object->get_member_index(point_2));
 
     void* memory = retail::sub_823840(0x30);                              // slingshot_point_event::operator new
     auto  raised = memory ? (event*)retail::sub_91EE30(memory) : nullptr; // slingshot_point_event::slingshot_point_event
@@ -7851,7 +7851,7 @@ bool slf__entity__set_simple_variant_mode__num__t::operator()(chuck::vm::vm_stac
     if (!self->is_a_conglomerate())
         return true;
 
-    for (entity* member : ((conglomerate*)self)->members) {
+    for (entity_base* member : ((conglomerate*)self)->members) {
         if (member->has_ifc(entity_ifc_simple_variant))
             member->simple_variant_ifc()->simple_variant_mode = (i32)mode;
     }
@@ -7891,7 +7891,7 @@ bool slf__entity__set_simple_variant__num__t::operator()(chuck::vm::vm_stack &st
     if (!self->is_a_conglomerate())
         return true;
 
-    for (entity* member : ((conglomerate*)self)->members) {
+    for (entity_base* member : ((conglomerate*)self)->members) {
         if (member->has_ifc(entity_ifc_simple_variant))
             member->simple_variant_ifc()->simple_variant = (i32)variant;
     }

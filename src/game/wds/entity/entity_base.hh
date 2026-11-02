@@ -133,7 +133,8 @@ namespace treyarch {
         u8                         clone_member_idx;
         u8                         reserved_03c[0x04];
         conglomerate*              my_conglom_root;
-        u8                         reserved_044[0x08];
+        u8                         bone_idx;
+        u8                         reserved_045[0x07];
         string_hash                sound_type;
 
         explicit entity_base(mash::generating_vtable_version so_do_nothing) : arch_base(so_do_nothing) {}
@@ -447,10 +448,13 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_base, fade_timer,       0x3A);
     ASSERT_OFFSETOF(entity_base, clone_member_idx, 0x3B);
     ASSERT_OFFSETOF(entity_base, my_conglom_root,  0x40);
+    ASSERT_OFFSETOF(entity_base, bone_idx,         0x44);
     ASSERT_OFFSETOF(entity_base, sound_type,       0x4C);
 
     void entity_set_abs_po(entity_base* ent, const po &the_po);
     void entity_set_abs_position(entity_base* ent, const vector3d &pos);
     void entity_set_abs_parent(entity_base* me, entity_base* parent); // keeps the world po
     void entity_set_facing_and_up(actor* ent, const vector3d &facing, const vector3d &up, bool force);
+
+    i32 compare_entity_base_ptr_entity_id(const void* x1, const void* x2); // for qsort
 } // treyarch

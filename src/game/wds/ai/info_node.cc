@@ -292,7 +292,7 @@ bool std_carry_inode::add_slave(std_carry_inode* slave, bool engage_slave_mode) 
 void std_carry_inode::attach_slave(std_carry_inode* slave, const string_hash &bone) { // onto the bone of a conglomerate that has it, else onto the carrier
     if (get_actor()->is_a_conglomerate() && ((conglomerate*)get_actor())->has_member_for_linking(bone)) {
         auto* body   = (conglomerate*)get_actor();
-        auto  member = (entity_base*)retail::sub_655D80((i32)body, body->get_member_index(bone)); // conglomerate::get_member_for_linking
+        auto* member = body->get_member_for_linking(body->get_member_index(bone));
 
         entity_set_abs_parent(slave->get_actor(), member);
         slave->get_actor()->set_rel_po(references::unk_00fc4f60.get());

@@ -110,6 +110,7 @@ namespace treyarch { namespace vc8 {
             return first ? (u32)(capacity_end - first) : 0;
         }
 
+        // sub_42D540
         // sub_455DB0
         // inlined @ sub_9C2D60
         // inlined @ sub_64B1D0

@@ -138,10 +138,10 @@ void mission_manager::on_icon_entity_acquired(arch_base_vhandle handle) {
 
     string_hash object_name = owner->adv_ptrs->script_pack_slot->pack_name.get_hash();
 
-    string_hash filename;
+    string_hash filename = owner->adv_ptrs->script_exe_name->get_hash();
 
     chuck::vm::script_object* script_object =
-        chuck::vm::script_manager::inst()->find_object(*(string_hash*)retail::sub_5FD120((u32*)owner->adv_ptrs->script_exe_name, (u32*)&filename),
+        chuck::vm::script_manager::inst()->find_object(filename,
                                                        object_name,
                                                        owner->adv_ptrs->script_obj_name);
 
@@ -185,9 +185,7 @@ void mission_manager::reset_icon_entity(arch_base_vhandle handle) {
 
 // sub_97ECC0
 bool fixup_mission_header_children_visitor::allow_object(const chuck::vm::script_object* object) {
-    string_hash name;
-
-    return *(string_hash*)retail::sub_5FD120((u32*)object, (u32*)&name) == references::mission_header_instance_base_name.read();
+    return object->get_name() == references::mission_header_instance_base_name.read();
 }
 
 // sub_97F5E0
@@ -225,9 +223,7 @@ chuck::vm::e_visit_result fixup_mission_header_children_visitor::visit(const chu
 
 // sub_97ECC0
 bool fixup_mission_header_visitor::allow_object(const chuck::vm::script_object* object) {
-    string_hash name;
-
-    return *(string_hash*)retail::sub_5FD120((u32*)object, (u32*)&name) == references::mission_header_instance_base_name.read();
+    return object->get_name() == references::mission_header_instance_base_name.read();
 }
 
 // sub_983DD0

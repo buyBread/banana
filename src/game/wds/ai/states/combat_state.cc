@@ -2222,7 +2222,7 @@ bool combat_state::unk_050(      entity*           target,
 
                     auto* self = (conglomerate*)get_actor();
 
-                    retail::sub_62FC10((i32)self, (i16)self->get_member_index(member_name), (u64*)&frame, 0); // conglomerate::get_member_abs_po
+                    self->get_member_abs_po(self->get_member_index(member_name), &frame);
                 } else
                     frame = *get_actor()->my_abs_po;
 
@@ -2713,7 +2713,7 @@ bool combat_state::hit_target(      entity*           target,
                         if (!((conglomerate*)target)->has_member_for_linking(bone))
                             continue;
 
-                        auto* member = ((entity* (__thiscall*)(entity*, const string_hash*))retail::sub_408F10)(target, &bone); // conglomerate::get_member_for_linking
+                        auto* member = ((conglomerate*)target)->get_member_for_linking(bone);
 
                         const vector3d &member_position = member->my_abs_po->get_position();
 

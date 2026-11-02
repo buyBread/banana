@@ -16,6 +16,8 @@ namespace treyarch {
     class flight_layer_inode;
     class spline;
 
+    enum e_conglom_member_index : i16;
+
 namespace als {
     class animation_logic_system;
     class state_machine;
@@ -398,15 +400,15 @@ namespace als {
     class simple_orientation_on_foot : public simple_orientation {
 
     public:
-        i16      foot_index[2];        // right and left; -2 without one
-        vector3d foot_world_facing[2];
-        vector3d foot_world_pos[2];
-        f32      return_rot_speed;
-        i32      lock_foot;            // -1 lets the lower foot be the pivot
-        i32      rot_foot;             // the last pivot
-        bool     use_fake_foot_ik;
-        bool     use_fake_leg_ik;
-        u8       pad_086[0x02];
+        e_conglom_member_index foot_index[2];        // right and left; invalid without one
+        vector3d               foot_world_facing[2];
+        vector3d               foot_world_pos[2];
+        f32                    return_rot_speed;
+        i32                    lock_foot;            // -1 lets the lower foot be the pivot
+        i32                    rot_foot;             // the last pivot
+        bool                   use_fake_foot_ik;
+        bool                   use_fake_leg_ik;
+        u8                     pad_086[0x02];
 
         simple_orientation_on_foot();
         explicit simple_orientation_on_foot(mash::generating_vtable_version so_do_nothing);
@@ -428,18 +430,18 @@ namespace als {
                             const vector3d &desired_dir) override;
 
         // false when there's no pivot or the feet are level and none is locked
-        static bool rotate_about_foot(      po*       curr_offset,
-                                            actor*    target,
-                                            f32       delta_t,
-                                            f32       heading_change,
-                                      const vector3d &curr_up,
-                                      const vector3d &curr_dir,
-                                      const vector3d &desired_up,
-                                      const vector3d &desired_dir,
-                                            i16       left_foot,
-                                            i16       right_foot,
-                                            i32       lock,
-                                            i32*      pivot_foot);
+        static bool rotate_about_foot(      po*                     curr_offset,
+                                            actor*                  target,
+                                            f32                     delta_t,
+                                            f32                     heading_change,
+                                      const vector3d               &curr_up,
+                                      const vector3d               &curr_dir,
+                                      const vector3d               &desired_up,
+                                      const vector3d               &desired_dir,
+                                            e_conglom_member_index  left_foot,
+                                            e_conglom_member_index  right_foot,
+                                            i32                     lock,
+                                            i32*                    pivot_foot);
 
         static void rotate_about_point(      po*       curr_offset,
                                              actor*    target,
@@ -1274,20 +1276,20 @@ namespace als {
     class sync_move_and_face : public use_anim_only {
 
     public:
-        f32      tween_pos;          // 0 to 1 over the pair's sync_tween_time_pos
-        f32      tween_orient;
-        actor*   sync_index_actor_a; // the pair the sync indices were found for
-        i16      sync_index_a;       // conglomerate members; -2 until found, negative for the actor's own po
-        u8       pad_01e[0x02];
-        actor*   sync_index_actor_b;
-        i16      sync_index_b;
-        u8       pad_026[0x02];
-        vector3d rel_slide_a;        // where b first sat in a's bone, along its axes; zero until an axis slide sets it
-        vector3d rel_slide_b;
-        bool     lock_pos_a;
-        bool     lock_pos_b;
-        bool     lock_orient_a;
-        bool     lock_orient_b;
+        f32                    tween_pos;          // 0 to 1 over the pair's sync_tween_time_pos
+        f32                    tween_orient;
+        actor*                 sync_index_actor_a; // the pair the sync indices were found for
+        e_conglom_member_index sync_index_a;       // invalid until found, negative for the actor's own po
+        u8                     pad_01e[0x02];
+        actor*                 sync_index_actor_b;
+        e_conglom_member_index sync_index_b;
+        u8                     pad_026[0x02];
+        vector3d               rel_slide_a;        // where b first sat in a's bone, along its axes; zero until an axis slide sets it
+        vector3d               rel_slide_b;
+        bool                   lock_pos_a;
+        bool                   lock_pos_b;
+        bool                   lock_orient_a;
+        bool                   lock_orient_b;
 
         // inlined @ sub_5C3730
         // inlined @ sub_5AE9A0
@@ -1335,11 +1337,11 @@ namespace als {
                                vector3d*                pos_b,
                                po*                      po_b);
 
-        // the closest pair of the two actors' sync bones; an actor without them stands in as -1 at its own position
-        static void compute_best_sync_bones(actor* actor_a, actor* actor_b, i16* index_a, i16* index_b);
+        // the closest pair of the two actors' sync bones; an actor without them stands in as the base index at its own position
+        static void compute_best_sync_bones(actor* actor_a, actor* actor_b, e_conglom_member_index* index_a, e_conglom_member_index* index_b);
 
-        // the bone's member index and world position, else -1 and the actor's own
-        static i16 get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos);
+        // the bone's member index and world position, else the base index and the actor's own
+        static e_conglom_member_index get_sync_bone_index_and_pos(const string_hash &bone, actor* the_actor, vector3d* pos);
 
         // b's actor moves and turns its bone part of the way onto a's, unless locked; its physics stop unless allowed
         static void sync_entities(f32       delta_t,

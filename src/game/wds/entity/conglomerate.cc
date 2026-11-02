@@ -1,6 +1,10 @@
+#include <cstdlib>
+#include <new>
+
 #include "retail.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/binary_search.hh"
+#include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
 
@@ -239,11 +243,37 @@ e_conglom_member_index conglomerate::get_member_index(const string_hash &nodenam
 }
 
 // sub_616950
-entity* conglomerate::get_member(e_conglom_member_index index) const {
+// inlined @ sub_6366D0
+entity_base* conglomerate::get_member(e_conglom_member_index index) const {
     if (index >= 0 && (u32)index < members.size)
         return members.array[index];
 
-    return index == base_conglom_index ? (entity*)this : nullptr;
+    return index == base_conglom_index ? (entity_base*)this : nullptr;
+}
+
+// sub_6366D0
+entity_base* conglomerate::get_member(const string_hash &nodename) const {
+    return get_member(get_member_index(nodename));
+}
+
+// sub_62F970
+const string_hash &conglomerate::get_member_id(e_conglom_member_index index) const {
+    if (index >= 0) {
+        if ((u32)index < members.size)
+            return members.array[index]->id;
+
+        i32 slot = (i16)(index - members.size);
+
+        if ((u32)slot < bone_indices.size())
+            return bone_indices.get_vector().array[slot].name;
+    } else if (index == base_conglom_index)
+        return id;
+
+    static string_hash no_id;
+
+    no_id = string_hash();
+
+    return no_id;
 }
 
 // sub_6169D0
@@ -261,4 +291,271 @@ bool conglomerate::has_member_for_linking(const string_hash &nodename) const {
     e_conglom_member_index index = get_member_index(nodename);
 
     return index >= 0 && (u32)index < bone_indices.size() + members.size;
+}
+
+// sub_655D80
+entity_base* conglomerate::get_member_for_linking(e_conglom_member_index index) {
+    if (index < 0)
+        return index == base_conglom_index ? this : nullptr;
+
+    if ((u32)index < members.size)
+        return members.array[index];
+
+    i32 slot = (i16)(index - members.size);
+
+    if ((u32)slot >= bone_indices.size())
+        return nullptr;
+
+    const conglomerate_bone_index &bone = bone_indices.get_vector().array[slot];
+
+    i32 found = -1;
+
+    if (bone_connectors && !bone_connectors->empty()) {
+        if (binary_search_array_deref(bone.name, bone_connectors->begin(), (i32)bone_connectors->size(), &found))
+            return bone_connectors->begin()[found];
+    }
+
+    entity_base* connector = nullptr;
+
+    if (void* memory = mm::allocate(sizeof(entity_base)))
+        connector = ((entity_base* (__thiscall*)(void*, const string_hash&, u32))retail::sub_64AF40)(memory, bone.name, entity_flag_bone_connector | entity_flag_member); // entity_base::entity_base
+
+    connector->bone_idx  = (u8)bone.model_po_index;
+    connector->my_rel_po = &all_model_po.array[connector->bone_idx];
+
+    auto* connector_abs_po = (po*)mm::allocate(sizeof(po));
+
+    if (connector_abs_po)
+        connector_abs_po->identity();
+
+    connector->my_abs_po       = connector_abs_po;
+    connector->my_conglom_root = this;
+    connector->set_parent(this);
+
+    if (!bone_connectors)
+        bone_connectors = new (mm::allocate(sizeof(vc8::vector<entity_base*>))) vc8::vector<entity_base*>();
+
+    bone_connectors->push_back(connector);
+
+    if (bone_connectors->size() > 1)
+        std::qsort(bone_connectors->begin(),
+                   bone_connectors->size(),
+                   sizeof(entity_base*),
+                   compare_entity_base_ptr_entity_id);
+
+    return connector;
+}
+
+// sub_408F10
+entity_base* conglomerate::get_member_for_linking(const string_hash &nodename) {
+    return get_member_for_linking(get_member_index(nodename));
+}
+
+// sub_62FA60
+bool conglomerate::get_member_abs_position(e_conglom_member_index index, vector3d* pos, const po* model_po_override) const {
+    if (index < 0) {
+        if (index != base_conglom_index)
+            return false;
+
+        *pos = my_abs_po->get_position();
+
+        return true;
+    }
+
+    if ((u32)index < members.size) {
+        *pos = members.array[index]->my_abs_po->get_position();
+
+        return true;
+    }
+
+    i32 slot = (i16)(index - members.size);
+
+    if ((u32)slot >= bone_indices.size())
+        return false;
+
+    const po*        model_pos = model_po_override ? model_po_override : all_model_po.array;
+    const vector3d  &local     = model_pos[bone_indices.get_vector().array[slot].model_po_index].get_position();
+    const matrix4x4 &m         = my_abs_po->get_matrix();
+
+    *pos = vector3d((f32)((f64)m.y.x * local.y + (f64)m.x.x * local.x + (f64)m.z.x * local.z + (f64)m.w.x),
+                    (f32)((f64)m.y.y * local.y + (f64)m.x.y * local.x + (f64)m.z.y * local.z + (f64)m.w.y),
+                    (f32)((f64)m.y.z * local.y + (f64)m.x.z * local.x + (f64)m.z.z * local.z + (f64)m.w.z));
+
+    return true;
+}
+
+// sub_402560
+bool conglomerate::get_member_abs_position(const string_hash &nodename, vector3d* pos, const po* model_po_override) const {
+    return get_member_abs_position(get_member_index(nodename), pos, model_po_override);
+}
+
+// sub_62FC10
+bool conglomerate::get_member_abs_po(e_conglom_member_index index, po* the_po, const po* model_po_override) const {
+    if (index < 0) {
+        if (index != base_conglom_index)
+            return false;
+
+        *the_po = *my_abs_po;
+
+        return true;
+    }
+
+    if ((u32)index < members.size) {
+        *the_po = *members.array[index]->my_abs_po;
+
+        return true;
+    }
+
+    i32 slot = (i16)(index - members.size);
+
+    if ((u32)slot >= bone_indices.size())
+        return false;
+
+    const po* model_pos = model_po_override ? model_po_override : all_model_po.array;
+
+    fast_po_mul(*the_po, model_pos[bone_indices.get_vector().array[slot].model_po_index], *my_abs_po);
+
+    return true;
+}
+
+// sub_402590
+bool conglomerate::get_member_abs_po(const string_hash &nodename, po* the_po, const po* model_po_override) const {
+    return get_member_abs_po(get_member_index(nodename), the_po, model_po_override);
+}
+
+// sub_640EA0
+bool conglomerate::set_member_abs_position(e_conglom_member_index index, const vector3d &pos) {
+    if (index < 0) {
+        if (index != base_conglom_index)
+            return false;
+
+        entity_set_abs_position(this, pos);
+
+        return true;
+    }
+
+    if ((u32)index < members.size) {
+        entity_set_abs_position(members.array[index], pos);
+
+        return true;
+    }
+
+    i32 slot = (i16)(index - members.size);
+
+    if ((u32)slot >= bone_indices.size())
+        return false;
+
+    const conglomerate_bone_index &bone = bone_indices.get_vector().array[slot];
+
+    vector3d model_position = all_model_po.array[bone.model_po_index].get_position();
+    vector3d target         = pos;
+
+    po               inverse = my_abs_po->inverse();
+    const matrix4x4 &m       = inverse.get_matrix();
+
+    // the target in model space, each component rounded before the bone's position comes off it
+    f32 x = (f32)((f64)m.y.x * target.y + (f64)m.x.x * target.x + (f64)m.z.x * target.z + (f64)m.w.x);
+    f32 y = (f32)((f64)m.y.y * target.y + (f64)m.x.y * target.x + (f64)m.z.y * target.z + (f64)m.w.y);
+    f32 z = (f32)((f64)m.y.z * target.y + (f64)m.x.z * target.x + (f64)m.z.z * target.z + (f64)m.w.z);
+
+    vector3d delta((f32)((f64)x - model_position.x),
+                   (f32)((f64)y - model_position.y),
+                   (f32)((f64)z - model_position.z));
+
+    translate_member_model_position_recurse(bone, delta);
+    dirty_bone_connectors(false);
+    radius_changed(true);
+
+    return true;
+}
+
+// sub_6410F0
+bool conglomerate::set_member_abs_po(e_conglom_member_index index, const po &the_po, po* model_po_override) {
+    if (index < 0) {
+        if (index != base_conglom_index)
+            return false;
+
+        entity_set_abs_po(this, the_po);
+
+        return true;
+    }
+
+    if ((u32)index < members.size) {
+        entity_set_abs_po(members.array[index], the_po);
+
+        return true;
+    }
+
+    i32 slot = (i16)(index - members.size);
+
+    if ((u32)slot >= bone_indices.size())
+        return false;
+
+    const conglomerate_bone_index &bone = bone_indices.get_vector().array[slot];
+
+    po old_inverse;
+    old_inverse.identity();
+
+    po* model_pos = model_po_override ? model_po_override : all_model_po.array;
+    po* model_po  = &model_pos[bone.model_po_index];
+
+    old_inverse = model_po->inverse();
+
+    fast_po_mul(*model_po, the_po, my_abs_po->inverse());
+
+    ((void (__thiscall*)(conglomerate*, const conglomerate_bone_index&, const po&, const po&, po*))retail::sub_62FEE0)(this, bone, *model_po, old_inverse, model_po_override); // conglomerate::update_member_model_po_recurse
+
+    dirty_bone_connectors(false);
+    radius_changed(true);
+
+    return true;
+}
+
+// sub_48E860
+bool conglomerate::set_member_abs_po(const string_hash &nodename, const po &the_po, po* model_po_override) {
+    return set_member_abs_po(get_member_index(nodename), the_po, model_po_override);
+}
+
+// sub_6304B0
+void conglomerate::translate_member_model_position_recurse(const conglomerate_bone_index &bone_index, const vector3d &delta) {
+    vector4d &translation = all_model_po.array[bone_index.model_po_index].get_matrix().w;
+
+    translation = vector4d((f32)((f64)translation.x + delta.x),
+                           (f32)((f64)translation.y + delta.y),
+                           (f32)((f64)translation.z + delta.z),
+                           1.0f);
+
+    e_conglom_member_index child = bone_index.child_index;
+
+    while (child != invalid_conglom_member) {
+        i32 slot = (i16)(child - members.size);
+
+        translate_member_model_position_recurse(bone_indices.get_vector().array[slot], delta);
+
+        child = bone_indices.get_vector().array[slot].sibling_index;
+    }
+}
+
+// sub_63AEA0
+void conglomerate::dirty_bone_connectors(bool force_entire_tree) {
+    if (!bone_connectors)
+        return;
+
+    for (entity_base* connector : *bone_connectors)
+        connector->update_abs_po_from_model_po();
+}
+
+// sub_656460
+void conglomerate::create_parentage_tree() {
+    for (i32 i = 0; i < (i32)members.size; ++i) {
+        u8 parent = (u8)member_parents.get_vector().array[i];
+
+        if (parent == 0xFF)
+            members.array[i]->set_parent(this);
+        else {
+            entity_base* linked = get_member_for_linking((e_conglom_member_index)parent);
+
+            members.array[i]->set_parent(linked);
+        }
+    }
 }

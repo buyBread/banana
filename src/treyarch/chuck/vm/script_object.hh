@@ -80,6 +80,11 @@ namespace treyarch { namespace chuck { namespace vm {
             finalize(mash::ALLOCATED);
         }
 
+        // sub_5FD120
+        string_hash get_name() const {
+            return name;
+        }
+
         void construct_mashed_class();
         void destruct_mashed_class();
         void unmash(mash::mash_info_struct* mash_info,
