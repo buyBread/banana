@@ -2,33 +2,34 @@
 
 #include <windows.h>
 
+#include "banana/logging.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 #include "treyarch/ngl/scene/scene.hh"
 
-namespace treyarch {
-    namespace ngl {
-        enum e_buffer_type : u32 {
-            buffer_list_work,
-            buffer_scratch_index,
-            buffer_scratch_vertex,
-            buffer_platform_work
-        };
+namespace treyarch { namespace ngl {
+    inline auto &log = banana::s_logging_manager::get().category("NGL");
 
-        ngl::scene* init(HWND window);
-        ngl::scene* present();
-        void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
+    enum e_buffer_type : u32 {
+        buffer_list_work,
+        buffer_scratch_index,
+        buffer_scratch_vertex,
+        buffer_platform_work
+    };
 
-        bool can_release_file(const apk::file* file);
+    ngl::scene* init(HWND window);
+    ngl::scene* present();
+    void set_buffer_size(e_buffer_type buffer, u32 size, bool allow_resize, bool send_list);
 
-        using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
+    bool can_release_file(const apk::file* file);
 
-        namespace references {
-            inline util::memory_reference<u8>   initialized   { 0x011184F0 };
-            inline util::memory_reference<u32>  frame         { 0x011184F4 };
-            inline util::memory_reference<HWND> render_window { 0x0111AA90 };
+    using resource_callback = void* (__cdecl*)(fixed_string* name, u32 type);
 
-            inline util::memory_reference<ngl::resource_callback> resource_callback_function { 0x01118510 };
-        } // references
-    } // ngl
-} // treyarch
+    namespace references {
+        inline util::memory_reference<u8>   initialized   { 0x011184F0 };
+        inline util::memory_reference<u32>  frame         { 0x011184F4 };
+        inline util::memory_reference<HWND> render_window { 0x0111AA90 };
+
+        inline util::memory_reference<ngl::resource_callback> resource_callback_function { 0x01118510 };
+    } // references
+}} // treyarch::ngl

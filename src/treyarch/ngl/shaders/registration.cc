@@ -1,5 +1,6 @@
 #include <cstddef>
 
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/shaders/registration.hh"
 #include "treyarch/ngl/shaders/fake_peds/programs.hh"
 #include "treyarch/ngl/shaders/pcuv/programs.hh"
@@ -45,7 +46,7 @@ struct registration_override {
 
 void initialize_programs(const char* name, program_initializer initialize) {
     if (!initialize())
-        ; // banana::log.ngl("failed to initialize the \"{}\" shader programs", name);
+        ngl::log.err("failed to initialize the \"{}\" shader programs", name);
 }
 
 void register_shader(      ngl::shader        &value,
@@ -56,10 +57,10 @@ void register_shader(      ngl::shader        &value,
     u32 shader_id = ngl::shaders::registration::references::next_shader_id.read();
 
     if (shader_id != (u32)expected_id)
-        ; // banana::log.ngl("unexpected \"{}\" shader id (expected {}, found {})",
-          //               name,
-          //               (u32)expected_id,
-          //               shader_id);
+        ngl::log.err("unexpected \"{}\" shader id (expected {}, found {})",
+                     name,
+                     (u32)expected_id,
+                     shader_id);
 
     value.id = (ngl::e_shader_id)shader_id;
     ngl::shaders::registration::references::next_shader_id.write(shader_id + 1);

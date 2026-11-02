@@ -19,6 +19,8 @@
 #ifdef DEBUG
     #include <unordered_set>
     #include <windows.h>
+
+    #include "treyarch/ngl/ngl.hh"
 #endif
 
 using namespace treyarch;
@@ -75,7 +77,7 @@ void log_unowned_node(void* vftable) {
         last = target;
 
         if (seen.insert(target).second)
-            ; // banana::log.ngl("unowned render node -- address: {:p} | vtable: {:p}", target, vftable);
+            ngl::log.dbg("unowned render node -- address: {:p} | vtable: {:p}", target, vftable);
     }
 }
 #endif

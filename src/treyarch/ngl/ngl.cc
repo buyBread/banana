@@ -19,9 +19,7 @@ bool ngl::can_release_file(const apk::file* file) {
 
 // sub_9E5CD0
 ngl::scene* ngl::init(HWND window) {
-    // banana::log.ngl("Nyarlathotep's Graphics Laboratory"
-    //                 " "
-    //                 NGL_VERSION);
+    ngl::log.msg("Nyarlathotep's Graphics Laboratory {}", NGL_VERSION);
 
     references::render_window.write(window);
 
@@ -47,7 +45,7 @@ ngl::scene* ngl::init(HWND window) {
 
     references::initialized.write(1);
 
-    // banana::log.ngl("initialized");
+    ngl::log.msg("initialized");
 
     return root_build_scene;
 }

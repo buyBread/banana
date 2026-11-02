@@ -1,5 +1,6 @@
 #include <windows.h>
 
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/shaders/package.hh"
 #include "treyarch/ngl/shaders/package_data.hh"
 #include "treyarch/ngl/shaders/resource_ids.hh"
@@ -104,7 +105,7 @@ std::span<const u8> ngl::shaders::package_data::load(shader_key key) {
         initialized = true;
 
         if (!valid)
-            ; // banana::log.ngl("embedded NGL shader package is invalid");
+            ngl::log.wrn("embedded NGL shader package is invalid");
     }
 
     if (!valid)

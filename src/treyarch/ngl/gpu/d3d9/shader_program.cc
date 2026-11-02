@@ -1,3 +1,4 @@
+#include "treyarch/ngl/ngl.hh"
 #include "treyarch/ngl/gpu/d3d9/shader_program.hh"
 #include "treyarch/ngl/gpu/d3d9/shader_program_cache.hh"
 #include "treyarch/ngl/shaders/package_data.hh"
@@ -6,11 +7,11 @@
 using namespace treyarch;
 
 template<typename T>
-bool create_shader_program(      ngl::shaders::shader_key     key,
-                                 ngl::shaders::e_shader_stage expected_stage,
-                           const char*                        stage_name,
-                                 HRESULT                    (*create_program)(const DWORD*, T**),
-                                 T**                          output) {
+bool create_shader_program(ngl::shaders::shader_key     key,
+                           ngl::shaders::e_shader_stage expected_stage,
+                           const char*                  stage_name,
+                           HRESULT                    (*create_program)(const DWORD*, T**),
+                           T**                          output) {
 
     ngl::shaders::shader_description description {};
 
@@ -20,9 +21,9 @@ bool create_shader_program(      ngl::shaders::shader_key     key,
     std::span<const u8> bytecode = ngl::shaders::package_data::load(key);
 
     if (bytecode.empty()) {
-        // banana::log.ngl("failed to load {} program \"{}\"",
-        //                 stage_name,
-        //                 description.source_name);
+        ngl::log.err("failed to load {} program \"{}\"",
+                     stage_name,
+                     description.source_name);
         
         return false;
     }
@@ -30,10 +31,10 @@ bool create_shader_program(      ngl::shaders::shader_key     key,
     HRESULT result = create_program((const DWORD*)bytecode.data(), output);
 
     if (FAILED(result)) {
-        // banana::log.ngl("failed to create {} program \"{}\" (0x{:08X})",
-        //                 stage_name,
-        //                 description.source_name,
-        //                 (u32)result);
+        ngl::log.err("failed to create {} program \"{}\" (0x{:08X})",
+                     stage_name,
+                     description.source_name,
+                     (u32)result);
 
         return false;
     }

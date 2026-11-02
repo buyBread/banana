@@ -28,7 +28,7 @@ void* ngl::resources::get_resource(fixed_string* name, u32 type) {
             mesh* value = ngl::references::mesh_directory.get().find(name->hash);
 
             if (!value)
-                ; // banana::log.ngl("unable to find mesh \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+                ngl::log.err("unable to find mesh \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
 
             return value;
         }
@@ -37,7 +37,7 @@ void* ngl::resources::get_resource(fixed_string* name, u32 type) {
             font* value = ngl::references::font_directory.get().find(name->hash);
 
             if (!value)
-                ; // banana::log.ngl("unable to find font \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+                ngl::log.err("unable to find font \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
 
             return value;
         }
@@ -46,7 +46,7 @@ void* ngl::resources::get_resource(fixed_string* name, u32 type) {
             morph_set* value = ngl::references::morph_directory.get().find(name->hash);
 
             if (!value)
-                ; // banana::log.ngl("unable to find morph \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+                ngl::log.err("unable to find morph \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
 
             return value;
         }
@@ -55,7 +55,7 @@ void* ngl::resources::get_resource(fixed_string* name, u32 type) {
             material* value = ngl::references::material_directory.get().find(name->hash);
 
             if (!value)
-                ; // banana::log.ngl("unable to find material \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
+                ngl::log.err("unable to find material \"{}\" (0x{:08X})", display_name, name->hash.source_hash_code);
 
             return value;
         }
@@ -64,9 +64,9 @@ void* ngl::resources::get_resource(fixed_string* name, u32 type) {
             texture* value = ngl::references::texture_directory.get().find(name->hash);
 
             if (!value)
-                ; // banana::log.ngl("unable to locate texture resource \"{}\" (0x{:08X}) -- assigning default texture",
-                //                 display_name,
-                //                 name->hash.source_hash_code);
+                ngl::log.wrn("unable to locate texture resource \"{}\" (0x{:08X}) -- assigning default texture",
+                             display_name,
+                             name->hash.source_hash_code);
 
             return value ? value : ngl::references::default_tex.read();
         }
@@ -145,9 +145,9 @@ void ngl::resources::init() {
     fixed_string system_font_name = make_fixed_string("ngl_sysfont");
     ngl::references::sys_font.write((font*)get_resource(&system_font_name, four_cc('F', 'O', 'N', 'T')));
 
-    // banana::log.ngl("default resources -- ngl_default: {} | ngl_sysfont: {}",
-    //                 ngl::references::default_tex.read() ? "found" : "missing",
-    //                 ngl::references::sys_font.read()    ? "found" : "missing");
+    ngl::log.msg("default resources -- ngl_default: {} | ngl_sysfont: {}",
+                 ngl::references::default_tex.read() ? "found" : "missing",
+                 ngl::references::sys_font.read() ? "found" : "missing");
 
     initialize_builtin_textures();
     apk::set_resource_callback(get_resource);
