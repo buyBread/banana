@@ -1,3 +1,4 @@
+#include <cstring>
 #include <ctime>
 
 #include "retail.hh"
@@ -73,7 +74,7 @@ void treyarch::nfl::start(void* work_space) {
 
     references::nfs_thread.write(CreateThread(nullptr,
                                               0x2000,
-                                              (LPTHREAD_START_ROUTINE)retail::sub_A17310,
+                                              nfs_update_thread,
                                               nullptr,
                                               CREATE_SUSPENDED,
                                               nullptr));
@@ -105,7 +106,7 @@ u32 treyarch::nfl::nfs_pre_allocate_work_space(u8* work_space) {
 
         const i32 buffer_mode = driver->init->buffer_mode;
 
-        if (buffer_mode != 2 && buffer_mode != 3 && buffer_mode != 4)
+        if (buffer_mode != buffer_mode_unaligned && buffer_mode != buffer_mode_all && buffer_mode != buffer_mode_vm)
             continue;
 
         nfd_buffer* buffer = driver->buffers_object;
@@ -152,7 +153,7 @@ u32 treyarch::nfl::nfs_pre_allocate_work_space(u8* work_space) {
 
         const i32 buffer_mode = driver->init->buffer_mode;
 
-        if (buffer_mode != 2 && buffer_mode != 3 && buffer_mode != 4)
+        if (buffer_mode != buffer_mode_unaligned && buffer_mode != buffer_mode_all && buffer_mode != buffer_mode_vm)
             continue;
 
         nfd_buffer* buffer = driver->buffers_object;
@@ -226,6 +227,26 @@ i32 treyarch::nfl::nfs_get_native_file_id(i32 id) {
         return -1;
 
     return file->file_type == nfs_file_type_subfile ? file->as.subfile.parent : id;
+}
+
+// inlined @ sub_A164E0
+nfl::nfd_driver* treyarch::nfl::nfs_get_file_driver(i32 id) {
+    nfs_file* file = nfs_get_file(nfs_get_native_file_id(id));
+
+    return file ? file->as.native.driver : nullptr;
+}
+
+// inlined @ sub_A15530
+// inlined @ sub_A158E0
+nfl::nfd_driver* treyarch::nfl::nfs_get_media_driver(u32 media) {
+    for (i32 index = 0; index < references::nfs_drivers_count.read(); ++index) {
+        nfd_driver* driver = references::nfs_drivers.read()[index];
+
+        if (driver && driver->binding && media & driver->binding->media_mask)
+            return driver;
+    }
+
+    return nullptr;
 }
 
 // inlined @ sub_A15530
@@ -343,9 +364,9 @@ void treyarch::nfl::update() {
 
         nfs_request* request = nfs_get_request(call_request.request);
 
-        if (request->decompress_group != -1) {
+        if (request->group_handle != -1) {
             for (decompress_group &group : references::decompress_groups.get()) {
-                if (group.group == request->decompress_group) {
+                if (group.group == request->group_handle) {
                     group.in_use = 0;
 
                     break;
@@ -355,7 +376,7 @@ void treyarch::nfl::update() {
 
         nfs_file* file = nfs_get_file(request->file);
 
-        if (file && file->as.native.flags & nfd_file_flag_deferred_close && !--file->pending_closes)
+        if (file && file->as.native.flags & nfd_file_flag_deferred_close && !--file->as.native.pending_requests)
             nfd_close_file(request->file);
 
         tx::slot_free(requests_pool, call_request.request);
@@ -366,5 +387,171 @@ void treyarch::nfl::update() {
     nfs_unlock();
 
     if (!references::nfs_init_params.get().thread_mode)
-        retail::sub_A171A0(); // nfs_update
+        nfs_update();
+}
+
+// sub_A17310
+DWORD __stdcall treyarch::nfl::nfs_update_thread(void* parameter) {
+    for (;;) {
+        WaitForSingleObject(references::nfs_event.read(), INFINITE);
+
+        nfs_lock();
+
+        const bool exit   = references::thread_exit.read() != 0;
+        const i32  result = nfs_update();
+
+        nfs_unlock();
+
+        if (exit)
+            return 0;
+
+        if (!result)
+            continue;
+
+        if (references::alertable_wait.read()) {
+            if (result == 1) {
+                HANDLE handles[2] = { references::nfd_win32_io_work.get().io_event, references::cancel_event.read() };
+
+                WaitForMultipleObjectsEx(2, handles, FALSE, INFINITE, TRUE);
+            }
+        } else
+            Sleep(references::thread_sleep.read());
+
+        if (references::nfs_init_params.get().thread_mode == 1)
+            SetEvent(references::nfs_event.read());
+    }
+}
+
+// sub_A171A0
+i32 treyarch::nfl::nfs_update() { // 1 while a driver has I/O going, 2 while chunk jobs are pending
+    nfd_driver** const drivers       = references::nfs_drivers.read();
+    const i32          drivers_count = references::nfs_drivers_count.read();
+
+    i32 can_schedule[32];
+    i32 scheduled[32];
+
+    for (i32 index = 0; index < drivers_count; ++index)
+        can_schedule[index] = nfs_update_driver(drivers[index]) && nfd_find_unlocked_read_buffer(drivers[index]) != -1;
+
+    for (i32 index = 0; index < drivers_count; ++index) {
+        scheduled[index] = can_schedule[index] ?
+            nfs_schedule_request(drivers_count == 1 ? nullptr : drivers[index]) : -1;
+    }
+
+    for (i32 index = 0; index < drivers_count; ++index) {
+        if (scheduled[index] != -1)
+            nfs_execute_request(drivers[index], scheduled[index]);
+    }
+
+    i32 result = 0;
+
+    for (i32 index = 0; index < drivers_count; ++index) {
+        if (drivers[index]->io_state)
+            result = 1;
+
+        if (drivers[index]->chunk_jobs)
+            result = 2;
+    }
+
+    return result;
+}
+
+// sub_A16FA0
+i32 treyarch::nfl::nfs_update_driver(nfd_driver* driver) { // nonzero when the driver can take a new command
+    retail::sub_A16D60((u32*)driver); // nfs_update_chunk_decompression_jobs
+
+    if (!driver->io_state)
+        return 1;
+
+    // completions run in here
+    if (driver->io_operations->update && driver->io_operations->update())
+        return 0;
+
+    disk_read_t &disk_read = driver->disk_read;
+
+    const i32    id      = disk_read.io_command.request;
+    nfs_request* request = nfs_get_request(id);
+
+    if (request) {
+        switch (driver->io_state) {
+            case nfd_io_state_working:
+                if (request->state == nfs_request_state_canceling) {
+                    if (driver->io_operations->cancel && driver->io_operations->cancel(disk_read.io_command.file_handle))
+                        return 0;
+
+                    driver->io_state = nfd_io_state_canceling;
+                }
+
+                return 0;
+
+            case nfd_io_state_workdone:
+                if (request->state != nfs_request_state_canceling) {
+                    if (!disk_read.bytes_completed)
+                        request->state = nfs_request_state_workdone;
+                    else if (request->decompress) {
+                        request->state = request->bytes_read == request->disk_size && !request->active_decompress_jobs ?
+                            nfs_request_state_workdone : nfs_request_state_waiting;
+
+                        request->bytes_read += disk_read.bytes_completed;
+
+                        if (request->bytes_scheduled >= request->output_size)
+                            nfd_unlock_read_buffer(driver, id, request->read_buffer_slot);
+                        else {
+                            retail::sub_A16380((u32*)driver, (u32*)request); // nfs_begin_segment_decompress
+                            retail::sub_A16D60((u32*)driver);                // nfs_update_chunk_decompression_jobs
+                        }
+                    } else {
+                        std::memcpy(request->destination + request->bytes_read, disk_read.io_command.buffer, disk_read.bytes_completed);
+
+                        request->bytes_read += disk_read.bytes_completed;
+
+                        request->state = request->bytes_read != request->disk_size ?
+                            nfs_request_state_waiting : nfs_request_state_workdone;
+
+                        nfd_unlock_read_buffer(driver, id, request->read_buffer_slot);
+                    }
+
+                    break;
+                }
+
+                [[fallthrough]];
+
+            case nfd_io_state_canceled:
+                nfd_unlock_read_buffer(driver, id, request->read_buffer_slot);
+
+                if (!request->active_decompress_jobs)
+                    request->state = nfs_request_state_canceled;
+
+                break;
+
+            case nfd_io_state_canceling:
+                return 0;
+
+            case nfd_io_state_error:
+                // stays here, stopping all streaming, until the request is canceled and freed
+                if (request->state != nfs_request_state_io_error_waiting) {
+                    nfd_unlock_read_buffer(driver, id, disk_read.io_command.read_buffer_slot);
+
+                    request->state = nfs_request_state_io_error;
+                }
+
+                return 0;
+
+            default:
+                tl_fatal("nfsUpdateDriver: invalid state %s", 0);
+
+                return 0;
+        }
+    }
+
+    driver->io_state = nfd_io_state_idle;
+
+    disk_read.io_command.size             = 0;
+    disk_read.io_command.file_handle      = nullptr;
+    disk_read.io_command.offset           = 0;
+    disk_read.io_command.request          = -1;
+    disk_read.io_command.type             = -1;
+    disk_read.io_command.read_buffer_slot = -1;
+
+    return 1;
 }

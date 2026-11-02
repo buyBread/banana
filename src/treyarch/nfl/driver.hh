@@ -7,6 +7,14 @@
 namespace treyarch { namespace nfl {
     struct nfd_driver;
 
+    // NFL_BUFFER_MODE_*
+    enum e_buffer_mode : i32 {
+        buffer_mode_nobuffer = 1,
+        buffer_mode_unaligned,
+        buffer_mode_all,
+        buffer_mode_vm
+    };
+
     // NFD_IO_STATE_*
     enum e_nfd_io_state : i32 {
         nfd_io_state_idle,
@@ -114,7 +122,12 @@ namespace treyarch { namespace nfl {
         u32 unk_20;
     };
 
-    void nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error);
+    e_nfd_error nfd_io_execute(nfd_driver* driver, const nfd_io_command* command);
+    void        nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error);
+
+    i32  nfd_find_unlocked_read_buffer(const nfd_driver* driver);
+    void nfd_lock_read_buffer(nfd_driver* driver, i32 id, i32 slot);
+    void nfd_unlock_read_buffer(nfd_driver* driver, i32 id, i32 slot);
 
     namespace references {
         inline util::memory_reference<nfd_driver**> nfs_drivers       { 0x00FB8534 };

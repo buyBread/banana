@@ -30,7 +30,7 @@ namespace treyarch { namespace nfl {
 
     void __stdcall nfd_win32_io_completion_routine(DWORD error_code, DWORD bytes_transferred, OVERLAPPED* overlapped);
 
-    inline nfd_init nfd_win32_init = { 2, nfd_win32_initialize, nfd_win32_shutdown };
+    inline nfd_init nfd_win32_init = { buffer_mode_unaligned, nfd_win32_initialize, nfd_win32_shutdown };
 
     inline nfd_media nfd_win32_media = { 3, nfd_win32_media_bind };
 

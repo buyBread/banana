@@ -61,6 +61,7 @@ namespace treyarch { namespace nfl {
         inline util::memory_reference<init_params> nfs_init_params { 0x00FB84B0 };
 
         inline util::memory_reference<i32> thread_priority { 0x00FB84A4 };
+        inline util::memory_reference<u32> thread_sleep    { 0x00FB84A8 };
     } // references
 
     ASSERT_SIZEOF  (init_params,                  0x14);

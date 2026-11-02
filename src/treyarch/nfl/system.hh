@@ -40,7 +40,7 @@ namespace treyarch { namespace nfl {
 
     struct nfs_request {
         u32              offset;
-        i32              type;                  // 0 read, 1 write
+        i32              type;                   // 0 read, 1 write
         i32              file;
         nfd_driver*      driver;
         request_callback callback;
@@ -51,16 +51,16 @@ namespace treyarch { namespace nfl {
         u8*              destination;
         i32              decompress;
         u32              output_size;
-        u32              read_size;
+        u32              disk_size;
         i32              state;
         i32              age;
         u32              bytes_read;
         u32              bytes_decompressed;
-        u32              bytes_scheduled;       // output covered by chunk jobs issued so far
-        i32              chunk_jobs;
-        i32              holds_buffer[2];
-        i32              buffer;
-        i32              decompress_group;
+        u32              bytes_scheduled;        // output covered by chunk jobs issued so far
+        i32              active_decompress_jobs;
+        i32              read_buffers_locked[2];
+        i32              read_buffer_slot;
+        i32              group_handle;
         tx::slot_entry   entry;
         u32              last_bytes_read;
         i32              last_progress_time;
@@ -92,15 +92,17 @@ namespace treyarch { namespace nfl {
                 nfd_driver* driver;
                 u32         flags;
                 i32         child_count;
+                i32         pending_requests;
             } native;
 
             struct {
-                u32 unk_04;
+                u32 offset;      // in the parent
                 i32 parent;
+                u32 chunk_size;
+                u32 stride_size;
             } subfile;
         } as;
 
-        i32             pending_closes;
         char            path[0x100];
         tx::slot_entry  entry;
         e_nfs_file_type file_type;
@@ -114,6 +116,11 @@ namespace treyarch { namespace nfl {
     u32 nfs_pre_allocate_work_space(u8* work_space);
     u8* nfs_pre_allocate(u32 size, u32 alignment);
 
+    DWORD __stdcall nfs_update_thread(void* parameter);
+
+    i32 nfs_update();
+    i32 nfs_update_driver(nfd_driver* driver);
+
     void nfs_lock();
     void nfs_unlock();
 
@@ -122,14 +129,20 @@ namespace treyarch { namespace nfl {
     nfs_request* nfs_get_request(i32 id);
     nfs_file*    nfs_get_file(i32 id);
     i32          nfs_get_native_file_id(i32 id);
+    nfd_driver*  nfs_get_file_driver(i32 id);
+    nfd_driver*  nfs_get_media_driver(u32 media);
     u8*          nfs_get_file_handle(i32 id);
 
     i32  nfs_open_file(u32 media_mask, const char* path, u32 flags, u32* size);
+    bool nfs_open_file_async(i32 id);
     void nfd_close_file(i32 id);
     void nfs_close_file(i32 id, bool deferred);
     void nfs_cancel_request(i32 id);
     i32  nfs_allocate_decompress_batch_job();
     bool nfs_validate_destination(u8* destination);
+
+    i32         nfs_schedule_request(nfd_driver* driver);
+    e_nfd_error nfs_execute_request(nfd_driver* driver, i32 id);
 
     namespace references {
         inline util::memory_reference<u8*> nfs_mem { 0x01124644 };
@@ -149,6 +162,7 @@ namespace treyarch { namespace nfl {
 
         inline util::memory_reference<u32> nfs_file_handle_size    { 0x011246E4 };
         inline util::memory_reference<i32> nfs_call_requests_count { 0x011246D4 };
+        inline util::memory_reference<i32> thread_exit             { 0x011246D0 };
 
         inline util::memory_reference<std::array<decompress_group, 8>> decompress_groups { 0x011246E8 };
 
@@ -158,12 +172,16 @@ namespace treyarch { namespace nfl {
         inline util::memory_reference<HANDLE> cancel_event { 0x0112463C };
     } // references
 
-    ASSERT_SIZEOF  (nfs_request,                     0x70);
-    ASSERT_OFFSETOF(nfs_request, destination,        0x24);
-    ASSERT_OFFSETOF(nfs_request, state,              0x34);
-    ASSERT_OFFSETOF(nfs_request, decompress_group,   0x58);
-    ASSERT_OFFSETOF(nfs_request, entry,              0x5C);
-    ASSERT_OFFSETOF(nfs_request, last_progress_time, 0x6C);
+    ASSERT_SIZEOF  (nfs_request,                         0x70);
+    ASSERT_OFFSETOF(nfs_request, destination,            0x24);
+    ASSERT_OFFSETOF(nfs_request, disk_size,              0x30);
+    ASSERT_OFFSETOF(nfs_request, state,                  0x34);
+    ASSERT_OFFSETOF(nfs_request, active_decompress_jobs, 0x48);
+    ASSERT_OFFSETOF(nfs_request, read_buffers_locked,    0x4C);
+    ASSERT_OFFSETOF(nfs_request, read_buffer_slot,       0x54);
+    ASSERT_OFFSETOF(nfs_request, group_handle,           0x58);
+    ASSERT_OFFSETOF(nfs_request, entry,                  0x5C);
+    ASSERT_OFFSETOF(nfs_request, last_progress_time,     0x6C);
 
     ASSERT_SIZEOF  (chunk_job,         0x3C);
     ASSERT_OFFSETOF(chunk_job, header, 0x10);
@@ -172,14 +190,16 @@ namespace treyarch { namespace nfl {
     ASSERT_SIZEOF  (nfs_request_cb,          0x14);
     ASSERT_OFFSETOF(nfs_request_cb, release, 0x10);
 
-    ASSERT_SIZEOF  (nfs_file,                        0x128);
-    ASSERT_OFFSETOF(nfs_file, as.native.driver,      0x08);
-    ASSERT_OFFSETOF(nfs_file, as.native.child_count, 0x10);
-    ASSERT_OFFSETOF(nfs_file, as.subfile.parent,     0x08);
-    ASSERT_OFFSETOF(nfs_file, pending_closes,        0x14);
-    ASSERT_OFFSETOF(nfs_file, path,                  0x18);
-    ASSERT_OFFSETOF(nfs_file, entry,                 0x118);
-    ASSERT_OFFSETOF(nfs_file, file_type,             0x124);
+    ASSERT_SIZEOF  (nfs_file,                             0x128);
+    ASSERT_OFFSETOF(nfs_file, as.native.driver,           0x08);
+    ASSERT_OFFSETOF(nfs_file, as.native.child_count,      0x10);
+    ASSERT_OFFSETOF(nfs_file, as.native.pending_requests, 0x14);
+    ASSERT_OFFSETOF(nfs_file, as.subfile.parent,          0x08);
+    ASSERT_OFFSETOF(nfs_file, as.subfile.chunk_size,      0x0C);
+    ASSERT_OFFSETOF(nfs_file, as.subfile.stride_size,     0x10);
+    ASSERT_OFFSETOF(nfs_file, path,                       0x18);
+    ASSERT_OFFSETOF(nfs_file, entry,                      0x118);
+    ASSERT_OFFSETOF(nfs_file, file_type,                  0x124);
 
     ASSERT_SIZEOF(decompress_group, 0x08);
 }} // treyarch::nfl

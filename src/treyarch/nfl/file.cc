@@ -17,19 +17,7 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
         if (!media)
             continue;
 
-        i32 driver_index = 0;
-
-        for (; driver_index < references::nfs_drivers_count.read(); ++driver_index) {
-            nfd_driver* candidate = references::nfs_drivers.read()[driver_index];
-
-            if (candidate && candidate->binding && media & candidate->binding->media_mask)
-                break;
-        }
-
-        if (driver_index >= references::nfs_drivers_count.read())
-            continue;
-
-        nfd_driver* driver = references::nfs_drivers.read()[driver_index];
+        nfd_driver* driver = nfs_get_media_driver(media);
 
         if (!driver || driver->binding->bind(media, path, bound_path, sizeof(bound_path)))
             continue;
@@ -48,12 +36,12 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
 
         nfs_unlock();
 
-        file->file_type             = nfs_file_type_native;
-        file->as.native.child_count = 0;
-        file->pending_closes        = 0;
-        file->as.native.flags       = flags;
-        file->as.native.driver      = driver;
-        file->as.native.media       = media;
+        file->file_type                  = nfs_file_type_native;
+        file->as.native.child_count      = 0;
+        file->as.native.pending_requests = 0;
+        file->as.native.flags            = flags;
+        file->as.native.driver           = driver;
+        file->as.native.media            = media;
 
         std::strcpy(file->path, bound_path);
 
@@ -84,6 +72,82 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
     }
 
     return -1;
+}
+
+// sub_A158E0
+bool treyarch::nfl::nfs_open_file_async(i32 id) {
+    nfs_lock();
+
+    nfs_request* request = nfs_get_request(id);
+    nfs_file*    file    = request ? nfs_get_file(request->file) : nullptr;
+
+    if (!file) {
+        nfs_unlock();
+
+        return false;
+    }
+
+    nfs_file local_file = *file;
+
+    if (local_file.as.native.driver) {
+        bool assigned = false;
+
+        if (!request->driver) {
+            request->driver = local_file.as.native.driver;
+            assigned        = true;
+        }
+
+        nfs_unlock();
+
+        return assigned;
+    }
+
+    nfs_unlock();
+
+    char          bound_path[0x100];
+    u8            local_handle[0x100];
+    nfd_file_info info;
+
+    for (i32 bit = 0; bit < 32; ++bit) {
+        const u32 media = local_file.as.native.media & (1 << bit);
+
+        if (!media)
+            continue;
+
+        nfd_driver* driver = nfs_get_media_driver(media);
+
+        if (!driver ||
+            driver->binding->bind(media, local_file.path, bound_path, sizeof(bound_path)) ||
+            driver->file_operations->open(local_handle, bound_path, local_file.as.native.flags, 0) ||
+            driver->file_operations->status(local_handle, &info))
+
+            continue;
+
+        nfs_lock();
+
+        request = nfs_get_request(id);
+        file    = nullptr;
+
+        if (request) {
+            request->driver = driver;
+
+            file = nfs_get_file(request->file);
+
+            if (file) {
+                std::memcpy(nfs_get_file_handle(request->file), local_handle, references::nfs_file_handle_size.read());
+
+                file->size             = info.size;
+                file->as.native.driver = driver;
+                file->as.native.media  = media;
+            }
+        }
+
+        nfs_unlock();
+
+        return request && file;
+    }
+
+    return false;
 }
 
 // sub_A15CE0
@@ -124,7 +188,7 @@ void treyarch::nfl::nfs_close_file(i32 id, bool deferred) {
 
         if (request->file == id) {
             if (deferred)
-                ++file->pending_closes;
+                ++file->as.native.pending_requests;
 
             nfs_cancel_request(request_id);
         }
@@ -142,7 +206,7 @@ void treyarch::nfl::nfs_close_file(i32 id, bool deferred) {
             tl_fatal("nflCloseFile: Invalid filetype");
     } else if (!file->as.native.child_count) {
         // closing now would pull the file out from under requests that are still being canceled
-        if (file->pending_closes && deferred)
+        if (file->as.native.pending_requests && deferred)
             file->as.native.flags |= nfd_file_flag_deferred_close;
         else
             nfd_close_file(id);
