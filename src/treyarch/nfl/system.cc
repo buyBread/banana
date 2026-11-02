@@ -27,6 +27,12 @@ u32 treyarch::nfl::init(const init_params* params) {
 
         if (driver->init->initialize)
             driver->init->initialize(driver);
+
+        nfl::log.msg("driver #{}: {} | media mask: 0x{:X} | buffer mode: {}",
+                     index,
+                     driver->name,
+                     driver->binding->media_mask,
+                     driver->init->buffer_mode);
     }
 
     for (nfs_decompress_batch_group &group : references::nfs_decompress_batch_groups.get()) {
@@ -35,7 +41,19 @@ u32 treyarch::nfl::init(const init_params* params) {
     }
 
     // with no work space this only measures it
-    return nfs_pre_allocate_work_space(nullptr);
+    const u32 work_space_size = nfs_pre_allocate_work_space(nullptr);
+
+    const init_params &nfs_params = references::nfs_init_params.get();
+
+    nfl::log.msg("files: {} | requests: {} | chunk jobs: {} | buffer mode: {} | thread mode: {} | work space: 0x{:X} bytes",
+                 nfs_params.file_count,
+                 nfs_params.request_count,
+                 nfs_params.chunk_decompress_job_count,
+                 nfs_params.buffer_mode,
+                 nfs_params.thread_mode,
+                 work_space_size);
+
+    return work_space_size;
 }
 
 // sub_A17830
@@ -60,7 +78,15 @@ void treyarch::nfl::start(void* work_space) {
                       references::nfs_init_params.get().file_count,
                       sizeof(nfs_file));
 
-    lzo_init();
+    const i32 lzo_result = lzo_init();
+
+    if (lzo_result != LZO_E_OK)
+        nfl::log.err("lzo_init failed -- error {}", lzo_result);
+
+    nfl::log.msg("read buffers: 2 x 0x{:X} | lzo {} | i/o thread priority: {}",
+                 references::current_platform_settings.read()->buffer_size,
+                 lzo_version_string(),
+                 references::thread_priority.read());
 
     if (references::nfs_init_params.get().thread_mode != 1)
         return;
@@ -79,6 +105,9 @@ void treyarch::nfl::start(void* work_space) {
                                               nullptr,
                                               CREATE_SUSPENDED,
                                               nullptr));
+
+    if (!references::nfs_thread.read())
+        nfl::log.err("failed to create the i/o thread -- win32 error {}", GetLastError());
 
     SetThreadPriority(references::nfs_thread.read(), references::thread_priority.read());
     ResumeThread(references::nfs_thread.read());
@@ -322,12 +351,36 @@ void treyarch::nfl::update() {
                 call_request.release  = 1;
                 call_request.user     = request->user;
 
+                const i32 elapsed = now - request->start_time;
+
+                if (request->state == nfs_request_state_canceled)
+                    nfl::log.dbg("canceled {} \"{}\" after {} ms", request->entry.id, nfs_file_path(request->file), elapsed);
+                else if (elapsed > 10000)
+                    nfl::log.wrn("slow request {} \"{}\" -- 0x{:X} bytes in {} ms",
+                                 request->entry.id,
+                                 nfs_file_path(request->file),
+                                 request->output_size,
+                                 elapsed);
+                else
+                    nfl::log.dbg("complete {} \"{}\" -- 0x{:X} bytes in {} ms",
+                                 request->entry.id,
+                                 nfs_file_path(request->file),
+                                 request->output_size,
+                                 elapsed);
+
                 break;
             }
 
             case nfs_request_state_io_error:
                 // the request stays allocated until it's canceled or its file closes
                 request->state = nfs_request_state_io_error_waiting;
+
+                nfl::log.err("request {} \"{}\" failed -- 0x{:X} of 0x{:X} bytes read{}",
+                             request->entry.id,
+                             nfs_file_path(request->file),
+                             request->bytes_read,
+                             request->disk_size,
+                             request->driver->io_state == nfd_io_state_error ? ", streaming stopped until it's canceled" : "");
 
                 if (request->callback) {
                     nfs_request_cb &call_request =

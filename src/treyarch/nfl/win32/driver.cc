@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
 #include "treyarch/nfl/win32/driver.hh"
 #include "treyarch/base/tl_system.hh"
@@ -42,8 +43,11 @@ nfl::e_nfd_error treyarch::nfl::nfd_win32_file_open(void* handle, const char* pa
                               (flags & nfd_file_flag_write ? 0 : FILE_FLAG_NO_BUFFERING) | FILE_FLAG_OVERLAPPED,
                               nullptr);
 
-    if (file == INVALID_HANDLE_VALUE)
+    if (file == INVALID_HANDLE_VALUE) {
+        nfl::log.err("failed to open \"{}\" -- win32 error {}", path, GetLastError());
+
         return nfd_error_failure;
+    }
 
     if (flags & nfd_file_flag_create) {
         LARGE_INTEGER distance;
@@ -117,10 +121,28 @@ nfl::e_nfd_error treyarch::nfl::nfd_win32_io_execute(nfd_driver* driver, void* f
             break;
 
         // past the end of the file, ask again for what's left of it
-        size = GetFileSize(*(HANDLE*)file_handle, nullptr) - offset;
+        const u32 remaining = GetFileSize(*(HANDLE*)file_handle, nullptr) - offset;
+
+        if (remaining != size)
+            nfl::log.wrn("read past the end of \"{}\" -- offset 0x{:X}, size 0x{:X} -> 0x{:X}",
+                         nfs_file_handle_path(file_handle),
+                         offset,
+                         size,
+                         remaining);
+
+        size = remaining;
     }
 
-    tl_fatal("NFL: windows file error %d", GetLastError());
+    // the log can clobber the last error
+    const u32 last_error = GetLastError();
+
+    nfl::log.err("read failed \"{}\" -- offset 0x{:X}, size 0x{:X}, win32 error {}",
+                 nfs_file_handle_path(file_handle),
+                 offset,
+                 size,
+                 last_error);
+
+    tl_fatal("NFL: windows file error %d", last_error);
 
     return ok ? nfd_error_noerror : nfd_error_failure;
 }

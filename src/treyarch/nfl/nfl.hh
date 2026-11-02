@@ -1,11 +1,14 @@
 #pragma once
 
 #include "treyarch/nfl/system.hh"
+#include "banana/logging.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch { namespace nfl {
+    inline auto &log = banana::s_logging_manager::get().category("NFL");
+
     struct init_params {
         i32 file_count;
         i32 request_count;

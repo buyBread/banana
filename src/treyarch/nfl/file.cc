@@ -29,6 +29,8 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
         if (id == -1) {
             nfs_unlock();
 
+            nfl::log.err("out of file handles ({}) -- \"{}\"", references::nfs_files_pool.get().count, path);
+
             return -1;
         }
 
@@ -64,6 +66,8 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
                 *size = info.size;
 
             file->size = info.size;
+
+            nfl::log.dbg("open {} \"{}\" -- 0x{:X} bytes", id, bound_path, info.size);
 
             return id;
         }
@@ -206,10 +210,18 @@ void treyarch::nfl::nfs_close_file(i32 id, bool deferred) {
             tl_fatal("nflCloseFile: Invalid filetype");
     } else if (!file->as.native.child_count) {
         // closing now would pull the file out from under requests that are still being canceled
-        if (file->as.native.pending_requests && deferred)
+        if (file->as.native.pending_requests && deferred) {
+            nfl::log.dbg("close {} \"{}\" -- deferred, {} requests pending",
+                         id,
+                         file->path,
+                         file->as.native.pending_requests);
+
             file->as.native.flags |= nfd_file_flag_deferred_close;
-        else
+        } else {
+            nfl::log.dbg("close {} \"{}\"", id, file->path);
+
             nfd_close_file(id);
+        }
     }
 
     nfs_unlock();

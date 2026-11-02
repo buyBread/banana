@@ -104,9 +104,16 @@ nfl::e_nfd_error treyarch::nfl::nfd_io_execute(nfd_driver* driver, const nfd_io_
 void treyarch::nfl::nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error) {
     switch (driver->io_state) {
         case nfd_io_state_working:
-            if (error)
+            if (error) {
+                nfl::log.err("request {} \"{}\" read failed -- offset 0x{:X}, size 0x{:X}, error code {}",
+                             driver->disk_read.io_command.request,
+                             nfs_request_path(driver->disk_read.io_command.request),
+                             driver->disk_read.io_command.offset,
+                             driver->disk_read.io_command.size,
+                             error);
+
                 driver->io_state = nfd_io_state_error;
-            else {
+            } else {
                 driver->disk_read.bytes_completed = bytes;
                 driver->io_state                  = nfd_io_state_workdone;
             }

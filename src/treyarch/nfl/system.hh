@@ -165,6 +165,12 @@ namespace treyarch { namespace nfl {
 
     void nfl_jq_decompress_module(jq::batch* batch);
 
+    const char* nfs_request_state_text(e_nfs_request_state state);
+
+    const char* nfs_file_path(i32 id);
+    const char* nfs_request_path(i32 id);
+    const char* nfs_file_handle_path(const void* handle);
+
     inline constexpr jq::descriptor nfl_jq_decompress_descriptor = { nfl_jq_decompress_module, "nflJqDecompressModule" };
 
     namespace references {

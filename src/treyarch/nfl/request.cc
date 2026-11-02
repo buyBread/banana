@@ -34,6 +34,11 @@ void treyarch::nfl::nfs_cancel_request(i32 id) {
 
     const i32 state = request->state;
 
+    nfl::log.dbg("cancel {} \"{}\" -- {}",
+                 id,
+                 nfs_file_path(request->file),
+                 nfs_request_state_text((e_nfs_request_state)state));
+
     // anything with I/O or decompression in flight has to be stopped by the driver first
     if (state == nfs_request_state_working || request->active_decompress_jobs) {
         request->state = nfs_request_state_canceling;
@@ -51,8 +56,14 @@ i32 treyarch::nfl::add_request(const request_params* params) {
     if (!nfs_validate_destination(params->destination))
         return -1;
 
-    if (!nfs_get_file(params->file_id))
+    if (!nfs_get_file(params->file_id)) {
+        nfl::log.err("request for a dead file {} -- offset 0x{:X}, read 0x{:X}",
+                     params->file_id,
+                     params->offset,
+                     params->read_size);
+
         return -1;
+    }
 
     nfs_lock();
 
@@ -60,6 +71,10 @@ i32 treyarch::nfl::add_request(const request_params* params) {
 
     if (id == -1) {
         nfs_unlock();
+
+        nfl::log.err("out of request slots ({}) -- \"{}\"",
+                     references::nfs_requests_pool.get().count,
+                     nfs_file_path(params->file_id));
 
         return -1;
     }
@@ -100,6 +115,11 @@ i32 treyarch::nfl::add_request(const request_params* params) {
     request->read_buffer_slot       = -1;
     request->group_handle           = params->decompress ? nfs_allocate_decompress_batch_job() : -1;
 
+    if (params->decompress && request->group_handle == -1)
+        nfl::log.wrn("request {} \"{}\" -- no free decompress group, it waits on the global batch counters",
+                     id,
+                     nfs_file_path(params->file_id));
+
     if (references::nfs_init_params.get().thread_mode == 1) {
         ReleaseMutex(references::nfs_mutex.read());
 
@@ -107,6 +127,15 @@ i32 treyarch::nfl::add_request(const request_params* params) {
         if (references::nfs_init_params.get().thread_mode == 1)
             SetEvent(references::nfs_event.read());
     }
+
+    nfl::log.dbg("add {} \"{}\" -- offset 0x{:X}, read 0x{:X}, output 0x{:X}, priority {}, decompress {}",
+                 id,
+                 nfs_file_path(params->file_id),
+                 params->offset,
+                 params->read_size,
+                 params->output_size,
+                 params->priority,
+                 params->decompress);
 
     return id;
 }

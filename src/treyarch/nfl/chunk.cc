@@ -24,12 +24,33 @@ void treyarch::nfl::nfs_begin_segment_decompress(nfd_driver* driver, nfs_request
 
     const i32 chunk_count = ((chunk_header*)io_command.buffer)->num_chunks_in_segment;
 
+    if (std::memcmp(((chunk_header*)io_command.buffer)->chunk_id, "NCH", 4))
+        nfl::log.err("request {} \"{}\" -- invalid chunk header at 0x{:X}",
+                     io_command.request,
+                     nfs_file_path(request->file),
+                     io_command.offset);
+    else if (chunk_count <= 0)
+        nfl::log.err("request {} \"{}\" -- {} chunks in the segment at 0x{:X}",
+                     io_command.request,
+                     nfs_file_path(request->file),
+                     chunk_count,
+                     io_command.offset);
+
     u32 offset = 0;
 
     for (i32 index = 0; index < chunk_count; ++index) {
         auto* record = (chunk_header*)((u8*)io_command.buffer + offset);
 
-        chunk_decompress_job* job = get_chunk_decompress_job(tx::slot_new(&references::chunk_decompress_job_pool.get()));
+        const i32 job_id = tx::slot_new(&references::chunk_decompress_job_pool.get());
+
+        if (job_id == -1)
+            nfl::log.err("request {} \"{}\" -- out of chunk jobs ({}), {} chunks in the segment",
+                         io_command.request,
+                         nfs_file_path(request->file),
+                         references::chunk_decompress_job_pool.get().count,
+                         chunk_count);
+
+        chunk_decompress_job* job = get_chunk_decompress_job(job_id);
 
         job->request = io_command.request;
         job->record  = record;
@@ -126,6 +147,21 @@ void treyarch::nfl::nfl_jq_decompress_module(jq::batch* batch) { // runs on the 
     else {
         lzo_uint out_len = record->output_size;
 
-        lzo1x_decompress(payload, record->stored_size, (u8*)batch->payload[1], &out_len, nullptr);
+        const i32 result = lzo1x_decompress(payload, record->stored_size, (u8*)batch->payload[1], &out_len, nullptr);
+
+        if (result != LZO_E_OK)
+            nfl::log.err("lzo decompression failed -- error {}, record {}, output {}, stored 0x{:X}, expected 0x{:X}, got 0x{:X}",
+                         result,
+                         (void*)record,
+                         batch->payload[1],
+                         record->stored_size,
+                         record->output_size,
+                         out_len);
+        else if (out_len != record->output_size)
+            nfl::log.err("lzo output size mismatch -- record {}, output {}, expected 0x{:X}, got 0x{:X}",
+                         (void*)record,
+                         batch->payload[1],
+                         record->output_size,
+                         out_len);
     }
 }
