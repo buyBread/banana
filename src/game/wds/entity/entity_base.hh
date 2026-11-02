@@ -119,8 +119,8 @@ namespace treyarch {
         string_hash                id;
         po*                        my_rel_po;
         po*                        my_abs_po;
-        u32                        flags;
-        u32                        ext_flags;
+        mutable u32                flags;
+        mutable u32                ext_flags;
         interface_storage*         my_ifc_storage;
         entity_base*               my_parent;
         entity_base*               my_child;

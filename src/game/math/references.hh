@@ -105,7 +105,7 @@ namespace treyarch { namespace references {
     // the tentacle code's copy of po_identity_matrix, built the same way
     inline util::memory_reference<po> unk_00fc4f60 { 0x00FC4F60 };
 
-    // the weapon and grenade code's copy of po_identity_matrix, built the same way
+    // the actor, weapon and grenade code's copy of po_identity_matrix, built the same way
     inline util::memory_reference<po> unk_010038a0 { 0x010038A0 };
 }} // treyarch::references
 

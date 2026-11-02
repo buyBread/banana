@@ -1,7 +1,13 @@
+#include <cmath>
+
 #include "retail.hh"
 #include "game/als/animation_logic_system.hh"
+#include "game/colgeom.hh"
+#include "game/math/references.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/entity/actor.hh"
+#include "game/wds/entity/conglomerate.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
 
@@ -54,17 +60,17 @@ bool actor::is_an_actor() const {
     return ((bool (__thiscall*)(const actor*))retail::sub_667F80)(this);
 }
 
-// slot 53
+// sub_602E60
 vector3d actor::get_last_position() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const actor*, vector3d*))retail::sub_602E60)(this, &result);
+    if (adv_ptrs && adv_ptrs->mi)
+        return adv_ptrs->mi->last_position;
 
-    return result;
+    return my_abs_po->get_position();
 }
 
-// slot 68
+// sub_68B9C0
 collision_geometry* actor::get_colgeom() const {
-    return ((collision_geometry* (__thiscall*)(const actor*))retail::sub_68B9C0)(this);
+    return colgeom;
 }
 
 // slot 69
@@ -72,9 +78,9 @@ void actor::set_collisions_active(bool active, bool recursive) {
     ((void (__thiscall*)(actor*, bool, bool))retail::sub_65B1D0)(this, active, recursive);
 }
 
-// slot 70
+// sub_6027F0
 bool actor::are_character_collisions_active() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_6027F0)(this);
+    return (flags & entity_flag_physics_collide_characters) && get_colgeom() && (get_colgeom()->flags & fi_collide_characters);
 }
 
 // slot 76
@@ -87,9 +93,16 @@ e_entity_flavor actor::get_flavor() const {
     return ((e_entity_flavor (__thiscall*)(const actor*))retail::sub_A944D0)(this);
 }
 
-// slot 78
+// sub_6025E0
 bool actor::is_a_placeholder_vehicle() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_6025E0)(this);
+    ngl::mesh* my_mesh = get_mesh();
+
+    if (!my_mesh)
+        return false;
+
+    mash::string name(my_mesh->name.get_text());
+
+    return name.find("vehicle_placeholder", 0) != mash::string::npos;
 }
 
 // slot 86
@@ -112,32 +125,75 @@ void actor::render(f32 camera_distance, f32 entity_translucency_pct) {
     ((void (__thiscall*)(actor*, f32, f32))retail::sub_627720)(this, camera_distance, entity_translucency_pct);
 }
 
-// slot 110
+// sub_665240
 ngl::mesh* actor::get_mesh() const {
-    return ((ngl::mesh* (__thiscall*)(const actor*))retail::sub_665240)(this);
+    return mesh;
 }
 
 // slot 111
-ngl::mesh* actor::unk_111() const {
-    return ((ngl::mesh* (__thiscall*)(const actor*))retail::sub_665240)(this);
+ngl::mesh* actor::unk_111() const { // slot 110's body
+    return mesh;
 }
 
-// slot 112
+// sub_665250
 bool actor::has_mesh() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_665250)(this);
+    return get_mesh() != nullptr;
 }
 
-// slot 113
+// sub_602860
 f32 actor::get_visual_radius() const {
-    return ((f32 (__thiscall*)(const actor*))retail::sub_602860)(this);
+    if (!get_mesh()) {
+        if (is_a_conglomerate() || (flags & entity_flag_member)) {
+            conglomerate* owner = get_conglom_owner();
+
+            if (owner)
+                return owner->get_visual_radius();
+        }
+
+        return 0.0f;
+    }
+
+    const vector3d scale = get_render_scale();
+
+    ngl::mesh* my_mesh = get_mesh();
+
+    const f32 scale_x = std::fabs(scale.x);
+    const f32 scale_y = std::fabs(scale.y);
+    const f32 scale_z = std::fabs(scale.z);
+
+    f32 largest = scale_z;
+
+    if (scale_y > scale_z)
+        largest = scale_y;
+
+    if (scale_x > largest)
+        return my_mesh->sphere.get_w() * scale_x;
+
+    return my_mesh->sphere.get_w() * largest;
 }
 
-// slot 114
+// sub_602990
 vector3d actor::get_visual_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const actor*, vector3d*))retail::sub_602990)(this, &result);
+    if (!get_mesh())
+        return my_abs_po->get_position();
 
-    return result;
+    if (ext_flags & entity_ext_flag_bounding_sphere_dirty) {
+        const math::vector4 &sphere = get_mesh()->sphere;
+
+        const f32 x = sphere.get_x();
+        const f32 y = sphere.get_y();
+        const f32 z = sphere.get_z();
+
+        const matrix4x4 &m = my_abs_po->get_matrix();
+
+        cached_visual_bounding_sphere_center = vector3d((f32)((f64)m.y.x * y + (f64)m.x.x * x + (f64)m.z.x * z + m.w.x),
+                                                        (f32)((f64)m.y.y * y + (f64)m.x.y * x + (f64)m.z.y * z + m.w.y),
+                                                        (f32)((f64)m.y.z * y + (f64)m.x.z * x + (f64)m.z.z * z + m.w.z));
+
+        ext_flags &= ~entity_ext_flag_bounding_sphere_dirty;
+    }
+
+    return cached_visual_bounding_sphere_center;
 }
 
 // sub_602EB0
@@ -252,19 +308,36 @@ bool actor::unk_142() {
     return ((bool (__thiscall*)(actor*))retail::sub_613D10)(this);
 }
 
-// slot 143
+// sub_602660
 void actor::set_colgeom_flag_recursive(u32 flag, bool set) {
-    ((void (__thiscall*)(actor*, u32, bool))retail::sub_602660)(this, flag, set);
+    if (!get_colgeom())
+        return;
+
+    if (get_colgeom()->get_type() != collision_geometry_type_mesh &&
+        get_colgeom()->get_type() != collision_geometry_type_convex_hull)
+
+        return;
+
+    collision_geometry* geometry = get_colgeom();
+
+    if (set)
+        geometry->flags |= flag;
+    else
+        geometry->flags &= ~flag;
 }
 
-// slot 144
+// sub_602720
 void actor::update_colgeom(po* replacement_po) {
-    ((void (__thiscall*)(actor*, po*))retail::sub_602720)(this, replacement_po);
+    collision_geometry* geometry = get_colgeom();
+
+    if (geometry)
+        geometry->xform(replacement_po ? *replacement_po : *my_abs_po);
 }
 
-// slot 145
+// sub_602760
 void actor::invalidate_colgeom() {
-    ((void (__thiscall*)(actor*))retail::sub_602760)(this);
+    if (get_colgeom())
+        get_colgeom()->valid = false;
 }
 
 // slot 146
@@ -291,22 +364,36 @@ bool actor::test_combat_target(const vector3d  &p0,
                                                            rear_cull);
 }
 
-// slot 148
+// sub_602C90
 f32 actor::get_colgeom_radius() const {
-    return ((f32 (__thiscall*)(const actor*))retail::sub_602C90)(this);
+    if (colgeom)
+        return colgeom->get_bounding_sphere_radius();
+
+    return 0.0f;
 }
 
-// slot 149
-vector3d actor::get_colgeom_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const actor*, vector3d*))retail::sub_602B10)(this, &result);
+// sub_602B10
+vector3d actor::get_colgeom_center() const { // also writes the abs po's fourth column
+    if (!colgeom)
+        return my_abs_po->get_position();
 
-    return result;
+    const vector3d center = colgeom->get_local_space_bounding_sphere_center();
+
+    matrix4x4 &m = my_abs_po->get_matrix();
+
+    m.x.w = 0.0f;
+    m.y.w = 0.0f;
+    m.z.w = 0.0f;
+    m.w.w = 1.0f;
+
+    return vector3d((f32)((f64)m.y.x * center.y + (f64)m.x.x * center.x + (f64)m.z.x * center.z + m.w.x),
+                    (f32)((f64)m.y.y * center.y + (f64)m.x.y * center.x + (f64)m.z.y * center.z + m.w.y),
+                    (f32)((f64)m.y.z * center.y + (f64)m.x.z * center.x + (f64)m.z.z * center.z + m.w.z));
 }
 
-// slot 150
+// sub_602CB0
 void actor::radius_changed(bool force) {
-    ((void (__thiscall*)(actor*, bool))retail::sub_602CB0)(this, force);
+    ext_flags |= entity_ext_flag_bounding_sphere_dirty;
 }
 
 // slot 151
@@ -314,19 +401,22 @@ ngl::morph_set* actor::get_morph(const tl_fixed_string &morph_name, bool warn_if
     return ((ngl::morph_set* (__thiscall*)(actor*, const tl_fixed_string&, bool))retail::sub_614C20)(this, morph_name, warn_if_missing);
 }
 
-// slot 152
+// sub_665340
 bool actor::is_frame_delta_valid() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_665340)(this);
+    return adv_ptrs && adv_ptrs->mi && adv_ptrs->mi->frame_delta_valid;
 }
 
-// slot 153
+// sub_665360
 bool actor::is_last_frame_delta_valid() const {
-    return ((bool (__thiscall*)(const actor*))retail::sub_665360)(this);
+    return adv_ptrs && adv_ptrs->mi && adv_ptrs->mi->last_frame_delta_valid;
 }
 
-// slot 154
+// sub_665380
 const po &actor::get_frame_delta() const {
-    return ((const po& (__thiscall*)(const actor*))retail::sub_665380)(this);
+    if (adv_ptrs && adv_ptrs->mi)
+        return adv_ptrs->mi->frame_delta;
+
+    return references::unk_010038a0.get();
 }
 
 // slot 155
@@ -339,9 +429,27 @@ void actor::set_frame_delta_trans(const vector3d &delta, f32 delta_t) {
     ((void (__thiscall*)(actor*, const vector3d&, f32))retail::sub_629420)(this, delta, delta_t);
 }
 
-// slot 157
+// sub_602D30
 void actor::invalidate_frame_delta() {
-    ((void (__thiscall*)(actor*))retail::sub_602D30)(this);
+    if (!adv_ptrs || !adv_ptrs->mi)
+        return;
+
+    movement_info* mi = adv_ptrs->mi;
+
+    mi->last_frame_delta_valid = mi->frame_delta_valid;
+    mi->frame_delta_valid      = false;
+    mi->frame_delta            = references::unk_010038a0.get();
+
+    const vector3d &position = my_abs_po->get_position();
+
+    const f32 x = (f32)((f64)mi->last_position.x - position.x);
+    const f32 y = (f32)((f64)mi->last_position.y - position.y);
+    const f32 z = (f32)((f64)mi->last_position.z - position.z);
+
+    const f32 length_squared = (f32)((f64)x * x + (f64)y * y + (f64)z * z);
+
+    mi->delta_length  = (f32)std::sqrt((f64)length_squared);
+    mi->last_position = position;
 }
 
 // sub_602830
@@ -356,6 +464,24 @@ als::animation_logic_system_interface* actor::get_als() const {
         return adv_ptrs->my_als_data->the_als;
 
     return nullptr;
+}
+
+// sub_602580
+bool actor::has_entity_collision() const {
+    return colgeom && (flags & entity_flag_collisions_active) && (colgeom->flags & fi_collide_entity);
+}
+
+// sub_6025B0
+bool actor::has_camera_collision() const {
+    return colgeom && (flags & entity_flag_collisions_active) && (colgeom->flags & fi_collide_camera);
+}
+
+// sub_602790
+void actor::replace_colgeom(collision_geometry* new_colgeom) { // a dynamic one is deleted
+    if (colgeom && colgeom->is_dynamic())
+        delete colgeom;
+
+    colgeom = new_colgeom;
 }
 
 void actor::set_frame_delta_no_update(const po &bob, f32 t) {

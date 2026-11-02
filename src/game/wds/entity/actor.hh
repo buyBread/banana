@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/boolx.hh"
 #include "game/wds/entity/entity.hh"
 #include "treyarch/mash/string_hash.hh"
 #include "treyarch/mash/types.hh"
@@ -41,8 +42,21 @@ namespace treyarch {
         ai_core* core;
     };
 
+    class movement_info {
+
+    public:
+        po       frame_delta;
+        f32      frame_time;
+        vector3d last_position;
+        f32      delta_length;
+        boolx    frame_delta_valid;
+        boolx    last_frame_delta_valid;
+        u8       pad_056[0x0A];
+    };
+
     struct advanced_entity_ptrs {
-        u8                          reserved_000[0x0C];
+        u8                          reserved_000[0x08];
+        movement_info*              mi;
         chuck::vm::script_instance* my_script;       // the actor's "__enx" instance
         u8*                         unk_010;         // its script object's name hash sits at +4
         resource_key*               script_exe_name; // its hash is the script's filename
@@ -62,9 +76,10 @@ namespace treyarch {
         animation_controller*       anim_ctrl;
         advanced_entity_ptrs*       adv_ptrs;
         collision_geometry*         colgeom;
-        u8                          reserved_0b8[0x08];
+        ngl::mesh*                  mesh;
+        u8                          reserved_0bc[0x04];
         amalga::resource_pack_slot* pack_slot; // the one the actor came from; its script threads take it as their resource context
-        u8                          reserved_0c4[0x0C];
+        mutable vector3d            cached_visual_bounding_sphere_center;
         base_ai_data*               my_base_ai_data;
         capsule_alter_sys*          capsule_alter;
         u8                          reserved_0d8[0x10];
@@ -148,6 +163,10 @@ namespace treyarch {
             return my_base_ai_data != nullptr;
         }
 
+        bool has_entity_collision() const;
+        bool has_camera_collision() const;
+        void replace_colgeom(collision_geometry* new_colgeom);
+
         void set_frame_delta_no_update(const po &bob, f32 t);
         void save_last_collision_free_state();
 
@@ -159,19 +178,29 @@ namespace treyarch {
 
     ASSERT_OFFSETOF(base_ai_data, core, 0x28);
 
+    ASSERT_SIZEOF  (movement_info,                         0x60);
+    ASSERT_OFFSETOF(movement_info, frame_time,             0x40);
+    ASSERT_OFFSETOF(movement_info, last_position,          0x44);
+    ASSERT_OFFSETOF(movement_info, delta_length,           0x50);
+    ASSERT_OFFSETOF(movement_info, frame_delta_valid,      0x54);
+    ASSERT_OFFSETOF(movement_info, last_frame_delta_valid, 0x55);
+
+    ASSERT_OFFSETOF(advanced_entity_ptrs, mi,              0x08);
     ASSERT_OFFSETOF(advanced_entity_ptrs, my_script,       0x0C);
     ASSERT_OFFSETOF(advanced_entity_ptrs, script_exe_name, 0x14);
     ASSERT_OFFSETOF(advanced_entity_ptrs, script_obj_name, 0x18);
     ASSERT_OFFSETOF(advanced_entity_ptrs, my_als_data,     0x20);
     ASSERT_OFFSETOF(advanced_entity_ptrs, unk_028,         0x28);
 
-    ASSERT_SIZEOF  (actor,                  0xE8);
-    ASSERT_OFFSETOF(actor, m_skeleton,      0xA4);
-    ASSERT_OFFSETOF(actor, skeleton_map,    0xA8);
-    ASSERT_OFFSETOF(actor, anim_ctrl,       0xAC);
-    ASSERT_OFFSETOF(actor, adv_ptrs,        0xB0);
-    ASSERT_OFFSETOF(actor, colgeom,         0xB4);
-    ASSERT_OFFSETOF(actor, pack_slot,       0xC0);
-    ASSERT_OFFSETOF(actor, my_base_ai_data, 0xD0);
-    ASSERT_OFFSETOF(actor, capsule_alter,   0xD4);
+    ASSERT_SIZEOF  (actor,                                       0xE8);
+    ASSERT_OFFSETOF(actor, m_skeleton,                           0xA4);
+    ASSERT_OFFSETOF(actor, skeleton_map,                         0xA8);
+    ASSERT_OFFSETOF(actor, anim_ctrl,                            0xAC);
+    ASSERT_OFFSETOF(actor, adv_ptrs,                             0xB0);
+    ASSERT_OFFSETOF(actor, colgeom,                              0xB4);
+    ASSERT_OFFSETOF(actor, mesh,                                 0xB8);
+    ASSERT_OFFSETOF(actor, pack_slot,                            0xC0);
+    ASSERT_OFFSETOF(actor, cached_visual_bounding_sphere_center, 0xC4);
+    ASSERT_OFFSETOF(actor, my_base_ai_data,                      0xD0);
+    ASSERT_OFFSETOF(actor, capsule_alter,                        0xD4);
 } // treyarch

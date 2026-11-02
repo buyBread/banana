@@ -3277,7 +3277,7 @@ bool slf__entity__set_auto_prop_physics_activate__num__t::operator()(chuck::vm::
         !(self->flags & entity_flag_member) &&
         !self->is_a_conglomerate() &&
         self->get_colgeom() &&
-        (self->get_colgeom()->get_type() == collision_geometry_type_mesh || self->get_colgeom()->get_type() == 3))
+        (self->get_colgeom()->get_type() == collision_geometry_type_mesh || self->get_colgeom()->get_type() == collision_geometry_type_convex_hull))
 
         self->ext_flags |= entity_ext_flag_is_auto_activate_prop;
     else
