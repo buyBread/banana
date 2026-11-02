@@ -1,5 +1,7 @@
 #pragma once
 
+#include <new>
+
 #include "vc8/vector.hh"
 #include "treyarch/mash/string.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -21,6 +23,10 @@ namespace treyarch {
         mash::string                    unk_10;
         vc8::vector<active_spawn_item*> unk_1c;
         i32                             sub_pool;
+
+        mash::string* get_pack_name(mash::string* result) { // a copy of the name
+            return new (result) mash::string(pack_name);
+        }
     };
 
     // only the name is known

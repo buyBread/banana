@@ -759,6 +759,8 @@ void igo_3d_widget::fade_in(f32 duration, f32 from_alpha, f32 to_alpha, f32 dela
 }
 
 // sub_699CD0
+// inlined @ sub_6DE8F0
+// inlined @ sub_6DEBC0
 void igo_3d_widget::fade_out(f32 duration, f32 from_alpha, f32 to_alpha, f32 delay) {
     fade_out_duration   = duration;
     fade_out_remaining  = (f32)((f64)duration + delay);

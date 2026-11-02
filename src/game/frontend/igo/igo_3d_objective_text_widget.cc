@@ -8,7 +8,7 @@ igo_3d_objective_text_widget::~igo_3d_objective_text_widget() {
     queue.clear();
 
     if (shown_message) {
-        shown_message->destroy();
+        delete shown_message;
         shown_message = nullptr;
     }
 
@@ -118,7 +118,7 @@ void igo_3d_objective_text_widget::clear(bool fade) {
 
     if (message) {
         if (!fade) {
-            message->destroy();
+            delete message;
 
             shown_message = nullptr;
 

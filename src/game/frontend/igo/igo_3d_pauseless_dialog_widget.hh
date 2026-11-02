@@ -10,7 +10,14 @@ namespace treyarch {
     class igo_3d_pauseless_dialog_widget : public igo_3d_dialog_widget {
 
     public:
-        u8 reserved_230[0x20];
+        f32 shown_time;       // the update adds to it while the dialog is shown
+        u8  reserved_234[0x0C];
+        f32 unk_240;
+        u8  reserved_244[0x04];
+        u8  unk_248;          // set when the update raises its event, as unk_240 reaches 1.5
+        u8  unk_249;
+        u8  pad_24a[0x02];
+        i32 unk_24c;
 
         explicit igo_3d_pauseless_dialog_widget(mash::generating_vtable_version so_do_nothing) : igo_3d_dialog_widget(so_do_nothing) {}
 
@@ -34,5 +41,10 @@ namespace treyarch {
         void close() override;
     };
 
-    ASSERT_SIZEOF(igo_3d_pauseless_dialog_widget, 0x250);
+    ASSERT_SIZEOF  (igo_3d_pauseless_dialog_widget,             0x250);
+    ASSERT_OFFSETOF(igo_3d_pauseless_dialog_widget, shown_time, 0x230);
+    ASSERT_OFFSETOF(igo_3d_pauseless_dialog_widget, unk_240,    0x240);
+    ASSERT_OFFSETOF(igo_3d_pauseless_dialog_widget, unk_248,    0x248);
+    ASSERT_OFFSETOF(igo_3d_pauseless_dialog_widget, unk_249,    0x249);
+    ASSERT_OFFSETOF(igo_3d_pauseless_dialog_widget, unk_24c,    0x24C);
 } // treyarch

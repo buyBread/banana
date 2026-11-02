@@ -10,6 +10,7 @@
 #include "game/app.hh"
 #include "game/frontend/igo/igo_3d_script_widget.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
+#include "game/frontend/message_text.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
 #include "game/game_data.hh"
@@ -2603,35 +2604,8 @@ bool slf__widget_3d__set_text__num__num__t::operator()(chuck::vm::vm_stack &stac
 
     *format = references::game.read()->string_localizer->lookup_scripttext_string((i32)text_id);
 
-    if (device && device->unk_034()) {
-        alignas(4) u8 message[0x30]; // message_text
-
-        auto set_text = (void          (__thiscall*)(void*, mash::string))retail::sub_68B3C0;
-        auto get_text = (mash::string* (__thiscall*)(void*, mash::string*))retail::sub_90AB90;
-
-        retail::sub_68B310((u32*)message); // message_text::message_text
-
-        set_text(message, mash::string(*format));
-
-        retail::sub_6B2760((u32*)message); // rewrites the pad tokens
-
-        mash::string* rewritten = get_text(message, (mash::string*)storage);
-
-        bool changed = format->compare(rewritten->c_str()) != 0;
-
-        rewritten->finalize(mash::ALLOCATED);
-
-        if (changed) {
-            rewritten = get_text(message, (mash::string*)storage);
-
-            *format = *rewritten;
-
-            rewritten->finalize(mash::ALLOCATED);
-        }
-
-        retail::sub_68B440((i32*)message);
-        retail::sub_68B3A0((u32*)message); // message_text::~message_text
-    }
+    if (device && device->unk_034())
+        message_text::substitute_pad_tokens(format);
 
     mash::string* result = format_script_text((mash::string*)result_storage,
                                               new (storage) mash::string(*format),

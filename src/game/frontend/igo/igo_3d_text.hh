@@ -12,7 +12,7 @@ namespace treyarch {
 
     struct igo_3d_text_vtable {
         igo_3d_text*  (__thiscall* destroy)(igo_3d_text* self, u32 flags);
-        void*         reserved_004;
+        bool          (__thiscall* is_shown)(igo_3d_text* self);
         void          (__thiscall* set_shown)(igo_3d_text* self, bool shown);
         void*         reserved_00c[4];
         void          (__thiscall* set_dimensions)(igo_3d_text* self, f32 w, f32 h);
@@ -70,6 +70,10 @@ namespace treyarch {
             vtable->destroy(this, 1);
         }
 
+        bool is_shown() {
+            return vtable->is_shown(this);
+        }
+
         void set_shown(bool shown) {
             vtable->set_shown(this, shown);
         }
@@ -101,6 +105,8 @@ namespace treyarch {
         void set_text_by_id(u32 text_id) {
             vtable->set_text_by_id(this, text_id);
         }
+
+        void set_text(u32 text_id); // slot 14's body, without the dispatch
 
         void set_text_no_localize(const char* text) { // the slot owns the string built here
             vtable->set_text_no_localize(this, mash::string(text));
@@ -184,6 +190,7 @@ namespace treyarch {
     };
 
     ASSERT_SIZEOF  (igo_3d_text_vtable,                         96 * 4);
+    ASSERT_OFFSETOF(igo_3d_text_vtable, is_shown,               0x004);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_shown,              0x008);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_dimensions,         0x01C);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_text_no_localize,   0x03C);

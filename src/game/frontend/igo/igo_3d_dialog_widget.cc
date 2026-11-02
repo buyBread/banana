@@ -7,10 +7,16 @@
 #include "game/frontend/igo/igo_3d_dialog_widget.hh"
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_text.hh"
+#include "game/frontend/message_text.hh"
 #include "game/frontend/ui_frontend.hh"
 #include "game/game.hh"
+#include "game/input/input_device.hh"
+#include "game/input/input_mgr.hh"
 #include "game/mission/mission_progression_data.hh"
+#include "game/wds/entity/entity.hh"
+#include "game/wds/references.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/math/trig.hh"
 
 using namespace treyarch;
 
@@ -86,7 +92,7 @@ void igo_3d_dialog_widget::spawn_entity() {
     ((void (__thiscall*)(igo_3d_dialog_widget*))retail::sub_6FEAC0)(this);
 }
 
-// slot 44
+// sub_6A20D0
 void igo_3d_dialog_widget::render_congomerate_mesh(ngl::mesh*              mesh,
                                                    i32                     index,
                                                    const matrix4x4        &trans_matrix,
@@ -94,13 +100,22 @@ void igo_3d_dialog_widget::render_congomerate_mesh(ngl::mesh*              mesh,
                                                    ngl::mesh_params*       mesh_params,
                                                    ngl::shader_param_set*  shader_params) {
 
-    ((void (__thiscall*)(igo_3d_dialog_widget*, ngl::mesh*, i32, const matrix4x4&, const matrix4x4&, ngl::mesh_params*, ngl::shader_param_set*))retail::sub_6A20D0)(this,
-                                                                                                                                                                    mesh,
-                                                                                                                                                                    index,
-                                                                                                                                                                    trans_matrix,
-                                                                                                                                                                    rel_pos_matrix,
-                                                                                                                                                                    mesh_params,
-                                                                                                                                                                    shader_params);
+    for (u32 hidden = 0; hidden < hidden_members.size(); ++hidden) {
+        if (hidden_members[hidden] == index)
+            return;
+    }
+
+    simple_text_nav_button* button = nullptr;
+
+    if (button_1 && (index == button_1->member_a || index == button_1->member_b))
+        button = button_1;
+    else if (button_2 && (index == button_2->member_a || index == button_2->member_b))
+        button = button_2;
+
+    if (button && (!button->shown || !button->selected))
+        return;
+
+    igo_3d_widget::render_congomerate_mesh(mesh, index, trans_matrix, rel_pos_matrix, mesh_params, shader_params);
 }
 
 // slot 46
@@ -186,29 +201,69 @@ void igo_3d_dialog_widget::unk_010(i32) {
     close();
 }
 
-// slot 54
+// sub_6B9F30
 void igo_3d_dialog_widget::set_title_by_id(u32 text_id) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, u32))retail::sub_6B9F30)(this, text_id);
+    if (objectives_title)
+        objectives_title->set_text(text_id);
 }
 
-// slot 55
+// sub_68EAF0
 void igo_3d_dialog_widget::set_title(mash::string title) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, mash::string))retail::sub_68EAF0)(this, title);
+    if (objectives_title)
+        objectives_title->set_text_no_localize(title);
 }
 
-// slot 56
+// sub_6BA110
 void igo_3d_dialog_widget::set_text_by_id(u32 text_id) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, u32))retail::sub_6BA110)(this, text_id);
+    if (objectives_subtitle)
+        objectives_subtitle->set_text(text_id);
 }
 
-// slot 57
+// sub_6B9F80
 void igo_3d_dialog_widget::set_text(mash::string text) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, mash::string))retail::sub_6B9F80)(this, text);
+    if (!objectives_subtitle)
+        return;
+
+    input_mgr* inputs = input_mgr::inst();
+
+    if (inputs) {
+        input_device* device = inputs->devices[joystick_2_device];
+
+        if (!device)
+            device = inputs->devices[joystick_1_device];
+
+        if (device && device->unk_034())
+            message_text::substitute_pad_tokens(&text);
+    }
+
+    objectives_subtitle->set_text_no_localize(text);
 }
 
-// slot 58
+// sub_6F7120
 void igo_3d_dialog_widget::clear() {
-    ((void (__thiscall*)(igo_3d_dialog_widget*))retail::sub_6F7120)(this);
+    button_1_shown     = false;
+    button_2_shown     = false;
+    selected_button    = -1;
+    unk_1c0            = -1;
+    first_visible_line = -1;
+
+    for (u32 index = 0; index < lines.size(); ++index) {
+        if (lines[index]) {
+            lines[index]->destroy();
+            lines[index] = nullptr;
+        }
+    }
+
+    lines.clear();
+    line_points.clear();
+    line_scores.clear();
+    line_not_required.clear();
+
+    if (objectives_title)
+        objectives_title->set_text_no_localize("");
+
+    unk_224 = 0.0f;
+    unk_22c = 0;
 }
 
 // sub_6A22F0
@@ -277,19 +332,51 @@ void igo_3d_dialog_widget::add_mission_objective(mash::string line, i32 points, 
                                                                                                        not_required);
 }
 
-// slot 61
+// sub_68EB60
 void igo_3d_dialog_widget::add_text_line(mash::string line) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, mash::string))retail::sub_68EB60)(this, line);
+    add_mission_objective(line, 0, 0.0f, 0.0f, true);
 }
 
-// slot 62
-void igo_3d_dialog_widget::set_button_texts(mash::string first, mash::string second) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, mash::string, mash::string))retail::sub_68EBF0)(this, first, second);
+// sub_68EBF0
+void igo_3d_dialog_widget::set_button_texts(mash::string first, mash::string second) { // a lone text lands on button 2's label whichever it is
+    if (second.empty()) {
+        if (first.empty()) {
+            set_button_text(mash::string(""), true);
+            set_button_text(mash::string(""), false);
+
+            button_1_shown = false;
+            button_2_shown = false;
+        } else {
+            set_button_text(first, false);
+            set_button_text(mash::string(""), true);
+
+            button_1_shown = true;
+            button_2_shown = false;
+        }
+    } else if (first.empty()) {
+        set_button_text(second, false);
+        set_button_text(mash::string(""), true);
+
+        button_1_shown = false;
+        button_2_shown = true;
+    } else {
+        set_button_text(second, false);
+        set_button_text(first, true);
+
+        button_1_shown = true;
+        button_2_shown = true;
+    }
 }
 
-// slot 63
+// sub_6A21C0
 void igo_3d_dialog_widget::set_button_text(mash::string text, bool first) {
-    ((void (__thiscall*)(igo_3d_dialog_widget*, mash::string, bool))retail::sub_6A21C0)(this, text, first);
+    simple_text_nav_button* button = first ? button_1 : button_2;
+
+    if (button) {
+        alignas(mash::string) u8 storage[sizeof(mash::string)];
+
+        button->set_text(new (storage) mash::string(text));
+    }
 }
 
 // sub_6DE490
@@ -340,9 +427,25 @@ void igo_3d_dialog_widget::bring_up(i32 mode) {
     faded_in = true;
 }
 
-// slot 65
+// sub_6DE8F0
 void igo_3d_dialog_widget::close() {
-    ((void (__thiscall*)(igo_3d_dialog_widget*))retail::sub_6DE8F0)(this);
+    if (!is_dialog_shown())
+        return;
+
+    unk_071(false);
+
+    fade_out(0.25f, 1.0f, 0.0f, 0.25f);
+
+    unk_1e8.start(0.0f, 1.0f, 0.5f, 0.0f);
+
+    retail::sub_6D8800((i32)references::frontend.get().igo, 1); // ends the dialog background fade
+
+    event_manager::raise_event(references::dialog_3d_exited.read(), arch_base_vhandle());
+
+    string_hash objectives_off;
+    objectives_off.initialize(mash::ALLOCATED, "ui_objectives_off");
+
+    retail::sub_900D60(objectives_off.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
 }
 
 // slot 66
@@ -390,9 +493,17 @@ i32 igo_3d_dialog_widget::unk_074() {
     return ((i32 (__thiscall*)(igo_3d_dialog_widget*))retail::sub_68EA10)(this);
 }
 
-// slot 75
-i32 igo_3d_dialog_widget::unk_075(i32 unk) {
-    return ((i32 (__thiscall*)(igo_3d_dialog_widget*, i32))retail::sub_6A2170)(this, unk);
+// sub_6A2170
+void igo_3d_dialog_widget::set_selected_button(i32 button) {
+    selected_button = button - 1;
+
+    i32 count = (i32)lines.size();
+
+    if (button - 1 < 0)
+        selected_button = 0;
+
+    if (selected_button >= count)
+        selected_button = count - 1;
 }
 
 // sub_68EA20
@@ -511,4 +622,41 @@ bool igo_3d_dialog_widget::set_first_visible_line(i32 index) {
 // inlined @ sub_68E820
 bool igo_3d_dialog_widget::takes_input() {
     return is_dialog_shown() && unk_070() && unk_068();
+}
+
+// sub_6A49F0
+void igo_3d_dialog_widget::spawn_reward_orbs(i32 experience) {
+    if (experience <= 0)
+        return;
+
+    i32 count     = experience / 20;
+    i32 remainder = experience % 20;
+
+    if (remainder > 0)
+        ++count;
+
+    f32      step   = (f32)((f64)(f32)(360.0 / (f64)(f32)count) * 0.017453293005625408);
+    vector3d center = references::g_world_ptr.read()->get_hero_ptr()->my_abs_po->get_position();
+
+    for (i32 orb = 0; orb < count; ++orb) {
+        f32 angle  = (f32)((f64)(f32)orb * (f64)step);
+        f32 sine   = math::cos((f32)(4.71238899230957 + (f64)angle)); // three quarters of a turn on
+        f32 cosine = math::cos(angle);
+
+        f32 x_offset = (f32)((f64)sine * 4.0);
+        f32 z_offset = (f32)((f64)cosine * 4.0);
+
+        entity* hero = references::g_world_ptr.read()->get_hero_ptr();
+
+        if (!hero)
+            continue;
+
+        vector3d position((f32)((f64)center.x + (f64)x_offset),
+                          (f32)((f64)center.y + 0.0),
+                          (f32)((f64)center.z + (f64)z_offset));
+
+        f32 amount = orb == 0 && remainder > 0 ? (f32)remainder : 20.0f;
+
+        retail::sub_673200(hero->my_ifc_storage->get_ifc(entity_ifc_rpg), amount, 3, (i32)&position, nullptr); // rpg_interface: spawns the orb
+    }
 }

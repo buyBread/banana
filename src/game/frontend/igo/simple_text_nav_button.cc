@@ -36,9 +36,16 @@ void simple_text_nav_button::nav_select(f32) {
     selected = true;
 }
 
-// slot 2
-void simple_text_nav_button::update(f32 time_inc) {
-    ((void (__thiscall*)(simple_text_nav_button*, f32))retail::sub_68F7F0)(this, time_inc);
+// sub_68F7F0
+void simple_text_nav_button::update(f32) {
+    if (!text)
+        return;
+
+    if (shown) {
+        if (!text->is_shown())
+            text->set_shown(true);
+    } else if (text->is_shown())
+        text->set_shown(false);
 }
 
 // sub_68F880

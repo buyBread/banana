@@ -21,6 +21,7 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<string_hash> dialog_3d_entered   { 0x0102CAA8 };
+        inline util::memory_reference<string_hash> dialog_3d_exited    { 0x0102C45C };
         inline util::memory_reference<string_hash> dialog_3d_selection { 0x0102C52C };
     } // references
 
@@ -54,7 +55,7 @@ namespace treyarch {
         igo_generic_decay_timer          unk_1e8;
         igo_generic_decay_timer          unk_204;
         i32                              result;              // 1 accepted, 0 cancelled; slot 72 answers it while no button is shown
-        u32                              unk_224;
+        f32                              unk_224;
         u32                              unk_228;
         u8                               unk_22c;             // hides the actual score of the objectives added
         u8                               reserved_22d[0x03];
@@ -115,8 +116,8 @@ namespace treyarch {
         virtual i32  get_selected_button(); // 1-based while a button is shown
         virtual i32  unk_073();
         virtual i32  unk_074();
-        virtual i32  unk_075(i32 unk);
-        virtual bool select_button(i32 button); // 1-based, true when the selection moved to a shown button
+        virtual void set_selected_button(i32 button); // 1-based, clamped to the lines
+        virtual bool select_button(i32 button);       // 1-based, true when the selection moved to a shown button
         virtual void unk_077(i32 unk);
         virtual void unk_078();
 
@@ -132,6 +133,8 @@ namespace treyarch {
         bool set_first_visible_line(i32 index); // clamped to the lines, true when it changed
 
         bool takes_input();
+
+        void spawn_reward_orbs(i32 experience); // a ring around the hero, 20 experience per orb and the remainder on the first
 
         void set_title(const char* title) {
             set_title(mash::string(title));

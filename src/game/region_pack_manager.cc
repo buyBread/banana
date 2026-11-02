@@ -16,7 +16,6 @@ namespace treyarch {
                                                                      string_hash   unk_00,
                                                                      mash::string  unk_10,
                                                                      i32           sub_pool); // owns both strings
-    using copy_pack_name_function      = mash::string* (__thiscall*)(held_pack* self, mash::string* result);
 } // treyarch
 
 using namespace treyarch;
@@ -179,7 +178,7 @@ void region_pack_manager::frame_advance(f32) { // one step of the requested pack
             for (; it != unk_02c.end(); ++it) {
                 alignas(4) u8 storage[sizeof(mash::string)];
 
-                mash::string* name    = ((copy_pack_name_function)retail::sub_90AB90)(*it, (mash::string*)storage);
+                mash::string* name    = (*it)->get_pack_name((mash::string*)storage);
                 bool          missing = !retail::sub_83F720((u32*)mission_memory_manager::inst(), (i32)name);
 
                 name->finalize(mash::ALLOCATED);

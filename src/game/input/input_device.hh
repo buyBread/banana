@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <xinput.h>
 
-#include "game/stringx.hh"
+#include "treyarch/mash/string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -29,22 +29,22 @@ namespace treyarch {
     public:
         device_id_t device_id;
 
-        virtual stringx     get_name() const = 0;
-        virtual stringx     get_name(i32 axis) const = 0;
-        virtual device_id_t get_id() const = 0;
-        virtual i32         get_axis_count() const = 0;
-        virtual i32         get_axis_id(i32 axis) const = 0;
-        virtual f32         get_axis_state(i32 axis, i32 control_axis) const = 0;
-        virtual f32         get_axis_old_state(i32 axis, i32 control_axis) const = 0;
-        virtual f32         get_axis_delta(i32 axis, i32 control_axis) const = 0;
-        virtual void        poll() = 0;
-        virtual void        unk_024() = 0;
-        virtual void        unk_028() = 0;
-        virtual void        unk_02c() = 0;
-        virtual void        unk_030() = 0;
-        virtual u8          unk_034() = 0; // xenon_input_device: always false (sub_71F870)
-        virtual void        unk_038() = 0;
-        virtual u8          unk_03c(i32 text_id) = 0; // xenon_input_device: always false (sub_71FF10)
+        virtual mash::string get_name() const = 0;
+        virtual mash::string get_name(i32 axis) const = 0;
+        virtual device_id_t  get_id() const = 0;
+        virtual i32          get_axis_count() const = 0;
+        virtual i32          get_axis_id(i32 axis) const = 0;
+        virtual f32          get_axis_state(i32 axis, i32 control_axis) const = 0;
+        virtual f32          get_axis_old_state(i32 axis, i32 control_axis) const = 0;
+        virtual f32          get_axis_delta(i32 axis, i32 control_axis) const = 0;
+        virtual void         poll() = 0;
+        virtual void         unk_024() = 0;
+        virtual void         unk_028() = 0;
+        virtual void         unk_02c() = 0;
+        virtual void         unk_030() = 0;
+        virtual u8           unk_034() = 0; // xenon_input_device: always false (sub_71F870)
+        virtual i32          unk_038(mash::string token) = 0;
+        virtual u8           unk_03c(i32 text_id) = 0; // xenon_input_device: always false (sub_71FF10)
     };
 
     // the pc pad, built by its retail constructor
