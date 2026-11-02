@@ -36,6 +36,7 @@ namespace treyarch {
         inline util::memory_reference<string_hash> tentacle_16         { 0x0102C444 };
         inline util::memory_reference<string_hash> set_vulnerable      { 0x0102C6B0 };
         inline util::memory_reference<string_hash> in_limbo            { 0x0102CAAC };
+        inline util::memory_reference<string_hash> out_limbo           { 0x0102CCE0 };
         inline util::memory_reference<string_hash> particle_event      { 0x0102C7A4 };
         inline util::memory_reference<string_hash> hit_pause           { 0x0102CB78 };
     } // references

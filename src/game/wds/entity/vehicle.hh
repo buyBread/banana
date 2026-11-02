@@ -12,7 +12,9 @@
 
 namespace treyarch {
     class ai_vehicle;
+    class rb_vehicle_model;
     class rigid_body;
+    class rigid_body_prop_head;
 
     // finalize(FROM_MASH) posts "stop_vehicle" to the sound interface of the entity it holds
     struct vehicle_unk_1e4 {
@@ -34,10 +36,10 @@ namespace treyarch {
         mash::vector_basic<po>      unk_1b4;
         bool                        physics_enabled;
         u8                          pad_1c5[0x03];
-        u8                          reserved_1c8[0x04];
+        rigid_body_prop_head*       my_prop;
         rigid_body*                 my_rb;
         mash::vector_basic<u32>     unk_1d0;
-        u8                          reserved_1e0[0x04];
+        rb_vehicle_model*           my_rb_model;
         vehicle_unk_1e4             unk_1e4;
         u8                          reserved_22c[0x04];
         f32                         my_mass;
@@ -111,8 +113,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(vehicle, unk_1a4,              0x1A4);
     ASSERT_OFFSETOF(vehicle, unk_1b4,              0x1B4);
     ASSERT_OFFSETOF(vehicle, physics_enabled,      0x1C4);
+    ASSERT_OFFSETOF(vehicle, my_prop,              0x1C8);
     ASSERT_OFFSETOF(vehicle, my_rb,                0x1CC);
     ASSERT_OFFSETOF(vehicle, unk_1d0,              0x1D0);
+    ASSERT_OFFSETOF(vehicle, my_rb_model,          0x1E0);
     ASSERT_OFFSETOF(vehicle, unk_1e4,              0x1E4);
     ASSERT_OFFSETOF(vehicle, my_mass,              0x230);
     ASSERT_OFFSETOF(vehicle, self_damage,          0x23C);

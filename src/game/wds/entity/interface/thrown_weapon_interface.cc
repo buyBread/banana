@@ -279,7 +279,7 @@ bool thrown_weapon_interface::spawn_grenade(      arch_base_vhandle  target,
     grenade_phys_ifc->enable();
     grenade_phys_ifc->cancel_all_velocity(references::unk_00ffec30.get(), true);
 
-    retail::sub_640D20((u8*)last_grenade_spawned);
+    last_grenade_spawned->clear_limbo();
 
     last_grenade_spawned->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
 

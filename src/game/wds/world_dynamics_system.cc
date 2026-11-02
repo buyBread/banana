@@ -140,7 +140,7 @@ void world_dynamics_system::add_player(const mash::string &filename, const po &t
 
     hero_ptr->set_visible(true, false);
     ((actor*)hero_ptr)->invalidate_frame_delta();
-    retail::sub_640D20((u8*)hero_ptr);
+    hero_ptr->clear_limbo();
     hero_ptr->compute_sector(the_terrain, false, nullptr);
 
     retail::sub_991A30((i32*)hero_ptr->player_ifc());

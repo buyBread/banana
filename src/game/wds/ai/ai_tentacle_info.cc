@@ -115,7 +115,7 @@ void ai_tentacle_info::initialize(mash::allocation_scope scope) { // onto all_te
             vector3d parked(-999.0f, -999.0f, -999.0f);
 
             render_ent->set_rel_position(parked);
-            retail::sub_612D70((u32*)render_ent, true);          // entity_base::remove_from_regions
+            render_ent->remove_from_regions(true);
 
             misc_render_ent = render_ent->my_handle;
         } else

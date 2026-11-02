@@ -106,9 +106,18 @@ namespace treyarch {
         static void set_occluded_last_frame_all();
         void        set_occluded_last_frame(bool occluded);
 
+        void add_me_to_region     (region* r);
+        void remove_me_from_region(region* r);
+        void update_regions       (region** new_regions, i32 count);
+        void remove_from_regions  (bool update_limbo);
+        void update_proximity_maps(entity* ent = nullptr);
+
+        void clear_limbo();
+        void visibility_changed(bool from_conglom);
+
         region* get_primary_region();
 
-        // inlined
+        // sub_48E700
         bool is_in_limbo() {
             return (flags & entity_flag_in_limbo) || !get_primary_region();
         }

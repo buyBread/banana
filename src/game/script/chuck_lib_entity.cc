@@ -1552,7 +1552,7 @@ bool slf__entity__set_parent__entity__t::operator()(chuck::vm::vm_stack &stack) 
 
     if (self->is_an_entity()) {
         self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
-        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+        self->update_proximity_maps();
     }
 
     if (self->is_an_actor())
@@ -2216,7 +2216,7 @@ bool slf__entity__wait_translate_with_compute_sector__vector3d__num__t::operator
 
         if (self->is_an_entity() && !(self->flags & entity_flag_member)) {
             self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
-            retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+            self->update_proximity_maps();
         }
 
         if (self->is_an_actor())
@@ -2650,7 +2650,7 @@ bool slf__entity__set_visible__num__t::operator()(chuck::vm::vm_stack &stack) {
 
     // newly shown entities join the proximity maps
     if (!was_visible && self->is_visible() && self->is_an_entity())
-        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+        self->update_proximity_maps();
 
     return true;
 }
@@ -3601,7 +3601,7 @@ bool slf__entity__snap_to__entity__t::operator()(chuck::vm::vm_stack &stack) {
 
     if (self->is_an_entity()) {
         self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
-        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+        self->update_proximity_maps();
     }
 
     if (self->is_an_actor()) {
@@ -3641,7 +3641,7 @@ bool slf__entity__abs_snap_to__entity__t::operator()(chuck::vm::vm_stack &stack)
 
     if (self->is_an_entity()) {
         self->compute_sector(references::g_world_ptr.read()->the_terrain, false, nullptr);
-        retail::sub_612EB0((u32*)self, 0); // entity::update_proximity_maps
+        self->update_proximity_maps();
     }
 
     if (self->is_an_actor()) {

@@ -56,27 +56,28 @@ namespace treyarch {
 
     // SM3's EFLAG_*, but 0x800000 and 0x20000000
     enum e_entity_flags : u32 {
-        entity_flag_in_limbo                   = 0x00000001,
-        entity_flag_physics_collide_characters = 0x00000010,
-        entity_flag_physics_collide_terrain    = 0x00000020,
-        entity_flag_moving                     = 0x00000040,
-        entity_flag_walkable                   = 0x00000080,
-        entity_flag_graphics                   = 0x00000100,
-        entity_flag_graphics_visible           = 0x00000200,
-        entity_flag_special_target             = 0x00001000,
-        entity_flag_active                     = 0x00002000,
-        entity_flag_collisions_active          = 0x00004000,
-        entity_flag_member                     = 0x00008000,
-        entity_flag_nontarget                  = 0x00020000,
-        entity_flag_beamable                   = 0x00080000,
-        entity_flag_unk_00200000               = 0x00200000,
-        entity_flag_externally_controlled      = 0x00400000,
-        entity_flag_detectable                 = 0x00800000, // SM3's GLOWABLE
-        entity_flag_update_regions_every_frame = 0x02000000,
-        entity_flag_bone_connector             = 0x08000000,
-        entity_flag_region_forced              = 0x10000000,
-        entity_flag_allow_lockon               = 0x20000000, // SM3's COLGEOM_INSTANCED
-        entity_flag_suspended                  = 0x40000000
+        entity_flag_in_limbo                             = 0x00000001,
+        entity_flag_needs_collision_proximity_map_update = 0x00000004,
+        entity_flag_physics_collide_characters           = 0x00000010,
+        entity_flag_physics_collide_terrain              = 0x00000020,
+        entity_flag_moving                               = 0x00000040,
+        entity_flag_walkable                             = 0x00000080,
+        entity_flag_graphics                             = 0x00000100,
+        entity_flag_graphics_visible                     = 0x00000200,
+        entity_flag_special_target                       = 0x00001000,
+        entity_flag_active                               = 0x00002000,
+        entity_flag_collisions_active                    = 0x00004000,
+        entity_flag_member                               = 0x00008000,
+        entity_flag_nontarget                            = 0x00020000,
+        entity_flag_beamable                             = 0x00080000,
+        entity_flag_unk_00200000                         = 0x00200000,
+        entity_flag_externally_controlled                = 0x00400000,
+        entity_flag_detectable                           = 0x00800000, // SM3's GLOWABLE
+        entity_flag_update_regions_every_frame           = 0x02000000,
+        entity_flag_bone_connector                       = 0x08000000,
+        entity_flag_region_forced                        = 0x10000000,
+        entity_flag_allow_lockon                         = 0x20000000, // SM3's COLGEOM_INSTANCED
+        entity_flag_suspended                            = 0x40000000
     };
 
     // SM3's EFLAG_EXT_*, but 0x10000
@@ -408,6 +409,8 @@ namespace treyarch {
         void dirty_adopted_children();
 
         bool set_flag_in_the_moved_list(); // true when this call set it
+
+        static void stop_owned_effects(entity_base* ent);
 
         // the milestone's entity_base::create_<name>_ifc(); an existing one is answered as is
         script_data_interface* create_script_data_ifc();

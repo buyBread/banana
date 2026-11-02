@@ -817,6 +817,22 @@ void entity_base::dirty_adopted_children() {
             moved_entities::add_moved(child->my_handle);
 }
 
+// sub_627420
+void entity_base::stop_owned_effects(entity_base* ent) {
+    if (ent->has_ise_ifc())
+        ent->ise_ifc()->unk_020();
+
+    if (ent->has_tentacle_ifc())
+        retail::sub_61FC80((u32*)ent->tentacle_ifc()); // tentacle effects
+
+    if (ent->is_an_actor()) {
+        ai_core* core = ((actor*)ent)->get_ai_core();
+
+        if (core)
+            core->stop_looping_effects();
+    }
+}
+
 // sub_601CA0
 bool entity_base::set_flag_in_the_moved_list() {
     for (;;) {

@@ -538,8 +538,8 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
                 if (hero->has_damage_ifc())
                     hero->damage_ifc()->set_hit_points(0);
 
-                if (retail::sub_48E700((u8*)my_actor))
-                    retail::sub_640D20((u8*)my_actor);
+                if (my_actor->is_in_limbo())
+                    my_actor->clear_limbo();
 
                 vector3d position = my_actor->my_abs_po->get_position();
                 position.y        = 1.5f;

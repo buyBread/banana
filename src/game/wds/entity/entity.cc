@@ -2,6 +2,12 @@
 #include "game/colgeom.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/entity.hh"
+#include "game/wds/entity/limbo.hh"
+#include "game/wds/entity/moved_entities.hh"
+#include "game/wds/entity/vehicle.hh"
+#include "game/wds/references.hh"
+#include "game/wds/region.hh"
+#include "treyarch/chuck/vm/script_instance.hh"
 
 using namespace treyarch;
 
@@ -60,9 +66,20 @@ bool entity::is_an_entity() const {
     return ((bool (__thiscall*)(const entity*))retail::sub_667F80)(this);
 }
 
-// slot 67
+// sub_645060
 void entity::set_visible(bool visible, bool from_conglom) {
-    ((void (__thiscall*)(entity*, bool, bool))retail::sub_645060)(this, visible, from_conglom);
+    if (is_visible() == visible)
+        return;
+
+    if (visible)
+        flags |= entity_flag_graphics_visible;
+    else
+        flags &= ~entity_flag_graphics_visible;
+
+    if (!is_visible())
+        occlusion_status = references::occlusion_status_base.read() - 1;
+
+    visibility_changed(from_conglom);
 }
 
 // sub_4E1F70
@@ -83,19 +100,31 @@ u32 entity::get_entity_size() const {
     return ((u32 (__thiscall*)(const entity*))retail::sub_4BF7E0)(this);
 }
 
-// slot 88
+// sub_612C20
 void entity::clear_region(region* r, i32 i_know_what_i_am_doing) {
-    ((void (__thiscall*)(entity*, region*, i32))retail::sub_612C20)(this, r, i_know_what_i_am_doing);
+    remove_me_from_region(r);
+
+    limbo::update_limbo_entity(this);
 }
 
-// slot 89
+// sub_612D10
 void entity::compute_sector(terrain* ter, bool use_high_res_intersect, entity* original) {
-    ((void (__thiscall*)(entity*, terrain*, bool, entity*))retail::sub_612D10)(this, ter, use_high_res_intersect, original);
+    if (!(flags & entity_flag_region_forced))
+        moved_entities::add_moved(my_handle);
 }
 
-// slot 90
+// sub_612DB0
 void entity::force_region(region* r) {
-    ((void (__thiscall*)(entity*, region*))retail::sub_612DB0)(this, r);
+    if (!(flags & entity_flag_region_forced))
+        remove_from_regions(true);
+
+    flags |= entity_flag_region_forced;
+
+    if (r) {
+        retail::sub_7ABE70((i32)r, (i32)this); // region::add
+
+        limbo::update_limbo_entity(this);
+    }
 }
 
 // sub_4E1F90
@@ -103,14 +132,27 @@ void entity::force_current_region() {
     flags |= entity_flag_region_forced;
 }
 
-// slot 92
+// sub_612E10
 void entity::unforce_regions() {
-    ((void (__thiscall*)(entity*))retail::sub_612E10)(this);
+    if (flags & entity_flag_region_forced) {
+        flags &= ~entity_flag_region_forced;
+
+        moved_entities::add_moved(my_handle);
+    }
 }
 
-// slot 93
+// sub_612E30
 void entity::force_regions(entity* e) {
-    ((void (__thiscall*)(entity*, entity*))retail::sub_612E30)(this, e);
+    remove_from_regions(false);
+
+    flags |= entity_flag_region_forced;
+
+    container::fixed_vector<region*, 15> copied;
+
+    for (region* r : e->regions)
+        copied.push_back(r);
+
+    update_regions(copied.data_, (i32)copied.size());
 }
 
 // sub_601E90
@@ -142,9 +184,24 @@ bool entity::possibly_walkable() const {
     return get_colgeom() && (flags & entity_flag_collisions_active) && (flags & entity_flag_walkable);
 }
 
-// slot 99
+// sub_612F60
 void entity::region_update_poss_collide() {
-    ((void (__thiscall*)(entity*))retail::sub_612F60)(this);
+    if ((flags & entity_flag_member) || !get_primary_region())
+        return;
+
+    if (possibly_collide()) {
+        retail::sub_6022E0((u32*)get_primary_region()->collision_proximity_map, (u32*)this); // collision map add
+
+        return;
+    }
+
+    collision_map_t* map = get_primary_region()->collision_proximity_map;
+
+    if (flags & entity_flag_needs_collision_proximity_map_update) {
+        flags &= ~entity_flag_needs_collision_proximity_map_update;
+
+        retail::sub_975020((i32*)map, (u32)this); // collision map remove
+    }
 }
 
 // slot 100
@@ -152,9 +209,29 @@ bool entity::unk_100() {
     return ((bool (__thiscall*)(entity*))retail::sub_71F870)(this);
 }
 
-// slot 101
+// sub_6450D0
 void entity::unk_101(bool on) {
-    ((void (__thiscall*)(entity*, bool))retail::sub_6450D0)(this, on);
+    if ((bool)(ext_flags & entity_ext_flag_unk_00001000) == on)
+        return;
+
+    if (on) {
+        ext_flags |= entity_ext_flag_unk_00001000;
+
+        if (!(flags & entity_flag_in_limbo))
+            limbo::add_limbo_entity(this);
+
+        flags |= entity_flag_in_limbo;
+
+        stop_owned_effects(this);
+    } else {
+        ext_flags &= ~entity_ext_flag_unk_00001000;
+
+        clear_limbo();
+
+        moved_entities::add_moved(my_handle);
+    }
+
+    visibility_changed(false);
 }
 
 // sub_4E1FA0
@@ -359,6 +436,160 @@ void entity::set_occluded_last_frame_all() {
 // sub_602060
 void entity::set_occluded_last_frame(bool occluded) {
     occlusion_status = references::occlusion_status_base.read() - occluded;
+}
+
+// sub_612B70
+void entity::add_me_to_region(region* r) { // an interior region goes first
+    if (r->flags & region_flag_interior) {
+        i32 position = (i32)regions.size();
+
+        regions.push_back(nullptr);
+
+        for (; position > 0; --position)
+            regions[position] = regions[position - 1];
+
+        regions[0] = r;
+    } else
+        regions.push_back(r);
+}
+
+// sub_612BD0
+void entity::remove_me_from_region(region* r) { // the count drops even for an absent region
+    u32 index = (u32)-1;
+
+    for (u32 i = 0; i < regions.size(); ++i) {
+        if (regions[i] == r) {
+            index = i;
+
+            break;
+        }
+    }
+
+    regions.erase(index);
+}
+
+// sub_612C40
+void entity::update_regions(region** new_regions, i32 count) { // a set equal to the current one only updates limbo
+    const bool same = (count == 0 && regions.size() == 0) ||
+                      (count == 1 && regions.size() == 1 && new_regions[0] == regions[0]) ||
+                      (count == 2 && regions.size() == 2 && new_regions[0] == regions[0] && new_regions[1] == regions[1]);
+
+    if (!same) {
+        // each removal starts the scan over
+        region** current = regions.begin();
+
+        while (current != regions.end()) {
+            i32 i = count - 1;
+
+            while (i >= 0 && new_regions[i] != *current)
+                --i;
+
+            if (i >= 0)
+                ++current;
+            else {
+                retail::sub_7A5280((i32)*current, (u32*)this); // region::remove
+
+                current = regions.begin();
+            }
+        }
+
+        for (i32 i = 0; i < count; ++i)
+            if (new_regions[i]->collision_proximity_map)
+                retail::sub_7ABE70((i32)new_regions[i], (i32)this); // region::add
+    }
+
+    limbo::update_limbo_entity(this);
+}
+
+// sub_612D70
+// inlined @ sub_612DB0
+// inlined @ sub_612E30
+void entity::remove_from_regions(bool update_limbo) {
+    if (references::g_world_ptr.read()) {
+        while (regions.size())
+            retail::sub_7A5280((i32)regions.back(), (u32*)this); // region::remove
+    }
+
+    if (update_limbo)
+        limbo::update_limbo_entity(this);
+}
+
+// sub_612EB0
+void entity::update_proximity_maps(entity* ent) { // a member answers for its owner, whatever was passed
+    entity* target = ent ? ent : this;
+
+    if (flags & entity_flag_member)
+        target = get_conglom_owner();
+
+    if (!target)
+        return;
+
+    if (target->possibly_render() && !(target->flags & entity_flag_update_regions_every_frame)) {
+        for (region** it = target->regions.begin(); it != target->regions.end(); ++it)
+            if ((*it)->collision_proximity_map)
+                retail::sub_7734F0((u32*)(*it)->visibility_map, (i32)target); // hierarchical_entity_proximity_map::update_entity
+    } else {
+        for (region** it = target->regions.begin(); it != target->regions.end(); ++it)
+            if ((*it)->collision_proximity_map)
+                retail::sub_784A90((char*)(*it)->visibility_map, (i32)target); // hierarchical_entity_proximity_map::remove_entity
+    }
+}
+
+// sub_640D20
+void entity::clear_limbo() {
+    if (!(flags & entity_flag_in_limbo))
+        return;
+
+    flags &= ~entity_flag_in_limbo;
+
+    limbo::remove_limbo_entity(this);
+
+    if (!is_an_actor())
+        return;
+
+    auto* self = (actor*)this;
+
+    if (self->adv_ptrs && self->adv_ptrs->my_script)
+        self->adv_ptrs->my_script->unsuspend();
+
+    if (!is_a_vehicle())
+        return;
+
+    // vehicle::on_exit_limbo
+    auto* car = (vehicle*)this;
+
+    if (!car->my_prop && car->physics_enabled) {
+        retail::sub_63B370((i32)car, (i64*)car->my_abs_po); // builds my_prop
+
+        retail::sub_58B470((u32*)car->my_ai, (i32)car->my_prop, (i32)car->my_rb, (i32)car->my_rb_model); // ai_vehicle::set_prop
+    }
+}
+
+// sub_644FD0
+void entity::visibility_changed(bool from_conglom) {
+    if (flags & entity_flag_member) {
+        conglomerate* owner = get_conglom_owner();
+
+        if (owner) {
+            if (!from_conglom)
+                owner->update_proximity_maps();
+
+            owner->conglomerate_flags = (owner->conglomerate_flags & ~conglomerate_flag_possibly_render_valid) |
+                                        conglomerate_flag_visual_radius_dirty;
+        }
+    } else {
+        if (is_a_conglomerate()) {
+            auto* self = (conglomerate*)this;
+
+            self->conglomerate_flags = (self->conglomerate_flags & ~conglomerate_flag_possibly_render_valid) |
+                                       conglomerate_flag_visual_radius_dirty;
+        }
+
+        update_proximity_maps();
+    }
+
+    if (has_manip_obj_ifc())
+        retail::sub_642BF0((u32*)manip_obj_ifc()); // manip_obj_interface::force_status_update
 }
 
 // sub_612D30

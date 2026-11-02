@@ -12,6 +12,8 @@
 #include "game/wds/ai/ai_tentacle_info.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/entity/interface/morph_interface.hh"
+#include "game/wds/entity/moved_entities.hh"
+#include "game/wds/region.hh"
 #include "game/wds/references.hh"
 #include "game/wds/world_dynamics_system.hh"
 #include "banana/util/memory_reference.hh"
@@ -151,7 +153,7 @@ void world_dynamics_system::frame_advance(f32 time_inc) {
     dilated_time_inc = dilate_world_time(time_inc);
 
     retail::sub_6664B0(retail::sub_6370C0(), dilated_time_inc);
-    retail::sub_9676F0(this, time_inc); // dynamic rtree update
+    update_collision_proximity_maps(time_inc);
     retail::sub_77F1F0(0, 0);
     retail::sub_801660(time_inc);
     retail::sub_756130(trigger_manager::inst()); // trigger_manager::update
@@ -174,4 +176,16 @@ void world_dynamics_system::misc_entity_updates(f32 time_inc) {
     retail::sub_681120(time_inc); // manip_obj_interface::frame_advance_all_manip_objs
     retail::sub_736180(time_inc); // beam::frame_advance_all_beams
     retail::sub_646F20(time_inc);
+}
+
+// sub_9676F0
+void world_dynamics_system::update_collision_proximity_maps(f32 time_inc) { // only the first region's collision map takes the entity
+    const u32 moved = moved_entities::get_moved_count();
+
+    for (u32 i = 0; i < moved; ++i) {
+        auto* ent = (entity*)moved_entities::references::moved_list.get()[i].resolve();
+
+        if (ent && ent->possibly_collide() && ent->regions.size())
+            retail::sub_6022E0((u32*)ent->regions[0]->collision_proximity_map, (u32*)ent); // collision map add
+    }
 }

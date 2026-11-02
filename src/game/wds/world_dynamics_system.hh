@@ -74,6 +74,7 @@ namespace treyarch {
 
         void frame_advance(f32 time_inc);
         void misc_entity_updates(f32 time_inc);
+        void update_collision_proximity_maps(f32 time_inc);
 
         void add_player(const mash::string &filename, const po &transform);
         void malor_point(const vector3d &xyz, bool translate_cam, bool locking);

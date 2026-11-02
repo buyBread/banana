@@ -64,7 +64,7 @@ namespace treyarch { namespace jq { namespace references {
     inline util::memory_reference<engine_recursive_lock> unk_01075e00 { 0x01075E00 }; // sub_789960
     inline util::memory_reference<engine_recursive_lock> unk_01075e20 { 0x01075E20 }; // region visitors
     inline util::memory_reference<engine_recursive_lock> unk_01075fd0 { 0x01075FD0 }; // unregister_entity_to_update_every_frame, sub_8FEE60
-    inline util::memory_reference<engine_recursive_lock> unk_01076aa8 { 0x01076AA8 }; // entity handle set (sub_7A1760, sub_7AA850)
+    inline util::memory_reference<engine_recursive_lock> unk_01076aa8 { 0x01076AA8 }; // limbo::references::g_limbo_entities
 
     // local collision query slots (sub_778ED0, sub_779070)
     inline util::memory_reference<engine_recursive_lock> unk_01073f58 { 0x01073F58 }; // taken while picking a slot

@@ -73,7 +73,7 @@ i32 amalga::scene_entity_container_resource_handler::handle_resource(e_behavior 
 
             retail::sub_8043A0((i32)&world->ent_mgr, (i32)instances->instances, (i32*)ent);
 
-            if (slot_region && slot_region->unk_000)
+            if (slot_region && slot_region->collision_proximity_map)
                 retail::sub_7ABE70((i32)slot_region, (i32)ent);
 
             if (ent->is_an_actor() && !retail::sub_6026D0((u32*)ent))

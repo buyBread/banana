@@ -208,8 +208,8 @@ void conglomerate::radius_changed(bool force) {
 }
 
 // slot 158
-void conglomerate::unk_158(i32 unk, i32 unk_2) {
-    ((void (__thiscall*)(conglomerate*, i32, i32))retail::sub_616A10)(this, unk, unk_2);
+void conglomerate::compute_sector(terrain* ter, bool use_high_res_intersect) {
+    ((void (__thiscall*)(conglomerate*, terrain*, bool))retail::sub_616A10)(this, ter, use_high_res_intersect);
 }
 
 // slot 159

@@ -121,7 +121,7 @@ namespace treyarch {
         vector3d        get_colgeom_center() const override;
         void            radius_changed(bool force) override;
 
-        virtual void unk_158(i32 unk, i32 unk_2); // add_moved unless the region is forced
+        virtual void compute_sector(terrain* ter, bool use_high_res_intersect); // add_moved unless the region is forced
         virtual void frame_done();
         virtual void frame_done_including_members();
 
