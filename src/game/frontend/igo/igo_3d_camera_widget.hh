@@ -12,12 +12,18 @@ namespace treyarch {
     class igo_3d_camera_widget : public igo_3d_widget {
 
     public:
-        i32       camera_mesh_index; // the "ui_camera_mesh01" member, set when the entity spawns
-        u8        reserved_154[0x0C];
-        matrix4x4 camera_matrix;
-        u8        matrix_dirty;
-        bool      edit_mode;
-        u8        reserved_1a2[0xCE];
+        i32            camera_mesh_index; // the "ui_camera_mesh01" member, set when the entity spawns
+        u8             reserved_154[0x0C];
+        matrix4x4      camera_matrix;
+        u8             matrix_dirty;
+        bool           edit_mode;
+        u8             pad_1a2[0x02];
+        igo_3d_widget* marker_widget;     // null on the way home
+        f32            move_time_left;
+        f32            move_duration;
+        matrix4x4      move_end_matrix;
+        matrix4x4      move_start_matrix;
+        matrix4x4      marker_matrix;
 
         explicit igo_3d_camera_widget(mash::generating_vtable_version so_do_nothing) : igo_3d_widget(so_do_nothing) {}
 
@@ -61,6 +67,9 @@ namespace treyarch {
                             const string_hash &marker,
                             f32                duration,
                             const matrix4x4*   matrix); // nothing without a widget
+
+        void move_to_member(igo_3d_widget* widget, i32 member, f32 duration, const matrix4x4* matrix); // nothing without a widget or for member -2
+        void move_to_home(f32 duration);
     };
 
     ASSERT_SIZEOF  (igo_3d_camera_widget,                    0x270);
@@ -68,4 +77,10 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_camera_widget, camera_matrix,     0x160);
     ASSERT_OFFSETOF(igo_3d_camera_widget, matrix_dirty,      0x1A0);
     ASSERT_OFFSETOF(igo_3d_camera_widget, edit_mode,         0x1A1);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, marker_widget,     0x1A4);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, move_time_left,    0x1A8);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, move_duration,     0x1AC);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, move_end_matrix,   0x1B0);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, move_start_matrix, 0x1F0);
+    ASSERT_OFFSETOF(igo_3d_camera_widget, marker_matrix,     0x230);
 } // treyarch

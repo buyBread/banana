@@ -506,12 +506,44 @@ void ui_frontend::rebuild_input_device_widgets() {
 
 // sub_699210
 void ui_frontend::set_generic_meter_label(mash::string* label) {
-    auto set_label = (void (__thiscall*)(igo_3d_generic_meter_widget*, mash::string, bool))retail::sub_68C960;
-
     if (mission_specific_meter)
-        set_label(mission_specific_meter, mash::string(*label), false);
+        mission_specific_meter->set_label(*label, false);
 
     label->finalize(mash::ALLOCATED);
+}
+
+// sub_7115F0
+finger_of_god* ui_frontend::create_fog(vector3d position, f32 radius, f32 unk_2c, bool unk_32, bool unk_33) {
+    if (!radar_widget)
+        return nullptr;
+
+    auto* fog = new finger_of_god(position, radius, unk_2c, unk_32, unk_33);
+
+    if (!fog)
+        return nullptr;
+
+    retail::sub_70FE90((i32)fog); // spawns its entity, tracker, poi and trigger
+
+    retail::sub_6F78D0((i32)&radar_widget->fingers_of_god, (i32*)&fog);
+
+    return fog;
+}
+
+// sub_7116D0
+finger_of_god* ui_frontend::create_fog(bool unk_32) {
+    if (!radar_widget)
+        return nullptr;
+
+    auto* fog = new finger_of_god(unk_32);
+
+    if (!fog)
+        return nullptr;
+
+    retail::sub_70FE90((i32)fog); // spawns its entity, tracker, poi and trigger
+
+    retail::sub_6F78D0((i32)&radar_widget->fingers_of_god, (i32*)&fog);
+
+    return fog;
 }
 
 // sub_6E77C0

@@ -22,6 +22,9 @@ namespace treyarch {
 
         // the widget records of the 12 button kinds, "ui_button_xe_a" first; hashed by a crt initializer (sub_B42170)
         inline util::memory_reference<std::array<string_hash, 12>> button_widget_keys { 0x0102CF64 };
+
+        // "ui_button_arrow", _full, _half, _quarter; hashed by a crt initializer (sub_B42260)
+        inline util::memory_reference<std::array<string_hash, 4>> button_arrow_keys { 0x0102F7B0 };
     } // references
 
     class igo_3d_face_button_system : public igo_generic_input_listener {
@@ -58,6 +61,9 @@ namespace treyarch {
         }
 
         bool has_button(i32 id);
+
+        i32  show_button(u32 kind, f32 unk_0, f32 unk_1); // -1 past the 12 kinds
+        void play_button_anim(i32 id, u32 anim, bool sets_arrow, i32 unk);
 
         void remove_all_buttons();
         void remove_button(i32 id); // every button with the id

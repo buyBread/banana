@@ -245,6 +245,9 @@ namespace treyarch {
         void set_generic_meter_value  (f32 value);
         void set_generic_meter_label  (mash::string* label); // finalizes the label
 
+        finger_of_god* create_fog(vector3d position, f32 radius, f32 unk_2c, bool unk_32, bool unk_33); // null without a radar
+        finger_of_god* create_fog(bool unk_32);                                                         // null without a radar
+
         void destroy_fog(finger_of_god* fog); // deletes it and drops it from the radar
 
         void letterbox(f32 time, f32 height); // leaves the senses first when the height is above 0.0001

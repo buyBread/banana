@@ -360,7 +360,7 @@ void quest_manager::giver_trigger_entered(event*, arch_base_vhandle, void* param
             return;
     }
 
-    record->face_button                = retail::sub_70C7E0((u32*)references::frontend.get().igo->face_button_system, 2, -1.0f, 0.0f); // the square button
+    record->face_button                = references::frontend.get().igo->face_button_system->show_button(2, -1.0f, 0.0f); // the square button
     record->square_pressed_callback_id = references::script_controller.read()->add_callback(references::square_pressed.read(), giver_square_pressed, record, false);
 }
 

@@ -136,6 +136,8 @@ namespace treyarch {
 
         void spawn_reward_orbs(i32 experience); // a ring around the hero, 20 experience per orb and the remainder on the first
 
+        void fill_mission_results(); // adds every objective line, then rescales the lines' points to the quest's totals
+
         void set_title(const char* title) {
             set_title(mash::string(title));
         }

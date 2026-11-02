@@ -4,8 +4,69 @@
 #include "game/frontend/ui_frontend.hh"
 #include "game/trigger.hh"
 #include "game/wds/entity/entity_base.hh"
+#include "game/wds/references.hh"
+#include "game/wds/world_dynamics_system.hh"
 
 using namespace treyarch;
+
+// sub_6AFA00
+finger_of_god::finger_of_god(vector3d initial_position,
+                             f32      initial_radius,
+                             f32      initial_unk_2c,
+                             bool     initial_unk_32,
+                             bool     initial_unk_33) : position(initial_position),
+                                                        poi_index(-1),
+                                                        tracker_id((entity_tracker_id)-1),
+                                                        sphere_trigger(nullptr),
+                                                        radius(initial_radius),
+                                                        unk_28(0),
+                                                        unk_2c(initial_unk_2c),
+                                                        poi_active(false),
+                                                        active(false),
+                                                        unk_32(initial_unk_32),
+                                                        unk_33(initial_unk_33) {}
+
+// sub_6AF9A0
+finger_of_god::finger_of_god(bool initial_unk_32) : position(0.0f, 0.0f, 0.0f),
+                                                    poi_index(-1),
+                                                    tracker_id((entity_tracker_id)-1),
+                                                    sphere_trigger(nullptr),
+                                                    radius(0.0f),
+                                                    unk_28(0),
+                                                    unk_2c(0.0f),
+                                                    poi_active(false),
+                                                    active(false),
+                                                    unk_32(initial_unk_32),
+                                                    unk_33(false) {}
+
+// sub_6E1440
+finger_of_god::~finger_of_god() {
+    if (!ent.null()) {
+        if (ui_frontend* igo = references::frontend.get().igo)
+            retail::sub_6D9260((i32)igo, ent.value); // target icon removal
+
+        retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)ent.resolve()); // wds_entity_manager::destroy_entity
+
+        ent = arch_base_vhandle();
+    }
+
+    if (tracker_id != (entity_tracker_id)-1) {
+        references::frontend.get().igo->entity_tracker_mgr->destroy_entity_tracker(tracker_id);
+
+        tracker_id = (entity_tracker_id)-1;
+    }
+
+    if (poi_index >= 0) {
+        references::frontend.get().igo->zoom_map->remove_poi((u32)poi_index);
+
+        poi_index = -1;
+    }
+}
+
+// slot 52
+bool finger_of_god::is_a_finger_of_god() const {
+    return ((bool (__thiscall*)(const finger_of_god*))retail::sub_667F80)(this);
+}
 
 // sub_6CA350
 entity_tracker* finger_of_god::get_tracker() {

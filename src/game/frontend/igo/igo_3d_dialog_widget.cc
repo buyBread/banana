@@ -12,7 +12,9 @@
 #include "game/game.hh"
 #include "game/input/input_device.hh"
 #include "game/input/input_mgr.hh"
+#include "game/mission/mission_manager.hh"
 #include "game/mission/mission_progression_data.hh"
+#include "game/quest_manager.hh"
 #include "game/wds/entity/entity.hh"
 #include "game/wds/references.hh"
 #include "treyarch/mash/string_hash.hh"
@@ -658,5 +660,75 @@ void igo_3d_dialog_widget::spawn_reward_orbs(i32 experience) {
         f32 amount = orb == 0 && remainder > 0 ? (f32)remainder : 20.0f;
 
         retail::sub_673200(hero->my_ifc_storage->get_ifc(entity_ifc_rpg), amount, 3, (i32)&position, nullptr); // rpg_interface: spawns the orb
+    }
+}
+
+// sub_6ECF90
+void igo_3d_dialog_widget::fill_mission_results() {
+    i32 objective_count = ((mission_progression_registry*)retail::sub_7685B0())->objectives.size();
+
+    for (i32 i = 0; i < objective_count; ++i)
+        add_objective((mission_objective_data*)retail::sub_759270((i32)retail::sub_7685B0(), i), false); // mission_progression_registry objective by key
+
+    i32 stage_count = ((mission_progression_registry*)retail::sub_7685B0())->stages.size();
+
+    for (i32 i = 0; i < stage_count; ++i) {
+        auto* stage = (mission_stage_data*)retail::sub_759240((i32)retail::sub_7685B0(), i); // mission_progression_registry stage by key
+
+        if (!stage)
+            continue;
+
+        i32 stage_objective_count = stage->children.size();
+
+        for (i32 j = 0; j < stage_objective_count; ++j) {
+            auto* objective = (mission_objective_data*)retail::sub_766530((u32*)stage, j); // mission_progression_data child by key
+
+            add_objective(objective, false);
+
+            i32 child_count = objective->children.size();
+
+            for (i32 k = 0; k < child_count; ++k)
+                add_objective((mission_objective_data*)retail::sub_766530((u32*)objective, k), true); // mission_progression_data child by key
+        }
+    }
+
+    i32 not_required_points = 0;
+    i32 required_points     = 0;
+    i32 not_required_lines  = 0;
+    i32 required_lines      = 0;
+
+    for (u32 i = 0; i < line_points.size(); ++i) {
+        if (line_not_required[i]) {
+            not_required_points += line_points[i];
+            ++not_required_lines;
+        } else {
+            required_points += line_points[i];
+            ++required_lines;
+        }
+    }
+
+    if (!not_required_points && !required_points) { // no line has points, so each counts as one
+        not_required_points = not_required_lines;
+        required_points     = required_lines;
+
+        for (u32 i = 0; i < line_points.size(); ++i)
+            line_points[i] = 1;
+    }
+
+    f32 unk_d0;
+    f32 unk_d4;
+
+    {
+        mash::string mission_name(mission_manager::inst()->get_running_mission_name());
+
+        retail::sub_7F18D0((u32*)quest_manager::inst(), (i32)&mission_name, &unk_d0, &unk_d4); // that quest's unk_d0 and unk_d4
+    }
+
+    for (u32 i = 0; i < line_points.size(); ++i) {
+        if (line_not_required[i]) {
+            if (line_points[i])
+                line_points[i] = (i32)((f64)(f32)line_points[i] * (f64)unk_d4 / (f64)(f32)not_required_points);
+        } else if (line_points[i])
+            line_points[i] = (i32)((f64)(f32)line_points[i] * (f64)unk_d0 / (f64)(f32)required_points);
     }
 }

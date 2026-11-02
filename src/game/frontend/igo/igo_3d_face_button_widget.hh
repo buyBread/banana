@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/frontend/igo/igo_3d_widget.hh"
+#include "treyarch/mash/string_hash.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -23,7 +24,7 @@ namespace treyarch {
         virtual bool  unk_056() = 0;
         virtual void  set_button_pos(f32 x, f32 y) = 0;
         virtual void* unk_058(void* unk) = 0;
-        virtual bool  unk_059(i32 unk_0, i32 unk_1) = 0;
+        virtual bool  unk_059(string_hash arrow_key, i32 unk) = 0;
         virtual bool  unk_060() = 0;
         virtual i32   unk_061(u8* unk) = 0;
         virtual bool  unk_062() = 0;

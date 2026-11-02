@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/frontend/igo/igo_3d_camera_widget.hh"
+#include "game/math/references.hh"
 
 using namespace treyarch;
 
@@ -152,5 +153,35 @@ void igo_3d_camera_widget::move_to_marker(igo_3d_widget*     widget,
 
     i32 index = widget->get_mesh_index(marker);
 
-    retail::sub_69A830(this, widget, index, duration, matrix); // starts the move towards the member
+    move_to_member(widget, index, duration, matrix);
+}
+
+// sub_69A830
+void igo_3d_camera_widget::move_to_member(igo_3d_widget* widget, i32 member, f32 duration, const matrix4x4* matrix) {
+    if (!widget || member == -2)
+        return;
+
+    marker_matrix = *matrix;
+
+    move_time_left = duration;
+    move_duration  = duration;
+
+    move_start_matrix = camera_matrix;
+    move_end_matrix   = move_start_matrix;
+
+    widget->unk_0d0 = member;
+    marker_widget   = widget;
+}
+
+// sub_69A910
+void igo_3d_camera_widget::move_to_home(f32 duration) {
+    marker_matrix = references::identity_matrix.get();
+
+    move_time_left = duration;
+    move_duration  = duration;
+
+    move_start_matrix = camera_matrix;
+    move_end_matrix   = references::identity_matrix.get();
+
+    marker_widget = nullptr;
 }

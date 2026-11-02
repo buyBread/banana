@@ -244,10 +244,8 @@ void cross_neighborhood_spawn::update_arrival(bool arrived) { // marks the goto 
     if (unk_d8->goto_points.size() == unk_d8->radar_markers.size())
         return;
 
-    auto create_fog = (finger_of_god* (__thiscall*)(ui_frontend*, vector3d, f32, f32, bool, i32))retail::sub_7115F0;
-
     for (spawn_point** it = unk_d8->goto_points.begin(); it != unk_d8->goto_points.end(); ++it) {
-        finger_of_god* fog = create_fog(references::frontend.get().igo, (*it)->position, radius, 0.0f, false, 0);
+        finger_of_god* fog = references::frontend.get().igo->create_fog((*it)->position, radius, 0.0f, false, false);
 
         unk_d8->radar_markers.push_back(fog);
 

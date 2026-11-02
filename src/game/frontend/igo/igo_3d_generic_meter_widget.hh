@@ -2,6 +2,7 @@
 
 #include "game/frontend/igo/igo_3d_text.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
+#include "treyarch/mash/string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -23,6 +24,19 @@ namespace treyarch {
         virtual void set_value(f32 value) = 0;
         virtual f32  unk_055(f32 unk_0, f32 unk_1, f32 unk_2) = 0;
         virtual f32  unk_056(i32 unk) = 0;
+
+        // sub_68C960
+        void set_label(mash::string label, bool first) { // shows the text it lands on, hides the other
+            if (first) {
+                unk_164->set_shown(true);
+                unk_164->set_text_no_localize(label);
+                unk_168->set_shown(false);
+            } else {
+                unk_164->set_shown(false);
+                unk_168->set_shown(true);
+                unk_168->set_text_no_localize(label);
+            }
+        }
     };
 
     ASSERT_SIZEOF  (igo_3d_generic_meter_widget,          0x180);

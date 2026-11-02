@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstddef>
+
 #include "game/arch_base.hh"
 #include "game/arch_base_vhandle.hh"
 #include "game/frontend/entity_tracker.hh"
 #include "game/math/algebra/vector3d.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mm/mm.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
@@ -32,6 +35,22 @@ namespace treyarch {
         bool              active;
         bool              unk_32;
         bool              unk_33;
+
+        finger_of_god(vector3d initial_position,
+                      f32      initial_radius,
+                      f32      initial_unk_2c,
+                      bool     initial_unk_32,
+                      bool     initial_unk_33);
+
+        explicit finger_of_god(bool initial_unk_32);
+
+        ~finger_of_god() override;
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        bool is_a_finger_of_god() const override;
 
         entity_tracker* get_tracker();
 

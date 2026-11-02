@@ -295,7 +295,7 @@ bool slf__move_ui_camera_to_home__num__t::operator()(chuck::vm::vm_stack &stack)
         references::frontend.get().igo->camera_widget->reset_entity_po();
         references::frontend.get().igo->camera_widget->reset_position();
 
-        retail::sub_69A910(references::frontend.get().igo->camera_widget, duration); // igo_3d_camera_widget move home
+        references::frontend.get().igo->camera_widget->move_to_home(duration);
     }
 
     return true;
@@ -336,7 +336,7 @@ bool slf__enable_boss_meter__entity__num__t::operator()(chuck::vm::vm_stack &sta
 
     references::frontend.get().igo->boss_meter_system->remove_all_meters();
 
-    retail::sub_70CEC0(references::frontend.get().igo->boss_meter_system, boss, (i32)type); // igo_3d_boss_meter_system add
+    references::frontend.get().igo->boss_meter_system->add_meter(arch_base_vhandle(boss), (i32)type);
 
     return true;
 }
@@ -355,7 +355,7 @@ bool slf__add_boss_meter__entity__num__t::operator()(chuck::vm::vm_stack &stack)
     auto boss = stack.local_uint(0x00);
     auto type = stack.local_num(0x04);
 
-    auto result = (f32)retail::sub_70CEC0(references::frontend.get().igo->boss_meter_system, boss, (i32)type); // igo_3d_boss_meter_system add
+    auto result = (f32)references::frontend.get().igo->boss_meter_system->add_meter(arch_base_vhandle(boss), (i32)type);
 
     stack.push(&result, sizeof(result));
 
@@ -368,7 +368,7 @@ bool slf__add_boss_meter__num__t::operator()(chuck::vm::vm_stack &stack) {
 
     auto type = stack.local_num(0x00);
 
-    auto result = (f32)retail::sub_70D060(references::frontend.get().igo->boss_meter_system, (i32)type); // igo_3d_boss_meter_system add
+    auto result = (f32)references::frontend.get().igo->boss_meter_system->add_meter((i32)type);
 
     stack.push(&result, sizeof(result));
 
@@ -712,7 +712,7 @@ bool slf__show_game_button__num__t::operator()(chuck::vm::vm_stack &stack) {
     f32 result = -1.0f;
 
     if (system)
-        result = (f32)retail::sub_70C7E0((u32*)system, (i32)kind, -1.0f, 0.0f); // show_button
+        result = (f32)system->show_button((i32)kind, -1.0f, 0.0f);
 
     stack.push(&result, sizeof(result));
 
@@ -753,7 +753,7 @@ bool slf__play_game_button_anim__num__num__t::operator()(chuck::vm::vm_stack &st
     igo_3d_face_button_system* system = references::frontend.get().igo->face_button_system;
 
     if (system)
-        retail::sub_6D06E0((u32*)system, (i32)id, (i32)anim, 1, 0); // play the button anim
+        system->play_button_anim((i32)id, (i32)anim, true, 0);
 
     return true;
 }
@@ -1210,7 +1210,7 @@ bool slf__ui_camera_reset_pos__num__t::operator()(chuck::vm::vm_stack &stack) {
     if (references::frontend.get().igo->camera_widget) {
         references::frontend.get().igo->camera_widget->reset_position();
 
-        retail::sub_69A910(references::frontend.get().igo->camera_widget, duration); // igo_3d_camera_widget move home
+        references::frontend.get().igo->camera_widget->move_to_home(duration);
     }
 
     return true;
@@ -1633,9 +1633,7 @@ bool slf__create_fog__vector3d__num__num__t::operator()(chuck::vm::vm_stack &sta
     auto radius   = stack.local_num(0x0C);
     auto unk_2c   = stack.local_num(0x10);
 
-    auto create_fog = (finger_of_god* (__thiscall*)(ui_frontend*, vector3d, f32, f32, bool, i32))retail::sub_7115F0;
-
-    finger_of_god*    fog = create_fog(references::frontend.get().igo, position, radius, unk_2c, true, 0);
+    finger_of_god*    fog = references::frontend.get().igo->create_fog(position, radius, unk_2c, true, false);
     arch_base_vhandle result;
 
     if (fog) {
@@ -1650,9 +1648,7 @@ bool slf__create_fog__vector3d__num__num__t::operator()(chuck::vm::vm_stack &sta
 
 // sub_83EE60
 bool slf__create_fog__t::operator()(chuck::vm::vm_stack &stack) {
-    auto create_fog = (finger_of_god* (__thiscall*)(ui_frontend*, bool))retail::sub_7116D0;
-
-    finger_of_god*    fog = create_fog(references::frontend.get().igo, true);
+    finger_of_god*    fog = references::frontend.get().igo->create_fog(true);
     arch_base_vhandle result;
 
     if (fog) {
@@ -1743,7 +1739,7 @@ bool slf__show_mission_success_screen__num__num__t::operator()(chuck::vm::vm_sta
     dialog->set_title_by_id(3436);
     dialog->set_text("");
 
-    retail::sub_6ECF90((u32*)dialog); // fills in the results
+    dialog->fill_mission_results();
 
     dialog->unk_22c = 0;
 
