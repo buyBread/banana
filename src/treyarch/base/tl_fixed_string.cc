@@ -34,3 +34,16 @@ bool tl_fixed_string::operator==(const tl_fixed_string &other) const {
 
     return true;
 }
+
+// sub_5B74B0
+bool tl_fixed_string::operator!=(const tl_fixed_string &other) const {
+    auto left  = (const u32*)this;
+    auto right = (const u32*)&other;
+
+    for (i32 i = 0; i < 8; i++) {
+        if (left[i] != right[i])
+            return true;
+    }
+
+    return false;
+}

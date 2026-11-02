@@ -15,6 +15,7 @@ namespace treyarch {
         tl_fixed_string(const char* value);
 
         bool operator==(const tl_fixed_string &other) const;
+        bool operator!=(const tl_fixed_string &other) const;
 
         void construct_mashed_class() {}
         void destruct_mashed_class() {}
