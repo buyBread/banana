@@ -894,7 +894,7 @@ bool slf__entity__push_ai_disable__t::operator()(chuck::vm::vm_stack &stack) {
         return true;
 
     // the hero's are counted, so pop_ai_disable can't go past them
-    if (retail::sub_601C50((u32*)self)) // entity_base::is_hero
+    if (self->is_hero())
         ++mission_manager::inst()->saved_script_hero_ai_disable_count;
 
     self->get_ai_core()->push_disable(0);
@@ -913,11 +913,11 @@ bool slf__entity__pop_ai_disable__t::operator()(chuck::vm::vm_stack &stack) {
 
     // the hero stays disabled while the loading screen is up
     if (references::frontend.get().igo->loading_screen->is_shown() &&
-        retail::sub_601C50((u32*)self))
+        self->is_hero())
 
         return true;
 
-    if (retail::sub_601C50((u32*)self)) {
+    if (self->is_hero()) {
         if (mission_manager::inst()->saved_script_hero_ai_disable_count <= 0)
             return true;
 

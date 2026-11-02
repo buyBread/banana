@@ -926,7 +926,7 @@ bool slf__polytube__tentacle_web_set_up__entity__uint__num__t::operator()(chuck:
 
     // the owner isn't checked; the hero dresses the tube as his own web unless he's in black mode and wasn't asked to
     if (owner->has_ifc(entity_ifc_tentacle)) {
-        bool own_tentacles = !retail::sub_601C50((u32*)owner); // entity_base::is_hero
+        bool own_tentacles = !owner->is_hero();
 
         if (!own_tentacles)
             own_tentacles = owner->player_ifc()->is_in_rvb_black_mode() && !use_hero_web;
@@ -940,7 +940,7 @@ bool slf__polytube__tentacle_web_set_up__entity__uint__num__t::operator()(chuck:
         }
     }
 
-    if (retail::sub_601C50((u32*)owner))
+    if (owner->is_hero())
         owner->player_ifc()->unk_400(self, radius);
 
     return true;

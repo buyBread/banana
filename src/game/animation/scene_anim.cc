@@ -65,7 +65,7 @@ scene_anim::~scene_anim() {
             if (ent->has_ifc(entity_ifc_standing))
                 ent->standing_ifc()->set_control_parent(nullptr);
 
-            if (((actor*)ent)->get_ai_core() && !retail::sub_601C50((u32*)ent))
+            if (((actor*)ent)->get_ai_core() && !ent->is_hero())
                 ((actor*)ent)->get_ai_core()->pop_disable(0);
 
             info.ent = arch_base_vhandle();
@@ -232,7 +232,7 @@ void scene_anim::find_actor_and_create_controller_for_subanim(      i32         
 
         bool collisions_active = (ent->flags & entity_flag_collisions_active) != 0;
 
-        if (ent->get_ai_core() && !retail::sub_601C50((u32*)ent)) {
+        if (ent->get_ai_core() && !ent->is_hero()) {
             ent->get_ai_core()->stop_movement();
             ent->get_ai_core()->push_disable(0);
         }

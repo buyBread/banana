@@ -831,7 +831,7 @@ bool ai_core::wants_low_priority() const {
     if (flags & ai_core_flag_forcing_high_priority)
         return false;
 
-    if (retail::sub_601C50((u32*)my_actor))
+    if (my_actor->is_hero())
         return false;
 
     return my_resource->low_priority_advance ||

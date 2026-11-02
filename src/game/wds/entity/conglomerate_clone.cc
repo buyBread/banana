@@ -86,10 +86,7 @@ f32 conglomerate_clone::get_visual_radius() const {
 
 // slot 114
 vector3d conglomerate_clone::get_visual_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const conglomerate_clone*, vector3d*))retail::sub_667F30)(this, &result);
-
-    return result;
+    return entity_base::get_last_position();
 }
 
 // slot 158

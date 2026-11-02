@@ -535,7 +535,7 @@ void spiderman_rvb_player_interface::frame_advance(f32 delta_t) {
 
                 fall_timer = 0.0f;
 
-                if (retail::sub_4024A0((u32*)hero)) // entity_base::has_damage_ifc
+                if (hero->has_damage_ifc())
                     hero->damage_ifc()->set_hit_points(0);
 
                 if (retail::sub_48E700((u8*)my_actor))
@@ -1609,12 +1609,12 @@ bool spiderman_rvb_player_interface::check_for_block(      entity_base*         
     } else if (weapon) {
         entity* holder = weapon->my_entity;
 
-        if (holder->has_ifc(entity_ifc_gun_weapon))
+        if (holder->has_gun_weapon_ifc())
             block = (f32)((gun_weapon_interface*)holder->my_ifc_storage->get_ifc(entity_ifc_gun_weapon))->unk_020;
-        else if (holder->has_ifc(entity_ifc_thrown_weapon)) {
+        else if (holder->has_thrown_weapon_ifc()) {
             block    = (f32)((thrown_weapon_interface*)holder->my_ifc_storage->get_ifc(entity_ifc_thrown_weapon))->unk_010;
             unk_077e = true;
-        } else if ((u8)retail::sub_4E1D20((u32*)holder)) { // has_ifc(entity_ifc_melee_weapon)
+        } else if (holder->has_melee_weapon_ifc()) {
             block    = (f32)((f64)((melee_weapon_interface*)holder->my_ifc_storage->get_ifc(entity_ifc_melee_weapon))->unk_010 * 0.0);
             unk_0768 = 1;
             unk_077e = true;

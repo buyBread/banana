@@ -388,7 +388,7 @@ bool treyarch::rvb_is_crawling(arch_base* the_entity) {
 
     auto the_actor = (actor*)the_entity;
 
-    if (!retail::sub_601C50((u32*)the_actor)) {
+    if (!the_actor->is_hero()) {
         if (!the_actor->get_ai_core())
             return false;
 

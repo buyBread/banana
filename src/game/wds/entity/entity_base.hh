@@ -45,25 +45,29 @@ namespace treyarch {
 
     // SM3's EFLAG_*, but 0x800000 and 0x20000000
     enum e_entity_flags : u32 {
-        entity_flag_in_limbo              = 0x00000001,
-        entity_flag_moving                = 0x00000040,
-        entity_flag_walkable              = 0x00000080,
-        entity_flag_graphics_visible      = 0x00000200,
-        entity_flag_special_target        = 0x00001000,
-        entity_flag_collisions_active     = 0x00004000,
-        entity_flag_member                = 0x00008000,
-        entity_flag_nontarget             = 0x00020000,
-        entity_flag_beamable              = 0x00080000,
-        entity_flag_externally_controlled = 0x00400000,
-        entity_flag_detectable            = 0x00800000, // SM3's GLOWABLE
-        entity_flag_bone_connector        = 0x08000000,
-        entity_flag_allow_lockon          = 0x20000000, // SM3's COLGEOM_INSTANCED
-        entity_flag_suspended             = 0x40000000
+        entity_flag_in_limbo                   = 0x00000001,
+        entity_flag_physics_collide_characters = 0x00000010,
+        entity_flag_physics_collide_terrain    = 0x00000020,
+        entity_flag_moving                     = 0x00000040,
+        entity_flag_walkable                   = 0x00000080,
+        entity_flag_graphics_visible           = 0x00000200,
+        entity_flag_special_target             = 0x00001000,
+        entity_flag_active                     = 0x00002000,
+        entity_flag_collisions_active          = 0x00004000,
+        entity_flag_member                     = 0x00008000,
+        entity_flag_nontarget                  = 0x00020000,
+        entity_flag_beamable                   = 0x00080000,
+        entity_flag_externally_controlled      = 0x00400000,
+        entity_flag_detectable                 = 0x00800000, // SM3's GLOWABLE
+        entity_flag_bone_connector             = 0x08000000,
+        entity_flag_allow_lockon               = 0x20000000, // SM3's COLGEOM_INSTANCED
+        entity_flag_suspended                  = 0x40000000
     };
 
     // SM3's EFLAG_EXT_*, but 0x10000
     enum e_entity_ext_flags : u32 {
         entity_ext_flag_spawned                         = 0x00000100,
+        entity_ext_flag_is_hero                         = 0x00000200,
         entity_ext_flag_is_auto_activate_prop           = 0x00000800,
         entity_ext_flag_invulnerable                    = 0x00004000,
         entity_ext_flag_noncrawlable                    = 0x00008000,
@@ -88,7 +92,8 @@ namespace treyarch {
         u32                unk_030; // the transform waits report a move (add_moved) only while it's set
         u8                 reserved_034[0x06];
         u8                 unk_03a; // cleared as scene entities are loaded
-        u8                 reserved_03b[0x15];
+        u8                 reserved_03b[0x11];
+        string_hash        sound_type;
 
         explicit entity_base(mash::generating_vtable_version so_do_nothing) : arch_base(so_do_nothing) {}
 
@@ -147,6 +152,11 @@ namespace treyarch {
             return my_ifc_storage && my_ifc_storage->has_ifc(index);
         }
 
+        // sub_4024A0
+        bool has_damage_ifc() const {
+            return has_ifc(entity_ifc_damage);
+        }
+
         // sub_4024C0
         bool has_physical_ifc() const {
             return has_ifc(entity_ifc_physical);
@@ -158,9 +168,34 @@ namespace treyarch {
             return has_ifc(entity_ifc_standing);
         }
 
+        // sub_408CF0
+        bool has_script_data_ifc() const {
+            return has_ifc(entity_ifc_script_data);
+        }
+
         // sub_408D10
         bool has_manip_obj_ifc() const {
             return has_ifc(entity_ifc_manip_obj);
+        }
+
+        // sub_44E680
+        bool has_switch_obj_ifc() const {
+            return has_ifc(entity_ifc_switch_obj);
+        }
+
+        // sub_4E1CE0
+        bool has_thrown_weapon_ifc() const {
+            return has_ifc(entity_ifc_thrown_weapon);
+        }
+
+        // sub_4E1D00
+        bool has_gun_weapon_ifc() const {
+            return has_ifc(entity_ifc_gun_weapon);
+        }
+
+        // sub_4E1D20
+        bool has_melee_weapon_ifc() const {
+            return has_ifc(entity_ifc_melee_weapon);
         }
 
         // sub_402500
@@ -168,9 +203,19 @@ namespace treyarch {
             return has_ifc(entity_ifc_player);
         }
 
-        // sub_402520
-        bool has_combo_ifc() const {
-            return has_ifc(entity_ifc_combo);
+        // sub_5FCB20
+        bool has_variant_ifc() const {
+            return has_ifc(entity_ifc_variant);
+        }
+
+        // sub_5837A0
+        bool has_simple_variant_ifc() const {
+            return has_ifc(entity_ifc_simple_variant);
+        }
+
+        // sub_48E6C0
+        bool has_card_ifc() const {
+            return has_ifc(entity_ifc_card);
         }
 
         // sub_48E6E0
@@ -178,14 +223,34 @@ namespace treyarch {
             return has_ifc(entity_ifc_occupant);
         }
 
+        // sub_5A7FC0
+        bool has_morph_ifc() const {
+            return has_ifc(entity_ifc_morph);
+        }
+
+        // sub_5FCB40
+        bool has_rpg_ifc() const {
+            return has_ifc(entity_ifc_rpg);
+        }
+
+        // sub_402520
+        bool has_combo_ifc() const {
+            return has_ifc(entity_ifc_combo);
+        }
+
+        // sub_423D00
+        bool has_ise_ifc() const {
+            return has_ifc(entity_ifc_ise);
+        }
+
+        // sub_423D20
+        bool has_tentacle_ifc() const {
+            return has_ifc(entity_ifc_tentacle);
+        }
+
         // sub_402540
         bool has_sound_ifc() const {
             return has_ifc(entity_ifc_sound);
-        }
-
-        // sub_48E6C0
-        bool has_card_ifc() const {
-            return has_ifc(entity_ifc_card);
         }
 
         // inlined; the milestone's entity_base::<name>_ifc()
@@ -195,6 +260,14 @@ namespace treyarch {
 
         physical_interface* physical_ifc() const {
             return (physical_interface*)my_ifc_storage->get_ifc(entity_ifc_physical);
+        }
+
+        // sub_5B76B0
+        physical_interface* find_physical_ifc() const {
+            if (!my_ifc_storage)
+                return nullptr;
+
+            return (physical_interface*)my_ifc_storage->find_ifc(entity_ifc_physical);
         }
 
         standing_interface* standing_ifc() const {
@@ -258,6 +331,15 @@ namespace treyarch {
             return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
         }
 
+        // sub_42AC00
+        string_hash get_sound_type() const {
+            return sound_type;
+        }
+
+        bool is_hero() const;
+        void set_hero(bool hero);
+        void set_invulnerable(bool invulnerable);
+
         // the milestone's entity_base::create_<name>_ifc(); an existing one is answered as is
         script_data_interface* create_script_data_ifc();
         physical_interface*    create_physical_ifc();
@@ -280,4 +362,5 @@ namespace treyarch {
     ASSERT_OFFSETOF(entity_base, my_parent,      0x20);
     ASSERT_OFFSETOF(entity_base, unk_030,        0x30);
     ASSERT_OFFSETOF(entity_base, unk_03a,        0x3A);
+    ASSERT_OFFSETOF(entity_base, sound_type,     0x4C);
 } // treyarch

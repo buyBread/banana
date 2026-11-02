@@ -329,7 +329,7 @@ void game::freeze_hero(bool freeze) {
 
     entity* hero = the_world->hero_ptr;
 
-    retail::sub_548450((u32*)hero, freeze); // the invulnerable flag
+    hero->set_invulnerable(freeze);
 
     if (freeze)
         hero->suspend(true);

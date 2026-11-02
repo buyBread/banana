@@ -2518,7 +2518,7 @@ bool slf__entity__set_invulnerable__num__t::operator()(chuck::vm::vm_stack &stac
     }
 
     // the hero's are counted, so clearing can't go past them
-    if (retail::sub_601C50((u32*)self)) { // entity_base::is_hero
+    if (self->is_hero()) {
         if (on != 0.0f)
             ++mission_manager::inst()->saved_script_hero_invulnerable_count;
         else {
@@ -3330,7 +3330,7 @@ bool slf__entity__apply_explosive_damage__num__vector3d__t::operator()(chuck::vm
     auto position = (const vector3d*)&stack.local_uint(0x08);
 
     // the hero gets a react, anyone else a plain explosive hit
-    bool hero = retail::sub_601C50((u32*)self); // entity_base::is_hero
+    bool hero = self->is_hero();
 
     if (!self || !self->has_ifc(entity_ifc_damage))
         return true;
@@ -3396,7 +3396,7 @@ bool slf__entity__attach_to_wall__vector3d__t::operator()(chuck::vm::vm_stack &s
     auto self     = (entity*)arch_base_vhandle(stack.local_uint(0x00)).resolve();
     auto position = (const vector3d*)&stack.local_uint(0x04);
 
-    if (!self->has_ifc(entity_ifc_player) || !retail::sub_601C50((u32*)self))
+    if (!self->has_ifc(entity_ifc_player) || !self->is_hero())
         return true;
 
     references::g_world_ptr.read()->malor_point(*position, false, true);
@@ -3449,7 +3449,7 @@ bool slf__entity__apply_explosive_damage__num__vector3d__vector3d__t::operator()
     auto override_dir = (const vector3d*)&stack.local_uint(0x14);
 
     // the hero gets a react, anyone else a plain explosive hit
-    bool hero = retail::sub_601C50((u32*)self); // entity_base::is_hero
+    bool hero = self->is_hero();
 
     if (!self || !self->has_ifc(entity_ifc_damage))
         return true;
@@ -4009,7 +4009,7 @@ bool slf__entity__suspend__t::operator()(chuck::vm::vm_stack &stack) {
         return true;
 
     // the hero's are counted, so unsuspend can't go past them
-    if (retail::sub_601C50((u32*)self)) // entity_base::is_hero
+    if (self->is_hero())
         ++mission_manager::inst()->saved_script_hero_suspend_count;
 
     self->suspend(true);
@@ -4089,7 +4089,7 @@ bool slf__entity__unsuspend__t::operator()(chuck::vm::vm_stack &stack) {
     if (!self || !self->is_an_entity())
         return true;
 
-    if (retail::sub_601C50((u32*)self)) { // entity_base::is_hero
+    if (self->is_hero()) {
         if (mission_manager::inst()->saved_script_hero_suspend_count <= 0)
             return true;
 

@@ -423,7 +423,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
             found->physical_ifc()->cancel_all_velocity(zerovec);
 
         if (found->is_an_actor()) {
-            if (((actor*)found)->get_ai_core() && !retail::sub_601C50((u32*)found))
+            if (((actor*)found)->get_ai_core() && !found->is_hero())
                 ((actor*)found)->get_ai_core()->push_disable(0);
 
             if (found->has_ifc(entity_ifc_physical)) {
@@ -502,7 +502,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
                 ((vehicle*)spawned)->set_model(string_hash(*model));
         }
     } else if (spawned->is_a_conglomerate() && entry->variant.valid()) {
-        if (retail::sub_5FCB20((u32*)spawned)) {
+        if (spawned->has_variant_ifc()) {
             retail::sub_65F730((u32*)spawned->my_ifc_storage->get_ifc(entity_ifc_variant), (i32)entry->variant.source_hash_code);
 
             i32* values = entry->variant_values;
@@ -520,7 +520,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
                                    values[6],
                                    values[7]);
         }
-    } else if (entry->morph_name.m_size && retail::sub_5A7FC0((u32*)spawned)) {
+    } else if (entry->morph_name.m_size && spawned->has_morph_ifc()) {
         auto morph = (morph_interface*)spawned->my_ifc_storage->get_ifc(entity_ifc_morph);
 
         ((set_morph_method)retail::sub_61FD20)(morph, entry->morph_name);
@@ -537,7 +537,7 @@ void cut_scene_player::start_entity(entity_class_entry* entry) {
     if (spawned->has_ifc(entity_ifc_physical))
         spawned->physical_ifc()->cancel_all_velocity(zerovec);
 
-    if (spawned->is_an_actor() && ((actor*)spawned)->get_ai_core() && !retail::sub_601C50((u32*)spawned))
+    if (spawned->is_an_actor() && ((actor*)spawned)->get_ai_core() && !spawned->is_hero())
         ((actor*)spawned)->get_ai_core()->push_disable(0);
 
     if (!(entry->flags & entity_class_entry::keep_spawned))
@@ -835,7 +835,7 @@ void cut_scene_player::restore_entities() {
 
         ai_core* ai = ((actor*)restored)->get_ai_core();
 
-        if (ai && !retail::sub_601C50((u32*)restored))
+        if (ai && !restored->is_hero())
             ai->pop_disable(0);
 
         if (entry->flags & entity_class_entry::place_at_end) {

@@ -1195,7 +1195,7 @@ void combat_state::update_combat(f32               delta_t,
             auto apply_attack = [&]() { // the move's weapons, else its hits
                 if (!weapon_to_use[0].valid() && !weapon_to_use[1].valid()) {
                     // the debug damage mode that has the hero kill everything around him once per move
-                    if (references::unk_00ffead0.read() && retail::sub_601C50((u32*)get_actor())) { // entity_base::is_hero
+                    if (references::unk_00ffead0.read() && get_actor()->is_hero()) {
                         if (!attack_applied) {
                             retail::sub_5FE3D0(); // damageable search lock
 
@@ -1496,7 +1496,7 @@ void combat_state::update_combat(f32               delta_t,
             get_actor()->create_time_ifc();
 
         get_actor()->time_ifc()->ignore_reflex_dilation = (bool)hero_is_a_target;
-    } else if (!hero_is_a_target || retail::sub_601C50((u32*)get_actor())) { // entity_base::is_hero
+    } else if (!hero_is_a_target || get_actor()->is_hero()) {
         if (get_actor()->has_ifc(entity_ifc_time))
             get_actor()->time_ifc()->ignore_reflex_dilation = false;
     } else {
@@ -1947,7 +1947,7 @@ void combat_state::spawn_sound_impact(const combo_move_data* combo_move,
         retail::sub_6011E0((i32)target->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)damage_key.source_hash_code, (f32)damage); // sound_interface: set rtpc
 
         // the hero tries his own impact first
-        if (retail::sub_601C50((u32*)attacker) &&
+        if (attacker->is_hero() &&
             retail::sub_65FA00((i32)target->my_ifc_storage->get_ifc(entity_ifc_sound), (i32)impact_hero_key.source_hash_code, false))
 
             return;
@@ -2026,7 +2026,7 @@ bool combat_state::unk_049(      entity*           target,
         if (!((f32)(arc * 0.017453293005625408) >= angle))
             return false;
     } else {
-        f32 margin    = retail::sub_601C50((u32*)get_actor()) ? 1.25f : 1.0f; // entity_base::is_hero
+        f32 margin    = get_actor()->is_hero() ? 1.25f : 1.0f;
         f32 range_mod = combo_move->params.get_optional_pb_float(connect_range_mod_key, 0.0f, nullptr);
 
         if (last_attack_connected)
@@ -2369,13 +2369,13 @@ bool combat_state::hit_target(      entity*           target,
     if (target_core && !ai_core::wait_for_other_ai_retrying(get_core(), target_core, 10, &wait_answer))
         return false;
 
-    bool hit = target                                                                                                   &&
-               target != get_actor()                                                                                    &&
-               target->has_ifc(entity_ifc_damage)                                                                       &&
-               !(target->damage_ifc()->flags & damage_ifc_flag_combat_invulnerable)                                     &&
-               (retail::sub_601C50((u32*)get_actor()) || !(target->damage_ifc()->flags & damage_ifc_flag_unk_40000000)) && // entity_base::is_hero
-               !(target->ext_flags & entity_ext_flag_invulnerable)                                                      &&
-               (!retail::sub_601C50((u32*)target) || !references::unk_00ffeab6.read());
+    bool hit = target                                                                                    &&
+               target != get_actor()                                                                     &&
+               target->has_ifc(entity_ifc_damage)                                                        &&
+               !(target->damage_ifc()->flags & damage_ifc_flag_combat_invulnerable)                      &&
+               (get_actor()->is_hero() || !(target->damage_ifc()->flags & damage_ifc_flag_unk_40000000)) &&
+               !(target->ext_flags & entity_ext_flag_invulnerable)                                       &&
+               (!target->is_hero() || !references::unk_00ffeab6.read());
 
     // the target is read even when it's null
     i32      damage      = get_damage(combo_move, target->my_handle);
@@ -2613,7 +2613,7 @@ bool combat_state::hit_target(      entity*           target,
                             friendly = true;
                     }
 
-                    if (retail::sub_4024A0((u32*)target) && !friendly) { // entity_base::has_damage_ifc
+                    if (target->has_damage_ifc() && !friendly) {
                         damage_interface* their_damage = target->damage_ifc();
                         string_hash       wounded      = combo_move->get_wounded_category(nullptr);
 
@@ -2652,7 +2652,7 @@ bool combat_state::hit_target(      entity*           target,
                     dealt = (i32)((f64)script_damage + 0.5);
 
                     if (combo_move->flags_1 & combo_flag_combo_breaker &&
-                        retail::sub_4024A0((u32*)target)               && // entity_base::has_damage_ifc
+                        target->has_damage_ifc()                       &&
                         target->damage_ifc()->flags & damage_ifc_flag_combat_engaged)
 
                         target->damage_ifc()->flags |= damage_ifc_flag_combat_combo_breaker;
@@ -2699,7 +2699,7 @@ bool combat_state::hit_target(      entity*           target,
             }
 
             // the hero gets what he hits to throw, held at the connect point or at a conglomerate's sync member nearest to it
-            if (target->has_ifc(entity_ifc_manip_obj) && retail::sub_601C50((u32*)get_actor()) && get_actor()->has_player_ifc()) {
+            if (target->has_ifc(entity_ifc_manip_obj) && get_actor()->is_hero() && get_actor()->has_player_ifc()) {
                 get_actor()->player_ifc()->unk_064(target->my_handle);
                 get_actor()->player_ifc()->unk_066(*connect_point);
 
@@ -3179,12 +3179,12 @@ void combat_state::remove_combat_thread_info(combat_thread_info* info) {
 void combat_state::push_target(arch_base_vhandle targ) {
     engine_lock_scope lock(&references::target_list_lock.get());
 
-    arch_base* target = targ.resolve();
+    auto* target = (entity_base*)targ.resolve();
 
     if (target && target != get_actor()) {
         current_targets->push_back(targ);
 
-        if (retail::sub_601C50((u32*)target)) // entity_base::is_hero
+        if (target->is_hero())
             hero_is_a_target = true;
     }
 }
@@ -3329,13 +3329,13 @@ void combat_state::update_camera(      f32               delta_t,
 
     bool hero_involved = false;
 
-    if (retail::sub_601C50((u32*)get_actor())) // entity_base::is_hero
+    if (get_actor()->is_hero())
         hero_involved = true;
     else if (current_targets->size())
         for (auto it = current_targets->begin(); it != current_targets->end(); ++it) {
-            arch_base* target = (*it).resolve();
+            auto* target = (entity_base*)(*it).resolve();
 
-            if (target && retail::sub_601C50((u32*)target)) {
+            if (target && target->is_hero()) {
                 hero_involved = true;
 
                 break;

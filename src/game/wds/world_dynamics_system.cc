@@ -107,7 +107,7 @@ void world_dynamics_system::add_player(const mash::string &filename, const po &t
                                                0); // built from its template
     }
 
-    retail::sub_601C70((u32*)hero_ptr, true);
+    hero_ptr->set_hero(true);
 
     const vector3d &position = hero_ptr->my_rel_po->get_position();
     const vector3d &lift     = references::unk_00f4ce5c.get();

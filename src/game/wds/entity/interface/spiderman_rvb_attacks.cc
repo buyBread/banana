@@ -688,10 +688,10 @@ bool spiderman_rvb_web_yank_attack::update(e_combat_move            move,
     auto* current_best = (entity_base*)current_chosen_attack->targets->front().target.resolve();
     auto* my_best      = (entity_base*)targets->front().target.resolve();
 
-    if (current_best && retail::sub_4024A0((u32*)current_best)) // entity_base::has_damage_ifc
+    if (current_best && current_best->has_damage_ifc())
         current_best->damage_ifc()->flags &= ~damage_ifc_flag_die_on_fall_damage;
 
-    if (my_best && retail::sub_4024A0((u32*)my_best))
+    if (my_best && my_best->has_damage_ifc())
         my_best->damage_ifc()->flags &= ~damage_ifc_flag_die_on_fall_damage;
 
     bool take = false;

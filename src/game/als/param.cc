@@ -210,19 +210,19 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             return the_actor->player_ifc()->get_jump_charge();
 
         case param_damage_stunned:
-            if (!retail::sub_4024A0((u32*)the_actor) || !the_actor->damage_ifc()->is_stunned()) // has_damage_ifc
+            if (!the_actor->has_damage_ifc() || !the_actor->damage_ifc()->is_stunned())
                 return 0.0f;
 
             return 1.0f;
 
         case param_damage_hit_point_percent:
-            if (!retail::sub_4024A0((u32*)the_actor))
+            if (!the_actor->has_damage_ifc())
                 return 1.0f;
 
             return (f32)retail::sub_5BAB80((u32*)the_actor->damage_ifc());
 
         case param_damage_armor_percent:
-            if (!retail::sub_4024A0((u32*)the_actor))
+            if (!the_actor->has_damage_ifc())
                 return 0.0f;
 
             return (f32)retail::sub_5BABD0((u32*)the_actor->damage_ifc());
@@ -704,12 +704,12 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
             if (!the_actor->is_a_conglomerate())
                 return 0.0f;
 
-            u32* physical = (u32*)retail::sub_5B76B0((u32*)the_actor);
+            physical_interface* physical = the_actor->find_physical_ifc();
 
             if (!physical)
                 return 0.0f;
 
-            vector3d velocity = ((physical_interface*)physical)->get_velocity();
+            vector3d velocity = physical->get_velocity();
 
             using get_member_abs_position_t = bool (__thiscall*)(actor*, const string_hash*, vector3d*, i32);
 
@@ -1145,7 +1145,7 @@ string_hash als::internal_parameter_cache::calculate_internal_hash(animation_log
 
         case param_variant_id: {
             // the script data's Variant_ID string
-            if (!retail::sub_408CF0((u32*)the_actor)) // has_script_data_ifc
+            if (!the_actor->has_script_data_ifc())
                 break;
 
             string_hash name;

@@ -112,7 +112,7 @@ e_state_exit_code plr_combat_state::frame_advance(f32 delta_t) {
     if (combo_move                                                       &&
         (combo_move->flags_1 & combo_flag_allow_flight_thrusters)        &&
         (attack_applied || !current_targets || current_targets->empty()) &&
-        retail::sub_601C50((u32*)get_actor())                            &&
+        get_actor()->is_hero()                                           &&
         get_actor()->has_standing_ifc()                                  &&
         !get_actor()->standing_ifc()->is_effectively_standing()) {
 

@@ -894,7 +894,7 @@ f32 als::simple_orientation::get_turn_rate(f32 delta_t, animation_logic_system*,
     rate = rate * 0.017453293f;
     rate = rate * scale;
 
-    if (retail::sub_601C50((u32*)the_actor)) {
+    if (the_actor->is_hero()) {
         turn_rate = rate;
 
         return turn_rate;
@@ -1003,12 +1003,12 @@ void als::simple_orientation::face_desired_direction() {
 
 // sub_5B4BF0
 f32 als::simple_orientation::get_dir_tolerance() const {
-    return retail::sub_601C50((u32*)the_actor) ? 0.9999f : 0.99f;
+    return the_actor->is_hero() ? 0.9999f : 0.99f;
 }
 
 // sub_5B4BF0
 f32 als::simple_orientation::get_up_tolerance() const {
-    return retail::sub_601C50((u32*)the_actor) ? 0.9999f : 0.99f;
+    return the_actor->is_hero() ? 0.9999f : 0.99f;
 }
 
 // sub_5AE210
@@ -3600,7 +3600,7 @@ i32 als::action_move_and_face::get_mash_sizeof() const {
 void als::action_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
     move_and_face::activate(the_als, layer); // the stored als, not the_als_core
 
-    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+    f32 default_speed = the_actor->is_hero() ? 50.0f : 25.0f;
 
     max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
     max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
@@ -3721,7 +3721,7 @@ i32 als::combat_move_and_face::get_mash_sizeof() const {
 void als::combat_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
     move_and_face::activate(the_als, layer); // the stored als, not the_als_core
 
-    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+    f32 default_speed = the_actor->is_hero() ? 50.0f : 25.0f;
 
     max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
     max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
@@ -3950,7 +3950,7 @@ i32 als::signal_move_and_face::get_mash_sizeof() const {
 void als::signal_move_and_face::activate(animation_logic_system* the_als_core, layer_id layer) {
     move_and_face::activate(the_als, layer); // the stored als, not the_als_core
 
-    f32 default_speed = retail::sub_601C50((u32*)the_actor) ? 50.0f : 25.0f;
+    f32 default_speed = the_actor->is_hero() ? 50.0f : 25.0f;
 
     max_movement_speed = the_base->get_optional_pb_float(movement_speed_id, default_speed, nullptr);
     max_turn_speed     = (f32)(the_base->get_optional_pb_float(turn_rate_id, 0.0f, nullptr) * 0.017453293005625408);
@@ -5238,7 +5238,7 @@ bool als::sync_move_and_face::get_sync_actors(actor** actor_a, actor** actor_b) 
     }
 
     // the player and the actor behind its unk_467
-    if (!*actor_a && !*actor_b && retail::sub_601C50((u32*)the_actor)) {
+    if (!*actor_a && !*actor_b && the_actor->is_hero()) {
         if (void* held = the_actor->player_ifc()->unk_467()) {
             arch_base_vhandle target = *(arch_base_vhandle*)((u8*)held + 4);
 
@@ -7465,7 +7465,7 @@ bool als::momentum_combat_move_and_face::get_sync_actors(actor** actor_a, actor*
     }
 
     // the player and the actor behind its unk_467
-    if (!*actor_a && !*actor_b && retail::sub_601C50((u32*)the_actor)) {
+    if (!*actor_a && !*actor_b && the_actor->is_hero()) {
         if (void* held = the_actor->player_ifc()->unk_467()) {
             arch_base_vhandle target = *(arch_base_vhandle*)((u8*)held + 4);
 

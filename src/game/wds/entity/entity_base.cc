@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/entity/entity_base.hh"
+#include "game/wds/references.hh"
 
 using namespace treyarch;
 
@@ -37,9 +38,12 @@ mash::virtual_types_key entity_base::get_virtual_type_key() const {
     return ((mash::virtual_types_key (__thiscall*)(const entity_base*))retail::sub_4E1EA0)(this);
 }
 
-// slot 6
+// sub_4E1EB0
 bool entity_base::is_subclass_of(mash::virtual_types_key parent_class) const {
-    return ((bool (__thiscall*)(const entity_base*, mash::virtual_types_key))retail::sub_4E1EB0)(this, parent_class);
+    if (arch_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    return mash::mash_virtual_base::get_virtual_type_key() == parent_class;
 }
 
 // slot 8
@@ -52,12 +56,9 @@ bool entity_base::is_an_entity_base() const {
     return ((bool (__thiscall*)(const entity_base*))retail::sub_667F80)(this);
 }
 
-// slot 53
+// sub_667F30
 vector3d entity_base::get_last_position() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const entity_base*, vector3d*))retail::sub_667F30)(this, &result);
-
-    return result;
+    return my_abs_po->get_position();
 }
 
 // slot 54
@@ -110,24 +111,42 @@ void entity_base::stop_looping_effect(u32 effect_id) {
     ((void (__thiscall*)(entity_base*, u32))retail::sub_626DA0)(this, effect_id);
 }
 
-// slot 64
+// sub_4E1DB0
 void entity_base::set_flag_recursive(u32 flag, bool on) {
-    ((void (__thiscall*)(entity_base*, u32, bool))retail::sub_4E1DB0)(this, flag, on);
+    if (flags & entity_flag_bone_connector)
+        return;
+
+    if (on)
+        flags |= flag;
+    else
+        flags &= ~flag;
 }
 
-// slot 65
+// sub_4E1DE0
 void entity_base::set_ext_flag_recursive(u32 flag, bool on) {
-    ((void (__thiscall*)(entity_base*, u32, bool))retail::sub_4E1DE0)(this, flag, on);
+    if (flags & entity_flag_bone_connector)
+        return;
+
+    if (on)
+        ext_flags |= flag;
+    else
+        ext_flags &= ~flag;
 }
 
-// slot 66
+// sub_4E1E10
 void entity_base::set_active(bool active) {
-    ((void (__thiscall*)(entity_base*, bool))retail::sub_4E1E10)(this, active);
+    if (active)
+        flags |= entity_flag_active;
+    else
+        flags &= ~entity_flag_active;
 }
 
-// slot 67
+// sub_4E1E30
 void entity_base::set_visible(bool visible, bool from_conglom) {
-    ((void (__thiscall*)(entity_base*, bool, bool))retail::sub_4E1E30)(this, visible, from_conglom);
+    if (visible)
+        flags |= entity_flag_graphics_visible;
+    else
+        flags &= ~entity_flag_graphics_visible;
 }
 
 // slot 68
@@ -150,14 +169,20 @@ bool entity_base::are_moving_terrain_only_collisions_active() const {
     return ((bool (__thiscall*)(const entity_base*))retail::sub_71F870)(this);
 }
 
-// slot 72
+// sub_4E1E50
 void entity_base::set_character_collisions_active(bool active) {
-    ((void (__thiscall*)(entity_base*, bool))retail::sub_4E1E50)(this, active);
+    if (active)
+        flags |= entity_flag_physics_collide_characters;
+    else
+        flags &= ~entity_flag_physics_collide_characters;
 }
 
-// slot 73
+// sub_4E1E70
 void entity_base::set_terrain_collisions_active(bool active) {
-    ((void (__thiscall*)(entity_base*, bool))retail::sub_4E1E70)(this, active);
+    if (active)
+        flags |= entity_flag_physics_collide_terrain;
+    else
+        flags &= ~entity_flag_physics_collide_terrain;
 }
 
 // slot 74
@@ -228,6 +253,37 @@ void entity_base::post_unmash_fixup(i32 unk) {
 // slot 87
 u32 entity_base::get_entity_size() const {
     return ((u32 (__thiscall*)(const entity_base*))retail::sub_4E1E90)(this);
+}
+
+// sub_601C50
+bool entity_base::is_hero() const {
+    bool hero = ext_flags & entity_ext_flag_is_hero;
+
+    // the answer is dropped
+    if (references::g_world_ptr.read())
+        is_an_actor();
+
+    return hero;
+}
+
+// sub_601C70
+void entity_base::set_hero(bool hero) {
+    // the answer is dropped
+    if (references::g_world_ptr.read())
+        is_an_actor();
+
+    if (hero)
+        ext_flags |= entity_ext_flag_is_hero;
+    else
+        ext_flags &= ~entity_ext_flag_is_hero;
+}
+
+// sub_548450
+void entity_base::set_invulnerable(bool invulnerable) {
+    if (invulnerable)
+        ext_flags |= entity_ext_flag_invulnerable;
+    else
+        ext_flags &= ~entity_ext_flag_invulnerable;
 }
 
 // sub_6267E0
