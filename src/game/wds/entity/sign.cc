@@ -20,12 +20,11 @@ void sign::destruct_mashed_class() {
     ((void (__thiscall*)(sign*))retail::sub_668130)(this);
 }
 
-// slot 3
+// sub_64F220
 void sign::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(sign*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64F220)(this,
-                                                                                                       mash_info,
-                                                                                                       containing_class_ptr,
-                                                                                                       buffer);
+    actor::unmash(mash_info, containing_class_ptr, buffer);
+
+    ((mash::string*)unk_0e8)->unmash(mash_info, this, buffer);
 }
 
 // slot 4

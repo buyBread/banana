@@ -15,6 +15,17 @@
 
 using namespace treyarch;
 
+void ai_tentacle_info::construct_mashed_class() {
+    retail::sub_4BE660((i32)this);
+}
+
+void ai_tentacle_info::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
+    ((void (__thiscall*)(ai_tentacle_info*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_4C1A20)(this,
+                                                                                                                   mash_info,
+                                                                                                                   containing_class_ptr,
+                                                                                                                   buffer);
+}
+
 // sub_4855F0
 ai_tentacle_info::~ai_tentacle_info() {
     destroy_tentacle(false);

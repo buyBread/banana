@@ -106,7 +106,11 @@ namespace treyarch {
             mm::free(allocation);
         }
 
+        void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
         static ai_tentacle_info* find_tentacle(const string_hash &search_id, ai_tentacle_info** array, i32 size);
 

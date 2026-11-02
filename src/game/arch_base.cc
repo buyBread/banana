@@ -49,6 +49,7 @@ void arch_base::destruct_mashed_class() {
 }
 
 // sub_6391B0
+// inlined @ sub_64D140
 void arch_base::unmash(mash::mash_info_struct*, void*, mash::buffer_type) {
     my_handle = arch_base_vhandle();
 

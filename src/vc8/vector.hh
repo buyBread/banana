@@ -248,6 +248,8 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_94B390
         // inlined @ sub_99B7D0
         // inlined @ sub_41A430
+        // inlined @ sub_6560C0
+        // inlined @ sub_6562D0
         void push_back(const T &value) {
             if (last == capacity_end)
                 reserve_for_size(size() + 1);

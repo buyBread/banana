@@ -1327,8 +1327,13 @@ void als::als_res_data::destruct_mashed_class() {
     key.destruct_mashed_class();
 }
 
+// sub_5E2F20
+void als::als_res_data::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    key.unmash(mash_info, this, buffer);
+}
+
 // sub_5EEF70
-void als::als_res_data::post_unmash_fixup(actor* owner, u32) {
+void als::als_res_data::post_unmash_fixup(actor* owner, amalga::resource_pack_slot*) {
     string_hash none;
     none.initialize(mash::ALLOCATED);
 

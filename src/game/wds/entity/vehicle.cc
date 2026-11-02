@@ -5,8 +5,8 @@ using namespace treyarch;
 
 string_hash vehicle::my_type_key { 0x6E864420 }; // "vehicle"
 
-void vehicle_unk_1e4::finalize(mash::allocation_scope scope) {
-    ((void (__thiscall*)(vehicle_unk_1e4*, mash::allocation_scope))retail::sub_901A00)(this, scope);
+void vehicle_sound::finalize(mash::allocation_scope scope) {
+    ((void (__thiscall*)(vehicle_sound*, mash::allocation_scope))retail::sub_901A00)(this, scope);
 }
 
 // sub_681E20
@@ -24,12 +24,20 @@ void vehicle::destruct_mashed_class() {
     ((void (__thiscall*)(vehicle*))retail::sub_668150)(this);
 }
 
-// slot 3
+// sub_65C3C0
 void vehicle::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(vehicle*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_65C3C0)(this,
-                                                                                                          mash_info,
-                                                                                                          containing_class_ptr,
-                                                                                                          buffer);
+    conglomerate::unmash(mash_info, containing_class_ptr, buffer);
+
+    my_wheels               .unmash(mash_info, this, buffer);
+    my_initial_wheel_rel_pos.unmash(mash_info, this, buffer);
+    my_rbc_wheels           .unmash(mash_info, this, buffer);
+    sound                   .unmash(mash_info, this, buffer);
+    my_undamaged_members    .unmash(mash_info, this, buffer);
+    my_damaged_members      .unmash(mash_info, this, buffer);
+    my_member_hps           .unmash(mash_info, this, buffer);
+    unk_2c8                 .unmash(mash_info, this, buffer);
+    unk_2d0                 .unmash(mash_info, this, buffer);
+    unk_2d8                 .unmash(mash_info, this, buffer);
 }
 
 // slot 4

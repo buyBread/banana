@@ -13,6 +13,7 @@
 #include "game/wds/entity/moved_entities.hh"
 #include "game/wds/references.hh"
 #include "treyarch/jq/native_locks.hh"
+#include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
@@ -209,12 +210,47 @@ void entity_base::destruct_mashed_class() {
     arch_base::destruct_mashed_class();
 }
 
-// slot 3
+// sub_64D140
 void entity_base::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(entity_base*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64D140)(this,
-                                                                                                               mash_info,
-                                                                                                               containing_class_ptr,
-                                                                                                               buffer);
+    arch_base::unmash(mash_info, containing_class_ptr, buffer);
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, flags);
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, ext_flags);
+
+    my_trigger = arch_base_vhandle();
+
+    id        .unmash(mash_info, this, buffer);
+    sound_type.unmash(mash_info, this, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(my_ifc_storage, this, buffer);
+    else
+        my_ifc_storage = nullptr;
+
+    custom_unmash(mash_info, containing_class_ptr, buffer);
+}
+
+// sub_6409D0
+void entity_base::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) { // a member's po comes from its conglomerate
+    if (flags & entity_flag_member)
+        return;
+
+    mash_info->unmash_class(my_rel_po, nullptr, buffer);
+
+    if (!(flags & entity_flag_has_box_trigger))
+        return;
+
+    auto* frame  = (vector3d*)mash_info->read_from_buffer(mash::SHARED_BUFFER, (i32)(sizeof(vector3d) * 3), (i32)alignof(vector3d));
+    void* memory = mm::allocate(0xB0);
+    auto* box    = memory ? (trigger*)retail::sub_75D690((i32)memory, (u32*)&id, (i32)my_handle.value) : nullptr; // box_trigger's constructor
+
+    retail::sub_745650(box, (i32)frame); // box_trigger::set_frame
+
+    if (!(box->flags & trigger_flag_owned_by_conglom))
+        retail::sub_72CDA0((u32*)box, 1); // sets trigger_flag_owned_by_entity_base
 }
 
 // slot 4
@@ -1057,4 +1093,48 @@ damage_interface* entity_base::create_damage_ifc() {
 
 time_interface* entity_base::create_time_ifc() {
     return (time_interface*)retail::sub_65ABE0((i32*)this);
+}
+
+// sub_639310
+entity_base* treyarch::parse_entity_mash(amalga::resource_pack_slot* pack_slot,
+                                         u8*                         mash_resource,
+                                         i32                         resource_size,
+                                         const string_hash*          id,
+                                         u8*                         mash_shared_resource,
+                                         i32                         shared_resource_size) {
+
+    bool duplicated = false;
+
+    mash::mash_info_struct mash_info(mash::UNMASH_MODE, mash_resource, resource_size, mash_shared_resource == nullptr);
+
+    if (mash_shared_resource) {
+        mash::mash_info_struct shared_info(mash::UNMASH_MODE, mash_shared_resource, shared_resource_size, false);
+
+        mash_info.set_buffer(mash::SHARED_BUFFER,
+                             shared_info.get_buffer(mash::NORMAL_BUFFER),
+                             shared_info.get_buffer_size_max(mash::NORMAL_BUFFER));
+    } else if (mash_info.get_header()->in_use) {
+        mash_info.dupe_buffers_for_unmash_copies();
+
+        duplicated = true;
+    } else
+        mash_info.get_header()->in_use = 1;
+
+    if (id)
+        ((entity_base*)mash_info.get_curr_buffer_pos(mash::NORMAL_BUFFER))->id = *id; // before the padding is skipped
+
+    entity_base* ent;
+
+    mash_info.unmash_class(ent, nullptr, mash::NORMAL_BUFFER);
+
+    mash::mash_info_struct::construct_class(ent);
+
+    if (duplicated)
+        ent->ext_flags |= entity_ext_flag_instance;
+    else
+        ent->ext_flags &= ~entity_ext_flag_instance;
+
+    ent->post_unmash_fixup(pack_slot);
+
+    return ent;
 }

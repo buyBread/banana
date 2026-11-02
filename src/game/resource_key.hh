@@ -37,6 +37,7 @@ namespace treyarch {
 
         // inlined @ sub_5D5F70
         // inlined @ sub_411870
+        // inlined @ sub_629810
         bool is_set() const {
             string_hash none;
             none.initialize(mash::ALLOCATED);

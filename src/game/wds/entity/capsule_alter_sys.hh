@@ -7,6 +7,10 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace mash {
+        class mash_info_struct;
+    } // mash
+
     class actor;
 
     // SM3's eFlagType, the ones read so far
@@ -44,11 +48,16 @@ namespace treyarch {
         // sub_5B4A70
         void destruct_mashed_class() {}
 
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
+
         void set_mode(u32 new_mode);
         void set_custom_capsule(const vector3d &base, const vector3d &end, f32 radius);
         void update(bool unk);
     };
 
+    ASSERT_SIZEOF  (capsule_alter_sys,                0xB0);
     ASSERT_OFFSETOF(capsule_alter_sys, mode,          0x04);
     ASSERT_OFFSETOF(capsule_alter_sys, prev_mode,     0x08);
     ASSERT_OFFSETOF(capsule_alter_sys, custom_base,   0x48);

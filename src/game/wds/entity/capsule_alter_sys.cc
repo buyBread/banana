@@ -1,7 +1,12 @@
 #include "retail.hh"
 #include "game/wds/entity/capsule_alter_sys.hh"
+#include "treyarch/mash/mash_info.hh"
 
 using namespace treyarch;
+
+void capsule_alter_sys::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type) {
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, mode);
+}
 
 // sub_7F71F0
 void capsule_alter_sys::construct_mashed_class() {

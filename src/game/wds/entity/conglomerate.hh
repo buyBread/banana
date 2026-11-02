@@ -100,6 +100,10 @@ namespace treyarch {
                     void*                   containing_class_ptr,
                     mash::buffer_type       buffer) override;
 
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       buffer);
+
         mash::virtual_types_key get_virtual_type_key() const override;
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
         i32                     get_mash_sizeof() const override;

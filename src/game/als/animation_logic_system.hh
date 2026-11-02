@@ -160,7 +160,7 @@ namespace treyarch { namespace als {
     f32 get_default_blend_time(u32 flags, f32 duration);
 
     // what an entity's resource asks for; post-load setup turns it into the actor's als
-    struct als_res_data {
+    struct alignas(8) als_res_data {
         resource_key                      key;
         animation_logic_system_interface* the_als;
 
@@ -168,8 +168,11 @@ namespace treyarch { namespace als {
 
         void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
-        void post_unmash_fixup(actor* owner, u32 unk);
+        void post_unmash_fixup(actor* owner, amalga::resource_pack_slot* pack_slot);
     };
 
     ASSERT_SIZEOF  (animation_logic_system,                     0xA90);
@@ -194,6 +197,6 @@ namespace treyarch { namespace als {
     ASSERT_OFFSETOF(animation_logic_system, coordinator_unk,    0xA7C);
     ASSERT_OFFSETOF(animation_logic_system, coordinated,        0xA80);
 
-    ASSERT_SIZEOF  (als_res_data,          0x0C);
+    ASSERT_SIZEOF  (als_res_data,          0x10);
     ASSERT_OFFSETOF(als_res_data, the_als, 0x08);
 }} // treyarch::als

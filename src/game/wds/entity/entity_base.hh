@@ -65,6 +65,7 @@ namespace treyarch {
         entity_flag_walkable                             = 0x00000080,
         entity_flag_graphics                             = 0x00000100,
         entity_flag_graphics_visible                     = 0x00000200,
+        entity_flag_has_box_trigger                      = 0x00000400,
         entity_flag_special_target                       = 0x00001000,
         entity_flag_active                               = 0x00002000,
         entity_flag_collisions_active                    = 0x00004000,
@@ -99,6 +100,7 @@ namespace treyarch {
         entity_ext_flag_noncrawlable                    = 0x00008000,
         entity_ext_flag_shadow_casting                  = 0x00010000, // SM3's AI_COVER
         entity_ext_flag_sync_anim                       = 0x00020000,
+        entity_ext_flag_smallcrawl                      = 0x00080000,
         entity_ext_flag_ai_los_see_through              = 0x00100000,
         entity_ext_flag_unk_00200000                    = 0x00200000,
         entity_ext_flag_added_to_list_of_moved_entities = 0x00800000,
@@ -165,6 +167,10 @@ namespace treyarch {
         void unmash(mash::mash_info_struct* mash_info,
                     void*                   containing_class_ptr,
                     mash::buffer_type       buffer) override;
+
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       buffer);
 
         mash::virtual_types_key get_virtual_type_key() const override;
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
@@ -490,4 +496,11 @@ namespace treyarch {
     void entity_set_facing_and_up(actor* ent, const vector3d &facing, const vector3d &up, bool force);
 
     i32 compare_entity_base_ptr_entity_id(const void* x1, const void* x2); // for qsort
+
+    entity_base* parse_entity_mash(amalga::resource_pack_slot* pack_slot,
+                                   u8*                         mash_resource,
+                                   i32                         resource_size,
+                                   const string_hash*          id,
+                                   u8*                         mash_shared_resource,
+                                   i32                         shared_resource_size);
 } // treyarch

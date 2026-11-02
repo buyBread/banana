@@ -44,6 +44,10 @@ namespace treyarch { namespace mash {
     constexpr vtable_value_t invalid_vtable_value = 0;
     constexpr vtable_key_t   invalid_type_key     = 0;
 
+    // SM3's tt::alignment_of; where an element goes in the image and on the heap
+    template <typename T>
+    inline constexpr i32 alignment_of = alignof(T);
+
     constexpr u8 alignment_padding   = 0xA1;
     constexpr u8 member_class_mashed = 0xAF;
 

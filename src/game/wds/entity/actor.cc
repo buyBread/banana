@@ -3,15 +3,18 @@
 
 #include "retail.hh"
 #include "game/als/animation_logic_system.hh"
+#include "game/amalga/resource_directory.hh"
 #include "game/amalga/resource_manager.hh"
 #include "game/amalga/resource_types.hh"
 #include "game/colgeom.hh"
+#include "game/four_cc.hh"
 #include "game/frontend/frontend_manager.hh"
 #include "game/math/references.hh"
 #include "game/physics/physics_system.hh"
 #include "game/physics/rb_character_controller.hh"
 #include "game/physics/rigid_body_prop_system.hh"
 #include "game/resource_key.hh"
+#include "game/script/script_access.hh"
 #include "game/wds/ai/ai_basic_inode.hh"
 #include "game/wds/ai/ai_core.hh"
 #include "game/wds/ai/ai_team.hh"
@@ -20,12 +23,16 @@
 #include "game/wds/entity/capsule_alter_sys.hh"
 #include "game/wds/entity/conglomerate.hh"
 #include "game/wds/entity/conglomerate_clone.hh"
+#include "game/wds/references.hh"
 #include "game/wds/region.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "treyarch/chuck/vm/script_object.hh"
+#include "treyarch/apk/file.hh"
 #include "treyarch/jq/jq.hh"
+#include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
+#include "treyarch/nal/transport_list.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
@@ -47,6 +54,12 @@ void base_ai_data::finalize(mash::allocation_scope) {
     }
 }
 
+// sub_4CD1C0
+void base_ai_data::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    core_ai_key.unmash(mash_info, this, buffer);
+    overrides  .unmash(mash_info, this, buffer);
+}
+
 // sub_4DACB0
 void base_ai_data::destruct_mashed_class() {
     if (core) {
@@ -57,6 +70,26 @@ void base_ai_data::destruct_mashed_class() {
 
     core_ai_key.destruct_mashed_class();
     overrides  .destruct_mashed_class();
+}
+
+// sub_640D80
+void advanced_entity_ptrs::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    script_obj_name.unmash(mash_info, this, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(script_exe_name, this, mash::SHARED_BUFFER);
+    else
+        script_exe_name = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(my_als_data, this, buffer);
+    else
+        my_als_data = nullptr;
 }
 
 // sub_6396A0
@@ -461,12 +494,87 @@ void actor::destruct_mashed_class() {
     entity::destruct_mashed_class();
 }
 
-// slot 3
+// sub_64D2D0
 void actor::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(actor*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64D2D0)(this,
-                                                                                                        mash_info,
-                                                                                                        containing_class_ptr,
-                                                                                                        buffer);
+    entity::unmash(mash_info, containing_class_ptr, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(m_skeleton_name, this, mash::SHARED_BUFFER);
+    else
+        m_skeleton_name = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(adv_ptrs, this, buffer);
+    else
+        adv_ptrs = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(colgeom, this, buffer);
+    else
+        colgeom = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(my_base_ai_data, this, buffer);
+    else
+        my_base_ai_data = nullptr;
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(capsule_alter, this, buffer);
+    else
+        capsule_alter = nullptr;
+
+    custom_unmash(mash_info, containing_class_ptr, buffer);
+}
+
+// sub_614ED0
+void actor::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type) {
+    pack_slot = references::g_world_ptr.read()->ent_mgr.get_current_resource_context();
+
+    m_skeleton   = nullptr;
+    skeleton_map = nullptr;
+
+    if (m_skeleton_name && !m_skeleton_name->empty()) {
+        string_hash name;
+        name.initialize(mash::ALLOCATED, m_skeleton_name->c_str());
+
+        m_skeleton = (nal::transport_list*)pack_slot->pack_directory->get_merged_resource(name, nal::transport_list_type, nullptr);
+
+        resource_key key;
+        key.set(name, (u32)amalga::e_resource_type::nal_skeleton_map);
+
+        if (auto* file = (apk::file*)pack_slot->pack_directory->get_resource(key, nullptr, nullptr)) {
+            i32   section = file->get_section_index(string_hash(four_cc('I', 'M', 'G')));
+            auto* entry   = (apk::file_entry*)retail::sub_A6AB80((u32*)file, four_cc('S', 'K', 'M', 'P')); // the type's first file
+
+            skeleton_map = (nal::skeleton_map*)entry->get_data(file, four_cc('S', 'K', 'M', 'P'), section, 1);
+        }
+    }
+
+    string_hash mesh_name;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, mesh_name);
+
+    mesh = nullptr;
+
+    string_hash none;
+    none.initialize(mash::ALLOCATED);
+
+    if (mesh_name == none)
+        return;
+
+    amalga::push_resource_context_stack_object context(pack_slot);
+
+    mesh = (ngl::mesh*)retail::sub_75E080((i32)mesh_name.source_hash_code, four_cc('M', 'E', 'S', 'H'), nullptr);
 }
 
 // slot 4
@@ -539,9 +647,140 @@ bool actor::is_a_placeholder_vehicle() const {
     return name.find("vehicle_placeholder", 0) != mash::string::npos;
 }
 
-// slot 86
+// sub_629810
 void actor::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
-    ((void (__thiscall*)(actor*, amalga::resource_pack_slot*))retail::sub_629810)(this, pack_slot);
+    radius_changed(true);
+
+    if (adv_ptrs && adv_ptrs->my_als_data)
+        adv_ptrs->my_als_data->post_unmash_fixup(this, pack_slot);
+
+    if (my_ifc_storage)
+        my_ifc_storage->set_owner(this);
+
+    if (my_base_ai_data) {
+        retail::sub_4DEEB0((u32*)my_base_ai_data, (i32)this); // builds the ai_core
+        retail::sub_4CD1A0((i32*)my_base_ai_data, (i32)pack_slot);
+        retail::sub_4CD1B0((u32**)my_base_ai_data);
+    }
+
+    if (!adv_ptrs || !adv_ptrs->script_exe_name->is_set())
+        return;
+
+    amalga::resource_pack_slot* script_slot = nullptr;
+
+    amalga::resource_manager::get_resource(*adv_ptrs->script_exe_name, nullptr, &script_slot);
+
+    adv_ptrs->script_pack_slot = (amalga::resource_pack_slot*)retail::sub_739BC0((i32)script_slot);
+
+    resource_key loaded_key = {};
+
+    retail::sub_842650((u32*)adv_ptrs->script_exe_name, (u32*)&loaded_key, (i32)script_slot); // load_script_exec
+
+    string_hash key_prefix = adv_ptrs->script_pack_slot->pack_name.get_hash();
+
+    chuck::vm::script_object* object = chuck::vm::script_manager::inst()->find_object(adv_ptrs->script_exe_name->get_hash(),
+                                                                                      adv_ptrs->script_obj_name,
+                                                                                      key_prefix);
+
+    chuck::vm::vm_thread* constructor_thread = nullptr;
+
+    adv_ptrs->my_script = script::add_instance(mash::string("__enx"),
+                                               object,
+                                               &constructor_thread,
+                                               this,
+                                               chuck::vm::script_instance_stack_size_normal);
+
+    script::push_entity(constructor_thread, this);
+    script::start_thread(constructor_thread, true);
+
+    adv_ptrs->unk_01c = 0;
+}
+
+// sub_613A10
+void actor::process_extra_scene_flags(u32 scn_flags) {
+    const bool do_not_inherit = scn_flags & scene_flag_do_not_inherit;
+
+    const bool beamable = (scn_flags & scene_flag_beamable) || !(scn_flags & scene_flag_no_beamable);
+
+    if (!do_not_inherit)
+        set_flag_recursive(entity_flag_beamable, beamable);
+    else if (beamable)
+        flags |= entity_flag_beamable;
+    else
+        flags &= ~entity_flag_beamable;
+
+    if (!do_not_inherit ||
+        (get_colgeom() &&
+         (get_colgeom()->get_type() == collision_geometry_type_mesh ||
+          get_colgeom()->get_type() == collision_geometry_type_convex_hull))) {
+
+        collision_geometry* the_colgeom = get_colgeom();
+
+        if (scn_flags & scene_flag_camera_coll) {
+            if (!do_not_inherit)
+                set_colgeom_flag_recursive(fi_collide_camera, true);
+            else if (the_colgeom)
+                the_colgeom->flags |= fi_collide_camera;
+        } else if (scn_flags & scene_flag_no_camera_coll) {
+            if (!do_not_inherit)
+                set_colgeom_flag_recursive(fi_collide_camera, false);
+            else
+                the_colgeom->flags &= ~fi_collide_camera;
+        }
+
+        if (scn_flags & scene_flag_entity_coll) {
+            if (!do_not_inherit)
+                set_colgeom_flag_recursive(fi_collide_entity, true);
+            else if (the_colgeom)
+                the_colgeom->flags |= fi_collide_entity;
+        } else if (scn_flags & scene_flag_no_entity_coll) {
+            if (!do_not_inherit)
+                set_colgeom_flag_recursive(fi_collide_entity, false);
+            else if (the_colgeom)
+                the_colgeom->flags &= ~fi_collide_entity;
+        }
+
+        if (scn_flags & scene_flag_small_crawl) {
+            if (!do_not_inherit)
+                set_ext_flag_recursive(entity_ext_flag_smallcrawl, true);
+            else if (the_colgeom)
+                ext_flags |= entity_ext_flag_smallcrawl;
+        } else if (scn_flags & scene_flag_non_small_crawl) {
+            if (!do_not_inherit)
+                set_ext_flag_recursive(entity_ext_flag_smallcrawl, false);
+            else if (the_colgeom)
+                ext_flags &= ~entity_ext_flag_smallcrawl;
+        }
+
+        if (scn_flags & scene_flag_non_crawlable) {
+            if (!do_not_inherit)
+                set_ext_flag_recursive(entity_ext_flag_noncrawlable, true);
+            else if (the_colgeom)
+                ext_flags |= entity_ext_flag_noncrawlable;
+        } else if (scn_flags & scene_flag_crawlable) {
+            if (!do_not_inherit)
+                set_ext_flag_recursive(entity_ext_flag_noncrawlable, false);
+            else if (the_colgeom)
+                ext_flags &= ~entity_ext_flag_noncrawlable;
+        }
+    }
+
+    if (scn_flags & scene_flag_prop_physics) {
+        if (!is_a_conglomerate() && !(flags & entity_flag_member)) {
+            ext_flags |= entity_ext_flag_is_auto_activate_prop;
+
+            if (has_physical_ifc())
+                physical_ifc()->flags |= physical_interface_flag_auto_prop_physics;
+
+            return;
+        }
+    } else if (!(scn_flags & scene_flag_no_prop_physics))
+        return;
+
+    ext_flags &= ~entity_ext_flag_is_auto_activate_prop;
+
+    if (has_physical_ifc())
+        physical_ifc()->flags &= ~physical_interface_flag_auto_prop_physics;
 }
 
 // slot 87

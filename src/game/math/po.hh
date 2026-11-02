@@ -1,9 +1,14 @@
 #pragma once
 
 #include "game/math/algebra.hh"
+#include "treyarch/mash/types.hh"
 #include "banana/util/macros/sanity_assert.hh"
 
 namespace treyarch {
+    namespace mash {
+        class mash_info_struct;
+    } // mash
+
     class po {
 
     private:
@@ -11,6 +16,8 @@ namespace treyarch {
 
     public:
         po() = default;
+
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
 
         po(const math::vector4 &desired_forward, const math::vector4 &normal, const math::vector4 &pos);
 
@@ -88,6 +95,12 @@ namespace treyarch {
     };
 
     void fast_po_mul(po &res, const po &a, const po &b);
+
+    namespace mash {
+        // retail's is 16 aligned, in the image and on the heap
+        template <>
+        inline constexpr i32 alignment_of<po> = 16;
+    } // mash
 
     ASSERT_SIZEOF(po, 0x40);
 } // treyarch

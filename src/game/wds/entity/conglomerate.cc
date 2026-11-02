@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <new>
 
 #include "retail.hh"
@@ -13,6 +14,7 @@
 #include "game/wds/entity/moved_entities.hh"
 #include "game/binary_search.hh"
 #include "treyarch/jq/native_locks.hh"
+#include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
 #include "treyarch/ngl/mesh/mesh.hh"
 
@@ -163,7 +165,7 @@ void conglomerate::construct_mashed_class() {
     unassigned_skin_bone_parent_indices.construct_mashed_class();
 
     if (tentacles)
-        retail::sub_6515A0((void**)&tentacles); // the tentacle vector's construct_mashed_class
+        mash::mash_info_struct::construct_class(tentacles);
 
     initialize(mash::FROM_MASH);
 }
@@ -173,12 +175,78 @@ void conglomerate::destruct_mashed_class() {
     ((void (__thiscall*)(conglomerate*))retail::sub_667BA0)(this);
 }
 
-// slot 3
+// sub_65B5D0
 void conglomerate::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(conglomerate*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_65B5D0)(this,
-                                                                                                               mash_info,
-                                                                                                               containing_class_ptr,
-                                                                                                               buffer);
+    actor::unmash(mash_info, containing_class_ptr, buffer);
+
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, conglomerate_flags);
+
+    members        .unmash(mash_info, this, buffer);
+    member_abs_po  .unmash(mash_info, this, buffer);
+    all_rel_po     .unmash(mash_info, this, buffer);
+    all_model_po   .unmash(mash_info, this, buffer);
+    original_rel_po.unmash(mash_info, this, buffer);
+    member_parents .unmash(mash_info, this, buffer);
+
+    root_index.name.unmash(mash_info, &root_index, buffer);
+
+    bone_indices.unmash(mash_info, this, buffer);
+    unk_154     .unmash(mash_info, this, buffer);
+
+    skeleton_to_conglom_bone_mapping   .unmash(mash_info, this, buffer);
+    unassigned_skin_bone_rel_pos       .unmash(mash_info, this, buffer);
+    unassigned_skin_bone_indices       .unmash(mash_info, this, buffer);
+    unassigned_skin_bone_parent_indices.unmash(mash_info, this, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(tentacles, this, buffer);
+    else
+        tentacles = nullptr;
+
+    custom_unmash(mash_info, containing_class_ptr, buffer);
+}
+
+// sub_6560C0
+void conglomerate::custom_unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type) {
+    root_index.name = id;
+
+    conglomerate_flags &= ~(conglomerate_flag_has_colgeom_members | conglomerate_flag_has_ai_members);
+
+    my_conglom_root   = this;
+    collision_members = nullptr;
+    light_members     = nullptr;
+    bone_connectors   = nullptr;
+
+    po* abs_po = member_abs_po.array;
+
+    std::memcpy(all_rel_po.array, original_rel_po.get_vector().array, all_rel_po.size * sizeof(po));
+
+    for (entity_base* member : members) {
+        member->my_conglom_root = this;
+        member->my_abs_po       = abs_po;
+        member->my_rel_po       = &all_rel_po.array[member->rel_po_idx];
+
+        if (member->is_a_light_source()) {
+            if (!light_members)
+                light_members = new (mm::allocate(sizeof(vc8::vector<light_source*>))) vc8::vector<light_source*>();
+
+            light_members->push_back((light_source*)member);
+        }
+
+        if (member->flags & entity_flag_has_box_trigger) {
+            auto* frame  = (vector3d*)mash_info->read_from_buffer(mash::SHARED_BUFFER, (i32)(sizeof(vector3d) * 3), (i32)alignof(vector3d));
+            void* memory = mm::allocate(0xB0);
+            auto* box    = memory ? (trigger*)retail::sub_75D690((i32)memory, (u32*)&id, (i32)member->my_handle.value) : nullptr; // box_trigger's constructor
+
+            retail::sub_745650(box, (i32)frame); // box_trigger::set_frame
+            retail::sub_72CD80((u32*)box, 1);    // sets trigger_flag_owned_by_conglom
+        }
+
+        ++abs_po;
+    }
 }
 
 // slot 4
@@ -278,9 +346,36 @@ e_entity_flavor conglomerate::get_flavor() const {
     return ((e_entity_flavor (__thiscall*)(const conglomerate*))retail::sub_AD6450)(this);
 }
 
-// slot 86
+// sub_6562D0
 void conglomerate::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
-    ((void (__thiscall*)(conglomerate*, amalga::resource_pack_slot*))retail::sub_6562D0)(this, pack_slot);
+    actor::post_unmash_fixup(pack_slot);
+
+    for (entity_base* member : members) {
+        member->post_unmash_fixup(pack_slot);
+
+        if (!member->is_an_actor())
+            continue;
+
+        if (member->get_colgeom()) {
+            conglomerate_flags |= conglomerate_flag_has_colgeom_members;
+
+            if (((actor*)member)->possibly_collide()) {
+                if (!collision_members)
+                    collision_members = new (mm::allocate(sizeof(vc8::vector<actor*>))) vc8::vector<actor*>();
+
+                collision_members->push_back((actor*)member);
+            }
+        }
+
+        base_ai_data* ai_data = ((actor*)member)->my_base_ai_data;
+
+        if (ai_data && ai_data->core)
+            conglomerate_flags |= conglomerate_flag_has_ai_members;
+    }
+
+    if (tentacles)
+        for (ai_tentacle_info* tentacle : *tentacles)
+            tentacle->set_my_entity(this);
 }
 
 // slot 87

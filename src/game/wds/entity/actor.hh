@@ -59,6 +59,9 @@ namespace treyarch {
 
         void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
     };
 
     class movement_info {
@@ -130,6 +133,9 @@ namespace treyarch {
 
         void construct_mashed_class();
         void destruct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
         void release_script();
 
@@ -172,6 +178,10 @@ namespace treyarch {
         void unmash(mash::mash_info_struct* mash_info,
                     void*                   containing_class_ptr,
                     mash::buffer_type       buffer) override;
+
+        void custom_unmash(mash::mash_info_struct* mash_info,
+                           void*                   containing_class_ptr,
+                           mash::buffer_type       buffer);
 
         mash::virtual_types_key get_virtual_type_key() const override;
         bool                    is_subclass_of(mash::virtual_types_key parent_class) const override;
@@ -252,6 +262,8 @@ namespace treyarch {
 
         void create_adv_ptrs();
 
+        void process_extra_scene_flags(u32 scn_flags);
+
         void add_collision_ignorance(arch_base_vhandle ent);
         void remove_collision_ignorance(arch_base_vhandle ent);
 
@@ -270,6 +282,7 @@ namespace treyarch {
         render_info* create_render_info();
     };
 
+    ASSERT_SIZEOF  (base_ai_data,            0x30);
     ASSERT_OFFSETOF(base_ai_data, overrides, 0x08);
     ASSERT_OFFSETOF(base_ai_data, core,      0x28);
 

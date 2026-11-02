@@ -39,7 +39,7 @@ namespace treyarch {
     };
 
     // SM3 entity_base::my_ifc_storage; retail keeps SM3's interface vector and adds the lock and presence mask
-    class interface_storage {
+    class alignas(8) interface_storage {
 
     public:
         mash::vector<generic_interface> interfaces; // packed in index order of the set mask bits
@@ -50,6 +50,9 @@ namespace treyarch {
         u8                              pad_02d[0x03];
 
         void construct_mashed_class();
+        void unmash(mash::mash_info_struct* mash_info,
+                    void*                   containing_class_ptr,
+                    mash::buffer_type       buffer);
 
         // inlined; retail reads the mask without taking ifc_lock
         bool has_ifc(e_entity_ifc index) const {
@@ -76,6 +79,7 @@ namespace treyarch {
         }
     };
 
+    ASSERT_SIZEOF  (interface_storage,             0x30);
     ASSERT_OFFSETOF(interface_storage, interfaces, 0x00);
     ASSERT_OFFSETOF(interface_storage, ifc_lock,   0x18);
     ASSERT_OFFSETOF(interface_storage, ifc_mask,   0x28);

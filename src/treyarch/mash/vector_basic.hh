@@ -52,13 +52,14 @@ namespace treyarch { namespace mash {
 
             // the elements are plain data and are used where they lie
             if (size)
-                array = (T*)mash_info->read_from_buffer(buffer, (i32)(size * sizeof(T)), (i32)alignof(T));
+                array = (T*)mash_info->read_from_buffer(buffer, (i32)(size * sizeof(T)), alignment_of<T>);
             else
                 array = nullptr;
 
             container_base::custom_unmash_base(mash_info, buffer);
         }
 
+        // sub_6364F0
         void unmash(mash_info_struct* mash_info,
                     void*             containing_class_ptr,
                     buffer_type       buffer) {
@@ -106,7 +107,7 @@ namespace treyarch { namespace mash {
             if (new_size <= max_size)
                 return;
 
-            auto new_array = (T*)tl_mem_alloc(new_size * sizeof(T), alignof(T), 0);
+            auto new_array = (T*)tl_mem_alloc(new_size * sizeof(T), alignment_of<T>, 0);
 
             if (array) {
                 if (size)

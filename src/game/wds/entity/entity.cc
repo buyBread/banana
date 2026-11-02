@@ -12,6 +12,7 @@
 #include "game/wds/references.hh"
 #include "game/wds/region.hh"
 #include "treyarch/chuck/vm/script_instance.hh"
+#include "treyarch/mash/mash_info.hh"
 #include "treyarch/mm/mm.hh"
 
 using namespace treyarch;
@@ -87,12 +88,19 @@ void entity::destruct_mashed_class() {
     entity_base::destruct_mashed_class();
 }
 
-// slot 3
+// sub_64D220
 void entity::unmash(mash::mash_info_struct* mash_info, void* containing_class_ptr, mash::buffer_type buffer) {
-    ((void (__thiscall*)(entity*, mash::mash_info_struct*, void*, mash::buffer_type))retail::sub_64D220)(this,
-                                                                                                         mash_info,
-                                                                                                         containing_class_ptr,
-                                                                                                         buffer);
+    entity_base::unmash(mash_info, containing_class_ptr, buffer);
+
+    ((mash::string*)unk_090)->unmash(mash_info, this, buffer);
+
+    u8 class_mashed;
+    mash_info->read_from_buffer(mash::SHARED_BUFFER, class_mashed);
+
+    if (class_mashed == mash::member_class_mashed)
+        mash_info->unmash_class(time_visibility_info, this, mash::SHARED_BUFFER);
+    else
+        time_visibility_info = nullptr;
 }
 
 // slot 4

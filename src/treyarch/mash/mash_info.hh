@@ -67,12 +67,12 @@ namespace treyarch { namespace mash {
 
         template <typename T>
         T* read_from_buffer(buffer_type buffer, const T*) {
-            return (T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
+            return (T*)read_from_buffer(buffer, (i32)sizeof(T), alignment_of<T>);
         }
 
         template <typename T>
         void read_from_buffer(buffer_type buffer, T &value) {
-            value = *(T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
+            value = *(T*)read_from_buffer(buffer, (i32)sizeof(T), alignment_of<T>);
         }
 
         // sub_442230
@@ -89,6 +89,9 @@ namespace treyarch { namespace mash {
         // sub_63E5A0
         // sub_63E600
         // sub_63E660
+        // sub_64C740
+        // sub_64C7A0
+        // sub_64C9A0
         // sub_6D7850
         // sub_755600
         // sub_767680
@@ -117,7 +120,7 @@ namespace treyarch { namespace mash {
                 advance_buffer(buffer,
                                class_ptr->get_mash_sizeof() - (i32)sizeof(T));
             } else
-                class_ptr = (T*)read_from_buffer(buffer, (i32)sizeof(T), (i32)alignof(T));
+                class_ptr = (T*)read_from_buffer(buffer, (i32)sizeof(T), alignment_of<T>);
 
             class_ptr->unmash(this, containing_class_ptr, buffer);
         }
@@ -133,6 +136,7 @@ namespace treyarch { namespace mash {
             class_ref.unmash(this, containing_class_ptr, buffer);
         }
 
+        // sub_6515A0
         // sub_7EB910
         // sub_9038E0
         template <typename T>

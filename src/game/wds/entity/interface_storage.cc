@@ -19,6 +19,11 @@ void interface_storage::construct_mashed_class() {
         ifc_mask |= 1 << ifc->get_ifc_id();
 }
 
+// inlined @ sub_64C740
+void interface_storage::unmash(mash::mash_info_struct* mash_info, void*, mash::buffer_type buffer) {
+    interfaces.unmash(mash_info, this, buffer);
+}
+
 // sub_402CC0
 generic_interface* interface_storage::get_ifc(e_entity_ifc index) {
     ifc_lock.acquire();

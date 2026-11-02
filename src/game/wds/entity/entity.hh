@@ -16,12 +16,21 @@
 namespace treyarch {
     class light_manager;
     class terrain;
-    struct entity_time_visibility_info;
     struct region;
 
     namespace ngl {
         struct mesh;
     } // ngl
+
+    struct entity_time_visibility_info {
+        i32 start_visibility_time;
+        i32 end_visibility_time;
+        i32 fade_time;
+
+        void unmash(mash::mash_info_struct*, void*, mash::buffer_type) {}
+    };
+
+    ASSERT_SIZEOF(entity_time_visibility_info, 0x0C);
 
     class entity : public entity_base {
 
