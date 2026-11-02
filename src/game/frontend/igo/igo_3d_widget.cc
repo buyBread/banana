@@ -900,6 +900,7 @@ void igo_3d_widget::kill_layer_0_anims() {
 // inlined @ sub_6D8270
 // inlined @ sub_6D8380
 // inlined @ sub_6F83E0
+// inlined @ sub_6F8800
 // inlined @ sub_6F9A90
 void igo_3d_widget::reset_anim_speeds() {
     arch_base* ent = entity_vh.resolve();
@@ -913,6 +914,7 @@ void igo_3d_widget::reset_anim_speeds() {
 
 // inlined @ sub_6B1D10
 // inlined @ sub_6F83E0
+// inlined @ sub_6F8800
 // inlined @ sub_6F9470
 // inlined @ sub_6F90E0
 // inlined @ sub_6F9A90
@@ -955,7 +957,11 @@ void igo_3d_widget::reset_entity_po() {
 }
 
 // sub_6899A0
+// inlined @ sub_6B2660
 // inlined @ sub_6B2700
+// inlined @ sub_6C62A0
+// inlined @ sub_6E7BB0
+// inlined @ sub_6EDB20
 // inlined @ sub_6F8600
 // inlined @ sub_6F8670
 i32 igo_3d_widget::get_mesh_index(const string_hash &nodename) {

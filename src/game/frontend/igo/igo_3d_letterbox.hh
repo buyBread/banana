@@ -1,6 +1,8 @@
 #pragma once
 
 #include "game/frontend/igo/igo_3d_widget.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -14,6 +16,17 @@ namespace treyarch {
         f32 elapsed;
         f32 desired_height;
         u8  reserved_164[0x0C];
+
+        explicit igo_3d_letterbox(mash::generating_vtable_version so_do_nothing) : igo_3d_widget(so_do_nothing) {}
+
+        // writes the source vptr over a letterbox the retail constructor built
+        void stamp_source_vtable() {
+            *(mash::vtable_value_t*)this = mash::generate_vtable<igo_3d_letterbox>();
+        }
+
+        void init() override;
+        void update(f32 time_inc) override;
+        void render() override;
 
         void letterbox(f32 time, f32 height); // a time under 0.0001 jumps straight to the height
     };

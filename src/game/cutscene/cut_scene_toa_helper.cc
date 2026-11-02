@@ -100,7 +100,7 @@ bool cut_scene_toa_helper::setup(chuck::vm::script_dynamic_array<const char*> cu
 
     cut_scene_started = true;
 
-    retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, false); // hides the prompt
+    references::frontend.get().igo->agility_test->show(false); // hides the prompt
 
     current_button       = 0;
     current_button_index = 0;
@@ -124,7 +124,7 @@ void cut_scene_toa_helper::stop() {
     end_button_time_list.clear();
     cutscene_list.clear();
 
-    retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, false); // hides the prompt
+    references::frontend.get().igo->agility_test->show(false); // hides the prompt
 
     references::frontend.get().igo->agility_test->waits_for_press = false;
 
@@ -228,7 +228,7 @@ void cut_scene_toa_helper::frame_advance(f32 time_inc) {
             retail::sub_900D60(toa_success.source_hash_code, 0x10000000, 0); // post the sound event on the global game object
 
             if (references::frontend.get().igo->agility_test)
-                retail::sub_692330((i32)references::frontend.get().igo->agility_test);
+                references::frontend.get().igo->agility_test->mark_hit();
         }
     }
 
@@ -274,8 +274,8 @@ void cut_scene_toa_helper::step_pressed_buttons() { // takes this frame's press 
     ((void (__thiscall*)(igo_3d_agility_test*, vc8::vector<i32>))retail::sub_708190)(references::frontend.get().igo->agility_test,
                                                                                      next_buttons);
 
-    retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, false);
-    retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, true);
+    references::frontend.get().igo->agility_test->show(false);
+    references::frontend.get().igo->agility_test->show(true);
 
     sequence = current_sequence;
 
@@ -293,7 +293,7 @@ void cut_scene_toa_helper::step_pressed_buttons() { // takes this frame's press 
 // sub_808310
 void cut_scene_toa_helper::update_prompt() {
     if (!is_window_open() || current_sequence >= (i32)(cutscene_list.size() / 2)) {
-        retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, false); // hides the prompt
+        references::frontend.get().igo->agility_test->show(false); // hides the prompt
 
         return;
     }
@@ -301,7 +301,7 @@ void cut_scene_toa_helper::update_prompt() {
     if (failed || waits_for_press()) {
         igo_3d_agility_test* agility_test = references::frontend.get().igo->agility_test;
 
-        if (!agility_test->unk_150)
+        if (!agility_test->x_widget_shown)
             retail::sub_692250((i32)agility_test, true);
 
         return;
@@ -322,7 +322,7 @@ void cut_scene_toa_helper::update_prompt() {
     f32 window   = end_time - get_show_button_time(sequence);
 
     retail::sub_6922C0((f32*)references::frontend.get().igo->agility_test, window / button_num_per_sequence[sequence]);
-    retail::sub_6AAA00((u32**)references::frontend.get().igo->agility_test, true); // shows the prompt
+    references::frontend.get().igo->agility_test->show(true); // shows the prompt
 
     references::frontend.get().igo->agility_test->waits_for_press = waits_for_press();
 

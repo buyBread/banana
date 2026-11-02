@@ -10,6 +10,7 @@
 #include "treyarch/chuck/vm/script_manager.hh"
 #include "game/environment_progression.hh"
 #include "game/frontend/frontend_manager.hh"
+#include "game/frontend/igo/igo_3d_camera_widget.hh"
 #include "game/frontend/igo/igo_3d_scrapbook.hh"
 #include "game/game.hh"
 #include "game/geometry/geometry_manager.hh"
@@ -186,6 +187,12 @@ void game::one_time_init_stuff() {
     frontend.igo->loading_screen->stamp_source_vtable();
     frontend.igo->scrapbook->stamp_source_vtable();
     frontend.igo->conversation_menu_system->stamp_source_vtables();
+    frontend.igo->agility_test->stamp_source_vtable();
+    frontend.igo->letterbox_widget->stamp_source_vtable();
+    frontend.igo->camera_widget->stamp_source_vtable();
+    frontend.igo->objective_text->stamp_source_vtable();
+    frontend.igo->hint_text->stamp_source_vtable();
+    frontend.igo->radar_widget->stamp_source_vtable();
 
     if (!references::pack_mode.read())
         retail::sub_9874E0();

@@ -3,6 +3,67 @@
 
 using namespace treyarch;
 
+// sub_6F8800
+igo_3d_camera_widget::~igo_3d_camera_widget() {
+    reset_anim_speeds();
+    release_entity();
+}
+
+// slot 1
+void igo_3d_camera_widget::init() {
+    ((void (__thiscall*)(igo_3d_camera_widget*))retail::sub_68AFF0)(this);
+}
+
+// slot 2
+void igo_3d_camera_widget::update(f32 time_inc) {
+    ((void (__thiscall*)(igo_3d_camera_widget*, f32))retail::sub_6B2490)(this, time_inc);
+}
+
+// slot 3
+void igo_3d_camera_widget::render() {
+    ((void (__thiscall*)(igo_3d_camera_widget*))retail::sub_68B020)(this);
+}
+
+// sub_6B2660
+void igo_3d_camera_widget::spawn_entity() {
+    if (entity_vh.value)
+        return;
+
+    string_hash name;
+    name.initialize(mash::ALLOCATED, "ui_camera_base");
+
+    init_entity(name);
+    init_anim_controller();
+
+    string_hash member;
+    member.initialize(mash::ALLOCATED, "ui_camera_mesh01");
+
+    camera_mesh_index = get_mesh_index(member);
+}
+
+// slot 44
+void igo_3d_camera_widget::render_congomerate_mesh(ngl::mesh*              mesh,
+                                                   i32                     index,
+                                                   const matrix4x4        &trans_matrix,
+                                                   const matrix4x4        &rel_pos_matrix,
+                                                   ngl::mesh_params*       mesh_params,
+                                                   ngl::shader_param_set*  shader_params) {
+
+    ((void (__thiscall*)(igo_3d_camera_widget*,
+                         ngl::mesh*,
+                         i32,
+                         const matrix4x4&,
+                         const matrix4x4&,
+                         ngl::mesh_params*,
+                         ngl::shader_param_set*))retail::sub_69AAF0)(this,
+                                                                     mesh,
+                                                                     index,
+                                                                     trans_matrix,
+                                                                     rel_pos_matrix,
+                                                                     mesh_params,
+                                                                     shader_params);
+}
+
 // sub_68B0A0
 void igo_3d_camera_widget::set_edit_mode(bool enabled) {
     edit_mode = enabled;

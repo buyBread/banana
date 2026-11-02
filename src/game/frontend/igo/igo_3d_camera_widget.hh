@@ -3,6 +3,8 @@
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "game/math/algebra.hh"
 #include "treyarch/mash/string_hash.hh"
+#include "treyarch/mash/types.hh"
+#include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
 
@@ -15,6 +17,28 @@ namespace treyarch {
         matrix4x4 camera_matrix;
         u8        matrix_dirty;
         bool      edit_mode;
+        u8        reserved_1a2[0xCE];
+
+        explicit igo_3d_camera_widget(mash::generating_vtable_version so_do_nothing) : igo_3d_widget(so_do_nothing) {}
+
+        ~igo_3d_camera_widget() override;
+
+        // writes the source vptr over a camera the retail constructor built
+        void stamp_source_vtable() {
+            *(mash::vtable_value_t*)this = mash::generate_vtable<igo_3d_camera_widget>();
+        }
+
+        void init() override;
+        void update(f32 time_inc) override;
+        void render() override;
+        void spawn_entity() override;
+
+        void render_congomerate_mesh(ngl::mesh*              mesh,
+                                     i32                     index,
+                                     const matrix4x4        &trans_matrix,
+                                     const matrix4x4        &rel_pos_matrix,
+                                     ngl::mesh_params*       mesh_params,
+                                     ngl::shader_param_set*  shader_params) override;
 
         void set_edit_mode(bool enabled);
 
@@ -39,6 +63,7 @@ namespace treyarch {
                             const matrix4x4*   matrix); // nothing without a widget
     };
 
+    ASSERT_SIZEOF  (igo_3d_camera_widget,                    0x270);
     ASSERT_OFFSETOF(igo_3d_camera_widget, camera_mesh_index, 0x150);
     ASSERT_OFFSETOF(igo_3d_camera_widget, camera_matrix,     0x160);
     ASSERT_OFFSETOF(igo_3d_camera_widget, matrix_dirty,      0x1A0);

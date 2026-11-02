@@ -44,6 +44,7 @@ namespace treyarch { namespace vc8 {
 
         // sub_4ED040
         // inlined @ sub_97A400
+        // inlined @ sub_6F88B0
         ~list() {
             clear();
             
@@ -115,6 +116,8 @@ namespace treyarch { namespace vc8 {
         }
 
         // inlined @ sub_4BEA10
+        // inlined @ sub_6E7BB0
+        // inlined @ sub_6EDB20
         node* push_back(const T &value) {
             return insert_before(sentinel, value);
         }
