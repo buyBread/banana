@@ -28,6 +28,10 @@ namespace treyarch {
     class entity;
     class info_node;
 
+    namespace amalga {
+        struct resource_pack_slot;
+    } // amalga
+
     // SM3's entflavors.h order
     enum e_entity_flavor : i32 {
         entity_flavor_actor,
@@ -50,6 +54,7 @@ namespace treyarch {
         entity_flag_physics_collide_terrain    = 0x00000020,
         entity_flag_moving                     = 0x00000040,
         entity_flag_walkable                   = 0x00000080,
+        entity_flag_graphics                   = 0x00000100,
         entity_flag_graphics_visible           = 0x00000200,
         entity_flag_special_target             = 0x00001000,
         entity_flag_active                     = 0x00002000,
@@ -57,9 +62,11 @@ namespace treyarch {
         entity_flag_member                     = 0x00008000,
         entity_flag_nontarget                  = 0x00020000,
         entity_flag_beamable                   = 0x00080000,
+        entity_flag_unk_00200000               = 0x00200000,
         entity_flag_externally_controlled      = 0x00400000,
         entity_flag_detectable                 = 0x00800000, // SM3's GLOWABLE
         entity_flag_bone_connector             = 0x08000000,
+        entity_flag_region_forced              = 0x10000000,
         entity_flag_allow_lockon               = 0x20000000, // SM3's COLGEOM_INSTANCED
         entity_flag_suspended                  = 0x40000000
     };
@@ -69,6 +76,7 @@ namespace treyarch {
         entity_ext_flag_spawned                         = 0x00000100,
         entity_ext_flag_is_hero                         = 0x00000200,
         entity_ext_flag_is_auto_activate_prop           = 0x00000800,
+        entity_ext_flag_unk_00001000                    = 0x00001000,
         entity_ext_flag_invulnerable                    = 0x00004000,
         entity_ext_flag_noncrawlable                    = 0x00008000,
         entity_ext_flag_shadow_casting                  = 0x00010000, // SM3's AI_COVER
@@ -144,7 +152,7 @@ namespace treyarch {
         virtual bool                get_ifc_str(const string_hash &name, const char** value, bool document);
         virtual bool                set_ifc_str(const string_hash &name, const char* value, bool document);
         virtual info_node*          get_voice();
-        virtual void                post_unmash_fixup(i32 unk);
+        virtual void                post_unmash_fixup(amalga::resource_pack_slot* pack_slot);
         virtual u32                 get_entity_size() const;
 
         // inlined; the milestone's has_<name>_ifc()
@@ -328,7 +336,7 @@ namespace treyarch {
 
         // unless ext flag 0x1000 vetoes it
         bool is_visible() const {
-            return (flags & entity_flag_graphics_visible) && !(ext_flags & 0x1000);
+            return (flags & entity_flag_graphics_visible) && !(ext_flags & entity_ext_flag_unk_00001000);
         }
 
         // sub_42AC00
@@ -350,6 +358,9 @@ namespace treyarch {
 
     private:
         void finalize(mash::allocation_scope scope);
+
+        template <typename ask_t>
+        bool ask_ifcs(ask_t ask);
     };
 
     ASSERT_SIZEOF  (entity_base,                 0x50);

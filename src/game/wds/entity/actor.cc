@@ -93,8 +93,8 @@ bool actor::is_a_placeholder_vehicle() const {
 }
 
 // slot 86
-void actor::post_unmash_fixup(i32 unk) {
-    ((void (__thiscall*)(actor*, i32))retail::sub_629810)(this, unk);
+void actor::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
+    ((void (__thiscall*)(actor*, amalga::resource_pack_slot*))retail::sub_629810)(this, pack_slot);
 }
 
 // slot 87
@@ -345,6 +345,7 @@ void actor::invalidate_frame_delta() {
 }
 
 // sub_602830
+// inlined @ sub_611A90
 ai_core* actor::get_ai_core() const {
     return my_base_ai_data ? my_base_ai_data->core : nullptr;
 }

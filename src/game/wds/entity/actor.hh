@@ -91,7 +91,7 @@ namespace treyarch {
         bool                is_alive() const override;
         e_entity_flavor     get_flavor() const override;
         bool                is_a_placeholder_vehicle() const override;
-        void                post_unmash_fixup(i32 unk) override;
+        void                post_unmash_fixup(amalga::resource_pack_slot* pack_slot) override;
         u32                 get_entity_size() const override;
         void                unk_108(f32 unk) override;
         void                render(f32 camera_distance, f32 entity_translucency_pct) override;

@@ -40,7 +40,7 @@ const char* actor_interface::get_ifc_type_str() const {
 
 // slot 17
 e_entity_interface_base actor_interface::get_base_type() {
-    return ((e_entity_interface_base (__thiscall*)(actor_interface*))retail::sub_719110)(this);
+    return entity_ifc_actor;
 }
 
 // slot 18

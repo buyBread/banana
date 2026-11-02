@@ -74,8 +74,8 @@ e_entity_flavor conglomerate::get_flavor() const {
 }
 
 // slot 86
-void conglomerate::post_unmash_fixup(i32 unk) {
-    ((void (__thiscall*)(conglomerate*, i32))retail::sub_6562D0)(this, unk);
+void conglomerate::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
+    ((void (__thiscall*)(conglomerate*, amalga::resource_pack_slot*))retail::sub_6562D0)(this, pack_slot);
 }
 
 // slot 87

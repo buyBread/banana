@@ -44,6 +44,6 @@ bool door::is_a_door() const {
 }
 
 // slot 86
-void door::post_unmash_fixup(i32 unk) {
-    ((void (__thiscall*)(door*, i32))retail::sub_66C5F0)(this, unk);
+void door::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
+    ((void (__thiscall*)(door*, amalga::resource_pack_slot*))retail::sub_66C5F0)(this, pack_slot);
 }

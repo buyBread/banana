@@ -33,7 +33,7 @@ namespace treyarch {
         i32                     get_mash_sizeof() const override;
 
         bool is_a_water_box() const override;
-        void post_unmash_fixup(i32 unk) override;
+        void post_unmash_fixup(amalga::resource_pack_slot* pack_slot) override;
         u32  get_entity_size() const override;
 
         virtual bool point_inside(const vector3d &point);         // m_trigger's slot 54

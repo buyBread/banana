@@ -814,7 +814,7 @@ bool ped_manager::place_ped(actor*          ped,
         als->suspend_logic_system(false);
 
     ped->set_visible(true, false);
-    retail::sub_602060((u32*)ped, false);
+    ped->set_occluded_last_frame(false);
     ped->set_collisions_active(true, false);
     ped->unk_03a = 0;
 

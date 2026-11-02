@@ -1,4 +1,6 @@
 #include "retail.hh"
+#include "game/wds/ai/ai_core.hh"
+#include "game/wds/entity/actor.hh"
 #include "game/wds/entity/entity_base.hh"
 #include "game/wds/references.hh"
 
@@ -210,44 +212,77 @@ bool entity_base::is_a_placeholder_vehicle() const {
     return ((bool (__thiscall*)(const entity_base*))retail::sub_71F870)(this);
 }
 
-// slot 79
+// inlined @ sub_612510
+// inlined @ sub_612620
+// inlined @ sub_612730
+// inlined @ sub_612840
+// inlined @ sub_612950
+// inlined @ sub_612A60
+template <typename ask_t>
+bool entity_base::ask_ifcs(ask_t ask) { // the script data interface is held back and asked last; the first true answer ends it
+    if (!my_ifc_storage)
+        return false;
+
+    engine_lock_scope lock(&my_ifc_storage->ifc_lock);
+
+    generic_interface* script_data = nullptr;
+
+    for (i32 i = 0; i < (i32)my_ifc_storage->interfaces.size; ++i) {
+        generic_interface* ifc = my_ifc_storage->interfaces.array[i];
+
+        if (ifc->get_ifc_id() == entity_ifc_script_data)
+            script_data = ifc;
+        else if (ask(ifc))
+            return true;
+    }
+
+    return script_data && ask(script_data);
+}
+
+// sub_612510
 bool entity_base::get_ifc_num(const string_hash &name, f32* value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, f32*, bool))retail::sub_612510)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->get_ifc_num(name, value, document); });
 }
 
-// slot 80
+// sub_612620
 bool entity_base::set_ifc_num(const string_hash &name, f32 value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, f32, bool))retail::sub_612620)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->set_ifc_num(name, value, document); });
 }
 
-// slot 81
+// sub_612730
 bool entity_base::get_ifc_vec(const string_hash &name, vector3d* value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, vector3d*, bool))retail::sub_612730)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->get_ifc_vec(name, value, document); });
 }
 
-// slot 82
+// sub_612840
 bool entity_base::set_ifc_vec(const string_hash &name, const vector3d &value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, const vector3d&, bool))retail::sub_612840)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->set_ifc_vec(name, value, document); });
 }
 
-// slot 83
+// sub_612950
 bool entity_base::get_ifc_str(const string_hash &name, const char** value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, const char**, bool))retail::sub_612950)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->get_ifc_str(name, value, document); });
 }
 
-// slot 84
+// sub_612A60
 bool entity_base::set_ifc_str(const string_hash &name, const char* value, bool document) {
-    return ((bool (__thiscall*)(entity_base*, const string_hash&, const char*, bool))retail::sub_612A60)(this, name, value, document);
+    return ask_ifcs([&](generic_interface* ifc) { return ifc->set_ifc_str(name, value, document); });
 }
 
-// slot 85
+// sub_611A90
 info_node* entity_base::get_voice() {
-    return ((info_node* (__thiscall*)(entity_base*))retail::sub_611A90)(this);
+    if (!is_an_actor())
+        return nullptr;
+
+    ai_core* core = ((actor*)this)->get_ai_core();
+
+    return core ? core->get_info_node(info_node_type_voice_box) : nullptr;
 }
 
-// slot 86
-void entity_base::post_unmash_fixup(i32 unk) {
-    ((void (__thiscall*)(entity_base*, i32))retail::sub_627160)(this, unk);
+// sub_627160
+void entity_base::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
+    if (my_ifc_storage)
+        my_ifc_storage->set_owner(this);
 }
 
 // slot 87

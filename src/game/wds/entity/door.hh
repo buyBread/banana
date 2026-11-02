@@ -28,7 +28,7 @@ namespace treyarch {
         i32                     get_mash_sizeof() const override;
 
         bool is_a_door() const override;
-        void post_unmash_fixup(i32 unk) override;
+        void post_unmash_fixup(amalga::resource_pack_slot* pack_slot) override;
 
         static string_hash my_type_key;
     };

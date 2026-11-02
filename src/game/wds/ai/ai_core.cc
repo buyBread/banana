@@ -139,6 +139,7 @@ void ai_core::team_lists::rebuild() {
 // inlined @ sub_9922E0
 // inlined @ sub_992A60
 // inlined @ sub_4C5590
+// inlined @ sub_611A90
 info_node* ai_core::get_info_node(e_info_node_type type) const {
     u32 word = type >> 5;
     u32 bit  = 1u << (type & 0x1F);
@@ -661,7 +662,7 @@ void ai_core::frame_advance(f32 delta_t) {
         string_hash none;
         none.initialize(mash::ALLOCATED);
 
-        if (my_param_block.get_pb_hash(references::lifetime_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_still_visible
+        if (my_param_block.get_pb_hash(references::lifetime_effect_hash.read()) != none && my_actor->entity::is_still_visible())
             lifetime_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::lifetime_effect_hash.read()), 0);
     }
 
@@ -674,7 +675,7 @@ void ai_core::frame_advance(f32 delta_t) {
         string_hash none;
         none.initialize(mash::ALLOCATED);
 
-        if (my_param_block.get_pb_hash(references::infected_effect_hash.read()) != none && retail::sub_4E1FC0((u32*)my_actor)) // entity::is_still_visible
+        if (my_param_block.get_pb_hash(references::infected_effect_hash.read()) != none && my_actor->entity::is_still_visible())
             infected_effect = my_actor->spawn_looping_effect(my_param_block.get_pb_hash(references::infected_effect_hash.read()), 0);
     }
 

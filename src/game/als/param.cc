@@ -762,7 +762,7 @@ f32 als::internal_parameter_cache::calculate_internal_float(animation_logic_syst
         }
 
         case param_is_visible:
-            return retail::sub_4E1FC0((u32*)the_actor) ? 1.0f : 0.0f;
+            return the_actor->entity::is_still_visible() ? 1.0f : 0.0f;
 
         // -1 without a view camera
         case param_distance_to_camera: {

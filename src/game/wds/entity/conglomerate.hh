@@ -94,7 +94,7 @@ namespace treyarch {
         void            set_ext_flag_recursive(u32 flag, bool on) override;
         void            set_visible(bool visible, bool from_conglom) override;
         e_entity_flavor get_flavor() const override;
-        void            post_unmash_fixup(i32 unk) override;
+        void            post_unmash_fixup(amalga::resource_pack_slot* pack_slot) override;
         u32             get_entity_size() const override;
         void            clear_region(region* r, i32 i_know_what_i_am_doing) override;
         void            force_region(region* r) override;

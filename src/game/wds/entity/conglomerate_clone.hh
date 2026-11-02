@@ -51,7 +51,7 @@ namespace treyarch {
 
         bool            is_a_conglomerate_clone() const override;
         e_entity_flavor get_flavor() const override;
-        void            post_unmash_fixup(i32 unk) override;
+        void            post_unmash_fixup(amalga::resource_pack_slot* pack_slot) override;
         u32             get_entity_size() const override;
         u32             possibly_render() const override;
         void            unk_108(f32 unk) override;

@@ -58,8 +58,8 @@ bool water_box::is_a_water_box() const {
 }
 
 // slot 86
-void water_box::post_unmash_fixup(i32 unk) {
-    ((void (__thiscall*)(water_box*, i32))retail::sub_65CAD0)(this, unk);
+void water_box::post_unmash_fixup(amalga::resource_pack_slot* pack_slot) {
+    ((void (__thiscall*)(water_box*, amalga::resource_pack_slot*))retail::sub_65CAD0)(this, pack_slot);
 }
 
 // slot 87

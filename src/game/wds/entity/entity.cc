@@ -1,4 +1,5 @@
 #include "retail.hh"
+#include "game/colgeom.hh"
 #include "game/wds/entity/entity.hh"
 
 using namespace treyarch;
@@ -37,9 +38,15 @@ mash::virtual_types_key entity::get_virtual_type_key() const {
     return ((mash::virtual_types_key (__thiscall*)(const entity*))retail::sub_4E2040)(this);
 }
 
-// slot 6
+// sub_4E2050
 bool entity::is_subclass_of(mash::virtual_types_key parent_class) const {
-    return ((bool (__thiscall*)(const entity*, mash::virtual_types_key))retail::sub_4E2050)(this, parent_class);
+    if (entity_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    if (arch_base::get_virtual_type_key() == parent_class)
+        return true;
+
+    return mash::mash_virtual_base::get_virtual_type_key() == parent_class;
 }
 
 // slot 8
@@ -57,14 +64,17 @@ void entity::set_visible(bool visible, bool from_conglom) {
     ((void (__thiscall*)(entity*, bool, bool))retail::sub_645060)(this, visible, from_conglom);
 }
 
-// slot 75
+// sub_4E1F70
 bool entity::was_occluded_last_frame() {
-    return ((bool (__thiscall*)(entity*))retail::sub_4E1F70)(this);
+    if (flags & entity_flag_member)
+        return get_occluded_last_frame_conglom_member();
+
+    return occlusion_status != references::occlusion_status_base.read();
 }
 
-// slot 77
+// sub_719110
 e_entity_flavor entity::get_flavor() const {
-    return ((e_entity_flavor (__thiscall*)(const entity*))retail::sub_719110)(this);
+    return entity_flavor_entity;
 }
 
 // slot 87
@@ -87,9 +97,9 @@ void entity::force_region(region* r) {
     ((void (__thiscall*)(entity*, region*))retail::sub_612DB0)(this, r);
 }
 
-// slot 91
+// sub_4E1F90
 void entity::force_current_region() {
-    ((void (__thiscall*)(entity*))retail::sub_4E1F90)(this);
+    flags |= entity_flag_region_forced;
 }
 
 // slot 92
@@ -107,24 +117,24 @@ void entity::set_family_visible(bool visible) {
     ((void (__thiscall*)(entity*, bool))retail::sub_601E90)(this, visible);
 }
 
-// slot 95
+// sub_601EE0
 u32 entity::possibly_render() const {
-    return ((u32 (__thiscall*)(const entity*))retail::sub_601EE0)(this);
+    return is_still_visible() && (flags & entity_flag_graphics);
 }
 
-// slot 96
+// sub_601F10
 u32 entity::possibly_collide() const {
-    return ((u32 (__thiscall*)(const entity*))retail::sub_601F10)(this);
+    return get_colgeom() && (flags & entity_flag_collisions_active);
 }
 
-// slot 97
+// sub_601F40
 bool entity::possibly_camera_collide() const {
-    return ((bool (__thiscall*)(const entity*))retail::sub_601F40)(this);
+    return get_colgeom() && (flags & entity_flag_collisions_active) && (get_colgeom()->flags & fi_collide_camera);
 }
 
-// slot 98
+// sub_601F80
 bool entity::possibly_walkable() const {
-    return ((bool (__thiscall*)(const entity*))retail::sub_601F80)(this);
+    return get_colgeom() && (flags & entity_flag_collisions_active) && (flags & entity_flag_walkable);
 }
 
 // slot 99
@@ -142,19 +152,24 @@ void entity::unk_101(bool on) {
     ((void (__thiscall*)(entity*, bool))retail::sub_6450D0)(this, on);
 }
 
-// slot 102
+// sub_4E1FA0
 bool entity::unk_102() const {
-    return ((bool (__thiscall*)(const entity*))retail::sub_4E1FA0)(this);
+    return ext_flags & entity_ext_flag_unk_00001000;
 }
 
-// slot 103
+// sub_601FE0
 void entity::unk_103(bool on) {
-    ((void (__thiscall*)(entity*, bool))retail::sub_601FE0)(this, on);
+    if (on)
+        flags |= entity_flag_unk_00200000;
+    else
+        flags &= ~entity_flag_unk_00200000;
+
+    unk_101(on);
 }
 
-// slot 104
+// sub_4E1FB0
 bool entity::unk_104() const {
-    return ((bool (__thiscall*)(const entity*))retail::sub_4E1FB0)(this);
+    return flags & entity_flag_unk_00200000;
 }
 
 // slot 105
@@ -162,9 +177,9 @@ void entity::frame_advance(f32 t) {
     ((void (__thiscall*)(entity*, f32))retail::sub_689610)(this, t);
 }
 
-// slot 106
+// sub_4E1FC0
 bool entity::is_still_visible() const {
-    return ((bool (__thiscall*)(const entity*))retail::sub_4E1FC0)(this);
+    return is_visible();
 }
 
 // slot 107
@@ -210,12 +225,9 @@ vector3d entity::get_visual_center() const {
     return result;
 }
 
-// slot 115
+// sub_4E1FE0
 vector3d entity::unk_115() {
-    vector3d result;
-    ((vector3d* (__thiscall*)(entity*, vector3d*))retail::sub_4E1FE0)(this, &result);
-
-    return result;
+    return get_visual_center();
 }
 
 // slot 116
@@ -233,12 +245,9 @@ void entity::set_render_color(color32 color) {
     ((void (__thiscall*)(entity*, color32))retail::sub_689610)(this, color);
 }
 
-// slot 119
+// sub_4EB5B0
 color32 entity::get_render_color() const {
-    color32 result;
-    ((color32* (__thiscall*)(const entity*, color32*))retail::sub_4EB5B0)(this, &result);
-
-    return result;
+    return color32(0xFF, 0xFF, 0xFF, 0xFF);
 }
 
 // slot 120
@@ -256,12 +265,9 @@ void entity::set_render_scale(const vector3d &scale) {
     ((void (__thiscall*)(entity*, const vector3d&))retail::sub_689610)(this, scale);
 }
 
-// slot 123
+// sub_4E2000
 vector3d entity::get_render_scale() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const entity*, vector3d*))retail::sub_4E2000)(this, &result);
-
-    return result;
+    return vector3d(1.0f, 1.0f, 1.0f);
 }
 
 // slot 124
@@ -299,9 +305,9 @@ void entity::set_age(f32 age) {
     ((void (__thiscall*)(entity*, f32))retail::sub_689610)(this, age);
 }
 
-// slot 131
+// sub_4E2020
 void entity::set_recursive_age(f32 age) {
-    ((void (__thiscall*)(entity*, f32))retail::sub_4E2020)(this, age);
+    set_age(age);
 }
 
 // slot 132
@@ -319,9 +325,26 @@ bool entity::hates_spiderman() {
     return ((bool (__thiscall*)(entity*))retail::sub_71F870)(this);
 }
 
-// slot 135
-mash::string* entity::get_signaller_owner_name(mash::string* result) const {
-    return ((mash::string* (__thiscall*)(const entity*, mash::string*))retail::sub_601FB0)(this, result);
+// sub_601FB0
+mash::string entity::get_signaller_owner_name() const {
+    return mash::string(mash::string::fmt, "0x%08x", id.source_hash_code);
+}
+
+// loc_602080
+bool entity::get_occluded_last_frame_conglom_member() {
+    auto owner = (entity*)retail::sub_601910((u32*)this);
+
+    return owner->was_occluded_last_frame();
+}
+
+// sub_602050
+void entity::set_occluded_last_frame_all() {
+    ++references::occlusion_status_base.get();
+}
+
+// sub_602060
+void entity::set_occluded_last_frame(bool occluded) {
+    occlusion_status = references::occlusion_status_base.read() - occluded;
 }
 
 // sub_612D30

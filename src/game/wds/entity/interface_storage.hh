@@ -9,6 +9,7 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    class entity_base;
     class generic_interface;
 
     enum e_entity_ifc : u8 {
@@ -55,6 +56,8 @@ namespace treyarch {
 
         // the first interface with that name
         generic_interface* find_ifc_by_name(string_hash name);
+
+        void set_owner(entity_base* owner);
 
         // sub_4561C0
         // inlined @ sub_5ED8C0
