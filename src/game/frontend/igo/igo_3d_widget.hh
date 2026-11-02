@@ -13,7 +13,15 @@
 #include "banana/util/types.hh"
 
 namespace treyarch {
+    namespace ngl {
+        struct mesh;
+        struct mesh_params;
+        struct shader_param_set;
+    } // ngl
+
     class igo_3d_text;
+
+    struct tl_fixed_string;
 
     enum igo_widget_suppression_condition : u32 {
         suppress_when_paused             = 0x01,
@@ -27,9 +35,14 @@ namespace treyarch {
     class alignas(16) igo_3d_widget {
 
     public:
+        enum e_flags : u32 {
+            flag_shown                = 0x1,
+            flag_parameters_from_mash = 0x2,
+        };
+
         u8                            reserved_004[0x0C];
         igo_3d_widget_parameters*     parameters;
-        u32                           flags;               // bit 0 shown, bit 1 the parameters live in a mashed resource
+        u32                           flags;               // e_flags
         f32                           alpha;
         f32                           scale_factor;
         f32                           alpha_factor;
@@ -44,8 +57,8 @@ namespace treyarch {
         matrix4x4                     trans_matrix;
         vc8::map<i32, igo_3d_text*>   member_texts;        // by conglomerate member index
         vc8::map<i32, igo_3d_widget*> member_widgets;      // by conglomerate member index
-        vc8::list<igo_3d_text*>       unk_0b8;
-        vc8::list<igo_3d_widget*>     unk_0c4;
+        vc8::list<igo_3d_text*>       unattached_texts;
+        vc8::list<igo_3d_widget*>     unattached_widgets;
         u8                            reserved_0d0[0x08];
         bool                          faded_in;            // either fade sets it, the end of a fade out clears it
         bool                          fading_in;
@@ -72,8 +85,8 @@ namespace treyarch {
 
         explicit igo_3d_widget(mash::generating_vtable_version so_do_nothing) : member_texts(so_do_nothing),
                                                                                 member_widgets(so_do_nothing),
-                                                                                unk_0b8(so_do_nothing),
-                                                                                unk_0c4(so_do_nothing) {}
+                                                                                unattached_texts(so_do_nothing),
+                                                                                unattached_widgets(so_do_nothing) {}
 
         virtual ~igo_3d_widget();
 
@@ -118,8 +131,8 @@ namespace treyarch {
         virtual igo_3d_widget_parameters::e_wide_align_flags get_widescreen_alignment();
 
         virtual u32  suppression_mask();
-        virtual i32  unk_033();
-        virtual i32  unk_034();
+        virtual void play_anim_50();
+        virtual void play_anim_5c();
         virtual void set_scale_factor(f32 factor);
         virtual f32  get_scale_factor();
         virtual void set_alpha_factor(f32 factor);
@@ -130,23 +143,62 @@ namespace treyarch {
         virtual void render_entity();
         virtual void spawn_entity();
 
-        virtual i32   render_mesh                (i32 unk_0, void* unk_1, i32 unk_2, i32 unk_3);
-        virtual i32   render_congomerate_mesh    (i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
-        virtual i32   render_mesh_from_parameters(i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3);
-        virtual i32   render_text                (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   render_child_widget        (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   render_value_mesh          (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4, i32 unk_5);
-        virtual void  render_value_text          (i32 unk_0, i32 unk_1, i32 unk_2, i32 unk_3, i32 unk_4);
-        virtual i32   create_child_texts();
-        virtual void* create_child_widgets();
-        virtual void  unk_052();
-        virtual void  unk_053();
+        virtual void render_mesh(ngl::mesh*              mesh,
+                                 const matrix4x4        &trans_matrix,
+                                 ngl::mesh_params*       mesh_params,
+                                 ngl::shader_param_set*  shader_params);
+
+        virtual void render_congomerate_mesh(ngl::mesh*              mesh,
+                                             i32                     index,
+                                             const matrix4x4        &trans_matrix,
+                                             const matrix4x4        &rel_pos_matrix,
+                                             ngl::mesh_params*       mesh_params,
+                                             ngl::shader_param_set*  shader_params);
+
+        virtual void render_mesh_from_parameters(ngl::mesh*              mesh,
+                                                 i32                     index,
+                                                 ngl::mesh_params*       mesh_params,
+                                                 ngl::shader_param_set*  shader_params);
+
+        virtual void render_text(igo_3d_text*            text,
+                                 const matrix4x4        &trans_matrix,
+                                 const matrix4x4        &rel_pos_matrix,
+                                 ngl::mesh_params*       mesh_params,
+                                 ngl::shader_param_set*  shader_params);
+
+        virtual void render_child_widget(igo_3d_widget*          child,
+                                         const matrix4x4        &trans_matrix,
+                                         const matrix4x4        &rel_pos_matrix,
+                                         ngl::mesh_params*       mesh_params,
+                                         ngl::shader_param_set*  shader_params);
+
+        virtual void render_value_mesh(ngl::mesh*              mesh,
+                                       i32                     index,
+                                       const matrix4x4        &trans_matrix,
+                                       const matrix4x4        &rel_pos_matrix,
+                                       ngl::mesh_params*       mesh_params,
+                                       ngl::shader_param_set*  shader_params);
+
+        virtual void render_value_text(igo_3d_text*            text,
+                                       const matrix4x4        &trans_matrix,
+                                       const matrix4x4        &rel_pos_matrix,
+                                       ngl::mesh_params*       mesh_params,
+                                       ngl::shader_param_set*  shader_params);
+
+        virtual void create_child_texts();
+        virtual void create_child_widgets();
+        virtual void unk_052();
+        virtual void unk_053();
 
         static f32 move_curve_value(f32 t, i32 curve); // curve 1 eases out, 0 eases in, anything else is linear
 
         void fade_in    (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay);
         void fade_out   (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
         void update_fade(f32 dt);
+
+        void init_entity(string_hash name); // replaces a spawned entity with a hidden one that doesn't collide
+        void init_anim_controller();
+        void play_anim(const tl_fixed_string &name); // on layer 0
 
         void kill_layer_0_anims();
         void reset_anim_speeds();
@@ -156,6 +208,9 @@ namespace treyarch {
 
         i32 get_mesh_index(const string_hash &nodename); // invalid_conglom_member without a conglomerate
         i32 find_child    (mash::string*      name);     // always -2; destroys the name
+
+        void attach_text  (igo_3d_text*   child, const string_hash &member); // files it under the conglomerate member, if there is one
+        void attach_widget(igo_3d_widget* child, const string_hash &member);
     };
 
     ASSERT_SIZEOF  (igo_3d_widget,                              0x150);
@@ -171,7 +226,8 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_widget, trans_matrix,                0x060);
     ASSERT_OFFSETOF(igo_3d_widget, member_texts,                0x0A0);
     ASSERT_OFFSETOF(igo_3d_widget, member_widgets,              0x0AC);
-    ASSERT_OFFSETOF(igo_3d_widget, unk_0c4,                     0x0C4);
+    ASSERT_OFFSETOF(igo_3d_widget, unattached_texts,            0x0B8);
+    ASSERT_OFFSETOF(igo_3d_widget, unattached_widgets,          0x0C4);
     ASSERT_OFFSETOF(igo_3d_widget, faded_in,                    0x0D8);
     ASSERT_OFFSETOF(igo_3d_widget, fade_in_remaining,           0x0DC);
     ASSERT_OFFSETOF(igo_3d_widget, fade_out_alpha_base,         0x0F8);

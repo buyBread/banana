@@ -245,6 +245,34 @@ namespace treyarch { namespace math {
         res = a * b;
     }
 
+    // inlined @ sub_689AD0
+    // inlined @ sub_68A1E0
+    inline matrix4x4 matrix4x4_mul(const matrix4x4 &a, const matrix4x4 &b) { // each element four double products, narrowed once
+        matrix4x4 result;
+
+        result.x.x = (f32)((f64)a.x.x * b.x.x + (f64)a.x.y * b.y.x + (f64)a.x.z * b.z.x + (f64)a.x.w * b.w.x);
+        result.x.y = (f32)((f64)a.x.x * b.x.y + (f64)a.x.y * b.y.y + (f64)a.x.z * b.z.y + (f64)a.x.w * b.w.y);
+        result.x.z = (f32)((f64)a.x.x * b.x.z + (f64)a.x.y * b.y.z + (f64)a.x.z * b.z.z + (f64)a.x.w * b.w.z);
+        result.x.w = (f32)((f64)a.x.x * b.x.w + (f64)a.x.y * b.y.w + (f64)a.x.z * b.z.w + (f64)a.x.w * b.w.w);
+
+        result.y.x = (f32)((f64)a.y.x * b.x.x + (f64)a.y.y * b.y.x + (f64)a.y.z * b.z.x + (f64)a.y.w * b.w.x);
+        result.y.y = (f32)((f64)a.y.x * b.x.y + (f64)a.y.y * b.y.y + (f64)a.y.z * b.z.y + (f64)a.y.w * b.w.y);
+        result.y.z = (f32)((f64)a.y.x * b.x.z + (f64)a.y.y * b.y.z + (f64)a.y.z * b.z.z + (f64)a.y.w * b.w.z);
+        result.y.w = (f32)((f64)a.y.x * b.x.w + (f64)a.y.y * b.y.w + (f64)a.y.z * b.z.w + (f64)a.y.w * b.w.w);
+
+        result.z.x = (f32)((f64)a.z.x * b.x.x + (f64)a.z.y * b.y.x + (f64)a.z.z * b.z.x + (f64)a.z.w * b.w.x);
+        result.z.y = (f32)((f64)a.z.x * b.x.y + (f64)a.z.y * b.y.y + (f64)a.z.z * b.z.y + (f64)a.z.w * b.w.y);
+        result.z.z = (f32)((f64)a.z.x * b.x.z + (f64)a.z.y * b.y.z + (f64)a.z.z * b.z.z + (f64)a.z.w * b.w.z);
+        result.z.w = (f32)((f64)a.z.x * b.x.w + (f64)a.z.y * b.y.w + (f64)a.z.z * b.z.w + (f64)a.z.w * b.w.w);
+
+        result.w.x = (f32)((f64)a.w.x * b.x.x + (f64)a.w.y * b.y.x + (f64)a.w.z * b.z.x + (f64)a.w.w * b.w.x);
+        result.w.y = (f32)((f64)a.w.x * b.x.y + (f64)a.w.y * b.y.y + (f64)a.w.z * b.z.y + (f64)a.w.w * b.w.y);
+        result.w.z = (f32)((f64)a.w.x * b.x.z + (f64)a.w.y * b.y.z + (f64)a.w.z * b.z.z + (f64)a.w.w * b.w.z);
+        result.w.w = (f32)((f64)a.w.x * b.x.w + (f64)a.w.y * b.y.w + (f64)a.w.z * b.z.w + (f64)a.w.w * b.w.w);
+
+        return result;
+    }
+
     inline dir3 xform3d_0(const matrix4x4 &m44, const dir3 &sv) {
         return sv * reinterpret_cast<const mat43&>(m44);
     }

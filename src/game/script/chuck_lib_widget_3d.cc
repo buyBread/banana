@@ -1060,7 +1060,7 @@ bool slf__ui_camera_play_anim__str__t::operator()(chuck::vm::vm_stack &stack) {
 
         tl_fixed_string name(anim);
 
-        ((void (__thiscall*)(igo_3d_widget*, const tl_fixed_string*))retail::sub_699A10)(references::frontend.get().igo->camera_widget, &name); // igo_3d_widget::play_anim
+        references::frontend.get().igo->camera_widget->play_anim(name);
     }
 
     return true;
@@ -2489,7 +2489,7 @@ bool slf__widget_3d__play_anim__str__t::operator()(chuck::vm::vm_stack &stack) {
 
         tl_fixed_string name(anim);
 
-        ((void (__thiscall*)(igo_3d_widget*, const tl_fixed_string*))retail::sub_699A10)(self, &name); // igo_3d_widget::play_anim
+        self->play_anim(name);
     }
 
     return true;
@@ -2516,7 +2516,7 @@ bool slf__widget_3d__play_button_anim__num__num__t::operator()(chuck::vm::vm_sta
 
     tl_fixed_string name(anim->c_str());
 
-    ((void (__thiscall*)(igo_3d_widget*, const tl_fixed_string*))retail::sub_699A10)(self, &name); // igo_3d_widget::play_anim
+    self->play_anim(name);
 
     anim->finalize(mash::ALLOCATED);
 

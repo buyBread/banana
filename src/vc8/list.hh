@@ -102,6 +102,7 @@ namespace treyarch { namespace vc8 {
         // sub_5CD230
         // sub_635E30
         // sub_6CBC90
+        // sub_6CBD30
         // sub_749E80
         // sub_A1AB20
         // sub_A6B870

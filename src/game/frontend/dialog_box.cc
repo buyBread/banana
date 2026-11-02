@@ -97,14 +97,20 @@ void dialog_box::spawn_entity() {
 }
 
 // +0x10 slot 44
-i32 dialog_box::render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) {
-    return ((i32 (__thiscall*)(igo_3d_widget*, i32, i32, void*, i32, i32, i32))retail::sub_6B4380)((igo_3d_widget*)this,
-                                                                                                   unk_0,
-                                                                                                   unk_1,
-                                                                                                   unk_2,
-                                                                                                   unk_3,
-                                                                                                   unk_4,
-                                                                                                   unk_5);
+void dialog_box::render_congomerate_mesh(ngl::mesh*              mesh,
+                                         i32                     index,
+                                         const matrix4x4        &trans_matrix,
+                                         const matrix4x4        &rel_pos_matrix,
+                                         ngl::mesh_params*       mesh_params,
+                                         ngl::shader_param_set*  shader_params) {
+
+    ((void (__thiscall*)(igo_3d_widget*, ngl::mesh*, i32, const matrix4x4&, const matrix4x4&, ngl::mesh_params*, ngl::shader_param_set*))retail::sub_6B4380)((igo_3d_widget*)this,
+                                                                                                                                                             mesh,
+                                                                                                                                                             index,
+                                                                                                                                                             trans_matrix,
+                                                                                                                                                             rel_pos_matrix,
+                                                                                                                                                             mesh_params,
+                                                                                                                                                             shader_params);
 }
 
 // sub_6A0D30

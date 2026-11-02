@@ -66,7 +66,13 @@ namespace treyarch {
         void update(f32 time_inc) override;
         void render() override;
         void spawn_entity() override;
-        i32  render_congomerate_mesh(i32 unk_0, i32 unk_1, void* unk_2, i32 unk_3, i32 unk_4, i32 unk_5) override;
+
+        void render_congomerate_mesh(ngl::mesh*              mesh,
+                                     i32                     index,
+                                     const matrix4x4        &trans_matrix,
+                                     const matrix4x4        &rel_pos_matrix,
+                                     ngl::mesh_params*       mesh_params,
+                                     ngl::shader_param_set*  shader_params) override;
 
         virtual void show(bool freeze_hero);
         virtual void hide();

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "retail.hh"
+#include "game/frontend/igo/igo_3d_text_parameters.hh"
+#include "game/math/algebra.hh"
 #include "treyarch/mash/string.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -41,7 +44,9 @@ namespace treyarch {
         void          (__thiscall* set_shadow)(igo_3d_text* self, bool shadow);
         void          (__thiscall* set_shadow_color)(igo_3d_text* self, f32 r, f32 g, f32 b);
         void          (__thiscall* set_shadow_alpha)(igo_3d_text* self, f32 alpha);
-        void*         reserved_124[5];
+        void*         reserved_124[3];
+        void          (__thiscall* render_rel_pos_trans)(igo_3d_text* self, const matrix4x4 &rel_pos_matrix, const matrix4x4 &trans_matrix);
+        void*         reserved_134;
         void          (__thiscall* render)(igo_3d_text* self); // sub_69D520
         void*         reserved_13c[4];
         void          (__thiscall* update)(igo_3d_text* self, f32 time_inc); // the typewriter's reveal
@@ -146,8 +151,16 @@ namespace treyarch {
             vtable->set_shadow_alpha(this, alpha);
         }
 
+        void render(const matrix4x4 &rel_pos_matrix, const matrix4x4 &trans_matrix) {
+            vtable->render_rel_pos_trans(this, rel_pos_matrix, trans_matrix);
+        }
+
         void render() {
             vtable->render(this);
+        }
+
+        igo_3d_text_parameters::parameter_set* current_parameter_set() {
+            return (igo_3d_text_parameters::parameter_set*)retail::sub_698240((u32*)this);
         }
 
         void update(f32 time_inc) {
@@ -174,6 +187,7 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_word_wrap_line_gap, 0x100);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_shadow,             0x118);
     ASSERT_OFFSETOF(igo_3d_text_vtable, set_shadow_alpha,       0x120);
+    ASSERT_OFFSETOF(igo_3d_text_vtable, render_rel_pos_trans,   0x130);
     ASSERT_OFFSETOF(igo_3d_text_vtable, render,                 0x138);
     ASSERT_OFFSETOF(igo_3d_text_vtable, update,                 0x14C);
     ASSERT_OFFSETOF(igo_3d_text_vtable, all_lines_revealed,     0x150);

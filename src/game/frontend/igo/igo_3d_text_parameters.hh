@@ -17,7 +17,12 @@ namespace treyarch {
             f32                 unk_18;
             f32                 unk_1c;
             f32                 unk_20;
-            u32                 unk_24[40];
+            u32                 unk_24[35];
+            i32                 value_source;
+            i32                 value_display;
+            f32                 value_min;
+            f32                 value_max;
+            u32                 unk_c0;
             mash::string        unk_c4;
             math::mat43::packed unk_d0;
             u32                 unk_100;
@@ -55,12 +60,16 @@ namespace treyarch {
                     mash::buffer_type       buffer);
     };
 
-    ASSERT_SIZEOF  (igo_3d_text_parameters::parameter_set,          0x104);
-    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_0c,  0x00C);
-    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_24,  0x024);
-    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_c4,  0x0C4);
-    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_d0,  0x0D0);
-    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_100, 0x100);
+    ASSERT_SIZEOF  (igo_3d_text_parameters::parameter_set,                0x104);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_0c,        0x00C);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_24,        0x024);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, value_source,  0x0B0);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, value_display, 0x0B4);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, value_min,     0x0B8);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, value_max,     0x0BC);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_c4,        0x0C4);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_d0,        0x0D0);
+    ASSERT_OFFSETOF(igo_3d_text_parameters::parameter_set, unk_100,       0x100);
 
     ASSERT_SIZEOF  (igo_3d_text_parameters,             0x2C);
     ASSERT_OFFSETOF(igo_3d_text_parameters, parameters, 0x04);

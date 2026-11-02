@@ -9,6 +9,12 @@ namespace treyarch { namespace ngl {
         u8 reserved_0a4[0x0C];
     };
 
+    struct mesh_params;
+
+    struct shader_param_set {
+        u32* array;
+    };
+
     i32        cull_mesh_sphere(const math::position3 &center, f32 radius, u8 flags);
     mesh_node* create_transient_mesh_node(mesh* value, const math::mat43* local_to_world);
     mesh_node* list_add_transient_mesh(mesh* value, const math::mat43* local_to_world);
@@ -18,5 +24,6 @@ namespace treyarch { namespace ngl {
         inline util::memory_reference<scene_parameters*> default_parameters { 0x00F52804 };
     } // references
 
-    ASSERT_SIZEOF(mesh_node, 0xB0);
+    ASSERT_SIZEOF(mesh_node,        0xB0);
+    ASSERT_SIZEOF(shader_param_set, 0x04);
 }} // treyarch::ngl
