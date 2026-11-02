@@ -137,6 +137,7 @@ namespace treyarch { namespace vc8 {
         // inlined @ sub_418B40
         // inlined @ sub_65B290
         // inlined @ sub_6ED5F0
+        // inlined @ sub_6F9C50
         // inlined @ sub_6FAFF0
         void clear() noexcept {
             erase(first, last);
@@ -351,6 +352,7 @@ namespace treyarch { namespace vc8 {
         // sub_6F4C40
         // sub_87E470
         // sub_A188A0
+        // sub_A69B70
         // sub_4179B0
         T* erase(T* range_first, T* range_last) noexcept {
             if (range_first == range_last)
@@ -474,5 +476,127 @@ namespace treyarch { namespace vc8 {
         }
     };
 
+    // the bits are packed into a vector of words
+    template<typename allocator_t>
+    class vector<bool, allocator_t> {
+
+        u32         bit_count;
+        vector<u32> words;
+
+    public:
+        struct iterator {
+            u32* word;
+            u32  bit;
+
+            // sub_A699E0
+            iterator &operator+=(i32 offset) noexcept {
+                if (!offset)
+                    return *this;
+
+                if (offset >= 0 || bit >= (u32)-offset) {
+                    u32 position = bit + offset;
+
+                    word += position >> 5;
+                    bit   = position & 0x1F;
+                } else {
+                    word -= 1 + ((u32)(-1 - (i32)(bit + offset)) >> 5);
+                    bit   = (bit + offset) & 0x1F;
+                }
+
+                return *this;
+            }
+        };
+
+        vector() noexcept : bit_count(0) {}
+
+        // inlined @ sub_6F9C50
+        ~vector() {
+            bit_count = 0;
+        }
+
+        vector(const vector&) = delete;
+        vector &operator=(const vector&) = delete;
+
+        iterator begin() noexcept {
+            return { words.begin(), 0 };
+        }
+
+        iterator end() noexcept {
+            iterator result = begin();
+
+            result += (i32)bit_count;
+
+            return result;
+        }
+
+        u32 size() const noexcept {
+            return bit_count;
+        }
+
+        // inlined @ sub_6F9C50
+        void clear() noexcept {
+            erase(begin(), end());
+        }
+
+        // sub_6F0810
+        iterator erase(iterator range_first, iterator range_last) noexcept {
+            i32 offset = bit_position(range_first);
+
+            trim(bit_position(copy(range_last, end(), range_first)));
+
+            iterator result = begin();
+
+            result += offset;
+
+            return result;
+        }
+
+    private:
+        i32 bit_position(iterator where) const noexcept {
+            return (i32)(where.word - words.begin()) * 32 + (i32)where.bit;
+        }
+
+        // sub_6D7640
+        // sub_6E6A20
+        static iterator copy(iterator source, iterator source_end, iterator destination) noexcept {
+            while (source.word != source_end.word || source.bit != source_end.bit) {
+                if (*source.word & (1 << source.bit))
+                    *destination.word |= 1 << destination.bit;
+                else
+                    *destination.word &= ~(1 << destination.bit);
+
+                if (destination.bit >= 31) {
+                    destination.bit = 0;
+
+                    ++destination.word;
+                } else
+                    ++destination.bit;
+
+                if (source.bit >= 31) {
+                    source.bit = 0;
+
+                    ++source.word;
+                } else
+                    ++source.bit;
+            }
+
+            return destination;
+        }
+
+        // sub_6E6270
+        void trim(u32 count) noexcept {
+            u32 word_count = (count + 31) >> 5;
+
+            if (word_count < words.size())
+                words.erase(words.begin() + word_count, words.end());
+
+            bit_count = count;
+
+            if (count & 0x1F)
+                words[word_count - 1] &= (1 << (count & 0x1F)) - 1;
+        }
+    };
+
     ASSERT_SIZEOF(vector<void*>, 0x10);
+    ASSERT_SIZEOF(vector<bool>,  0x14);
 }} // treyarch::vc8
