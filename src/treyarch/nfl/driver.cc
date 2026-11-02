@@ -7,7 +7,7 @@ using namespace treyarch;
 
 // inlined @ sub_A166F0
 // inlined @ sub_A171A0
-i32 treyarch::nfl::nfd_find_unlocked_read_buffer(const nfd_driver* driver) {
+i32 treyarch::nfl::driver::find_unlocked_read_buffer(const driver_t* driver) {
     for (i32 slot = 0; slot < 2; ++slot) {
         if (driver->buffers_object->buffers[slot].locked_by == -1)
             return slot;
@@ -17,20 +17,20 @@ i32 treyarch::nfl::nfd_find_unlocked_read_buffer(const nfd_driver* driver) {
 }
 
 // sub_A162A0
-void treyarch::nfl::nfd_lock_read_buffer(nfd_driver* driver, i32 id, i32 slot) {
+void treyarch::nfl::driver::lock_read_buffer(driver_t* driver, i32 id, i32 slot) {
     driver->buffers_object->buffers[slot].locked_by = id;
 
-    nfs_request* request = nfs_get_request(id);
+    system::request_t* request = system::get_request(id);
 
     request->read_buffer_slot          = slot;
     request->read_buffers_locked[slot] = 1;
 }
 
 // sub_A16310
-void treyarch::nfl::nfd_unlock_read_buffer(nfd_driver* driver, i32 id, i32 slot) {
+void treyarch::nfl::driver::unlock_read_buffer(driver_t* driver, i32 id, i32 slot) {
     driver->buffers_object->buffers[slot].locked_by = -1;
 
-    nfs_request* request = nfs_get_request(id);
+    system::request_t* request = system::get_request(id);
 
     if (request->read_buffer_slot == slot)
         request->read_buffer_slot = -1;
@@ -39,17 +39,17 @@ void treyarch::nfl::nfd_unlock_read_buffer(nfd_driver* driver, i32 id, i32 slot)
 }
 
 // sub_A179F0
-nfl::e_nfd_error treyarch::nfl::nfd_io_execute(nfd_driver* driver, const nfd_io_command* command) {
+nfl::driver::e_error treyarch::nfl::driver::io_execute(driver_t* driver, const io_command_t* command) {
     if (command->type != 0 && command->type != 1)
-        return nfd_error_invalid_arguments;
+        return error_invalid_arguments;
 
     if (!command->type) {
         if (!command->size) {
             driver->disk_read.bytes_completed = 0;
             driver->disk_read.io_command      = *command;
-            driver->io_state                  = nfd_io_state_workdone;
+            driver->io_state                  = io_state_workdone;
 
-            return nfd_error_noerror;
+            return error_noerror;
         }
 
         const i32 buffer_mode = driver->init->buffer_mode;
@@ -58,8 +58,8 @@ nfl::e_nfd_error treyarch::nfl::nfd_io_execute(nfd_driver* driver, const nfd_io_
             case buffer_mode_nobuffer:
             case buffer_mode_unaligned:
             case buffer_mode_vm: {
-                const nfd_buffer* buffers = driver->buffers_object;
-                const u32         address = (u32)command->buffer;
+                const buffer_t* buffers = driver->buffers_object;
+                const u32       address = (u32)command->buffer;
 
                 const bool misaligned =
                     address         != ((buffers->address_alignment + address         - 1) & ~(buffers->address_alignment - 1)) ||
@@ -67,7 +67,7 @@ nfl::e_nfd_error treyarch::nfl::nfd_io_execute(nfd_driver* driver, const nfd_io_
                     command->offset != ((buffers->offset_alignment  + command->offset - 1) & ~(buffers->offset_alignment  - 1));
 
                 if (buffer_mode == buffer_mode_nobuffer && misaligned)
-                    return nfd_error_unaligned_access;
+                    return error_unaligned_access;
 
                 break;
             }
@@ -78,50 +78,50 @@ nfl::e_nfd_error treyarch::nfl::nfd_io_execute(nfd_driver* driver, const nfd_io_
             default:
                 tl_fatal("Invalid nflInitParams.bufferMode specified\n");
 
-                return nfd_error_unaligned_access;
+                return error_unaligned_access;
         }
     }
 
     driver->disk_read.aligned_offset = command->offset;
     driver->disk_read.aligned_size   = command->size;
 
-    const e_nfd_error error = driver->io_operations->execute(driver,
-                                                             command->file_handle,
-                                                             command->type,
-                                                             command->offset,
-                                                             command->buffer,
-                                                             command->size);
+    const e_error error = driver->io_operations->execute(driver,
+                                                         command->file_handle,
+                                                         command->type,
+                                                         command->offset,
+                                                         command->buffer,
+                                                         command->size);
 
     if (!error) {
         driver->disk_read.io_command = *command;
-        driver->io_state             = nfd_io_state_working;
+        driver->io_state             = io_state_working;
     }
 
     return error;
 }
 
 // sub_A179A0
-void treyarch::nfl::nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error) {
+void treyarch::nfl::driver::io_complete(driver_t* driver, u32 bytes, i32 error) {
     switch (driver->io_state) {
-        case nfd_io_state_working:
+        case io_state_working:
             if (error) {
                 nfl::log.err("request {} \"{}\" read failed -- offset 0x{:X}, size 0x{:X}, error code {}",
                              driver->disk_read.io_command.request,
-                             nfs_request_path(driver->disk_read.io_command.request),
+                             system::request_path(driver->disk_read.io_command.request),
                              driver->disk_read.io_command.offset,
                              driver->disk_read.io_command.size,
                              error);
 
-                driver->io_state = nfd_io_state_error;
+                driver->io_state = io_state_error;
             } else {
                 driver->disk_read.bytes_completed = bytes;
-                driver->io_state                  = nfd_io_state_workdone;
+                driver->io_state                  = io_state_workdone;
             }
 
             break;
 
-        case nfd_io_state_canceling:
-            driver->io_state = nfd_io_state_canceled;
+        case io_state_canceling:
+            driver->io_state = io_state_canceled;
 
             break;
 
@@ -130,34 +130,18 @@ void treyarch::nfl::nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error) {
     }
 }
 
-// sub_A16A60
-nfl::e_state treyarch::nfl::get_state() {
-    // the worst state across the drivers, invalid with none
-    e_state state = state_invalid;
+// sub_A15D00
+void treyarch::nfl::driver::close_file(i32 id) {
+    system::file_t* file = system::get_file(id);
 
-    for (i32 index = 0; index < references::nfs_drivers_count.read(); ++index) {
-        switch (references::nfs_drivers.read()[index]->io_state) {
-            case nfd_io_state_idle:
-            case nfd_io_state_workdone:
-            case nfd_io_state_canceled:
-                if (state == state_invalid)
-                    state = state_idle;
+    if (!file || !file->as.native.driver)
+        return;
 
-                break;
+    driver_t* driver = file->as.native.driver;
+    u8*       handle = system::get_file_handle(id);
 
-            case nfd_io_state_working:
-            case nfd_io_state_canceling:
-                if (state == state_invalid || state == state_idle)
-                    state = state_busy;
+    if (handle)
+        driver->file_operations->close(handle);
 
-                break;
-
-            case nfd_io_state_error:
-                state = state_error;
-
-                break;
-        }
-    }
-
-    return state;
+    tx::slot_free(&system::references::files_pool.get(), id);
 }

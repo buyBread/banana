@@ -1,5 +1,6 @@
 #pragma once
 
+#include "treyarch/jq/jq.hh"
 #include "treyarch/nfl/system.hh"
 #include "banana/logging.hh"
 #include "banana/util/macros/sanity_assert.hh"
@@ -60,9 +61,15 @@ namespace treyarch { namespace nfl {
 
     e_state get_state();
 
-    namespace references {
-        inline util::memory_reference<init_params> nfs_init_params { 0x00FB84B0 };
+    void nfl_jq_decompress_module(jq::batch* batch);
 
+    inline constexpr jq::descriptor nfl_jq_decompress_descriptor = { nfl_jq_decompress_module, "nflJqDecompressModule" };
+
+    namespace system { namespace references {
+        inline util::memory_reference<init_params> init_params { 0x00FB84B0 };
+    }} // system::references
+
+    namespace references {
         inline util::memory_reference<i32> thread_priority { 0x00FB84A4 };
         inline util::memory_reference<u32> thread_sleep    { 0x00FB84A8 };
 
