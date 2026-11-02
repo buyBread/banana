@@ -374,8 +374,8 @@ f32 entity::get_render_zbias() const {
 }
 
 // slot 126
-void* entity::get_light_set() const {
-    return ((void* (__thiscall*)(const entity*))retail::sub_A944D0)(this);
+light_manager* entity::get_light_set() const {
+    return ((light_manager* (__thiscall*)(const entity*))retail::sub_A944D0)(this);
 }
 
 // slot 127
@@ -589,7 +589,7 @@ void entity::visibility_changed(bool from_conglom) {
     }
 
     if (has_manip_obj_ifc())
-        retail::sub_642BF0((u32*)manip_obj_ifc()); // manip_obj_interface::force_status_update
+        manip_obj_ifc()->force_status_update();
 }
 
 // sub_612D30

@@ -1,10 +1,15 @@
+#include <cmath>
 #include <cstdlib>
 #include <new>
 
 #include "retail.hh"
+#include "game/math/references.hh"
 #include "game/wds/entity/conglomerate.hh"
+#include "game/wds/entity/limbo.hh"
+#include "game/wds/entity/moved_entities.hh"
 #include "game/binary_search.hh"
 #include "treyarch/mm/mm.hh"
+#include "treyarch/ngl/mesh/mesh.hh"
 
 using namespace treyarch;
 
@@ -57,19 +62,76 @@ bool conglomerate::is_a_conglomerate() const {
     return ((bool (__thiscall*)(const conglomerate*))retail::sub_667F80)(this);
 }
 
-// slot 64
-void conglomerate::set_flag_recursive(u32 flag, bool on) {
-    ((void (__thiscall*)(conglomerate*, u32, bool))retail::sub_6319A0)(this, flag, on);
+// sub_6319A0
+void conglomerate::set_flag_recursive(u32 flag, bool on) { // a connector keeps its own flags, its members still get the call
+    if (!(flags & entity_flag_bone_connector)) {
+        if (on)
+            flags |= flag;
+        else
+            flags &= ~flag;
+    }
+
+    for (entity_base* member : members)
+        member->set_flag_recursive(flag, on);
 }
 
-// slot 65
-void conglomerate::set_ext_flag_recursive(u32 flag, bool on) {
-    ((void (__thiscall*)(conglomerate*, u32, bool))retail::sub_631A10)(this, flag, on);
+// sub_631A10
+void conglomerate::set_ext_flag_recursive(u32 flag, bool on) { // same
+    if (!(flags & entity_flag_bone_connector)) {
+        if (on)
+            ext_flags |= flag;
+        else
+            ext_flags &= ~flag;
+    }
+
+    for (entity_base* member : members)
+        member->set_ext_flag_recursive(flag, on);
 }
 
-// slot 67
+// sub_645FD0
 void conglomerate::set_visible(bool visible, bool from_conglom) {
-    ((void (__thiscall*)(conglomerate*, bool, bool))retail::sub_645FD0)(this, visible, from_conglom);
+    const bool was_visible = is_visible();
+
+    for (entity_base* member : members) {
+        if (member->bone_idx != 0xFF)
+            continue;
+
+        if (!(member->flags & entity_flag_member_hide))
+            member->set_visible(visible, true);
+        else if (was_visible != visible)
+            member->set_visible(false, true);
+    }
+
+    if (is_visible() == visible)
+        return;
+
+    if (visible)
+        flags |= entity_flag_graphics_visible;
+    else
+        flags &= ~entity_flag_graphics_visible;
+
+    if (!is_visible())
+        occlusion_status = references::occlusion_status_base.read() - 1;
+
+    if (flags & entity_flag_member) {
+        conglomerate* owner = get_conglom_owner();
+
+        if (owner) {
+            owner->update_proximity_maps();
+
+            owner->conglomerate_flags = (owner->conglomerate_flags & ~conglomerate_flag_possibly_render_valid) |
+                                        conglomerate_flag_visual_radius_dirty;
+        }
+    } else {
+        if (is_a_conglomerate())
+            conglomerate_flags = (conglomerate_flags & ~conglomerate_flag_possibly_render_valid) |
+                                 conglomerate_flag_visual_radius_dirty;
+
+        update_proximity_maps();
+    }
+
+    if (has_manip_obj_ifc())
+        manip_obj_ifc()->force_status_update();
 }
 
 // slot 77
@@ -87,49 +149,105 @@ u32 conglomerate::get_entity_size() const {
     return ((u32 (__thiscall*)(const conglomerate*))retail::sub_665650)(this);
 }
 
-// slot 88
+// sub_63AE70
 void conglomerate::clear_region(region* r, i32 i_know_what_i_am_doing) {
-    ((void (__thiscall*)(conglomerate*, region*, i32))retail::sub_63AE70)(this, r, i_know_what_i_am_doing);
+    remove_me_from_region(r);
+
+    limbo::update_limbo_entity(this);
+
+    remove_member_lights_from_region(r);
 }
 
-// slot 90
+// sub_6168E0
 void conglomerate::force_region(region* r) {
-    ((void (__thiscall*)(conglomerate*, region*))retail::sub_6168E0)(this, r);
+    entity::force_region(r);
 }
 
-// slot 93
+// sub_6168F0
 void conglomerate::force_regions(entity* e) {
-    ((void (__thiscall*)(conglomerate*, entity*))retail::sub_6168F0)(this, e);
+    entity::force_regions(e);
 }
 
-// slot 95
-u32 conglomerate::possibly_render() const {
-    return ((u32 (__thiscall*)(const conglomerate*))retail::sub_631AE0)(this);
+// sub_631AE0
+u32 conglomerate::possibly_render() const { // answers the flag's bit, not 1
+    if (conglomerate_flags & conglomerate_flag_possibly_render_valid)
+        return conglomerate_flags & conglomerate_flag_possibly_render;
+
+    if (is_still_visible() && (flags & entity_flag_graphics)) {
+        conglomerate_flags |= conglomerate_flag_possibly_render_valid | conglomerate_flag_possibly_render;
+
+        return conglomerate_flag_possibly_render;
+    }
+
+    for (entity_base* member : members) {
+        if (member->is_an_entity() && ((entity*)member)->possibly_render()) {
+            conglomerate_flags |= conglomerate_flag_possibly_render_valid | conglomerate_flag_possibly_render;
+
+            return conglomerate_flag_possibly_render;
+        }
+    }
+
+    conglomerate_flags = (conglomerate_flags & ~conglomerate_flag_possibly_render) | conglomerate_flag_possibly_render_valid;
+
+    return 0;
 }
 
-// slot 96
+// sub_617640
 u32 conglomerate::possibly_collide() const {
-    return ((u32 (__thiscall*)(const conglomerate*))retail::sub_617640)(this);
+    if (has_collision_members())
+        return 1;
+
+    return get_colgeom() && (flags & entity_flag_collisions_active);
 }
 
-// slot 97
+// sub_63AEE0
 bool conglomerate::possibly_camera_collide() const {
-    return ((bool (__thiscall*)(const conglomerate*))retail::sub_63AEE0)(this);
+    if (get_colgeom() && (flags & entity_flag_collisions_active) && (get_colgeom()->flags & fi_collide_camera))
+        return true;
+
+    if (!has_collision_members())
+        return false;
+
+    for (actor* member : *collision_members) {
+        if (member->possibly_camera_collide())
+            return true;
+    }
+
+    return false;
 }
 
-// slot 98
+// sub_63AF70
 bool conglomerate::possibly_walkable() const {
-    return ((bool (__thiscall*)(const conglomerate*))retail::sub_63AF70)(this);
+    if (get_colgeom() && (flags & entity_flag_collisions_active) && (flags & entity_flag_walkable))
+        return true;
+
+    if (!has_collision_members())
+        return false;
+
+    for (actor* member : *collision_members) {
+        if (member->possibly_walkable())
+            return true;
+    }
+
+    return false;
 }
 
-// slot 99
+// sub_617690
 void conglomerate::region_update_poss_collide() {
-    ((void (__thiscall*)(conglomerate*))retail::sub_617690)(this);
+    entity::region_update_poss_collide();
 }
 
-// slot 106
+// sub_62F810
 bool conglomerate::is_still_visible() const {
-    return ((bool (__thiscall*)(const conglomerate*))retail::sub_62F810)(this);
+    if (is_visible())
+        return true;
+
+    for (entity_base* member : members) {
+        if (member->is_an_entity() && ((entity*)member)->is_still_visible())
+            return true;
+    }
+
+    return false;
 }
 
 // slot 108
@@ -147,78 +265,195 @@ f32 conglomerate::get_visual_radius() const {
     return ((f32 (__thiscall*)(const conglomerate*))retail::sub_63A830)(this);
 }
 
-// slot 114
+// sub_63A660
 vector3d conglomerate::get_visual_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const conglomerate*, vector3d*))retail::sub_63A660)(this, &result);
+    if (attach_index == invalid_conglom_member)
+        return actor::get_visual_center();
 
-    return result;
+    po attach_po;
+    attach_po.identity();
+
+    get_member_abs_po(attach_index, &attach_po);
+
+    vector3d attach_position;
+    get_member_abs_position(attach_index, &attach_position);
+
+    if (!get_mesh())
+        return attach_position;
+
+    if (ext_flags & entity_ext_flag_bounding_sphere_dirty) {
+        const math::vector4 &sphere = get_mesh()->sphere;
+
+        const f32 x = sphere.get_x();
+        const f32 y = sphere.get_y();
+        const f32 z = sphere.get_z();
+
+        const matrix4x4 &m = attach_po.get_matrix();
+
+        cached_visual_bounding_sphere_center = vector3d((f32)((f64)m.y.x * y + (f64)m.x.x * x + (f64)m.z.x * z + m.w.x),
+                                                        (f32)((f64)m.y.y * y + (f64)m.x.y * x + (f64)m.z.y * z + m.w.y),
+                                                        (f32)((f64)m.y.z * y + (f64)m.x.z * x + (f64)m.z.z * z + m.w.z));
+
+        ext_flags &= ~entity_ext_flag_bounding_sphere_dirty;
+    }
+
+    return cached_visual_bounding_sphere_center;
 }
 
-// slot 115
-vector3d conglomerate::unk_115() {
-    vector3d result;
-    ((vector3d* (__thiscall*)(conglomerate*, vector3d*))retail::sub_62F670)(this, &result);
+// sub_62F670
+vector3d conglomerate::unk_115() { // without a mesh, the mean of the visible actor members' centers
+    if (!get_mesh()) {
+        vector3d sum   = references::unk_00ffec30.get();
+        i32      count = 0;
 
-    return result;
+        for (entity_base* member : members) {
+            if (!member->is_an_actor() || !member->is_visible())
+                continue;
+
+            auto* ent = (entity*)member;
+
+            if (!ent->unk_111())
+                continue;
+
+            const vector3d center = ent->get_visual_center();
+
+            ++count;
+
+            sum.x = (f32)((f64)center.x + sum.x);
+            sum.y = (f32)((f64)center.y + sum.y);
+            sum.z = (f32)((f64)center.z + sum.z);
+        }
+
+        if (count) {
+            const f32 divisor = (f32)count;
+
+            return vector3d((f32)((f64)sum.x / divisor),
+                            (f32)((f64)sum.y / divisor),
+                            (f32)((f64)sum.z / divisor));
+        }
+    }
+
+    return actor::get_visual_center();
 }
 
-// slot 118
-void conglomerate::set_render_color(color32 color) {
-    ((void (__thiscall*)(conglomerate*, color32))retail::sub_6305A0)(this, color);
+// sub_6305A0
+void conglomerate::set_render_color(color32 color) { // members on a bone are skipped
+    actor::set_render_color(color);
+
+    for (entity_base* member : members) {
+        if (member->is_an_entity() && member->bone_idx == 0xFF)
+            ((entity*)member)->set_render_color(color);
+    }
 }
 
-// slot 120
-void conglomerate::set_render_alpha_mod(f32 alpha) {
-    ((void (__thiscall*)(conglomerate*, f32))retail::sub_630610)(this, alpha);
+// sub_630610
+void conglomerate::set_render_alpha_mod(f32 alpha) { // same
+    actor::set_render_alpha_mod(alpha);
+
+    for (entity_base* member : members) {
+        if (member->is_an_entity() && member->bone_idx == 0xFF)
+            ((entity*)member)->set_render_alpha_mod(alpha);
+    }
 }
 
-// slot 122
-void conglomerate::set_render_scale(const vector3d &scale) {
-    ((void (__thiscall*)(conglomerate*, const vector3d&))retail::sub_631C00)(this, scale);
+// sub_631C00
+void conglomerate::set_render_scale(const vector3d &scale) { // a big enough change dirties the visual radius
+    const vector3d wanted = scale;
+    const vector3d old    = get_render_scale();
+
+    const f32 x = (f32)((f64)old.x - wanted.x);
+    const f32 y = (f32)((f64)old.y - wanted.y);
+    const f32 z = (f32)((f64)old.z - wanted.z);
+
+    const bool changed = (f32)((f64)x * x + (f64)y * y + (f64)z * z) > 0.01f;
+
+    actor::set_render_scale(scale);
+
+    if (changed)
+        conglomerate_flags |= conglomerate_flag_visual_radius_dirty;
 }
 
-// slot 126
-void* conglomerate::get_light_set() const {
-    return ((void* (__thiscall*)(const conglomerate*))retail::sub_603DB0)(this);
+// sub_603DB0
+light_manager* conglomerate::get_light_set() const {
+    return lightmgr;
 }
 
-// slot 131
+// sub_631B90
 void conglomerate::set_recursive_age(f32 age) {
-    ((void (__thiscall*)(conglomerate*, f32))retail::sub_631B90)(this, age);
+    set_age(age);
+
+    for (entity_base* member : members) {
+        if (member->is_an_entity())
+            ((entity*)member)->set_recursive_age(age);
+    }
 }
 
-// slot 143
+// sub_631A70
 void conglomerate::set_colgeom_flag_recursive(u32 flag, bool set) {
-    ((void (__thiscall*)(conglomerate*, u32, bool))retail::sub_631A70)(this, flag, set);
+    actor::set_colgeom_flag_recursive(flag, set);
+
+    for (entity_base* member : members) {
+        if (member->is_an_actor())
+            ((actor*)member)->set_colgeom_flag_recursive(flag, set);
+    }
 }
 
-// slot 148
+// sub_63AC20
 f32 conglomerate::get_colgeom_radius() const {
-    return ((f32 (__thiscall*)(const conglomerate*))retail::sub_63AC20)(this);
+    if (conglomerate_flags & conglomerate_flag_colgeom_radius_dirty) {
+        conglomerate_colgeom_radius = colgeom ? colgeom->get_bounding_sphere_radius() : 0.0f;
+
+        if (has_collision_members()) {
+            for (actor* member : *collision_members) {
+                const vector3d center        = get_colgeom_center();
+                const vector3d member_center = member->get_colgeom_center();
+
+                const f32 x = (f32)((f64)member_center.x - center.x);
+                const f32 y = (f32)((f64)member_center.y - center.y);
+                const f32 z = (f32)((f64)member_center.z - center.z);
+
+                const f32 member_radius = member->get_colgeom_radius();
+                const f32 reach         = std::sqrt(x * x + y * y + z * z) + member_radius;
+
+                if (reach > conglomerate_colgeom_radius)
+                    conglomerate_colgeom_radius = reach;
+            }
+
+            conglomerate_colgeom_radius = (f32)((f64)conglomerate_colgeom_radius * (f64)1.1f);
+        }
+
+        conglomerate_flags &= ~conglomerate_flag_colgeom_radius_dirty;
+    }
+
+    return conglomerate_colgeom_radius;
 }
 
-// slot 149
+// sub_665670
 vector3d conglomerate::get_colgeom_center() const {
-    vector3d result;
-    ((vector3d* (__thiscall*)(const conglomerate*, vector3d*))retail::sub_665670)(this, &result);
+    if (get_colgeom())
+        return actor::get_colgeom_center();
 
-    return result;
+    return my_abs_po->get_position();
 }
 
-// slot 150
+// sub_603C30
 void conglomerate::radius_changed(bool force) {
-    ((void (__thiscall*)(conglomerate*, bool))retail::sub_603C30)(this, force);
+    conglomerate_flags |= conglomerate_flag_visual_radius_dirty |
+                          conglomerate_flag_colgeom_radius_dirty |
+                          conglomerate_flag_unk_00004000;
+
+    ext_flags |= entity_ext_flag_bounding_sphere_dirty;
 }
 
-// slot 158
+// sub_616A10
 void conglomerate::compute_sector(terrain* ter, bool use_high_res_intersect) {
-    ((void (__thiscall*)(conglomerate*, terrain*, bool))retail::sub_616A10)(this, ter, use_high_res_intersect);
+    if (!(flags & entity_flag_region_forced))
+        moved_entities::add_moved(my_handle);
 }
 
-// slot 159
+// sub_665640
 void conglomerate::frame_done() {
-    ((void (__thiscall*)(conglomerate*))retail::sub_665640)(this);
+    frame_done_including_members();
 }
 
 // slot 160
@@ -558,4 +793,30 @@ void conglomerate::create_parentage_tree() {
             members.array[i]->set_parent(linked);
         }
     }
+}
+
+// sub_63ADF0
+void conglomerate::add_member_lights_to_region(region* the_region) {
+    if (!light_members)
+        return;
+
+    for (light_source* light : *light_members)
+        retail::sub_7A8580((u32*)the_region, (i32)light); // region::add_light
+}
+
+// sub_63AE30
+void conglomerate::remove_member_lights_from_region(region* the_region) {
+    if (!light_members)
+        return;
+
+    for (light_source* light : *light_members)
+        retail::sub_7A3090((u32*)the_region, (i32)light); // region::remove_light
+}
+
+// sub_631CE0
+void conglomerate::set_all_collisions_active(bool val) {
+    set_collisions_active(val, true);
+
+    for (entity_base* member : members)
+        member->set_collisions_active(val, true);
 }

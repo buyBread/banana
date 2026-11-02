@@ -77,7 +77,8 @@ namespace treyarch {
         entity_flag_bone_connector                       = 0x08000000,
         entity_flag_region_forced                        = 0x10000000,
         entity_flag_allow_lockon                         = 0x20000000, // SM3's COLGEOM_INSTANCED
-        entity_flag_suspended                            = 0x40000000
+        entity_flag_suspended                            = 0x40000000,
+        entity_flag_member_hide                          = 0x80000000
     };
 
     // SM3's EFLAG_EXT_*, but 0x10000

@@ -12,6 +12,7 @@
 
 namespace treyarch {
     class ai_tentacle_info;
+    class light_source;
 
     // members first, then the bones past them
     enum e_conglom_member_index : i16 {
@@ -36,7 +37,7 @@ namespace treyarch {
     inline bool operator<(string_hash lhs, const entity_base &rhs) { return lhs < rhs.id; }
     inline bool operator>(string_hash lhs, const entity_base &rhs) { return rhs.id < lhs; }
 
-    // SM3's conglomerate_flags_t, but 0x100
+    // SM3's conglomerate_flags_t, but 0x100 and 0x4000
     enum e_conglomerate_flags : u32 {
         conglomerate_flag_visual_radius_dirty   = 0x00000001,
         conglomerate_flag_colgeom_radius_dirty  = 0x00000002,
@@ -45,7 +46,8 @@ namespace treyarch {
         conglomerate_flag_possibly_render_valid = 0x00000010,
         conglomerate_flag_possibly_render       = 0x00000020,
         conglomerate_flag_is_cloned             = 0x00000040,
-        conglomerate_flag_unk_00000100          = 0x00000100 // ped_manager::add_ped sets it with conglomerate_visual_radius
+        conglomerate_flag_unk_00000100          = 0x00000100, // ped_manager::add_ped sets it with conglomerate_visual_radius
+        conglomerate_flag_unk_00004000          = 0x00004000
     };
 
     class conglomerate : public actor {
@@ -76,9 +78,14 @@ namespace treyarch {
             <u8>                      unassigned_skin_bone_parent_indices;
         string_hash                   skeleton_name_hash;
         vc8::vector<entity_base*>*    bone_connectors;
-        u8                            reserved_17c[0x14];
-        u32                           conglomerate_flags;
-        u8                            reserved_194[0x04];
+        light_manager*                lightmgr;
+        vc8::vector<actor*>*          collision_members;
+        vc8::vector<light_source*>*   light_members;
+        mutable f32                   conglomerate_visual_radius;
+        mutable f32                   conglomerate_colgeom_radius;
+        mutable u32                   conglomerate_flags;
+        e_conglom_member_index        attach_index;
+        u8                            pad_196[0x02];
 
         explicit conglomerate(mash::generating_vtable_version so_do_nothing) : actor(so_do_nothing) {}
 
@@ -118,7 +125,7 @@ namespace treyarch {
         void            set_render_color(color32 color) override;
         void            set_render_alpha_mod(f32 alpha) override;
         void            set_render_scale(const vector3d &scale) override;
-        void*           get_light_set() const override;
+        light_manager*  get_light_set() const override;
         void            set_recursive_age(f32 age) override;
         void            set_colgeom_flag_recursive(u32 flag, bool set) override;
         f32             get_colgeom_radius() const override;
@@ -152,6 +159,20 @@ namespace treyarch {
         void dirty_bone_connectors(bool force_entire_tree = false);
         void create_parentage_tree();
 
+        // sub_42E530
+        // inlined @ sub_617640
+        // inlined @ sub_63AC20
+        // inlined @ sub_63AEE0
+        // inlined @ sub_63AF70
+        bool has_collision_members() const {
+            return collision_members && collision_members->size() > 0;
+        }
+
+        void add_member_lights_to_region     (region* the_region);
+        void remove_member_lights_from_region(region* the_region);
+
+        void set_all_collisions_active(bool val);
+
         static string_hash my_type_key;
 
     protected:
@@ -184,5 +205,11 @@ namespace treyarch {
     ASSERT_OFFSETOF(conglomerate, unassigned_skin_bone_parent_indices, 0x170);
     ASSERT_OFFSETOF(conglomerate, skeleton_name_hash,                  0x174);
     ASSERT_OFFSETOF(conglomerate, bone_connectors,                     0x178);
+    ASSERT_OFFSETOF(conglomerate, lightmgr,                            0x17C);
+    ASSERT_OFFSETOF(conglomerate, collision_members,                   0x180);
+    ASSERT_OFFSETOF(conglomerate, light_members,                       0x184);
+    ASSERT_OFFSETOF(conglomerate, conglomerate_visual_radius,          0x188);
+    ASSERT_OFFSETOF(conglomerate, conglomerate_colgeom_radius,         0x18C);
     ASSERT_OFFSETOF(conglomerate, conglomerate_flags,                  0x190);
+    ASSERT_OFFSETOF(conglomerate, attach_index,                        0x194);
 } // treyarch

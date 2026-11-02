@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/wds/entity/interface/manip_obj_interface.hh"
+#include "treyarch/jq/native_locks.hh"
 
 using namespace treyarch;
 
@@ -40,4 +41,19 @@ arch_base_vhandle manip_obj_interface::update_for_grab(entity* grabber) {
 // sub_611790
 bool manip_obj_interface::is_active() const {
     return references::active_manip_objs.get().contains((manip_obj_interface*)this);
+}
+
+// sub_642BF0
+// inlined @ sub_645FD0
+void manip_obj_interface::force_status_update() {
+    engine_lock_scope lock(&jq::references::unk_01003498.get());
+
+    references::unk_00ffeb18.write(1);
+
+    retail::sub_63F8A0((u32*)this); // manip_obj_interface::remove_from_lists
+
+    u32 inserted;
+    retail::sub_6353A0((u32*)&references::update_manip_objs.get(), &inserted, (u32*)this); // simple_list::push_back
+
+    references::unk_00ffeb18.write(0);
 }

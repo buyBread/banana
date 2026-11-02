@@ -109,6 +109,7 @@ namespace treyarch {
         arch_base_vhandle update_for_grab(entity* grabber);
 
         bool is_active() const;
+        void force_status_update();
     };
 
     ASSERT_SIZEOF  (manip_obj_interface,                         0x108);
@@ -125,5 +126,8 @@ namespace treyarch {
 
     namespace references {
         inline util::memory_reference<container::simple_list<manip_obj_interface*>> active_manip_objs { 0x00FFEC3C };
+        inline util::memory_reference<container::simple_list<manip_obj_interface*>> update_manip_objs { 0x00FFED14 };
+
+        inline util::memory_reference<u8> unk_00ffeb18 { 0x00FFEB18 }; // 1 while the manip obj lock has the lists
     } // references
 } // treyarch
