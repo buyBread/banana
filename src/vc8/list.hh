@@ -105,6 +105,8 @@ namespace treyarch { namespace vc8 {
         // sub_6CBC90
         // sub_6CBD30
         // sub_6CBF00
+        // sub_6CC040
+        // sub_6CC0E0
         // sub_749E80
         // sub_A1AB20
         // sub_A6B870
@@ -115,6 +117,8 @@ namespace treyarch { namespace vc8 {
             count += added;
         }
 
+        // sub_6E6120
+        // sub_6E6160
         // inlined @ sub_4BEA10
         // inlined @ sub_6E7BB0
         // inlined @ sub_6EDB20

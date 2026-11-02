@@ -533,6 +533,15 @@ namespace treyarch { namespace vc8 {
             return bit_count;
         }
 
+        // inlined @ sub_6ECF90
+        bool operator[](u32 index) noexcept {
+            iterator where = begin();
+
+            where += (i32)index;
+
+            return *where.word & (1 << where.bit);
+        }
+
         // inlined @ sub_6F9C50
         void clear() noexcept {
             erase(begin(), end());
