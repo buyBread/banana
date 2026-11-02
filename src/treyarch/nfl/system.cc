@@ -3,12 +3,15 @@
 #include "retail.hh"
 #include "treyarch/nfl/nfl.hh"
 #include "treyarch/nfl/system.hh"
+#include "treyarch/nfl/win32/driver.hh"
 #include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
 
 // sub_A15470
 u32 treyarch::nfl::init(const init_params* params) {
+    references::nfs_drivers.write(nfs_win32_drivers);
+
     references::current_platform_settings.write(&references::default_platform_settings.get());
 
     if (params)
@@ -105,7 +108,7 @@ u32 treyarch::nfl::nfs_pre_allocate_work_space(u8* work_space) {
         if (buffer_mode != 2 && buffer_mode != 3 && buffer_mode != 4)
             continue;
 
-        nfd_buffer* buffer = driver->buffer;
+        nfd_buffer* buffer = driver->buffers_object;
 
         u32 alignment = buffer->address_alignment;
 
@@ -152,7 +155,7 @@ u32 treyarch::nfl::nfs_pre_allocate_work_space(u8* work_space) {
         if (buffer_mode != 2 && buffer_mode != 3 && buffer_mode != 4)
             continue;
 
-        nfd_buffer* buffer = driver->buffer;
+        nfd_buffer* buffer = driver->buffers_object;
 
         if (buffer->buffers[0].data)
             continue;

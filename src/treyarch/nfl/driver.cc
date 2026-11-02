@@ -1,7 +1,31 @@
 #include "treyarch/nfl/driver.hh"
 #include "treyarch/nfl/nfl.hh"
+#include "treyarch/base/tl_system.hh"
 
 using namespace treyarch;
+
+// sub_A179A0
+void treyarch::nfl::nfd_io_complete(nfd_driver* driver, u32 bytes, i32 error) {
+    switch (driver->io_state) {
+        case nfd_io_state_working:
+            if (error)
+                driver->io_state = nfd_io_state_error;
+            else {
+                driver->disk_read.bytes_completed = bytes;
+                driver->io_state                  = nfd_io_state_workdone;
+            }
+
+            break;
+
+        case nfd_io_state_canceling:
+            driver->io_state = nfd_io_state_canceled;
+
+            break;
+
+        default:
+            tl_fatal("nfdIoCompleted: called in inappopriate state %s", 0);
+    }
+}
 
 // sub_A16A60
 nfl::e_state treyarch::nfl::get_state() {

@@ -70,7 +70,7 @@ i32 treyarch::nfl::nfs_open_file(u32 media_mask, const char* path, u32 flags, u3
         nfd_file_info info;
 
         if (!driver->file_operations->open(handle, bound_path, flags, size ? *size : 0) &&
-            !driver->file_operations->get_info(handle, &info)) {
+            !driver->file_operations->status(handle, &info)) {
 
             if (size)
                 *size = info.size;
