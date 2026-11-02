@@ -113,7 +113,7 @@ namespace treyarch {
         virtual f32  get_spin_angle();
         virtual f32  get_scale();
         virtual f32  get_alpha();
-        virtual bool unk_030();
+        virtual bool anims_enabled();
 
         virtual igo_3d_widget_parameters::e_wide_align_flags get_widescreen_alignment();
 
@@ -142,8 +142,11 @@ namespace treyarch {
         virtual void  unk_052();
         virtual void  unk_053();
 
-        void fade_in (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay);
-        void fade_out(f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
+        static f32 move_curve_value(f32 t, i32 curve); // curve 1 eases out, 0 eases in, anything else is linear
+
+        void fade_in    (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay);
+        void fade_out   (f32 duration, f32 from_alpha, f32 to_alpha, f32 delay); // cancels a fade in
+        void update_fade(f32 dt);
 
         void kill_layer_0_anims();
         void reset_anim_speeds();

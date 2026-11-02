@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "retail.hh"
 #include "game/animation/animation_controller.hh"
@@ -37,19 +38,55 @@ igo_3d_widget::~igo_3d_widget() {
 // slot 1
 void igo_3d_widget::init() {}
 
-// slot 2
+// sub_699E00
 void igo_3d_widget::update(f32 time_inc) {
-    ((void (__thiscall*)(igo_3d_widget*, f32))retail::sub_699E00)(this, time_inc);
+    if (is_anim_playing() || moving)
+        move_elapsed = (f32)((f64)move_elapsed + time_inc);
+
+    if (!is_anim_playing() && !moving)
+        return;
+
+    if (move_elapsed == 0.0f)
+        set_position(move_from.x, move_from.y, move_from.z);
+    else if ((f64)move_elapsed >= move_duration) {
+        moving = false;
+
+        set_position(move_to.x, move_to.y, move_to.z);
+    } else {
+        f32 progress = move_curve_value((f32)((f64)move_elapsed / move_duration), move_curve);
+
+        set_position((f32)(((f64)move_to.x - move_from.x) * progress + move_from.x),
+                     (f32)(((f64)move_to.y - move_from.y) * progress + move_from.y),
+                     (f32)(((f64)move_to.z - move_from.z) * progress + move_from.z));
+    }
 }
 
-// slot 3
+// sub_68AD00
+f32 igo_3d_widget::move_curve_value(f32 t, i32 curve) {
+    if (curve == 1) {
+        f32 value = (f32)((f32)(9.0 * t) + 1.0);
+
+        return (f32)std::log10((f64)value);
+    }
+
+    if (curve == 0) {
+        f32 value = (f32)(9.0 * (1.0f - t)) + 1.0f;
+
+        return 1.0f - (f32)std::log10((f64)value);
+    }
+
+    return t;
+}
+
+// sub_6911A0
 void igo_3d_widget::render() {
-    ((void (__thiscall*)(igo_3d_widget*))retail::sub_6911A0)(this);
+    if (is_shown())
+        render_entity();
 }
 
-// slot 4
+// sub_698430
 u8 igo_3d_widget::is_shown() {
-    return ((u8 (__thiscall*)(igo_3d_widget*))retail::sub_698430)(this);
+    return flags & 1;
 }
 
 // sub_6AE420
@@ -77,9 +114,10 @@ void igo_3d_widget::set_center_pos(f32 x, f32 y) {
     parameters->update_transform_matrix();
 }
 
-// slot 8
+// sub_689890
 void igo_3d_widget::get_position(f32* x, f32* y) {
-    ((void (__thiscall*)(igo_3d_widget*, f32*, f32*))retail::sub_689890)(this, x, y);
+    *x = parameters->position.get_x();
+    *y = parameters->position.get_y();
 }
 
 // sub_6B1C70
@@ -162,59 +200,59 @@ void igo_3d_widget::unk_021(i32 value) {
     unk_048 = value;
 }
 
-// slot 22
+// sub_687260
 f32 igo_3d_widget::get_position_x() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_687260)(this);
+    return parameters->position.get_x();
 }
 
-// slot 23
+// sub_687270
 f32 igo_3d_widget::get_position_y() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_687270)(this);
+    return parameters->position.get_y();
 }
 
-// slot 24
+// sub_687280
 f32 igo_3d_widget::get_position_z() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_687280)(this);
+    return parameters->position.get_z();
 }
 
-// slot 25
+// sub_6F8580
 f32 igo_3d_widget::get_rotation_angle() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F8580)(this);
+    return parameters->rotation_angle;
 }
 
-// slot 26
+// sub_6F8590
 f32 igo_3d_widget::get_tilt_angle() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F8590)(this);
+    return parameters->tilt_angle;
 }
 
-// slot 27
+// sub_6F85A0
 f32 igo_3d_widget::get_spin_angle() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F85A0)(this);
+    return parameters->spin_angle;
 }
 
-// slot 28
+// sub_687290
 f32 igo_3d_widget::get_scale() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_687290)(this);
+    return parameters->scale;
 }
 
-// slot 29
+// sub_90D180
 f32 igo_3d_widget::get_alpha() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_90D180)(this);
+    return alpha;
 }
 
-// slot 30
-bool igo_3d_widget::unk_030() {
-    return ((bool (__thiscall*)(igo_3d_widget*))retail::sub_6F85B0)(this);
+// sub_6F85B0
+bool igo_3d_widget::anims_enabled() {
+    return parameters->anims_enabled != 0;
 }
 
-// slot 31
+// sub_6F85C0
 igo_3d_widget_parameters::e_wide_align_flags igo_3d_widget::get_widescreen_alignment() {
-    return ((igo_3d_widget_parameters::e_wide_align_flags (__thiscall*)(igo_3d_widget*))retail::sub_6F85C0)(this);
+    return parameters->widescreen_align;
 }
 
-// slot 32
+// sub_6F85D0
 u32 igo_3d_widget::suppression_mask() {
-    return ((u32 (__thiscall*)(igo_3d_widget*))retail::sub_6F85D0)(this);
+    return parameters->suppression_mask;
 }
 
 // slot 33
@@ -232,9 +270,9 @@ void igo_3d_widget::set_scale_factor(f32 factor) {
     scale_factor = factor;
 }
 
-// slot 36
+// sub_6F85E0
 f32 igo_3d_widget::get_scale_factor() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F85E0)(this);
+    return scale_factor;
 }
 
 // sub_6F85F0
@@ -242,9 +280,9 @@ void igo_3d_widget::set_alpha_factor(f32 factor) {
     alpha_factor = factor;
 }
 
-// slot 38
+// sub_6F6760
 f32 igo_3d_widget::get_alpha_factor() {
-    return ((f32 (__thiscall*)(igo_3d_widget*))retail::sub_6F6760)(this);
+    return alpha_factor;
 }
 
 // sub_68AC20
@@ -355,7 +393,7 @@ void igo_3d_widget::fade_in(f32 duration, f32 from_alpha, f32 to_alpha, f32 dela
     fade_in_alpha_base = from_alpha;
     faded_in           = true;
 
-    retail::sub_68A920(this, 0.0f); // fade step, applies the start alpha
+    update_fade(0.0f);
 }
 
 // sub_699CD0
@@ -369,7 +407,40 @@ void igo_3d_widget::fade_out(f32 duration, f32 from_alpha, f32 to_alpha, f32 del
     fade_out_alpha_base = to_alpha;
     faded_in            = true;
 
-    retail::sub_68A920(this, 0.0f); // fade step, applies the start alpha
+    update_fade(0.0f);
+}
+
+// sub_68A920
+void igo_3d_widget::update_fade(f32 dt) {
+    if (fading_in) {
+        fade_in_remaining = (f32)((f64)fade_in_remaining - dt);
+
+        if (fade_in_remaining <= 0.0f) {
+            fade_in_remaining = 0.0f;
+            fading_in         = false;
+            faded_in          = true;
+
+            set_alpha((f32)((f64)fade_in_alpha_base + fade_in_alpha_span));
+        }
+
+        if (!((f64)fade_in_remaining > fade_in_duration) && fade_in_duration != 0.0f)
+            set_alpha((f32)(((f64)fade_in_duration - fade_in_remaining) / fade_in_duration * fade_in_alpha_span + fade_in_alpha_base));
+    }
+
+    if (fading_out) {
+        fade_out_remaining = (f32)((f64)fade_out_remaining - dt);
+
+        if (fade_out_remaining <= 0.0f) {
+            fade_out_remaining = 0.0f;
+            fading_out         = false;
+            faded_in           = false;
+
+            set_alpha(fade_out_alpha_base);
+        }
+
+        if (!((f64)fade_out_remaining > fade_out_duration) && fade_out_duration != 0.0f)
+            set_alpha((f32)((f64)fade_out_remaining / fade_out_duration * fade_out_alpha_span + fade_out_alpha_base));
+    }
 }
 
 // sub_68A860
