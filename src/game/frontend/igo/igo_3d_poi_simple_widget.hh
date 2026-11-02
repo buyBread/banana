@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/color.hh"
 #include "game/frontend/igo/igo_3d_widget.hh"
 #include "banana/util/macros/sanity_assert.hh"
 #include "banana/util/types.hh"
@@ -15,6 +16,9 @@ namespace treyarch {
         u8   reserved_168[0x2D];
         bool is_life_bar;
         u8   reserved_196[0x2A];
+
+        virtual void set_color32(color32 color) = 0;
+        virtual void unk_055(u8 unk) = 0;
     };
 
     ASSERT_SIZEOF  (igo_3d_poi_simple_widget,                  0x1C0);

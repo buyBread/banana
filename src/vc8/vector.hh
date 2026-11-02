@@ -241,6 +241,8 @@ namespace treyarch { namespace vc8 {
         // sub_983C70
         // inlined @ sub_66CE80
         // inlined @ sub_6FB6C0
+        // inlined @ sub_6FBF90
+        // inlined @ sub_6FC010
         // inlined @ sub_947CC0
         // inlined @ sub_948280
         // inlined @ sub_9484B0
@@ -304,6 +306,7 @@ namespace treyarch { namespace vc8 {
         }
 
         // sub_6842B0
+        // inlined @ sub_6DFB50
         // inlined @ sub_6E77C0
         // inlined @ sub_4EF7C0
         // inlined @ sub_66CDA0

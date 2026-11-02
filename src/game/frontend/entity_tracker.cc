@@ -51,6 +51,34 @@ void stealth_widget_t::draw() {
         unk_0c->render();
 }
 
+// sub_6AB6A0
+entity_fog_obj::entity_fog_obj(arch_base_vhandle ent) {
+    active          = false;
+    requires_senses = false;
+    entity          = ent;
+
+    string_hash name;
+
+    name.initialize(mash::ALLOCATED, "FX_CYL_POI");
+
+    auto spawned = (entity_base*)retail::sub_804740((u32*)&references::g_world_ptr.read()->ent_mgr,
+                                                    (i32)name.source_hash_code,
+                                                    (i32*)1); // wds_entity_manager::spawn_entity_autoname
+
+    fog_vh          = spawned->my_handle;
+    spawned->flags |= entity_flag_detectable;
+
+    if (auto tracked = (entity_base*)ent.resolve()) {
+        vector3d position = tracked->my_abs_po->get_position();
+
+        spawned->set_rel_position(position);
+    }
+
+    vector3d axis(0.0f, 1.0f, 0.0f);
+
+    retail::sub_60FEB0(fog_vh.value, (f32*)&axis, 0.08f, false);
+}
+
 // sub_70E960
 entity_tracker::entity_tracker(entity_tracker_manager* parent, arch_base_vhandle ent) {
     poi_show_distance_info    = false;
@@ -69,8 +97,7 @@ entity_tracker::entity_tracker(entity_tracker_manager* parent, arch_base_vhandle
     poi_show_distance_info = false;
     poi_icon_offset        = vector3d(0.0f, 0.0f, 0.0f);
 
-    void* allocation = mm::allocate(sizeof(poi_icon_widget));
-    poi_icon = allocation ? (poi_icon_widget*)retail::sub_70C4A0((u8*)allocation, 2) : nullptr;
+    poi_icon = new poi_icon_widget(2);
 
     if (poi_icon->is_shown) {
         poi_icon->is_shown = false;
@@ -89,8 +116,7 @@ entity_tracker::entity_tracker(entity_tracker_manager* parent, arch_base_vhandle
     shows_out_of_spidey_sense = true;
     fog_obj                   = nullptr;
 
-    allocation = mm::allocate(sizeof(igo_3d_gta_widget));
-    gta_widget = allocation ? (igo_3d_gta_widget*)retail::sub_6A0E40((u32*)allocation) : nullptr;
+    gta_widget = new igo_3d_gta_widget;
 
     gta_widget_active     = false;
     unk_41                = false;
@@ -121,7 +147,7 @@ entity_tracker::~entity_tracker() {
         retail::sub_90D110((u32*)record, -1.0f); // zlock off
 
     if (mm_icon) {
-        retail::sub_6DFB50((u32*)references::frontend.get().igo->radar_widget, (i32)mm_icon); // remove_icon
+        references::frontend.get().igo->radar_widget->remove_icon(mm_icon);
         delete mm_icon;
     }
 
@@ -140,7 +166,7 @@ entity_tracker::~entity_tracker() {
         if (arch_base* fog = fog_obj->fog_vh.resolve())
             retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)fog);
 
-        mm::free(fog_obj);
+        delete fog_obj;
     }
 
     fog_obj = nullptr;
@@ -180,30 +206,28 @@ void entity_tracker::set_poi_icon(i32 kind) {
             carried_health = -1.0f;
             carried_unk    = -1.0f;
         } else if (mode == 2) {
-            carried_health = (f32)retail::sub_68C490((u32*)poi_icon); // poi_icon_widget::get_life_bar_health
+            carried_health = (f32)poi_icon->get_life_bar_health();
             carried_unk    = -1.0f;
         }
 
-        retail::sub_6923F0((u32*)poi_icon, 1); // poi_icon_widget scalar deleting destructor
+        delete poi_icon;
         poi_icon = nullptr;
     }
 
     if (mm_icon && kind != mm_icon->kind) {
-        retail::sub_6DFB50((u32*)references::frontend.get().igo->radar_widget, (i32)mm_icon); // remove_icon
+        references::frontend.get().igo->radar_widget->remove_icon(mm_icon);
         delete mm_icon;
         mm_icon = nullptr;
     }
 
     if (!poi_icon) {
-        if (kind != 11) {
-            void* allocation = mm::allocate(sizeof(poi_icon_widget));
-            poi_icon = allocation ? (poi_icon_widget*)retail::sub_70C4A0((u8*)allocation, kind) : nullptr;
-        }
+        if (kind != 11)
+            poi_icon = new poi_icon_widget(kind);
 
         poi_icon->mode = mode;
 
         if (mode == 2)
-            retail::sub_68C450((u32*)poi_icon, (i32)carried_health, (i32)carried_unk); // poi_icon_widget::set_life_bar_values
+            poi_icon->set_life_bar_values((i32)carried_health, (i32)carried_unk);
     }
 
     if (!mm_icon) {
@@ -312,12 +336,12 @@ void entity_tracker::set_poi_is_life_bar(bool is_life_bar, i32 health, i32 unk) 
 
 // sub_692590
 void entity_tracker::set_poi_life_bar_values(i32 health, i32 unk) {
-    retail::sub_68C450((u32*)poi_icon, health, unk); // poi_icon_widget::set_life_bar_values
+    poi_icon->set_life_bar_values(health, unk);
 }
 
 // sub_6925D0
 i32 entity_tracker::get_poi_curr_life_bar_health() {
-    return retail::sub_68C490((u32*)poi_icon); // poi_icon_widget::get_life_bar_health
+    return poi_icon->get_life_bar_health();
 }
 
 // sub_6AAC90
@@ -396,12 +420,11 @@ void entity_tracker::set_fog_obj(i32) { // the kind goes unused
         if (arch_base* fog = old->fog_vh.resolve())
             retail::sub_7FBF20((u32*)&references::g_world_ptr.read()->ent_mgr, (i32*)fog);
 
-        mm::free(old);
+        delete old;
         fog_obj = nullptr;
     }
 
-    void* allocation = mm::allocate(sizeof(entity_fog_obj));
-    fog_obj = allocation ? (entity_fog_obj*)retail::sub_6AB6A0((u32*)allocation, ent.value) : nullptr;
+    fog_obj = new entity_fog_obj(ent);
 }
 
 // sub_6AAD30

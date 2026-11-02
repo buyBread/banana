@@ -67,12 +67,12 @@ igo_map_poi::igo_map_poi(i32 kind, u32 unk_14, vector3d) { // the position goes 
 
     set_color(std::bit_cast<color32>(argb));
 
-    igo_3d_widget* radar = references::frontend.get().igo->radar_widget;
+    igo_3d_radar_widget* radar = references::frontend.get().igo->radar_widget;
 
     if (kind == 15)
-        retail::sub_6FC010(radar, (i32)this);
+        radar->add_kind_15_icon(this);
     else
-        retail::sub_6FBF90((u32*)radar, (i32)this);
+        radar->add_icon(this);
 
     is_shown  = true;
     unk_19[0] = 1;

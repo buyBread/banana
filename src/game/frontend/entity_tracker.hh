@@ -47,6 +47,16 @@ namespace treyarch {
         arch_base_vhandle entity;
         bool              active;
         bool              requires_senses;
+
+        explicit entity_fog_obj(arch_base_vhandle ent);
+
+        void* operator new(std::size_t size) noexcept {
+            return mm::allocate(size);
+        }
+
+        void operator delete(void* allocation) noexcept {
+            mm::free(allocation);
+        }
     };
 
     class entity_tracker {

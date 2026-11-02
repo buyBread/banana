@@ -15,6 +15,7 @@
 #include "game/frontend/igo/igo_3d_loading_screen.hh"
 #include "game/frontend/igo/igo_3d_pauseless_dialog_widget.hh"
 #include "game/frontend/igo/igo_3d_zoom_map.hh"
+#include "game/frontend/igo/poi_icon_widget.hh"
 #include "game/game.hh"
 #include "game/glass_house_manager.hh"
 #include "game/mission/mission_manager.hh"
@@ -81,10 +82,8 @@ void mission_manager::process_state_initial_startup(f32 time_inc) {
                                                                           nullptr,
                                                                           false);
 
-    if (!selected_poi_icon) {
-        void* allocation = mm::allocate(0x40);
-        selected_poi_icon = allocation ? (poi_icon_widget*)retail::sub_70C4A0((u8*)allocation, 6) : nullptr;
-    }
+    if (!selected_poi_icon)
+        selected_poi_icon = new poi_icon_widget(6);
 }
 
 // sub_9860E0

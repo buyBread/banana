@@ -1,5 +1,6 @@
 #include "retail.hh"
 #include "game/frontend/igo/igo_3d_radar_widget.hh"
+#include "game/frontend/igo/igo_map_poi.hh"
 
 using namespace treyarch;
 
@@ -47,6 +48,41 @@ void igo_3d_radar_widget::spawn_entity() {
 // slot 54
 bool igo_3d_radar_widget::unk_054(i32 kind) {
     return ((bool (__thiscall*)(igo_3d_radar_widget*, i32))retail::sub_691E70)(this, kind);
+}
+
+// sub_6FBF90
+void igo_3d_radar_widget::add_icon(igo_map_poi* icon) {
+    if (icon->kind != 11 && ++references::radar_icon_counter.get() > 1000)
+        references::radar_icon_counter.write(1);
+
+    icons.push_back(icon);
+}
+
+// sub_6FC010
+void igo_3d_radar_widget::add_kind_15_icon(igo_map_poi* icon) {
+    if (++references::radar_kind_15_icon_counter.get() > 999)
+        references::radar_kind_15_icon_counter.write(0);
+
+    kind_15_icons.push_back(icon);
+}
+
+// sub_6DFB50
+void igo_3d_radar_widget::remove_icon(igo_map_poi* icon) {
+    for (igo_map_poi** position = icons.begin(); position < icons.end(); ++position) {
+        if (*position == icon) {
+            icons.erase(position);
+
+            return;
+        }
+    }
+
+    for (igo_map_poi** position = kind_15_icons.begin(); position != kind_15_icons.end(); ++position) {
+        if (*position == icon) {
+            kind_15_icons.erase(position);
+
+            return;
+        }
+    }
 }
 
 // sub_691EC0

@@ -6,6 +6,7 @@
 #include "treyarch/mash/types.hh"
 #include "treyarch/mash/virtual_base.hh"
 #include "banana/util/macros/sanity_assert.hh"
+#include "banana/util/memory_reference.hh"
 #include "banana/util/types.hh"
 
 namespace treyarch {
@@ -53,6 +54,10 @@ namespace treyarch {
 
         virtual bool unk_054(i32 kind);
 
+        void add_icon        (igo_map_poi* icon);
+        void add_kind_15_icon(igo_map_poi* icon);
+        void remove_icon     (igo_map_poi* icon); // from the first list holding it
+
         void lock_minimap(vector3d center, f32 zoom); // ignores a zoom of 0 or below
         void unlock_minimap();
 
@@ -73,4 +78,9 @@ namespace treyarch {
     ASSERT_OFFSETOF(igo_3d_radar_widget, minimap_locked,      0x1D4);
     ASSERT_OFFSETOF(igo_3d_radar_widget, buildings_invisible, 0x1D5);
     ASSERT_OFFSETOF(igo_3d_radar_widget, wallmode_disabled,   0x1D6);
+
+    namespace references {
+        inline util::memory_reference<i32> radar_icon_counter         { 0x00E743EC };
+        inline util::memory_reference<i32> radar_kind_15_icon_counter { 0x0102F92C };
+    } // references
 } // treyarch
